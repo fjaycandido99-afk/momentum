@@ -8,7 +8,7 @@
  * - Energy level (low/normal/high)
  */
 
-export type DayType = 'work' | 'off' | 'recovery'
+export type DayType = 'work' | 'off' | 'recovery' | 'class' | 'study' | 'exam'
 export type Pace = 'focused' | 'open' | 'gentle'
 export type TimeMode = 'quick' | 'normal' | 'full'
 export type EnergyLevel = 'low' | 'normal' | 'high'

@@ -87,9 +87,9 @@ export async function POST(request: NextRequest) {
     const timeMode = (requestedTimeMode || userPrefs.defaultTimeMode) as TimeMode
 
     // Determine day type (allow override from request)
-    let dayType: DayType | 'class' | 'study' | 'exam' = classifyDayType(date, userPrefs)
+    let dayType: DayType = classifyDayType(date, userPrefs)
     if (requestedDayType) {
-      dayType = requestedDayType as DayType | 'class' | 'study' | 'exam'
+      dayType = requestedDayType as DayType
     } else if (isRecoveryDay) {
       dayType = 'recovery'
     } else if (userPrefs.examMode && (userPrefs.userType === 'student' || userPrefs.userType === 'hybrid')) {
