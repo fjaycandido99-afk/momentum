@@ -25,6 +25,8 @@ import {
   VolumeX,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { useThemeOptional } from '@/contexts/ThemeContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
 
@@ -78,6 +80,8 @@ const SEGMENT_OPTIONS = [
 ]
 
 export default function SettingsPage() {
+  const router = useRouter()
+  const supabase = createClient()
   const themeContext = useThemeOptional()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -194,7 +198,9 @@ export default function SettingsPage() {
   }
 
   const handleSignOut = async () => {
-    window.location.href = '/login'
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
   }
 
   if (isLoading) {
