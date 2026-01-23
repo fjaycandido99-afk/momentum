@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       : PRICE_IDS.premium_monthly
 
     // Check if user has already had a trial
-    const hasHadTrial = subscription.trial_start !== null
+    const hasHadTrial = !!subscription?.trial_start
 
     // Create checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
