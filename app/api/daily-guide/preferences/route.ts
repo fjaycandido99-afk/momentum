@@ -35,7 +35,11 @@ const DEFAULT_PREFERENCES = {
 export async function GET() {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError) {
+      console.error('Auth error in preferences:', authError)
+    }
 
     // For guests, return default preferences (they can still use the app)
     if (!user) {
@@ -139,7 +143,7 @@ export async function GET() {
   } catch (error) {
     console.error('Get daily guide preferences error:', error)
     return NextResponse.json(
-      { error: 'Failed to get preferences' },
+      { error: 'Failed to get preferences', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
