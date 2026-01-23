@@ -78,21 +78,12 @@ export default function SignupPage() {
         {/* Logo with rotating rings animation */}
         <div className="text-center mb-10">
           <div className="w-20 h-20 mx-auto mb-6 relative flex items-center justify-center">
-            {/* Outer ring - rotates clockwise */}
-            <div
-              className="absolute inset-0 rounded-full border-2 border-white/20 animate-spin"
-              style={{ animationDuration: '8s' }}
-            />
+            {/* Outer ring - rotates clockwise slow */}
+            <div className="absolute inset-0 rounded-full border-2 border-white/20 animate-spin-slow" />
             {/* Middle ring - rotates counter-clockwise */}
-            <div
-              className="absolute inset-2 rounded-full border-2 border-white/30 animate-spin"
-              style={{ animationDuration: '6s', animationDirection: 'reverse' }}
-            />
+            <div className="absolute inset-2 rounded-full border-2 border-white/30 animate-spin-medium" />
             {/* Inner ring - rotates clockwise faster */}
-            <div
-              className="absolute inset-4 rounded-full border-2 border-white/40 animate-spin"
-              style={{ animationDuration: '4s' }}
-            />
+            <div className="absolute inset-4 rounded-full border-2 border-white/40 animate-spin-fast" />
             {/* Center dot */}
             <div className="w-4 h-4 rounded-full bg-white/60" />
           </div>
