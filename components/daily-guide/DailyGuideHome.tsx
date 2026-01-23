@@ -25,6 +25,7 @@ import {
   Moon,
   Sparkles,
 } from 'lucide-react'
+import { LoadingScreen, LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { DayTypeIndicator } from './DayTypeIndicator'
 import { GuidancePlayer } from './GuidancePlayer'
 import { EnergyPrompt, EnergySelector } from './EnergyPrompt'
@@ -613,11 +614,7 @@ export function DailyGuideHome() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-white/80 animate-spin" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return (
