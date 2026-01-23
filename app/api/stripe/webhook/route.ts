@@ -92,7 +92,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   // Get subscription details from Stripe
-  const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription
 
   const isTrialing = stripeSubscription.status === 'trialing'
   const trialEnd = stripeSubscription.trial_end
@@ -200,7 +200,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   if (!subscription) return
 
   // Get updated subscription details
-  const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription
 
   await prisma.subscription.update({
     where: { id: subscription.id },
