@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
 import { FREE_TIER_LIMITS, hasPremiumAccess } from '@/lib/stripe'
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     // For guest users, just return success (no tracking)
