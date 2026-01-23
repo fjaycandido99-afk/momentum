@@ -7,10 +7,10 @@ import {
   generateAndCacheAudio,
 } from '@/lib/daily-guide/audio-cache'
 import { getDateString } from '@/lib/daily-guide/day-type'
-import type { ModuleType } from '@/lib/daily-guide/decision-tree'
+import type { GuideSegment } from '@/lib/daily-guide/day-type'
 
 // All valid module/segment types
-const VALID_MODULES = [
+const VALID_MODULES: GuideSegment[] = [
   'morning',
   'evening',
   'midday',
@@ -36,15 +36,17 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const segment = searchParams.get('segment')
+    const segmentParam = searchParams.get('segment')
     const dateStr = searchParams.get('date')
 
-    if (!segment || !VALID_MODULES.includes(segment)) {
+    if (!segmentParam || !VALID_MODULES.includes(segmentParam as GuideSegment)) {
       return NextResponse.json(
         { error: 'Invalid segment parameter' },
         { status: 400 }
       )
     }
+
+    const segment = segmentParam as GuideSegment
 
     const date = dateStr ? new Date(dateStr) : new Date()
     const dateKey = getDateString(date)

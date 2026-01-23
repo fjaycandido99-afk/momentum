@@ -10,7 +10,20 @@ import type {
 } from '../daily-guide/decision-tree'
 
 export type { DayType, GuideTone }
-export type GuideSegment = 'morning' | 'midday' | 'afternoon' | 'evening'
+export type GuideSegment =
+  | 'morning'
+  | 'midday'
+  | 'afternoon'
+  | 'evening'
+  | 'morning_prime'
+  | 'workout'
+  | 'breath'
+  | 'micro_lesson'
+  | 'day_close'
+  | 'checkpoint_1'
+  | 'checkpoint_2'
+  | 'checkpoint_3'
+  | 'tomorrow_preview'
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
