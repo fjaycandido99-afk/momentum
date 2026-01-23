@@ -159,7 +159,7 @@ export function MusicThemeSelector({
             const sample = MUSIC_SAMPLES[genre]
             const isSelected = selectedGenre === genre
             const isPlaying = playingGenre === genre
-            const previewBg = theme?.backgrounds?.[0] || `/backgrounds/${genre}/${genre}1.jpg`
+            const previewBg = `/backgrounds/${genre}/${genre}1.jpg`
 
             return (
               <div

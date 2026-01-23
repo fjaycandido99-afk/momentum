@@ -136,10 +136,10 @@ export async function sendPushToUser(
   // Check if user has this notification type enabled
   const notificationPreferenceMap: Record<NotificationType, keyof typeof subscriptions[0]> = {
     morning_reminder: 'morning_reminder',
-    checkpoint: 'checkpoint_reminder',
+    checkpoint: 'checkpoint_alerts',
     evening_reminder: 'evening_reminder',
-    streak_at_risk: 'streak_reminder',
-    weekly_review: 'weekly_summary',
+    streak_at_risk: 'streak_alerts',
+    weekly_review: 'weekly_review',
     custom: 'morning_reminder', // Custom always sends
   }
 
