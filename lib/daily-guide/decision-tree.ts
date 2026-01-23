@@ -24,6 +24,9 @@ export type ModuleType =
   | 'checkpoint_1'
   | 'checkpoint_2'
   | 'checkpoint_3'
+  | 'exam_calm'
+  | 'pre_study'
+  | 'study_break'
 
 export interface UserPreferences {
   workDays: number[]
