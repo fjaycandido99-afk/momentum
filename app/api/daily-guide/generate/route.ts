@@ -124,10 +124,10 @@ export async function POST(request: NextRequest) {
       generateModuleContent('day_close', genContext).then(result => ({ key: 'day_close', result }))
     )
 
-    // Generate movement/workout if included
-    if (modules.modules.includes('movement') || modules.modules.includes('workout')) {
+    // Generate workout/movement if included
+    if (modules.modules.includes('workout')) {
       generationPromises.push(
-        generateModuleContent('workout', genContext).then(result => ({ key: 'movement', result }))
+        generateModuleContent('workout', genContext).then(result => ({ key: 'workout', result }))
       )
     }
 
