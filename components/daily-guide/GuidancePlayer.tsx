@@ -2,43 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Pause, Play, RotateCcw, Volume2, VolumeX, Check, Music } from 'lucide-react'
-
-// YouTube Player type
-interface YTPlayer {
-  playVideo: () => void
-  pauseVideo: () => void
-  setVolume: (volume: number) => void
-  getVolume: () => number
-  mute: () => void
-  unMute: () => void
-  isMuted: () => boolean
-  destroy: () => void
-}
-
-declare global {
-  interface Window {
-    YT: {
-      Player: new (
-        elementId: string,
-        config: {
-          videoId: string
-          playerVars?: Record<string, string | number>
-          events?: {
-            onReady?: (event: { target: YTPlayer }) => void
-            onStateChange?: (event: { data: number }) => void
-            onError?: (event: { data: number }) => void
-          }
-        }
-      ) => YTPlayer
-      PlayerState: {
-        PLAYING: number
-        PAUSED: number
-        ENDED: number
-      }
-    }
-    onYouTubeIframeAPIReady: () => void
-  }
-}
+import type { YTPlayer } from '@/lib/youtube-types'
+import '@/lib/youtube-types' // Import for global Window.YT declaration
 
 interface GuidancePlayerProps {
   segment: string

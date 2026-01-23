@@ -81,7 +81,7 @@ export function getCurrentSegment(
 export function getSegmentAvailability(
   now: Date,
   schedule: UserSchedule
-): Record<GuideSegment, { available: boolean; time: string }> {
+): Partial<Record<GuideSegment, { available: boolean; time: string }>> {
   const wakeTime = schedule.wakeTime || '07:00'
   const workEnd = schedule.workEndTime || '17:00'
 
@@ -125,7 +125,14 @@ export function getSegmentAvailability(
 
 export function formatSegmentTime(segment: GuideSegment, schedule: UserSchedule): string {
   const availability = getSegmentAvailability(new Date(), schedule)
-  const time = availability[segment].time
+  const segmentAvail = availability[segment]
+
+  // Only time-of-day segments have availability data
+  if (!segmentAvail) {
+    return ''
+  }
+
+  const time = segmentAvail.time
 
   const { hours, minutes } = parseTimeString(time)
   const period = hours >= 12 ? 'pm' : 'am'

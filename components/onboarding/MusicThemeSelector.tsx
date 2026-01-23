@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Play, Pause, Check, ChevronRight, Loader2, Volume2 } from 'lucide-react'
 import { MUSIC_SAMPLES, MUSIC_GENRE_INFO } from '@/lib/music-samples'
 import { GENRE_THEMES } from '@/lib/theme/music-theme'
+import type { YTPlayer } from '@/lib/youtube-types'
+import '@/lib/youtube-types' // Import for global Window.YT declaration
 
 interface MusicThemeSelectorProps {
   onSelect: (genre: string) => void
@@ -21,7 +23,7 @@ export function MusicThemeSelector({
   const [selectedGenre, setSelectedGenre] = useState<string | null>(initialGenre)
   const [playingGenre, setPlayingGenre] = useState<string | null>(null)
   const [isPlayerReady, setIsPlayerReady] = useState(false)
-  const playerRef = useRef<YT.Player | null>(null)
+  const playerRef = useRef<YTPlayer | null>(null)
   const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -79,10 +81,10 @@ export function MusicThemeSelector({
         showinfo: 0,
       },
       events: {
-        onReady: (event: YT.PlayerEvent) => {
+        onReady: (event: { target: YTPlayer }) => {
           event.target.playVideo()
         },
-        onStateChange: (event: YT.OnStateChangeEvent) => {
+        onStateChange: (event: { data: number }) => {
           if (event.data === window.YT.PlayerState.PLAYING) {
             // Stop after preview duration
             if (previewTimeoutRef.current) {
@@ -270,69 +272,4 @@ export function MusicThemeSelector({
       </div>
     </div>
   )
-}
-
-// Add YouTube IFrame API types
-declare global {
-  interface Window {
-    YT: typeof YT
-    onYouTubeIframeAPIReady: () => void
-  }
-
-  namespace YT {
-    class Player {
-      constructor(elementId: string, options: PlayerOptions)
-      playVideo(): void
-      pauseVideo(): void
-      stopVideo(): void
-      destroy(): void
-    }
-
-    interface PlayerOptions {
-      height?: string | number
-      width?: string | number
-      videoId?: string
-      playerVars?: PlayerVars
-      events?: {
-        onReady?: (event: PlayerEvent) => void
-        onStateChange?: (event: OnStateChangeEvent) => void
-        onError?: (event: OnErrorEvent) => void
-      }
-    }
-
-    interface PlayerVars {
-      autoplay?: 0 | 1
-      controls?: 0 | 1
-      disablekb?: 0 | 1
-      fs?: 0 | 1
-      modestbranding?: 0 | 1
-      rel?: 0 | 1
-      showinfo?: 0 | 1
-      start?: number
-      end?: number
-    }
-
-    interface PlayerEvent {
-      target: Player
-    }
-
-    interface OnStateChangeEvent {
-      target: Player
-      data: PlayerState
-    }
-
-    interface OnErrorEvent {
-      target: Player
-      data: number
-    }
-
-    enum PlayerState {
-      UNSTARTED = -1,
-      ENDED = 0,
-      PLAYING = 1,
-      PAUSED = 2,
-      BUFFERING = 3,
-      CUED = 5,
-    }
-  }
 }

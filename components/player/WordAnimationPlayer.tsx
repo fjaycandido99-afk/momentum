@@ -3,36 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Volume2, VolumeX, ExternalLink, Play, Pause } from 'lucide-react'
 import { RainEffect } from '@/components/effects/RainEffect'
-
-declare global {
-  interface Window {
-    YT: {
-      Player: new (
-        elementId: string,
-        config: {
-          videoId: string
-          playerVars?: Record<string, number | string>
-          events?: {
-            onReady?: (event: { target: YTPlayer }) => void
-            onStateChange?: (event: { data: number }) => void
-            onError?: (event: { data: number }) => void
-          }
-        }
-      ) => YTPlayer
-    }
-    onYouTubeIframeAPIReady: () => void
-  }
-}
-
-interface YTPlayer {
-  playVideo: () => void
-  pauseVideo: () => void
-  setVolume: (volume: number) => void
-  destroy: () => void
-  getDuration: () => number
-  getCurrentTime: () => number
-  seekTo: (seconds: number, allowSeekAhead: boolean) => void
-}
+import type { YTPlayer } from '@/lib/youtube-types'
+import '@/lib/youtube-types' // Import for global Window.YT declaration
 
 interface WordAnimationPlayerProps {
   word: string

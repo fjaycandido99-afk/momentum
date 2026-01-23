@@ -75,6 +75,9 @@ const TIME_DURATIONS: Record<TimeMode, Record<ModuleType, number>> = {
     checkpoint_1: 20,
     checkpoint_2: 20,
     checkpoint_3: 20,
+    pre_study: 30,
+    study_break: 60,
+    exam_calm: 45,
   },
   normal: {
     morning_prime: 60,
@@ -85,6 +88,9 @@ const TIME_DURATIONS: Record<TimeMode, Record<ModuleType, number>> = {
     checkpoint_1: 30,
     checkpoint_2: 30,
     checkpoint_3: 30,
+    pre_study: 60,
+    study_break: 120,
+    exam_calm: 90,
   },
   full: {
     morning_prime: 90,
@@ -95,6 +101,9 @@ const TIME_DURATIONS: Record<TimeMode, Record<ModuleType, number>> = {
     checkpoint_1: 45,
     checkpoint_2: 45,
     checkpoint_3: 45,
+    pre_study: 90,
+    study_break: 180,
+    exam_calm: 120,
   },
 }
 
@@ -131,7 +140,10 @@ export function classifyDayType(
 export function determinePace(dayType: DayType): Pace {
   switch (dayType) {
     case 'work':
+    case 'class':
+    case 'exam':
       return 'focused'
+    case 'study':
     case 'off':
       return 'open'
     case 'recovery':
@@ -275,6 +287,69 @@ export function configureCheckpoints(
         },
         // Stronger day close handled in day_close module
       ]
+
+    case 'class':
+      // CLASS: 3 checkpoints (pre-class, between classes, after)
+      return [
+        {
+          id: 'checkpoint_1',
+          name: 'Class Prep',
+          time: '08:30',
+          description: 'Get focused before class',
+        },
+        {
+          id: 'checkpoint_2',
+          name: 'Midday Reset',
+          time: '12:30',
+          description: 'Recharge between classes',
+        },
+        {
+          id: 'checkpoint_3',
+          name: 'Day Review',
+          time: '17:00',
+          description: 'Recap what you learned',
+        },
+      ]
+
+    case 'study':
+      // STUDY: 3 checkpoints (focus blocks)
+      return [
+        {
+          id: 'checkpoint_1',
+          name: 'Deep Focus',
+          time: '09:00',
+          description: 'Enter your study zone',
+        },
+        {
+          id: 'checkpoint_2',
+          name: 'Study Break',
+          time: '12:00',
+          description: 'Rest and refuel',
+        },
+        {
+          id: 'checkpoint_3',
+          name: 'Final Push',
+          time: '15:00',
+          description: 'One more focused session',
+        },
+      ]
+
+    case 'exam':
+      // EXAM: 2 checkpoints (calm before, recovery after)
+      return [
+        {
+          id: 'checkpoint_1',
+          name: 'Exam Calm',
+          time: '07:00',
+          description: 'Center yourself before the exam',
+        },
+        {
+          id: 'checkpoint_2',
+          name: 'Decompress',
+          time: '16:00',
+          description: 'Release and recover',
+        },
+      ]
   }
 }
 
@@ -409,6 +484,9 @@ export function getTomorrowPreview(
     work: "Tomorrow is a work day. I've set a focused morning for you.",
     off: "Tomorrow is your day off. A relaxed start awaits.",
     recovery: "Tomorrow is for recovery. Rest well tonight.",
+    class: "Tomorrow is a class day. Get ready to learn.",
+    study: "Tomorrow is a study day. Deep focus awaits.",
+    exam: "Tomorrow is exam day. You've got this.",
   }
 
   return {
