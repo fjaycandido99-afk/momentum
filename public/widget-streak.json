@@ -1,0 +1,60 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "Your Streak",
+          "weight": "Bolder",
+          "size": "Medium",
+          "wrap": true
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "spacing": "Medium",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "${streak}",
+          "size": "ExtraLarge",
+          "weight": "Bolder",
+          "color": "Warning",
+          "horizontalAlignment": "Center"
+        },
+        {
+          "type": "TextBlock",
+          "text": "days in a row",
+          "size": "Small",
+          "color": "Light",
+          "horizontalAlignment": "Center"
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "spacing": "Medium",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "${message}",
+          "size": "Small",
+          "wrap": true,
+          "horizontalAlignment": "Center"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Execute",
+      "title": "Continue Streak",
+      "verb": "openApp"
+    }
+  ]
+}

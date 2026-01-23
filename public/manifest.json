@@ -1,0 +1,83 @@
+{
+  "name": "VentProof",
+  "short_name": "VentProof",
+  "description": "Your daily guide for mindful living - morning routines, breathing exercises, and more",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Morning Flow",
+      "short_name": "Morning",
+      "description": "Start your morning routine",
+      "url": "/?action=morning",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Breathe",
+      "short_name": "Breathe",
+      "description": "Quick breathing exercise",
+      "url": "/?action=breathe",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Day Close",
+      "short_name": "Evening",
+      "description": "End of day reflection",
+      "url": "/?action=evening",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    }
+  ],
+  "widgets": [
+    {
+      "name": "Daily Progress",
+      "short_name": "Progress",
+      "description": "Your daily guide progress",
+      "tag": "daily-progress",
+      "ms_ac_template": "widget-template.json",
+      "icons": [
+        {
+          "src": "/icon-192.svg",
+          "sizes": "192x192"
+        }
+      ],
+      "screenshots": [],
+      "backgrounds": [
+        {
+          "src": "/widget-bg.png"
+        }
+      ]
+    },
+    {
+      "name": "Streak Counter",
+      "short_name": "Streak",
+      "description": "Your current streak",
+      "tag": "streak-counter",
+      "ms_ac_template": "widget-streak.json",
+      "icons": [
+        {
+          "src": "/icon-192.svg",
+          "sizes": "192x192"
+        }
+      ],
+      "screenshots": [],
+      "backgrounds": []
+    }
+  ]
+}

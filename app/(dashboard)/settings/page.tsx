@@ -1,0 +1,661 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import {
+  Volume2,
+  Bell,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Music,
+  Briefcase,
+  GraduationCap,
+  BookOpen,
+  Calendar,
+  Clock,
+  Zap,
+  Layers,
+  Sun,
+  Sparkles,
+  Lightbulb,
+  Wind,
+  Moon,
+  Check,
+  Loader2,
+  VolumeX,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useThemeOptional } from '@/contexts/ThemeContext'
+import { NotificationSettings } from '@/components/notifications/NotificationSettings'
+
+type UserType = 'professional' | 'student' | 'hybrid'
+type GuideTone = 'calm' | 'direct' | 'neutral'
+type TimeMode = 'quick' | 'normal' | 'full'
+
+const GENRE_OPTIONS: { id: string | null; name: string; description: string }[] = [
+  { id: null, name: 'Daily Rotation', description: 'Different genre each day' },
+  { id: 'lofi', name: 'Lo-Fi', description: 'Chill beats to relax' },
+  { id: 'piano', name: 'Piano', description: 'Peaceful keys' },
+  { id: 'study', name: 'Study', description: 'Focus music' },
+  { id: 'classical', name: 'Classical', description: 'Timeless elegance' },
+  { id: 'ambient', name: 'Ambient', description: 'Atmospheric soundscapes' },
+]
+
+const DAYS = [
+  { value: 0, label: 'Sun' },
+  { value: 1, label: 'Mon' },
+  { value: 2, label: 'Tue' },
+  { value: 3, label: 'Wed' },
+  { value: 4, label: 'Thu' },
+  { value: 5, label: 'Fri' },
+  { value: 6, label: 'Sat' },
+]
+
+const USER_TYPES = [
+  { value: 'professional' as UserType, label: 'Professional', icon: Briefcase },
+  { value: 'student' as UserType, label: 'Student', icon: GraduationCap },
+  { value: 'hybrid' as UserType, label: 'Both', icon: BookOpen },
+]
+
+const TONES = [
+  { value: 'calm' as GuideTone, label: 'Calm', description: 'Soft and gentle' },
+  { value: 'direct' as GuideTone, label: 'Direct', description: 'Clear and concise' },
+  { value: 'neutral' as GuideTone, label: 'Neutral', description: 'Balanced tone' },
+]
+
+const TIME_MODES = [
+  { value: 'quick' as TimeMode, label: 'Quick', duration: '~5 min' },
+  { value: 'normal' as TimeMode, label: 'Normal', duration: '~15 min' },
+  { value: 'full' as TimeMode, label: 'Full', duration: '~25 min' },
+]
+
+const SEGMENT_OPTIONS = [
+  { id: 'morning_prime', label: 'Morning Greeting', icon: Sun, required: true },
+  { id: 'movement', label: 'Quote of the Day', icon: Sparkles },
+  { id: 'micro_lesson', label: 'Motivation Video', icon: Lightbulb },
+  { id: 'breath', label: 'Breath', icon: Wind },
+  { id: 'day_close', label: 'Day Close', icon: Moon, required: true },
+]
+
+export default function SettingsPage() {
+  const themeContext = useThemeOptional()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [showGenreSelector, setShowGenreSelector] = useState(false)
+
+  // Preferences state
+  const [userType, setUserType] = useState<UserType>('professional')
+  const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5])
+  const [classDays, setClassDays] = useState<number[]>([1, 2, 3, 4, 5])
+  const [wakeTime, setWakeTime] = useState('07:00')
+  const [workStartTime, setWorkStartTime] = useState('09:00')
+  const [workEndTime, setWorkEndTime] = useState('17:00')
+  const [classStartTime, setClassStartTime] = useState('08:00')
+  const [classEndTime, setClassEndTime] = useState('15:00')
+  const [studyStartTime, setStudyStartTime] = useState('18:00')
+  const [studyEndTime, setStudyEndTime] = useState('21:00')
+  const [guideTone, setGuideTone] = useState<GuideTone>('calm')
+  const [defaultTimeMode, setDefaultTimeMode] = useState<TimeMode>('normal')
+  const [enabledSegments, setEnabledSegments] = useState<string[]>(['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'])
+  const [dailyReminder, setDailyReminder] = useState(true)
+  const [reminderTime, setReminderTime] = useState('07:00')
+  const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(true)
+  const [preferredMusicGenre, setPreferredMusicGenre] = useState<string | null>(null)
+
+  // Load preferences on mount
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const response = await fetch('/api/daily-guide/preferences')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.user_type) setUserType(data.user_type)
+          if (data.work_days) setWorkDays(data.work_days)
+          if (data.class_days) setClassDays(data.class_days)
+          if (data.wake_time) setWakeTime(data.wake_time)
+          if (data.work_start_time) setWorkStartTime(data.work_start_time)
+          if (data.work_end_time) setWorkEndTime(data.work_end_time)
+          if (data.class_start_time) setClassStartTime(data.class_start_time)
+          if (data.class_end_time) setClassEndTime(data.class_end_time)
+          if (data.study_start_time) setStudyStartTime(data.study_start_time)
+          if (data.study_end_time) setStudyEndTime(data.study_end_time)
+          if (data.guide_tone) setGuideTone(data.guide_tone)
+          if (data.default_time_mode) setDefaultTimeMode(data.default_time_mode)
+          if (data.enabled_segments) setEnabledSegments(data.enabled_segments)
+          if (data.daily_reminder !== undefined) setDailyReminder(data.daily_reminder)
+          if (data.reminder_time) setReminderTime(data.reminder_time)
+          if (data.background_music_enabled !== undefined) setBackgroundMusicEnabled(data.background_music_enabled)
+          if (data.preferred_music_genre !== undefined) setPreferredMusicGenre(data.preferred_music_genre)
+        }
+      } catch (error) {
+        console.error('Failed to load preferences:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadPreferences()
+  }, [])
+
+  // Save preferences
+  const savePreferences = async () => {
+    setIsSaving(true)
+    try {
+      await fetch('/api/daily-guide/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_type: userType,
+          work_days: workDays,
+          class_days: classDays,
+          wake_time: wakeTime,
+          work_start_time: workStartTime,
+          work_end_time: workEndTime,
+          class_start_time: classStartTime,
+          class_end_time: classEndTime,
+          study_start_time: studyStartTime,
+          study_end_time: studyEndTime,
+          guide_tone: guideTone,
+          default_time_mode: defaultTimeMode,
+          enabled_segments: enabledSegments,
+          daily_reminder: dailyReminder,
+          reminder_time: reminderTime,
+          background_music_enabled: backgroundMusicEnabled,
+          preferred_music_genre: preferredMusicGenre,
+          workout_enabled: enabledSegments.includes('movement'),
+          micro_lesson_enabled: enabledSegments.includes('micro_lesson'),
+          breath_cues_enabled: enabledSegments.includes('breath'),
+        }),
+      })
+    } catch (error) {
+      console.error('Failed to save preferences:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const toggleDay = (day: number, type: 'work' | 'class') => {
+    if (type === 'work') {
+      setWorkDays(prev =>
+        prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort()
+      )
+    } else {
+      setClassDays(prev =>
+        prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort()
+      )
+    }
+  }
+
+  const toggleSegment = (segmentId: string) => {
+    const segment = SEGMENT_OPTIONS.find(s => s.id === segmentId)
+    if (segment?.required) return
+    setEnabledSegments(prev =>
+      prev.includes(segmentId) ? prev.filter(s => s !== segmentId) : [...prev, segmentId]
+    )
+  }
+
+  const handleSignOut = async () => {
+    window.location.href = '/login'
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#08080c] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-white/50 animate-spin" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-[#08080c] text-white pb-24">
+      {/* Header */}
+      <div className="px-6 pt-12 pb-6">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+              <ChevronLeft className="w-5 h-5 text-white/80" />
+            </Link>
+            <h1 className="text-2xl font-light text-white">Settings</h1>
+          </div>
+          <button
+            onClick={savePreferences}
+            disabled={isSaving}
+            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            {isSaving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+        <p className="text-white/60 text-sm mt-1">Customize your Daily Guide</p>
+      </div>
+
+      <div className="px-6 space-y-6">
+        {/* User Type */}
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-white/10">
+              <Briefcase className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="font-medium text-white">I am a</h2>
+              <p className="text-white/60 text-xs">This personalizes your experience</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {USER_TYPES.map((type) => {
+              const Icon = type.icon
+              return (
+                <button
+                  key={type.value}
+                  onClick={() => setUserType(type.value)}
+                  className={`p-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-2 ${
+                    userType === type.value
+                      ? 'bg-white/20 text-white border border-white/30'
+                      : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  {type.label}
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* Work Days (for professional/hybrid) */}
+        {(userType === 'professional' || userType === 'hybrid') && (
+          <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-xl bg-white/10">
+                <Calendar className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="font-medium text-white">Work Days</h2>
+                <p className="text-white/60 text-xs">Days you work</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {DAYS.map((day) => (
+                <button
+                  key={day.value}
+                  onClick={() => toggleDay(day.value, 'work')}
+                  className={`w-11 h-11 rounded-xl text-sm font-medium transition-all ${
+                    workDays.includes(day.value)
+                      ? 'bg-white/20 text-white border border-white/30'
+                      : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
+                  }`}
+                >
+                  {day.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Class Days (for student/hybrid) */}
+        {(userType === 'student' || userType === 'hybrid') && (
+          <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-xl bg-white/10">
+                <GraduationCap className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="font-medium text-white">Class Days</h2>
+                <p className="text-white/60 text-xs">Days you have classes</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {DAYS.map((day) => (
+                <button
+                  key={day.value}
+                  onClick={() => toggleDay(day.value, 'class')}
+                  className={`w-11 h-11 rounded-xl text-sm font-medium transition-all ${
+                    classDays.includes(day.value)
+                      ? 'bg-white/20 text-white border border-white/30'
+                      : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
+                  }`}
+                >
+                  {day.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Schedule */}
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-white/10">
+              <Clock className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="font-medium text-white">Schedule</h2>
+              <p className="text-white/60 text-xs">Your daily times</p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-white/70 mb-2">Wake time</label>
+              <input
+                type="time"
+                value={wakeTime}
+                onChange={(e) => setWakeTime(e.target.value)}
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+              />
+            </div>
+            {(userType === 'professional' || userType === 'hybrid') && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-white/70 mb-2">Work starts</label>
+                  <input
+                    type="time"
+                    value={workStartTime}
+                    onChange={(e) => setWorkStartTime(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-white/70 mb-2">Work ends</label>
+                  <input
+                    type="time"
+                    value={workEndTime}
+                    onChange={(e) => setWorkEndTime(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+                  />
+                </div>
+              </div>
+            )}
+            {(userType === 'student' || userType === 'hybrid') && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">Classes start</label>
+                    <input
+                      type="time"
+                      value={classStartTime}
+                      onChange={(e) => setClassStartTime(e.target.value)}
+                      className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">Classes end</label>
+                    <input
+                      type="time"
+                      value={classEndTime}
+                      onChange={(e) => setClassEndTime(e.target.value)}
+                      className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">Study starts</label>
+                    <input
+                      type="time"
+                      value={studyStartTime}
+                      onChange={(e) => setStudyStartTime(e.target.value)}
+                      className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-2">Study ends</label>
+                    <input
+                      type="time"
+                      value={studyEndTime}
+                      onChange={(e) => setStudyEndTime(e.target.value)}
+                      className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* Session Length */}
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-white/10">
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="font-medium text-white">Session Length</h2>
+              <p className="text-white/60 text-xs">Default morning session</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {TIME_MODES.map((mode) => (
+              <button
+                key={mode.value}
+                onClick={() => setDefaultTimeMode(mode.value)}
+                className={`p-3 rounded-xl text-center transition-all ${
+                  defaultTimeMode === mode.value
+                    ? 'bg-white/20 text-white border border-white/30'
+                    : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
+                }`}
+              >
+                <p className="font-medium text-sm">{mode.label}</p>
+                <p className="text-xs text-white/50 mt-0.5">{mode.duration}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Segments */}
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-white/10">
+              <Layers className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="font-medium text-white">Daily Flow</h2>
+              <p className="text-white/60 text-xs">Which segments to include</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {SEGMENT_OPTIONS.map((segment) => {
+              const Icon = segment.icon
+              const isEnabled = enabledSegments.includes(segment.id)
+              return (
+                <button
+                  key={segment.id}
+                  onClick={() => toggleSegment(segment.id)}
+                  disabled={segment.required}
+                  className={`w-full p-3 rounded-xl flex items-center justify-between transition-all ${
+                    isEnabled
+                      ? 'bg-white/10 border border-white/20'
+                      : 'bg-white/5 border border-transparent'
+                  } ${segment.required ? 'cursor-default' : 'cursor-pointer hover:bg-white/10'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${isEnabled ? 'text-white' : 'text-white/50'}`} />
+                    <span className={isEnabled ? 'text-white' : 'text-white/60'}>{segment.label}</span>
+                    {segment.required && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/50">Required</span>
+                    )}
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    isEnabled ? 'bg-white border-white' : 'border-white/30'
+                  }`}>
+                    {isEnabled && <Check className="w-3 h-3 text-black" />}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* Voice Tone */}
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-white/10">
+              <Volume2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="font-medium text-white">Voice Tone</h2>
+              <p className="text-white/60 text-xs">How the AI speaks to you</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {TONES.map((tone) => (
+              <button
+                key={tone.value}
+                onClick={() => setGuideTone(tone.value)}
+                className={`p-3 rounded-xl text-center transition-all ${
+                  guideTone === tone.value
+                    ? 'bg-white/20 text-white border border-white/30'
+                    : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
+                }`}
+              >
+                <p className="font-medium text-sm">{tone.label}</p>
+                <p className="text-xs text-white/50 mt-0.5">{tone.description}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Daily Reminder */}
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-white/10">
+                <Bell className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="font-medium text-white">Daily Reminder</h2>
+                <p className="text-white/60 text-xs">Get notified each morning</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setDailyReminder(!dailyReminder)}
+              className={`w-12 h-7 rounded-full transition-all ${
+                dailyReminder ? 'bg-white' : 'bg-white/10'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                  dailyReminder ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+          {dailyReminder && (
+            <div className="mt-4">
+              <input
+                type="time"
+                value={reminderTime}
+                onChange={(e) => setReminderTime(e.target.value)}
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+              />
+            </div>
+          )}
+        </section>
+
+        {/* Push Notifications */}
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <h2 className="font-medium text-white mb-4 flex items-center gap-2">
+            <Bell className="w-5 h-5" />
+            Push Notifications
+          </h2>
+          <NotificationSettings />
+        </section>
+
+        {/* Background Music */}
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-white/10">
+                <Music className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="font-medium text-white">Background Music</h2>
+                <p className="text-white/60 text-xs">Music during your sessions</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setBackgroundMusicEnabled(!backgroundMusicEnabled)}
+              className={`w-12 h-7 rounded-full transition-all ${
+                backgroundMusicEnabled ? 'bg-white' : 'bg-white/10'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                  backgroundMusicEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+
+          {backgroundMusicEnabled && (
+            <>
+              <div
+                onClick={() => setShowGenreSelector(!showGenreSelector)}
+                className="p-4 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white font-medium">
+                      {preferredMusicGenre === null
+                        ? 'Daily Rotation'
+                        : GENRE_OPTIONS.find(g => g.id === preferredMusicGenre)?.name || 'Lo-Fi'}
+                    </p>
+                    <p className="text-white/60 text-xs mt-0.5">
+                      {preferredMusicGenre === null
+                        ? 'Different genre each day'
+                        : GENRE_OPTIONS.find(g => g.id === preferredMusicGenre)?.description || 'Chill beats to relax'}
+                    </p>
+                  </div>
+                  <ChevronRight className={`w-5 h-5 text-white/60 transition-transform ${showGenreSelector ? 'rotate-90' : ''}`} />
+                </div>
+              </div>
+
+              {showGenreSelector && (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {GENRE_OPTIONS.map((genre) => {
+                    const isSelected = preferredMusicGenre === genre.id
+                    return (
+                      <button
+                        key={genre.id || 'rotation'}
+                        onClick={() => {
+                          setPreferredMusicGenre(genre.id)
+                          // Also update theme context for visual theming (only for non-null genres)
+                          if (genre.id !== null) {
+                            themeContext?.setGenre(genre.id)
+                          }
+                          setShowGenreSelector(false)
+                        }}
+                        className={`p-3 rounded-xl text-left transition-all ${
+                          isSelected
+                            ? 'bg-white/15 border border-white/30'
+                            : 'bg-white/5 border border-transparent hover:bg-white/10'
+                        }`}
+                      >
+                        <p className="text-sm font-medium text-white">{genre.name}</p>
+                        <p className="text-xs text-white/60 mt-0.5">{genre.description}</p>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </section>
+
+        {/* Sign Out */}
+        <section className="pt-2">
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all"
+          >
+            <LogOut className="w-5 h-5" />
+            Sign Out
+          </button>
+        </section>
+
+        {/* App Info */}
+        <div className="text-center pt-6 pb-8">
+          <p className="text-white/20 text-sm">Momentum v0.1.0</p>
+          <p className="text-white/10 text-xs mt-1">Your AI Audio Coach</p>
+        </div>
+      </div>
+    </div>
+  )
+}

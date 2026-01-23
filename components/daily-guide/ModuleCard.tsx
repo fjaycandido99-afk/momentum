@@ -1,0 +1,411 @@
+'use client'
+
+import { useMemo } from 'react'
+import {
+  Sun,
+  Dumbbell,
+  Wind,
+  Lightbulb,
+  Moon,
+  Sunrise,
+  Play,
+  Check,
+  Loader2,
+  SkipForward,
+  Activity,
+  Zap,
+  Heart,
+  Brain,
+  Sparkles,
+} from 'lucide-react'
+import type { ModuleType } from '@/lib/daily-guide/decision-tree'
+
+// Get day name for dynamic messaging
+function getDayName(): string {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  return days[new Date().getDay()]
+}
+
+// Get time of day for context
+function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'morning'
+  if (hour < 17) return 'afternoon'
+  return 'evening'
+}
+
+interface ModuleCardProps {
+  module: ModuleType
+  script: string | null
+  duration: number
+  isCompleted: boolean
+  isLoading: boolean
+  isActive?: boolean
+  onPlay: () => void
+  onSkip?: () => void
+}
+
+// Benefit types for mood/energy indicators
+type BenefitType = 'energy' | 'calm' | 'focus' | 'peace' | 'confidence'
+
+const BENEFIT_CONFIG: Record<BenefitType, { icon: typeof Zap; label: string; color: string }> = {
+  energy: { icon: Zap, label: 'Energy', color: 'text-amber-400' },
+  calm: { icon: Heart, label: 'Calm', color: 'text-blue-400' },
+  focus: { icon: Brain, label: 'Focus', color: 'text-purple-400' },
+  peace: { icon: Sparkles, label: 'Peace', color: 'text-teal-400' },
+  confidence: { icon: Zap, label: 'Confidence', color: 'text-orange-400' },
+}
+
+// Rich content configuration for each module
+const MODULE_CONTENT: Record<
+  string,
+  {
+    theme: string
+    tagline: string | ((day: string) => string)
+    label: string
+    icon: typeof Sun
+    defaultPreview: string
+    metadata?: string
+    technique?: string
+    pattern?: string
+    benefit?: { type: BenefitType; value: number }
+  }
+> = {
+  morning_prime: {
+    theme: 'WELCOME',
+    tagline: (day) => `Good morning, beautiful ${day}`,
+    label: 'Morning Greeting',
+    icon: Sunrise,
+    defaultPreview: '"You woke up today. That\'s already a win. Let\'s make it count..."',
+    metadata: 'Start your day right',
+    benefit: { type: 'confidence', value: 2 },
+  },
+  workout: {
+    theme: 'WISDOM',
+    tagline: 'Daily inspiration',
+    label: 'Quote of the Day',
+    icon: Sparkles,
+    defaultPreview: '"The only way to do great work is to love what you do." - Steve Jobs',
+    metadata: 'Inspiration',
+    benefit: { type: 'focus', value: 2 },
+  },
+  movement: {
+    theme: 'WISDOM',
+    tagline: 'Daily inspiration',
+    label: 'Quote of the Day',
+    icon: Sparkles,
+    defaultPreview: '"The only way to do great work is to love what you do." - Steve Jobs',
+    metadata: 'Inspiration',
+    benefit: { type: 'focus', value: 2 },
+  },
+  breath: {
+    theme: 'CALM',
+    tagline: 'Center yourself',
+    label: 'Grounding Breath',
+    icon: Wind,
+    defaultPreview: 'Box Breathing',
+    technique: 'Box Breathing',
+    pattern: '4 in · 4 hold · 4 out · 4 hold',
+    benefit: { type: 'calm', value: 3 },
+  },
+  micro_lesson: {
+    theme: 'MOTIVATION',
+    tagline: 'Get inspired',
+    label: 'Motivation Video',
+    icon: Lightbulb,
+    defaultPreview: 'Watch a short motivational clip to fuel your day',
+    metadata: 'Video',
+    benefit: { type: 'energy', value: 3 },
+  },
+  day_close: {
+    theme: 'PEACE',
+    tagline: 'Release the day',
+    label: 'Evening Reflection',
+    icon: Moon,
+    defaultPreview: '"Acknowledge what you accomplished. Release what you cannot control..."',
+    metadata: 'Wind down',
+    benefit: { type: 'peace', value: 3 },
+  },
+  checkpoint_1: {
+    theme: 'CHECK-IN',
+    tagline: 'Stay on track',
+    label: 'Midday Reset',
+    icon: Sun,
+    defaultPreview: '"Pause. Breathe. How are you showing up right now?"',
+    benefit: { type: 'focus', value: 1 },
+  },
+  checkpoint_2: {
+    theme: 'CHECK-IN',
+    tagline: 'Stay on track',
+    label: 'Afternoon Boost',
+    icon: Sun,
+    defaultPreview: '"You\'re past the midpoint. Keep the momentum going..."',
+    benefit: { type: 'energy', value: 1 },
+  },
+  checkpoint_3: {
+    theme: 'CHECK-IN',
+    tagline: 'Stay on track',
+    label: 'Final Push',
+    icon: Sun,
+    defaultPreview: '"The home stretch. Finish strong..."',
+    benefit: { type: 'energy', value: 2 },
+  },
+  pre_study: {
+    theme: 'FOCUS',
+    tagline: 'Prepare your mind',
+    label: 'Pre-Study Focus',
+    icon: Lightbulb,
+    defaultPreview: '"Clear your mental space. Set your learning intention..."',
+    benefit: { type: 'focus', value: 3 },
+  },
+  study_break: {
+    theme: 'REFRESH',
+    tagline: 'Reset and recharge',
+    label: 'Study Break',
+    icon: Sun,
+    defaultPreview: '"Step back. Let your mind consolidate what you\'ve learned..."',
+    benefit: { type: 'calm', value: 2 },
+  },
+  exam_calm: {
+    theme: 'CONFIDENCE',
+    tagline: 'Trust yourself',
+    label: 'Exam Calm',
+    icon: Wind,
+    defaultPreview: '"You\'ve prepared for this. Trust your knowledge..."',
+    technique: 'Calming Breath',
+    benefit: { type: 'confidence', value: 3 },
+  },
+}
+
+// Extract a preview quote from script
+function extractPreview(script: string | null, defaultPreview: string): string {
+  if (!script) return defaultPreview
+
+  // Try to find a compelling sentence from the script
+  const sentences = script.split(/[.!?]+/).filter(s => s.trim().length > 20 && s.trim().length < 100)
+  if (sentences.length > 0) {
+    // Get a sentence from the first third of the script (usually the hook)
+    const hookSentence = sentences[Math.min(1, sentences.length - 1)]?.trim()
+    if (hookSentence) {
+      return `"${hookSentence}..."`
+    }
+  }
+
+  return defaultPreview
+}
+
+function formatDuration(seconds: number): string {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  if (minutes === 0) {
+    return `${remainingSeconds}s`
+  }
+  if (remainingSeconds === 0) {
+    return `${minutes}m`
+  }
+  return `${minutes}m ${remainingSeconds}s`
+}
+
+export function ModuleCard({
+  module,
+  script,
+  duration,
+  isCompleted,
+  isLoading,
+  isActive,
+  onPlay,
+  onSkip,
+}: ModuleCardProps) {
+  const content = MODULE_CONTENT[module] || MODULE_CONTENT.morning_prime
+  const Icon = content.icon
+  const dayName = getDayName()
+
+  // Get dynamic tagline
+  const tagline = typeof content.tagline === 'function'
+    ? content.tagline(dayName)
+    : content.tagline
+
+  // Get preview text - either from script or default
+  const preview = useMemo(() => {
+    return extractPreview(script, content.defaultPreview)
+  }, [script, content.defaultPreview])
+
+  // Check if this is a breath module to show pattern
+  const isBreathModule = module === 'breath' || module === 'exam_calm'
+
+  // Get benefit config if exists
+  const benefit = content.benefit ? BENEFIT_CONFIG[content.benefit.type] : null
+  const BenefitIcon = benefit?.icon
+
+  return (
+    <div
+      className={`
+        relative rounded-2xl border overflow-hidden transition-all
+        ${isCompleted
+          ? 'bg-white/[0.03] border-white/10'
+          : isActive
+            ? 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border-white/20 ring-1 ring-white/10'
+            : 'bg-gradient-to-br from-white/[0.06] to-white/[0.02] border-white/10 hover:border-white/20'
+        }
+      `}
+    >
+      {/* Theme Header */}
+      <div className={`px-4 pt-4 pb-2 ${isCompleted ? 'opacity-50' : ''}`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className={`text-sm font-semibold tracking-wider ${isCompleted ? 'text-white/50' : 'text-white/90'}`}>
+              {content.theme}
+            </h2>
+            <p className={`text-xs ${isCompleted ? 'text-white/30' : 'text-white/50'}`}>
+              {tagline}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Benefit indicator */}
+            {benefit && content.benefit && !isCompleted && (
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 ${benefit.color}`}>
+                {BenefitIcon && <BenefitIcon className="w-3 h-3" />}
+                <span className="text-xs font-medium">+{content.benefit.value}</span>
+              </div>
+            )}
+            {isCompleted && (
+              <div className="p-1.5 rounded-full bg-white/10">
+                <Check className="w-4 h-4 text-white/70" />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Content Preview */}
+      <div className={`px-4 py-3 ${isCompleted ? 'opacity-40' : ''}`}>
+        {isBreathModule && content.technique ? (
+          // Breath module - show technique and pattern
+          <div className="space-y-2">
+            <p className="text-white font-medium">{content.technique}</p>
+            {content.pattern && (
+              <p className="text-sm text-white/70 font-mono tracking-wide">
+                {content.pattern}
+              </p>
+            )}
+          </div>
+        ) : (
+          // Other modules - show preview quote
+          <p className={`text-sm leading-relaxed ${isCompleted ? 'text-white/40' : 'text-white/80'} line-clamp-2`}>
+            {preview}
+          </p>
+        )}
+      </div>
+
+      {/* Footer with label, duration, and actions */}
+      <div className={`px-4 pb-4 pt-2 flex items-center justify-between ${isCompleted ? 'opacity-50' : ''}`}>
+        <div className="flex items-center gap-3">
+          <div className={`
+            p-2 rounded-xl transition-all
+            ${isCompleted ? 'bg-white/5' : isActive ? 'bg-white/15 animate-pulse-glow' : 'bg-white/10'}
+          `}>
+            <Icon className={`
+              w-4 h-4 transition-all
+              ${isCompleted ? 'text-white/50' : isActive ? 'text-white animate-icon-bounce' : 'text-white/80'}
+            `} />
+          </div>
+          <div>
+            <p className={`text-sm font-medium ${isCompleted ? 'text-white/50' : 'text-white'}`}>
+              {content.label}
+            </p>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs ${isCompleted ? 'text-white/30' : 'text-white/50'}`}>
+                {formatDuration(duration)}
+              </span>
+              {content.metadata && (
+                <>
+                  <span className="text-white/30">·</span>
+                  <span className={`text-xs ${isCompleted ? 'text-white/30' : 'text-white/50'}`}>
+                    {content.metadata}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        {!isCompleted && (
+          <div className="flex items-center gap-2">
+            {onSkip && (
+              <button
+                onClick={onSkip}
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                title="Skip this module"
+              >
+                <SkipForward className="w-4 h-4 text-white/50" />
+              </button>
+            )}
+            <button
+              onClick={onPlay}
+              disabled={isLoading || !script}
+              className={`
+                p-3 rounded-xl transition-all
+                bg-white/10 hover:bg-white/20 hover:scale-105 active:scale-95
+                disabled:opacity-50 disabled:cursor-not-allowed
+                ${isActive ? 'ring-2 ring-white/30' : ''}
+              `}
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
+              ) : (
+                <Play className="w-5 h-5 text-white fill-current" />
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Active indicator line */}
+      {isActive && !isCompleted && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-white/60 rounded-r-full" />
+      )}
+    </div>
+  )
+}
+
+// Morning flow progress indicator
+interface MorningFlowProps {
+  modules: ModuleType[]
+  completedModules: string[]
+  currentModule: ModuleType | null
+}
+
+export function MorningFlowProgress({ modules, completedModules, currentModule }: MorningFlowProps) {
+  const morningModules = modules.filter(m =>
+    ['morning_prime', 'workout', 'movement', 'breath', 'micro_lesson'].includes(m)
+  )
+
+  return (
+    <div className="flex items-center justify-center gap-2">
+      {morningModules.map((module, index) => {
+        const isCompleted = completedModules.includes(module)
+        const isCurrent = currentModule === module
+
+        return (
+          <div key={module} className="flex items-center">
+            <div
+              className={`
+                w-2.5 h-2.5 rounded-full transition-all
+                ${isCompleted
+                  ? 'bg-white'
+                  : isCurrent
+                    ? 'bg-white/60 animate-pulse'
+                    : 'bg-white/20'
+                }
+              `}
+            />
+            {index < morningModules.length - 1 && (
+              <div className={`w-6 h-0.5 ${isCompleted ? 'bg-white/50' : 'bg-white/10'}`} />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}

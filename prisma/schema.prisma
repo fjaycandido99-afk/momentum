@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Preferences
+  preferences   UserPreferences?
+  sessions      Session[]
+  favorites     FavoriteContent[]
+}
+
+model UserPreferences {
+  id      String @id @default(cuid())
+  user_id String @unique
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // Schedule
+  wake_time       String?  // "06:30" format
+  workout_time    String?  // "07:00" format
+  session_length  Int      @default(20) // minutes
+
+  // Audio style
+  voice_style     String   @default("calm") // "calm" | "direct" | "energetic"
+  content_focus   String[] @default(["motivation", "mindfulness"]) // topics to include
+
+  // Activity preferences
+  activity_type   String   @default("workout") // "workout" | "morning" | "commute" | "evening"
+
+  // Notifications
+  daily_reminder  Boolean  @default(true)
+  reminder_time   String?  // "06:25" format
+
+  // User Type
+  user_type             String   @default("professional") // "professional" | "student" | "hybrid"
+
+  // Daily Guide Schedule
+  work_days             Int[]    @default([1, 2, 3, 4, 5]) // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  work_start_time       String?  // "09:00" format
+  work_end_time         String?  // "17:00" format
+  guide_tone            String   @default("calm") // "calm" | "direct" | "neutral"
+  daily_guide_enabled   Boolean  @default(false)
+  guide_onboarding_done Boolean  @default(false)
+  theme_onboarding_done Boolean  @default(false)
+
+  // Student-specific settings
+  class_days            Int[]    @default([1, 2, 3, 4, 5]) // Days with classes
+  class_start_time      String?  // "08:00" format
+  class_end_time        String?  // "15:00" format
+  study_start_time      String?  // Preferred study time start
+  study_end_time        String?  // Preferred study time end
+  exam_mode             Boolean  @default(false) // Enable during exam periods
+
+  // Enhanced Daily Guide - Modules & Customization
+  workout_enabled       Boolean  @default(true)
+  workout_intensity     String   @default("full") // "none" | "light" | "full"
+  micro_lesson_enabled  Boolean  @default(true)
+  default_time_mode     String   @default("normal") // "quick" | "normal" | "full"
+  breath_cues_enabled   Boolean  @default(true)
+
+  // Segment customization
+  enabled_segments      String[] @default(["morning_prime", "movement", "micro_lesson", "breath", "day_close"])
+  segment_order         String[] @default(["morning_prime", "movement", "micro_lesson", "breath"]) // Morning flow order
+
+  // Background music preferences
+  background_music_enabled Boolean @default(true)
+  preferred_music_genre    String? // Override daily rotation: "lofi" | "piano" | "jazz" | "classical" | "ambient" | "study"
+
+  // Streak tracking (days used this week)
+  current_streak        Int      @default(0)
+  last_active_date      DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Session {
+  id      String @id @default(cuid())
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // Session details
+  activity_type    String   // "workout" | "morning" | "commute" | "evening"
+  duration_planned Int      // minutes planned
+  duration_actual  Int?     // actual minutes completed
+
+  // Content played
+  content_segments ContentSegment[]
+
+  // Timestamps
+  started_at   DateTime @default(now())
+  completed_at DateTime?
+
+  // User feedback (optional)
+  rating       Int?     // 1-5 stars
+  mood_before  String?  // "low" | "medium" | "high"
+  mood_after   String?
+
+  @@index([user_id])
+  @@index([started_at])
+}
+
+model ContentSegment {
+  id         String  @id @default(cuid())
+  session_id String
+  session    Session @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  // Content details
+  segment_type String   // "activation" | "breathing" | "micro_lesson" | "cooldown"
+  content_text String   // The actual script/text
+  duration     Int      // seconds
+  order        Int      // sequence in session
+
+  // AI generation metadata
+  ai_model     String?  // which model generated this
+  prompt_used  String?  // for debugging/improvement
+
+  // Audio (if pre-generated)
+  audio_url    String?
+
+  created_at DateTime @default(now())
+
+  @@index([session_id])
+}
+
+model FavoriteContent {
+  id      String @id @default(cuid())
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  content_type String // "quote" | "lesson" | "breathing"
+  content_text String
+
+  created_at DateTime @default(now())
+
+  @@index([user_id])
+}
+
+// Pre-built content library (admin-managed)
+model ContentTemplate {
+  id String @id @default(cuid())
+
+  segment_type String   // "activation" | "breathing" | "micro_lesson" | "cooldown"
+  category     String   // "discipline" | "resilience" | "focus" | "gratitude"
+  voice_style  String   // "calm" | "direct" | "energetic"
+
+  title        String
+  content_text String
+  duration     Int      // seconds
+
+  // For AI variation generation
+  is_seed      Boolean  @default(false) // Use as seed for AI variations
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([segment_type])
+  @@index([voice_style])
+}
+
+model DailyGuide {
+  id      String @id @default(cuid())
+  user_id String
+  date    DateTime @db.Date
+
+  // Day classification - supports both professional and student
+  day_type String // "work" | "off" | "recovery" | "class" | "study" | "exam"
+  pace     String @default("focused") // "focused" | "open" | "gentle"
+
+  // User inputs for this day
+  time_mode    String @default("normal") // "quick" | "normal" | "full"
+  energy_level String? // "low" | "normal" | "high" (morning input)
+
+  // Selected modules for this day
+  modules String[] @default([]) // ["morning_prime", "movement", "micro_lesson", "breath", "day_close"]
+
+  // Core scripts - Morning Flow
+  morning_prime_script String? // 30-90s intention setting
+  movement_script      String? // 60-90s energizing movement guidance
+  micro_lesson_script  String? // 60-120s quick insight/tip
+  breath_script        String? // 60-90s breathing exercise
+
+  // Evening
+  day_close_script     String? // 30-60s evening reflection
+  tomorrow_preview     String? // Preview message for tomorrow
+
+  // Student-specific scripts
+  pre_study_script     String? // Focus prep before studying
+  study_break_script   String? // Reset between study sessions
+  exam_calm_script     String? // Anxiety relief before exams
+
+  // Legacy fields for backward compatibility
+  workout_script       String?
+  morning_script       String?
+  morning_audio_key    String?
+  midday_script        String?
+  afternoon_script     String?
+  evening_script       String?
+  micro_lesson         String?
+  checkpoint_1_script  String?
+  checkpoint_2_script  String?
+  checkpoint_3_script  String?
+
+  // Segment completion tracking
+  morning_prime_done   Boolean @default(false)
+  movement_done        Boolean @default(false)
+  micro_lesson_done    Boolean @default(false)
+  breath_done          Boolean @default(false)
+  day_close_done       Boolean @default(false)
+
+  // Legacy tracking
+  morning_played       Boolean @default(false)
+  evening_played       Boolean @default(false)
+  workout_completed    Boolean @default(false)
+  checkpoint_1_done    Boolean @default(false)
+  checkpoint_2_done    Boolean @default(false)
+  checkpoint_3_done    Boolean @default(false)
+  stressed_triggered   Boolean @default(false)
+
+  // Background music used
+  music_genre_used     String? // Which genre was played
+
+  // Daily AI Voice Guides (generated once per day, max 2 min each)
+  breathing_script     String? // Breathing exercise script
+  breathing_audio      String? // Base64 audio from ElevenLabs
+  breathing_duration   Int?    // Duration in seconds
+
+  affirmation_script   String? // Daily affirmations script
+  affirmation_audio    String? // Base64 audio
+  affirmation_duration Int?
+
+  gratitude_script     String? // Gratitude practice script
+  gratitude_audio      String? // Base64 audio
+  gratitude_duration   Int?
+
+  sleep_script         String? // Sleep/wind down script
+  sleep_audio          String? // Base64 audio
+  sleep_duration       Int?
+
+  grounding_script     String? // Anxiety grounding script
+  grounding_audio      String? // Base64 audio
+  grounding_duration   Int?
+
+  // Day-type specific Morning Prime voices (generated for all types daily)
+  work_prime_script      String? // Work day morning intention
+  work_prime_audio       String? // Base64 audio
+  work_prime_duration    Int?
+
+  off_prime_script       String? // Off day morning intention
+  off_prime_audio        String? // Base64 audio
+  off_prime_duration     Int?
+
+  recovery_prime_script  String? // Recovery day morning intention
+  recovery_prime_audio   String? // Base64 audio
+  recovery_prime_duration Int?
+
+  // Day-type specific Day Close voices
+  work_close_script      String? // Work day evening reflection
+  work_close_audio       String? // Base64 audio
+  work_close_duration    Int?
+
+  off_close_script       String? // Off day evening reflection
+  off_close_audio        String? // Base64 audio
+  off_close_duration     Int?
+
+  recovery_close_script  String? // Recovery day evening reflection
+  recovery_close_audio   String? // Base64 audio
+  recovery_close_duration Int?
+
+  // Journal entries
+  journal_win            String? // "What was your win today?"
+  journal_gratitude      String? // "What are you grateful for?"
+  journal_learned        String? // "What did you learn?"
+  journal_intention      String? // Weekly intention (set on Sundays)
+
+  created_at DateTime @default(now())
+
+  @@unique([user_id, date])
+  @@index([user_id])
+  @@index([date])
+}
+
+// Push Notification Subscriptions
+model PushSubscription {
+  id       String @id @default(cuid())
+  user_id  String
+  endpoint String @unique
+  p256dh   String @default("") // Public key for encryption (web push)
+  auth     String @default("") // Auth secret (web push)
+
+  // Native app support
+  platform     String @default("web") // "web" | "ios" | "android"
+  native_token String? // APNs token (iOS) or FCM token (Android)
+
+  // Notification preferences
+  morning_reminder  Boolean @default(true)
+  checkpoint_alerts Boolean @default(true)
+  evening_reminder  Boolean @default(true)
+  streak_alerts     Boolean @default(true)
+  weekly_review     Boolean @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([user_id])
+  @@index([platform])
+}
