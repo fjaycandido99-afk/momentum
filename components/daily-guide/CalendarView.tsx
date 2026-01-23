@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Loader2, Check, Circle, Flame } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, Check, Circle, Flame, X, BookOpen } from 'lucide-react'
 
 interface DayData {
   date: Date
@@ -47,6 +47,8 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
   const [monthData, setMonthData] = useState<Record<string, DayData>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [showJournalPopup, setShowJournalPopup] = useState(false)
+  const [selectedDayData, setSelectedDayData] = useState<DayData | null>(null)
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -115,6 +117,14 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
 
     setSelectedDate(clickedDate)
     onSelectDate?.(clickedDate)
+
+    // Show journal popup if there's data for this day
+    const dateKey = clickedDate.toISOString().split('T')[0]
+    const dayData = monthData[dateKey]
+    if (dayData) {
+      setSelectedDayData({ ...dayData, date: clickedDate })
+      setShowJournalPopup(true)
+    }
   }
 
   const renderDay = (day: number) => {
@@ -282,6 +292,95 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
           <span>Journal</span>
         </div>
       </div>
+
+      {/* Journal Popup */}
+      {showJournalPopup && selectedDayData && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => setShowJournalPopup(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-[#12121a] rounded-2xl border border-white/10 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Popup Header */}
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <div>
+                <p className="text-white font-medium">
+                  {selectedDayData.date.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  {getCompletionLevel(selectedDayData) >= 4 ? (
+                    <span className="text-xs text-emerald-400 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Complete
+                    </span>
+                  ) : getCompletionLevel(selectedDayData) > 0 ? (
+                    <span className="text-xs text-amber-400">
+                      {getCompletionLevel(selectedDayData)}/5 modules
+                    </span>
+                  ) : (
+                    <span className="text-xs text-white/40">No activity</span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowJournalPopup(false)}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5 text-white/60" />
+              </button>
+            </div>
+
+            {/* Journal Content */}
+            <div className="p-4">
+              {selectedDayData.journal_win ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-blue-400">
+                    <BookOpen className="w-4 h-4" />
+                    <span className="text-sm font-medium">What I learned</span>
+                  </div>
+                  <p className="text-white/80 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
+                    {selectedDayData.journal_win}
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <BookOpen className="w-8 h-8 text-white/20 mx-auto mb-2" />
+                  <p className="text-white/40 text-sm">No journal entry for this day</p>
+                </div>
+              )}
+            </div>
+
+            {/* Modules completed */}
+            {getCompletionLevel(selectedDayData) > 0 && (
+              <div className="px-4 pb-4">
+                <p className="text-xs text-white/40 mb-2">Completed modules</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedDayData.morning_prime_done && (
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/60">Morning</span>
+                  )}
+                  {selectedDayData.movement_done && (
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/60">Movement</span>
+                  )}
+                  {selectedDayData.micro_lesson_done && (
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/60">Lesson</span>
+                  )}
+                  {selectedDayData.breath_done && (
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/60">Breath</span>
+                  )}
+                  {selectedDayData.day_close_done && (
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/60">Day Close</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

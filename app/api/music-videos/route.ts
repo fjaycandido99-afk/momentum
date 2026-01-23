@@ -13,9 +13,10 @@ const FALLBACK_MUSIC: Record<string, Array<{
   duration: number
 }>> = {
   lofi: [
-    { id: 'lf1', youtubeId: 'jfKfPfyJRdk', title: 'lofi hip hop radio - beats to relax/study to', channel: 'Lofi Girl', duration: 0 },
-    { id: 'lf2', youtubeId: '5qap5aO4i9A', title: 'lofi hip hop radio - beats to sleep/chill to', channel: 'Lofi Girl', duration: 0 },
-    { id: 'lf3', youtubeId: 'rUxyKA_-grg', title: 'Lofi Chill Music - Beats to Relax', channel: 'Chillhop Music', duration: 3600 },
+    { id: 'lf1', youtubeId: 'lTRiuFIWV54', title: 'Lofi Hip Hop Radio - Beats to Relax/Study', channel: 'Yellow Brick Cinema', duration: 10800 },
+    { id: 'lf2', youtubeId: 'rUxyKA_-grg', title: 'Lofi Chill Music - Beats to Relax', channel: 'Chillhop Music', duration: 3600 },
+    { id: 'lf3', youtubeId: 'n61ULEU7CO0', title: 'Lofi Hip Hop Mix - Beats to Study/Chill To', channel: 'Lofi Geek', duration: 7200 },
+    { id: 'lf4', youtubeId: 'kgx4WGK0oNU', title: 'Lofi Hip Hop Radio - Chill Study Beats', channel: 'ChilledCow', duration: 3600 },
   ],
   piano: [
     { id: 'pn1', youtubeId: 'HSOtku1j600', title: 'Beautiful Piano Music - Relaxing Music for Sleep', channel: 'Soothing Relaxation', duration: 10800 },

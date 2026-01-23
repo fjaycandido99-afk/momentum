@@ -1,100 +1,63 @@
 // Theme definitions for each music genre
 // Each genre has its own visual aesthetic that themes the app
+// Backgrounds are stored in Supabase Storage for optimal performance
 
 export interface GenreTheme {
   name: string
   tagline: string
-  backgroundFolder: string
   accentColor: string
   vibe: string
-  // Background images for this genre
-  backgrounds: string[]
+  gradient: string // Fallback gradient when no images available
 }
 
-// Define theme for each genre
+// Define theme for each genre (without backgrounds - loaded from Supabase Storage)
 export const GENRE_THEMES: Record<string, GenreTheme> = {
   lofi: {
     name: 'Lo-Fi',
     tagline: 'Chill beats to relax',
-    backgroundFolder: '/backgrounds/lofi',
     accentColor: 'purple',
     vibe: 'Cozy and nostalgic',
-    backgrounds: Array.from({ length: 34 }, (_, i) => `/backgrounds/lofi/lofi${i + 1}.jpg`),
+    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   },
   piano: {
     name: 'Piano',
     tagline: 'Peaceful keys',
-    backgroundFolder: '/backgrounds/piano',
     accentColor: 'blue',
     vibe: 'Elegant and calm',
-    backgrounds: Array.from({ length: 5 }, (_, i) => `/backgrounds/piano/piano${i + 1}.jpg`),
+    gradient: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
   },
   jazz: {
     name: 'Jazz',
     tagline: 'Smooth vibes',
-    backgroundFolder: '/backgrounds/jazz',
     accentColor: 'amber',
     vibe: 'Warm and sophisticated',
-    backgrounds: Array.from({ length: 5 }, (_, i) => `/backgrounds/jazz/jazz${i + 1}.jpg`),
+    gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
   },
   classical: {
     name: 'Classical',
     tagline: 'Timeless elegance',
-    backgroundFolder: '/backgrounds/classical',
     accentColor: 'gold',
     vibe: 'Refined and majestic',
-    backgrounds: Array.from({ length: 5 }, (_, i) => `/backgrounds/classical/classical${i + 1}.jpg`),
+    gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
   },
   ambient: {
     name: 'Ambient',
     tagline: 'Atmospheric soundscapes',
-    backgroundFolder: '/backgrounds/ambient',
     accentColor: 'teal',
     vibe: 'Ethereal and immersive',
-    backgrounds: Array.from({ length: 5 }, (_, i) => `/backgrounds/ambient/ambient${i + 1}.jpg`),
+    gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
   },
   study: {
     name: 'Study',
     tagline: 'Focus music',
-    backgroundFolder: '/backgrounds/study',
     accentColor: 'green',
     vibe: 'Focused and productive',
-    backgrounds: Array.from({ length: 5 }, (_, i) => `/backgrounds/study/study${i + 1}.jpg`),
+    gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
   },
 }
 
 // Default genre to use when none is selected
 export const DEFAULT_GENRE = 'lofi'
-
-// Fallback backgrounds when genre-specific images are unavailable
-export const FALLBACK_BACKGROUNDS = Array.from({ length: 31 }, (_, i) => `/backgrounds/bg${i + 1}.jpg`)
-
-// Get a random background for a given genre
-export function getRandomBackground(genre: string): string {
-  const theme = GENRE_THEMES[genre]
-  if (theme && theme.backgrounds.length > 0) {
-    const randomIndex = Math.floor(Math.random() * theme.backgrounds.length)
-    return theme.backgrounds[randomIndex]
-  }
-  // Fallback to general backgrounds
-  const fallbackIndex = Math.floor(Math.random() * FALLBACK_BACKGROUNDS.length)
-  return FALLBACK_BACKGROUNDS[fallbackIndex]
-}
-
-// Get a deterministic background based on date (same background for same day)
-export function getDailyBackground(genre: string): string {
-  const now = new Date()
-  const dayOfYear = Math.floor(
-    (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
-  )
-
-  const theme = GENRE_THEMES[genre]
-  if (theme && theme.backgrounds.length > 0) {
-    return theme.backgrounds[dayOfYear % theme.backgrounds.length]
-  }
-  // Fallback to general backgrounds
-  return FALLBACK_BACKGROUNDS[dayOfYear % FALLBACK_BACKGROUNDS.length]
-}
 
 // Get theme info for a genre
 export function getTheme(genre: string): GenreTheme {
@@ -103,3 +66,25 @@ export function getTheme(genre: string): GenreTheme {
 
 // Get all available genres
 export const AVAILABLE_GENRES = Object.keys(GENRE_THEMES)
+
+// Get fallback gradient for a genre
+export function getFallbackGradient(genre: string): string {
+  const theme = GENRE_THEMES[genre]
+  return theme?.gradient || GENRE_THEMES[DEFAULT_GENRE].gradient
+}
+
+// Helper to get random item from array
+export function getRandomFromArray<T>(arr: T[]): T | null {
+  if (!arr || arr.length === 0) return null
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+// Helper to get daily item from array (same item for same day)
+export function getDailyFromArray<T>(arr: T[]): T | null {
+  if (!arr || arr.length === 0) return null
+  const now = new Date()
+  const dayOfYear = Math.floor(
+    (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
+  )
+  return arr[dayOfYear % arr.length]
+}

@@ -35,32 +35,42 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes - redirect to login if not authenticated
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/(dashboard)') ||
-                          request.nextUrl.pathname === '/' ||
-                          request.nextUrl.pathname.startsWith('/jobs') ||
-                          request.nextUrl.pathname.startsWith('/settings')
+  // Public/auth routes - always accessible
+  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
+                     request.nextUrl.pathname.startsWith('/signup') ||
+                     request.nextUrl.pathname.startsWith('/forgot-password')
 
-  // Public routes that don't need auth
-  const isPublicRoute = request.nextUrl.pathname.startsWith('/login') ||
-                       request.nextUrl.pathname.startsWith('/signup') ||
-                       request.nextUrl.pathname.startsWith('/report/') ||
+  // API routes - always accessible
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
+
+  // Public link routes - always accessible
+  const isPublicLink = request.nextUrl.pathname.startsWith('/report/') ||
                        request.nextUrl.pathname.startsWith('/portal/') ||
-                       request.nextUrl.pathname.startsWith('/invite/') ||
-                       request.nextUrl.pathname.startsWith('/api/')
+                       request.nextUrl.pathname.startsWith('/invite/')
 
-  if (!user && isProtectedRoute && !isPublicRoute) {
+  // Protected routes that REQUIRE auth (very few)
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/jobs')
+
+  // If it's an API, auth page, or public link - let it through
+  if (isApiRoute || isAuthRoute || isPublicLink) {
+    return supabaseResponse
+  }
+
+  // Only redirect to login for truly protected routes
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
   // Redirect authenticated users away from login/signup
-  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)
   }
 
+  // Everything else (home, daily-guide, discover, soundscape, settings, theme-setup)
+  // is accessible to EVERYONE (guests and signed-in users)
   return supabaseResponse
 }

@@ -10,9 +10,9 @@ export interface MusicSample {
 
 export const MUSIC_SAMPLES: Record<string, MusicSample> = {
   lofi: {
-    youtubeId: 'jfKfPfyJRdk',
-    title: 'Lofi Girl Radio',
-    channel: 'Lofi Girl',
+    youtubeId: 'lTRiuFIWV54',
+    title: 'Lofi Hip Hop Beats',
+    channel: 'Yellow Brick Cinema',
     previewDuration: 20,
   },
   piano: {

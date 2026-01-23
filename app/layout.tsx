@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { AppWrapper } from '@/components/AppWrapper'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -42,7 +43,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={`${inter.className} antialiased`}>
-        {children}
+        <AppWrapper>
+          {children}
+        </AppWrapper>
       </body>
     </html>
   )

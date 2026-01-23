@@ -860,6 +860,8 @@ export function DailyGuideHome() {
                         isCompleted={completedModules.includes(module)}
                         isLoading={loadingModule === module}
                         isActive={getCurrentMorningModule() === module}
+                        musicEnabled={musicEnabled}
+                        musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
                         onPlay={() => playModule(module, musicEnabled)}
                         onSkip={() => handleSkipModule(module)}
                       />
@@ -907,6 +909,8 @@ export function DailyGuideHome() {
                       duration={90}
                       isCompleted={completedModules.includes('exam_calm')}
                       isLoading={loadingModule === 'exam_calm'}
+                      musicEnabled={musicEnabled}
+                      musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
                       onPlay={() => playModule('exam_calm', musicEnabled)}
                       onSkip={() => handleSkipModule('exam_calm')}
                     />
@@ -920,6 +924,8 @@ export function DailyGuideHome() {
                           duration={60}
                           isCompleted={completedModules.includes('pre_study')}
                           isLoading={loadingModule === 'pre_study'}
+                          musicEnabled={musicEnabled}
+                          musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
                           onPlay={() => playModule('pre_study', musicEnabled)}
                           onSkip={() => handleSkipModule('pre_study')}
                         />
@@ -931,6 +937,8 @@ export function DailyGuideHome() {
                           duration={60}
                           isCompleted={completedModules.includes('study_break')}
                           isLoading={loadingModule === 'study_break'}
+                          musicEnabled={musicEnabled}
+                          musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
                           onPlay={() => playModule('study_break', musicEnabled)}
                           onSkip={() => handleSkipModule('study_break')}
                         />
@@ -980,6 +988,8 @@ export function DailyGuideHome() {
                   duration={durations.day_close || 45}
                   isCompleted={completedModules.includes('day_close')}
                   isLoading={loadingModule === 'day_close'}
+                  musicEnabled={musicEnabled}
+                  musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
                   onPlay={() => playModule('day_close', musicEnabled)}
                 />
               ) : (
@@ -1016,10 +1026,8 @@ export function DailyGuideHome() {
             </div>
           )}
 
-          {/* Weekly Review Prompt (shows on Sundays) */}
-          {isSunday() && (
-            <WeeklyReviewPrompt onOpen={() => setShowWeeklyReview(true)} />
-          )}
+          {/* Weekly Review Prompt (shows on Sundays - temporarily always visible for testing) */}
+          <WeeklyReviewPrompt onOpen={() => setShowWeeklyReview(true)} />
 
           {/* Calendar View - Progress tracker */}
           <CalendarView currentStreak={streak} />

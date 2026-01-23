@@ -38,6 +38,7 @@ type TimeMode = 'quick' | 'normal' | 'full'
 const GENRE_OPTIONS: { id: string | null; name: string; description: string }[] = [
   { id: null, name: 'Daily Rotation', description: 'Different genre each day' },
   { id: 'lofi', name: 'Lo-Fi', description: 'Chill beats to relax' },
+  { id: 'jazz', name: 'Jazz', description: 'Smooth vibes' },
   { id: 'piano', name: 'Piano', description: 'Peaceful keys' },
   { id: 'study', name: 'Study', description: 'Focus music' },
   { id: 'classical', name: 'Classical', description: 'Timeless elegance' },
@@ -87,6 +88,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [showGenreSelector, setShowGenreSelector] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   // Preferences state
   const [userType, setUserType] = useState<UserType>('professional')
@@ -111,6 +113,10 @@ export default function SettingsPage() {
   useEffect(() => {
     const loadPreferences = async () => {
       try {
+        // Check auth status
+        const { data: { user } } = await supabase.auth.getUser()
+        setIsAuthenticated(!!user)
+
         const response = await fetch('/api/daily-guide/preferences')
         if (response.ok) {
           const data = await response.json()
@@ -139,7 +145,7 @@ export default function SettingsPage() {
       }
     }
     loadPreferences()
-  }, [])
+  }, [supabase.auth])
 
   // Save preferences
   const savePreferences = async () => {
@@ -612,8 +618,9 @@ export default function SettingsPage() {
 
               {showGenreSelector && (
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                  {GENRE_OPTIONS.map((genre) => {
+                  {GENRE_OPTIONS.map((genre, index) => {
                     const isSelected = preferredMusicGenre === genre.id
+                    const isFirstItem = index === 0
                     return (
                       <button
                         key={genre.id || 'rotation'}
@@ -629,7 +636,7 @@ export default function SettingsPage() {
                           isSelected
                             ? 'bg-white/15 border border-white/30'
                             : 'bg-white/5 border border-transparent hover:bg-white/10'
-                        }`}
+                        } ${isFirstItem ? 'col-span-2 max-w-[50%] mx-auto text-center' : ''}`}
                       >
                         <p className="text-sm font-medium text-white">{genre.name}</p>
                         <p className="text-xs text-white/60 mt-0.5">{genre.description}</p>
@@ -642,15 +649,24 @@ export default function SettingsPage() {
           )}
         </section>
 
-        {/* Sign Out */}
+        {/* Sign In / Sign Out */}
         <section className="pt-2">
-          <button
-            onClick={handleSignOut}
-            className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all"
-          >
-            <LogOut className="w-5 h-5" />
-            Sign Out
-          </button>
+          {isAuthenticated ? (
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all"
+            >
+              <LogOut className="w-5 h-5" />
+              Sign Out
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
+            >
+              Sign In to Save Progress
+            </Link>
+          )}
         </section>
 
         {/* App Info */}

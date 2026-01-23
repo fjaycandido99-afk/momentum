@@ -259,6 +259,7 @@ export function GuidancePlayer({
           fs: 0,
           modestbranding: 1,
           playsinline: 1,
+          origin: window.location.origin,
         },
         events: {
           onReady: (event) => {
@@ -268,10 +269,23 @@ export function GuidancePlayer({
             if (isMusicMuted) {
               event.target.mute()
             }
+            // Explicitly call playVideo to start playback (helps with autoplay restrictions)
+            event.target.playVideo()
             setMusicLoaded(true)
+          },
+          onStateChange: (event) => {
+            // If video is paused/ended unexpectedly, try to restart
+            if (event.data === 0 || event.data === 2) { // 0 = ended, 2 = paused
+              event.target.playVideo()
+            }
           },
           onError: (event) => {
             console.error('YouTube player error:', event.data)
+            // Try fallback video if current one fails
+            if (event.data === 150 || event.data === 101) {
+              // Video not embeddable - this is common for live streams
+              console.log('Video not embeddable, music playback unavailable')
+            }
           },
         },
       })
@@ -287,6 +301,11 @@ export function GuidancePlayer({
           // Ignore errors
         }
         musicPlayerRef.current = null
+      }
+      // Remove the container div to ensure fresh state for next player
+      const container = document.getElementById('youtube-music-player')
+      if (container) {
+        container.remove()
       }
     }
   }, [musicYoutubeId, withMusic])
@@ -372,6 +391,16 @@ export function GuidancePlayer({
     }
     onComplete()
   }, [onComplete])
+
+  // Handle close - mark as complete if listened to > 50% of the session
+  const handleClose = useCallback(() => {
+    const progress = currentTime / totalDuration
+    if (progress >= 0.5) {
+      // User listened to most of it, mark as complete
+      onComplete()
+    }
+    onClose()
+  }, [currentTime, totalDuration, onComplete, onClose])
 
   const togglePlayPause = () => {
     if (audioBase64 && audioRef.current) {
@@ -567,7 +596,7 @@ export function GuidancePlayer({
             </button>
           )}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
           >
             <X className="w-5 h-5 text-white" />
@@ -627,7 +656,7 @@ export function GuidancePlayer({
           </button>
 
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
           >
             <X className="w-5 h-5 text-white" />

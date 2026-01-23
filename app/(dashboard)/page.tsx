@@ -18,12 +18,16 @@ export default function HomePage() {
         if (response.ok) {
           const prefs = await response.json()
 
-          // First check if Daily Guide onboarding is complete
+          // Guests can use app immediately - no onboarding required
+          if (prefs.isGuest) {
+            setIsLoading(false)
+            return
+          }
+
+          // For signed-in users, check onboarding status
           if (!prefs.guide_onboarding_done) {
             setNeedsOnboarding(true)
-          }
-          // Then check if theme onboarding is complete
-          else if (!prefs.theme_onboarding_done) {
+          } else if (!prefs.theme_onboarding_done) {
             setNeedsThemeSetup(true)
           }
         }

@@ -2,13 +2,44 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 
+// Default preferences for guests
+const DEFAULT_PREFERENCES = {
+  user_type: 'professional',
+  work_days: [1, 2, 3, 4, 5],
+  work_start_time: '09:00',
+  work_end_time: '17:00',
+  wake_time: '07:00',
+  class_days: [1, 2, 3, 4, 5],
+  class_start_time: '08:00',
+  class_end_time: '15:00',
+  study_start_time: '18:00',
+  study_end_time: '21:00',
+  exam_mode: false,
+  guide_tone: 'calm',
+  daily_guide_enabled: false,
+  guide_onboarding_done: false,
+  theme_onboarding_done: false,
+  default_time_mode: 'normal',
+  workout_enabled: true,
+  workout_intensity: 'full',
+  micro_lesson_enabled: true,
+  breath_cues_enabled: true,
+  enabled_segments: ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'],
+  segment_order: ['morning_prime', 'movement', 'micro_lesson', 'breath'],
+  background_music_enabled: true,
+  preferred_music_genre: null,
+  current_streak: 0,
+  last_active_date: null,
+}
+
 export async function GET() {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    // For guests, return default preferences (they can still use the app)
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ ...DEFAULT_PREFERENCES, isGuest: true })
     }
 
     const preferences = await prisma.userPreferences.findUnique({
@@ -119,8 +150,13 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    // For guests, accept the request but let them know to sign in to save
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({
+        success: true,
+        isGuest: true,
+        message: 'Sign in to save your preferences'
+      })
     }
 
     const body = await request.json()

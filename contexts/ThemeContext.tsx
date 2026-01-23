@@ -4,9 +4,10 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import {
   GENRE_THEMES,
   DEFAULT_GENRE,
-  getRandomBackground,
-  getDailyBackground,
   getTheme,
+  getFallbackGradient,
+  getRandomFromArray,
+  getDailyFromArray,
   type GenreTheme,
 } from '@/lib/theme/music-theme'
 
@@ -17,6 +18,7 @@ interface ThemeContextType {
 
   // Background utilities
   backgroundImages: string[]
+  backgroundsLoading: boolean
   getRandomBackground: () => string
   getDailyBackground: () => string
 
@@ -35,10 +37,40 @@ interface ThemeProviderProps {
   children: ReactNode
 }
 
+// Cache for backgrounds per genre
+const backgroundsCache: Map<string, string[]> = new Map()
+
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [genre, setGenreState] = useState<string>(DEFAULT_GENRE)
   const [isLoading, setIsLoading] = useState(true)
+  const [backgroundsLoading, setBackgroundsLoading] = useState(false)
+  const [backgroundImages, setBackgroundImages] = useState<string[]>([])
   const [themeOnboardingDone, setThemeOnboardingDoneState] = useState(false)
+
+  // Fetch backgrounds from Supabase Storage
+  const fetchBackgrounds = useCallback(async (selectedGenre: string) => {
+    // Check cache first
+    if (backgroundsCache.has(selectedGenre)) {
+      setBackgroundImages(backgroundsCache.get(selectedGenre)!)
+      return
+    }
+
+    setBackgroundsLoading(true)
+    try {
+      const response = await fetch(`/api/backgrounds?genre=${selectedGenre}`)
+      if (response.ok) {
+        const data = await response.json()
+        const urls = data.images?.map((img: { url: string }) => img.url) || []
+        backgroundsCache.set(selectedGenre, urls)
+        setBackgroundImages(urls)
+      }
+    } catch (error) {
+      console.error('Error fetching backgrounds:', error)
+      setBackgroundImages([])
+    } finally {
+      setBackgroundsLoading(false)
+    }
+  }, [])
 
   // Fetch user preferences on mount
   useEffect(() => {
@@ -47,24 +79,29 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         const response = await fetch('/api/daily-guide/preferences')
         if (response.ok) {
           const prefs = await response.json()
-          if (prefs.preferred_music_genre) {
-            setGenreState(prefs.preferred_music_genre)
-          }
+          const preferredGenre = prefs.preferred_music_genre || DEFAULT_GENRE
+          setGenreState(preferredGenre)
           setThemeOnboardingDoneState(prefs.theme_onboarding_done ?? false)
+          // Fetch backgrounds for the preferred genre
+          fetchBackgrounds(preferredGenre)
         }
       } catch (error) {
         console.error('Error fetching theme preferences:', error)
+        // Still try to fetch backgrounds for default genre
+        fetchBackgrounds(DEFAULT_GENRE)
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchPreferences()
-  }, [])
+  }, [fetchBackgrounds])
 
   // Set genre and update in backend
   const setGenre = useCallback(async (newGenre: string) => {
     setGenreState(newGenre)
+    // Fetch backgrounds for the new genre
+    fetchBackgrounds(newGenre)
 
     try {
       await fetch('/api/daily-guide/preferences', {
@@ -77,7 +114,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     } catch (error) {
       console.error('Error updating theme preference:', error)
     }
-  }, [])
+  }, [fetchBackgrounds])
 
   // Set theme onboarding done
   const setThemeOnboardingDone = useCallback(async (done: boolean) => {
@@ -99,19 +136,22 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // Get current theme
   const theme = getTheme(genre)
 
-  // Background utilities
+  // Background utilities - return gradient fallback if no images
   const handleGetRandomBackground = useCallback(() => {
-    return getRandomBackground(genre)
-  }, [genre])
+    const bg = getRandomFromArray(backgroundImages)
+    return bg || getFallbackGradient(genre)
+  }, [backgroundImages, genre])
 
   const handleGetDailyBackground = useCallback(() => {
-    return getDailyBackground(genre)
-  }, [genre])
+    const bg = getDailyFromArray(backgroundImages)
+    return bg || getFallbackGradient(genre)
+  }, [backgroundImages, genre])
 
   const value: ThemeContextType = {
     genre,
     theme,
-    backgroundImages: theme.backgrounds,
+    backgroundImages,
+    backgroundsLoading,
     getRandomBackground: handleGetRandomBackground,
     getDailyBackground: handleGetDailyBackground,
     setGenre,

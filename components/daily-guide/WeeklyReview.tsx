@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react'
 import { CalendarDays, Trophy, Flame, PenLine, Check, Loader2, ChevronRight, Sparkles, Target, X } from 'lucide-react'
 
+interface DayEntry {
+  date: Date
+  dayName: string
+  journal_win?: string | null
+  moduleCount: number
+}
+
 interface WeeklyStats {
   completedDays: number
   partialDays: number
@@ -10,6 +17,7 @@ interface WeeklyStats {
   journalEntries: number
   bestStreak: number
   wins: string[]
+  dailyEntries: DayEntry[]
 }
 
 interface WeeklyReviewProps {
@@ -24,6 +32,8 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [existingIntention, setExistingIntention] = useState<string | null>(null)
+  const [showFullJournal, setShowFullJournal] = useState(false)
+  const [expandedDay, setExpandedDay] = useState<number | null>(null)
 
   // Get last week's date range
   const getLastWeekRange = () => {
@@ -61,27 +71,52 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           let journalEntries = 0
           const wins: string[] = []
 
+          // Create a map of entries by date
+          const entryMap: Record<string, any> = {}
           entries.forEach((entry: any) => {
-            let moduleCount = 0
-            if (entry.morning_prime_done) moduleCount++
-            if (entry.movement_done) moduleCount++
-            if (entry.micro_lesson_done) moduleCount++
-            if (entry.breath_done) moduleCount++
-            if (entry.day_close_done) moduleCount++
-
-            totalModules += moduleCount
-
-            if (moduleCount >= 4) {
-              completedDays++
-            } else if (moduleCount > 0) {
-              partialDays++
-            }
-
-            if (entry.journal_win) {
-              journalEntries++
-              wins.push(entry.journal_win)
-            }
+            const dateKey = new Date(entry.date).toISOString().split('T')[0]
+            entryMap[dateKey] = entry
           })
+
+          // Build daily entries for all 7 days
+          const dailyEntries: DayEntry[] = []
+          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+          for (let i = 0; i < 7; i++) {
+            const dayDate = new Date(start)
+            dayDate.setDate(start.getDate() + i)
+            const dateKey = dayDate.toISOString().split('T')[0]
+            const entry = entryMap[dateKey]
+
+            let moduleCount = 0
+            if (entry) {
+              if (entry.morning_prime_done) moduleCount++
+              if (entry.movement_done) moduleCount++
+              if (entry.micro_lesson_done) moduleCount++
+              if (entry.breath_done) moduleCount++
+              if (entry.day_close_done) moduleCount++
+
+              totalModules += moduleCount
+
+              if (moduleCount >= 4) {
+                completedDays++
+              } else if (moduleCount > 0) {
+                partialDays++
+              }
+
+              if (entry.journal_win) {
+                journalEntries++
+                wins.push(entry.journal_win)
+              }
+            }
+
+            dailyEntries.push({
+              date: dayDate,
+              dayName: dayNames[dayDate.getDay()],
+              journal_win: entry?.journal_win || null,
+              moduleCount,
+            })
+          }
 
           setStats({
             completedDays,
@@ -90,6 +125,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
             journalEntries,
             bestStreak: completedDays, // Simplified
             wins: wins.slice(0, 5), // Top 5 wins
+            dailyEntries,
           })
         }
 
@@ -211,18 +247,35 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           </div>
 
           {/* Learnings from the week */}
-          {stats?.wins && stats.wins.length > 0 && (
+          {stats?.journalEntries && stats.journalEntries > 0 && (
             <div className="px-4 pb-4">
-              <h3 className="text-sm font-medium text-white/80 mb-2 flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-amber-400" />
-                What You Learned This Week
-              </h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-white/80 flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-amber-400" />
+                  What You Learned This Week
+                </h3>
+                <button
+                  onClick={() => setShowFullJournal(true)}
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                >
+                  View All
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
               <div className="space-y-2">
-                {stats.wins.map((win, i) => (
+                {stats.wins.slice(0, 3).map((win, i) => (
                   <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10">
-                    <p className="text-sm text-white/80 italic">"{win}"</p>
+                    <p className="text-sm text-white/80 italic line-clamp-2">"{win}"</p>
                   </div>
                 ))}
+                {stats.wins.length > 3 && (
+                  <button
+                    onClick={() => setShowFullJournal(true)}
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white/50 text-sm hover:bg-white/10 transition-colors"
+                  >
+                    +{stats.wins.length - 3} more entries
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -292,17 +345,122 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
     </div>
   )
 
-  if (isModal) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-        <div className="w-full max-w-md my-8 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10 overflow-hidden">
-          {content}
+  // Full Journal View Popup
+  const fullJournalPopup = showFullJournal && stats?.dailyEntries && (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+      onClick={() => setShowFullJournal(false)}
+    >
+      <div
+        className="w-full max-w-md my-8 rounded-2xl bg-[#12121a] border border-white/10 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-[#12121a]">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-blue-500/20">
+              <PenLine className="w-5 h-5 text-blue-400" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-white">Week's Journal</h2>
+              <p className="text-xs text-white/50">{weekLabel}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowFullJournal(false)}
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+          >
+            <X className="w-5 h-5 text-white/60" />
+          </button>
+        </div>
+
+        {/* Daily Entries */}
+        <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
+          {stats.dailyEntries.map((day, index) => (
+            <div
+              key={index}
+              className={`rounded-xl border transition-all ${
+                day.journal_win
+                  ? 'bg-white/5 border-white/10 cursor-pointer hover:bg-white/10'
+                  : 'bg-white/[0.02] border-white/5'
+              }`}
+              onClick={() => day.journal_win && setExpandedDay(expandedDay === index ? null : index)}
+            >
+              {/* Day Header */}
+              <div className="p-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center ${
+                    day.moduleCount >= 4 ? 'bg-emerald-500/20' :
+                    day.moduleCount > 0 ? 'bg-amber-500/20' : 'bg-white/5'
+                  }`}>
+                    <span className={`text-xs font-medium ${
+                      day.moduleCount >= 4 ? 'text-emerald-400' :
+                      day.moduleCount > 0 ? 'text-amber-400' : 'text-white/40'
+                    }`}>
+                      {day.date.getDate()}
+                    </span>
+                    <span className="text-[10px] text-white/40">
+                      {day.dayName.slice(0, 3)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-white/80">{day.dayName}</p>
+                    <p className="text-xs text-white/40">
+                      {day.moduleCount > 0 ? `${day.moduleCount}/5 modules` : 'No activity'}
+                      {day.journal_win && ' • Journal ✓'}
+                    </p>
+                  </div>
+                </div>
+                {day.journal_win && (
+                  <ChevronRight className={`w-4 h-4 text-white/40 transition-transform ${
+                    expandedDay === index ? 'rotate-90' : ''
+                  }`} />
+                )}
+              </div>
+
+              {/* Expanded Journal Content */}
+              {expandedDay === index && day.journal_win && (
+                <div className="px-3 pb-3">
+                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <p className="text-xs text-blue-400 mb-1">What I learned:</p>
+                    <p className="text-sm text-white/80 leading-relaxed">{day.journal_win}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Summary */}
+        <div className="p-4 border-t border-white/10 bg-white/[0.02]">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-white/50">Total journal entries</span>
+            <span className="text-blue-400 font-medium">{stats.journalEntries} / 7 days</span>
+          </div>
         </div>
       </div>
+    </div>
+  )
+
+  if (isModal) {
+    return (
+      <>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-md my-8 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10 overflow-hidden">
+            {content}
+          </div>
+        </div>
+        {fullJournalPopup}
+      </>
     )
   }
 
-  return content
+  return (
+    <>
+      {content}
+      {fullJournalPopup}
+    </>
+  )
 }
 
 // Check if today is Sunday

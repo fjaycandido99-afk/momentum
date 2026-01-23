@@ -13,23 +13,30 @@
     "db:generate": "prisma generate"
   },
   "dependencies": {
+    "@capacitor/cli": "^8.0.1",
+    "@capacitor/core": "^8.0.1",
+    "@capacitor/local-notifications": "^8.0.0",
+    "@capacitor/push-notifications": "^8.0.0",
     "@elevenlabs/elevenlabs-js": "^2.32.0",
     "@prisma/client": "^5.19.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "groq-sdk": "^0.37.0",
     "lucide-react": "^0.562.0",
     "next": "^14.2.18",
     "openai": "^6.16.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
+    "@types/web-push": "^3.6.4",
     "autoprefixer": "^10.4.17",
     "postcss": "^8.4.33",
     "prisma": "^5.19.0",

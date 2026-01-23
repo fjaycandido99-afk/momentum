@@ -16,6 +16,14 @@ export default function DailyGuidePage() {
         const response = await fetch('/api/daily-guide/preferences')
         if (response.ok) {
           const data = await response.json()
+
+          // Guests can use app immediately
+          if (data.isGuest) {
+            setIsOnboarded(true)
+            setIsLoading(false)
+            return
+          }
+
           if (data.guide_onboarding_done) {
             setIsOnboarded(true)
           } else {

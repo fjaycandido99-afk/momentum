@@ -17,6 +17,7 @@ import {
   Heart,
   Brain,
   Sparkles,
+  RotateCcw,
 } from 'lucide-react'
 import type { ModuleType } from '@/lib/daily-guide/decision-tree'
 
@@ -41,8 +42,20 @@ interface ModuleCardProps {
   isCompleted: boolean
   isLoading: boolean
   isActive?: boolean
+  musicEnabled?: boolean
+  musicGenre?: string
   onPlay: () => void
   onSkip?: () => void
+}
+
+// Genre display labels
+const GENRE_LABELS: Record<string, string> = {
+  lofi: 'Lo-Fi',
+  piano: 'Piano',
+  jazz: 'Jazz',
+  classical: 'Classical',
+  ambient: 'Ambient',
+  study: 'Study',
 }
 
 // Benefit types for mood/energy indicators
@@ -213,6 +226,8 @@ export function ModuleCard({
   isCompleted,
   isLoading,
   isActive,
+  musicEnabled,
+  musicGenre,
   onPlay,
   onSkip,
 }: ModuleCardProps) {
@@ -325,16 +340,27 @@ export function ModuleCard({
                   </span>
                 </>
               )}
+              {musicEnabled && musicGenre && !isCompleted && (
+                <>
+                  <span className="text-white/30">·</span>
+                  <span className="text-xs text-purple-400/80">
+                    {GENRE_LABELS[musicGenre] || musicGenre}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
 
         {/* Actions */}
-        {!isCompleted && (
+        {!isCompleted ? (
           <div className="flex items-center gap-2">
             {onSkip && (
               <button
-                onClick={onSkip}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSkip()
+                }}
                 className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
                 title="Skip this module"
               >
@@ -342,7 +368,10 @@ export function ModuleCard({
               </button>
             )}
             <button
-              onClick={onPlay}
+              onClick={(e) => {
+                e.stopPropagation()
+                onPlay()
+              }}
               disabled={isLoading || !script}
               className={`
                 p-3 rounded-xl transition-all
@@ -358,6 +387,24 @@ export function ModuleCard({
               )}
             </button>
           </div>
+        ) : (
+          // Replay button for completed modules
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onPlay()
+            }}
+            disabled={isLoading || !script}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-50"
+            title="Listen again"
+          >
+            {isLoading ? (
+              <Loader2 className="w-3.5 h-3.5 text-white/50 animate-spin" />
+            ) : (
+              <RotateCcw className="w-3.5 h-3.5 text-white/50" />
+            )}
+            <span className="text-xs text-white/50">Replay</span>
+          </button>
         )}
       </div>
 

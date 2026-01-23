@@ -167,6 +167,7 @@ const TIME_MODES: { value: TimeMode; label: string; duration: string; descriptio
 const MUSIC_GENRES = [
   { value: null, label: 'Daily Rotation', description: 'Different genre each day' },
   { value: 'lofi', label: 'Lo-Fi', description: 'Chill beats to relax' },
+  { value: 'jazz', label: 'Jazz', description: 'Smooth vibes' },
   { value: 'piano', label: 'Piano', description: 'Peaceful keys' },
   { value: 'study', label: 'Study', description: 'Focus music' },
   { value: 'classical', label: 'Classical', description: 'Timeless elegance' },
