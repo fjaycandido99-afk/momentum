@@ -88,8 +88,8 @@ export default function ForgotPasswordPage() {
           <div
             className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center transition-transform duration-500"
             style={{
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.2))',
-              boxShadow: '0 0 60px rgba(139, 92, 246, 0.3)',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05))',
+              boxShadow: '0 0 60px rgba(255, 255, 255, 0.15)',
               transform: `scale(${pulseScale})`,
             }}
           >
@@ -112,7 +112,7 @@ export default function ForgotPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-violet-500/50 transition-colors"
+              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
             />
           </div>
 
@@ -125,7 +125,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full p-4 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-medium hover:from-violet-600 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full p-4 rounded-xl bg-white text-black font-medium hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -141,7 +141,7 @@ export default function ForgotPasswordPage() {
         {/* Footer */}
         <Link
           href="/login"
-          className="flex items-center justify-center gap-2 text-sm text-white/40 mt-8 hover:text-violet-400 transition-colors"
+          className="flex items-center justify-center gap-2 text-sm text-white/40 mt-8 hover:text-white/70 transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           Back to login

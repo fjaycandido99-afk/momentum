@@ -64,8 +64,8 @@ export default function LoginPage() {
           <div
             className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center transition-transform duration-500"
             style={{
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.2))',
-              boxShadow: '0 0 60px rgba(139, 92, 246, 0.3)',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05))',
+              boxShadow: '0 0 60px rgba(255, 255, 255, 0.15)',
               transform: `scale(${pulseScale})`,
             }}
           >
@@ -88,7 +88,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-violet-500/50 transition-colors"
+              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
             />
           </div>
 
@@ -101,7 +101,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-violet-500/50 transition-colors"
+              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
             />
           </div>
 
@@ -114,7 +114,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full p-4 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-medium hover:from-violet-600 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full p-4 rounded-xl bg-white text-black font-medium hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -129,7 +129,7 @@ export default function LoginPage() {
 
         {/* Forgot password */}
         <div className="text-center mt-6">
-          <Link href="/forgot-password" className="text-sm text-white/40 hover:text-violet-400 transition-colors">
+          <Link href="/forgot-password" className="text-sm text-white/40 hover:text-white/70 transition-colors">
             Forgot your password?
           </Link>
         </div>
@@ -137,7 +137,7 @@ export default function LoginPage() {
         {/* Footer */}
         <p className="text-center text-sm text-white/40 mt-8">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-violet-400 font-medium hover:text-violet-300 transition-colors">
+          <Link href="/signup" className="text-white font-medium hover:text-white/80 transition-colors">
             Sign up
           </Link>
         </p>
