@@ -335,6 +335,7 @@ export function buildDayPlan(
     wasYesterdayHeavy?: boolean
     energyLevel?: EnergyLevel
     timeMode?: TimeMode
+    dayTypeOverride?: DayType
   } = {}
 ): {
   dayContext: DayContext
@@ -345,10 +346,11 @@ export function buildDayPlan(
     wasYesterdayHeavy = false,
     energyLevel,
     timeMode = preferences.defaultTimeMode,
+    dayTypeOverride,
   } = options
 
-  // Step 1: Classify day type
-  const dayType = classifyDayType(date, preferences, isRecoveryOverride, wasYesterdayHeavy)
+  // Step 1: Classify day type (use override if provided)
+  const dayType = dayTypeOverride || classifyDayType(date, preferences, isRecoveryOverride, wasYesterdayHeavy)
 
   // Step 2: Determine base pace
   let pace = determinePace(dayType)
