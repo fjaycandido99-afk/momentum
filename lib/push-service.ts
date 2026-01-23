@@ -90,7 +90,7 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
     ],
   },
   custom: {
-    title: 'Momentum',
+    title: 'Voxu',
     body: 'You have a new notification',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/badge-72x72.png',
@@ -101,7 +101,7 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
 function initWebPush() {
   const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
   const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://momentum.app'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://voxu.app'
 
   if (!vapidPublicKey || !vapidPrivateKey) {
     console.warn('VAPID keys not configured. Web push notifications will not work.')

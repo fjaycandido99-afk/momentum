@@ -82,7 +82,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-2xl font-light text-white/90">Welcome back</h1>
           <p className="text-white/40 text-sm mt-2">
-            Sign in to Momentum
+            Sign in to Voxu
           </p>
         </div>
 

@@ -198,7 +198,7 @@ export default function PricingPage() {
             <div className="relative p-6 rounded-2xl bg-white/[0.02] border border-white/10">
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-white mb-2">Free</h3>
-                <p className="text-white/50 text-sm">Perfect for trying out Momentum</p>
+                <p className="text-white/50 text-sm">Perfect for trying out Voxu</p>
               </div>
 
               <div className="mb-6">
@@ -255,7 +255,7 @@ export default function PricingPage() {
                   <Crown className="w-5 h-5 text-amber-400" />
                   <h3 className="text-xl font-semibold text-white">Premium</h3>
                 </div>
-                <p className="text-white/50 text-sm">The full Momentum experience</p>
+                <p className="text-white/50 text-sm">The full Voxu experience</p>
               </div>
 
               <div className="mb-6">
@@ -456,7 +456,7 @@ export default function PricingPage() {
             Ready to upgrade your focus?
           </h3>
           <p className="text-white/50 mb-8">
-            Join thousands of users who have transformed their productivity with Momentum Premium.
+            Join thousands of users who have transformed their productivity with Voxu Premium.
           </p>
 
           <button
@@ -485,7 +485,7 @@ export default function PricingPage() {
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-white/5">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-white/30 text-sm">
-          <span>Momentum {new Date().getFullYear()}</span>
+          <span>Voxu {new Date().getFullYear()}</span>
           <div className="flex items-center gap-6">
             <a href="#" className="hover:text-white/50 transition-colors">Terms</a>
             <a href="#" className="hover:text-white/50 transition-colors">Privacy</a>

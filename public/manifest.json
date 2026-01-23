@@ -1,7 +1,7 @@
 {
-  "name": "VentProof",
-  "short_name": "VentProof",
-  "description": "Your daily guide for mindful living - morning routines, breathing exercises, and more",
+  "name": "Voxu",
+  "short_name": "Voxu",
+  "description": "Your AI Audio Coach - motivation, mindfulness, and focus delivered daily",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",

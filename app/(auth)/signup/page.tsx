@@ -115,7 +115,7 @@ export default function SignupPage() {
           </div>
           <h1 className="text-2xl font-light text-white/90">Create your account</h1>
           <p className="text-white/40 text-sm mt-2">
-            Start your journey with Momentum
+            Start your journey with Voxu
           </p>
         </div>
 

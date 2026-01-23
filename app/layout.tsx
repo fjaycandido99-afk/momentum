@@ -6,13 +6,13 @@ import { AppWrapper } from '@/components/AppWrapper'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Momentum - Your AI Audio Coach',
+  title: 'Voxu - Your AI Audio Coach',
   description: 'Motivation, mindfulness, and focus - delivered automatically',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Momentum',
+    title: 'Voxu',
   },
   other: {
     'mobile-web-app-capable': 'yes',

@@ -22,7 +22,7 @@ export default function MarketingLayout({
             href="/"
             className="text-lg font-semibold text-white"
           >
-            Momentum
+            Voxu
           </Link>
         </div>
       </header>

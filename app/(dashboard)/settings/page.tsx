@@ -821,7 +821,7 @@ function SettingsContent() {
 
         {/* App Info */}
         <div className="text-center pt-6 pb-8">
-          <p className="text-white/20 text-sm">Momentum v0.1.0</p>
+          <p className="text-white/20 text-sm">Voxu v0.1.0</p>
           <p className="text-white/10 text-xs mt-1">Your AI Audio Coach</p>
         </div>
       </div>

@@ -5,8 +5,8 @@ import type { SubscriptionTier, SubscriptionStatus } from './stripe'
 
 // RevenueCat product identifiers (configure these in RevenueCat dashboard)
 export const REVENUECAT_PRODUCTS = {
-  premium_monthly: 'momentum_premium_monthly',
-  premium_yearly: 'momentum_premium_yearly',
+  premium_monthly: 'voxu_premium_monthly',
+  premium_yearly: 'voxu_premium_yearly',
 }
 
 // RevenueCat entitlement identifier

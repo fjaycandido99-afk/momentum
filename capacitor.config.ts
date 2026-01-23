@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.momentum.app',
-  appName: 'Momentum',
+  appId: 'com.voxu.app',
+  appName: 'Voxu',
   webDir: 'out',
   server: {
     // For development, use your local server

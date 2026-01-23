@@ -82,7 +82,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               Unlock Premium
             </h2>
             <p className="text-white/60 text-sm">
-              Get the full Momentum experience
+              Get the full Voxu experience
             </p>
           </div>
         </div>

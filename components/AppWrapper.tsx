@@ -45,7 +45,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
       return
     }
 
-    const seen = sessionStorage.getItem('momentum_splash_seen')
+    const seen = sessionStorage.getItem('voxu_splash_seen')
     if (seen) {
       setShowSplash(false)
       setHasSeenSplash(true)
@@ -55,7 +55,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
   const handleSplashComplete = () => {
     setShowSplash(false)
     setHasSeenSplash(true)
-    sessionStorage.setItem('momentum_splash_seen', 'true')
+    sessionStorage.setItem('voxu_splash_seen', 'true')
   }
 
   // On auth pages, just render children without splash
