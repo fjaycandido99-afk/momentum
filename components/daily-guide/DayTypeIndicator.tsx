@@ -1,6 +1,6 @@
 'use client'
 
-import { Briefcase, Coffee, Heart } from 'lucide-react'
+import { Briefcase, Coffee, Heart, GraduationCap, BookOpen, FileCheck } from 'lucide-react'
 import type { DayType } from '@/lib/ai/daily-guide-prompts'
 
 interface DayTypeIndicatorProps {
@@ -36,6 +36,27 @@ const dayTypeConfig: Record<DayType, {
     bgClass: 'bg-white/10',
     textClass: 'text-white',
     borderClass: 'border-white/20',
+  },
+  class: {
+    label: 'CLASS DAY',
+    icon: GraduationCap,
+    bgClass: 'bg-blue-500/10',
+    textClass: 'text-blue-300',
+    borderClass: 'border-blue-400/20',
+  },
+  study: {
+    label: 'STUDY DAY',
+    icon: BookOpen,
+    bgClass: 'bg-purple-500/10',
+    textClass: 'text-purple-300',
+    borderClass: 'border-purple-400/20',
+  },
+  exam: {
+    label: 'EXAM DAY',
+    icon: FileCheck,
+    bgClass: 'bg-amber-500/10',
+    textClass: 'text-amber-300',
+    borderClass: 'border-amber-400/20',
   },
 }
 
