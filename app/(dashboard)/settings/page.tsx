@@ -29,6 +29,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useThemeOptional } from '@/contexts/ThemeContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
+import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 type GuideTone = 'calm' | 'direct' | 'neutral'
@@ -204,11 +205,7 @@ export default function SettingsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#08080c] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-white/50 animate-spin" />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return (

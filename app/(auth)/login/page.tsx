@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -11,8 +11,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [rotation, setRotation] = useState(0)
   const router = useRouter()
   const supabase = createClient()
+
+  // Rotation animation
+  useEffect(() => {
+    let frame: number
+    let start = performance.now()
+
+    const animate = (time: number) => {
+      const elapsed = (time - start) / 1000
+      setRotation(elapsed * 45) // 45 degrees per second
+      frame = requestAnimationFrame(animate)
+    }
+
+    frame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frame)
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,14 +61,23 @@ export default function LoginPage() {
         {/* Logo with rotating rings animation */}
         <div className="text-center mb-10">
           <div className="w-20 h-20 mx-auto mb-6 relative flex items-center justify-center">
-            {/* Outer ring - rotates clockwise slow */}
-            <div className="absolute inset-0 rounded-full border-2 border-white/20 animate-spin-slow" />
-            {/* Middle ring - rotates counter-clockwise */}
-            <div className="absolute inset-2 rounded-full border-2 border-white/30 animate-spin-medium" />
-            {/* Inner ring - rotates clockwise faster */}
-            <div className="absolute inset-4 rounded-full border-2 border-white/40 animate-spin-fast" />
-            {/* Center dot */}
-            <div className="w-4 h-4 rounded-full bg-white/60" />
+            {/* Outer ring - dashed, rotates clockwise slow */}
+            <div
+              className="absolute inset-0 rounded-full border-2 border-dashed border-white/20"
+              style={{ transform: `rotate(${rotation}deg)` }}
+            />
+            {/* Middle ring - dotted, rotates counter-clockwise */}
+            <div
+              className="absolute inset-2 rounded-full border-2 border-dotted border-white/40"
+              style={{ transform: `rotate(${-rotation * 1.3}deg)` }}
+            />
+            {/* Inner ring - dashed, rotates clockwise faster */}
+            <div
+              className="absolute inset-4 rounded-full border-2 border-dashed border-white/30"
+              style={{ transform: `rotate(${rotation * 2}deg)` }}
+            />
+            {/* Center dot with glow */}
+            <div className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
           </div>
           <h1 className="text-2xl font-light text-white/90">Welcome back</h1>
           <p className="text-white/40 text-sm mt-2">

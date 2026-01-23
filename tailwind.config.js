@@ -25,6 +25,11 @@ module.exports = {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      animation: {
+        'spin-slow': 'spin 8s linear infinite',
+        'spin-medium': 'spin 6s linear infinite reverse',
+        'spin-fast': 'spin 4s linear infinite',
+      },
     },
   },
   plugins: [],
