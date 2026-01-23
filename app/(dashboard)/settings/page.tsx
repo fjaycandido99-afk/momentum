@@ -23,13 +23,19 @@ import {
   Check,
   Loader2,
   VolumeX,
+  Crown,
+  CreditCard,
+  ExternalLink,
+  Lock,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useThemeOptional } from '@/contexts/ThemeContext'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
+import { PremiumBadge, ProLabel } from '@/components/premium'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 type GuideTone = 'calm' | 'direct' | 'neutral'
@@ -83,12 +89,30 @@ const SEGMENT_OPTIONS = [
 
 export default function SettingsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
   const themeContext = useThemeOptional()
+  const subscription = useSubscriptionOptional()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [showGenreSelector, setShowGenreSelector] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [subscriptionMessage, setSubscriptionMessage] = useState<string | null>(null)
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false)
+
+  // Check for subscription success/cancel from Stripe redirect
+  useEffect(() => {
+    const subscriptionStatus = searchParams.get('subscription')
+    if (subscriptionStatus === 'success') {
+      setSubscriptionMessage('Welcome to Premium! Your subscription is now active.')
+      subscription?.refreshSubscription()
+      // Clear the URL param
+      router.replace('/settings')
+    } else if (subscriptionStatus === 'canceled') {
+      setSubscriptionMessage('Subscription checkout was canceled.')
+      router.replace('/settings')
+    }
+  }, [searchParams, subscription, router])
 
   // Preferences state
   const [userType, setUserType] = useState<UserType>('professional')
@@ -646,6 +670,132 @@ export default function SettingsPage() {
                 </div>
               )}
             </>
+          )}
+        </section>
+
+        {/* Subscription Management */}
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-amber-500/20">
+              <Crown className="w-5 h-5 text-amber-400" />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-medium text-white">Subscription</h2>
+              <p className="text-white/60 text-xs">Manage your plan</p>
+            </div>
+            {subscription?.isPremium && <PremiumBadge size="sm" />}
+          </div>
+
+          {/* Subscription message */}
+          {subscriptionMessage && (
+            <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+              {subscriptionMessage}
+            </div>
+          )}
+
+          {subscription?.isPremium ? (
+            // Premium user view
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-medium">
+                    {subscription.isTrialing ? 'Premium Trial' : 'Premium Plan'}
+                  </span>
+                  <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400">
+                    Active
+                  </span>
+                </div>
+                {subscription.isTrialing && subscription.trialDaysLeft > 0 && (
+                  <p className="text-sm text-white/60">
+                    {subscription.trialDaysLeft} days left in trial
+                  </p>
+                )}
+                {subscription.billingPeriodEnd && !subscription.isTrialing && (
+                  <p className="text-sm text-white/60">
+                    Next billing: {subscription.billingPeriodEnd.toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={async () => {
+                    setIsLoadingPortal(true)
+                    try {
+                      const response = await fetch('/api/stripe/portal', {
+                        method: 'POST',
+                      })
+                      const data = await response.json()
+                      if (data.url) {
+                        window.location.href = data.url
+                      }
+                    } catch (error) {
+                      console.error('Failed to open portal:', error)
+                    } finally {
+                      setIsLoadingPortal(false)
+                    }
+                  }}
+                  disabled={isLoadingPortal}
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/10 text-white text-sm hover:bg-white/15 transition-colors disabled:opacity-50"
+                >
+                  {isLoadingPortal ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CreditCard className="w-4 h-4" />
+                  )}
+                  Manage Billing
+                </button>
+                <Link
+                  href="/pricing"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/70 text-sm hover:bg-white/10 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  View Plans
+                </Link>
+              </div>
+            </div>
+          ) : (
+            // Free user view
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <p className="text-white font-medium mb-1">Free Plan</p>
+                <p className="text-sm text-white/60 mb-3">
+                  1 session/day · 10-min limit · Limited features
+                </p>
+                <ul className="space-y-2 text-sm text-white/50">
+                  <li className="flex items-center gap-2">
+                    <Lock className="w-3.5 h-3.5" />
+                    Daily checkpoints locked
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Lock className="w-3.5 h-3.5" />
+                    Genre selection locked
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Lock className="w-3.5 h-3.5" />
+                    Journal history locked
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                onClick={() => subscription?.openUpgradeModal()}
+                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all"
+              >
+                <Sparkles className="w-5 h-5" />
+                Upgrade to Premium - $4.99/mo
+              </button>
+              <p className="text-center text-white/40 text-xs">
+                7-day free trial · Cancel anytime
+              </p>
+              <Link
+                href="/pricing"
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/60 text-sm hover:bg-white/10 hover:text-white/80 transition-colors mt-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Compare plans
+              </Link>
+            </div>
           )}
         </section>
 

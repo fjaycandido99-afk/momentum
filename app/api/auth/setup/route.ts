@@ -17,10 +17,21 @@ export async function POST(request: NextRequest) {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
+      include: { subscription: true },
     })
 
     if (existingUser) {
-      // User already set up, return success
+      // Ensure subscription exists for existing users
+      if (!existingUser.subscription) {
+        await prisma.subscription.create({
+          data: {
+            user_id: existingUser.id,
+            tier: 'free',
+            status: 'active',
+          },
+        })
+      }
+
       return NextResponse.json({
         success: true,
         data: { user: existingUser }
@@ -44,6 +55,15 @@ export async function POST(request: NextRequest) {
         session_length: 20,
         activity_type: 'workout',
         daily_reminder: true,
+      },
+    })
+
+    // Create default free subscription
+    await prisma.subscription.create({
+      data: {
+        user_id: user.id,
+        tier: 'free',
+        status: 'active',
       },
     })
 

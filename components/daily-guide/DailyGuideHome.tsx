@@ -41,6 +41,11 @@ import { CheckpointList } from './CheckpointCard'
 import { FloatingJournalButton } from './FloatingJournalButton'
 import { getFormattedDate } from '@/lib/daily-guide/day-type'
 import { useThemeOptional } from '@/contexts/ThemeContext'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { SessionLimitBanner } from '@/components/premium/SessionLimitBanner'
+import { TrialBanner, TrialEndingBanner } from '@/components/premium/TrialBanner'
+import { FeatureLock, LockIcon } from '@/components/premium/FeatureLock'
+import { PremiumBadge } from '@/components/premium/PremiumBadge'
 import type { DayType, TimeMode, EnergyLevel, ModuleType, CheckpointConfig } from '@/lib/daily-guide/decision-tree'
 
 type UserType = 'professional' | 'student' | 'hybrid'
@@ -200,6 +205,7 @@ const MUSIC_GENRES = [
 export function DailyGuideHome() {
   const router = useRouter()
   const themeContext = useThemeOptional()
+  const subscription = useSubscriptionOptional()
   const [guide, setGuide] = useState<DailyGuide | null>(null)
   const [checkpoints, setCheckpoints] = useState<CheckpointConfig[]>([])
   const [durations, setDurations] = useState<Record<ModuleType, number>>({} as Record<ModuleType, number>)
@@ -360,6 +366,21 @@ export function DailyGuideHome() {
   }
 
   const playModule = async (moduleType: string, withMusic = false) => {
+    // Check session limits for free users
+    if (subscription && !subscription.canStartSession && !subscription.isPremium) {
+      subscription.openUpgradeModal()
+      return
+    }
+
+    // Record session for free tier tracking
+    if (subscription && !subscription.isPremium) {
+      const canContinue = await subscription.recordSession()
+      if (!canContinue) {
+        subscription.openUpgradeModal()
+        return
+      }
+    }
+
     setLoadingModule(moduleType)
     try {
       // Map day types to voice types
@@ -619,6 +640,10 @@ export function DailyGuideHome() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] pb-32">
+      {/* Trial Banner */}
+      <TrialBanner variant="compact" />
+      <TrialEndingBanner />
+
       {/* Header */}
       <div className="p-6 animate-fade-in-down">
         {/* Greeting Section */}
@@ -647,6 +672,8 @@ export function DailyGuideHome() {
             })()}
           </div>
           <div className="flex items-center gap-2">
+            {/* Premium badge */}
+            <PremiumBadge size="sm" />
             {/* Streak indicator */}
             <StreakDisplay streak={streak} />
             <button
@@ -737,6 +764,11 @@ export function DailyGuideHome() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Session Limit Banner */}
+      <div className="px-6 mb-4">
+        <SessionLimitBanner />
       </div>
 
       {/* Energy prompt (initial) */}

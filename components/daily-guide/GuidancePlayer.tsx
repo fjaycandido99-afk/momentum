@@ -1,9 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Pause, Play, RotateCcw, Volume2, VolumeX, Check, Music } from 'lucide-react'
+import { X, Pause, Play, RotateCcw, Volume2, VolumeX, Check, Music, Crown, Clock } from 'lucide-react'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+
+// Free tier time limit in seconds (10 minutes)
+const FREE_TIER_TIME_LIMIT = 10 * 60
 
 interface GuidancePlayerProps {
   segment: string
@@ -146,6 +150,9 @@ export function GuidancePlayer({
   onClose,
   onComplete,
 }: GuidancePlayerProps) {
+  const subscription = useSubscriptionOptional()
+  const isPremium = subscription?.isPremium ?? false
+
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
@@ -156,6 +163,7 @@ export function GuidancePlayer({
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
   const [musicVolume, setMusicVolume] = useState(30) // Default music volume (0-100)
   const [showVolumeSlider, setShowVolumeSlider] = useState(false)
+  const [showTimeLimitReached, setShowTimeLimitReached] = useState(false)
 
   // Volume levels for ducking
   const DUCKED_VOLUME = 15 // Volume when voice is playing (ducked)
@@ -391,6 +399,23 @@ export function GuidancePlayer({
     }
     onComplete()
   }, [onComplete])
+
+  // Check for free tier time limit
+  useEffect(() => {
+    if (isPremium || showTimeLimitReached) return
+
+    if (currentTime >= FREE_TIER_TIME_LIMIT) {
+      // Pause playback
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+      setIsPlaying(false)
+      setShowTimeLimitReached(true)
+    }
+  }, [currentTime, isPremium, showTimeLimitReached])
 
   // Handle close - mark as complete if listened to > 50% of the session
   const handleClose = useCallback(() => {
@@ -673,6 +698,43 @@ export function GuidancePlayer({
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/5 rounded-full blur-[120px]" />
       </div>
+
+      {/* Time limit reached overlay for free users */}
+      {showTimeLimitReached && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
+          <div className="max-w-sm mx-4 p-6 rounded-2xl bg-gradient-to-b from-[#1a1a24] to-[#0f0f15] border border-white/10">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/20 mb-4">
+                <Clock className="w-7 h-7 text-amber-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">
+                Session Limit Reached
+              </h3>
+              <p className="text-white/60 text-sm mb-6">
+                Free sessions are limited to 10 minutes. Upgrade to Premium for unlimited session duration.
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    subscription?.openUpgradeModal()
+                    handleClose()
+                  }}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:from-amber-400 hover:to-orange-400 transition-all flex items-center justify-center gap-2"
+                >
+                  <Crown className="w-5 h-5" />
+                  Upgrade to Premium
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="w-full py-3 px-4 rounded-xl bg-white/10 text-white/80 font-medium hover:bg-white/15 transition-colors"
+                >
+                  Close Session
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

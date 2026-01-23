@@ -19,6 +19,43 @@ model User {
   preferences   UserPreferences?
   sessions      Session[]
   favorites     FavoriteContent[]
+  subscription  Subscription?
+}
+
+model Subscription {
+  id      String @id @default(cuid())
+  user_id String @unique
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // Subscription status
+  tier   String @default("free") // "free" | "premium"
+  status String @default("active") // "active" | "trialing" | "canceled" | "expired"
+
+  // Trial tracking
+  trial_start DateTime?
+  trial_end   DateTime?
+
+  // Billing info
+  billing_period_start DateTime?
+  billing_period_end   DateTime?
+
+  // Stripe (web)
+  stripe_customer_id     String? @unique
+  stripe_subscription_id String? @unique
+
+  // RevenueCat (mobile)
+  revenuecat_user_id String? @unique
+
+  // Usage tracking (for free tier limits)
+  sessions_today    Int       @default(0)
+  last_session_date DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([user_id])
+  @@index([tier])
+  @@index([status])
 }
 
 model UserPreferences {
