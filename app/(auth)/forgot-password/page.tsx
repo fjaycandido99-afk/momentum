@@ -1,33 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Volume2, ChevronLeft, CheckCircle, Loader2 } from 'lucide-react'
+import { ChevronLeft, CheckCircle, Loader2 } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [pulseScale, setPulseScale] = useState(1)
   const supabase = createClient()
-
-  // Breathing animation for the orb
-  useEffect(() => {
-    let frame: number
-    let start = performance.now()
-
-    const animate = (time: number) => {
-      const elapsed = (time - start) / 1000
-      const scale = 1 + Math.sin(elapsed * Math.PI / 3) * 0.08
-      setPulseScale(scale)
-      frame = requestAnimationFrame(animate)
-    }
-
-    frame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frame)
-  }, [])
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,17 +66,26 @@ export default function ForgotPasswordPage() {
   return (
     <div className="flex-1 flex flex-col justify-center px-6 py-12 text-white">
       <div className="mx-auto w-full max-w-sm">
-        {/* Logo with breathing animation */}
+        {/* Logo with rotating rings animation */}
         <div className="text-center mb-10">
-          <div
-            className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center transition-transform duration-500"
-            style={{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05))',
-              boxShadow: '0 0 60px rgba(255, 255, 255, 0.15)',
-              transform: `scale(${pulseScale})`,
-            }}
-          >
-            <Volume2 className="w-9 h-9 text-white/80" />
+          <div className="w-20 h-20 mx-auto mb-6 relative flex items-center justify-center">
+            {/* Outer ring - rotates clockwise */}
+            <div
+              className="absolute inset-0 rounded-full border-2 border-white/20 animate-spin"
+              style={{ animationDuration: '8s' }}
+            />
+            {/* Middle ring - rotates counter-clockwise */}
+            <div
+              className="absolute inset-2 rounded-full border-2 border-white/30 animate-spin"
+              style={{ animationDuration: '6s', animationDirection: 'reverse' }}
+            />
+            {/* Inner ring - rotates clockwise faster */}
+            <div
+              className="absolute inset-4 rounded-full border-2 border-white/40 animate-spin"
+              style={{ animationDuration: '4s' }}
+            />
+            {/* Center dot */}
+            <div className="w-4 h-4 rounded-full bg-white/60" />
           </div>
           <h1 className="text-2xl font-light text-white/90">Reset password</h1>
           <p className="text-white/40 text-sm mt-2">
