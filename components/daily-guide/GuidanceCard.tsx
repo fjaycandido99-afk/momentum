@@ -39,6 +39,51 @@ const segmentConfig: Record<GuideSegment, {
     gradient: 'from-slate-500/20 to-slate-600/10',
     iconBg: 'bg-slate-500/20',
   },
+  morning_prime: {
+    label: 'MORNING PRIME',
+    gradient: 'from-amber-500/20 to-orange-500/10',
+    iconBg: 'bg-amber-500/20',
+  },
+  workout: {
+    label: 'WORKOUT',
+    gradient: 'from-red-500/20 to-orange-500/10',
+    iconBg: 'bg-red-500/20',
+  },
+  breath: {
+    label: 'BREATHE',
+    gradient: 'from-teal-500/20 to-cyan-500/10',
+    iconBg: 'bg-teal-500/20',
+  },
+  micro_lesson: {
+    label: 'MICRO LESSON',
+    gradient: 'from-violet-500/20 to-purple-500/10',
+    iconBg: 'bg-violet-500/20',
+  },
+  day_close: {
+    label: 'DAY CLOSE',
+    gradient: 'from-indigo-500/20 to-slate-500/10',
+    iconBg: 'bg-indigo-500/20',
+  },
+  checkpoint_1: {
+    label: 'CHECKPOINT 1',
+    gradient: 'from-cyan-500/20 to-blue-500/10',
+    iconBg: 'bg-cyan-500/20',
+  },
+  checkpoint_2: {
+    label: 'CHECKPOINT 2',
+    gradient: 'from-cyan-500/20 to-blue-500/10',
+    iconBg: 'bg-cyan-500/20',
+  },
+  checkpoint_3: {
+    label: 'CHECKPOINT 3',
+    gradient: 'from-cyan-500/20 to-blue-500/10',
+    iconBg: 'bg-cyan-500/20',
+  },
+  tomorrow_preview: {
+    label: 'TOMORROW',
+    gradient: 'from-purple-500/20 to-pink-500/10',
+    iconBg: 'bg-purple-500/20',
+  },
 }
 
 export function GuidanceCard({
