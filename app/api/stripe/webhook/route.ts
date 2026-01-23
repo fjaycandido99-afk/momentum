@@ -99,6 +99,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     ? new Date(stripeSubscription.trial_end * 1000)
     : null
 
+  // Get billing period from first subscription item
+  const firstItem = stripeSubscription.items.data[0]
+  const billingPeriodStart = firstItem ? new Date(firstItem.current_period_start * 1000) : null
+  const billingPeriodEnd = firstItem ? new Date(firstItem.current_period_end * 1000) : null
+
   await prisma.subscription.upsert({
     where: { user_id: userId },
     update: {
@@ -108,8 +113,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       stripe_subscription_id: subscriptionId,
       trial_start: isTrialing ? new Date() : undefined,
       trial_end: trialEnd,
-      billing_period_start: new Date(stripeSubscription.current_period_start * 1000),
-      billing_period_end: new Date(stripeSubscription.current_period_end * 1000),
+      billing_period_start: billingPeriodStart,
+      billing_period_end: billingPeriodEnd,
     },
     create: {
       user_id: userId,
@@ -119,8 +124,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       stripe_subscription_id: subscriptionId,
       trial_start: isTrialing ? new Date() : null,
       trial_end: trialEnd,
-      billing_period_start: new Date(stripeSubscription.current_period_start * 1000),
-      billing_period_end: new Date(stripeSubscription.current_period_end * 1000),
+      billing_period_start: billingPeriodStart,
+      billing_period_end: billingPeriodEnd,
     },
   })
 }
@@ -148,6 +153,11 @@ async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription
   else if (isCanceled) status = 'canceled'
   else if (!isActive) status = 'expired'
 
+  // Get billing period from first subscription item
+  const firstItem = stripeSubscription.items.data[0]
+  const billingPeriodStart = firstItem ? new Date(firstItem.current_period_start * 1000) : null
+  const billingPeriodEnd = firstItem ? new Date(firstItem.current_period_end * 1000) : null
+
   await prisma.subscription.update({
     where: { id: subscription.id },
     data: {
@@ -157,8 +167,8 @@ async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription
       trial_end: stripeSubscription.trial_end
         ? new Date(stripeSubscription.trial_end * 1000)
         : null,
-      billing_period_start: new Date(stripeSubscription.current_period_start * 1000),
-      billing_period_end: new Date(stripeSubscription.current_period_end * 1000),
+      billing_period_start: billingPeriodStart,
+      billing_period_end: billingPeriodEnd,
     },
   })
 }
@@ -189,7 +199,7 @@ async function handleSubscriptionDeleted(stripeSubscription: Stripe.Subscription
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string
-  const subscriptionId = invoice.subscription as string
+  const subscriptionId = invoice.parent?.subscription_details?.subscription as string | undefined
 
   if (!subscriptionId) return
 
@@ -202,13 +212,18 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   // Get updated subscription details
   const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription
 
+  // Get billing period from first subscription item
+  const firstItem = stripeSubscription.items.data[0]
+  const billingPeriodStart = firstItem ? new Date(firstItem.current_period_start * 1000) : null
+  const billingPeriodEnd = firstItem ? new Date(firstItem.current_period_end * 1000) : null
+
   await prisma.subscription.update({
     where: { id: subscription.id },
     data: {
       tier: 'premium',
       status: 'active',
-      billing_period_start: new Date(stripeSubscription.current_period_start * 1000),
-      billing_period_end: new Date(stripeSubscription.current_period_end * 1000),
+      billing_period_start: billingPeriodStart,
+      billing_period_end: billingPeriodEnd,
     },
   })
 }

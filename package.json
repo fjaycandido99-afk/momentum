@@ -19,6 +19,7 @@
     "@capacitor/push-notifications": "^8.0.0",
     "@elevenlabs/elevenlabs-js": "^2.32.0",
     "@prisma/client": "^5.19.0",
+    "@revenuecat/purchases-capacitor": "^12.0.5",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",
     "clsx": "^2.1.1",

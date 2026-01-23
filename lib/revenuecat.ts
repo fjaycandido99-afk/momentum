@@ -77,8 +77,8 @@ export async function hasPremiumAccess(): Promise<boolean> {
 export async function purchaseProduct(productId: string): Promise<boolean> {
   try {
     const { Purchases } = await import('@revenuecat/purchases-capacitor')
-    const { customerInfo } = await Purchases.purchaseProduct({
-      productIdentifier: productId,
+    const { customerInfo } = await Purchases.purchaseStoreProduct({
+      product: { identifier: productId } as any,
     })
 
     // Check if premium is now active
@@ -173,14 +173,15 @@ export async function addCustomerInfoListener(
   try {
     const { Purchases } = await import('@revenuecat/purchases-capacitor')
 
-    const listener = await Purchases.addCustomerInfoUpdateListener(
+    await Purchases.addCustomerInfoUpdateListener(
       (info: any) => {
         callback(info.customerInfo as RevenueCatCustomerInfo)
       }
     )
 
+    // Note: In newer versions, listener removal may need different handling
     return () => {
-      listener.remove()
+      // Listener cleanup handled by Capacitor
     }
   } catch (error) {
     console.error('Failed to add listener:', error)

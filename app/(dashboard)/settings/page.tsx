@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import {
   Volume2,
   Bell,
@@ -87,7 +87,7 @@ const SEGMENT_OPTIONS = [
   { id: 'day_close', label: 'Day Close', icon: Moon, required: true },
 ]
 
-export default function SettingsPage() {
+function SettingsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -826,5 +826,13 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <SettingsContent />
+    </Suspense>
   )
 }

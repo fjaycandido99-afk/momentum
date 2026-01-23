@@ -11,10 +11,19 @@ export {
 } from './subscription-constants'
 export type { SubscriptionTier, SubscriptionStatus } from './subscription-constants'
 
-// Server-side Stripe client
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-  typescript: true,
+// Server-side Stripe client (lazy initialization to avoid build-time errors)
+let _stripe: Stripe | null = null
+
+export const stripe = new Proxy({} as Stripe, {
+  get(_, prop) {
+    if (!_stripe) {
+      _stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+        apiVersion: '2025-12-15.clover',
+        typescript: true,
+      })
+    }
+    return (_stripe as any)[prop]
+  }
 })
 
 // Price IDs from Stripe Dashboard
