@@ -13,10 +13,18 @@ import type { DayType, TimeMode, EnergyLevel, GuideTone, WorkoutIntensity } from
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError) {
+      console.error('Auth error in generate:', authError)
+    }
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.error('No user found in generate POST. Auth error:', authError?.message)
+      return NextResponse.json({
+        error: 'Unauthorized',
+        details: authError?.message || 'No session found. Please sign in again.'
+      }, { status: 401 })
     }
 
     const body = await request.json()
@@ -32,16 +40,41 @@ export async function POST(request: NextRequest) {
     const date = dateStr ? new Date(dateStr) : new Date()
     const dateKey = getDateString(date)
 
-    // Get user preferences
-    const preferences = await prisma.userPreferences.findUnique({
+    // Get user preferences, create defaults if not found
+    let preferences = await prisma.userPreferences.findUnique({
       where: { user_id: user.id },
     })
 
     if (!preferences) {
-      return NextResponse.json(
-        { error: 'User preferences not found. Please complete onboarding.' },
-        { status: 404 }
-      )
+      // Create default preferences for the user
+      preferences = await prisma.userPreferences.create({
+        data: {
+          user_id: user.id,
+          user_type: 'professional',
+          work_days: [1, 2, 3, 4, 5],
+          work_start_time: '09:00',
+          work_end_time: '17:00',
+          wake_time: '07:00',
+          class_days: [1, 2, 3, 4, 5],
+          class_start_time: '08:00',
+          class_end_time: '15:00',
+          study_start_time: '18:00',
+          study_end_time: '21:00',
+          exam_mode: false,
+          guide_tone: 'calm',
+          daily_guide_enabled: true,
+          guide_onboarding_done: true,
+          default_time_mode: 'normal',
+          workout_enabled: true,
+          workout_intensity: 'full',
+          micro_lesson_enabled: true,
+          breath_cues_enabled: true,
+          enabled_segments: ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'],
+          segment_order: ['morning_prime', 'movement', 'micro_lesson', 'breath'],
+          background_music_enabled: true,
+          current_streak: 0,
+        },
+      })
     }
 
     // Check if guide already exists for today

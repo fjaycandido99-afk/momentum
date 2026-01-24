@@ -230,6 +230,7 @@ export function DailyGuideHome() {
   const [showWeeklyReview, setShowWeeklyReview] = useState(false)
   const [showMorningComplete, setShowMorningComplete] = useState(false)
   const [morningCompleteCelebrated, setMorningCompleteCelebrated] = useState(false)
+  const [generationError, setGenerationError] = useState<string | null>(null)
 
   const today = new Date()
 
@@ -292,9 +293,15 @@ export function DailyGuideHome() {
           // No guide yet, show energy prompt to generate
           setShowEnergyPrompt(true)
         }
+      } else {
+        // API returned an error (e.g., 401 for guests) - show energy prompt anyway
+        console.error('Guide API error:', guideRes.status)
+        setShowEnergyPrompt(true)
       }
     } catch (error) {
       console.error('Error fetching data:', error)
+      // On error, show energy prompt so user can try to generate
+      setShowEnergyPrompt(true)
     } finally {
       setIsLoading(false)
     }
@@ -306,6 +313,7 @@ export function DailyGuideHome() {
 
   const generateGuide = async (energyLevel?: EnergyLevel) => {
     setIsGenerating(true)
+    setGenerationError(null)
     try {
       const response = await fetch('/api/daily-guide/generate', {
         method: 'POST',
@@ -327,9 +335,18 @@ export function DailyGuideHome() {
         if (energyLevel) {
           setSelectedEnergy(energyLevel)
         }
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Guide generation failed:', response.status, errorData)
+        if (response.status === 401) {
+          setGenerationError('Please sign in to generate your daily guide')
+        } else {
+          setGenerationError(errorData.error || 'Failed to generate guide. Please try again.')
+        }
       }
     } catch (error) {
       console.error('Error generating guide:', error)
+      setGenerationError('Network error. Please check your connection and try again.')
     } finally {
       setIsGenerating(false)
     }
@@ -774,6 +791,11 @@ export function DailyGuideHome() {
       {/* Energy prompt (initial) */}
       {showEnergyPrompt && !guide && (
         <div className="px-6 mb-6">
+          {generationError && (
+            <div className="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+              <p className="text-sm text-red-400">{generationError}</p>
+            </div>
+          )}
           <EnergyPrompt
             onSelect={handleEnergySelect}
             isLoading={isGenerating}
