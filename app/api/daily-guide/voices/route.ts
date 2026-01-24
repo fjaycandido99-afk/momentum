@@ -2,10 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import Groq from 'groq-sdk'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 const prisma = new PrismaClient()
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-})
+
+// Lazy initialization to avoid build-time errors
+let groq: Groq | null = null
+function getGroq() {
+  if (!groq) {
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+  }
+  return groq
+}
 
 // Voice guide types
 type VoiceGuideType = 'breathing' | 'affirmation' | 'gratitude' | 'sleep' | 'grounding'

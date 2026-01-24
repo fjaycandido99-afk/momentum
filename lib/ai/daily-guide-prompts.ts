@@ -25,9 +25,14 @@ export type GuideSegment =
   | 'checkpoint_3'
   | 'tomorrow_preview'
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-})
+// Lazy initialization to avoid build-time errors
+let groq: Groq | null = null
+function getGroq() {
+  if (!groq) {
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+  }
+  return groq
+}
 
 const DAY_TYPE_CONTEXT: Record<DayType, string> = {
   work: 'This is a work day. The user needs to be focused, grounded, and efficient. Acknowledge the demands ahead without adding pressure.',
@@ -505,7 +510,7 @@ export async function generateModuleContent(
   }
 
   try {
-    const response = await groq.chat.completions.create({
+    const response = await getGroq().chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         {

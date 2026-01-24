@@ -3,9 +3,17 @@ import Groq from 'groq-sdk'
 import fs from 'fs'
 import path from 'path'
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-})
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
+// Lazy initialization to avoid build-time errors
+let groq: Groq | null = null
+function getGroq() {
+  if (!groq) {
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+  }
+  return groq
+}
 
 // File-based cache directory for persistent audio storage
 const CACHE_DIR = path.join(process.cwd(), '.audio-cache')
@@ -302,7 +310,7 @@ export async function POST(request: NextRequest) {
 
     // If no pre-written script, generate with AI
     if (!script) {
-      const completion = await groq.chat.completions.create({
+      const completion = await getGroq().chat.completions.create({
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: 'You are a calm, soothing meditation guide. Write scripts that are peaceful and reassuring. Use ellipses (...) for pauses. No markdown formatting.' },

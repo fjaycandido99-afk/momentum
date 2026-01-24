@@ -1,8 +1,13 @@
 import Groq from 'groq-sdk'
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-})
+// Lazy initialization to avoid build-time errors
+let groq: Groq | null = null
+function getGroq() {
+  if (!groq) {
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+  }
+  return groq
+}
 
 export type SegmentType = 'activation' | 'breathing' | 'micro_lesson' | 'cooldown'
 
@@ -53,7 +58,7 @@ export async function generateSessionContent(
   const prompt = buildPrompt(activityType, voiceStyle, durationMinutes, segmentPlan)
 
   try {
-    const response = await groq.chat.completions.create({
+    const response = await getGroq().chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         {
