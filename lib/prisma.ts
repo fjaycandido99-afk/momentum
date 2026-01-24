@@ -4,8 +4,8 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Use pooled connection for serverless (port 6543 with pgbouncer)
-const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres.jkrpreixylczfdfdyxrm:Aundanao102499@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true'
+// Direct connection (port 5432) - more reliable for Supabase
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:Aundanao102499@db.jkrpreixylczfdfdyxrm.supabase.co:5432/postgres'
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   datasources: {
