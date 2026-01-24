@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendPushToUser, NotificationType, NotificationPayload } from '@/lib/push-service'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 /**
  * Send a push notification to the current user (for testing)
  * or to a specific user (admin only)

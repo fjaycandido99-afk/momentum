@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCachedVideos, setCachedVideos } from '@/lib/video-cache'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3'
 

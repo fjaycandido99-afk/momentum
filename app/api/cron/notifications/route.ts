@@ -5,6 +5,9 @@ import {
   sendWeeklyReviewReminders,
 } from '@/lib/push-service'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 /**
  * Cron endpoint for scheduled push notifications
  *

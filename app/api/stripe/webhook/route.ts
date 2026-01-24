@@ -3,6 +3,9 @@ import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import Stripe from 'stripe'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 // Disable body parsing, we need raw body for webhook verification
 export const runtime = 'nodejs'
 

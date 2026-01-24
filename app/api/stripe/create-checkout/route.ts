@@ -3,6 +3,9 @@ import { stripe, PRICE_IDS, TRIAL_DAYS } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()

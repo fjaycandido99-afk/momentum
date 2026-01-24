@@ -9,6 +9,9 @@ import {
 import { getDateString } from '@/lib/daily-guide/day-type'
 import type { GuideSegment } from '@/lib/daily-guide/day-type'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 // All valid module/segment types
 const VALID_MODULES: GuideSegment[] = [
   'morning',

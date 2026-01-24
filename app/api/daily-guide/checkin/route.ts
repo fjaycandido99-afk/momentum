@@ -3,6 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getDateString } from '@/lib/daily-guide/day-type'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 // All valid segments that can be checked in
 const VALID_SEGMENTS = [
   // Morning flow segments

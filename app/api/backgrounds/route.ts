@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 const BACKGROUND_BUCKET = 'backgrounds'
 
 // Use service role for listing public storage (anon key can't list by default)

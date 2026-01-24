@@ -10,6 +10,9 @@ import {
 import { getDateString } from '@/lib/daily-guide/day-type'
 import type { DayType, TimeMode, EnergyLevel, GuideTone, WorkoutIntensity } from '@/lib/daily-guide/decision-tree'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()

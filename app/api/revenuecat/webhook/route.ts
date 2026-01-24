@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 // RevenueCat webhook event types
 type RevenueCatEvent =
   | 'INITIAL_PURCHASE'
