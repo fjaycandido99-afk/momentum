@@ -48,98 +48,7 @@ const BACKGROUND_IMAGES = [
   '/backgrounds/bg31.jpg',
 ]
 
-// Music-specific backgrounds - each genre has its own aesthetic
-const MUSIC_BACKGROUNDS: Record<string, { images: string[]; showRain: boolean }> = {
-  lofi: {
-    images: [
-      '/backgrounds/lofi/lofi1.jpg',
-      '/backgrounds/lofi/lofi2.jpg',
-      '/backgrounds/lofi/lofi3.jpg',
-      '/backgrounds/lofi/lofi4.jpg',
-      '/backgrounds/lofi/lofi5.jpg',
-      '/backgrounds/lofi/lofi6.jpg',
-      '/backgrounds/lofi/lofi7.jpg',
-      '/backgrounds/lofi/lofi8.jpg',
-      '/backgrounds/lofi/lofi9.jpg',
-      '/backgrounds/lofi/lofi10.jpg',
-      '/backgrounds/lofi/lofi11.jpg',
-      '/backgrounds/lofi/lofi12.jpg',
-      '/backgrounds/lofi/lofi13.jpg',
-      '/backgrounds/lofi/lofi14.jpg',
-      '/backgrounds/lofi/lofi15.jpg',
-      '/backgrounds/lofi/lofi16.jpg',
-      '/backgrounds/lofi/lofi17.jpg',
-      '/backgrounds/lofi/lofi18.jpg',
-      '/backgrounds/lofi/lofi19.jpg',
-      '/backgrounds/lofi/lofi20.jpg',
-      '/backgrounds/lofi/lofi21.jpg',
-      '/backgrounds/lofi/lofi22.jpg',
-      '/backgrounds/lofi/lofi23.jpg',
-      '/backgrounds/lofi/lofi24.jpg',
-      '/backgrounds/lofi/lofi25.jpg',
-      '/backgrounds/lofi/lofi26.jpg',
-      '/backgrounds/lofi/lofi27.jpg',
-      '/backgrounds/lofi/lofi28.jpg',
-      '/backgrounds/lofi/lofi29.jpg',
-      '/backgrounds/lofi/lofi30.jpg',
-      '/backgrounds/lofi/lofi31.jpg',
-      '/backgrounds/lofi/lofi32.jpg',
-      '/backgrounds/lofi/lofi33.jpg',
-      '/backgrounds/lofi/lofi34.jpg',
-    ],
-    showRain: false, // Rain effect disabled for now
-  },
-  piano: {
-    images: [
-      '/backgrounds/piano/piano1.jpg',
-      '/backgrounds/piano/piano2.jpg',
-      '/backgrounds/piano/piano3.jpg',
-      '/backgrounds/piano/piano4.jpg',
-      '/backgrounds/piano/piano5.jpg',
-    ],
-    showRain: false,
-  },
-  jazz: {
-    images: [
-      '/backgrounds/jazz/jazz1.jpg',
-      '/backgrounds/jazz/jazz2.jpg',
-      '/backgrounds/jazz/jazz3.jpg',
-      '/backgrounds/jazz/jazz4.jpg',
-      '/backgrounds/jazz/jazz5.jpg',
-    ],
-    showRain: false, // Rain disabled for now
-  },
-  classical: {
-    images: [
-      '/backgrounds/classical/classical1.jpg',
-      '/backgrounds/classical/classical2.jpg',
-      '/backgrounds/classical/classical3.jpg',
-      '/backgrounds/classical/classical4.jpg',
-      '/backgrounds/classical/classical5.jpg',
-    ],
-    showRain: false,
-  },
-  ambient: {
-    images: [
-      '/backgrounds/ambient/ambient1.jpg',
-      '/backgrounds/ambient/ambient2.jpg',
-      '/backgrounds/ambient/ambient3.jpg',
-      '/backgrounds/ambient/ambient4.jpg',
-      '/backgrounds/ambient/ambient5.jpg',
-    ],
-    showRain: false,
-  },
-  study: {
-    images: [
-      '/backgrounds/study/study1.jpg',
-      '/backgrounds/study/study2.jpg',
-      '/backgrounds/study/study3.jpg',
-      '/backgrounds/study/study4.jpg',
-      '/backgrounds/study/study5.jpg',
-    ],
-    showRain: false, // Rain disabled for now
-  },
-}
+// Backgrounds are now fetched from Supabase Storage via fetchVoicePlayerBackgrounds()
 
 // Daily motivational topics - rotates daily, same for all users
 // Channels that allow embedding: Motiversity, MotivationHub, Absolute Motivation, After Skool, T&H Inspiration
@@ -588,12 +497,14 @@ export default function DiscoverPage() {
         {activeTab === 'music' && (
           <DailyMusicTab
             preferredGenre={themeContext?.genre}
-            onPlayVideo={(video, genre, index) => {
-              const musicBg = MUSIC_BACKGROUNDS[genre.id]
-              const backgrounds = musicBg?.images || []
+            onPlayVideo={async (video, genre, index) => {
+              console.log('[Music] Playing video for genre:', genre.id)
+              // Fetch backgrounds from Supabase Storage
+              const backgrounds = await fetchVoicePlayerBackgrounds(genre.id)
               const randomBg = backgrounds.length > 0
                 ? backgrounds[index % backgrounds.length]
                 : undefined
+              console.log('[Music] Setting backgroundImage:', randomBg)
               setPlayingSound({
                 id: video.id,
                 word: genre.word,
@@ -601,7 +512,7 @@ export default function DiscoverPage() {
                 youtubeId: video.youtubeId,
                 script: '',
                 backgroundImage: randomBg,
-                showRain: musicBg?.showRain || false,
+                showRain: false,
               })
             }}
           />
@@ -611,21 +522,35 @@ export default function DiscoverPage() {
   )
 }
 
-// Get a random background for a genre
-function getVoicePlayerBackground(genre?: string): string | null {
-  if (!genre) return null
+// Cache for fetched background images per genre
+const voicePlayerBackgroundsCache: Map<string, string[]> = new Map()
 
-  const backgrounds: Record<string, string[]> = {
-    lofi: Array.from({ length: 34 }, (_, i) => `/backgrounds/lofi/lofi${i + 1}.jpg`),
-    piano: Array.from({ length: 5 }, (_, i) => `/backgrounds/piano/piano${i + 1}.jpg`),
-    jazz: Array.from({ length: 5 }, (_, i) => `/backgrounds/jazz/jazz${i + 1}.jpg`),
-    classical: Array.from({ length: 5 }, (_, i) => `/backgrounds/classical/classical${i + 1}.jpg`),
-    ambient: Array.from({ length: 5 }, (_, i) => `/backgrounds/ambient/ambient${i + 1}.jpg`),
-    study: Array.from({ length: 5 }, (_, i) => `/backgrounds/study/study${i + 1}.jpg`),
+// Fetch backgrounds for a genre from Supabase Storage
+async function fetchVoicePlayerBackgrounds(genre: string): Promise<string[]> {
+  if (voicePlayerBackgroundsCache.has(genre)) {
+    console.log(`[VoicePlayer] Using cached ${genre}:`, voicePlayerBackgroundsCache.get(genre)!.length, 'images')
+    return voicePlayerBackgroundsCache.get(genre)!
   }
 
-  const genreBackgrounds = backgrounds[genre] || backgrounds.lofi
-  return genreBackgrounds[Math.floor(Math.random() * genreBackgrounds.length)]
+  try {
+    console.log(`[VoicePlayer] Fetching ${genre} from API...`)
+    const response = await fetch(`/api/backgrounds?genre=${genre}`)
+    if (response.ok) {
+      const data = await response.json()
+      const urls = data.images?.map((img: { url: string }) => img.url) || []
+      console.log(`[VoicePlayer] Got ${urls.length} images for ${genre}`)
+      if (urls.length > 0) {
+        console.log(`[VoicePlayer] First URL:`, urls[0])
+      }
+      voicePlayerBackgroundsCache.set(genre, urls)
+      return urls
+    } else {
+      console.error(`[VoicePlayer] API error:`, response.status)
+    }
+  } catch (error) {
+    console.error('[VoicePlayer] Fetch error:', error)
+  }
+  return []
 }
 
 // Voice Player Component with Word-by-Word Captions
@@ -649,10 +574,20 @@ function VoicePlayer({
   const [isLoading, setIsLoading] = useState(true)
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
 
-  // Set background based on genre
+  // Set background based on genre - fetch from Supabase Storage
   useEffect(() => {
+    console.log('[VoicePlayer] useEffect genre:', genre)
     if (genre) {
-      setBackgroundImage(getVoicePlayerBackground(genre))
+      fetchVoicePlayerBackgrounds(genre).then((backgrounds) => {
+        console.log('[VoicePlayer] Got backgrounds for', genre, ':', backgrounds.length)
+        if (backgrounds.length > 0) {
+          const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)]
+          console.log('[VoicePlayer] Setting background:', randomBg)
+          setBackgroundImage(randomBg)
+        } else {
+          console.log('[VoicePlayer] No backgrounds to set')
+        }
+      })
     }
   }, [genre])
 
@@ -705,8 +640,10 @@ function VoicePlayer({
             src={backgroundImage}
             alt=""
             className="w-full h-full object-cover"
+            onLoad={() => console.log('[VoicePlayer] Image loaded successfully:', backgroundImage)}
             onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none'
+              console.error('[VoicePlayer] Image failed to load:', backgroundImage)
+              ;(e.target as HTMLImageElement).style.display = 'none'
             }}
           />
           {/* Dark overlay for readability */}

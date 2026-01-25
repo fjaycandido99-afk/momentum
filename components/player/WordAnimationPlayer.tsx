@@ -22,6 +22,7 @@ const colorMap: Record<string, { primary: string; glow: string; bg: string }> = 
 }
 
 export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, onClose }: WordAnimationPlayerProps) {
+  console.log('[WordAnimationPlayer] Rendering with backgroundImage:', backgroundImage)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [playerReady, setPlayerReady] = useState(false)
@@ -175,9 +176,15 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
       {/* Background image */}
       {backgroundImage && (
         <>
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${backgroundImage})` }}
+          <img
+            src={backgroundImage}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            onLoad={() => console.log('[WordAnimationPlayer] Image loaded:', backgroundImage)}
+            onError={(e) => {
+              console.error('[WordAnimationPlayer] Image failed:', backgroundImage)
+              ;(e.target as HTMLImageElement).style.display = 'none'
+            }}
           />
           {/* Dark overlay for readability */}
           <div className="absolute inset-0 bg-black/60" />

@@ -14,6 +14,9 @@ interface MusicThemeSelectorProps {
   initialGenre?: string | null
 }
 
+// Cache for genre preview backgrounds
+const genreBackgroundsCache: Map<string, string> = new Map()
+
 export function MusicThemeSelector({
   onSelect,
   onSkip,
@@ -23,9 +26,39 @@ export function MusicThemeSelector({
   const [selectedGenre, setSelectedGenre] = useState<string | null>(initialGenre)
   const [playingGenre, setPlayingGenre] = useState<string | null>(null)
   const [isPlayerReady, setIsPlayerReady] = useState(false)
+  const [genreBackgrounds, setGenreBackgrounds] = useState<Record<string, string>>({})
   const playerRef = useRef<YTPlayer | null>(null)
   const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Fetch background images for all genres from Supabase Storage
+  useEffect(() => {
+    const genres = Object.keys(MUSIC_SAMPLES)
+
+    genres.forEach(async (genre) => {
+      // Check cache first
+      if (genreBackgroundsCache.has(genre)) {
+        setGenreBackgrounds(prev => ({ ...prev, [genre]: genreBackgroundsCache.get(genre)! }))
+        return
+      }
+
+      try {
+        const response = await fetch(`/api/backgrounds?genre=${genre}`)
+        if (response.ok) {
+          const data = await response.json()
+          const urls = data.images?.map((img: { url: string }) => img.url) || []
+          if (urls.length > 0) {
+            // Pick a random one for preview
+            const previewUrl = urls[Math.floor(Math.random() * urls.length)]
+            genreBackgroundsCache.set(genre, previewUrl)
+            setGenreBackgrounds(prev => ({ ...prev, [genre]: previewUrl }))
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching backgrounds for ${genre}:`, error)
+      }
+    })
+  }, [])
 
   // Load YouTube IFrame API
   useEffect(() => {
@@ -159,7 +192,7 @@ export function MusicThemeSelector({
             const sample = MUSIC_SAMPLES[genre]
             const isSelected = selectedGenre === genre
             const isPlaying = playingGenre === genre
-            const previewBg = `/backgrounds/${genre}/${genre}1.jpg`
+            const previewBg = genreBackgrounds[genre] || ''
 
             return (
               <div
@@ -175,8 +208,12 @@ export function MusicThemeSelector({
               >
                 {/* Background Image */}
                 <div
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${previewBg})` }}
+                  className="absolute inset-0 bg-cover bg-center transition-opacity duration-300"
+                  style={{
+                    backgroundImage: previewBg ? `url(${previewBg})` : 'none',
+                    backgroundColor: previewBg ? undefined : '#1a1a24',
+                    opacity: previewBg ? 1 : 0.5
+                  }}
                 />
                 <div className="absolute inset-0 bg-black/50" />
 

@@ -87,6 +87,15 @@ const SEGMENT_OPTIONS = [
   { id: 'day_close', label: 'Day Close', icon: Moon, required: true },
 ]
 
+// Format 24h time to 12h AM/PM
+function formatTime12h(time24: string): string {
+  if (!time24) return '12:00 AM'
+  const [hours, minutes] = time24.split(':').map(Number)
+  const period = hours >= 12 ? 'PM' : 'AM'
+  const hours12 = hours % 12 || 12
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`
+}
+
 function SettingsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -367,32 +376,50 @@ function SettingsContent() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm text-white/70 mb-2">Wake time</label>
-              <input
-                type="time"
-                value={wakeTime}
-                onChange={(e) => setWakeTime(e.target.value)}
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
-              />
+              <div className="relative">
+                <input
+                  type="time"
+                  value={wakeTime}
+                  onChange={(e) => setWakeTime(e.target.value)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  style={{ WebkitAppearance: 'none', zIndex: 10 }}
+                />
+                <div className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium pointer-events-none">
+                  {formatTime12h(wakeTime)}
+                </div>
+              </div>
             </div>
             {(userType === 'professional' || userType === 'hybrid') && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm text-white/70 mb-2">Work starts</label>
-                  <input
-                    type="time"
-                    value={workStartTime}
-                    onChange={(e) => setWorkStartTime(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
-                  />
+                  <div className="relative">
+                    <input
+                      type="time"
+                      value={workStartTime}
+                      onChange={(e) => setWorkStartTime(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      style={{ WebkitAppearance: 'none', zIndex: 10 }}
+                    />
+                    <div className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium pointer-events-none">
+                      {formatTime12h(workStartTime)}
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm text-white/70 mb-2">Work ends</label>
-                  <input
-                    type="time"
-                    value={workEndTime}
-                    onChange={(e) => setWorkEndTime(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
-                  />
+                  <div className="relative">
+                    <input
+                      type="time"
+                      value={workEndTime}
+                      onChange={(e) => setWorkEndTime(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      style={{ WebkitAppearance: 'none', zIndex: 10 }}
+                    />
+                    <div className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium pointer-events-none">
+                      {formatTime12h(workEndTime)}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -401,41 +428,65 @@ function SettingsContent() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm text-white/70 mb-2">Classes start</label>
-                    <input
-                      type="time"
-                      value={classStartTime}
-                      onChange={(e) => setClassStartTime(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
-                    />
+                    <div className="relative">
+                      <input
+                        type="time"
+                        value={classStartTime}
+                        onChange={(e) => setClassStartTime(e.target.value)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        style={{ WebkitAppearance: 'none', zIndex: 10 }}
+                      />
+                      <div className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium pointer-events-none">
+                        {formatTime12h(classStartTime)}
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm text-white/70 mb-2">Classes end</label>
-                    <input
-                      type="time"
-                      value={classEndTime}
-                      onChange={(e) => setClassEndTime(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
-                    />
+                    <div className="relative">
+                      <input
+                        type="time"
+                        value={classEndTime}
+                        onChange={(e) => setClassEndTime(e.target.value)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        style={{ WebkitAppearance: 'none', zIndex: 10 }}
+                      />
+                      <div className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium pointer-events-none">
+                        {formatTime12h(classEndTime)}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm text-white/70 mb-2">Study starts</label>
-                    <input
-                      type="time"
-                      value={studyStartTime}
-                      onChange={(e) => setStudyStartTime(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
-                    />
+                    <div className="relative">
+                      <input
+                        type="time"
+                        value={studyStartTime}
+                        onChange={(e) => setStudyStartTime(e.target.value)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        style={{ WebkitAppearance: 'none', zIndex: 10 }}
+                      />
+                      <div className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium pointer-events-none">
+                        {formatTime12h(studyStartTime)}
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm text-white/70 mb-2">Study ends</label>
-                    <input
-                      type="time"
-                      value={studyEndTime}
-                      onChange={(e) => setStudyEndTime(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
-                    />
+                    <div className="relative">
+                      <input
+                        type="time"
+                        value={studyEndTime}
+                        onChange={(e) => setStudyEndTime(e.target.value)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        style={{ WebkitAppearance: 'none', zIndex: 10 }}
+                      />
+                      <div className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium pointer-events-none">
+                        {formatTime12h(studyEndTime)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
@@ -572,12 +623,18 @@ function SettingsContent() {
           </div>
           {dailyReminder && (
             <div className="mt-4">
-              <input
-                type="time"
-                value={reminderTime}
-                onChange={(e) => setReminderTime(e.target.value)}
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
-              />
+              <div className="relative">
+                <input
+                  type="time"
+                  value={reminderTime}
+                  onChange={(e) => setReminderTime(e.target.value)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  style={{ WebkitAppearance: 'none', zIndex: 10 }}
+                />
+                <div className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium pointer-events-none">
+                  {formatTime12h(reminderTime)}
+                </div>
+              </div>
             </div>
           )}
         </section>

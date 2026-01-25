@@ -76,19 +76,35 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     async function fetchPreferences() {
       try {
+        // First check localStorage for genre (faster, works for guests)
+        const localGenre = typeof window !== 'undefined'
+          ? localStorage.getItem('voxu_music_genre')
+          : null
+
         const response = await fetch('/api/daily-guide/preferences')
         if (response.ok) {
           const prefs = await response.json()
-          const preferredGenre = prefs.preferred_music_genre || DEFAULT_GENRE
+          // Use server preference if logged in and has preference, otherwise use local
+          const preferredGenre = prefs.preferred_music_genre || localGenre || DEFAULT_GENRE
           setGenreState(preferredGenre)
           setThemeOnboardingDoneState(prefs.theme_onboarding_done ?? false)
           // Fetch backgrounds for the preferred genre
           fetchBackgrounds(preferredGenre)
+        } else {
+          // Use local storage fallback
+          const genre = localGenre || DEFAULT_GENRE
+          setGenreState(genre)
+          fetchBackgrounds(genre)
         }
       } catch (error) {
         console.error('Error fetching theme preferences:', error)
-        // Still try to fetch backgrounds for default genre
-        fetchBackgrounds(DEFAULT_GENRE)
+        // Use local storage fallback
+        const localGenre = typeof window !== 'undefined'
+          ? localStorage.getItem('voxu_music_genre')
+          : null
+        const genre = localGenre || DEFAULT_GENRE
+        setGenreState(genre)
+        fetchBackgrounds(genre)
       } finally {
         setIsLoading(false)
       }
@@ -97,11 +113,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     fetchPreferences()
   }, [fetchBackgrounds])
 
-  // Set genre and update in backend
+  // Set genre and update in backend + localStorage
   const setGenre = useCallback(async (newGenre: string) => {
     setGenreState(newGenre)
     // Fetch backgrounds for the new genre
     fetchBackgrounds(newGenre)
+
+    // Save to localStorage for persistence (works even when auth fails)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('voxu_music_genre', newGenre)
+    }
 
     try {
       await fetch('/api/daily-guide/preferences', {

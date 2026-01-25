@@ -50,7 +50,8 @@ export async function GET(request: NextRequest) {
       .filter(file => imageExtensions.some(ext => file.name.toLowerCase().endsWith(ext)))
       .map(file => ({
         name: file.name,
-        url: `${supabaseUrl}/storage/v1/object/public/${BACKGROUND_BUCKET}/${genre}/${file.name}`,
+        // URL-encode the filename to handle spaces and special characters
+        url: `${supabaseUrl}/storage/v1/object/public/${BACKGROUND_BUCKET}/${genre}/${encodeURIComponent(file.name)}`,
         size: file.metadata?.size,
       }))
 

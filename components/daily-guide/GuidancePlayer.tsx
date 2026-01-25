@@ -5,6 +5,7 @@ import { X, Pause, Play, RotateCcw, Volume2, VolumeX, Check, Music, Crown, Clock
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { useThemeOptional } from '@/contexts/ThemeContext'
 
 // Free tier time limit in seconds (10 minutes)
 const FREE_TIER_TIME_LIMIT = 10 * 60
@@ -113,31 +114,36 @@ const genreLabels: Record<string, string> = {
   study: 'Study',
 }
 
-// Background images for each music genre
-const GENRE_BACKGROUNDS: Record<string, string[]> = {
-  lofi: Array.from({ length: 34 }, (_, i) => `/backgrounds/lofi/lofi${i + 1}.jpg`),
-  piano: Array.from({ length: 5 }, (_, i) => `/backgrounds/piano/piano${i + 1}.jpg`),
-  jazz: Array.from({ length: 5 }, (_, i) => `/backgrounds/jazz/jazz${i + 1}.jpg`),
-  classical: Array.from({ length: 5 }, (_, i) => `/backgrounds/classical/classical${i + 1}.jpg`),
-  ambient: Array.from({ length: 5 }, (_, i) => `/backgrounds/ambient/ambient${i + 1}.jpg`),
-  study: Array.from({ length: 5 }, (_, i) => `/backgrounds/study/study${i + 1}.jpg`),
-}
+// Cache for fetched background images per genre
+const backgroundsCache: Map<string, string[]> = new Map()
 
-// Fallback backgrounds
-const FALLBACK_BACKGROUNDS = [
-  '/backgrounds/bg1.jpg',
-  '/backgrounds/bg2.jpg',
-  '/backgrounds/bg3.jpg',
-  '/backgrounds/bg4.jpg',
-  '/backgrounds/bg5.jpg',
-]
+// Fetch and get a random background for a genre from Supabase Storage
+async function fetchBackgroundsForGenre(genre: string): Promise<string[]> {
+  // Check cache first
+  if (backgroundsCache.has(genre)) {
+    console.log(`[Backgrounds] Using cached ${genre}:`, backgroundsCache.get(genre)!.length, 'images')
+    return backgroundsCache.get(genre)!
+  }
 
-// Get a random background for a genre
-function getRandomBackground(genre?: string): string | null {
-  if (!genre) return null
-
-  const backgrounds = GENRE_BACKGROUNDS[genre] || FALLBACK_BACKGROUNDS
-  return backgrounds[Math.floor(Math.random() * backgrounds.length)]
+  try {
+    console.log(`[Backgrounds] Fetching ${genre} from API...`)
+    const response = await fetch(`/api/backgrounds?genre=${genre}`)
+    if (response.ok) {
+      const data = await response.json()
+      const urls = data.images?.map((img: { url: string }) => img.url) || []
+      console.log(`[Backgrounds] Got ${urls.length} images for ${genre}`)
+      if (urls.length > 0) {
+        console.log(`[Backgrounds] Sample URL:`, urls[0])
+      }
+      backgroundsCache.set(genre, urls)
+      return urls
+    } else {
+      console.error(`[Backgrounds] API error for ${genre}:`, response.status)
+    }
+  } catch (error) {
+    console.error('[Backgrounds] Fetch error:', error)
+  }
+  return []
 }
 
 export function GuidancePlayer({
@@ -152,6 +158,7 @@ export function GuidancePlayer({
 }: GuidancePlayerProps) {
   const subscription = useSubscriptionOptional()
   const isPremium = subscription?.isPremium ?? false
+  const themeContext = useThemeOptional()
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -169,13 +176,34 @@ export function GuidancePlayer({
   const DUCKED_VOLUME = 15 // Volume when voice is playing (ducked)
   const NORMAL_VOLUME = musicVolume // User's preferred volume
 
-  // Set background image based on music genre
+  // Set background image based on music genre - use ThemeContext or fetch from API
   useEffect(() => {
-    if (musicGenre) {
-      const bg = getRandomBackground(musicGenre)
-      setBackgroundImage(bg)
+    console.log('[GuidancePlayer] musicGenre:', musicGenre, 'themeContext:', !!themeContext)
+
+    // Try to use ThemeContext first (if genre matches)
+    if (themeContext && themeContext.genre === musicGenre && themeContext.backgroundImages.length > 0) {
+      const bg = themeContext.getRandomBackground()
+      console.log('[GuidancePlayer] Using ThemeContext background:', bg)
+      if (bg && !bg.startsWith('linear-gradient')) {
+        setBackgroundImage(bg)
+        return
+      }
     }
-  }, [musicGenre])
+
+    // Otherwise fetch from API
+    if (musicGenre) {
+      fetchBackgroundsForGenre(musicGenre).then((backgrounds) => {
+        console.log('[GuidancePlayer] fetched backgrounds:', backgrounds.length, 'images')
+        if (backgrounds.length > 0) {
+          const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)]
+          console.log('[GuidancePlayer] setting background:', randomBg)
+          setBackgroundImage(randomBg)
+        } else {
+          console.log('[GuidancePlayer] No backgrounds found for genre:', musicGenre)
+        }
+      })
+    }
+  }, [musicGenre, themeContext])
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const musicPlayerRef = useRef<YTPlayer | null>(null)
