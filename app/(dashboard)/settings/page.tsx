@@ -108,6 +108,7 @@ function SettingsContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [subscriptionMessage, setSubscriptionMessage] = useState<string | null>(null)
   const [isLoadingPortal, setIsLoadingPortal] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   // Check for subscription success/cancel from Stripe redirect
   useEffect(() => {
@@ -183,8 +184,9 @@ function SettingsContent() {
   // Save preferences
   const savePreferences = async () => {
     setIsSaving(true)
+    setSaveMessage(null)
     try {
-      await fetch('/api/daily-guide/preferences', {
+      const response = await fetch('/api/daily-guide/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -210,8 +212,20 @@ function SettingsContent() {
           breath_cues_enabled: enabledSegments.includes('breath'),
         }),
       })
+      const data = await response.json()
+      if (response.ok) {
+        if (data.isGuest) {
+          setSaveMessage({ type: 'error', text: 'Sign in to save your preferences' })
+        } else {
+          setSaveMessage({ type: 'success', text: 'Settings saved!' })
+          setTimeout(() => setSaveMessage(null), 3000)
+        }
+      } else {
+        setSaveMessage({ type: 'error', text: data.error || 'Failed to save' })
+      }
     } catch (error) {
       console.error('Failed to save preferences:', error)
+      setSaveMessage({ type: 'error', text: 'Failed to save preferences' })
     } finally {
       setIsSaving(false)
     }
@@ -267,6 +281,15 @@ function SettingsContent() {
           </button>
         </div>
         <p className="text-white/60 text-sm mt-1">Customize your Daily Guide</p>
+        {saveMessage && (
+          <div className={`mt-3 p-3 rounded-xl text-sm ${
+            saveMessage.type === 'success'
+              ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+              : 'bg-red-500/10 border border-red-500/20 text-red-400'
+          }`}>
+            {saveMessage.text}
+          </div>
+        )}
       </div>
 
       <div className="px-6 space-y-6">

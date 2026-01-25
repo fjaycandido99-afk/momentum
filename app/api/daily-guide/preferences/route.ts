@@ -31,6 +31,8 @@ const DEFAULT_PREFERENCES = {
   segment_order: ['morning_prime', 'movement', 'micro_lesson', 'breath'],
   background_music_enabled: true,
   preferred_music_genre: null,
+  daily_reminder: true,
+  reminder_time: '07:00',
   current_streak: 0,
   last_active_date: null,
 }
@@ -90,6 +92,10 @@ export async function GET() {
         background_music_enabled: true,
         preferred_music_genre: true,
 
+        // Reminders
+        daily_reminder: true,
+        reminder_time: true,
+
         // Streak tracking
         current_streak: true,
         last_active_date: true,
@@ -135,6 +141,10 @@ export async function GET() {
         // Background music
         background_music_enabled: true,
         preferred_music_genre: null,
+
+        // Reminders
+        daily_reminder: true,
+        reminder_time: '07:00',
 
         // Streak tracking
         current_streak: 0,
@@ -205,6 +215,10 @@ export async function POST(request: NextRequest) {
       // Background music
       background_music_enabled,
       preferred_music_genre,
+
+      // Reminders
+      daily_reminder,
+      reminder_time,
     } = body
 
     const preferences = await prisma.userPreferences.upsert({
@@ -247,6 +261,10 @@ export async function POST(request: NextRequest) {
         // Background music
         ...(background_music_enabled !== undefined && { background_music_enabled }),
         ...(preferred_music_genre !== undefined && { preferred_music_genre }),
+
+        // Reminders
+        ...(daily_reminder !== undefined && { daily_reminder }),
+        ...(reminder_time !== undefined && { reminder_time }),
       },
       create: {
         user_id: user.id,
@@ -288,6 +306,10 @@ export async function POST(request: NextRequest) {
         // Background music
         background_music_enabled: background_music_enabled ?? true,
         preferred_music_genre: preferred_music_genre || null,
+
+        // Reminders
+        daily_reminder: daily_reminder ?? true,
+        reminder_time: reminder_time || '07:00',
       },
     })
 
