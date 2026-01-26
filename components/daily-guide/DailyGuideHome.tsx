@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   RefreshCw,
@@ -231,6 +231,7 @@ export function DailyGuideHome() {
   const [showMorningComplete, setShowMorningComplete] = useState(false)
   const [morningCompleteCelebrated, setMorningCompleteCelebrated] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
+  const isMountedRef = useRef(true)
 
   const today = new Date()
 
@@ -260,15 +261,21 @@ export function DailyGuideHome() {
         fetch('/api/daily-guide/preferences'),
       ])
 
+      if (!isMountedRef.current) return
+
       if (prefsRes.ok) {
         const prefsData = await prefsRes.json()
+        if (!isMountedRef.current) return
         setPreferences(prefsData)
         setMusicEnabled(prefsData.background_music_enabled ?? false)
         setCurrentMusicGenre(prefsData.preferred_music_genre || getTodaysMusicGenre(prefsData.preferred_music_genre))
       }
 
+      if (!isMountedRef.current) return
+
       if (guideRes.ok) {
         const guideData = await guideRes.json()
+        if (!isMountedRef.current) return
         if (guideData.data) {
           setGuide(guideData.data)
           setCheckpoints(guideData.checkpoints || [])
@@ -300,15 +307,20 @@ export function DailyGuideHome() {
       }
     } catch (error) {
       console.error('Error fetching data:', error)
+      if (!isMountedRef.current) return
       // On error, show energy prompt so user can try to generate
       setShowEnergyPrompt(true)
     } finally {
-      setIsLoading(false)
+      if (isMountedRef.current) setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
+    isMountedRef.current = true
     fetchData()
+    return () => {
+      isMountedRef.current = false
+    }
   }, [fetchData])
 
   const generateGuide = async (energyLevel?: EnergyLevel) => {

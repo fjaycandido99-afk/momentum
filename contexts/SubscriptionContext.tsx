@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import { FREE_TIER_LIMITS } from '@/lib/subscription-constants'
 
 export type SubscriptionTier = 'free' | 'premium'
@@ -76,25 +76,31 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const isMountedRef = useRef(true)
 
   // Fetch subscription data
   const fetchSubscription = useCallback(async () => {
     try {
       const response = await fetch('/api/subscription')
+      if (!isMountedRef.current) return
       if (response.ok) {
         const { data } = await response.json()
-        setSubscriptionData(data)
+        if (isMountedRef.current) setSubscriptionData(data)
       }
     } catch (error) {
       console.error('Error fetching subscription:', error)
     } finally {
-      setIsLoading(false)
+      if (isMountedRef.current) setIsLoading(false)
     }
   }, [])
 
   // Initial fetch
   useEffect(() => {
+    isMountedRef.current = true
     fetchSubscription()
+    return () => {
+      isMountedRef.current = false
+    }
   }, [fetchSubscription])
 
   // Check if user has access to a premium feature
@@ -136,20 +142,24 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
       if (response.ok) {
         const { data } = await response.json()
-        setSubscriptionData(prev => ({
-          ...prev,
-          sessionsToday: data.sessionsToday,
-          canStartSession: data.canStartMoreSessions,
-        }))
+        if (isMountedRef.current) {
+          setSubscriptionData(prev => ({
+            ...prev,
+            sessionsToday: data.sessionsToday,
+            canStartSession: data.canStartMoreSessions,
+          }))
+        }
         return true
       }
 
       if (response.status === 403) {
         // Session limit reached
-        setSubscriptionData(prev => ({
-          ...prev,
-          canStartSession: false,
-        }))
+        if (isMountedRef.current) {
+          setSubscriptionData(prev => ({
+            ...prev,
+            canStartSession: false,
+          }))
+        }
         return false
       }
 
