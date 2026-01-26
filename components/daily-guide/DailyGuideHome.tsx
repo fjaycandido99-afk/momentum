@@ -462,6 +462,7 @@ export function DailyGuideHome() {
 
       // For breath module, use the daily voices API (ElevenLabs generated once per day)
       if (moduleType === 'breath') {
+        console.log('[DailyGuideHome] Fetching breath audio...')
         const response = await fetch('/api/daily-guide/voices', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -470,6 +471,7 @@ export function DailyGuideHome() {
 
         if (response.ok) {
           const data = await response.json()
+          console.log('[DailyGuideHome] Got breath audio, has base64:', !!data.audioBase64)
           // Store for inline playback
           setModuleAudioData(prev => ({
             ...prev,
@@ -479,12 +481,15 @@ export function DailyGuideHome() {
               duration: data.duration || 120,
             }
           }))
+        } else {
+          console.error('[DailyGuideHome] Breath audio fetch failed:', response.status)
         }
         return
       }
 
       // For morning_prime, use day-type-specific voice
       if (moduleType === 'morning_prime') {
+        console.log('[DailyGuideHome] Fetching morning_prime audio...')
         const response = await fetch('/api/daily-guide/voices', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -493,6 +498,7 @@ export function DailyGuideHome() {
 
         if (response.ok) {
           const data = await response.json()
+          console.log('[DailyGuideHome] Got morning_prime audio, has base64:', !!data.audioBase64)
           // Store for inline playback
           setModuleAudioData(prev => ({
             ...prev,
@@ -502,6 +508,8 @@ export function DailyGuideHome() {
               duration: data.duration || 120,
             }
           }))
+        } else {
+          console.error('[DailyGuideHome] Morning prime audio fetch failed:', response.status)
         }
         return
       }

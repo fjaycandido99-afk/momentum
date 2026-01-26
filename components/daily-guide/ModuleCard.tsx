@@ -292,17 +292,22 @@ export function ModuleCard({
       ? `data:audio/mpeg;base64,${audioBase64}`
       : audioUrl
 
+    console.log('[ModuleCard] Audio effect running, source:', audioSource ? 'yes' : 'no', 'pendingPlay:', pendingPlay)
+
     if (!audioSource) return
 
     // Create audio element if not exists
     if (!audioRef.current) {
       audioRef.current = new Audio()
+      console.log('[ModuleCard] Created new Audio element')
     }
 
     const audio = audioRef.current
     audio.src = audioSource
+    console.log('[ModuleCard] Set audio source')
 
     const handleLoadedMetadata = () => {
+      console.log('[ModuleCard] loadedmetadata, duration:', audio.duration)
       setAudioDuration(audio.duration)
       setIsAudioLoading(false)
     }
@@ -312,20 +317,42 @@ export function ModuleCard({
     }
 
     const handleEnded = () => {
+      console.log('[ModuleCard] Audio ended')
       setIsPlaying(false)
       setCurrentTime(0)
       onComplete?.()
     }
 
-    const handlePlay = () => setIsPlaying(true)
-    const handlePause = () => setIsPlaying(false)
+    const handlePlay = () => {
+      console.log('[ModuleCard] Audio playing')
+      setIsPlaying(true)
+    }
+    const handlePause = () => {
+      console.log('[ModuleCard] Audio paused')
+      setIsPlaying(false)
+    }
 
     // Handle canplaythrough - auto-play if we were waiting
     const handleCanPlay = () => {
+      console.log('[ModuleCard] canplaythrough, pendingPlay:', pendingPlay)
       if (pendingPlay) {
         setPendingPlay(false)
         setHasStarted(true)
-        audio.play().catch(console.error)
+        setIsAudioLoading(false)
+        console.log('[ModuleCard] Auto-playing...')
+        audio.play().catch(e => console.error('[ModuleCard] Play error:', e))
+      }
+    }
+
+    // Also try loadeddata as fallback
+    const handleLoadedData = () => {
+      console.log('[ModuleCard] loadeddata, pendingPlay:', pendingPlay)
+      if (pendingPlay) {
+        setPendingPlay(false)
+        setHasStarted(true)
+        setIsAudioLoading(false)
+        console.log('[ModuleCard] Auto-playing from loadeddata...')
+        audio.play().catch(e => console.error('[ModuleCard] Play error:', e))
       }
     }
 
@@ -335,6 +362,7 @@ export function ModuleCard({
     audio.addEventListener('play', handlePlay)
     audio.addEventListener('pause', handlePause)
     audio.addEventListener('canplaythrough', handleCanPlay)
+    audio.addEventListener('loadeddata', handleLoadedData)
 
     return () => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
@@ -343,6 +371,7 @@ export function ModuleCard({
       audio.removeEventListener('play', handlePlay)
       audio.removeEventListener('pause', handlePause)
       audio.removeEventListener('canplaythrough', handleCanPlay)
+      audio.removeEventListener('loadeddata', handleLoadedData)
     }
   }, [audioBase64, audioUrl, onComplete, pendingPlay])
 
@@ -364,25 +393,34 @@ export function ModuleCard({
   }, [audioContext, hasStarted])
 
   const handlePlayPause = useCallback(async () => {
+    console.log('[ModuleCard] handlePlayPause called, audioBase64:', !!audioBase64, 'audioUrl:', !!audioUrl, 'isPlaying:', isPlaying)
+
     // If no audio data loaded yet, call onPlay to fetch it
     if (!audioBase64 && !audioUrl) {
+      console.log('[ModuleCard] No audio data, fetching...')
       setIsAudioLoading(true)
       setPendingPlay(true) // Will auto-play once data arrives
       onPlay()
       return
     }
 
-    if (!audioRef.current) return
+    if (!audioRef.current) {
+      console.log('[ModuleCard] No audio ref!')
+      return
+    }
 
     if (isPlaying) {
+      console.log('[ModuleCard] Pausing audio')
       audioRef.current.pause()
     } else {
+      console.log('[ModuleCard] Playing audio')
       setIsAudioLoading(true)
       try {
         await audioRef.current.play()
         setHasStarted(true)
+        console.log('[ModuleCard] Play started')
       } catch (error) {
-        console.error('Error playing audio:', error)
+        console.error('[ModuleCard] Error playing audio:', error)
       }
       setIsAudioLoading(false)
     }
