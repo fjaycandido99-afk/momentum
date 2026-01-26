@@ -42,13 +42,12 @@ import { FloatingJournalButton } from './FloatingJournalButton'
 import { getFormattedDate } from '@/lib/daily-guide/day-type'
 import { useThemeOptional } from '@/contexts/ThemeContext'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { useAudioOptional } from '@/contexts/AudioContext'
 import { SessionLimitBanner } from '@/components/premium/SessionLimitBanner'
 import { TrialBanner, TrialEndingBanner } from '@/components/premium/TrialBanner'
 import { FeatureLock, LockIcon } from '@/components/premium/FeatureLock'
 import { PremiumBadge } from '@/components/premium/PremiumBadge'
 import type { DayType, TimeMode, EnergyLevel, ModuleType, CheckpointConfig } from '@/lib/daily-guide/decision-tree'
-import type { YTPlayer } from '@/lib/youtube-types'
-import '@/lib/youtube-types'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 
@@ -208,6 +207,7 @@ export function DailyGuideHome() {
   const router = useRouter()
   const themeContext = useThemeOptional()
   const subscription = useSubscriptionOptional()
+  const audioContext = useAudioOptional()
   const [guide, setGuide] = useState<DailyGuide | null>(null)
   const [checkpoints, setCheckpoints] = useState<CheckpointConfig[]>([])
   const [durations, setDurations] = useState<Record<ModuleType, number>>({} as Record<ModuleType, number>)
@@ -221,7 +221,6 @@ export function DailyGuideHome() {
   const [selectedEnergy, setSelectedEnergy] = useState<EnergyLevel | null>(null)
   const [showMorningFlow, setShowMorningFlow] = useState(true)
   const [showStudentSection, setShowStudentSection] = useState(false)
-  const [musicEnabled, setMusicEnabled] = useState(false)
   const [currentMusicGenre, setCurrentMusicGenre] = useState<string | null>(null)
   const [activePlayer, setActivePlayer] = useState<{
     module: string
@@ -233,10 +232,12 @@ export function DailyGuideHome() {
   const [showMorningComplete, setShowMorningComplete] = useState(false)
   const [morningCompleteCelebrated, setMorningCompleteCelebrated] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
-  const [bgMusicVideoId, setBgMusicVideoId] = useState<string | null>(null)
-  const [bgMusicLoaded, setBgMusicLoaded] = useState(false)
   const isMountedRef = useRef(true)
-  const bgMusicPlayerRef = useRef<YTPlayer | null>(null)
+
+  // Use global audio context for music
+  const musicEnabled = audioContext?.musicEnabled ?? false
+  const setMusicEnabled = audioContext?.setMusicEnabled ?? (() => {})
+  const bgMusicLoaded = audioContext?.isMusicLoaded ?? false
 
   const today = new Date()
 
@@ -272,8 +273,15 @@ export function DailyGuideHome() {
         const prefsData = await prefsRes.json()
         if (!isMountedRef.current) return
         setPreferences(prefsData)
-        setMusicEnabled(prefsData.background_music_enabled ?? false)
-        setCurrentMusicGenre(prefsData.preferred_music_genre || getTodaysMusicGenre(prefsData.preferred_music_genre))
+        const genre = prefsData.preferred_music_genre || getTodaysMusicGenre(prefsData.preferred_music_genre)
+        setCurrentMusicGenre(genre)
+        // Sync with global audio context
+        if (audioContext) {
+          audioContext.setMusicGenre(genre)
+          if (prefsData.background_music_enabled && !audioContext.musicEnabled) {
+            audioContext.setMusicEnabled(true)
+          }
+        }
       }
 
       if (!isMountedRef.current) return
@@ -328,143 +336,24 @@ export function DailyGuideHome() {
     }
   }, [fetchData])
 
-  // Load YouTube IFrame API for background music
+  // Sync music genre with audio context when it changes
   useEffect(() => {
-    if (window.YT && window.YT.Player) return
+    if (audioContext && currentMusicGenre) {
+      audioContext.setMusicGenre(currentMusicGenre)
+    }
+  }, [audioContext, currentMusicGenre])
 
-    const tag = document.createElement('script')
-    tag.src = 'https://www.youtube.com/iframe_api'
-    const firstScriptTag = document.getElementsByTagName('script')[0]
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
-  }, [])
-
-  // Fetch background music video when genre changes
+  // Effective genre for display
   const effectiveGenre = useMemo(() => {
     return currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)
   }, [currentMusicGenre, preferences?.preferred_music_genre, themeContext?.genre])
 
+  // Notify audio context when session starts/ends
   useEffect(() => {
-    if (!musicEnabled || !effectiveGenre) return
-
-    const fetchMusic = async () => {
-      try {
-        const response = await fetch(`/api/music-videos?genre=${effectiveGenre}`)
-        const data = await response.json()
-        if (data.videos && data.videos.length > 0) {
-          const randomVideo = data.videos[Math.floor(Math.random() * data.videos.length)]
-          setBgMusicVideoId(randomVideo.youtubeId)
-        }
-      } catch (error) {
-        console.error('Failed to fetch background music:', error)
-      }
+    if (audioContext) {
+      audioContext.setSessionActive(!!activePlayer)
     }
-
-    fetchMusic()
-  }, [musicEnabled, effectiveGenre])
-
-  // Create/control background music player
-  useEffect(() => {
-    // If music is disabled or a session is active, stop the background music
-    if (!musicEnabled || activePlayer) {
-      if (bgMusicPlayerRef.current) {
-        try {
-          bgMusicPlayerRef.current.pauseVideo()
-        } catch (e) {
-          // Player might not be ready
-        }
-      }
-      return
-    }
-
-    // If music is enabled and we have a video ID, create/play the player
-    if (musicEnabled && bgMusicVideoId && !activePlayer) {
-      const createPlayer = () => {
-        if (!window.YT || !window.YT.Player) {
-          setTimeout(createPlayer, 100)
-          return
-        }
-
-        // Create container if needed
-        const containerId = 'bg-music-player'
-        let container = document.getElementById(containerId)
-        if (!container) {
-          container = document.createElement('div')
-          container.id = containerId
-          container.style.position = 'fixed'
-          container.style.width = '1px'
-          container.style.height = '1px'
-          container.style.opacity = '0'
-          container.style.pointerEvents = 'none'
-          container.style.zIndex = '-1'
-          document.body.appendChild(container)
-        }
-
-        // Destroy existing player
-        if (bgMusicPlayerRef.current) {
-          try {
-            bgMusicPlayerRef.current.destroy()
-          } catch (e) {}
-        }
-
-        // Create new player
-        bgMusicPlayerRef.current = new window.YT.Player(containerId, {
-          videoId: bgMusicVideoId,
-          playerVars: {
-            autoplay: 1,
-            loop: 1,
-            playlist: bgMusicVideoId,
-            controls: 0,
-            disablekb: 1,
-            fs: 0,
-            modestbranding: 1,
-            playsinline: 1,
-            origin: window.location.origin,
-          },
-          events: {
-            onReady: (event) => {
-              event.target.setVolume(30) // Set volume to 30%
-              event.target.playVideo()
-              setBgMusicLoaded(true)
-            },
-            onStateChange: (event) => {
-              // If video ended or paused unexpectedly, restart
-              if (event.data === 0 || event.data === 2) {
-                if (musicEnabled && !activePlayer) {
-                  event.target.playVideo()
-                }
-              }
-            },
-            onError: (event) => {
-              console.error('Background music error:', event.data)
-            },
-          },
-        })
-      }
-
-      createPlayer()
-    }
-
-    return () => {
-      // Cleanup player when component unmounts
-      if (bgMusicPlayerRef.current) {
-        try {
-          bgMusicPlayerRef.current.destroy()
-        } catch (e) {}
-        bgMusicPlayerRef.current = null
-      }
-      const container = document.getElementById('bg-music-player')
-      if (container) container.remove()
-    }
-  }, [musicEnabled, bgMusicVideoId, activePlayer])
-
-  // Resume background music when session ends
-  useEffect(() => {
-    if (!activePlayer && musicEnabled && bgMusicPlayerRef.current && bgMusicLoaded) {
-      try {
-        bgMusicPlayerRef.current.playVideo()
-      } catch (e) {}
-    }
-  }, [activePlayer, musicEnabled, bgMusicLoaded])
+  }, [audioContext, activePlayer])
 
   const generateGuide = async (energyLevel?: EnergyLevel) => {
     setIsGenerating(true)
@@ -933,24 +822,7 @@ export function DailyGuideHome() {
               </div>
             </div>
             <button
-              onClick={() => {
-                const newEnabled = !musicEnabled
-                setMusicEnabled(newEnabled)
-                if (!newEnabled) {
-                  // Stop and cleanup when disabling
-                  if (bgMusicPlayerRef.current) {
-                    try {
-                      bgMusicPlayerRef.current.stopVideo()
-                      bgMusicPlayerRef.current.destroy()
-                    } catch (e) {}
-                    bgMusicPlayerRef.current = null
-                  }
-                  setBgMusicLoaded(false)
-                  setBgMusicVideoId(null)
-                  const container = document.getElementById('bg-music-player')
-                  if (container) container.remove()
-                }
-              }}
+              onClick={() => setMusicEnabled(!musicEnabled)}
               className={`p-2 rounded-lg transition-all ${
                 musicEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/50'
               }`}
