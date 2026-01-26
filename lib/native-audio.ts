@@ -208,7 +208,9 @@ export function addNotificationListener(
 ) {
   if (!isNative) return () => {}
 
-  const listener = LocalNotifications.addListener(
+  let listenerHandle: { remove: () => void } | null = null
+
+  LocalNotifications.addListener(
     'localNotificationActionPerformed',
     (notification) => {
       callback({
@@ -216,7 +218,11 @@ export function addNotificationListener(
         actionId: notification.actionId,
       })
     }
-  )
+  ).then(handle => {
+    listenerHandle = handle
+  })
 
-  return () => listener.remove()
+  return () => {
+    listenerHandle?.remove()
+  }
 }

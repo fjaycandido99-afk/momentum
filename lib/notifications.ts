@@ -269,7 +269,9 @@ export function addNotificationTapListener(
 ): () => void {
   if (!isNative) return () => {}
 
-  const listener = LocalNotifications.addListener(
+  let listenerHandle: { remove: () => void } | null = null
+
+  LocalNotifications.addListener(
     'localNotificationActionPerformed',
     (notification) => {
       console.log('[Notifications] Action performed:', notification)
@@ -279,9 +281,13 @@ export function addNotificationTapListener(
         extra: notification.notification.extra as Record<string, string> | undefined,
       })
     }
-  )
+  ).then(handle => {
+    listenerHandle = handle
+  })
 
-  return () => listener.remove()
+  return () => {
+    listenerHandle?.remove()
+  }
 }
 
 // Listen for notification received (while app is open)
@@ -290,7 +296,9 @@ export function addNotificationReceivedListener(
 ): () => void {
   if (!isNative) return () => {}
 
-  const listener = LocalNotifications.addListener(
+  let listenerHandle: { remove: () => void } | null = null
+
+  LocalNotifications.addListener(
     'localNotificationReceived',
     (notification) => {
       console.log('[Notifications] Received:', notification)
@@ -300,9 +308,13 @@ export function addNotificationReceivedListener(
         body: notification.body,
       })
     }
-  )
+  ).then(handle => {
+    listenerHandle = handle
+  })
 
-  return () => listener.remove()
+  return () => {
+    listenerHandle?.remove()
+  }
 }
 
 // Update reminders based on user preferences
@@ -388,7 +400,9 @@ export function addPushNotificationTapListener(
 ): () => void {
   if (!isNative) return () => {}
 
-  const listener = PushNotifications.addListener(
+  let listenerHandle: { remove: () => void } | null = null
+
+  PushNotifications.addListener(
     'pushNotificationActionPerformed',
     (notification) => {
       console.log('[PushNotifications] Action performed:', notification)
@@ -398,7 +412,11 @@ export function addPushNotificationTapListener(
         data: notification.notification.data,
       })
     }
-  )
+  ).then(handle => {
+    listenerHandle = handle
+  })
 
-  return () => listener.remove()
+  return () => {
+    listenerHandle?.remove()
+  }
 }
