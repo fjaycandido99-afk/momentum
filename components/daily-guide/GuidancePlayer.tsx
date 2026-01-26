@@ -225,13 +225,17 @@ export function GuidancePlayer({
   useEffect(() => {
     if (!isNativePlatform) return
 
-    const listener = App.addListener('appStateChange', ({ isActive }) => {
+    let listenerHandle: { remove: () => void } | null = null
+
+    App.addListener('appStateChange', ({ isActive }) => {
       console.log(`[GuidancePlayer] App state: ${isActive ? 'foreground' : 'background'}`)
       // Native audio continues in background automatically
+    }).then(handle => {
+      listenerHandle = handle
     })
 
     return () => {
-      listener.remove()
+      listenerHandle?.remove()
     }
   }, [])
 
