@@ -251,8 +251,8 @@ export function ModuleCard({
   const [audioDuration, setAudioDuration] = useState(duration)
   const [isAudioLoading, setIsAudioLoading] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
-  const [pendingPlay, setPendingPlay] = useState(false) // Track if waiting for audio to load
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const pendingPlayRef = useRef(false) // Use ref to avoid closure issues
 
   // Pause/resume background music when inline audio plays/stops
   useEffect(() => {
@@ -292,7 +292,7 @@ export function ModuleCard({
       ? `data:audio/mpeg;base64,${audioBase64}`
       : audioUrl
 
-    console.log('[ModuleCard] Audio effect running, source:', audioSource ? 'yes' : 'no', 'pendingPlay:', pendingPlay)
+    console.log('[ModuleCard] Audio effect running, source:', audioSource ? 'yes' : 'no', 'pendingPlayRef:', pendingPlayRef.current)
 
     if (!audioSource) return
 
@@ -332,11 +332,11 @@ export function ModuleCard({
       setIsPlaying(false)
     }
 
-    // Handle canplaythrough - auto-play if we were waiting
+    // Handle canplaythrough - auto-play if we were waiting (use ref for latest value)
     const handleCanPlay = () => {
-      console.log('[ModuleCard] canplaythrough, pendingPlay:', pendingPlay)
-      if (pendingPlay) {
-        setPendingPlay(false)
+      console.log('[ModuleCard] canplaythrough, pendingPlayRef:', pendingPlayRef.current)
+      if (pendingPlayRef.current) {
+        pendingPlayRef.current = false
         setHasStarted(true)
         setIsAudioLoading(false)
         console.log('[ModuleCard] Auto-playing...')
@@ -346,9 +346,9 @@ export function ModuleCard({
 
     // Also try loadeddata as fallback
     const handleLoadedData = () => {
-      console.log('[ModuleCard] loadeddata, pendingPlay:', pendingPlay)
-      if (pendingPlay) {
-        setPendingPlay(false)
+      console.log('[ModuleCard] loadeddata, pendingPlayRef:', pendingPlayRef.current)
+      if (pendingPlayRef.current) {
+        pendingPlayRef.current = false
         setHasStarted(true)
         setIsAudioLoading(false)
         console.log('[ModuleCard] Auto-playing from loadeddata...')
@@ -373,7 +373,7 @@ export function ModuleCard({
       audio.removeEventListener('canplaythrough', handleCanPlay)
       audio.removeEventListener('loadeddata', handleLoadedData)
     }
-  }, [audioBase64, audioUrl, onComplete, pendingPlay])
+  }, [audioBase64, audioUrl, onComplete])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -397,9 +397,9 @@ export function ModuleCard({
 
     // If no audio data loaded yet, call onPlay to fetch it
     if (!audioBase64 && !audioUrl) {
-      console.log('[ModuleCard] No audio data, fetching...')
+      console.log('[ModuleCard] No audio data, fetching... setting pendingPlayRef to true')
       setIsAudioLoading(true)
-      setPendingPlay(true) // Will auto-play once data arrives
+      pendingPlayRef.current = true // Will auto-play once data arrives
       onPlay()
       return
     }
@@ -512,7 +512,7 @@ export function ModuleCard({
       {/* Footer with label, duration, and actions */}
       <div className={`px-4 pb-4 pt-2 ${isCompleted ? 'opacity-50' : ''}`}>
         {/* Inline Player - shown when audio is playing, loading, or has been started */}
-        {(isPlaying || hasStarted || pendingPlay) && (hasInlineAudio || pendingPlay) && !isCompleted ? (
+        {(isPlaying || hasStarted || isAudioLoading) && (hasInlineAudio || isAudioLoading) && !isCompleted ? (
           <div className="space-y-3">
             {/* Progress bar */}
             <div
