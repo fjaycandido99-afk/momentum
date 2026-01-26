@@ -6,6 +6,12 @@ import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { useThemeOptional } from '@/contexts/ThemeContext'
+import { Capacitor } from '@capacitor/core'
+import { NativeAudio } from '@capacitor-community/native-audio'
+import { App } from '@capacitor/app'
+
+// Check if running in native app
+const isNativePlatform = Capacitor.isNativePlatform()
 
 // Free tier time limit in seconds (10 minutes)
 const FREE_TIER_TIME_LIMIT = 10 * 60
@@ -209,9 +215,25 @@ export function GuidancePlayer({
   const musicPlayerRef = useRef<YTPlayer | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const playerContainerRef = useRef<HTMLDivElement | null>(null)
+  const nativeAudioId = useRef(`guidance-${segment}-${Date.now()}`)
+  const nativeAudioLoadedRef = useRef(false)
 
   const config = segmentConfig[segment] || defaultConfig
   const totalDuration = duration || 45
+
+  // Handle app state changes for native background playback
+  useEffect(() => {
+    if (!isNativePlatform) return
+
+    const listener = App.addListener('appStateChange', ({ isActive }) => {
+      console.log(`[GuidancePlayer] App state: ${isActive ? 'foreground' : 'background'}`)
+      // Native audio continues in background automatically
+    })
+
+    return () => {
+      listener.remove()
+    }
+  }, [])
 
   // Load YouTube IFrame API
   useEffect(() => {
@@ -377,44 +399,117 @@ export function GuidancePlayer({
     }
   }, [musicVolume, musicLoaded, isMusicMuted])
 
-  // Create audio element from base64
+  // Create audio element from base64 - use native audio on native platforms
   useEffect(() => {
-    if (audioBase64) {
-      const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`)
-      audioRef.current = audio
+    const audioId = nativeAudioId.current
 
-      audio.addEventListener('ended', handleAudioEnd)
-      audio.addEventListener('timeupdate', () => {
-        setCurrentTime(audio.currentTime)
-      })
+    const initNativeAudio = async () => {
+      if (!audioBase64) return false
 
-      // Auto-play when loaded
-      audio.play().then(() => {
+      try {
+        // Unload any existing audio with this ID
+        await NativeAudio.unload({ assetId: audioId }).catch(() => {})
+
+        // Preload the audio from base64 data URL
+        await NativeAudio.preload({
+          assetId: audioId,
+          assetPath: `data:audio/mpeg;base64,${audioBase64}`,
+          audioChannelNum: 1,
+          isUrl: true,
+        })
+
+        nativeAudioLoadedRef.current = true
+        console.log(`[GuidancePlayer] Native audio loaded: ${audioId}`)
+
+        // Play the audio
+        await NativeAudio.play({ assetId: audioId, time: 0 })
         setIsPlaying(true)
-      }).catch(console.error)
 
-      return () => {
-        audio.removeEventListener('ended', handleAudioEnd)
-        audio.pause()
+        // Track time with interval (native doesn't have timeupdate events)
+        intervalRef.current = setInterval(() => {
+          setCurrentTime(prev => {
+            if (prev >= totalDuration) {
+              handleAudioEnd()
+              return prev
+            }
+            return prev + 0.1
+          })
+        }, 100)
+
+        // Listen for completion
+        NativeAudio.addListener('complete', (event) => {
+          if (event.assetId === audioId) {
+            handleAudioEnd()
+          }
+        })
+
+        return true
+      } catch (error) {
+        console.error('[GuidancePlayer] Native audio error:', error)
+        return false
+      }
+    }
+
+    const initWebAudio = () => {
+      if (audioBase64) {
+        const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`)
+        audioRef.current = audio
+
+        audio.addEventListener('ended', handleAudioEnd)
+        audio.addEventListener('timeupdate', () => {
+          setCurrentTime(audio.currentTime)
+        })
+
+        // Auto-play when loaded
+        audio.play().then(() => {
+          setIsPlaying(true)
+        }).catch(console.error)
+      } else {
+        // No audio - simulate with timer
+        setIsPlaying(true)
+        intervalRef.current = setInterval(() => {
+          setCurrentTime(prev => {
+            if (prev >= totalDuration) {
+              handleAudioEnd()
+              return prev
+            }
+            return prev + 0.1
+          })
+        }, 100)
+      }
+    }
+
+    const init = async () => {
+      if (isNativePlatform && audioBase64) {
+        // Try native audio first
+        const success = await initNativeAudio()
+        if (!success) {
+          // Fall back to web audio
+          console.log('[GuidancePlayer] Falling back to web audio')
+          initWebAudio()
+        }
+      } else {
+        // Use web audio
+        initWebAudio()
+      }
+    }
+
+    init()
+
+    return () => {
+      // Cleanup
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('ended', handleAudioEnd)
+        audioRef.current.pause()
         audioRef.current = null
       }
-    } else {
-      // No audio - simulate with timer
-      setIsPlaying(true)
-      intervalRef.current = setInterval(() => {
-        setCurrentTime(prev => {
-          if (prev >= totalDuration) {
-            handleAudioEnd()
-            return prev
-          }
-          return prev + 0.1
-        })
-      }, 100)
-
-      return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current)
-        }
+      if (isNativePlatform && nativeAudioLoadedRef.current) {
+        NativeAudio.stop({ assetId: audioId }).catch(() => {})
+        NativeAudio.unload({ assetId: audioId }).catch(() => {})
+        nativeAudioLoadedRef.current = false
       }
     }
   }, [audioBase64, totalDuration])
@@ -455,8 +550,30 @@ export function GuidancePlayer({
     onClose()
   }, [currentTime, totalDuration, onComplete, onClose])
 
-  const togglePlayPause = () => {
-    if (audioBase64 && audioRef.current) {
+  const togglePlayPause = async () => {
+    const audioId = nativeAudioId.current
+
+    if (isNativePlatform && nativeAudioLoadedRef.current) {
+      // Native audio control
+      if (isPlaying) {
+        await NativeAudio.pause({ assetId: audioId }).catch(console.error)
+        if (intervalRef.current) clearInterval(intervalRef.current)
+      } else {
+        await NativeAudio.resume({ assetId: audioId }).catch(console.error)
+        // Resume time tracking
+        intervalRef.current = setInterval(() => {
+          setCurrentTime(prev => {
+            if (prev >= totalDuration) {
+              handleAudioEnd()
+              return prev
+            }
+            return prev + 0.1
+          })
+        }, 100)
+      }
+      setIsPlaying(!isPlaying)
+    } else if (audioBase64 && audioRef.current) {
+      // Web audio control
       if (isPlaying) {
         audioRef.current.pause()
       } else {
@@ -482,8 +599,18 @@ export function GuidancePlayer({
     }
   }
 
-  const toggleMute = () => {
-    if (audioRef.current) {
+  const toggleMute = async () => {
+    const audioId = nativeAudioId.current
+
+    if (isNativePlatform && nativeAudioLoadedRef.current) {
+      // Native audio - toggle volume between 0 and 1
+      if (isMuted) {
+        await NativeAudio.setVolume({ assetId: audioId, volume: 1 }).catch(console.error)
+      } else {
+        await NativeAudio.setVolume({ assetId: audioId, volume: 0 }).catch(console.error)
+      }
+      setIsMuted(!isMuted)
+    } else if (audioRef.current) {
       audioRef.current.muted = !audioRef.current.muted
       setIsMuted(!isMuted)
     }
@@ -523,13 +650,32 @@ export function GuidancePlayer({
     }
   }
 
-  const restart = () => {
+  const restart = async () => {
+    const audioId = nativeAudioId.current
     setCurrentTime(0)
     setIsCompleted(false)
-    if (audioRef.current) {
+
+    if (isNativePlatform && nativeAudioLoadedRef.current) {
+      // Native audio - stop and replay from beginning
+      await NativeAudio.stop({ assetId: audioId }).catch(() => {})
+      await NativeAudio.play({ assetId: audioId, time: 0 }).catch(console.error)
+
+      // Restart time tracking
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      intervalRef.current = setInterval(() => {
+        setCurrentTime(prev => {
+          if (prev >= totalDuration) {
+            handleAudioEnd()
+            return prev
+          }
+          return prev + 0.1
+        })
+      }, 100)
+    } else if (audioRef.current) {
       audioRef.current.currentTime = 0
       audioRef.current.play()
     }
+
     setIsPlaying(true)
   }
 
