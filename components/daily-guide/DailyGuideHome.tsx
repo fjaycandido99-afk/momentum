@@ -522,26 +522,33 @@ export function DailyGuideHome() {
         return
       }
 
-      // For day_close, use day-type-specific voice
+      // For day_close, use day-type-specific voice (inline playback like morning flow)
       if (moduleType === 'day_close') {
-        const response = await fetch('/api/daily-guide/voices', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: `${currentDayTypeVoice}_close` }),
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          setActivePlayer({
-            module: moduleType,
-            audio: {
-              script: data.script,
-              audioBase64: data.audioBase64,
-              duration: data.duration || 120,
-            },
-            withMusic: withMusic && musicEnabled,
-            musicGenre: currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre),
+        console.log('[DailyGuideHome] Fetching day_close audio...')
+        try {
+          const response = await fetch('/api/daily-guide/voices', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: `${currentDayTypeVoice}_close` }),
           })
+
+          if (response.ok) {
+            const data = await response.json()
+            console.log('[DailyGuideHome] Got day_close audio, has base64:', !!data.audioBase64)
+            // Store for inline playback
+            setModuleAudioData(prev => ({
+              ...prev,
+              [moduleType]: {
+                script: data.script,
+                audioBase64: data.audioBase64,
+                duration: data.duration || 120,
+              }
+            }))
+          } else {
+            console.error('[DailyGuideHome] Day close audio fetch failed:', response.status)
+          }
+        } finally {
+          setLoadingModule(null)
         }
         return
       }
@@ -1128,6 +1135,19 @@ export function DailyGuideHome() {
                   musicEnabled={musicEnabled}
                   musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
                   onPlay={() => playModule('day_close', musicEnabled)}
+                  audioBase64={moduleAudioData['day_close']?.audioBase64}
+                  onComplete={async () => {
+                    try {
+                      await fetch('/api/daily-guide/checkin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ segment: 'day_close' }),
+                      })
+                      setCompletedModules(prev => [...prev, 'day_close'])
+                    } catch (error) {
+                      console.error('Error recording checkin:', error)
+                    }
+                  }}
                 />
               ) : (
                 // Locked state
