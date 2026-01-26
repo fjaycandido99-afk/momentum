@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   RefreshCw,
@@ -47,6 +47,8 @@ import { TrialBanner, TrialEndingBanner } from '@/components/premium/TrialBanner
 import { FeatureLock, LockIcon } from '@/components/premium/FeatureLock'
 import { PremiumBadge } from '@/components/premium/PremiumBadge'
 import type { DayType, TimeMode, EnergyLevel, ModuleType, CheckpointConfig } from '@/lib/daily-guide/decision-tree'
+import type { YTPlayer } from '@/lib/youtube-types'
+import '@/lib/youtube-types'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 
@@ -231,7 +233,10 @@ export function DailyGuideHome() {
   const [showMorningComplete, setShowMorningComplete] = useState(false)
   const [morningCompleteCelebrated, setMorningCompleteCelebrated] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
+  const [bgMusicVideoId, setBgMusicVideoId] = useState<string | null>(null)
+  const [bgMusicLoaded, setBgMusicLoaded] = useState(false)
   const isMountedRef = useRef(true)
+  const bgMusicPlayerRef = useRef<YTPlayer | null>(null)
 
   const today = new Date()
 
@@ -322,6 +327,144 @@ export function DailyGuideHome() {
       isMountedRef.current = false
     }
   }, [fetchData])
+
+  // Load YouTube IFrame API for background music
+  useEffect(() => {
+    if (window.YT && window.YT.Player) return
+
+    const tag = document.createElement('script')
+    tag.src = 'https://www.youtube.com/iframe_api'
+    const firstScriptTag = document.getElementsByTagName('script')[0]
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
+  }, [])
+
+  // Fetch background music video when genre changes
+  const effectiveGenre = useMemo(() => {
+    return currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)
+  }, [currentMusicGenre, preferences?.preferred_music_genre, themeContext?.genre])
+
+  useEffect(() => {
+    if (!musicEnabled || !effectiveGenre) return
+
+    const fetchMusic = async () => {
+      try {
+        const response = await fetch(`/api/music-videos?genre=${effectiveGenre}`)
+        const data = await response.json()
+        if (data.videos && data.videos.length > 0) {
+          const randomVideo = data.videos[Math.floor(Math.random() * data.videos.length)]
+          setBgMusicVideoId(randomVideo.youtubeId)
+        }
+      } catch (error) {
+        console.error('Failed to fetch background music:', error)
+      }
+    }
+
+    fetchMusic()
+  }, [musicEnabled, effectiveGenre])
+
+  // Create/control background music player
+  useEffect(() => {
+    // If music is disabled or a session is active, stop the background music
+    if (!musicEnabled || activePlayer) {
+      if (bgMusicPlayerRef.current) {
+        try {
+          bgMusicPlayerRef.current.pauseVideo()
+        } catch (e) {
+          // Player might not be ready
+        }
+      }
+      return
+    }
+
+    // If music is enabled and we have a video ID, create/play the player
+    if (musicEnabled && bgMusicVideoId && !activePlayer) {
+      const createPlayer = () => {
+        if (!window.YT || !window.YT.Player) {
+          setTimeout(createPlayer, 100)
+          return
+        }
+
+        // Create container if needed
+        const containerId = 'bg-music-player'
+        let container = document.getElementById(containerId)
+        if (!container) {
+          container = document.createElement('div')
+          container.id = containerId
+          container.style.position = 'fixed'
+          container.style.width = '1px'
+          container.style.height = '1px'
+          container.style.opacity = '0'
+          container.style.pointerEvents = 'none'
+          container.style.zIndex = '-1'
+          document.body.appendChild(container)
+        }
+
+        // Destroy existing player
+        if (bgMusicPlayerRef.current) {
+          try {
+            bgMusicPlayerRef.current.destroy()
+          } catch (e) {}
+        }
+
+        // Create new player
+        bgMusicPlayerRef.current = new window.YT.Player(containerId, {
+          videoId: bgMusicVideoId,
+          playerVars: {
+            autoplay: 1,
+            loop: 1,
+            playlist: bgMusicVideoId,
+            controls: 0,
+            disablekb: 1,
+            fs: 0,
+            modestbranding: 1,
+            playsinline: 1,
+            origin: window.location.origin,
+          },
+          events: {
+            onReady: (event) => {
+              event.target.setVolume(30) // Set volume to 30%
+              event.target.playVideo()
+              setBgMusicLoaded(true)
+            },
+            onStateChange: (event) => {
+              // If video ended or paused unexpectedly, restart
+              if (event.data === 0 || event.data === 2) {
+                if (musicEnabled && !activePlayer) {
+                  event.target.playVideo()
+                }
+              }
+            },
+            onError: (event) => {
+              console.error('Background music error:', event.data)
+            },
+          },
+        })
+      }
+
+      createPlayer()
+    }
+
+    return () => {
+      // Cleanup player when component unmounts
+      if (bgMusicPlayerRef.current) {
+        try {
+          bgMusicPlayerRef.current.destroy()
+        } catch (e) {}
+        bgMusicPlayerRef.current = null
+      }
+      const container = document.getElementById('bg-music-player')
+      if (container) container.remove()
+    }
+  }, [musicEnabled, bgMusicVideoId, activePlayer])
+
+  // Resume background music when session ends
+  useEffect(() => {
+    if (!activePlayer && musicEnabled && bgMusicPlayerRef.current && bgMusicLoaded) {
+      try {
+        bgMusicPlayerRef.current.playVideo()
+      } catch (e) {}
+    }
+  }, [activePlayer, musicEnabled, bgMusicLoaded])
 
   const generateGuide = async (energyLevel?: EnergyLevel) => {
     setIsGenerating(true)
@@ -775,18 +918,41 @@ export function DailyGuideHome() {
         {preferences?.background_music_enabled !== false && (
           <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 mb-4">
             <div className="flex items-center gap-3">
-              <Music className="w-4 h-4 text-white/70" />
+              <div className="relative">
+                <Music className={`w-4 h-4 ${musicEnabled && bgMusicLoaded ? 'text-emerald-400' : 'text-white/70'}`} />
+                {musicEnabled && bgMusicLoaded && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                )}
+              </div>
               <div>
                 <span className="text-sm text-white">Background Music</span>
                 <p className="text-xs text-white/50">
-                  Today: {MUSIC_GENRES.find(g => g.id === (currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)))?.label || 'Lo-Fi'}
+                  {musicEnabled && bgMusicLoaded ? 'Now playing: ' : 'Today: '}
+                  {MUSIC_GENRES.find(g => g.id === (currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)))?.label || 'Lo-Fi'}
                 </p>
               </div>
             </div>
             <button
-              onClick={() => setMusicEnabled(!musicEnabled)}
+              onClick={() => {
+                const newEnabled = !musicEnabled
+                setMusicEnabled(newEnabled)
+                if (!newEnabled) {
+                  // Stop and cleanup when disabling
+                  if (bgMusicPlayerRef.current) {
+                    try {
+                      bgMusicPlayerRef.current.stopVideo()
+                      bgMusicPlayerRef.current.destroy()
+                    } catch (e) {}
+                    bgMusicPlayerRef.current = null
+                  }
+                  setBgMusicLoaded(false)
+                  setBgMusicVideoId(null)
+                  const container = document.getElementById('bg-music-player')
+                  if (container) container.remove()
+                }
+              }}
               className={`p-2 rounded-lg transition-all ${
-                musicEnabled ? 'bg-white/15 text-white' : 'bg-white/5 text-white/50'
+                musicEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/50'
               }`}
             >
               {musicEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
