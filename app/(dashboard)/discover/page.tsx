@@ -708,21 +708,23 @@ function DailyMotivationTab({
       const cacheKey = `voxu_motivation_${topic.word}`
       const dateKey = getTodayDateKey()
 
-      // Check localStorage cache first
-      try {
-        const cached = localStorage.getItem(cacheKey)
-        if (cached) {
-          const { date, videos } = JSON.parse(cached)
-          if (date === dateKey && videos && videos.length > 0) {
-            console.log('[Motivation] Using cached videos for', topic.word)
-            setApiVideos(videos)
-            setUseApi(true)
-            setLoading(false)
-            return
+      // Check localStorage cache first (only in browser)
+      if (typeof window !== 'undefined') {
+        try {
+          const cached = localStorage.getItem(cacheKey)
+          if (cached) {
+            const { date, videos } = JSON.parse(cached)
+            if (date === dateKey && videos && videos.length > 0) {
+              console.log('[Motivation] Using cached videos for', topic.word)
+              setApiVideos(videos)
+              setUseApi(true)
+              setLoading(false)
+              return
+            }
           }
+        } catch (e) {
+          console.error('[Motivation] Cache read error:', e)
         }
-      } catch (e) {
-        console.error('[Motivation] Cache read error:', e)
       }
 
       // Fetch from API
@@ -734,11 +736,13 @@ function DailyMotivationTab({
         if (data.videos && data.videos.length > 0) {
           setApiVideos(data.videos)
           setUseApi(true)
-          // Cache for today
-          try {
-            localStorage.setItem(cacheKey, JSON.stringify({ date: dateKey, videos: data.videos }))
-          } catch (e) {
-            console.error('[Motivation] Cache write error:', e)
+          // Cache for today (only in browser)
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(cacheKey, JSON.stringify({ date: dateKey, videos: data.videos }))
+            } catch (e) {
+              console.error('[Motivation] Cache write error:', e)
+            }
           }
         } else {
           // Fallback to static list
@@ -865,20 +869,22 @@ function DailyMusicTab({
       const cacheKey = `voxu_music_${genre.id}`
       const dateKey = getTodayDateKey()
 
-      // Check localStorage cache first
-      try {
-        const cached = localStorage.getItem(cacheKey)
-        if (cached) {
-          const { date, videos } = JSON.parse(cached)
-          if (date === dateKey && videos && videos.length > 0) {
-            console.log('[Music] Using cached videos for', genre.id)
-            setApiVideos(videos)
-            setLoading(false)
-            return
+      // Check localStorage cache first (only in browser)
+      if (typeof window !== 'undefined') {
+        try {
+          const cached = localStorage.getItem(cacheKey)
+          if (cached) {
+            const { date, videos } = JSON.parse(cached)
+            if (date === dateKey && videos && videos.length > 0) {
+              console.log('[Music] Using cached videos for', genre.id)
+              setApiVideos(videos)
+              setLoading(false)
+              return
+            }
           }
+        } catch (e) {
+          console.error('[Music] Cache read error:', e)
         }
-      } catch (e) {
-        console.error('[Music] Cache read error:', e)
       }
 
       // Fetch from API
@@ -889,11 +895,13 @@ function DailyMusicTab({
         const data = await response.json()
         if (data.videos && data.videos.length > 0) {
           setApiVideos(data.videos)
-          // Cache for today
-          try {
-            localStorage.setItem(cacheKey, JSON.stringify({ date: dateKey, videos: data.videos }))
-          } catch (e) {
-            console.error('[Music] Cache write error:', e)
+          // Cache for today (only in browser)
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(cacheKey, JSON.stringify({ date: dateKey, videos: data.videos }))
+            } catch (e) {
+              console.error('[Music] Cache write error:', e)
+            }
           }
         } else {
           setApiVideos([])
