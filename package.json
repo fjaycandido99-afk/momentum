@@ -13,8 +13,12 @@
     "db:generate": "prisma generate"
   },
   "dependencies": {
+    "@capacitor-community/native-audio": "^8.0.0",
+    "@capacitor/android": "^8.0.1",
+    "@capacitor/app": "^8.0.0",
     "@capacitor/cli": "^8.0.1",
     "@capacitor/core": "^8.0.1",
+    "@capacitor/ios": "^8.0.1",
     "@capacitor/local-notifications": "^8.0.0",
     "@capacitor/push-notifications": "^8.0.0",
     "@elevenlabs/elevenlabs-js": "^2.32.0",

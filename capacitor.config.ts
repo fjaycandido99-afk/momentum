@@ -5,13 +5,14 @@ const config: CapacitorConfig = {
   appName: 'Voxu',
   webDir: 'out',
   server: {
-    // For development, use your local server
+    // Production: use your deployed web app
+    url: 'https://voxu.app',
+    // For development, uncomment below and comment the above:
     // url: 'http://localhost:3000',
     // cleartext: true,
   },
   plugins: {
     PushNotifications: {
-      // iOS specific settings
       presentationOptions: ['badge', 'sound', 'alert'],
     },
     LocalNotifications: {
@@ -19,18 +20,25 @@ const config: CapacitorConfig = {
       iconColor: '#8B5CF6',
       sound: 'notification.wav',
     },
+    NativeAudio: {
+      // Preload audio files for faster playback
+      preload: true,
+      // Focus audio - pause other apps when playing
+      focus: true,
+    },
   },
   ios: {
     contentInset: 'automatic',
     backgroundColor: '#0a0a0f',
-    // For push notifications, you'll need to:
-    // 1. Enable Push Notifications capability in Xcode
-    // 2. Add your APNs key to your Apple Developer account
-    // 3. Configure the key in your notification service
+    // Background audio mode will be configured in Xcode:
+    // 1. Enable "Audio, AirPlay, and Picture in Picture" in Background Modes
+    // 2. Enable Push Notifications capability
+    // 3. Add your APNs key to Apple Developer account
   },
   android: {
     backgroundColor: '#0a0a0f',
     allowMixedContent: true,
+    // Background audio handled via foreground service
   },
 }
 
