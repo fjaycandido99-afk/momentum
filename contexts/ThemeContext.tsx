@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react'
 import {
   GENRE_THEMES,
   DEFAULT_GENRE,
@@ -181,7 +181,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return bg || getFallbackGradient(genre)
   }, [backgroundImages, genre])
 
-  const value: ThemeContextType = {
+  const value = useMemo<ThemeContextType>(() => ({
     genre,
     theme,
     backgroundImages,
@@ -192,7 +192,18 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     isLoading,
     themeOnboardingDone,
     setThemeOnboardingDone,
-  }
+  }), [
+    genre,
+    theme,
+    backgroundImages,
+    backgroundsLoading,
+    handleGetRandomBackground,
+    handleGetDailyBackground,
+    setGenre,
+    isLoading,
+    themeOnboardingDone,
+    setThemeOnboardingDone,
+  ])
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }

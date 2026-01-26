@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight, Loader2, Check, Circle, Flame, X, BookOpen } from 'lucide-react'
 
 interface DayData {
@@ -49,6 +49,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [showJournalPopup, setShowJournalPopup] = useState(false)
   const [selectedDayData, setSelectedDayData] = useState<DayData | null>(null)
+  const isMountedRef = useRef(true)
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -59,8 +60,10 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
 
   // Fetch data for the current month
   useEffect(() => {
+    isMountedRef.current = true
+
     const fetchMonthData = async () => {
-      setIsLoading(true)
+      if (isMountedRef.current) setIsLoading(true)
       try {
         const startDate = new Date(year, month, 1)
         const endDate = new Date(year, month + 1, 0)
@@ -69,8 +72,12 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
           `/api/daily-guide/journal?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
         )
 
+        if (!isMountedRef.current) return
+
         if (response.ok) {
           const data = await response.json()
+          if (!isMountedRef.current) return
+
           const dataMap: Record<string, DayData> = {}
 
           data.entries?.forEach((entry: any) => {
@@ -92,11 +99,15 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
       } catch (error) {
         console.error('Failed to fetch calendar data:', error)
       } finally {
-        setIsLoading(false)
+        if (isMountedRef.current) setIsLoading(false)
       }
     }
 
     fetchMonthData()
+
+    return () => {
+      isMountedRef.current = false
+    }
   }, [year, month])
 
   const goToPreviousMonth = () => {

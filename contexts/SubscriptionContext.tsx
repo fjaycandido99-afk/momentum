@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react'
 import { FREE_TIER_LIMITS } from '@/lib/subscription-constants'
 
 export type SubscriptionTier = 'free' | 'premium'
@@ -185,7 +185,14 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     setShowUpgradeModal(false)
   }, [])
 
-  const value: SubscriptionContextType = {
+  // Memoize billingPeriodEnd to avoid creating new Date on every render
+  const billingPeriodEnd = useMemo(() => {
+    return subscriptionData.billingPeriodEnd
+      ? new Date(subscriptionData.billingPeriodEnd)
+      : null
+  }, [subscriptionData.billingPeriodEnd])
+
+  const value = useMemo<SubscriptionContextType>(() => ({
     tier: subscriptionData.tier,
     status: subscriptionData.status,
     isTrialing: subscriptionData.isTrialing,
@@ -193,9 +200,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     sessionsToday: subscriptionData.sessionsToday,
     canStartSession: subscriptionData.canStartSession,
     isPremium: subscriptionData.isPremium,
-    billingPeriodEnd: subscriptionData.billingPeriodEnd
-      ? new Date(subscriptionData.billingPeriodEnd)
-      : null,
+    billingPeriodEnd,
     isLoading,
     limits: subscriptionData.limits,
     checkAccess,
@@ -204,7 +209,24 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     showUpgradeModal,
     openUpgradeModal,
     closeUpgradeModal,
-  }
+  }), [
+    subscriptionData.tier,
+    subscriptionData.status,
+    subscriptionData.isTrialing,
+    subscriptionData.trialDaysLeft,
+    subscriptionData.sessionsToday,
+    subscriptionData.canStartSession,
+    subscriptionData.isPremium,
+    subscriptionData.limits,
+    billingPeriodEnd,
+    isLoading,
+    checkAccess,
+    recordSession,
+    refreshSubscription,
+    showUpgradeModal,
+    openUpgradeModal,
+    closeUpgradeModal,
+  ])
 
   return (
     <SubscriptionContext.Provider value={value}>

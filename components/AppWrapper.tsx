@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react'
+import { useState, useEffect, useMemo, createContext, useContext, ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 
@@ -58,17 +58,24 @@ export function AppWrapper({ children }: AppWrapperProps) {
     sessionStorage.setItem('voxu_splash_seen', 'true')
   }
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    isGuest,
+    showSplash: isAuthPage ? false : showSplash,
+    hasSeenSplash: isAuthPage ? true : hasSeenSplash,
+  }), [isGuest, showSplash, hasSeenSplash, isAuthPage])
+
   // On auth pages, just render children without splash
   if (isAuthPage) {
     return (
-      <AppContext.Provider value={{ isGuest, showSplash: false, hasSeenSplash: true }}>
+      <AppContext.Provider value={contextValue}>
         {children}
       </AppContext.Provider>
     )
   }
 
   return (
-    <AppContext.Provider value={{ isGuest, showSplash, hasSeenSplash }}>
+    <AppContext.Provider value={contextValue}>
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       <div className={showSplash ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}>
         {children}
