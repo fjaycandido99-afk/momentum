@@ -245,29 +245,46 @@ export function ModuleCard({
   const dayName = getDayName()
   const audioContext = useAudioOptional()
 
-  // Inline audio player state
+  // Inline audio player state - simplified like MicroLessonVideo
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [audioDuration, setAudioDuration] = useState(duration)
   const [isAudioLoading, setIsAudioLoading] = useState(false)
-  const [hasStarted, setHasStarted] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const pendingPlayRef = useRef(false) // Use ref to avoid closure issues
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Pause/resume background music when inline audio plays/stops
+  // Timer for tracking playback (like MicroLessonVideo)
+  useEffect(() => {
+    if (isPlaying && !isPaused) {
+      timerRef.current = setInterval(() => {
+        if (audioRef.current) {
+          setCurrentTime(audioRef.current.currentTime)
+        }
+      }, 100)
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [isPlaying, isPaused])
+
+  // Pause/resume background music when playing
   useEffect(() => {
     if (!audioContext) return
 
-    if (isPlaying) {
-      // Pause background music when module audio plays
-      console.log('[ModuleCard] Pausing background music')
+    if (isPlaying && !isPaused) {
       audioContext.pauseMusic()
-    } else if (hasStarted && !isPlaying) {
-      // Resume background music when module audio pauses/stops
-      console.log('[ModuleCard] Resuming background music')
+    } else {
       audioContext.resumeMusic()
     }
-  }, [isPlaying, hasStarted, audioContext])
+  }, [isPlaying, isPaused, audioContext])
 
   // Get dynamic tagline
   const tagline = typeof content.tagline === 'function'
@@ -286,145 +303,98 @@ export function ModuleCard({
   const benefit = content.benefit ? BENEFIT_CONFIG[content.benefit.type] : null
   const BenefitIcon = benefit?.icon
 
-  // Initialize audio when we have audio data
+  // Cleanup on unmount
   useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
+
+  // Handle play - fetch audio if needed, then play
+  const handlePlay = useCallback(async () => {
+    // If already playing, this shouldn't be called
+    if (isPlaying) return
+
+    setIsAudioLoading(true)
+
+    // If no audio data, fetch it first
+    if (!audioBase64 && !audioUrl) {
+      onPlay() // This will fetch and update the audioBase64 prop
+      return
+    }
+
+    // Create audio and play
     const audioSource = audioBase64
       ? `data:audio/mpeg;base64,${audioBase64}`
       : audioUrl
 
-    console.log('[ModuleCard] Audio effect running, source:', audioSource ? 'yes' : 'no', 'pendingPlayRef:', pendingPlayRef.current)
-
-    if (!audioSource) return
-
-    // Create audio element if not exists
-    if (!audioRef.current) {
-      audioRef.current = new Audio()
-      console.log('[ModuleCard] Created new Audio element')
-    }
-
-    const audio = audioRef.current
-    audio.src = audioSource
-    console.log('[ModuleCard] Set audio source')
-
-    const handleLoadedMetadata = () => {
-      console.log('[ModuleCard] loadedmetadata, duration:', audio.duration)
-      setAudioDuration(audio.duration)
+    if (!audioSource) {
       setIsAudioLoading(false)
+      return
     }
 
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime)
+    const audio = new Audio(audioSource)
+    audioRef.current = audio
+
+    audio.onloadedmetadata = () => {
+      setAudioDuration(audio.duration)
     }
 
-    const handleEnded = () => {
-      console.log('[ModuleCard] Audio ended')
+    audio.onended = () => {
       setIsPlaying(false)
+      setIsPaused(false)
       setCurrentTime(0)
       onComplete?.()
     }
 
-    const handlePlay = () => {
-      console.log('[ModuleCard] Audio playing')
+    try {
+      await audio.play()
       setIsPlaying(true)
-    }
-    const handlePause = () => {
-      console.log('[ModuleCard] Audio paused')
-      setIsPlaying(false)
-    }
-
-    // Handle canplaythrough - auto-play if we were waiting (use ref for latest value)
-    const handleCanPlay = () => {
-      console.log('[ModuleCard] canplaythrough, pendingPlayRef:', pendingPlayRef.current)
-      if (pendingPlayRef.current) {
-        pendingPlayRef.current = false
-        setHasStarted(true)
-        setIsAudioLoading(false)
-        console.log('[ModuleCard] Auto-playing...')
-        audio.play().catch(e => console.error('[ModuleCard] Play error:', e))
-      }
-    }
-
-    // Also try loadeddata as fallback
-    const handleLoadedData = () => {
-      console.log('[ModuleCard] loadeddata, pendingPlayRef:', pendingPlayRef.current)
-      if (pendingPlayRef.current) {
-        pendingPlayRef.current = false
-        setHasStarted(true)
-        setIsAudioLoading(false)
-        console.log('[ModuleCard] Auto-playing from loadeddata...')
-        audio.play().catch(e => console.error('[ModuleCard] Play error:', e))
-      }
-    }
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
-    audio.addEventListener('timeupdate', handleTimeUpdate)
-    audio.addEventListener('ended', handleEnded)
-    audio.addEventListener('play', handlePlay)
-    audio.addEventListener('pause', handlePause)
-    audio.addEventListener('canplaythrough', handleCanPlay)
-    audio.addEventListener('loadeddata', handleLoadedData)
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      audio.removeEventListener('timeupdate', handleTimeUpdate)
-      audio.removeEventListener('ended', handleEnded)
-      audio.removeEventListener('play', handlePlay)
-      audio.removeEventListener('pause', handlePause)
-      audio.removeEventListener('canplaythrough', handleCanPlay)
-      audio.removeEventListener('loadeddata', handleLoadedData)
-    }
-  }, [audioBase64, audioUrl, onComplete])
-
-  // Cleanup on unmount
-  useEffect(() => {
-    const ctx = audioContext
-    const started = hasStarted
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.src = ''
-      }
-      // Resume background music if we were playing
-      if (ctx && started) {
-        console.log('[ModuleCard] Cleanup - resuming background music')
-        ctx.resumeMusic()
-      }
-    }
-  }, [audioContext, hasStarted])
-
-  const handlePlayPause = useCallback(async () => {
-    console.log('[ModuleCard] handlePlayPause called, audioBase64:', !!audioBase64, 'audioUrl:', !!audioUrl, 'isPlaying:', isPlaying)
-
-    // If no audio data loaded yet, call onPlay to fetch it
-    if (!audioBase64 && !audioUrl) {
-      console.log('[ModuleCard] No audio data, fetching... setting pendingPlayRef to true')
-      setIsAudioLoading(true)
-      pendingPlayRef.current = true // Will auto-play once data arrives
-      onPlay()
-      return
-    }
-
-    if (!audioRef.current) {
-      console.log('[ModuleCard] No audio ref!')
-      return
-    }
-
-    if (isPlaying) {
-      console.log('[ModuleCard] Pausing audio')
-      audioRef.current.pause()
-    } else {
-      console.log('[ModuleCard] Playing audio')
-      setIsAudioLoading(true)
-      try {
-        await audioRef.current.play()
-        setHasStarted(true)
-        console.log('[ModuleCard] Play started')
-      } catch (error) {
-        console.error('[ModuleCard] Error playing audio:', error)
-      }
+      setIsPaused(false)
+      setIsAudioLoading(false)
+    } catch (error) {
+      console.error('[ModuleCard] Error playing audio:', error)
       setIsAudioLoading(false)
     }
-  }, [audioBase64, audioUrl, isPlaying, onPlay])
+  }, [audioBase64, audioUrl, isPlaying, onPlay, onComplete])
+
+  // Auto-play when audioBase64 arrives (after fetch)
+  useEffect(() => {
+    if (audioBase64 && isAudioLoading && !isPlaying) {
+      handlePlay()
+    }
+  }, [audioBase64, isAudioLoading, isPlaying, handlePlay])
+
+  // Handle pause/resume toggle
+  const handlePauseToggle = useCallback(() => {
+    if (!audioRef.current) return
+
+    if (isPaused) {
+      audioRef.current.play()
+      setIsPaused(false)
+    } else {
+      audioRef.current.pause()
+      setIsPaused(true)
+    }
+  }, [isPaused])
+
+  // Handle close/done
+  const handleClose = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    setIsPlaying(false)
+    setIsPaused(false)
+    setCurrentTime(0)
+    onComplete?.()
+  }, [onComplete])
 
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!audioRef.current || !audioDuration) return
@@ -511,8 +481,8 @@ export function ModuleCard({
 
       {/* Footer with label, duration, and actions */}
       <div className={`px-4 pb-4 pt-2 ${isCompleted ? 'opacity-50' : ''}`}>
-        {/* Inline Player - shown when audio is playing, loading, or has been started */}
-        {(isPlaying || hasStarted || isAudioLoading) && (hasInlineAudio || isAudioLoading) && !isCompleted ? (
+        {/* Inline Player - shown when audio is playing */}
+        {isPlaying && !isCompleted ? (
           <div className="space-y-3">
             {/* Progress bar */}
             <div
@@ -536,17 +506,14 @@ export function ModuleCard({
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    handlePlayPause()
+                    handlePauseToggle()
                   }}
-                  disabled={isAudioLoading}
                   className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all"
                 >
-                  {isAudioLoading ? (
-                    <Loader2 className="w-5 h-5 text-white animate-spin" />
-                  ) : isPlaying ? (
-                    <Pause className="w-5 h-5 text-white" />
-                  ) : (
+                  {isPaused ? (
                     <Play className="w-5 h-5 text-white fill-current" />
+                  ) : (
+                    <Pause className="w-5 h-5 text-white" />
                   )}
                 </button>
 
@@ -556,13 +523,17 @@ export function ModuleCard({
                 </div>
               </div>
 
-              {/* Module info */}
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-white/5">
-                  <Icon className="w-3.5 h-3.5 text-white/60" />
-                </div>
-                <span className="text-xs text-white/50">{content.label}</span>
-              </div>
+              {/* Done button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleClose()
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+              >
+                <Check className="w-3.5 h-3.5 text-white/70" />
+                <span className="text-xs text-white/70">Done</span>
+              </button>
             </div>
           </div>
         ) : (
@@ -624,7 +595,7 @@ export function ModuleCard({
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    handlePlayPause()
+                    handlePlay()
                   }}
                   disabled={isLoading || isAudioLoading || !script}
                   className={`
@@ -646,7 +617,7 @@ export function ModuleCard({
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  handlePlayPause()
+                  handlePlay()
                 }}
                 disabled={isLoading || isAudioLoading || !script}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-50"

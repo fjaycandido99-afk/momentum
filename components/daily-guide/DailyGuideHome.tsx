@@ -463,26 +463,30 @@ export function DailyGuideHome() {
       // For breath module, use the daily voices API (ElevenLabs generated once per day)
       if (moduleType === 'breath') {
         console.log('[DailyGuideHome] Fetching breath audio...')
-        const response = await fetch('/api/daily-guide/voices', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'breathing' }),
-        })
+        try {
+          const response = await fetch('/api/daily-guide/voices', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'breathing' }),
+          })
 
-        if (response.ok) {
-          const data = await response.json()
-          console.log('[DailyGuideHome] Got breath audio, has base64:', !!data.audioBase64)
-          // Store for inline playback
-          setModuleAudioData(prev => ({
-            ...prev,
-            [moduleType]: {
-              script: data.script,
-              audioBase64: data.audioBase64,
-              duration: data.duration || 120,
-            }
-          }))
-        } else {
-          console.error('[DailyGuideHome] Breath audio fetch failed:', response.status)
+          if (response.ok) {
+            const data = await response.json()
+            console.log('[DailyGuideHome] Got breath audio, has base64:', !!data.audioBase64)
+            // Store for inline playback
+            setModuleAudioData(prev => ({
+              ...prev,
+              [moduleType]: {
+                script: data.script,
+                audioBase64: data.audioBase64,
+                duration: data.duration || 120,
+              }
+            }))
+          } else {
+            console.error('[DailyGuideHome] Breath audio fetch failed:', response.status)
+          }
+        } finally {
+          setLoadingModule(null)
         }
         return
       }
@@ -490,26 +494,30 @@ export function DailyGuideHome() {
       // For morning_prime, use day-type-specific voice
       if (moduleType === 'morning_prime') {
         console.log('[DailyGuideHome] Fetching morning_prime audio...')
-        const response = await fetch('/api/daily-guide/voices', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: `${currentDayTypeVoice}_prime` }),
-        })
+        try {
+          const response = await fetch('/api/daily-guide/voices', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: `${currentDayTypeVoice}_prime` }),
+          })
 
-        if (response.ok) {
-          const data = await response.json()
-          console.log('[DailyGuideHome] Got morning_prime audio, has base64:', !!data.audioBase64)
-          // Store for inline playback
-          setModuleAudioData(prev => ({
-            ...prev,
-            [moduleType]: {
-              script: data.script,
-              audioBase64: data.audioBase64,
-              duration: data.duration || 120,
-            }
-          }))
-        } else {
-          console.error('[DailyGuideHome] Morning prime audio fetch failed:', response.status)
+          if (response.ok) {
+            const data = await response.json()
+            console.log('[DailyGuideHome] Got morning_prime audio, has base64:', !!data.audioBase64)
+            // Store for inline playback
+            setModuleAudioData(prev => ({
+              ...prev,
+              [moduleType]: {
+                script: data.script,
+                audioBase64: data.audioBase64,
+                duration: data.duration || 120,
+              }
+            }))
+          } else {
+            console.error('[DailyGuideHome] Morning prime audio fetch failed:', response.status)
+          }
+        } finally {
+          setLoadingModule(null)
         }
         return
       }
