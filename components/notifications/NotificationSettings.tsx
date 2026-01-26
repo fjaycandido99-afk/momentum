@@ -12,6 +12,19 @@ import {
   getPushSupportInfo,
   isNativeApp,
 } from '@/lib/push-notifications'
+import {
+  isNative as isNativePlatform,
+  initNotifications,
+  scheduleMorningReminder,
+  scheduleEveningReminder,
+  scheduleStreakReminder,
+  scheduleWeeklyReviewReminder,
+  scheduleCheckpointReminder,
+  cancelReminder,
+  cancelAllReminders,
+  getPendingReminders,
+  NOTIFICATION_IDS,
+} from '@/lib/notifications'
 
 interface NotificationPreferences {
   morning_reminder: boolean
@@ -44,6 +57,47 @@ export function NotificationSettings() {
 
   useEffect(() => {
     const checkStatus = async () => {
+      // Check for native platform first
+      if (isNativePlatform) {
+        const granted = await initNotifications()
+        setSupportInfo({
+          supported: true,
+          platform: 'ios', // or android - we'll detect this properly
+          isInstalled: true,
+          isNative: true,
+        })
+        setIsSupported(true)
+        setPermission(granted ? 'granted' : 'denied')
+
+        // Check if we have pending reminders (means notifications are enabled)
+        const pending = await getPendingReminders()
+        setIsSubscribed(pending.length > 0)
+
+        // Fetch preferences from server
+        try {
+          const response = await fetch('/api/notifications/subscribe')
+          if (response.ok) {
+            const data = await response.json()
+            if (data.subscriptions?.length > 0) {
+              const sub = data.subscriptions[0]
+              setPreferences({
+                morning_reminder: sub.morning_reminder,
+                checkpoint_alerts: sub.checkpoint_alerts,
+                evening_reminder: sub.evening_reminder,
+                streak_alerts: sub.streak_alerts,
+                weekly_review: sub.weekly_review,
+              })
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching notification preferences:', error)
+        }
+
+        setIsLoading(false)
+        return
+      }
+
+      // Web push notifications
       const info = getPushSupportInfo()
       setSupportInfo(info)
       setIsSupported(info.supported)
@@ -104,20 +158,45 @@ export function NotificationSettings() {
     setIsToggling(true)
 
     try {
-      if (isSubscribed) {
-        // Unsubscribe
-        await unsubscribeFromPush()
-        setIsSubscribed(false)
+      if (isNativePlatform) {
+        // Native notifications
+        if (isSubscribed) {
+          // Cancel all scheduled notifications
+          await cancelAllReminders()
+          setIsSubscribed(false)
+        } else {
+          // Request permission and schedule default reminders
+          const granted = await initNotifications()
+          if (granted) {
+            // Schedule default reminders (7am morning, 6pm evening)
+            await scheduleMorningReminder(7, 0)
+            await scheduleEveningReminder(18, 0)
+            await scheduleWeeklyReviewReminder(10, 0)
+            setIsSubscribed(true)
+            setPermission('granted')
+          } else {
+            setPermission('denied')
+          }
+        }
       } else {
-        // Subscribe
-        await subscribeToPush()
-        setIsSubscribed(true)
-        setPermission('granted')
+        // Web push notifications
+        if (isSubscribed) {
+          // Unsubscribe
+          await unsubscribeFromPush()
+          setIsSubscribed(false)
+        } else {
+          // Subscribe
+          await subscribeToPush()
+          setIsSubscribed(true)
+          setPermission('granted')
+        }
       }
     } catch (error) {
       console.error('Error toggling notifications:', error)
       // Update permission state in case it was denied
-      setPermission(getNotificationPermission())
+      if (!isNativePlatform) {
+        setPermission(getNotificationPermission())
+      }
     }
 
     setIsToggling(false)
@@ -128,11 +207,60 @@ export function NotificationSettings() {
     setPreferences(prev => ({ ...prev, [key]: newValue }))
 
     try {
+      // Update server-side preferences
       await fetch('/api/notifications/subscribe', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: newValue }),
       })
+
+      // For native, also update local notifications
+      if (isNativePlatform) {
+        if (newValue) {
+          // Schedule the notification
+          switch (key) {
+            case 'morning_reminder':
+              await scheduleMorningReminder(7, 0)
+              break
+            case 'evening_reminder':
+              await scheduleEveningReminder(18, 0)
+              break
+            case 'streak_alerts':
+              await scheduleStreakReminder(20, 0) // 8pm reminder
+              break
+            case 'weekly_review':
+              await scheduleWeeklyReviewReminder(10, 0)
+              break
+            case 'checkpoint_alerts':
+              // Schedule checkpoint reminders at common times
+              await scheduleCheckpointReminder(1, 10, 0, 'Mid-morning check-in')
+              await scheduleCheckpointReminder(2, 14, 0, 'Afternoon check-in')
+              await scheduleCheckpointReminder(3, 16, 0, 'Late afternoon check-in')
+              break
+          }
+        } else {
+          // Cancel the notification
+          switch (key) {
+            case 'morning_reminder':
+              await cancelReminder(NOTIFICATION_IDS.MORNING_REMINDER)
+              break
+            case 'evening_reminder':
+              await cancelReminder(NOTIFICATION_IDS.EVENING_REMINDER)
+              break
+            case 'streak_alerts':
+              await cancelReminder(NOTIFICATION_IDS.STREAK_REMINDER)
+              break
+            case 'weekly_review':
+              await cancelReminder(NOTIFICATION_IDS.WEEKLY_REVIEW)
+              break
+            case 'checkpoint_alerts':
+              await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_1)
+              await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_2)
+              await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_3)
+              break
+          }
+        }
+      }
     } catch (error) {
       console.error('Error updating preference:', error)
       // Revert on error

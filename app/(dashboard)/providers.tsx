@@ -3,6 +3,7 @@
 import { ReactNode } from 'react'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext'
+import { NotificationProvider } from '@/contexts/NotificationContext'
 import { UpgradeModalWithContext } from '@/components/premium/UpgradeModal'
 
 interface ProvidersProps {
@@ -13,8 +14,10 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <SubscriptionProvider>
       <ThemeProvider>
-        {children}
-        <UpgradeModalWithContext />
+        <NotificationProvider>
+          {children}
+          <UpgradeModalWithContext />
+        </NotificationProvider>
       </ThemeProvider>
     </SubscriptionProvider>
   )
