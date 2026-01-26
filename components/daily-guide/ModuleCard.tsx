@@ -249,6 +249,7 @@ export function ModuleCard({
   const [audioDuration, setAudioDuration] = useState(duration)
   const [isAudioLoading, setIsAudioLoading] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
+  const [pendingPlay, setPendingPlay] = useState(false) // Track if waiting for audio to load
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Get dynamic tagline
@@ -302,11 +303,21 @@ export function ModuleCard({
     const handlePlay = () => setIsPlaying(true)
     const handlePause = () => setIsPlaying(false)
 
+    // Handle canplaythrough - auto-play if we were waiting
+    const handleCanPlay = () => {
+      if (pendingPlay) {
+        setPendingPlay(false)
+        setHasStarted(true)
+        audio.play().catch(console.error)
+      }
+    }
+
     audio.addEventListener('loadedmetadata', handleLoadedMetadata)
     audio.addEventListener('timeupdate', handleTimeUpdate)
     audio.addEventListener('ended', handleEnded)
     audio.addEventListener('play', handlePlay)
     audio.addEventListener('pause', handlePause)
+    audio.addEventListener('canplaythrough', handleCanPlay)
 
     return () => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
@@ -314,8 +325,9 @@ export function ModuleCard({
       audio.removeEventListener('ended', handleEnded)
       audio.removeEventListener('play', handlePlay)
       audio.removeEventListener('pause', handlePause)
+      audio.removeEventListener('canplaythrough', handleCanPlay)
     }
-  }, [audioBase64, audioUrl, onComplete])
+  }, [audioBase64, audioUrl, onComplete, pendingPlay])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -330,6 +342,8 @@ export function ModuleCard({
   const handlePlayPause = useCallback(async () => {
     // If no audio data loaded yet, call onPlay to fetch it
     if (!audioBase64 && !audioUrl) {
+      setIsAudioLoading(true)
+      setPendingPlay(true) // Will auto-play once data arrives
       onPlay()
       return
     }
@@ -435,8 +449,8 @@ export function ModuleCard({
 
       {/* Footer with label, duration, and actions */}
       <div className={`px-4 pb-4 pt-2 ${isCompleted ? 'opacity-50' : ''}`}>
-        {/* Inline Player - shown when audio is playing or has been started */}
-        {(isPlaying || hasStarted) && hasInlineAudio && !isCompleted ? (
+        {/* Inline Player - shown when audio is playing, loading, or has been started */}
+        {(isPlaying || hasStarted || pendingPlay) && (hasInlineAudio || pendingPlay) && !isCompleted ? (
           <div className="space-y-3">
             {/* Progress bar */}
             <div
