@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import {
   GENRE_THEMES,
   DEFAULT_GENRE,
@@ -46,34 +46,39 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [backgroundsLoading, setBackgroundsLoading] = useState(false)
   const [backgroundImages, setBackgroundImages] = useState<string[]>([])
   const [themeOnboardingDone, setThemeOnboardingDoneState] = useState(false)
+  const isMountedRef = useRef(true)
 
   // Fetch backgrounds from Supabase Storage
   const fetchBackgrounds = useCallback(async (selectedGenre: string) => {
     // Check cache first
     if (backgroundsCache.has(selectedGenre)) {
-      setBackgroundImages(backgroundsCache.get(selectedGenre)!)
+      if (isMountedRef.current) {
+        setBackgroundImages(backgroundsCache.get(selectedGenre)!)
+      }
       return
     }
 
-    setBackgroundsLoading(true)
+    if (isMountedRef.current) setBackgroundsLoading(true)
     try {
       const response = await fetch(`/api/backgrounds?genre=${selectedGenre}`)
       if (response.ok) {
         const data = await response.json()
         const urls = data.images?.map((img: { url: string }) => img.url) || []
         backgroundsCache.set(selectedGenre, urls)
-        setBackgroundImages(urls)
+        if (isMountedRef.current) setBackgroundImages(urls)
       }
     } catch (error) {
       console.error('Error fetching backgrounds:', error)
-      setBackgroundImages([])
+      if (isMountedRef.current) setBackgroundImages([])
     } finally {
-      setBackgroundsLoading(false)
+      if (isMountedRef.current) setBackgroundsLoading(false)
     }
   }, [])
 
   // Fetch user preferences on mount
   useEffect(() => {
+    isMountedRef.current = true
+
     async function fetchPreferences() {
       try {
         // First check localStorage for genre (faster, works for guests)
@@ -82,8 +87,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
           : null
 
         const response = await fetch('/api/daily-guide/preferences')
+        if (!isMountedRef.current) return
+
         if (response.ok) {
           const prefs = await response.json()
+          if (!isMountedRef.current) return
           // Use server preference if logged in and has preference, otherwise use local
           const preferredGenre = prefs.preferred_music_genre || localGenre || DEFAULT_GENRE
           setGenreState(preferredGenre)
@@ -98,6 +106,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
       } catch (error) {
         console.error('Error fetching theme preferences:', error)
+        if (!isMountedRef.current) return
         // Use local storage fallback
         const localGenre = typeof window !== 'undefined'
           ? localStorage.getItem('voxu_music_genre')
@@ -106,11 +115,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         setGenreState(genre)
         fetchBackgrounds(genre)
       } finally {
-        setIsLoading(false)
+        if (isMountedRef.current) setIsLoading(false)
       }
     }
 
     fetchPreferences()
+
+    return () => {
+      isMountedRef.current = false
+    }
   }, [fetchBackgrounds])
 
   // Set genre and update in backend + localStorage
