@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react'
 import {
   Sun,
   Dumbbell,
@@ -9,6 +9,7 @@ import {
   Moon,
   Sunrise,
   Play,
+  Pause,
   Check,
   Loader2,
   SkipForward,
@@ -46,6 +47,10 @@ interface ModuleCardProps {
   musicGenre?: string
   onPlay: () => void
   onSkip?: () => void
+  onComplete?: () => void
+  // For inline playback
+  audioBase64?: string | null
+  audioUrl?: string | null
 }
 
 // Genre display labels
@@ -230,10 +235,21 @@ export function ModuleCard({
   musicGenre,
   onPlay,
   onSkip,
+  onComplete,
+  audioBase64,
+  audioUrl,
 }: ModuleCardProps) {
   const content = MODULE_CONTENT[module] || MODULE_CONTENT.morning_prime
   const Icon = content.icon
   const dayName = getDayName()
+
+  // Inline audio player state
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(duration)
+  const [isAudioLoading, setIsAudioLoading] = useState(false)
+  const [hasStarted, setHasStarted] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Get dynamic tagline
   const tagline = typeof content.tagline === 'function'
@@ -251,6 +267,111 @@ export function ModuleCard({
   // Get benefit config if exists
   const benefit = content.benefit ? BENEFIT_CONFIG[content.benefit.type] : null
   const BenefitIcon = benefit?.icon
+
+  // Initialize audio when we have audio data
+  useEffect(() => {
+    const audioSource = audioBase64
+      ? `data:audio/mpeg;base64,${audioBase64}`
+      : audioUrl
+
+    if (!audioSource) return
+
+    // Create audio element if not exists
+    if (!audioRef.current) {
+      audioRef.current = new Audio()
+    }
+
+    const audio = audioRef.current
+    audio.src = audioSource
+
+    const handleLoadedMetadata = () => {
+      setAudioDuration(audio.duration)
+      setIsAudioLoading(false)
+    }
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime)
+    }
+
+    const handleEnded = () => {
+      setIsPlaying(false)
+      setCurrentTime(0)
+      onComplete?.()
+    }
+
+    const handlePlay = () => setIsPlaying(true)
+    const handlePause = () => setIsPlaying(false)
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('ended', handleEnded)
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('pause', handlePause)
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('ended', handleEnded)
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('pause', handlePause)
+    }
+  }, [audioBase64, audioUrl, onComplete])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.src = ''
+      }
+    }
+  }, [])
+
+  const handlePlayPause = useCallback(async () => {
+    // If no audio data loaded yet, call onPlay to fetch it
+    if (!audioBase64 && !audioUrl) {
+      onPlay()
+      return
+    }
+
+    if (!audioRef.current) return
+
+    if (isPlaying) {
+      audioRef.current.pause()
+    } else {
+      setIsAudioLoading(true)
+      try {
+        await audioRef.current.play()
+        setHasStarted(true)
+      } catch (error) {
+        console.error('Error playing audio:', error)
+      }
+      setIsAudioLoading(false)
+    }
+  }, [audioBase64, audioUrl, isPlaying, onPlay])
+
+  const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !audioDuration) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const percentage = x / rect.width
+    const newTime = percentage * audioDuration
+
+    audioRef.current.currentTime = newTime
+    setCurrentTime(newTime)
+  }, [audioDuration])
+
+  const progress = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Has inline audio capability
+  const hasInlineAudio = !!(audioBase64 || audioUrl)
 
   return (
     <div
@@ -313,98 +434,157 @@ export function ModuleCard({
       </div>
 
       {/* Footer with label, duration, and actions */}
-      <div className={`px-4 pb-4 pt-2 flex items-center justify-between ${isCompleted ? 'opacity-50' : ''}`}>
-        <div className="flex items-center gap-3">
-          <div className={`
-            p-2 rounded-xl transition-all
-            ${isCompleted ? 'bg-white/5' : isActive ? 'bg-white/15 animate-pulse-glow' : 'bg-white/10'}
-          `}>
-            <Icon className={`
-              w-4 h-4 transition-all
-              ${isCompleted ? 'text-white/50' : isActive ? 'text-white animate-icon-bounce' : 'text-white/80'}
-            `} />
-          </div>
-          <div>
-            <p className={`text-sm font-medium ${isCompleted ? 'text-white/50' : 'text-white'}`}>
-              {content.label}
-            </p>
-            <div className="flex items-center gap-2">
-              <span className={`text-xs ${isCompleted ? 'text-white/30' : 'text-white/50'}`}>
-                {formatDuration(duration)}
-              </span>
-              {content.metadata && (
-                <>
-                  <span className="text-white/30">·</span>
-                  <span className={`text-xs ${isCompleted ? 'text-white/30' : 'text-white/50'}`}>
-                    {content.metadata}
-                  </span>
-                </>
-              )}
-              {musicEnabled && musicGenre && !isCompleted && (
-                <>
-                  <span className="text-white/30">·</span>
-                  <span className="text-xs text-purple-400/80">
-                    {GENRE_LABELS[musicGenre] || musicGenre}
-                  </span>
-                </>
-              )}
+      <div className={`px-4 pb-4 pt-2 ${isCompleted ? 'opacity-50' : ''}`}>
+        {/* Inline Player - shown when audio is playing or has been started */}
+        {(isPlaying || hasStarted) && hasInlineAudio && !isCompleted ? (
+          <div className="space-y-3">
+            {/* Progress bar */}
+            <div
+              className="relative h-1.5 bg-white/10 rounded-full cursor-pointer group"
+              onClick={handleSeek}
+            >
+              <div
+                className="absolute left-0 top-0 h-full bg-white/80 rounded-full transition-all"
+                style={{ width: `${progress}%` }}
+              />
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ left: `calc(${progress}% - 6px)` }}
+              />
+            </div>
+
+            {/* Controls row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {/* Play/Pause button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handlePlayPause()
+                  }}
+                  disabled={isAudioLoading}
+                  className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+                >
+                  {isAudioLoading ? (
+                    <Loader2 className="w-5 h-5 text-white animate-spin" />
+                  ) : isPlaying ? (
+                    <Pause className="w-5 h-5 text-white" />
+                  ) : (
+                    <Play className="w-5 h-5 text-white fill-current" />
+                  )}
+                </button>
+
+                {/* Time display */}
+                <div className="text-xs text-white/60 font-mono">
+                  {formatTime(currentTime)} / {formatTime(audioDuration)}
+                </div>
+              </div>
+
+              {/* Module info */}
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-white/5">
+                  <Icon className="w-3.5 h-3.5 text-white/60" />
+                </div>
+                <span className="text-xs text-white/50">{content.label}</span>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          /* Default view - not playing */
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`
+                p-2 rounded-xl transition-all
+                ${isCompleted ? 'bg-white/5' : isActive ? 'bg-white/15 animate-pulse-glow' : 'bg-white/10'}
+              `}>
+                <Icon className={`
+                  w-4 h-4 transition-all
+                  ${isCompleted ? 'text-white/50' : isActive ? 'text-white animate-icon-bounce' : 'text-white/80'}
+                `} />
+              </div>
+              <div>
+                <p className={`text-sm font-medium ${isCompleted ? 'text-white/50' : 'text-white'}`}>
+                  {content.label}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs ${isCompleted ? 'text-white/30' : 'text-white/50'}`}>
+                    {formatDuration(duration)}
+                  </span>
+                  {content.metadata && (
+                    <>
+                      <span className="text-white/30">·</span>
+                      <span className={`text-xs ${isCompleted ? 'text-white/30' : 'text-white/50'}`}>
+                        {content.metadata}
+                      </span>
+                    </>
+                  )}
+                  {musicEnabled && musicGenre && !isCompleted && (
+                    <>
+                      <span className="text-white/30">·</span>
+                      <span className="text-xs text-purple-400/80">
+                        {GENRE_LABELS[musicGenre] || musicGenre}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
 
-        {/* Actions */}
-        {!isCompleted ? (
-          <div className="flex items-center gap-2">
-            {onSkip && (
+            {/* Actions */}
+            {!isCompleted ? (
+              <div className="flex items-center gap-2">
+                {onSkip && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSkip()
+                    }}
+                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                    title="Skip this module"
+                  >
+                    <SkipForward className="w-4 h-4 text-white/50" />
+                  </button>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handlePlayPause()
+                  }}
+                  disabled={isLoading || isAudioLoading || !script}
+                  className={`
+                    p-3 rounded-xl transition-all
+                    bg-white/10 hover:bg-white/20 hover:scale-105 active:scale-95
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    ${isActive ? 'ring-2 ring-white/30' : ''}
+                  `}
+                >
+                  {isLoading || isAudioLoading ? (
+                    <Loader2 className="w-5 h-5 text-white animate-spin" />
+                  ) : (
+                    <Play className="w-5 h-5 text-white fill-current" />
+                  )}
+                </button>
+              </div>
+            ) : (
+              // Replay button for completed modules
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  onSkip()
+                  handlePlayPause()
                 }}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-                title="Skip this module"
+                disabled={isLoading || isAudioLoading || !script}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-50"
+                title="Listen again"
               >
-                <SkipForward className="w-4 h-4 text-white/50" />
+                {isLoading || isAudioLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 text-white/50 animate-spin" />
+                ) : (
+                  <RotateCcw className="w-3.5 h-3.5 text-white/50" />
+                )}
+                <span className="text-xs text-white/50">Replay</span>
               </button>
             )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onPlay()
-              }}
-              disabled={isLoading || !script}
-              className={`
-                p-3 rounded-xl transition-all
-                bg-white/10 hover:bg-white/20 hover:scale-105 active:scale-95
-                disabled:opacity-50 disabled:cursor-not-allowed
-                ${isActive ? 'ring-2 ring-white/30' : ''}
-              `}
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 text-white animate-spin" />
-              ) : (
-                <Play className="w-5 h-5 text-white fill-current" />
-              )}
-            </button>
           </div>
-        ) : (
-          // Replay button for completed modules
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onPlay()
-            }}
-            disabled={isLoading || !script}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-50"
-            title="Listen again"
-          >
-            {isLoading ? (
-              <Loader2 className="w-3.5 h-3.5 text-white/50 animate-spin" />
-            ) : (
-              <RotateCcw className="w-3.5 h-3.5 text-white/50" />
-            )}
-            <span className="text-xs text-white/50">Replay</span>
-          </button>
         )}
       </div>
 

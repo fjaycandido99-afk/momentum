@@ -232,6 +232,8 @@ export function DailyGuideHome() {
   const [showMorningComplete, setShowMorningComplete] = useState(false)
   const [morningCompleteCelebrated, setMorningCompleteCelebrated] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
+  // Store fetched audio data for inline playback
+  const [moduleAudioData, setModuleAudioData] = useState<Record<string, AudioData>>({})
   const isMountedRef = useRef(true)
 
   // Use global audio context for music
@@ -455,6 +457,9 @@ export function DailyGuideHome() {
       }
       const currentDayTypeVoice = dayTypeMap[guide?.day_type || 'work'] || 'work'
 
+      // Morning flow modules use inline playback (no overlay)
+      const isMorningFlowModule = ['morning_prime', 'breath'].includes(moduleType)
+
       // For breath module, use the daily voices API (ElevenLabs generated once per day)
       if (moduleType === 'breath') {
         const response = await fetch('/api/daily-guide/voices', {
@@ -465,16 +470,15 @@ export function DailyGuideHome() {
 
         if (response.ok) {
           const data = await response.json()
-          setActivePlayer({
-            module: moduleType,
-            audio: {
+          // Store for inline playback
+          setModuleAudioData(prev => ({
+            ...prev,
+            [moduleType]: {
               script: data.script,
               audioBase64: data.audioBase64,
               duration: data.duration || 120,
-            },
-            withMusic: withMusic && musicEnabled,
-            musicGenre: currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre),
-          })
+            }
+          }))
         }
         return
       }
@@ -489,16 +493,15 @@ export function DailyGuideHome() {
 
         if (response.ok) {
           const data = await response.json()
-          setActivePlayer({
-            module: moduleType,
-            audio: {
+          // Store for inline playback
+          setModuleAudioData(prev => ({
+            ...prev,
+            [moduleType]: {
               script: data.script,
               audioBase64: data.audioBase64,
               duration: data.duration || 120,
-            },
-            withMusic: withMusic && musicEnabled,
-            musicGenre: currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre),
-          })
+            }
+          }))
         }
         return
       }
@@ -968,6 +971,20 @@ export function DailyGuideHome() {
                         musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
                         onPlay={() => playModule(module, musicEnabled)}
                         onSkip={() => handleSkipModule(module)}
+                        audioBase64={moduleAudioData[module]?.audioBase64}
+                        onComplete={async () => {
+                          // Record checkin when audio completes
+                          try {
+                            await fetch('/api/daily-guide/checkin', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ segment: module }),
+                            })
+                            setCompletedModules(prev => [...prev, module])
+                          } catch (error) {
+                            console.error('Error recording checkin:', error)
+                          }
+                        }}
                       />
                     )
                   })}
