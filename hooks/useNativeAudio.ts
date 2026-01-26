@@ -155,14 +155,18 @@ export function useNativeAudio({
   useEffect(() => {
     if (!isNative) return
 
-    const handleAppStateChange = App.addListener('appStateChange', ({ isActive }) => {
+    let listenerHandle: { remove: () => void } | null = null
+
+    App.addListener('appStateChange', ({ isActive }) => {
       console.log(`[NativeAudio] App state: ${isActive ? 'active' : 'background'}`)
       // Native audio continues playing in background - no action needed
       // The native plugin handles this automatically with proper config
+    }).then(handle => {
+      listenerHandle = handle
     })
 
     return () => {
-      handleAppStateChange.remove()
+      listenerHandle?.remove()
     }
   }, [])
 
