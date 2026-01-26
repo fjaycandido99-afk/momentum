@@ -1,7 +1,5 @@
-import fs from 'fs'
-import path from 'path'
-
-const CACHE_DIR = path.join(process.cwd(), '.video-cache')
+// In-memory cache for serverless environment (Vercel)
+// Cache persists within the same instance but resets on cold starts
 
 interface CachedVideos {
   date: string // YYYY-MM-DD
@@ -15,12 +13,8 @@ interface CachedVideos {
   }>
 }
 
-// Ensure cache directory exists
-function ensureCacheDir() {
-  if (!fs.existsSync(CACHE_DIR)) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true })
-  }
-}
+// In-memory cache store
+const memoryCache: Map<string, CachedVideos> = new Map()
 
 // Get today's date string
 function getTodayString(): string {
@@ -30,28 +24,22 @@ function getTodayString(): string {
 
 // Get cached videos for a topic/genre
 export function getCachedVideos(type: 'motivation' | 'music', key: string): CachedVideos['videos'] | null {
-  ensureCacheDir()
+  const cacheKey = `${type}-${key.toLowerCase()}`
+  const cached = memoryCache.get(cacheKey)
 
-  const cacheFile = path.join(CACHE_DIR, `${type}-${key.toLowerCase()}.json`)
-
-  if (!fs.existsSync(cacheFile)) {
+  if (!cached) {
     return null
   }
 
-  try {
-    const data = JSON.parse(fs.readFileSync(cacheFile, 'utf-8')) as CachedVideos
-
-    // Check if cache is from today
-    if (data.date === getTodayString()) {
-      return data.videos
-    }
-
-    // Cache is stale (from a different day)
-    return null
-  } catch (error) {
-    console.error(`[Video Cache] Error reading cache for ${type}/${key}:`, error)
-    return null
+  // Check if cache is from today
+  if (cached.date === getTodayString()) {
+    console.log(`[Video Cache] Hit for ${cacheKey}`)
+    return cached.videos
   }
+
+  // Cache is stale (from a different day)
+  memoryCache.delete(cacheKey)
+  return null
 }
 
 // Save videos to cache
@@ -60,20 +48,15 @@ export function setCachedVideos(
   key: string,
   videos: CachedVideos['videos']
 ): void {
-  ensureCacheDir()
+  const cacheKey = `${type}-${key.toLowerCase()}`
 
-  const cacheFile = path.join(CACHE_DIR, `${type}-${key.toLowerCase()}.json`)
-
-  try {
-    const data: CachedVideos = {
-      date: getTodayString(),
-      videos,
-    }
-    fs.writeFileSync(cacheFile, JSON.stringify(data, null, 2))
-    console.log(`[Video Cache] Cached ${videos.length} ${type} videos for "${key}"`)
-  } catch (error) {
-    console.error(`[Video Cache] Error writing cache for ${type}/${key}:`, error)
+  const data: CachedVideos = {
+    date: getTodayString(),
+    videos,
   }
+
+  memoryCache.set(cacheKey, data)
+  console.log(`[Video Cache] Cached ${videos.length} ${type} videos for "${key}"`)
 }
 
 // Check if we have valid cache for today
