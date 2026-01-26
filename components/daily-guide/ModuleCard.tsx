@@ -21,6 +21,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import type { ModuleType } from '@/lib/daily-guide/decision-tree'
+import { useAudioOptional } from '@/contexts/AudioContext'
 
 // Get day name for dynamic messaging
 function getDayName(): string {
@@ -242,6 +243,7 @@ export function ModuleCard({
   const content = MODULE_CONTENT[module] || MODULE_CONTENT.morning_prime
   const Icon = content.icon
   const dayName = getDayName()
+  const audioContext = useAudioOptional()
 
   // Inline audio player state
   const [isPlaying, setIsPlaying] = useState(false)
@@ -251,6 +253,19 @@ export function ModuleCard({
   const [hasStarted, setHasStarted] = useState(false)
   const [pendingPlay, setPendingPlay] = useState(false) // Track if waiting for audio to load
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Pause/resume background music when inline audio plays/stops
+  useEffect(() => {
+    if (!audioContext) return
+
+    if (isPlaying) {
+      // Pause background music when module audio plays
+      audioContext.setSessionActive(true)
+    } else if (hasStarted && !isPlaying) {
+      // Resume background music when module audio pauses/stops
+      audioContext.setSessionActive(false)
+    }
+  }, [isPlaying, hasStarted, audioContext])
 
   // Get dynamic tagline
   const tagline = typeof content.tagline === 'function'
@@ -336,8 +351,12 @@ export function ModuleCard({
         audioRef.current.pause()
         audioRef.current.src = ''
       }
+      // Resume background music if we were playing
+      if (audioContext && hasStarted) {
+        audioContext.setSessionActive(false)
+      }
     }
-  }, [])
+  }, [audioContext, hasStarted])
 
   const handlePlayPause = useCallback(async () => {
     // If no audio data loaded yet, call onPlay to fetch it
