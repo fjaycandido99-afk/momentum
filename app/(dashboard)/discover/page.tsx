@@ -576,9 +576,11 @@ function VoicePlayer({
 
   // Set background based on genre - fetch from Supabase Storage
   useEffect(() => {
+    let isMounted = true
     console.log('[VoicePlayer] useEffect genre:', genre)
     if (genre) {
       fetchVoicePlayerBackgrounds(genre).then((backgrounds) => {
+        if (!isMounted) return
         console.log('[VoicePlayer] Got backgrounds for', genre, ':', backgrounds.length)
         if (backgrounds.length > 0) {
           const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)]
@@ -588,6 +590,9 @@ function VoicePlayer({
           console.log('[VoicePlayer] No backgrounds to set')
         }
       })
+    }
+    return () => {
+      isMounted = false
     }
   }, [genre])
 
@@ -704,6 +709,8 @@ function DailyMotivationTab({
 
   // Fetch videos from YouTube API - with daily caching
   useEffect(() => {
+    let isMounted = true
+
     async function fetchVideos() {
       const cacheKey = `voxu_motivation_${topic.word}`
       const dateKey = getTodayDateKey()
@@ -716,9 +723,11 @@ function DailyMotivationTab({
             const { date, videos } = JSON.parse(cached)
             if (date === dateKey && videos && videos.length > 0) {
               console.log('[Motivation] Using cached videos for', topic.word)
-              setApiVideos(videos)
-              setUseApi(true)
-              setLoading(false)
+              if (isMounted) {
+                setApiVideos(videos)
+                setUseApi(true)
+                setLoading(false)
+              }
               return
             }
           }
@@ -728,11 +737,12 @@ function DailyMotivationTab({
       }
 
       // Fetch from API
-      setLoading(true)
+      if (isMounted) setLoading(true)
       try {
         console.log('[Motivation] Fetching fresh videos for', topic.word)
         const response = await fetch(`/api/motivation-videos?topic=${topic.word}`)
         const data = await response.json()
+        if (!isMounted) return
         if (data.videos && data.videos.length > 0) {
           setApiVideos(data.videos)
           setUseApi(true)
@@ -750,12 +760,17 @@ function DailyMotivationTab({
         }
       } catch (error) {
         console.error('Failed to fetch videos:', error)
-        setUseApi(false)
+        if (isMounted) setUseApi(false)
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
+
     fetchVideos()
+
+    return () => {
+      isMounted = false
+    }
   }, [topic.word])
 
   // Update topic at midnight
@@ -865,6 +880,8 @@ function DailyMusicTab({
 
   // Fetch videos from YouTube API - with daily caching
   useEffect(() => {
+    let isMounted = true
+
     async function fetchVideos() {
       const cacheKey = `voxu_music_${genre.id}`
       const dateKey = getTodayDateKey()
@@ -877,8 +894,10 @@ function DailyMusicTab({
             const { date, videos } = JSON.parse(cached)
             if (date === dateKey && videos && videos.length > 0) {
               console.log('[Music] Using cached videos for', genre.id)
-              setApiVideos(videos)
-              setLoading(false)
+              if (isMounted) {
+                setApiVideos(videos)
+                setLoading(false)
+              }
               return
             }
           }
@@ -888,11 +907,12 @@ function DailyMusicTab({
       }
 
       // Fetch from API
-      setLoading(true)
+      if (isMounted) setLoading(true)
       try {
         console.log('[Music] Fetching fresh videos for', genre.id)
         const response = await fetch(`/api/music-videos?genre=${genre.id}`)
         const data = await response.json()
+        if (!isMounted) return
         if (data.videos && data.videos.length > 0) {
           setApiVideos(data.videos)
           // Cache for today (only in browser)
@@ -908,12 +928,17 @@ function DailyMusicTab({
         }
       } catch (error) {
         console.error('Failed to fetch music videos:', error)
-        setApiVideos([])
+        if (isMounted) setApiVideos([])
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
+
     fetchVideos()
+
+    return () => {
+      isMounted = false
+    }
   }, [genre.id])
 
   // Update genre at midnight
