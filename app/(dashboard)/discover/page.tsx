@@ -685,6 +685,12 @@ function VoicePlayer({
   )
 }
 
+// Get today's date key for caching
+function getTodayDateKey() {
+  const now = new Date()
+  return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`
+}
+
 // Daily Motivation Tab Component
 function DailyMotivationTab({
   onPlayVideo
@@ -696,16 +702,44 @@ function DailyMotivationTab({
   const [loading, setLoading] = useState(true)
   const [useApi, setUseApi] = useState(true)
 
-  // Fetch videos from YouTube API
+  // Fetch videos from YouTube API - with daily caching
   useEffect(() => {
     async function fetchVideos() {
+      const cacheKey = `voxu_motivation_${topic.word}`
+      const dateKey = getTodayDateKey()
+
+      // Check localStorage cache first
+      try {
+        const cached = localStorage.getItem(cacheKey)
+        if (cached) {
+          const { date, videos } = JSON.parse(cached)
+          if (date === dateKey && videos && videos.length > 0) {
+            console.log('[Motivation] Using cached videos for', topic.word)
+            setApiVideos(videos)
+            setUseApi(true)
+            setLoading(false)
+            return
+          }
+        }
+      } catch (e) {
+        console.error('[Motivation] Cache read error:', e)
+      }
+
+      // Fetch from API
       setLoading(true)
       try {
+        console.log('[Motivation] Fetching fresh videos for', topic.word)
         const response = await fetch(`/api/motivation-videos?topic=${topic.word}`)
         const data = await response.json()
         if (data.videos && data.videos.length > 0) {
           setApiVideos(data.videos)
           setUseApi(true)
+          // Cache for today
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify({ date: dateKey, videos: data.videos }))
+          } catch (e) {
+            console.error('[Motivation] Cache write error:', e)
+          }
         } else {
           // Fallback to static list
           setUseApi(false)
@@ -825,15 +859,42 @@ function DailyMusicTab({
   const [apiVideos, setApiVideos] = useState<Array<{ id: string; title: string; youtubeId: string; channel: string; thumbnail?: string; duration?: number }>>([])
   const [loading, setLoading] = useState(true)
 
-  // Fetch videos from YouTube API
+  // Fetch videos from YouTube API - with daily caching
   useEffect(() => {
     async function fetchVideos() {
+      const cacheKey = `voxu_music_${genre.id}`
+      const dateKey = getTodayDateKey()
+
+      // Check localStorage cache first
+      try {
+        const cached = localStorage.getItem(cacheKey)
+        if (cached) {
+          const { date, videos } = JSON.parse(cached)
+          if (date === dateKey && videos && videos.length > 0) {
+            console.log('[Music] Using cached videos for', genre.id)
+            setApiVideos(videos)
+            setLoading(false)
+            return
+          }
+        }
+      } catch (e) {
+        console.error('[Music] Cache read error:', e)
+      }
+
+      // Fetch from API
       setLoading(true)
       try {
+        console.log('[Music] Fetching fresh videos for', genre.id)
         const response = await fetch(`/api/music-videos?genre=${genre.id}`)
         const data = await response.json()
         if (data.videos && data.videos.length > 0) {
           setApiVideos(data.videos)
+          // Cache for today
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify({ date: dateKey, videos: data.videos }))
+          } catch (e) {
+            console.error('[Music] Cache write error:', e)
+          }
         } else {
           setApiVideos([])
         }
