@@ -260,10 +260,12 @@ export function ModuleCard({
 
     if (isPlaying) {
       // Pause background music when module audio plays
-      audioContext.setSessionActive(true)
+      console.log('[ModuleCard] Pausing background music')
+      audioContext.pauseMusic()
     } else if (hasStarted && !isPlaying) {
       // Resume background music when module audio pauses/stops
-      audioContext.setSessionActive(false)
+      console.log('[ModuleCard] Resuming background music')
+      audioContext.resumeMusic()
     }
   }, [isPlaying, hasStarted, audioContext])
 
@@ -346,14 +348,17 @@ export function ModuleCard({
 
   // Cleanup on unmount
   useEffect(() => {
+    const ctx = audioContext
+    const started = hasStarted
     return () => {
       if (audioRef.current) {
         audioRef.current.pause()
         audioRef.current.src = ''
       }
       // Resume background music if we were playing
-      if (audioContext && hasStarted) {
-        audioContext.setSessionActive(false)
+      if (ctx && started) {
+        console.log('[ModuleCard] Cleanup - resuming background music')
+        ctx.resumeMusic()
       }
     }
   }, [audioContext, hasStarted])

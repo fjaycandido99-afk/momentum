@@ -220,20 +220,31 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const pauseMusic = useCallback(() => {
     if (bgMusicPlayerRef.current) {
       try {
+        // Set session active to prevent onStateChange from restarting
+        setSessionActive(true)
         bgMusicPlayerRef.current.pauseVideo()
         setIsMusicPlaying(false)
-      } catch (e) {}
+        console.log('[AudioContext] Music paused')
+      } catch (e) {
+        console.error('[AudioContext] Pause error:', e)
+      }
     }
   }, [])
 
   const resumeMusic = useCallback(() => {
-    if (bgMusicPlayerRef.current && musicEnabled && !isSessionActive) {
+    // Clear session active flag first
+    setSessionActive(false)
+
+    if (bgMusicPlayerRef.current && musicEnabled) {
       try {
         bgMusicPlayerRef.current.playVideo()
         setIsMusicPlaying(true)
-      } catch (e) {}
+        console.log('[AudioContext] Music resumed')
+      } catch (e) {
+        console.error('[AudioContext] Resume error:', e)
+      }
     }
-  }, [musicEnabled, isSessionActive])
+  }, [musicEnabled])
 
   const stopMusic = useCallback(() => {
     if (bgMusicPlayerRef.current) {
