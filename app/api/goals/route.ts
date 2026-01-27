@@ -1,0 +1,179 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic'
+
+// GET - List active goals
+export async function GET() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check premium
+    const subscription = await prisma.subscription.findUnique({
+      where: { user_id: user.id },
+    })
+    const isPremium = subscription?.tier === 'premium' &&
+      (subscription?.status === 'active' || subscription?.status === 'trialing')
+
+    if (!isPremium) {
+      return NextResponse.json({ error: 'Premium required' }, { status: 403 })
+    }
+
+    const goals = await prisma.goal.findMany({
+      where: {
+        user_id: user.id,
+        status: { in: ['active', 'completed'] },
+      },
+      orderBy: [
+        { status: 'asc' },
+        { created_at: 'desc' },
+      ],
+    })
+
+    return NextResponse.json({ goals })
+  } catch (error) {
+    console.error('Goals GET error:', error)
+    return NextResponse.json({ error: 'Failed to fetch goals' }, { status: 500 })
+  }
+}
+
+// POST - Create new goal
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check premium
+    const subscription = await prisma.subscription.findUnique({
+      where: { user_id: user.id },
+    })
+    const isPremium = subscription?.tier === 'premium' &&
+      (subscription?.status === 'active' || subscription?.status === 'trialing')
+
+    if (!isPremium) {
+      return NextResponse.json({ error: 'Premium required' }, { status: 403 })
+    }
+
+    const { title, description, frequency, target_count } = await request.json()
+
+    if (!title || typeof title !== 'string') {
+      return NextResponse.json({ error: 'Title required' }, { status: 400 })
+    }
+
+    const goal = await prisma.goal.create({
+      data: {
+        user_id: user.id,
+        title: title.trim(),
+        description: description?.trim() || null,
+        frequency: frequency || 'daily',
+        target_count: target_count || 1,
+        period_start: new Date(),
+      },
+    })
+
+    return NextResponse.json({ goal })
+  } catch (error) {
+    console.error('Goals POST error:', error)
+    return NextResponse.json({ error: 'Failed to create goal' }, { status: 500 })
+  }
+}
+
+// PATCH - Update/increment goal
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id, increment, status, title, description, target_count } = await request.json()
+
+    if (!id) {
+      return NextResponse.json({ error: 'Goal ID required' }, { status: 400 })
+    }
+
+    // Verify ownership
+    const existing = await prisma.goal.findFirst({
+      where: { id, user_id: user.id },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Goal not found' }, { status: 404 })
+    }
+
+    const updateData: any = {}
+
+    if (increment) {
+      const newCount = existing.current_count + 1
+      updateData.current_count = newCount
+      // Auto-complete if target reached
+      if (newCount >= existing.target_count) {
+        updateData.status = 'completed'
+      }
+    }
+
+    if (status) updateData.status = status
+    if (title) updateData.title = title.trim()
+    if (description !== undefined) updateData.description = description?.trim() || null
+    if (target_count) updateData.target_count = target_count
+
+    const goal = await prisma.goal.update({
+      where: { id },
+      data: updateData,
+    })
+
+    return NextResponse.json({ goal })
+  } catch (error) {
+    console.error('Goals PATCH error:', error)
+    return NextResponse.json({ error: 'Failed to update goal' }, { status: 500 })
+  }
+}
+
+// DELETE - Archive goal
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id } = await request.json()
+
+    if (!id) {
+      return NextResponse.json({ error: 'Goal ID required' }, { status: 400 })
+    }
+
+    // Verify ownership
+    const existing = await prisma.goal.findFirst({
+      where: { id, user_id: user.id },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Goal not found' }, { status: 404 })
+    }
+
+    await prisma.goal.update({
+      where: { id },
+      data: { status: 'archived' },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Goals DELETE error:', error)
+    return NextResponse.json({ error: 'Failed to archive goal' }, { status: 500 })
+  }
+}

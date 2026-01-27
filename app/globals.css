@@ -205,6 +205,10 @@ html {
   animation: fade-in-up 0.3s ease-out both;
 }
 
+.animate-fade-in-up {
+  animation: fade-in-up 0.35s ease-out both;
+}
+
 .animate-fade-in-down {
   animation: fade-in-down 0.4s ease-out both;
 }

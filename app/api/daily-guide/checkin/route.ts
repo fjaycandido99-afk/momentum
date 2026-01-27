@@ -41,9 +41,37 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { segment, date: dateStr } = body
+    const { segment, date: dateStr, mood_before, mood_after } = body
 
-    if (!segment || !VALID_SEGMENTS.includes(segment)) {
+    if (!segment && !mood_before && !mood_after) {
+      return NextResponse.json(
+        { error: 'segment or mood required' },
+        { status: 400 }
+      )
+    }
+
+    // Handle mood-only updates (no segment required)
+    if (!segment && (mood_before || mood_after)) {
+      const date = dateStr ? new Date(dateStr) : new Date()
+      const dateKey = getDateString(date)
+      const moodUpdate: Record<string, string> = {}
+      if (mood_before) moodUpdate.mood_before = mood_before
+      if (mood_after) moodUpdate.mood_after = mood_after
+
+      await prisma.dailyGuide.update({
+        where: {
+          user_id_date: {
+            user_id: user.id,
+            date: new Date(dateKey),
+          },
+        },
+        data: moodUpdate,
+      })
+
+      return NextResponse.json({ success: true, mood: moodUpdate })
+    }
+
+    if (!VALID_SEGMENTS.includes(segment)) {
       return NextResponse.json(
         { error: 'Invalid segment parameter' },
         { status: 400 }
@@ -54,7 +82,7 @@ export async function POST(request: NextRequest) {
     const dateKey = getDateString(date)
 
     // Build update data based on segment
-    const updateData: Record<string, boolean> = {}
+    const updateData: Record<string, boolean | string> = {}
 
     switch (segment) {
       case 'morning_prime':
@@ -102,6 +130,9 @@ export async function POST(request: NextRequest) {
           message: `${segment} segment tracked`,
         })
     }
+
+    if (mood_before) updateData.mood_before = mood_before
+    if (mood_after) updateData.mood_after = mood_after
 
     const guide = await prisma.dailyGuide.update({
       where: {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { ChevronLeft, ChevronRight, Loader2, Check, Circle, Flame, X, BookOpen } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, Check, Circle, Flame, X, BookOpen, Heart, Target } from 'lucide-react'
 
 interface DayData {
   date: Date
@@ -11,6 +11,8 @@ interface DayData {
   breath_done?: boolean
   day_close_done?: boolean
   journal_win?: string | null
+  journal_gratitude?: string | null
+  journal_intention?: string | null
 }
 
 interface CalendarViewProps {
@@ -91,6 +93,8 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
               breath_done: entry.breath_done,
               day_close_done: entry.day_close_done,
               journal_win: entry.journal_win,
+              journal_gratitude: entry.journal_gratitude,
+              journal_intention: entry.journal_intention,
             }
           })
 
@@ -348,15 +352,41 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
 
             {/* Journal Content */}
             <div className="p-4">
-              {selectedDayData.journal_win ? (
+              {(selectedDayData.journal_win || selectedDayData.journal_gratitude || selectedDayData.journal_intention) ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-blue-400">
-                    <BookOpen className="w-4 h-4" />
-                    <span className="text-sm font-medium">What I learned</span>
-                  </div>
-                  <p className="text-white/80 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
-                    {selectedDayData.journal_win}
-                  </p>
+                  {selectedDayData.journal_win && (
+                    <div>
+                      <div className="flex items-center gap-2 text-blue-400 mb-1.5">
+                        <BookOpen className="w-4 h-4" />
+                        <span className="text-sm font-medium">What I learned</span>
+                      </div>
+                      <p className="text-white/80 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
+                        {selectedDayData.journal_win}
+                      </p>
+                    </div>
+                  )}
+                  {selectedDayData.journal_gratitude && (
+                    <div>
+                      <div className="flex items-center gap-2 text-pink-400 mb-1.5">
+                        <Heart className="w-4 h-4" />
+                        <span className="text-sm font-medium">Grateful for</span>
+                      </div>
+                      <p className="text-white/80 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
+                        {selectedDayData.journal_gratitude}
+                      </p>
+                    </div>
+                  )}
+                  {selectedDayData.journal_intention && (
+                    <div>
+                      <div className="flex items-center gap-2 text-purple-400 mb-1.5">
+                        <Target className="w-4 h-4" />
+                        <span className="text-sm font-medium">Intention</span>
+                      </div>
+                      <p className="text-white/80 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
+                        {selectedDayData.journal_intention}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-6">

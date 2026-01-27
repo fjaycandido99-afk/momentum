@@ -14,6 +14,7 @@ export const NOTIFICATION_IDS = {
   CHECKPOINT_3: 5,
   STREAK_REMINDER: 6,
   WEEKLY_REVIEW: 7,
+  BEDTIME_REMINDER: 8,
 }
 
 // Notification action types
@@ -220,6 +221,19 @@ export async function scheduleStreakReminder(hour: number, minute: number): Prom
   })
 }
 
+// Schedule bedtime reminder (wake_time - 8 hours)
+export async function scheduleBedtimeReminder(hour: number, minute: number): Promise<boolean> {
+  return scheduleReminder({
+    id: NOTIFICATION_IDS.BEDTIME_REMINDER,
+    title: 'Time for Bed 🌙',
+    body: 'Wind down for 8 hours of restful sleep.',
+    hour,
+    minute,
+    actionTypeId: 'DAILY_REMINDER',
+    extra: { route: '/guide', action: 'bedtime' },
+  })
+}
+
 // Cancel a specific reminder
 export async function cancelReminder(id: number): Promise<void> {
   if (!isNative) return
@@ -317,12 +331,36 @@ export function addNotificationReceivedListener(
   }
 }
 
+// Smart reminders - update based on AI nudge patterns
+export async function updateSmartReminders(nudgeType?: string): Promise<void> {
+  if (!isNative) return
+
+  // Reschedule streak reminder if streak is at risk
+  if (nudgeType === 'streak_risk') {
+    const now = new Date()
+    let reminderHour = now.getHours() + 2
+    if (reminderHour >= 22) reminderHour = 20
+    await scheduleReminder({
+      id: NOTIFICATION_IDS.STREAK_REMINDER,
+      title: "Your streak is at risk!",
+      body: "Open Voxu to keep your momentum going.",
+      hour: reminderHour,
+      minute: 0,
+      repeats: false,
+      actionTypeId: 'DAILY_REMINDER',
+      extra: { route: '/guide', action: 'streak' },
+    })
+    console.log('[Notifications] Smart streak reminder scheduled')
+  }
+}
+
 // Update reminders based on user preferences
 export async function updateRemindersFromPreferences(preferences: {
   daily_reminder: boolean
   reminder_time: string // "HH:MM" format
   work_end_time?: string
   wake_time?: string
+  bedtime_reminder_enabled?: boolean
 }): Promise<void> {
   if (!isNative) return
 
@@ -365,6 +403,16 @@ export async function updateRemindersFromPreferences(preferences: {
 
   // Schedule weekly review for Sundays at 10am
   await scheduleWeeklyReviewReminder(10, 0)
+
+  // Schedule bedtime reminder if enabled
+  if (preferences.bedtime_reminder_enabled && preferences.wake_time) {
+    const [wakeH, wakeM] = preferences.wake_time.split(':').map(Number)
+    // Bedtime = wake_time - 8 hours
+    let bedHour = wakeH - 8
+    let bedMinute = wakeM || 0
+    if (bedHour < 0) bedHour += 24
+    await scheduleBedtimeReminder(bedHour, bedMinute)
+  }
 
   console.log('[Notifications] Reminders updated from preferences')
 }

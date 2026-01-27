@@ -20,6 +20,7 @@ model User {
   sessions      Session[]
   favorites     FavoriteContent[]
   subscription  Subscription?
+  goals         Goal[]
 }
 
 model Subscription {
@@ -117,6 +118,9 @@ model UserPreferences {
   // Streak tracking (days used this week)
   current_streak        Int      @default(0)
   last_active_date      DateTime?
+
+  // Bedtime reminder
+  bedtime_reminder_enabled Boolean @default(false)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -321,6 +325,14 @@ model DailyGuide {
   journal_learned        String? // "What did you learn?"
   journal_intention      String? // Weekly intention (set on Sundays)
 
+  // Mood tracking
+  mood_before            String? // "low" | "medium" | "high" - before morning flow
+  mood_after             String? // "low" | "medium" | "high" - after day close
+
+  // AI features
+  journal_ai_reflection  String? // AI-generated insight after journal save
+  ai_affirmation         String? // Daily AI-generated affirmation
+
   created_at DateTime @default(now())
 
   @@unique([user_id, date])
@@ -352,4 +364,24 @@ model PushSubscription {
 
   @@index([user_id])
   @@index([platform])
+}
+
+model Goal {
+  id            String   @id @default(cuid())
+  user_id       String
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  title         String
+  description   String?
+  frequency     String   @default("daily") // "daily" | "weekly" | "monthly"
+  target_count  Int      @default(1)
+  current_count Int      @default(0)
+  period_start  DateTime @default(now())
+  status        String   @default("active") // "active" | "completed" | "archived"
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([user_id])
+  @@index([status])
 }

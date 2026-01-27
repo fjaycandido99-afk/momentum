@@ -1,13 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CalendarDays, Trophy, Flame, PenLine, Check, Loader2, ChevronRight, Sparkles, Target, X } from 'lucide-react'
+import { CalendarDays, Trophy, Flame, PenLine, Check, Loader2, ChevronRight, Sparkles, Target, X, Zap, Heart, TrendingUp, BarChart3, Brain } from 'lucide-react'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 
 interface DayEntry {
   date: Date
   dayName: string
   journal_win?: string | null
+  journal_gratitude?: string | null
+  journal_intention?: string | null
   moduleCount: number
+  energy_level?: string | null
+  day_type?: string | null
+  mood_before?: string | null
+  mood_after?: string | null
 }
 
 interface WeeklyStats {
@@ -18,6 +25,9 @@ interface WeeklyStats {
   bestStreak: number
   wins: string[]
   dailyEntries: DayEntry[]
+  energyDistribution: { low: number; normal: number; high: number }
+  completionRate: number
+  moodImprovedPercent: number
 }
 
 interface WeeklyReviewProps {
@@ -26,6 +36,7 @@ interface WeeklyReviewProps {
 }
 
 export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
+  const subscription = useSubscriptionOptional()
   const [stats, setStats] = useState<WeeklyStats | null>(null)
   const [intention, setIntention] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -34,6 +45,8 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
   const [existingIntention, setExistingIntention] = useState<string | null>(null)
   const [showFullJournal, setShowFullJournal] = useState(false)
   const [expandedDay, setExpandedDay] = useState<number | null>(null)
+  const [aiSummary, setAiSummary] = useState<string | null>(null)
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
 
   // Get last week's date range
   const getLastWeekRange = () => {
@@ -70,6 +83,9 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           let totalModules = 0
           let journalEntries = 0
           const wins: string[] = []
+          const energyDist = { low: 0, normal: 0, high: 0 }
+          let moodImprovedCount = 0
+          let moodTrackedCount = 0
 
           // Create a map of entries by date
           const entryMap: Record<string, any> = {}
@@ -108,24 +124,54 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                 journalEntries++
                 wins.push(entry.journal_win)
               }
+
+              // Track energy levels (string: 'low' | 'normal' | 'high')
+              if (entry.energy_level) {
+                if (entry.energy_level === 'low') energyDist.low++
+                else if (entry.energy_level === 'normal') energyDist.normal++
+                else if (entry.energy_level === 'high') energyDist.high++
+              }
+
+              // Track mood improvement (string: 'low' | 'medium' | 'high')
+              if (entry.mood_before && entry.mood_after) {
+                moodTrackedCount++
+                const moodOrder: Record<string, number> = { low: 0, medium: 1, high: 2 }
+                const before = moodOrder[entry.mood_before] ?? 0
+                const after = moodOrder[entry.mood_after] ?? 0
+                if (after > before) moodImprovedCount++
+              }
             }
 
             dailyEntries.push({
               date: dayDate,
               dayName: dayNames[dayDate.getDay()],
               journal_win: entry?.journal_win || null,
+              journal_gratitude: entry?.journal_gratitude || null,
+              journal_intention: entry?.journal_intention || null,
               moduleCount,
+              energy_level: entry?.energy_level ?? null,
+              day_type: entry?.day_type ?? null,
+              mood_before: entry?.mood_before ?? null,
+              mood_after: entry?.mood_after ?? null,
             })
           }
+
+          const completionRate = Math.round((completedDays / 7) * 100)
+          const moodImprovedPercent = moodTrackedCount > 0
+            ? Math.round((moodImprovedCount / moodTrackedCount) * 100)
+            : 0
 
           setStats({
             completedDays,
             partialDays,
             totalModules,
             journalEntries,
-            bestStreak: completedDays, // Simplified
-            wins: wins.slice(0, 5), // Top 5 wins
+            bestStreak: completedDays,
+            wins: wins.slice(0, 5),
             dailyEntries,
+            energyDistribution: energyDist,
+            completionRate,
+            moodImprovedPercent,
           })
         }
 
@@ -148,7 +194,19 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
     }
 
     fetchWeeklyData()
-  }, [])
+
+    // Fetch AI summary for premium users
+    if (subscription?.isPremium) {
+      setAiSummaryLoading(true)
+      fetch('/api/daily-guide/weekly-summary')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.summary) setAiSummary(data.summary)
+        })
+        .catch(err => console.error('AI summary error:', err))
+        .finally(() => setAiSummaryLoading(false))
+    }
+  }, [subscription?.isPremium])
 
   const handleSaveIntention = async () => {
     if (!intention.trim()) return
@@ -207,6 +265,97 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         </div>
       ) : (
         <>
+          {/* Weekly Insights Card */}
+          <div className="p-4 pb-2">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+              <div className="flex items-center gap-2 mb-3">
+                <BarChart3 className="w-4 h-4 text-indigo-400" />
+                <h3 className="text-sm font-medium text-indigo-300">Weekly Insights</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Energy Distribution */}
+                <div>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wide mb-1.5">Energy</p>
+                  {(stats?.energyDistribution.low || stats?.energyDistribution.normal || stats?.energyDistribution.high) ? (
+                    <>
+                      <div className="flex gap-1.5 mt-1">
+                        <div className="flex items-center gap-0.5">
+                          <div className="w-2 h-2 rounded-full bg-blue-400/60" />
+                          <span className="text-[10px] text-white/40">Low {stats.energyDistribution.low}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          <div className="w-2 h-2 rounded-full bg-amber-400/60" />
+                          <span className="text-[10px] text-white/40">Normal {stats.energyDistribution.normal}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          <div className="w-2 h-2 rounded-full bg-emerald-400/60" />
+                          <span className="text-[10px] text-white/40">High {stats.energyDistribution.high}</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-xs text-white/30">No data</p>
+                  )}
+                </div>
+
+                {/* Completion Rate */}
+                <div>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wide mb-1.5">Completion</p>
+                  <p className="text-lg font-bold text-white">{stats?.completionRate || 0}<span className="text-xs text-white/40 font-normal">%</span></p>
+                  <p className="text-[10px] text-white/40">{stats?.completedDays || 0} full days</p>
+                </div>
+
+                {/* Journal Count */}
+                <div>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wide mb-1.5">Journals</p>
+                  <p className="text-lg font-bold text-white">{stats?.journalEntries || 0}<span className="text-xs text-white/40 font-normal">/7</span></p>
+                  <p className="text-[10px] text-white/40">entries written</p>
+                </div>
+
+                {/* Mood Improvement */}
+                <div>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wide mb-1.5">Mood Shift</p>
+                  {stats && stats.moodImprovedPercent > 0 ? (
+                    <>
+                      <p className="text-lg font-bold text-emerald-400">
+                        {stats.moodImprovedPercent}%
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <TrendingUp className="w-3 h-3 text-emerald-400/60" />
+                        <span className="text-[10px] text-white/40">improved</span>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-xs text-white/30">No data</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Weekly Summary */}
+          {(aiSummary || aiSummaryLoading) && (
+            <div className="px-4 pb-2">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <Brain className="w-4 h-4 text-purple-400" />
+                  <h3 className="text-sm font-medium text-purple-300">AI Summary</h3>
+                </div>
+                {aiSummaryLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-3 w-full bg-white/10 rounded animate-pulse" />
+                    <div className="h-3 w-3/4 bg-white/5 rounded animate-pulse" />
+                    <div className="h-3 w-5/6 bg-white/5 rounded animate-pulse" />
+                  </div>
+                ) : (
+                  <p className="text-sm text-white/80 leading-relaxed italic">
+                    {aiSummary}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Stats Grid */}
           <div className="p-4 grid grid-cols-2 gap-3">
             <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
@@ -380,11 +529,11 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
             <div
               key={index}
               className={`rounded-xl border transition-all ${
-                day.journal_win
+                (day.journal_win || day.journal_gratitude || day.journal_intention)
                   ? 'bg-white/5 border-white/10 cursor-pointer hover:bg-white/10'
                   : 'bg-white/[0.02] border-white/5'
               }`}
-              onClick={() => day.journal_win && setExpandedDay(expandedDay === index ? null : index)}
+              onClick={() => (day.journal_win || day.journal_gratitude || day.journal_intention) && setExpandedDay(expandedDay === index ? null : index)}
             >
               {/* Day Header */}
               <div className="p-3 flex items-center justify-between">
@@ -407,11 +556,11 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                     <p className="text-sm text-white/80">{day.dayName}</p>
                     <p className="text-xs text-white/40">
                       {day.moduleCount > 0 ? `${day.moduleCount}/5 modules` : 'No activity'}
-                      {day.journal_win && ' • Journal ✓'}
+                      {(day.journal_win || day.journal_gratitude || day.journal_intention) && ' • Journal ✓'}
                     </p>
                   </div>
                 </div>
-                {day.journal_win && (
+                {(day.journal_win || day.journal_gratitude || day.journal_intention) && (
                   <ChevronRight className={`w-4 h-4 text-white/40 transition-transform ${
                     expandedDay === index ? 'rotate-90' : ''
                   }`} />
@@ -419,12 +568,30 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
               </div>
 
               {/* Expanded Journal Content */}
-              {expandedDay === index && day.journal_win && (
-                <div className="px-3 pb-3">
-                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <p className="text-xs text-blue-400 mb-1">What I learned:</p>
-                    <p className="text-sm text-white/80 leading-relaxed">{day.journal_win}</p>
-                  </div>
+              {expandedDay === index && (day.journal_win || day.journal_gratitude || day.journal_intention) && (
+                <div className="px-3 pb-3 space-y-2">
+                  {day.journal_win && (
+                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <p className="text-xs text-blue-400 mb-1">What I learned:</p>
+                      <p className="text-sm text-white/80 leading-relaxed">{day.journal_win}</p>
+                    </div>
+                  )}
+                  {day.journal_gratitude && (
+                    <div className="p-3 rounded-lg bg-pink-500/10 border border-pink-500/20">
+                      <p className="text-xs text-pink-400 mb-1 flex items-center gap-1">
+                        <Heart className="w-3 h-3" /> Grateful for:
+                      </p>
+                      <p className="text-sm text-white/80 leading-relaxed">{day.journal_gratitude}</p>
+                    </div>
+                  )}
+                  {day.journal_intention && (
+                    <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                      <p className="text-xs text-purple-400 mb-1 flex items-center gap-1">
+                        <Target className="w-3 h-3" /> Intention:
+                      </p>
+                      <p className="text-sm text-white/80 leading-relaxed">{day.journal_intention}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

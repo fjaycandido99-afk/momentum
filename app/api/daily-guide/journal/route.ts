@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { getGroq, GROQ_MODEL } from '@/lib/groq'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -38,10 +39,11 @@ export async function GET(request: NextRequest) {
           journal_gratitude: true,
           journal_learned: true,
           journal_intention: true,
+          journal_ai_reflection: true,
         },
       })
 
-      return NextResponse.json(guide || { date: targetDate, journal_win: null, journal_gratitude: null, journal_learned: null, journal_intention: null })
+      return NextResponse.json(guide || { date: targetDate, journal_win: null, journal_gratitude: null, journal_learned: null, journal_intention: null, journal_ai_reflection: null })
     }
 
     // Date range query (for calendar/history)
@@ -70,6 +72,10 @@ export async function GET(request: NextRequest) {
           movement_done: true,
           micro_lesson_done: true,
           breath_done: true,
+          energy_level: true,
+          day_type: true,
+          mood_before: true,
+          mood_after: true,
         },
         orderBy: {
           date: 'asc',
@@ -155,6 +161,102 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // AI Reflection: generate for premium users
+    let reflection: string | null = null
+    try {
+      const subscription = await prisma.subscription.findUnique({
+        where: { user_id: user.id },
+      })
+      const isPremium = subscription?.tier === 'premium' &&
+        (subscription?.status === 'active' || subscription?.status === 'trialing')
+
+      if (isPremium && (journal_win || journal_gratitude || journal_learned)) {
+        // Fetch last 7 days of journals for pattern detection
+        const weekAgo = new Date()
+        weekAgo.setDate(weekAgo.getDate() - 7)
+        weekAgo.setHours(0, 0, 0, 0)
+
+        const recentJournals = await prisma.dailyGuide.findMany({
+          where: {
+            user_id: user.id,
+            date: { gte: weekAgo },
+            OR: [
+              { journal_win: { not: null } },
+              { journal_gratitude: { not: null } },
+              { journal_learned: { not: null } },
+            ],
+          },
+          select: {
+            date: true,
+            journal_win: true,
+            journal_gratitude: true,
+            journal_learned: true,
+          },
+          orderBy: { date: 'desc' },
+          take: 7,
+        })
+
+        // Fetch active goals for context
+        const goals = await prisma.goal.findMany({
+          where: { user_id: user.id, status: 'active' },
+          select: { title: true, current_count: true, target_count: true },
+          take: 5,
+        })
+
+        const recentContext = recentJournals
+          .map(j => {
+            const parts = []
+            if (j.journal_win) parts.push(`learned: "${j.journal_win}"`)
+            if (j.journal_gratitude) parts.push(`grateful: "${j.journal_gratitude}"`)
+            return `${new Date(j.date).toLocaleDateString()}: ${parts.join(', ')}`
+          })
+          .join('\n')
+
+        const goalsContext = goals.length > 0
+          ? `\nActive goals: ${goals.map(g => `${g.title} (${g.current_count}/${g.target_count})`).join(', ')}`
+          : ''
+
+        const todayEntry = [
+          journal_win ? `Learned: "${journal_win}"` : null,
+          journal_gratitude ? `Grateful for: "${journal_gratitude}"` : null,
+          journal_learned ? `Insight: "${journal_learned}"` : null,
+        ].filter(Boolean).join('\n')
+
+        const completion = await getGroq().chat.completions.create({
+          model: GROQ_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: `You are a thoughtful wellness coach. Based on today's journal entry and recent patterns, provide a 1-2 sentence insight or reflection. Be specific, reference their actual words, notice patterns or growth. Don't be generic. Be warm but substantive.${goalsContext}`,
+            },
+            {
+              role: 'user',
+              content: `Today's entry:\n${todayEntry}\n\nRecent entries:\n${recentContext}`,
+            },
+          ],
+          max_tokens: 150,
+          temperature: 0.7,
+        })
+
+        reflection = completion.choices[0]?.message?.content?.trim() || null
+
+        // Save reflection
+        if (reflection) {
+          await prisma.dailyGuide.update({
+            where: {
+              user_id_date: {
+                user_id: user.id,
+                date: targetDate,
+              },
+            },
+            data: { journal_ai_reflection: reflection },
+          })
+        }
+      }
+    } catch (reflectionError) {
+      console.error('AI reflection error (non-fatal):', reflectionError)
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -163,6 +265,7 @@ export async function POST(request: NextRequest) {
         journal_gratitude: guide.journal_gratitude,
         journal_learned: guide.journal_learned,
         journal_intention: guide.journal_intention,
+        journal_ai_reflection: reflection,
       },
     })
   } catch (error) {

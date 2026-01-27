@@ -1,13 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import {
   RefreshCw,
   Heart,
   Loader2,
-  Settings,
-  Flame,
   ChevronDown,
   ChevronUp,
   Zap,
@@ -15,7 +12,6 @@ import {
   GraduationCap,
   Briefcase,
   BookOpen,
-  Play,
   Volume2,
   VolumeX,
   Clock,
@@ -23,22 +19,24 @@ import {
   Sunrise,
   Sun,
   Moon,
-  Sparkles,
 } from 'lucide-react'
-import { LoadingScreen, LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { DayTypeIndicator } from './DayTypeIndicator'
 import { GuidancePlayer } from './GuidancePlayer'
 import { EnergyPrompt, EnergySelector } from './EnergyPrompt'
 import { ModuleCard, MorningFlowProgress } from './ModuleCard'
 import { MicroLessonVideo } from './MicroLessonVideo'
 import { QuoteCard } from './QuoteCard'
+import { AffirmationCard } from './AffirmationCard'
+import { SmartNudgeBanner } from './SmartNudgeBanner'
+import { GoalTracker } from './GoalTracker'
 import { StreakDisplay } from './StreakDisplay'
-import { JournalEntry, JournalPrompt } from './JournalEntry'
-import { CalendarView } from './CalendarView'
-import { WeeklyReview, WeeklyReviewPrompt, isSunday } from './WeeklyReview'
+import { JournalEntry } from './JournalEntry'
 import { MorningFlowComplete } from './MorningFlowComplete'
 import { CheckpointList } from './CheckpointCard'
-import { FloatingJournalButton } from './FloatingJournalButton'
+import { MoodCheckIn } from './MoodCheckIn'
+import { JournalLookback } from './JournalLookback'
+import { RestDaySuggestion } from './RestDaySuggestion'
 import { getFormattedDate } from '@/lib/daily-guide/day-type'
 import { useThemeOptional } from '@/contexts/ThemeContext'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
@@ -204,7 +202,6 @@ const MUSIC_GENRES = [
 ]
 
 export function DailyGuideHome() {
-  const router = useRouter()
   const themeContext = useThemeOptional()
   const subscription = useSubscriptionOptional()
   const audioContext = useAudioOptional()
@@ -228,10 +225,12 @@ export function DailyGuideHome() {
     withMusic?: boolean
     musicGenre?: string
   } | null>(null)
-  const [showWeeklyReview, setShowWeeklyReview] = useState(false)
   const [showMorningComplete, setShowMorningComplete] = useState(false)
   const [morningCompleteCelebrated, setMorningCompleteCelebrated] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
+  // Mood tracking
+  const [moodBefore, setMoodBefore] = useState<string | null>(null)
+  const [moodAfter, setMoodAfter] = useState<string | null>(null)
   // Store fetched audio data for inline playback
   const [moduleAudioData, setModuleAudioData] = useState<Record<string, AudioData>>({})
   const isMountedRef = useRef(true)
@@ -771,6 +770,11 @@ export function DailyGuideHome() {
       <TrialBanner variant="compact" />
       <TrialEndingBanner />
 
+      {/* Smart Nudge */}
+      <div className="px-6 mb-2">
+        <SmartNudgeBanner />
+      </div>
+
       {/* Header */}
       <div className="p-6 animate-fade-in-down">
         {/* Greeting Section */}
@@ -798,17 +802,11 @@ export function DailyGuideHome() {
               )
             })()}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             {/* Premium badge */}
             <PremiumBadge size="sm" />
             {/* Streak indicator */}
             <StreakDisplay streak={streak} />
-            <button
-              onClick={() => router.push('/settings')}
-              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-            >
-              <Settings className="w-5 h-5 text-white/70" />
-            </button>
           </div>
         </div>
 
@@ -899,6 +897,11 @@ export function DailyGuideHome() {
         )}
       </div>
 
+      {/* AI Affirmation */}
+      <div className="px-6 mb-4">
+        <AffirmationCard isPremium={subscription?.isPremium ?? false} />
+      </div>
+
       {/* Session Limit Banner */}
       <div className="px-6 mb-4">
         <SessionLimitBanner />
@@ -948,6 +951,32 @@ export function DailyGuideHome() {
       {/* Guide content */}
       {guide && (
         <div className="px-6 space-y-6">
+          {/* Rest Day Suggestion */}
+          <RestDaySuggestion
+            streak={streak}
+            dayType={guide.day_type}
+            onTakeRecoveryDay={() => toggleDayType('recovery')}
+          />
+
+          {/* Morning Mood Check-In */}
+          {!moodBefore && getTimeGreeting().period === 'morning' && (
+            <MoodCheckIn
+              type="before"
+              onSelect={async (mood) => {
+                setMoodBefore(mood)
+                try {
+                  await fetch('/api/daily-guide/checkin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mood_before: mood }),
+                  })
+                } catch (error) {
+                  console.error('Error saving mood:', error)
+                }
+              }}
+            />
+          )}
+
           {/* Morning Flow Section */}
           {morningModules.length > 0 && (
             <div className="space-y-3">
@@ -1003,6 +1032,9 @@ export function DailyGuideHome() {
                             <QuoteCard
                               key={module}
                               isCompleted={completedModules.includes(module)}
+                              mood={moodBefore}
+                              energy={selectedEnergy}
+                              dayType={guide.day_type}
                               onComplete={() => {
                                 fetch('/api/daily-guide/checkin', {
                                   method: 'POST',
@@ -1179,6 +1211,11 @@ export function DailyGuideHome() {
             />
           )}
 
+          {/* Goal Tracker (Premium) */}
+          {subscription?.isPremium && (
+            <GoalTracker />
+          )}
+
           {/* Day Close */}
           {guide.modules?.includes('day_close') && (
             <div className="space-y-3">
@@ -1245,27 +1282,60 @@ export function DailyGuideHome() {
 
               {/* Journal Entry - shows after Day Close is completed */}
               {completedModules.includes('day_close') && eveningAvailability.isAvailable && (
-                <div className="mt-3">
+                <div className="mt-3 space-y-3">
+                  {/* Evening Mood Check-In */}
+                  {!moodAfter && (
+                    <MoodCheckIn
+                      type="after"
+                      onSelect={async (mood) => {
+                        setMoodAfter(mood)
+                        try {
+                          await fetch('/api/daily-guide/checkin', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ mood_after: mood }),
+                          })
+                        } catch (error) {
+                          console.error('Error saving mood:', error)
+                        }
+                      }}
+                    />
+                  )}
+
                   <JournalEntry date={today} />
+
+                  {/* Journal Lookback - "This time last week" */}
+                  <JournalLookback />
+
+                  {/* Bedtime Reminder Card */}
+                  {preferences?.wake_time && (
+                    <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Moon className="w-4 h-4 text-indigo-400" />
+                        <span className="text-sm font-medium text-white">Bedtime Reminder</span>
+                      </div>
+                      <p className="text-xs text-white/60">
+                        Aim to be in bed by{' '}
+                        <span className="text-white/90">
+                          {(() => {
+                            const [h, m] = preferences.wake_time!.split(':').map(Number)
+                            let bedH = h - 8
+                            if (bedH < 0) bedH += 24
+                            const period = bedH >= 12 ? 'PM' : 'AM'
+                            const display = bedH % 12 || 12
+                            return `${display}:${(m || 0).toString().padStart(2, '0')} ${period}`
+                          })()}
+                        </span>
+                        {' '}for 8 hours of rest
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
 
-          {/* Weekly Review Prompt (shows on Sundays - temporarily always visible for testing) */}
-          <WeeklyReviewPrompt onOpen={() => setShowWeeklyReview(true)} />
-
-          {/* Calendar View - Progress tracker */}
-          <CalendarView currentStreak={streak} />
         </div>
-      )}
-
-      {/* Weekly Review Modal */}
-      {showWeeklyReview && (
-        <WeeklyReview
-          isModal={true}
-          onClose={() => setShowWeeklyReview(false)}
-        />
       )}
 
       {/* Morning Flow Complete Celebration */}
@@ -1274,9 +1344,6 @@ export function DailyGuideHome() {
         onClose={() => setShowMorningComplete(false)}
         modulesCompleted={morningModules.length}
       />
-
-      {/* Floating journal button */}
-      {guide && <FloatingJournalButton />}
 
       {/* Player overlay */}
       {activePlayer && (

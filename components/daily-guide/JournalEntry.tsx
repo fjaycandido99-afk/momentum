@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { PenLine, Check, Loader2, X, Sparkles } from 'lucide-react'
+import { PenLine, Check, Loader2, X, Sparkles, Heart, Target } from 'lucide-react'
 
 interface JournalEntryProps {
   date?: Date
@@ -11,9 +11,12 @@ interface JournalEntryProps {
 
 export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntryProps) {
   const [win, setWin] = useState('')
+  const [gratitude, setGratitude] = useState('')
+  const [intention, setIntention] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [reflection, setReflection] = useState<string | null>(null)
 
   // Load existing journal entry
   useEffect(() => {
@@ -24,8 +27,11 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
         const response = await fetch(`/api/daily-guide/journal?date=${dateStr}`)
         if (response.ok) {
           const data = await response.json()
-          if (data.journal_win) {
-            setWin(data.journal_win)
+          if (data.journal_win) setWin(data.journal_win)
+          if (data.journal_gratitude) setGratitude(data.journal_gratitude)
+          if (data.journal_intention) setIntention(data.journal_intention)
+          if (data.journal_ai_reflection) setReflection(data.journal_ai_reflection)
+          if (data.journal_win || data.journal_gratitude || data.journal_intention) {
             setIsSaved(true)
           }
         }
@@ -39,7 +45,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
   }, [date])
 
   const handleSave = async () => {
-    if (!win.trim()) return
+    if (!win.trim() && !gratitude.trim() && !intention.trim()) return
 
     setIsSaving(true)
     try {
@@ -49,13 +55,18 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           date: targetDate.toISOString(),
-          journal_win: win.trim(),
+          journal_win: win.trim() || undefined,
+          journal_gratitude: gratitude.trim() || undefined,
+          journal_intention: intention.trim() || undefined,
         }),
       })
 
       if (response.ok) {
+        const data = await response.json()
         setIsSaved(true)
-        // Auto close modal after save
+        if (data.data?.journal_ai_reflection) {
+          setReflection(data.data.journal_ai_reflection)
+        }
         if (showAsModal && onClose) {
           setTimeout(onClose, 1500)
         }
@@ -66,6 +77,8 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
       setIsSaving(false)
     }
   }
+
+  const hasContent = win.trim() || gratitude.trim() || intention.trim()
 
   const content = (
     <div className={`${showAsModal ? '' : 'rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden'}`}>
@@ -97,79 +110,120 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
             <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
           </div>
         ) : isSaved && !showAsModal ? (
-          // Saved state (non-modal)
-          <div className="py-4">
+          <div className="py-4 space-y-3">
             <div className="flex items-center gap-2 text-emerald-400 mb-3">
               <Check className="w-4 h-4" />
               <span className="text-sm font-medium">Saved</span>
             </div>
-            <p className="text-white/80 text-sm italic">"{win}"</p>
+            {win && <p className="text-white/80 text-sm italic">&quot;{win}&quot;</p>}
+            {gratitude && (
+              <div className="flex items-start gap-2">
+                <Heart className="w-3.5 h-3.5 text-pink-400 mt-0.5 shrink-0" />
+                <p className="text-white/60 text-sm italic">{gratitude}</p>
+              </div>
+            )}
+            {intention && (
+              <div className="flex items-start gap-2">
+                <Target className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+                <p className="text-white/60 text-sm italic">{intention}</p>
+              </div>
+            )}
           </div>
         ) : (
-          <>
-            {/* Question */}
-            <div className="mb-3">
-              <label className="text-sm text-white/80 flex items-center gap-2">
+          <div className="space-y-4">
+            {/* What did you learn */}
+            <div>
+              <label className="text-sm text-white/80 flex items-center gap-2 mb-2">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 What did you learn today?
               </label>
+              <textarea
+                value={win}
+                onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
+                placeholder="Today I learned..."
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
+                rows={2}
+                maxLength={500}
+              />
             </div>
 
-            {/* Input */}
-            <textarea
-              value={win}
-              onChange={(e) => {
-                setWin(e.target.value)
-                setIsSaved(false)
-              }}
-              placeholder="Today I learned..."
-              className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
-              rows={3}
-              maxLength={500}
-            />
+            {/* Gratitude */}
+            <div>
+              <label className="text-sm text-white/80 flex items-center gap-2 mb-2">
+                <Heart className="w-3.5 h-3.5 text-pink-400" />
+                What are you grateful for?
+              </label>
+              <textarea
+                value={gratitude}
+                onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
+                placeholder="I'm grateful for..."
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
+                rows={2}
+                maxLength={500}
+              />
+            </div>
 
-            {/* Character count */}
-            <div className="flex justify-between items-center mt-2">
-              <span className="text-xs text-white/30">{win.length}/500</span>
+            {/* Tomorrow's intention */}
+            <div>
+              <label className="text-sm text-white/80 flex items-center gap-2 mb-2">
+                <Target className="w-3.5 h-3.5 text-purple-400" />
+                Tomorrow&apos;s intention
+              </label>
+              <textarea
+                value={intention}
+                onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
+                placeholder="Tomorrow I will..."
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
+                rows={2}
+                maxLength={300}
+              />
+            </div>
 
-              {/* Save button */}
+            {/* Save button */}
+            <div className="flex justify-end">
               <button
                 onClick={handleSave}
-                disabled={!win.trim() || isSaving || isSaved}
+                disabled={!hasContent || isSaving || isSaved}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
                   isSaved
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : win.trim()
+                    : hasContent
                     ? 'bg-white/10 hover:bg-white/20 text-white'
                     : 'bg-white/5 text-white/30 cursor-not-allowed'
                 }`}
               >
                 {isSaving ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Saving...
-                  </>
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...</>
                 ) : isSaved ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    Saved
-                  </>
+                  <><Check className="w-3.5 h-3.5" /> Saved</>
                 ) : (
                   'Save'
                 )}
               </button>
             </div>
-          </>
+
+            {/* AI Insight */}
+            {reflection && (
+              <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+                <div className="flex items-start gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-medium tracking-wider text-indigo-400/70 uppercase mb-1">AI Insight</p>
+                    <p className="text-sm text-white/80 leading-relaxed italic">{reflection}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
   )
 
-  // Modal version
   if (showAsModal) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div className="w-full max-w-md rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10 overflow-hidden">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+        <div className="w-full max-w-md my-8 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10 overflow-hidden">
           {content}
         </div>
       </div>
@@ -179,7 +233,6 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
   return content
 }
 
-// Compact inline version for showing in the flow
 export function JournalPrompt({ onOpen }: { onOpen: () => void }) {
   return (
     <button

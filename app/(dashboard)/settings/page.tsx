@@ -142,6 +142,7 @@ function SettingsContent() {
   const [reminderTime, setReminderTime] = useState('07:00')
   const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(true)
   const [preferredMusicGenre, setPreferredMusicGenre] = useState<string | null>(null)
+  const [bedtimeReminderEnabled, setBedtimeReminderEnabled] = useState(false)
 
   // Load preferences on mount
   useEffect(() => {
@@ -171,6 +172,7 @@ function SettingsContent() {
           if (data.reminder_time) setReminderTime(data.reminder_time)
           if (data.background_music_enabled !== undefined) setBackgroundMusicEnabled(data.background_music_enabled)
           if (data.preferred_music_genre !== undefined) setPreferredMusicGenre(data.preferred_music_genre)
+          if (data.bedtime_reminder_enabled !== undefined) setBedtimeReminderEnabled(data.bedtime_reminder_enabled)
         }
       } catch (error) {
         console.error('Failed to load preferences:', error)
@@ -207,6 +209,7 @@ function SettingsContent() {
           reminder_time: reminderTime,
           background_music_enabled: backgroundMusicEnabled,
           preferred_music_genre: preferredMusicGenre,
+          bedtime_reminder_enabled: bedtimeReminderEnabled,
           workout_enabled: enabledSegments.includes('movement'),
           micro_lesson_enabled: enabledSegments.includes('micro_lesson'),
           breath_cues_enabled: enabledSegments.includes('breath'),
@@ -658,6 +661,51 @@ function SettingsContent() {
                   {formatTime12h(reminderTime)}
                 </div>
               </div>
+            </div>
+          )}
+        </section>
+
+        {/* Bedtime Reminder */}
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-white/10">
+                <Moon className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="font-medium text-white">Bedtime Reminder</h2>
+                <p className="text-white/60 text-xs">Reminder for 8 hours before wake time</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setBedtimeReminderEnabled(!bedtimeReminderEnabled)}
+              className={`w-12 h-7 rounded-full transition-all ${
+                bedtimeReminderEnabled ? 'bg-white' : 'bg-white/10'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                  bedtimeReminderEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+          {bedtimeReminderEnabled && wakeTime && (
+            <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10">
+              <p className="text-sm text-white/70">
+                You&apos;ll be reminded at{' '}
+                <span className="text-white font-medium">
+                  {(() => {
+                    const [h, m] = wakeTime.split(':').map(Number)
+                    let bedH = h - 8
+                    if (bedH < 0) bedH += 24
+                    const period = bedH >= 12 ? 'PM' : 'AM'
+                    const display = bedH % 12 || 12
+                    return `${display}:${(m || 0).toString().padStart(2, '0')} ${period}`
+                  })()}
+                </span>
+                {' '}to get 8 hours of sleep
+              </p>
             </div>
           )}
         </section>

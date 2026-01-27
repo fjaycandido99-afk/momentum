@@ -17,6 +17,23 @@ const WordAnimationPlayer = dynamic(
 
 type Mode = 'focus' | 'relax' | 'sleep' | 'energy' | null
 
+// Mood/energy-based soundscape suggestion
+function getSuggestedMode(mood?: string | null, energy?: string | null, timeSuggested?: Mode): Mode {
+  // Mood + energy combinations
+  if (mood === 'low' && energy === 'low') return 'relax'
+  if (mood === 'low' && energy === 'high') return 'focus'
+  if (mood === 'low') return 'relax'
+  if (mood === 'high' && energy === 'high') return 'energy'
+  if (mood === 'high' && energy === 'low') return 'relax'
+  if (mood === 'high') return 'focus'
+  if (mood === 'medium' && energy === 'high') return 'energy'
+  if (mood === 'medium' && energy === 'low') return 'relax'
+  if (energy === 'low') return 'sleep'
+  if (energy === 'high') return 'energy'
+  // Default to time-based
+  return timeSuggested || 'focus'
+}
+
 // Get time-based greeting and suggestion
 function getTimeContext() {
   const hour = new Date().getHours()
@@ -85,6 +102,8 @@ export default function SoundscapePage() {
   const [activeMode, setActiveMode] = useState<Mode>(null)
   const [playingSound, setPlayingSound] = useState<typeof AMBIENT_SOUNDS[0] | null>(null)
   const [timeContext, setTimeContext] = useState(getTimeContext())
+  const [moodData, setMoodData] = useState<{ mood?: string | null; energy?: string | null } | null>(null)
+  const [moodSuggested, setMoodSuggested] = useState<Mode>(null)
 
   // Update time context periodically
   useEffect(() => {
@@ -92,6 +111,27 @@ export default function SoundscapePage() {
       setTimeContext(getTimeContext())
     }, 60000) // Every minute
     return () => clearInterval(interval)
+  }, [])
+
+  // Fetch today's mood/energy for personalized suggestion
+  useEffect(() => {
+    const fetchMoodData = async () => {
+      try {
+        const today = new Date().toISOString().split('T')[0]
+        const response = await fetch(`/api/daily-guide/journal?date=${today}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.mood_before || data.energy_level) {
+            setMoodData({ mood: data.mood_before, energy: data.energy_level })
+            const suggested = getSuggestedMode(data.mood_before, data.energy_level, timeContext.suggested)
+            setMoodSuggested(suggested)
+          }
+        }
+      } catch {
+        // Non-critical, fall through to time-based
+      }
+    }
+    fetchMoodData()
   }, [])
 
   const startMode = (mode: Mode) => {
@@ -131,8 +171,10 @@ export default function SoundscapePage() {
 
         {/* Suggested mode */}
         <div className="mb-8">
-          <p className="text-white/60 text-xs uppercase tracking-wider mb-3">Suggested for {timeContext.period}</p>
-          {MODES.filter(m => m.id === timeContext.suggested).map(mode => (
+          <p className="text-white/60 text-xs uppercase tracking-wider mb-3">
+            {moodSuggested && moodData ? 'Suggested for your mood' : `Suggested for ${timeContext.period}`}
+          </p>
+          {MODES.filter(m => m.id === (moodSuggested || timeContext.suggested)).map(mode => (
             <button
               key={mode.id}
               onClick={() => startMode(mode.id)}

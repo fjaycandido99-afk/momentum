@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Sun, Compass, Settings, Radio } from 'lucide-react'
+import { Sun, Compass, Settings, Radio, PenLine } from 'lucide-react'
 
 const NAV_ITEMS = [
   { href: '/', label: 'Guide', icon: Sun },
   { href: '/discover', label: 'Discover', icon: Compass },
   { href: '/soundscape', label: 'Sounds', icon: Radio, featured: true },
+  { href: '/journal', label: 'Journal', icon: PenLine },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -27,7 +28,7 @@ export function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 px-4 py-1 transition-all ${
+                className={`flex flex-col items-center gap-1 px-2 py-1 transition-all ${
                   isActive ? 'scale-105' : ''
                 }`}
               >
@@ -49,7 +50,7 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
+              className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg transition-colors ${
                 isActive
                   ? 'text-white'
                   : 'text-white/60 hover:text-white/80'
