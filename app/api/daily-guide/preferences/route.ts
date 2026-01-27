@@ -33,6 +33,7 @@ const DEFAULT_PREFERENCES = {
   preferred_music_genre: null,
   daily_reminder: true,
   reminder_time: '07:00',
+  bedtime_reminder_enabled: false,
   current_streak: 0,
   last_active_date: null,
 }
@@ -95,6 +96,7 @@ export async function GET() {
         // Reminders
         daily_reminder: true,
         reminder_time: true,
+        bedtime_reminder_enabled: true,
 
         // Streak tracking
         current_streak: true,
@@ -145,6 +147,7 @@ export async function GET() {
         // Reminders
         daily_reminder: true,
         reminder_time: '07:00',
+        bedtime_reminder_enabled: false,
 
         // Streak tracking
         current_streak: 0,
@@ -219,6 +222,7 @@ export async function POST(request: NextRequest) {
       // Reminders
       daily_reminder,
       reminder_time,
+      bedtime_reminder_enabled,
     } = body
 
     const preferences = await prisma.userPreferences.upsert({
@@ -265,6 +269,7 @@ export async function POST(request: NextRequest) {
         // Reminders
         ...(daily_reminder !== undefined && { daily_reminder }),
         ...(reminder_time !== undefined && { reminder_time }),
+        ...(bedtime_reminder_enabled !== undefined && { bedtime_reminder_enabled }),
       },
       create: {
         user_id: user.id,
@@ -310,6 +315,7 @@ export async function POST(request: NextRequest) {
         // Reminders
         daily_reminder: daily_reminder ?? true,
         reminder_time: reminder_time || '07:00',
+        bedtime_reminder_enabled: bedtime_reminder_enabled ?? false,
       },
     })
 
