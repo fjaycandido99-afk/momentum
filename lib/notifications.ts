@@ -335,7 +335,19 @@ export async function updateRemindersFromPreferences(preferences: {
   }
 
   // Parse reminder time
-  const [hour, minute] = preferences.reminder_time.split(':').map(Number)
+  let [hour, minute] = preferences.reminder_time.split(':').map(Number)
+  const reminderMinutes = hour * 60 + minute
+
+  // Use wake_time + 15 minutes as a floor for the morning reminder
+  // Don't schedule a morning reminder before the user is awake
+  if (preferences.wake_time) {
+    const [wakeHour, wakeMin] = preferences.wake_time.split(':').map(Number)
+    const wakeFloorMinutes = (wakeHour * 60 + (wakeMin || 0)) + 15
+    if (reminderMinutes < wakeFloorMinutes) {
+      hour = Math.floor(wakeFloorMinutes / 60)
+      minute = wakeFloorMinutes % 60
+    }
+  }
 
   // Schedule morning reminder
   await scheduleMorningReminder(hour, minute)

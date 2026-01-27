@@ -271,8 +271,9 @@ export function DailyGuideHome() {
 
       if (!isMountedRef.current) return
 
+      let prefsData: any = null
       if (prefsRes.ok) {
-        const prefsData = await prefsRes.json()
+        prefsData = await prefsRes.json()
         if (!isMountedRef.current) return
         setPreferences(prefsData)
         const genre = prefsData.preferred_music_genre || getTodaysMusicGenre(prefsData.preferred_music_genre)
@@ -306,10 +307,19 @@ export function DailyGuideHome() {
           if (guideData.data.day_close_done) completed.push('day_close')
           setCompletedModules(completed)
 
-          // Check if we should show energy prompt (morning, no energy set)
-          const hour = today.getHours()
-          if (hour < 12 && !guideData.data.energy_level) {
-            setShowEnergyPrompt(true)
+          // Check if we should show energy prompt (within 4 hours of wake time, no energy set)
+          if (!guideData.data.energy_level) {
+            const now = new Date()
+            const currentMinutes = now.getHours() * 60 + now.getMinutes()
+            // Use wake_time + 4 hours as window, default to noon (12:00) if no wake_time
+            let energyWindowEnd = 12 * 60 // default: noon
+            if (prefsData?.wake_time) {
+              const [wH, wM] = prefsData.wake_time.split(':').map(Number)
+              energyWindowEnd = (wH * 60 + (wM || 0)) + 4 * 60
+            }
+            if (currentMinutes < energyWindowEnd) {
+              setShowEnergyPrompt(true)
+            }
           }
         } else {
           // No guide yet, show energy prompt to generate
@@ -709,6 +719,36 @@ export function DailyGuideHome() {
 
   const eveningAvailability = getEveningAvailability()
 
+  // Time-based availability for Morning section (locked until wake_time)
+  const getMorningAvailability = useCallback(() => {
+    const currentHour = today.getHours()
+    const currentMinutes = today.getMinutes()
+    const currentTimeMinutes = currentHour * 60 + currentMinutes
+
+    // Default: morning is always available if no wake_time set
+    if (!preferences?.wake_time) {
+      return { isAvailable: true, unlockTime: '', unlockHour: 0, unlockMinutes: 0 }
+    }
+
+    const [wakeHour, wakeMins] = preferences.wake_time.split(':').map(Number)
+    const unlockTimeMinutes = wakeHour * 60 + (wakeMins || 0)
+    const isAvailable = currentTimeMinutes >= unlockTimeMinutes
+
+    // Format for display (12-hour)
+    const displayHour = wakeHour % 12 || 12
+    const ampm = wakeHour < 12 ? 'AM' : 'PM'
+    const unlockTime = `${displayHour}:${(wakeMins || 0).toString().padStart(2, '0')} ${ampm}`
+
+    return {
+      isAvailable,
+      unlockTime,
+      unlockHour: wakeHour,
+      unlockMinutes: wakeMins || 0,
+    }
+  }, [today, preferences?.wake_time])
+
+  const morningAvailability = getMorningAvailability()
+
   // Get available day types for user
   const getAvailableDayTypes = () => {
     if (!preferences) return ['work', 'off', 'recovery']
@@ -910,107 +950,136 @@ export function DailyGuideHome() {
         <div className="px-6 space-y-6">
           {/* Morning Flow Section */}
           {morningModules.length > 0 && (
-            <div className="rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/10 overflow-hidden animate-scale-in">
-              <button
-                onClick={() => setShowMorningFlow(!showMorningFlow)}
-                className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-white/10">
-                    <Zap className="w-4 h-4 text-white" />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-sm font-medium text-white/80 uppercase tracking-wider">
+                  Morning Flow
+                </h2>
+                {!morningAvailability.isAvailable && (
+                  <div className="flex items-center gap-1.5 text-xs text-white/50">
+                    <Clock className="w-3 h-3" />
+                    <span>Available at {morningAvailability.unlockTime}</span>
                   </div>
-                  <div className="text-left">
-                    <h2 className="font-medium text-white">Morning Flow</h2>
-                    <p className="text-xs text-white/80">
-                      {completedModules.filter(m => morningModules.includes(m)).length}/{morningModules.length} complete
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MorningFlowProgress
-                    modules={morningModules as ModuleType[]}
-                    completedModules={completedModules}
-                    currentModule={getCurrentMorningModule() as ModuleType}
-                  />
-                  {showMorningFlow ? (
-                    <ChevronUp className="w-5 h-5 text-white/80" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-white/80" />
+                )}
+              </div>
+
+              {morningAvailability.isAvailable ? (
+                <div className="rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/10 overflow-hidden animate-scale-in">
+                  <button
+                    onClick={() => setShowMorningFlow(!showMorningFlow)}
+                    className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-white/10">
+                        <Zap className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <h2 className="font-medium text-white">Morning Flow</h2>
+                        <p className="text-xs text-white/80">
+                          {completedModules.filter(m => morningModules.includes(m)).length}/{morningModules.length} complete
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <MorningFlowProgress
+                        modules={morningModules as ModuleType[]}
+                        completedModules={completedModules}
+                        currentModule={getCurrentMorningModule() as ModuleType}
+                      />
+                      {showMorningFlow ? (
+                        <ChevronUp className="w-5 h-5 text-white/80" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-white/80" />
+                      )}
+                    </div>
+                  </button>
+
+                  {showMorningFlow && (
+                    <div className="p-4 pt-0 space-y-3">
+                      {morningModules.map(module => {
+                        // Use QuoteCard for movement/workout (Quote of the Day)
+                        if (module === 'movement' || module === 'workout') {
+                          return (
+                            <QuoteCard
+                              key={module}
+                              isCompleted={completedModules.includes(module)}
+                              onComplete={() => {
+                                fetch('/api/daily-guide/checkin', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ segment: module }),
+                                })
+                                setCompletedModules(prev => [...prev, module])
+                              }}
+                            />
+                          )
+                        }
+
+                        // Use MicroLessonVideo for micro_lesson module to show Discover motivation videos
+                        if (module === 'micro_lesson') {
+                          return (
+                            <MicroLessonVideo
+                              key={module}
+                              isCompleted={completedModules.includes(module)}
+                              onComplete={() => {
+                                // Record checkin when video is watched
+                                fetch('/api/daily-guide/checkin', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ segment: 'micro_lesson' }),
+                                })
+                                setCompletedModules(prev => [...prev, module])
+                              }}
+                              onSkip={() => handleSkipModule(module)}
+                            />
+                          )
+                        }
+
+                        return (
+                          <ModuleCard
+                            key={module}
+                            module={module as ModuleType}
+                            script={getModuleScript(module)}
+                            duration={durations[module as ModuleType] || 60}
+                            isCompleted={completedModules.includes(module)}
+                            isLoading={loadingModule === module}
+                            isActive={getCurrentMorningModule() === module}
+                            musicEnabled={musicEnabled}
+                            musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
+                            onPlay={() => playModule(module, musicEnabled)}
+                            onSkip={() => handleSkipModule(module)}
+                            audioBase64={moduleAudioData[module]?.audioBase64}
+                            onComplete={async () => {
+                              // Record checkin when audio completes
+                              try {
+                                await fetch('/api/daily-guide/checkin', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ segment: module }),
+                                })
+                                setCompletedModules(prev => [...prev, module])
+                              } catch (error) {
+                                console.error('Error recording checkin:', error)
+                              }
+                            }}
+                          />
+                        )
+                      })}
+                    </div>
                   )}
                 </div>
-              </button>
-
-              {showMorningFlow && (
-                <div className="p-4 pt-0 space-y-3">
-                  {morningModules.map(module => {
-                    // Use QuoteCard for movement/workout (Quote of the Day)
-                    if (module === 'movement' || module === 'workout') {
-                      return (
-                        <QuoteCard
-                          key={module}
-                          isCompleted={completedModules.includes(module)}
-                          onComplete={() => {
-                            fetch('/api/daily-guide/checkin', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ segment: module }),
-                            })
-                            setCompletedModules(prev => [...prev, module])
-                          }}
-                        />
-                      )
-                    }
-
-                    // Use MicroLessonVideo for micro_lesson module to show Discover motivation videos
-                    if (module === 'micro_lesson') {
-                      return (
-                        <MicroLessonVideo
-                          key={module}
-                          isCompleted={completedModules.includes(module)}
-                          onComplete={() => {
-                            // Record checkin when video is watched
-                            fetch('/api/daily-guide/checkin', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ segment: 'micro_lesson' }),
-                            })
-                            setCompletedModules(prev => [...prev, module])
-                          }}
-                          onSkip={() => handleSkipModule(module)}
-                        />
-                      )
-                    }
-
-                    return (
-                      <ModuleCard
-                        key={module}
-                        module={module as ModuleType}
-                        script={getModuleScript(module)}
-                        duration={durations[module as ModuleType] || 60}
-                        isCompleted={completedModules.includes(module)}
-                        isLoading={loadingModule === module}
-                        isActive={getCurrentMorningModule() === module}
-                        musicEnabled={musicEnabled}
-                        musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
-                        onPlay={() => playModule(module, musicEnabled)}
-                        onSkip={() => handleSkipModule(module)}
-                        audioBase64={moduleAudioData[module]?.audioBase64}
-                        onComplete={async () => {
-                          // Record checkin when audio completes
-                          try {
-                            await fetch('/api/daily-guide/checkin', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ segment: module }),
-                            })
-                            setCompletedModules(prev => [...prev, module])
-                          } catch (error) {
-                            console.error('Error recording checkin:', error)
-                          }
-                        }}
-                      />
-                    )
-                  })}
+              ) : (
+                // Locked state - same pattern as Evening lock
+                <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4 opacity-60">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 rounded-xl bg-white/5">
+                      <Lock className="w-5 h-5 text-white/40" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-white/60">Morning Flow</h3>
+                      <p className="text-sm text-white/40">Your morning modules will unlock at {morningAvailability.unlockTime}</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
