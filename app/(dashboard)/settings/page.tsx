@@ -380,7 +380,7 @@ function SettingsContent() {
         )}
 
         {/* Schedule */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-white/10">
               <Clock className="w-5 h-5 text-white" />
@@ -403,23 +403,23 @@ function SettingsContent() {
             </div>
             {(userType === 'professional' || userType === 'hybrid') && (
               <div className="grid grid-cols-2 gap-3">
-                <div>
+                <div className="min-w-0">
                   <label className="block text-sm text-white/70 mb-2">Work starts</label>
                   <input
                     type="time"
                     value={workStartTime}
                     onChange={(e) => setWorkStartTime(e.target.value)}
-                    className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium cursor-pointer"
+                    className="w-full py-3 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-base font-medium cursor-pointer"
                     style={{ colorScheme: 'dark' }}
                   />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="block text-sm text-white/70 mb-2">Work ends</label>
                   <input
                     type="time"
                     value={workEndTime}
                     onChange={(e) => setWorkEndTime(e.target.value)}
-                    className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium cursor-pointer"
+                    className="w-full py-3 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-base font-medium cursor-pointer"
                     style={{ colorScheme: 'dark' }}
                   />
                 </div>
@@ -428,45 +428,45 @@ function SettingsContent() {
             {(userType === 'student' || userType === 'hybrid') && (
               <>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm text-white/70 mb-2">Classes start</label>
                     <input
                       type="time"
                       value={classStartTime}
                       onChange={(e) => setClassStartTime(e.target.value)}
-                      className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium cursor-pointer"
+                      className="w-full py-3 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-base font-medium cursor-pointer"
                       style={{ colorScheme: 'dark' }}
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm text-white/70 mb-2">Classes end</label>
                     <input
                       type="time"
                       value={classEndTime}
                       onChange={(e) => setClassEndTime(e.target.value)}
-                      className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium cursor-pointer"
+                      className="w-full py-3 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-base font-medium cursor-pointer"
                       style={{ colorScheme: 'dark' }}
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm text-white/70 mb-2">Study starts</label>
                     <input
                       type="time"
                       value={studyStartTime}
                       onChange={(e) => setStudyStartTime(e.target.value)}
-                      className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium cursor-pointer"
+                      className="w-full py-3 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-base font-medium cursor-pointer"
                       style={{ colorScheme: 'dark' }}
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm text-white/70 mb-2">Study ends</label>
                     <input
                       type="time"
                       value={studyEndTime}
                       onChange={(e) => setStudyEndTime(e.target.value)}
-                      className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium cursor-pointer"
+                      className="w-full py-3 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-base font-medium cursor-pointer"
                       style={{ colorScheme: 'dark' }}
                     />
                   </div>
