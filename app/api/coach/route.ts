@@ -140,6 +140,7 @@ RULES:
     return NextResponse.json({ reply })
   } catch (error) {
     console.error('Coach API error:', error)
-    return NextResponse.json({ error: 'Failed to get coach response' }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: 'Failed to get coach response', detail: message }, { status: 500 })
   }
 }

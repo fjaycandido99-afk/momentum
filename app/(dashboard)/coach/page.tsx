@@ -108,7 +108,9 @@ export default function CoachPage() {
       } else if (response.status === 403) {
         setMessages(prev => [...prev, { role: 'assistant', content: 'This feature requires a **Premium** subscription. Upgrade to chat with your AI Coach!', timestamp: Date.now() }])
       } else {
-        setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I couldn't process that. Please try again.", timestamp: Date.now() }])
+        const errData = await response.json().catch(() => null)
+        const detail = errData?.detail ? ` (${errData.detail})` : ''
+        setMessages(prev => [...prev, { role: 'assistant', content: `Sorry, I couldn't process that. Please try again.${detail}`, timestamp: Date.now() }])
       }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting. Please check your internet and try again.", timestamp: Date.now() }])
