@@ -20,6 +20,9 @@ interface AudioContextType {
   pauseMusic: () => void
   resumeMusic: () => void
   stopMusic: () => void
+  skipTrack: () => void
+  toggleMute: () => void
+  isMuted: boolean
 }
 
 const AudioContext = createContext<AudioContextType | null>(null)
@@ -47,9 +50,17 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const [isMusicLoaded, setIsMusicLoaded] = useState(false)
   const [isSessionActive, setSessionActive] = useState(false)
   const [bgMusicVideoId, setBgMusicVideoId] = useState<string | null>(null)
+  const [isMuted, setIsMuted] = useState(false)
 
   const bgMusicPlayerRef = useRef<YTPlayer | null>(null)
   const isMountedRef = useRef(true)
+  const userPausedRef = useRef(false)
+  const musicEnabledRef = useRef(false)
+
+  // Keep musicEnabledRef in sync with state
+  useEffect(() => {
+    musicEnabledRef.current = musicEnabled
+  }, [musicEnabled])
 
   // Load YouTube IFrame API
   useEffect(() => {
@@ -160,9 +171,9 @@ export function AudioProvider({ children }: AudioProviderProps) {
               if (isMountedRef.current) {
                 setIsMusicPlaying(event.data === 1) // 1 = playing
               }
-              // If video ended or paused unexpectedly, restart
-              if (event.data === 0 || event.data === 2) {
-                if (musicEnabled && !isSessionActive && isMountedRef.current) {
+              // Only auto-restart when video ends (loop fallback), never on pause
+              if (event.data === 0) {
+                if (musicEnabledRef.current && !userPausedRef.current && isMountedRef.current) {
                   event.target.playVideo()
                 }
               }
@@ -220,11 +231,10 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const pauseMusic = useCallback(() => {
     if (bgMusicPlayerRef.current) {
       try {
-        // Set session active to prevent onStateChange from restarting
+        userPausedRef.current = true
         setSessionActive(true)
         bgMusicPlayerRef.current.pauseVideo()
         setIsMusicPlaying(false)
-        console.log('[AudioContext] Music paused')
       } catch (e) {
         console.error('[AudioContext] Pause error:', e)
       }
@@ -232,14 +242,13 @@ export function AudioProvider({ children }: AudioProviderProps) {
   }, [])
 
   const resumeMusic = useCallback(() => {
-    // Clear session active flag first
+    userPausedRef.current = false
     setSessionActive(false)
 
     if (bgMusicPlayerRef.current && musicEnabled) {
       try {
         bgMusicPlayerRef.current.playVideo()
         setIsMusicPlaying(true)
-        console.log('[AudioContext] Music resumed')
       } catch (e) {
         console.error('[AudioContext] Resume error:', e)
       }
@@ -255,6 +264,50 @@ export function AudioProvider({ children }: AudioProviderProps) {
     }
   }, [])
 
+  const skipTrack = useCallback(async () => {
+    if (!musicGenre) return
+    userPausedRef.current = false
+    setSessionActive(false)
+    try {
+      // Destroy current player
+      if (bgMusicPlayerRef.current) {
+        try {
+          bgMusicPlayerRef.current.stopVideo()
+          bgMusicPlayerRef.current.destroy()
+        } catch (e) {}
+        bgMusicPlayerRef.current = null
+      }
+      const container = document.getElementById('bg-music-player-global')
+      if (container) container.remove()
+
+      // Fetch a new random video
+      const response = await fetch(`/api/music-videos?genre=${musicGenre}`)
+      const data = await response.json()
+      if (data.videos && data.videos.length > 0 && isMountedRef.current) {
+        const randomVideo = data.videos[Math.floor(Math.random() * data.videos.length)]
+        setBgMusicVideoId(randomVideo.youtubeId)
+      }
+    } catch (error) {
+      console.error('[AudioContext] Skip error:', error)
+    }
+  }, [musicGenre])
+
+  const toggleMute = useCallback(() => {
+    if (!bgMusicPlayerRef.current) return
+    try {
+      if (bgMusicPlayerRef.current.isMuted()) {
+        bgMusicPlayerRef.current.unMute()
+        bgMusicPlayerRef.current.setVolume(30)
+        setIsMuted(false)
+      } else {
+        bgMusicPlayerRef.current.mute()
+        setIsMuted(true)
+      }
+    } catch (e) {
+      console.error('[AudioContext] Mute toggle error:', e)
+    }
+  }, [])
+
   const value = useMemo<AudioContextType>(() => ({
     musicEnabled,
     setMusicEnabled,
@@ -267,6 +320,9 @@ export function AudioProvider({ children }: AudioProviderProps) {
     pauseMusic,
     resumeMusic,
     stopMusic,
+    skipTrack,
+    toggleMute,
+    isMuted,
   }), [
     musicEnabled,
     setMusicEnabled,
@@ -274,9 +330,12 @@ export function AudioProvider({ children }: AudioProviderProps) {
     isMusicPlaying,
     isMusicLoaded,
     isSessionActive,
+    isMuted,
     pauseMusic,
     resumeMusic,
     stopMusic,
+    skipTrack,
+    toggleMute,
   ])
 
   return (

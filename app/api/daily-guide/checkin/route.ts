@@ -134,6 +134,8 @@ export async function POST(request: NextRequest) {
     if (mood_before) updateData.mood_before = mood_before
     if (mood_after) updateData.mood_after = mood_after
 
+    console.log('[checkin] Updating guide:', { user_id: user.id, dateKey, segment, updateData })
+
     const guide = await prisma.dailyGuide.update({
       where: {
         user_id_date: {
@@ -142,6 +144,14 @@ export async function POST(request: NextRequest) {
         },
       },
       data: updateData,
+    })
+
+    console.log('[checkin] Update result:', {
+      morning_prime_done: guide.morning_prime_done,
+      movement_done: guide.movement_done,
+      micro_lesson_done: guide.micro_lesson_done,
+      breath_done: guide.breath_done,
+      day_close_done: guide.day_close_done,
     })
 
     return NextResponse.json({

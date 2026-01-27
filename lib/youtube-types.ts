@@ -11,6 +11,7 @@ export interface YTPlayer {
   unMute: () => void
   isMuted: () => boolean
   destroy: () => void
+  getPlayerState: () => number
   getDuration: () => number
   getCurrentTime: () => number
   seekTo: (seconds: number, allowSeekAhead: boolean) => void

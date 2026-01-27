@@ -357,14 +357,29 @@ export async function GET(request: NextRequest) {
       select: { current_streak: true },
     })
 
-    if (!guide) {
-      return NextResponse.json({ data: null, streak: preferences?.current_streak || 0 })
+    const headers = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'Pragma': 'no-cache',
     }
+
+    if (!guide) {
+      console.log('[generate GET] No guide found for date:', dateKey)
+      return NextResponse.json({ data: null, streak: preferences?.current_streak || 0 }, { headers })
+    }
+
+    console.log('[generate GET] Returning guide with done states:', {
+      dateKey,
+      morning_prime_done: guide.morning_prime_done,
+      movement_done: guide.movement_done,
+      micro_lesson_done: guide.micro_lesson_done,
+      breath_done: guide.breath_done,
+      day_close_done: guide.day_close_done,
+    })
 
     return NextResponse.json({
       data: guide,
       streak: preferences?.current_streak || 0,
-    })
+    }, { headers })
   } catch (error) {
     console.error('Get daily guide error:', error)
     return NextResponse.json(

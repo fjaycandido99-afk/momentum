@@ -14,6 +14,7 @@ import {
   BookOpen,
   Volume2,
   VolumeX,
+  SkipForward,
   Clock,
   Lock,
   Sunrise,
@@ -238,7 +239,10 @@ export function DailyGuideHome() {
   // Use global audio context for music
   const musicEnabled = audioContext?.musicEnabled ?? false
   const setMusicEnabled = audioContext?.setMusicEnabled ?? (() => {})
-  const bgMusicLoaded = audioContext?.isMusicLoaded ?? false
+  const isMusicPlaying = audioContext?.isMusicPlaying ?? false
+  const isMuted = audioContext?.isMuted ?? false
+  const toggleMute = audioContext?.toggleMute ?? (() => {})
+  const skipTrack = audioContext?.skipTrack ?? (() => {})
 
   const today = new Date()
 
@@ -264,8 +268,8 @@ export function DailyGuideHome() {
   const fetchData = useCallback(async () => {
     try {
       const [guideRes, prefsRes] = await Promise.all([
-        fetch('/api/daily-guide/generate?date=' + today.toISOString()),
-        fetch('/api/daily-guide/preferences'),
+        fetch('/api/daily-guide/generate?date=' + today.toISOString(), { cache: 'no-store' }),
+        fetch('/api/daily-guide/preferences', { cache: 'no-store' }),
       ])
 
       if (!isMountedRef.current) return
@@ -300,10 +304,22 @@ export function DailyGuideHome() {
           // Load completed modules from guide
           const completed: string[] = []
           if (guideData.data.morning_prime_done) completed.push('morning_prime')
-          if (guideData.data.movement_done) completed.push('movement')
+          if (guideData.data.movement_done) {
+            completed.push('movement')
+            completed.push('workout') // Both keys map to the same DB field
+          }
           if (guideData.data.micro_lesson_done) completed.push('micro_lesson')
           if (guideData.data.breath_done) completed.push('breath')
           if (guideData.data.day_close_done) completed.push('day_close')
+          console.log('[fetchData] Guide loaded, done states:', {
+            date: guideData.data.date,
+            morning_prime_done: guideData.data.morning_prime_done,
+            movement_done: guideData.data.movement_done,
+            micro_lesson_done: guideData.data.micro_lesson_done,
+            breath_done: guideData.data.breath_done,
+            day_close_done: guideData.data.day_close_done,
+            completedModules: completed,
+          })
           setCompletedModules(completed)
 
           // Check if we should show energy prompt (within 4 hours of wake time, no energy set)
@@ -587,27 +603,37 @@ export function DailyGuideHome() {
     }
   }
 
-  const handlePlayerComplete = async () => {
+  const handlePlayerComplete = () => {
     if (!activePlayer) return
 
-    try {
-      await fetch('/api/daily-guide/checkin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          segment: activePlayer.module,
-        }),
-      })
+    // Optimistic update
+    setCompletedModules(prev => [...prev, activePlayer.module])
 
-      // Update completed modules locally
-      setCompletedModules(prev => [...prev, activePlayer.module])
-    } catch (error) {
-      console.error('Error recording checkin:', error)
-    }
+    // Save to server
+    fetch('/api/daily-guide/checkin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        segment: activePlayer.module,
+        date: guide?.date,
+      }),
+    }).then(res => {
+      if (!res.ok) res.text().then(t => console.error('[Player checkin] failed:', res.status, t))
+    }).catch(err => console.error('[Player checkin] error:', err))
   }
 
   const handleSkipModule = (moduleType: string) => {
     setCompletedModules(prev => [...prev, moduleType])
+    // Also persist skip to server so progress survives reload
+    if (guide?.date) {
+      fetch('/api/daily-guide/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ segment: moduleType, date: guide.date }),
+      }).then(res => {
+        if (!res.ok) res.text().then(t => console.error(`[Skip ${moduleType} checkin] failed:`, res.status, t))
+      }).catch(err => console.error(`[Skip ${moduleType} checkin] error:`, err))
+    }
   }
 
   const handlePlayerClose = () => {
@@ -872,27 +898,46 @@ export function DailyGuideHome() {
           <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 mb-4">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Music className={`w-4 h-4 ${musicEnabled && bgMusicLoaded ? 'text-emerald-400' : 'text-white/70'}`} />
-                {musicEnabled && bgMusicLoaded && (
+                <Music className={`w-4 h-4 ${musicEnabled ? 'text-emerald-400' : 'text-white/70'}`} />
+                {musicEnabled && isMusicPlaying && (
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
                 )}
               </div>
               <div>
                 <span className="text-sm text-white">Background Music</span>
                 <p className="text-xs text-white/50">
-                  {musicEnabled && bgMusicLoaded ? 'Now playing: ' : 'Today: '}
+                  {musicEnabled && isMusicPlaying ? 'Now playing: ' : 'Today: '}
                   {MUSIC_GENRES.find(g => g.id === (currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)))?.label || 'Lo-Fi'}
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setMusicEnabled(!musicEnabled)}
-              className={`p-2 rounded-lg transition-all ${
-                musicEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/50'
-              }`}
-            >
-              {musicEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            </button>
+            <div className="flex items-center gap-1.5">
+              {musicEnabled ? (
+                <>
+                  <button
+                    onClick={toggleMute}
+                    className={`p-2 rounded-lg transition-all ${isMuted ? 'bg-white/5 text-white/40' : 'bg-white/10 hover:bg-white/20 text-white'}`}
+                    title={isMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={skipTrack}
+                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white"
+                    title="Skip track"
+                  >
+                    <SkipForward className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setMusicEnabled(true)}
+                  className="p-2 rounded-lg transition-all bg-white/5 text-white/50"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -968,7 +1013,7 @@ export function DailyGuideHome() {
                   await fetch('/api/daily-guide/checkin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mood_before: mood }),
+                    body: JSON.stringify({ mood_before: mood, date: guide?.date }),
                   })
                 } catch (error) {
                   console.error('Error saving mood:', error)
@@ -1036,12 +1081,14 @@ export function DailyGuideHome() {
                               energy={selectedEnergy}
                               dayType={guide.day_type}
                               onComplete={() => {
+                                setCompletedModules(prev => [...prev, module])
                                 fetch('/api/daily-guide/checkin', {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ segment: module }),
-                                })
-                                setCompletedModules(prev => [...prev, module])
+                                  body: JSON.stringify({ segment: module, date: guide.date }),
+                                }).then(res => {
+                                  if (!res.ok) res.text().then(t => console.error('[QuoteCard checkin] failed:', res.status, t))
+                                }).catch(err => console.error('[QuoteCard checkin] error:', err))
                               }}
                             />
                           )
@@ -1054,13 +1101,14 @@ export function DailyGuideHome() {
                               key={module}
                               isCompleted={completedModules.includes(module)}
                               onComplete={() => {
-                                // Record checkin when video is watched
+                                setCompletedModules(prev => [...prev, module])
                                 fetch('/api/daily-guide/checkin', {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ segment: 'micro_lesson' }),
-                                })
-                                setCompletedModules(prev => [...prev, module])
+                                  body: JSON.stringify({ segment: 'micro_lesson', date: guide.date }),
+                                }).then(res => {
+                                  if (!res.ok) res.text().then(t => console.error('[MicroLesson checkin] failed:', res.status, t))
+                                }).catch(err => console.error('[MicroLesson checkin] error:', err))
                               }}
                               onSkip={() => handleSkipModule(module)}
                             />
@@ -1081,18 +1129,17 @@ export function DailyGuideHome() {
                             onPlay={() => playModule(module, musicEnabled)}
                             onSkip={() => handleSkipModule(module)}
                             audioBase64={moduleAudioData[module]?.audioBase64}
-                            onComplete={async () => {
-                              // Record checkin when audio completes
-                              try {
-                                await fetch('/api/daily-guide/checkin', {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ segment: module }),
-                                })
-                                setCompletedModules(prev => [...prev, module])
-                              } catch (error) {
-                                console.error('Error recording checkin:', error)
-                              }
+                            onComplete={() => {
+                              console.log(`[ModuleCard ${module}] onComplete fired, saving checkin`)
+                              setCompletedModules(prev => [...prev, module])
+                              fetch('/api/daily-guide/checkin', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ segment: module, date: guide.date }),
+                              }).then(res => {
+                                if (!res.ok) res.text().then(t => console.error(`[ModuleCard ${module} checkin] failed:`, res.status, t))
+                                else console.log(`[ModuleCard ${module}] checkin saved OK`)
+                              }).catch(err => console.error(`[ModuleCard ${module} checkin] error:`, err))
                             }}
                           />
                         )
@@ -1242,17 +1289,15 @@ export function DailyGuideHome() {
                   musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
                   onPlay={() => playModule('day_close', musicEnabled)}
                   audioBase64={moduleAudioData['day_close']?.audioBase64}
-                  onComplete={async () => {
-                    try {
-                      await fetch('/api/daily-guide/checkin', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ segment: 'day_close' }),
-                      })
-                      setCompletedModules(prev => [...prev, 'day_close'])
-                    } catch (error) {
-                      console.error('Error recording checkin:', error)
-                    }
+                  onComplete={() => {
+                    setCompletedModules(prev => [...prev, 'day_close'])
+                    fetch('/api/daily-guide/checkin', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ segment: 'day_close', date: guide.date }),
+                    }).then(res => {
+                      if (!res.ok) res.text().then(t => console.error('[day_close checkin] failed:', res.status, t))
+                    }).catch(err => console.error('[day_close checkin] error:', err))
                   }}
                 />
               ) : (
@@ -1293,7 +1338,7 @@ export function DailyGuideHome() {
                           await fetch('/api/daily-guide/checkin', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ mood_after: mood }),
+                            body: JSON.stringify({ mood_after: mood, date: guide?.date }),
                           })
                         } catch (error) {
                           console.error('Error saving mood:', error)

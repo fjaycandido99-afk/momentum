@@ -79,10 +79,10 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
     setIsRevealed(true)
     // Save to localStorage
     localStorage.setItem(getTodayKey(), 'true')
-    // Complete after revealing
-    setTimeout(() => {
-      onComplete()
-    }, 1500)
+  }
+
+  const handleDone = () => {
+    onComplete()
   }
 
   const handleShare = async () => {
@@ -232,6 +232,16 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                     </button>
                   </div>
                 </div>
+                {/* Explicit Done button — only show after reveal, before completion */}
+                {!isCompleted && (
+                  <button
+                    onClick={handleDone}
+                    className="mt-3 w-full py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-sm font-medium hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    Done
+                  </button>
+                )}
               </div>
             ) : (
               <button
