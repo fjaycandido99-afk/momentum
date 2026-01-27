@@ -867,14 +867,14 @@ function DailyMusicTab({
   preferredGenre?: string
 }) {
   // Use preferred genre if available, otherwise daily rotation
-  const getInitialGenre = () => {
-    if (preferredGenre) {
-      const found = MUSIC_GENRES.find(g => g.id === preferredGenre)
+  const getGenreFromPreference = (pref?: string) => {
+    if (pref) {
+      const found = MUSIC_GENRES.find(g => g.id === pref)
       if (found) return found
     }
     return getTodaysMusicGenre()
   }
-  const [genre, setGenre] = useState(getInitialGenre())
+  const [genre, setGenre] = useState(() => getGenreFromPreference(preferredGenre))
   const [apiVideos, setApiVideos] = useState<Array<{ id: string; title: string; youtubeId: string; channel: string; thumbnail?: string; duration?: number }>>([])
   const [loading, setLoading] = useState(true)
 
@@ -941,17 +941,32 @@ function DailyMusicTab({
     }
   }, [genre.id])
 
-  // Update genre at midnight
+  // Sync genre when preferredGenre prop changes (e.g. ThemeContext loads)
   useEffect(() => {
+    if (preferredGenre) {
+      const found = MUSIC_GENRES.find(g => g.id === preferredGenre)
+      if (found && found.id !== genre.id) {
+        setGenre(found)
+      }
+    }
+  }, [preferredGenre])
+
+  // Update genre at midnight - only when no user preference is set
+  useEffect(() => {
+    if (preferredGenre) return // User has a preference, don't override with rotation
+
+    let lastDay = new Date().getDate()
     const checkForNewDay = () => {
-      const newGenre = getTodaysMusicGenre()
-      if (newGenre.id !== genre.id) {
+      const currentDay = new Date().getDate()
+      if (currentDay !== lastDay) {
+        lastDay = currentDay
+        const newGenre = getTodaysMusicGenre()
         setGenre(newGenre)
       }
     }
     const interval = setInterval(checkForNewDay, 60000)
     return () => clearInterval(interval)
-  }, [genre.id])
+  }, [preferredGenre])
 
   // Format duration to mm:ss
   const formatDuration = (seconds?: number) => {
