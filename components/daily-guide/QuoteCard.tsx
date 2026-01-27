@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Quote, Check, Sparkles, Share2, Heart } from 'lucide-react'
 import { getDayOfYearQuote } from '@/lib/quotes'
-import type { Quote as QuoteType } from '@/lib/quotes'
 
 interface QuoteCardProps {
   isCompleted: boolean

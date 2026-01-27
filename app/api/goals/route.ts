@@ -70,13 +70,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title required' }, { status: 400 })
     }
 
+    const validFrequencies = ['daily', 'weekly', 'monthly']
+    const safeFrequency = validFrequencies.includes(frequency) ? frequency : 'daily'
+    const safeTarget = typeof target_count === 'number' && target_count > 0 ? target_count : 1
+
     const goal = await prisma.goal.create({
       data: {
         user_id: user.id,
         title: title.trim(),
         description: description?.trim() || null,
-        frequency: frequency || 'daily',
-        target_count: target_count || 1,
+        frequency: safeFrequency,
+        target_count: safeTarget,
         period_start: new Date(),
       },
     })
@@ -98,6 +102,17 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check premium
+    const subscription = await prisma.subscription.findUnique({
+      where: { user_id: user.id },
+    })
+    const isPremium = subscription?.tier === 'premium' &&
+      (subscription?.status === 'active' || subscription?.status === 'trialing')
+
+    if (!isPremium) {
+      return NextResponse.json({ error: 'Premium required' }, { status: 403 })
+    }
+
     const { id, increment, status, title, description, target_count } = await request.json()
 
     if (!id) {
@@ -113,7 +128,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Goal not found' }, { status: 404 })
     }
 
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
 
     if (increment) {
       const newCount = existing.current_count + 1
@@ -124,10 +139,10 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    if (status) updateData.status = status
-    if (title) updateData.title = title.trim()
+    if (status !== undefined && typeof status === 'string') updateData.status = status
+    if (title !== undefined && typeof title === 'string' && title.trim()) updateData.title = title.trim()
     if (description !== undefined) updateData.description = description?.trim() || null
-    if (target_count) updateData.target_count = target_count
+    if (target_count !== undefined && typeof target_count === 'number' && target_count > 0) updateData.target_count = target_count
 
     const goal = await prisma.goal.update({
       where: { id },
@@ -149,6 +164,17 @@ export async function DELETE(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check premium
+    const subscription = await prisma.subscription.findUnique({
+      where: { user_id: user.id },
+    })
+    const isPremium = subscription?.tier === 'premium' &&
+      (subscription?.status === 'active' || subscription?.status === 'trialing')
+
+    if (!isPremium) {
+      return NextResponse.json({ error: 'Premium required' }, { status: 403 })
     }
 
     const { id } = await request.json()

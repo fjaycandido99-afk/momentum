@@ -26,11 +26,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Premium required' }, { status: 403 })
     }
 
-    const { message, context } = await request.json()
+    const { message, context: rawContext } = await request.json()
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Message required' }, { status: 400 })
     }
+
+    if (message.length > 2000) {
+      return NextResponse.json({ error: 'Message too long' }, { status: 400 })
+    }
+
+    // Sanitize context: only allow user/assistant roles, limit length
+    const context = Array.isArray(rawContext)
+      ? rawContext
+          .filter((m: any) => m && typeof m.content === 'string' && (m.role === 'user' || m.role === 'assistant'))
+          .slice(-20)
+          .map((m: any) => ({ role: m.role, content: m.content.slice(0, 2000) }))
+      : []
 
     // Get today's guide for context
     const today = new Date()
