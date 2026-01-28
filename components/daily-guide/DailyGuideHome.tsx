@@ -30,6 +30,7 @@ import { MicroLessonVideo } from './MicroLessonVideo'
 import { QuoteCard } from './QuoteCard'
 import { AffirmationCard } from './AffirmationCard'
 import { SmartNudgeBanner } from './SmartNudgeBanner'
+import { GoalTracker } from './GoalTracker'
 import { StreakDisplay } from './StreakDisplay'
 import { JournalEntry } from './JournalEntry'
 import { MorningFlowComplete } from './MorningFlowComplete'
@@ -1350,6 +1351,9 @@ export function DailyGuideHome() {
 
                   {/* Journal Lookback - "This time last week" */}
                   <JournalLookback />
+
+                  {/* Goal Tracker - Premium only */}
+                  {subscription?.isPremium && <GoalTracker />}
 
                   {/* Bedtime Reminder Card */}
                   {preferences?.wake_time && (
