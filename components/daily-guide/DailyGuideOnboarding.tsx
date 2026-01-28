@@ -56,6 +56,8 @@ const TONES: { value: GuideTone; label: string; description: string }[] = [
 export function DailyGuideOnboarding() {
   const router = useRouter()
   const [step, setStep] = useState(0)
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
+  const [animating, setAnimating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [data, setData] = useState<OnboardingData>({
     userType: 'professional',
@@ -68,14 +70,24 @@ export function DailyGuideOnboarding() {
   const totalSteps = 3
 
   const handleNext = () => {
-    if (step < totalSteps - 1) {
-      setStep(step + 1)
+    if (step < totalSteps - 1 && !animating) {
+      setDirection('forward')
+      setAnimating(true)
+      setTimeout(() => {
+        setStep(step + 1)
+        setAnimating(false)
+      }, 250)
     }
   }
 
   const handleBack = () => {
-    if (step > 0) {
-      setStep(step - 1)
+    if (step > 0 && !animating) {
+      setDirection('backward')
+      setAnimating(true)
+      setTimeout(() => {
+        setStep(step - 1)
+        setAnimating(false)
+      }, 250)
     }
   }
 
@@ -160,7 +172,7 @@ export function DailyGuideOnboarding() {
 
             {/* User Type */}
             <div className="space-y-3 mb-8">
-              <p className="text-xs text-white/40 uppercase tracking-wider px-1">I am a</p>
+              <p className="text-label px-1">I am a</p>
               <div className="grid grid-cols-2 gap-3">
                 {([
                   { value: 'professional' as UserType, label: 'Professional', icon: Briefcase, desc: 'Working with set hours' },
@@ -172,9 +184,9 @@ export function DailyGuideOnboarding() {
                       key={type.value}
                       onClick={() => setData(prev => ({ ...prev, userType: type.value }))}
                       className={`
-                        p-4 rounded-xl text-center transition-all
+                        p-4 rounded-xl text-center transition-all press-scale
                         ${data.userType === type.value
-                          ? 'bg-white/[0.08] border border-white/[0.15] shadow-[0_0_20px_rgba(255,255,255,0.08)]'
+                          ? 'bg-white/[0.08] border border-white/[0.15] shadow-[0_0_20px_rgba(255,255,255,0.08)] glow-sm'
                           : 'bg-white/5 border border-transparent hover:bg-white/10'
                         }
                       `}
@@ -192,7 +204,7 @@ export function DailyGuideOnboarding() {
 
             {/* Days Toggle */}
             <div className="mb-8">
-              <p className="text-xs text-white/40 uppercase tracking-wider px-1 mb-3">
+              <p className="text-label px-1 mb-3">
                 {data.userType === 'professional' ? 'Work days' : 'Class days'}
               </p>
               <div className="flex flex-wrap justify-center gap-3">
@@ -204,9 +216,9 @@ export function DailyGuideOnboarding() {
                       key={day.value}
                       onClick={() => toggleDay(day.value, toggleType)}
                       className={`
-                        w-12 h-12 rounded-xl text-sm font-medium transition-all
+                        w-12 h-12 rounded-xl text-sm font-medium transition-all press-scale
                         ${dayList.includes(day.value)
-                          ? 'bg-white/[0.08] text-white border border-white/[0.15] shadow-[0_0_15px_rgba(255,255,255,0.1)]'
+                          ? 'bg-white/[0.08] text-white border border-white/[0.15] shadow-[0_0_15px_rgba(255,255,255,0.1)] glow-sm'
                           : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
                         }
                       `}
@@ -220,7 +232,7 @@ export function DailyGuideOnboarding() {
 
             {/* Wake Time */}
             <div>
-              <p className="text-xs text-white/40 uppercase tracking-wider px-1 mb-3">Wake time</p>
+              <p className="text-label px-1 mb-3">Wake time</p>
               <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
                 <Clock className="w-5 h-5 text-white/60" />
                 <input
@@ -255,9 +267,9 @@ export function DailyGuideOnboarding() {
                   key={tone.value}
                   onClick={() => setData(prev => ({ ...prev, guideTone: tone.value }))}
                   className={`
-                    w-full p-4 rounded-xl text-left transition-all
+                    w-full p-4 rounded-xl text-left transition-all press-scale
                     ${data.guideTone === tone.value
-                      ? 'bg-white/[0.08] border border-white/[0.15] shadow-[0_0_20px_rgba(255,255,255,0.08)]'
+                      ? 'bg-white/[0.08] border border-white/[0.15] shadow-[0_0_20px_rgba(255,255,255,0.08)] glow-sm'
                       : 'bg-white/5 border border-transparent hover:bg-white/10'
                     }
                   `}
@@ -290,7 +302,7 @@ export function DailyGuideOnboarding() {
             <p className="text-white leading-relaxed max-w-sm mx-auto mb-8">
               Your Daily Guide is ready. We&apos;ve set smart defaults for everything — you can customize anytime in settings.
             </p>
-            <div className="bg-white/5 rounded-xl p-4 text-left max-w-sm mx-auto">
+            <div className="glass rounded-xl p-4 text-left max-w-sm mx-auto glow-sm">
               <h3 className="text-sm font-medium text-white mb-3">Your setup</h3>
               <div className="space-y-2 text-sm text-white/70">
                 <div className="flex items-center gap-2">
@@ -332,17 +344,27 @@ export function DailyGuideOnboarding() {
           {Array.from({ length: totalSteps }).map((_, i) => (
             <div
               key={i}
-              className={`h-1 rounded-full transition-all ${
-                i <= step ? 'w-8 bg-white/40' : 'w-8 bg-white/10'
+              className={`h-1 rounded-full transition-all duration-300 ${
+                i === step ? 'w-8 bg-white/60 animate-dot-pulse' : i < step ? 'w-8 bg-white/40' : 'w-8 bg-white/10'
               }`}
             />
           ))}
+        </div>
+        {/* Animated progress bar */}
+        <div className="mt-2 mx-auto max-w-[120px] h-0.5 bg-white/5 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-white/30 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
+          />
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 flex items-center justify-center px-6 pb-32">
-        <div className="w-full max-w-sm">
+        <div
+          key={step}
+          className={`w-full max-w-sm ${animating ? 'animate-slide-down-exit' : 'animate-slide-up-enter'}`}
+        >
           {renderStep()}
         </div>
       </div>
@@ -353,7 +375,7 @@ export function DailyGuideOnboarding() {
           {step > 0 ? (
             <button
               onClick={handleBack}
-              className="flex items-center gap-2 px-4 py-3 rounded-xl text-white hover:text-white transition-colors"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl text-white hover:text-white transition-colors press-scale"
             >
               <ChevronLeft className="w-5 h-5" />
               Back
@@ -365,7 +387,7 @@ export function DailyGuideOnboarding() {
           {step < totalSteps - 1 ? (
             <button
               onClick={handleNext}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors press-scale"
             >
               Next
               <ChevronRight className="w-5 h-5" />
@@ -374,7 +396,7 @@ export function DailyGuideOnboarding() {
             <button
               onClick={handleComplete}
               disabled={isSubmitting}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black hover:bg-white/90 transition-colors disabled:opacity-50 shadow-[0_0_25px_rgba(255,255,255,0.3)]"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black hover:bg-white/90 transition-colors disabled:opacity-50 shadow-[0_0_25px_rgba(255,255,255,0.3)] press-scale glow-md"
             >
               {isSubmitting ? (
                 <>

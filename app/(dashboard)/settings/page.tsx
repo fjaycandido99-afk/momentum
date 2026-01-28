@@ -286,19 +286,19 @@ function SettingsContent() {
             <span className="text-red-400 text-sm">Failed to save</span>
           )}
         </div>
-        <p className="text-white/60 text-sm mt-1">Customize your Daily Guide</p>
+        <p className="text-white/50 text-sm mt-1">Customize your Daily Guide</p>
       </div>
 
       <div className="px-6 space-y-6">
         {/* User Type */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-white/10">
               <Briefcase className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="font-medium text-white">I am a</h2>
-              <p className="text-white/60 text-xs">This personalizes your experience</p>
+              <p className="text-white/50 text-xs">This personalizes your experience</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -308,9 +308,9 @@ function SettingsContent() {
                 <button
                   key={type.value}
                   onClick={() => setUserType(type.value)}
-                  className={`p-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-2 ${
+                  className={`p-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-2 press-scale ${
                     userType === type.value
-                      ? 'bg-white/20 text-white border border-white/30'
+                      ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                       : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
                   }`}
                 >
@@ -324,14 +324,14 @@ function SettingsContent() {
 
         {/* Work Days (for professional/hybrid) */}
         {(userType === 'professional' || userType === 'hybrid') && (
-          <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl bg-white/10">
                 <Calendar className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="font-medium text-white">Work Days</h2>
-                <p className="text-white/60 text-xs">Days you work</p>
+                <p className="text-white/50 text-xs">Days you work</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -339,9 +339,9 @@ function SettingsContent() {
                 <button
                   key={day.value}
                   onClick={() => toggleDay(day.value, 'work')}
-                  className={`w-11 h-11 rounded-xl text-sm font-medium transition-all ${
+                  className={`w-11 h-11 rounded-xl text-sm font-medium transition-all press-scale ${
                     workDays.includes(day.value)
-                      ? 'bg-white/20 text-white border border-white/30'
+                      ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                       : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
                   }`}
                 >
@@ -354,14 +354,14 @@ function SettingsContent() {
 
         {/* Class Days (for student/hybrid) */}
         {(userType === 'student' || userType === 'hybrid') && (
-          <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+          <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl bg-white/10">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="font-medium text-white">Class Days</h2>
-                <p className="text-white/60 text-xs">Days you have classes</p>
+                <p className="text-white/50 text-xs">Days you have classes</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -369,9 +369,9 @@ function SettingsContent() {
                 <button
                   key={day.value}
                   onClick={() => toggleDay(day.value, 'class')}
-                  className={`w-11 h-11 rounded-xl text-sm font-medium transition-all ${
+                  className={`w-11 h-11 rounded-xl text-sm font-medium transition-all press-scale ${
                     classDays.includes(day.value)
-                      ? 'bg-white/20 text-white border border-white/30'
+                      ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                       : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
                   }`}
                 >
@@ -383,14 +383,14 @@ function SettingsContent() {
         )}
 
         {/* Schedule */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08] overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-white/10">
               <Clock className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="font-medium text-white">Schedule</h2>
-              <p className="text-white/60 text-xs">Your daily times</p>
+              <p className="text-white/50 text-xs">Your daily times</p>
             </div>
           </div>
           <div className="space-y-4">
@@ -480,14 +480,14 @@ function SettingsContent() {
         </section>
 
         {/* Segments */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-white/10">
               <Layers className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="font-medium text-white">Daily Flow</h2>
-              <p className="text-white/60 text-xs">Which segments to include</p>
+              <p className="text-white/50 text-xs">Which segments to include</p>
             </div>
           </div>
           <div className="space-y-2">
@@ -503,7 +503,7 @@ function SettingsContent() {
                     isEnabled
                       ? 'bg-white/10 border border-white/20'
                       : 'bg-white/5 border border-transparent'
-                  } ${segment.required ? 'cursor-default' : 'cursor-pointer hover:bg-white/10'}`}
+                  } ${segment.required ? 'cursor-default' : 'cursor-pointer hover:bg-white/10 press-scale'}`}
                 >
                   <div className="flex items-center gap-3">
                     <Icon className={`w-4 h-4 ${isEnabled ? 'text-white' : 'text-white/50'}`} />
@@ -524,14 +524,14 @@ function SettingsContent() {
         </section>
 
         {/* Voice Tone */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-white/10">
               <Volume2 className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="font-medium text-white">Voice Tone</h2>
-              <p className="text-white/60 text-xs">How the AI speaks to you</p>
+              <p className="text-white/50 text-xs">How the AI speaks to you</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -539,9 +539,9 @@ function SettingsContent() {
               <button
                 key={tone.value}
                 onClick={() => setGuideTone(tone.value)}
-                className={`p-3 rounded-xl text-center transition-all ${
+                className={`p-3 rounded-xl text-center transition-all press-scale ${
                   guideTone === tone.value
-                    ? 'bg-white/20 text-white border border-white/30'
+                    ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                     : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
                 }`}
               >
@@ -553,7 +553,7 @@ function SettingsContent() {
         </section>
 
         {/* Daily Reminder */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-white/10">
@@ -561,13 +561,13 @@ function SettingsContent() {
               </div>
               <div>
                 <h2 className="font-medium text-white">Daily Reminder</h2>
-                <p className="text-white/60 text-xs">Get notified each morning</p>
+                <p className="text-white/50 text-xs">Get notified each morning</p>
               </div>
             </div>
             <button
               onClick={() => setDailyReminder(!dailyReminder)}
-              className={`w-12 h-7 rounded-full transition-all ${
-                dailyReminder ? 'bg-white' : 'bg-white/10'
+              className={`w-12 h-7 rounded-full transition-all press-scale ${
+                dailyReminder ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
               }`}
             >
               <div
@@ -591,7 +591,7 @@ function SettingsContent() {
         </section>
 
         {/* Bedtime Reminder */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-white/10">
@@ -599,13 +599,13 @@ function SettingsContent() {
               </div>
               <div>
                 <h2 className="font-medium text-white">Bedtime Reminder</h2>
-                <p className="text-white/60 text-xs">Reminder for 8 hours before wake time</p>
+                <p className="text-white/50 text-xs">Reminder for 8 hours before wake time</p>
               </div>
             </div>
             <button
               onClick={() => setBedtimeReminderEnabled(!bedtimeReminderEnabled)}
-              className={`w-12 h-7 rounded-full transition-all ${
-                bedtimeReminderEnabled ? 'bg-white' : 'bg-white/10'
+              className={`w-12 h-7 rounded-full transition-all press-scale ${
+                bedtimeReminderEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
               }`}
             >
               <div
@@ -636,7 +636,7 @@ function SettingsContent() {
         </section>
 
         {/* Push Notifications */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
           <h2 className="font-medium text-white mb-4 flex items-center gap-2">
             <Bell className="w-5 h-5" />
             Push Notifications
@@ -645,7 +645,7 @@ function SettingsContent() {
         </section>
 
         {/* Background Music */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-white/10">
@@ -653,13 +653,13 @@ function SettingsContent() {
               </div>
               <div>
                 <h2 className="font-medium text-white">Background Music</h2>
-                <p className="text-white/60 text-xs">Music during your sessions</p>
+                <p className="text-white/50 text-xs">Music during your sessions</p>
               </div>
             </div>
             <button
               onClick={() => setBackgroundMusicEnabled(!backgroundMusicEnabled)}
-              className={`w-12 h-7 rounded-full transition-all ${
-                backgroundMusicEnabled ? 'bg-white' : 'bg-white/10'
+              className={`w-12 h-7 rounded-full transition-all press-scale ${
+                backgroundMusicEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
               }`}
             >
               <div
@@ -709,9 +709,9 @@ function SettingsContent() {
                           }
                           setShowGenreSelector(false)
                         }}
-                        className={`p-3 rounded-xl text-left transition-all ${
+                        className={`p-3 rounded-xl text-left transition-all press-scale ${
                           isSelected
-                            ? 'bg-white/15 border border-white/30'
+                            ? 'bg-white/15 border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                             : 'bg-white/5 border border-transparent hover:bg-white/10'
                         } ${isFirstItem ? 'col-span-2 max-w-[50%] mx-auto text-center' : ''}`}
                       >
@@ -727,14 +727,14 @@ function SettingsContent() {
         </section>
 
         {/* Subscription Management */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
+        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-amber-500/20">
               <Crown className="w-5 h-5 text-amber-400" />
             </div>
             <div className="flex-1">
               <h2 className="font-medium text-white">Subscription</h2>
-              <p className="text-white/60 text-xs">Manage your plan</p>
+              <p className="text-white/50 text-xs">Manage your plan</p>
             </div>
             {subscription?.isPremium && <PremiumBadge size="sm" />}
           </div>

@@ -29,6 +29,8 @@ module.exports = {
         'spin-slow': 'spin 8s linear infinite',
         'spin-medium': 'spin 6s linear infinite reverse',
         'spin-fast': 'spin 4s linear infinite',
+        'card-appear': 'card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'tab-fade': 'tab-fade 0.25s ease-out both',
       },
     },
   },

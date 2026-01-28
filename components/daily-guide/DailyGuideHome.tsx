@@ -859,7 +859,7 @@ export function DailyGuideHome() {
                 key={type}
                 onClick={() => toggleDayType(type)}
                 className={`
-                  flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all press-scale
                   ${guide.day_type === type
                     ? 'bg-white/15 text-white border border-white/20'
                     : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
@@ -935,6 +935,9 @@ export function DailyGuideHome() {
         )}
       </div>
 
+      {/* Gradient divider */}
+      <div className="mx-6 divider" />
+
       {/* AI Affirmation — gate behind ai_affirmation feature */}
       {subscription?.checkAccess('ai_affirmation') && (
         <div className="px-6 mb-4">
@@ -970,7 +973,7 @@ export function DailyGuideHome() {
             <button
               onClick={() => generateGuide()}
               disabled={isGenerating}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors mx-auto disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors mx-auto disabled:opacity-50 press-scale"
             >
               {isGenerating ? (
                 <>
@@ -990,7 +993,7 @@ export function DailyGuideHome() {
 
       {/* Guide content */}
       {guide && (
-        <div className="px-6 space-y-6">
+        <div className="px-6 space-y-6 animate-slide-up-enter">
           {/* Rest Day Suggestion */}
           <RestDaySuggestion
             streak={streak}
@@ -1021,7 +1024,7 @@ export function DailyGuideHome() {
           {morningModules.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-sm font-medium text-white/80 uppercase tracking-wider">
+                <h2 className="text-label">
                   Morning Flow
                 </h2>
                 {!morningAvailability.isAvailable && (
@@ -1033,10 +1036,10 @@ export function DailyGuideHome() {
               </div>
 
               {morningAvailability.isAvailable ? (
-                <div className="rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/10 overflow-hidden animate-scale-in">
+                <div className="rounded-2xl glass overflow-hidden animate-card-appear">
                   <button
                     onClick={() => setShowMorningFlow(!showMorningFlow)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+                    className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors press-scale"
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-white/10">
@@ -1258,7 +1261,7 @@ export function DailyGuideHome() {
           {guide.modules?.includes('day_close') && (
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-sm font-medium text-white/80 uppercase tracking-wider">
+                <h2 className="text-label">
                   Evening
                 </h2>
                 {!eveningAvailability.isAvailable && (

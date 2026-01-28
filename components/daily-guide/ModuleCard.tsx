@@ -436,12 +436,12 @@ export function ModuleCard({
   return (
     <div
       className={`
-        relative rounded-2xl border overflow-hidden transition-all
+        relative rounded-2xl border overflow-hidden transition-all duration-300
         ${isCompleted
-          ? 'bg-white/[0.03] border-white/10'
+          ? 'bg-white/[0.03] border-white/10 transition-opacity duration-500'
           : isActive
-            ? 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border-white/20 ring-1 ring-white/10'
-            : 'bg-gradient-to-br from-white/[0.06] to-white/[0.02] border-white/10 hover:border-white/20'
+            ? 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border-white/20 ring-1 ring-white/10 animate-card-appear'
+            : 'bg-gradient-to-br from-white/[0.06] to-white/[0.02] border-white/10 card-hover'
         }
       `}
     >
@@ -496,7 +496,7 @@ export function ModuleCard({
       {/* Text-only reading mode — shown for free users without AI voice */}
       {isReadingMode && readingScript && !isCompleted && (
         <div className="px-4 pb-4">
-          <div className="rounded-xl bg-white/[0.04] border border-white/10 p-4 max-h-60 overflow-y-auto">
+          <div className="rounded-xl bg-amber-950/20 border border-white/10 border-l-2 border-l-amber-400/60 p-4 max-h-60 overflow-y-auto">
             <p className="text-sm text-white/80 leading-relaxed whitespace-pre-line">
               {readingScript}
             </p>
@@ -532,7 +532,7 @@ export function ModuleCard({
               onClick={handleSeek}
             >
               <div
-                className="absolute left-0 top-0 h-full bg-white/80 rounded-full transition-all"
+                className="absolute left-0 top-0 h-full bg-white/80 rounded-full transition-all shadow-[0_0_6px_rgba(255,255,255,0.15)]"
                 style={{ width: `${progress}%` }}
               />
               <div
@@ -628,7 +628,7 @@ export function ModuleCard({
                       e.stopPropagation()
                       onSkip()
                     }}
-                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors press-scale"
                     title="Skip this module"
                   >
                     <SkipForward className="w-4 h-4 text-white/50" />
@@ -641,8 +641,8 @@ export function ModuleCard({
                   }}
                   disabled={isLoading || isAudioLoading || !script}
                   className={`
-                    p-3 rounded-xl transition-all
-                    bg-white/10 hover:bg-white/20 hover:scale-105 active:scale-95
+                    p-3 rounded-xl transition-all press-scale
+                    bg-white/10 hover:bg-white/20 hover:scale-105
                     disabled:opacity-50 disabled:cursor-not-allowed
                     ${isActive ? 'ring-2 ring-white/30' : ''}
                   `}

@@ -549,7 +549,8 @@ export default function DiscoverPage() {
       </div>
 
       {/* Content */}
-      <div className="px-6">
+      <div className="px-6" key={activeTab}>
+        <div className="animate-tab-fade">
         {activeTab === 'motivation' && (
           <DailyMotivationTab onPlayVideo={(video, topic, index) => {
             const backgrounds = getTodaysBackgrounds()
@@ -567,7 +568,7 @@ export default function DiscoverPage() {
 
         {activeTab === 'guided' && (
           <div className="space-y-4">
-            <p className="text-white/50 text-xs uppercase tracking-wider mb-4">AI Voice Guides</p>
+            <p className="text-label mb-4">AI Voice Guides</p>
             <div className="space-y-3">
               {VOICE_GUIDES.map((guide, index) => {
                 const Icon = guide.icon
@@ -580,7 +581,7 @@ export default function DiscoverPage() {
                 return (
                   <div
                     key={guide.id}
-                    className={`w-full rounded-2xl bg-gradient-to-br ${guide.color} border overflow-hidden transition-all animate-fade-in opacity-0 stagger-${Math.min(index + 1, 10)} ${
+                    className={`w-full rounded-2xl bg-gradient-to-br ${guide.color} border overflow-hidden transition-all animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)} ${
                       isActive ? 'border-white/20 shadow-[0_0_25px_rgba(255,255,255,0.1)]' : 'border-white/10'
                     }`}
                   >
@@ -718,6 +719,7 @@ export default function DiscoverPage() {
             onPlayVoice={(type, color) => generateCalmingVoice(type, color)}
           />
         )}
+        </div>
       </div>
     </div>
   )
@@ -991,7 +993,7 @@ function DailyMotivationTab({
   return (
     <div className="space-y-6">
       {/* Daily Theme Header */}
-      <div className={`p-6 rounded-3xl bg-gradient-to-br ${topic.color} relative overflow-hidden shadow-[0_0_30px_rgba(255,255,255,0.1),0_0_60px_rgba(255,255,255,0.05)] animate-scale-in animate-glow-pulse`}>
+      <div className={`p-6 rounded-3xl bg-gradient-to-br ${topic.color} relative overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.08),0_0_30px_rgba(255,255,255,0.03)] animate-scale-in animate-glow-pulse`}>
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative">
           <p className="text-white/70 text-xs uppercase tracking-widest mb-2">Today's Theme</p>
@@ -1010,11 +1012,11 @@ function DailyMotivationTab({
 
       {/* Videos List */}
       <div>
-        <p className="text-white/50 text-xs uppercase tracking-wider mb-4">Choose a video</p>
+        <p className="text-label mb-4">Choose a video</p>
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 animate-pulse">
+              <div key={i} className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 skeleton-shimmer">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-white/10" />
                   <div className="flex-1">
@@ -1031,7 +1033,7 @@ function DailyMotivationTab({
               <button
                 key={video.id}
                 onClick={() => onPlayVideo(video, topic, index)}
-                className={`w-full p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/20 transition-all hover:bg-white/[0.07] hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98] text-left flex items-center gap-4 animate-fade-in opacity-0 stagger-${Math.min(index + 1, 10)} hover-lift`}
+                className={`w-full p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/20 transition-all hover:bg-white/[0.07] hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98] text-left flex items-center gap-4 animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)} hover-lift`}
               >
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${topic.color} flex items-center justify-center flex-shrink-0`}>
                   <Play className="w-4 h-4 text-white" fill="white" />
@@ -1180,7 +1182,7 @@ function DailyMusicTab({
   return (
     <div className="space-y-6">
       {/* Daily Genre Header */}
-      <div className={`p-6 rounded-3xl bg-gradient-to-br ${genre.color} relative overflow-hidden shadow-[0_0_30px_rgba(255,255,255,0.1),0_0_60px_rgba(255,255,255,0.05)] animate-scale-in animate-glow-pulse`}>
+      <div className={`p-6 rounded-3xl bg-gradient-to-br ${genre.color} relative overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.08),0_0_30px_rgba(255,255,255,0.03)] animate-scale-in animate-glow-pulse`}>
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative">
           <p className="text-white/70 text-xs uppercase tracking-widest mb-2">Today's Genre</p>
@@ -1199,11 +1201,11 @@ function DailyMusicTab({
 
       {/* Music Videos List */}
       <div>
-        <p className="text-white/50 text-xs uppercase tracking-wider mb-4">Choose a track</p>
+        <p className="text-label mb-4">Choose a track</p>
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 animate-pulse">
+              <div key={i} className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 skeleton-shimmer">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-white/10" />
                   <div className="flex-1">
@@ -1224,7 +1226,7 @@ function DailyMusicTab({
               <button
                 key={video.id}
                 onClick={() => onPlayVideo(video, genre, index)}
-                className={`w-full p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/20 transition-all hover:bg-white/[0.07] hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98] text-left flex items-center gap-4 animate-fade-in opacity-0 stagger-${Math.min(index + 1, 10)} hover-lift`}
+                className={`w-full p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/20 transition-all hover:bg-white/[0.07] hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-[0.98] text-left flex items-center gap-4 animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)} hover-lift`}
               >
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${genre.color} flex items-center justify-center flex-shrink-0`}>
                   <Play className="w-4 h-4 text-white" fill="white" />
@@ -1325,7 +1327,7 @@ function SavedTab({ onPlayVoice }: { onPlayVoice: (type: string, color: string) 
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all press-scale ${
               filter === f.id
                 ? 'bg-white/15 text-white border border-white/20'
                 : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
