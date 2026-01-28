@@ -120,7 +120,7 @@ async function getOrGenerateScript(
       model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: 'You are a calm, soothing wellness guide. Write scripts that are peaceful and reassuring. Use ellipses (...) for pauses. No markdown formatting.' },
-        { role: 'user', content: `${prompt} Today is ${dateString}. Make this unique and different from previous days.` },
+        { role: 'user', content: `${prompt} Make this unique and fresh.` },
       ],
       max_tokens: 500,
       temperature: 0.8,

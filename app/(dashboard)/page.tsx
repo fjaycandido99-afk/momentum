@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
+import { ImmersiveHome } from '@/components/home/ImmersiveHome'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 
 export default function HomePage() {
@@ -53,5 +53,5 @@ export default function HomePage() {
     return <LoadingScreen />
   }
 
-  return <DailyGuideHome />
+  return <ImmersiveHome />
 }

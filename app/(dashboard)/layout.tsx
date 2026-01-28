@@ -1,21 +1,24 @@
-import { BottomNav } from '@/components/navigation/BottomNav'
-import { FloatingJournalButton } from '@/components/daily-guide/FloatingJournalButton'
+'use client'
+
+import { usePathname } from 'next/navigation'
+import { MinimalNav } from '@/components/navigation/MinimalNav'
 import { Providers } from './providers'
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // No auth check - guests can use the app freely
+  const pathname = usePathname()
+  const isHome = pathname === '/'
+
   return (
     <Providers>
       <div className="min-h-screen bg-[#0a0a0f]">
-        <main className="min-h-screen pb-20">
+        <main className={`min-h-screen ${isHome ? '' : 'pb-16'}`}>
           {children}
         </main>
-        <FloatingJournalButton />
-        <BottomNav />
+        {!isHome && <MinimalNav />}
       </div>
     </Providers>
   )

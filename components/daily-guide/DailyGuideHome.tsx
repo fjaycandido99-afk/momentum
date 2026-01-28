@@ -203,7 +203,11 @@ const MUSIC_GENRES = [
   { id: 'jazz', label: 'Jazz' },
 ]
 
-export function DailyGuideHome() {
+interface DailyGuideHomeProps {
+  embedded?: boolean
+}
+
+export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const themeContext = useThemeOptional()
   const subscription = useSubscriptionOptional()
   const audioContext = useAudioOptional()
@@ -784,10 +788,10 @@ export function DailyGuideHome() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] pb-32">
-      {/* Trial Banner */}
-      <TrialBanner variant="compact" />
-      <TrialEndingBanner />
+    <div className={embedded ? 'bg-[#0a0a0f] pb-8' : 'min-h-screen bg-[#0a0a0f] pb-32'}>
+      {/* Trial Banner (hidden in embedded/drawer mode) */}
+      {!embedded && <TrialBanner variant="compact" />}
+      {!embedded && <TrialEndingBanner />}
 
       {/* Smart Nudge */}
       <div className="px-6 mb-2">

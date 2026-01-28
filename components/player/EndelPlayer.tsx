@@ -8,8 +8,8 @@ interface EndelPlayerProps {
   onClose: () => void
 }
 
-// Mode configurations - clean atmospheric theme
-const MODES = {
+// Mode configurations - clean atmospheric theme (exported for EndelOrb and ImmersiveHome)
+export const ENDEL_MODES = {
   focus: {
     title: 'Focus',
     subtitle: 'Deep concentration',
@@ -61,7 +61,7 @@ export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
   const [breathPhase, setBreathPhase] = useState(0)
   const animationRef = useRef<number>()
 
-  const config = MODES[mode]
+  const config = ENDEL_MODES[mode]
 
   // Start playing automatically
   useEffect(() => {
