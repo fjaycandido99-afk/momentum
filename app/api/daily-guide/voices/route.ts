@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import Groq from 'groq-sdk'
+import fs from 'fs'
+import path from 'path'
 import { createClient } from '@/lib/supabase/server'
 
 // Force dynamic rendering
@@ -13,6 +15,35 @@ const TONE_VOICES: Record<string, string> = {
   calm: 'XB0fDUnXU5powFXDhCwa',     // Charlotte - calm and soothing
   neutral: 'uju3wxzG5OhpWcoi3SMy',   // Neutral voice
   direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
+}
+
+// Shared file cache — keyed by type+scriptIndex+tone, reused across all users and days
+const SHARED_CACHE_DIR = path.join(process.cwd(), '.audio-cache', 'shared-voices')
+
+function ensureSharedCacheDir() {
+  if (!fs.existsSync(SHARED_CACHE_DIR)) {
+    fs.mkdirSync(SHARED_CACHE_DIR, { recursive: true })
+  }
+}
+
+function getSharedCached(cacheKey: string): { audioBase64: string; duration: number } | null {
+  ensureSharedCacheDir()
+  const filePath = path.join(SHARED_CACHE_DIR, `${cacheKey}.json`)
+  if (fs.existsSync(filePath)) {
+    try {
+      return JSON.parse(fs.readFileSync(filePath, 'utf-8'))
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
+function setSharedCache(cacheKey: string, audioBase64: string, duration: number) {
+  ensureSharedCacheDir()
+  const filePath = path.join(SHARED_CACHE_DIR, `${cacheKey}.json`)
+  fs.writeFileSync(filePath, JSON.stringify({ audioBase64, duration }))
+  console.log(`[Shared Voice Cache SET] ${cacheKey}`)
 }
 
 // Lazy initialization to avoid build-time errors
@@ -389,18 +420,23 @@ Tomorrow is another chance to heal. For now, just rest.`,
   ],
 }
 
+// Get day-of-year for script rotation
+function getDayOfYear(): number {
+  return Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24))
+}
+
 // Get today's script based on date rotation
-function getTodayScript(type: VoiceGuideType): string {
+function getTodayScript(type: VoiceGuideType): { script: string; index: number } {
   const scripts = PRE_WRITTEN_SCRIPTS[type]
-  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24))
-  return scripts[dayOfYear % scripts.length]
+  const index = getDayOfYear() % scripts.length
+  return { script: scripts[index], index }
 }
 
 // Get today's day-type script
-function getTodayDayTypeScript(type: DayTypeVoiceType): string {
+function getTodayDayTypeScript(type: DayTypeVoiceType): { script: string; index: number } {
   const scripts = DAY_TYPE_SCRIPTS[type]
-  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24))
-  return scripts[dayOfYear % scripts.length]
+  const index = getDayOfYear() % scripts.length
+  return { script: scripts[index], index }
 }
 
 // Generate audio with ElevenLabs (max 2 min)
@@ -510,7 +546,7 @@ export async function GET(request: NextRequest) {
       const audioField = `${type}_audio` as keyof typeof guide
       const durationField = `${type}_duration` as keyof typeof guide
 
-      // Check if already generated today
+      // Check if already saved to this user's daily guide
       if (guide[scriptField] && guide[audioField]) {
         return NextResponse.json({
           type,
@@ -521,11 +557,29 @@ export async function GET(request: NextRequest) {
         })
       }
 
-      // Generate new
-      const script = getTodayScript(type)
-      const { audioBase64, duration } = await generateAudio(script, tone)
+      // Get today's script + index
+      const { script, index } = getTodayScript(type)
+      const sharedKey = `${type}-s${index}-${tone}`
 
-      // Save to database
+      // Check shared file cache first (reused across all users and days)
+      let audioBase64: string | null = null
+      let duration = 0
+      const shared = getSharedCached(sharedKey)
+      if (shared) {
+        console.log(`[Shared Voice Cache HIT] ${sharedKey}`)
+        audioBase64 = shared.audioBase64
+        duration = shared.duration
+      } else {
+        // Only call ElevenLabs if not in shared cache
+        const result = await generateAudio(script, tone)
+        audioBase64 = result.audioBase64
+        duration = result.duration
+        if (audioBase64) {
+          setSharedCache(sharedKey, audioBase64, duration)
+        }
+      }
+
+      // Save to user's daily guide DB record
       if (audioBase64) {
         await prisma.dailyGuide.update({
           where: { id: guide.id },
@@ -542,7 +596,7 @@ export async function GET(request: NextRequest) {
         script,
         audioBase64,
         duration,
-        cached: false,
+        cached: !!shared,
       })
     }
 
@@ -609,7 +663,7 @@ export async function POST(request: NextRequest) {
     const audioField = `${type}_audio` as keyof typeof guide
     const durationField = `${type}_duration` as keyof typeof guide
 
-    // Check if already generated today
+    // Check if already saved to this user's daily guide
     if (guide[scriptField] && guide[audioField]) {
       return NextResponse.json({
         type,
@@ -620,17 +674,40 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Generate new script based on type
+    // Get today's script + index
     let script: string
+    let scriptIndex: number
     if (isDayTypeVoice) {
-      script = getTodayDayTypeScript(type as DayTypeVoiceType)
+      const result = getTodayDayTypeScript(type as DayTypeVoiceType)
+      script = result.script
+      scriptIndex = result.index
     } else {
-      script = getTodayScript(type as VoiceGuideType)
+      const result = getTodayScript(type as VoiceGuideType)
+      script = result.script
+      scriptIndex = result.index
     }
 
-    const { audioBase64, duration } = await generateAudio(script, tone)
+    const sharedKey = `${type}-s${scriptIndex}-${tone}`
 
-    // Save to database
+    // Check shared file cache first (reused across all users and days)
+    let audioBase64: string | null = null
+    let duration = 0
+    const shared = getSharedCached(sharedKey)
+    if (shared) {
+      console.log(`[Shared Voice Cache HIT] ${sharedKey}`)
+      audioBase64 = shared.audioBase64
+      duration = shared.duration
+    } else {
+      // Only call ElevenLabs if not in shared cache
+      const result = await generateAudio(script, tone)
+      audioBase64 = result.audioBase64
+      duration = result.duration
+      if (audioBase64) {
+        setSharedCache(sharedKey, audioBase64, duration)
+      }
+    }
+
+    // Save to user's daily guide DB record
     if (audioBase64) {
       await prisma.dailyGuide.update({
         where: { id: guide.id },
@@ -647,7 +724,7 @@ export async function POST(request: NextRequest) {
       script,
       audioBase64,
       duration,
-      cached: false,
+      cached: !!shared,
     })
   } catch (error) {
     console.error('Daily voices POST error:', error)

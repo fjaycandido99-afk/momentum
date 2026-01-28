@@ -5,6 +5,9 @@ import type { GuideSegment } from './day-type'
 // File-based cache directory for persistent audio storage
 const CACHE_DIR = path.join(process.cwd(), '.audio-cache', 'daily-guide')
 
+// Shared cache — keyed by segment+tone, reused across all users and days for pre-written scripts
+const SHARED_CACHE_DIR = path.join(process.cwd(), '.audio-cache', 'shared-voices')
+
 // Ensure cache directory exists
 function ensureCacheDir() {
   if (!fs.existsSync(CACHE_DIR)) {
@@ -84,11 +87,45 @@ const TONE_VOICES: Record<string, string> = {
   direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
 }
 
+function ensureSharedCacheDir() {
+  if (!fs.existsSync(SHARED_CACHE_DIR)) {
+    fs.mkdirSync(SHARED_CACHE_DIR, { recursive: true })
+  }
+}
+
+function getSharedCached(cacheKey: string): { audioBase64: string; duration: number } | null {
+  ensureSharedCacheDir()
+  const filePath = path.join(SHARED_CACHE_DIR, `${cacheKey}.json`)
+  if (fs.existsSync(filePath)) {
+    try {
+      return JSON.parse(fs.readFileSync(filePath, 'utf-8'))
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
+function setSharedCached(cacheKey: string, audioBase64: string, duration: number) {
+  ensureSharedCacheDir()
+  const filePath = path.join(SHARED_CACHE_DIR, `${cacheKey}.json`)
+  fs.writeFileSync(filePath, JSON.stringify({ audioBase64, duration }))
+  console.log(`[Shared Audio Cache SET] ${cacheKey}`)
+}
+
 export async function generateAndCacheAudio(
   script: string,
   segment: GuideSegment,
   tone: string = 'calm'
 ): Promise<{ audioBase64: string; duration: number } | null> {
+  // Check shared cache first — keyed by segment+tone, reused forever
+  const sharedKey = `segment-${segment}-${tone}`
+  const shared = getSharedCached(sharedKey)
+  if (shared) {
+    console.log(`[Shared Audio Cache HIT] ${sharedKey}`)
+    return shared
+  }
+
   const apiKey = process.env.ELEVENLABS_API_KEY
   if (!apiKey) {
     console.error('[ElevenLabs Error] No API key found')
@@ -132,10 +169,12 @@ export async function generateAndCacheAudio(
     const wordCount = script.split(/\s+/).length
     const estimatedDuration = Math.ceil((wordCount / 150) * 60)
 
-    return {
-      audioBase64,
-      duration: estimatedDuration,
-    }
+    const result = { audioBase64, duration: estimatedDuration }
+
+    // Save to shared cache so it's never regenerated
+    setSharedCached(sharedKey, audioBase64, estimatedDuration)
+
+    return result
   } catch (error) {
     console.error('[ElevenLabs Error]', error)
     return null
