@@ -67,7 +67,6 @@ model UserPreferences {
   // Schedule
   wake_time       String?  // "06:30" format
   workout_time    String?  // "07:00" format
-  session_length  Int      @default(20) // minutes
 
   // Audio style
   voice_style     String   @default("calm") // "calm" | "direct" | "energetic"

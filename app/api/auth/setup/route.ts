@@ -55,7 +55,6 @@ export async function POST(request: NextRequest) {
       data: {
         user_id: user.id,
         voice_style: 'calm',
-        session_length: 20,
         activity_type: 'workout',
         daily_reminder: true,
       },
