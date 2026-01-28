@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
           micro_lesson_enabled: true,
           breath_cues_enabled: true,
           enabled_segments: ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'],
-          segment_order: ['morning_prime', 'movement', 'micro_lesson', 'breath'],
+          segment_order: ['morning_prime', 'movement', 'breath', 'micro_lesson'],
           background_music_enabled: true,
           current_streak: 0,
         },

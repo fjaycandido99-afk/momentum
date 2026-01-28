@@ -109,7 +109,7 @@ model UserPreferences {
 
   // Segment customization
   enabled_segments      String[] @default(["morning_prime", "movement", "micro_lesson", "breath", "day_close"])
-  segment_order         String[] @default(["morning_prime", "movement", "micro_lesson", "breath"]) // Morning flow order
+  segment_order         String[] @default(["morning_prime", "movement", "breath", "micro_lesson"]) // Morning flow order
 
   // Background music preferences
   background_music_enabled Boolean @default(true)

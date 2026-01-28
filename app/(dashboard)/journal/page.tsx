@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target, Sparkles, BookOpen, Calendar } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
+import { GoalTracker } from '@/components/daily-guide/GoalTracker'
 
 interface JournalDay {
   date: string
@@ -270,6 +271,11 @@ export default function JournalPage() {
             )}
           </div>
         )}
+      </div>
+
+      {/* Goals */}
+      <div className="px-6 mt-8">
+        <GoalTracker />
       </div>
 
       {/* Weekly Review */}

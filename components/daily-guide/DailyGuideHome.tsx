@@ -30,7 +30,6 @@ import { MicroLessonVideo } from './MicroLessonVideo'
 import { QuoteCard } from './QuoteCard'
 import { AffirmationCard } from './AffirmationCard'
 import { SmartNudgeBanner } from './SmartNudgeBanner'
-import { GoalTracker } from './GoalTracker'
 import { StreakDisplay } from './StreakDisplay'
 import { JournalEntry } from './JournalEntry'
 import { MorningFlowComplete } from './MorningFlowComplete'
@@ -157,6 +156,7 @@ interface Preferences {
   current_streak: number
   guide_tone: string
   enabled_segments: string[]
+  segment_order: string[]
 }
 
 interface AudioData {
@@ -321,6 +321,10 @@ export function DailyGuideHome() {
             completedModules: completed,
           })
           setCompletedModules(completed)
+
+          // Load mood data so check-ins only show once per day
+          if (guideData.data.mood_before) setMoodBefore(guideData.data.mood_before)
+          if (guideData.data.mood_after) setMoodAfter(guideData.data.mood_after)
 
           // Check if we should show energy prompt (within 4 hours of wake time, no energy set)
           if (!guideData.data.energy_level) {
@@ -672,15 +676,15 @@ export function DailyGuideHome() {
     }
   }
 
-  // Determine morning modules based on guide modules, defaults, and user's enabled segments
+  // Determine morning modules based on segment_order preference, guide modules, and enabled segments
   const enabledSegments = preferences?.enabled_segments || ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close']
-  const morningModules: string[] = (guide?.modules?.filter(m =>
-    ['morning_prime', 'movement', 'workout', 'breath', 'micro_lesson'].includes(m)
-  ) || ['morning_prime', 'movement', 'micro_lesson', 'breath']).filter(m =>
-    // Filter based on user's enabled segments
-    enabledSegments.includes(m) ||
-    // 'workout' maps to 'movement' in enabled_segments
-    (m === 'workout' && enabledSegments.includes('movement'))
+  const segmentOrder = preferences?.segment_order || ['morning_prime', 'movement', 'breath', 'micro_lesson']
+  const guideModuleSet = new Set<string>(guide?.modules || [])
+  const morningModuleNames = new Set(['morning_prime', 'movement', 'workout', 'breath', 'micro_lesson'])
+  const morningModules: string[] = segmentOrder.filter((m: string) =>
+    morningModuleNames.has(m) &&
+    (guideModuleSet.has(m) || (m === 'movement' && guideModuleSet.has('workout')) || (m === 'workout' && guideModuleSet.has('movement'))) &&
+    (enabledSegments.includes(m) || (m === 'workout' && enabledSegments.includes('movement')))
   )
 
   const getCurrentMorningModule = (): string | null => {
@@ -1256,11 +1260,6 @@ export function DailyGuideHome() {
               loadingCheckpoint={loadingModule?.startsWith('checkpoint') ? loadingModule : null}
               onPlayCheckpoint={(cp) => playModule(cp, musicEnabled)}
             />
-          )}
-
-          {/* Goal Tracker (Premium) */}
-          {subscription?.isPremium && (
-            <GoalTracker />
           )}
 
           {/* Day Close */}

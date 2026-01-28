@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { Play, Wind, Sparkles, Heart, Anchor, Loader2, X, Moon, ChevronRight, Bookmark, Trash2 } from 'lucide-react'
+import { Play, Pause, Wind, Sparkles, Heart, Anchor, Loader2, X, Moon, ChevronRight, Bookmark, Trash2 } from 'lucide-react'
 import { useThemeOptional } from '@/contexts/ThemeContext'
 
 // Dynamic import with no SSR to avoid hydration mismatch
@@ -315,6 +315,15 @@ export default function DiscoverPage() {
   const [loadingVoice, setLoadingVoice] = useState<string | null>(null)
   const [playingVoice, setPlayingVoice] = useState<{ script: string; audioUrl: string; color: string; type: string; genre?: string } | null>(null)
 
+  // Inline guide playback state
+  const [activeGuideId, setActiveGuideId] = useState<string | null>(null)
+  const guideAudioRef = useRef<HTMLAudioElement | null>(null)
+  const [guideIsPlaying, setGuideIsPlaying] = useState(false)
+  const [guideProgress, setGuideProgress] = useState(0)
+  const [guideDuration, setGuideDuration] = useState(0)
+  const [guideCurrentTime, setGuideCurrentTime] = useState(0)
+  const guideProgressInterval = useRef<NodeJS.Timeout | null>(null)
+
   const stopPlaying = () => {
     setPlayingSound(null)
     setPlayingVoice(null)
@@ -349,6 +358,138 @@ export default function DiscoverPage() {
       setLoadingVoice(null)
     }
   }
+
+  // Format time for inline guide player
+  const formatGuideTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Stop inline guide audio
+  const stopGuideAudio = () => {
+    if (guideAudioRef.current) {
+      guideAudioRef.current.pause()
+      guideAudioRef.current.src = ''
+      guideAudioRef.current = null
+    }
+    if (guideProgressInterval.current) {
+      clearInterval(guideProgressInterval.current)
+    }
+    setActiveGuideId(null)
+    setGuideIsPlaying(false)
+    setGuideProgress(0)
+    setGuideDuration(0)
+    setGuideCurrentTime(0)
+  }
+
+  // Play guide audio inline in card
+  const playGuideInline = async (guideId: string) => {
+    // If already active, toggle play/pause
+    if (activeGuideId === guideId && guideAudioRef.current) {
+      if (guideIsPlaying) {
+        guideAudioRef.current.pause()
+        setGuideIsPlaying(false)
+      } else {
+        guideAudioRef.current.play()
+        setGuideIsPlaying(true)
+      }
+      return
+    }
+
+    // Stop any currently playing guide
+    stopGuideAudio()
+
+    setActiveGuideId(guideId)
+    setLoadingVoice(guideId)
+
+    try {
+      const typeMap: Record<string, string> = { 'anxiety': 'grounding' }
+      const mappedType = typeMap[guideId] || guideId
+
+      const response = await fetch('/api/daily-guide/voices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: mappedType }),
+      })
+      const data = await response.json()
+
+      if (data.audioBase64) {
+        const audioUrl = `data:audio/mpeg;base64,${data.audioBase64}`
+        const audio = new Audio(audioUrl)
+        guideAudioRef.current = audio
+
+        audio.oncanplaythrough = () => {
+          setGuideDuration(audio.duration)
+          setLoadingVoice(null)
+          audio.play()
+            .then(() => setGuideIsPlaying(true))
+            .catch(err => console.error('Guide audio play error:', err))
+        }
+
+        audio.onended = () => {
+          setGuideIsPlaying(false)
+          setGuideProgress(100)
+        }
+
+        audio.onerror = () => {
+          console.error('Guide audio error')
+          setLoadingVoice(null)
+          setActiveGuideId(null)
+        }
+
+        guideProgressInterval.current = setInterval(() => {
+          if (guideAudioRef.current && !isNaN(guideAudioRef.current.duration)) {
+            const curr = guideAudioRef.current.currentTime
+            const dur = guideAudioRef.current.duration
+            setGuideCurrentTime(curr)
+            if (dur > 0) {
+              setGuideProgress((curr / dur) * 100)
+            }
+          }
+        }, 200)
+      } else {
+        setLoadingVoice(null)
+      }
+    } catch (error) {
+      console.error('Failed to fetch guide audio:', error)
+      setLoadingVoice(null)
+      setActiveGuideId(null)
+    }
+  }
+
+  // Seek inline guide audio
+  const handleGuideSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (guideAudioRef.current && guideDuration > 0) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const clickX = e.clientX - rect.left
+      const percent = clickX / rect.width
+      const seekTime = percent * guideDuration
+      guideAudioRef.current.currentTime = seekTime
+      setGuideCurrentTime(seekTime)
+      setGuideProgress(percent * 100)
+    }
+  }
+
+  // Stop inline guide when fullscreen players activate
+  useEffect(() => {
+    if (playingSound || playingVoice) {
+      stopGuideAudio()
+    }
+  }, [playingSound, playingVoice])
+
+  // Cleanup guide audio on unmount
+  useEffect(() => {
+    return () => {
+      if (guideAudioRef.current) {
+        guideAudioRef.current.pause()
+        guideAudioRef.current.src = ''
+      }
+      if (guideProgressInterval.current) {
+        clearInterval(guideProgressInterval.current)
+      }
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#08080c] text-white pb-24">
@@ -432,13 +573,16 @@ export default function DiscoverPage() {
                 const Icon = guide.icon
                 const benefit = VOICE_GUIDE_BENEFITS[guide.benefit]
                 const isLoading = loadingVoice === guide.id
+                const isActive = activeGuideId === guide.id
+                const isThisPlaying = isActive && guideIsPlaying
+                const isFinished = isActive && guideProgress >= 100 && !guideIsPlaying
 
                 return (
-                  <button
+                  <div
                     key={guide.id}
-                    onClick={() => generateCalmingVoice(guide.id, guide.color)}
-                    disabled={loadingVoice !== null}
-                    className={`w-full rounded-2xl bg-gradient-to-br ${guide.color} border border-white/10 overflow-hidden transition-all hover:border-white/20 hover:shadow-[0_0_25px_rgba(255,255,255,0.1)] disabled:opacity-50 animate-fade-in opacity-0 stagger-${Math.min(index + 1, 10)}`}
+                    className={`w-full rounded-2xl bg-gradient-to-br ${guide.color} border overflow-hidden transition-all animate-fade-in opacity-0 stagger-${Math.min(index + 1, 10)} ${
+                      isActive ? 'border-white/20 shadow-[0_0_25px_rgba(255,255,255,0.1)]' : 'border-white/10'
+                    }`}
                   >
                     {/* Theme Header */}
                     <div className="px-4 pt-4 pb-2">
@@ -458,37 +602,87 @@ export default function DiscoverPage() {
                       </div>
                     </div>
 
-                    {/* Preview */}
-                    <div className="px-4 py-3 text-left">
-                      <p className="text-sm text-white/80 leading-relaxed line-clamp-2">
-                        {guide.preview}
-                      </p>
-                    </div>
+                    {/* Preview - hide when active to save space */}
+                    {!isActive && (
+                      <div className="px-4 py-3 text-left">
+                        <p className="text-sm text-white/80 leading-relaxed line-clamp-2">
+                          {guide.preview}
+                        </p>
+                      </div>
+                    )}
 
-                    {/* Footer */}
-                    <div className="px-4 pb-4 pt-2 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-xl transition-all ${isLoading ? 'bg-white/15 animate-pulse-glow' : 'bg-white/10'}`}>
-                          {isLoading ? (
-                            <Loader2 className="w-4 h-4 text-white animate-spin" />
-                          ) : (
-                            <Icon className={`w-4 h-4 ${guide.iconColor}`} />
-                          )}
+                    {/* Footer with play controls */}
+                    <div className="px-4 pb-4 pt-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => playGuideInline(guide.id)}
+                            disabled={isLoading || (loadingVoice !== null && loadingVoice !== guide.id)}
+                            className={`p-2.5 rounded-xl transition-all ${
+                              isLoading ? 'bg-white/15 animate-pulse-glow' :
+                              isThisPlaying ? 'bg-white/20' :
+                              'bg-white/10 hover:bg-white/15'
+                            } disabled:opacity-50`}
+                          >
+                            {isLoading ? (
+                              <Loader2 className="w-5 h-5 text-white animate-spin" />
+                            ) : isThisPlaying ? (
+                              <Pause className="w-5 h-5 text-white" fill="white" />
+                            ) : (
+                              <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
+                            )}
+                          </button>
+                          <div className="text-left">
+                            <p className="text-sm font-medium text-white">
+                              {guide.name}
+                            </p>
+                            <span className="text-xs text-white/50">
+                              {isLoading ? 'Loading...' :
+                               isThisPlaying ? 'Playing' :
+                               isFinished ? 'Complete' :
+                               isActive ? 'Paused' :
+                               'AI generated daily'}
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-left">
-                          <p className="text-sm font-medium text-white">
-                            {guide.name}
-                          </p>
-                          <span className="text-xs text-white/50">
-                            AI generated daily
-                          </span>
+                        {isActive && !isLoading ? (
+                          <button
+                            onClick={stopGuideAudio}
+                            className="p-2 rounded-xl bg-white/10 hover:bg-white/15 transition-colors"
+                          >
+                            <X className="w-4 h-4 text-white/60" />
+                          </button>
+                        ) : !isActive && (
+                          <button
+                            onClick={() => playGuideInline(guide.id)}
+                            disabled={loadingVoice !== null}
+                            className="p-2 rounded-xl bg-white/10 hover:bg-white/15 transition-colors disabled:opacity-50"
+                          >
+                            <Play className="w-4 h-4 text-white" fill="white" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Inline progress bar when active */}
+                      {isActive && !isLoading && (
+                        <div className="mt-3">
+                          <div
+                            className="h-2 bg-white/10 rounded-full overflow-hidden cursor-pointer"
+                            onClick={handleGuideSeek}
+                          >
+                            <div
+                              className="h-full rounded-full transition-all duration-200 bg-white/60"
+                              style={{ width: `${guideProgress}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between mt-1.5 text-white/50 text-xs">
+                            <span>{formatGuideTime(guideCurrentTime)}</span>
+                            <span>{guideDuration > 0 ? formatGuideTime(guideDuration) : '--:--'}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="p-2 rounded-xl bg-white/10 hover:bg-white/15 transition-colors">
-                        <Play className="w-4 h-4 text-white" />
-                      </div>
+                      )}
                     </div>
-                  </button>
+                  </div>
                 )
               })}
             </div>

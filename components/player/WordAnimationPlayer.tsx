@@ -83,13 +83,14 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
           showinfo: 0,
           loop: 1,
           playlist: youtubeId,
+          playsinline: 1,
         },
         events: {
           onReady: (event) => {
             event.target.setVolume(80)
             event.target.playVideo()
             setPlayerReady(true)
-            setIsPlaying(true)
+            // Don't set isPlaying here — let onStateChange confirm actual playback
             // Get video duration
             const videoDuration = event.target.getDuration()
             setDuration(videoDuration)
@@ -102,8 +103,11 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
             }, 1000)
           },
           onStateChange: (event) => {
+            // 1 = playing, 2 = paused, 0 = ended, 3 = buffering, 5 = cued
             if (event.data === 1) {
               setIsPlaying(true)
+            } else if (event.data === 2 || event.data === 5 || event.data === 0) {
+              setIsPlaying(false)
             }
           },
           onError: (event) => {

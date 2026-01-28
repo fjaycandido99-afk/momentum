@@ -28,7 +28,7 @@ const DEFAULT_PREFERENCES = {
   micro_lesson_enabled: true,
   breath_cues_enabled: true,
   enabled_segments: ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'],
-  segment_order: ['morning_prime', 'movement', 'micro_lesson', 'breath'],
+  segment_order: ['morning_prime', 'movement', 'breath', 'micro_lesson'],
   background_music_enabled: true,
   preferred_music_genre: null,
   daily_reminder: true,
@@ -138,7 +138,7 @@ export async function GET() {
 
         // Segment customization
         enabled_segments: ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'],
-        segment_order: ['morning_prime', 'movement', 'micro_lesson', 'breath'],
+        segment_order: ['morning_prime', 'movement', 'breath', 'micro_lesson'],
 
         // Background music
         background_music_enabled: true,
