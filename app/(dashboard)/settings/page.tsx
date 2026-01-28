@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import {
   Volume2,
   Bell,
@@ -13,7 +13,6 @@ import {
   BookOpen,
   Calendar,
   Clock,
-  Zap,
   Layers,
   Sun,
   Sparkles,
@@ -39,7 +38,6 @@ import { PremiumBadge, ProLabel } from '@/components/premium'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 type GuideTone = 'calm' | 'direct' | 'neutral'
-type TimeMode = 'quick' | 'normal' | 'full'
 
 const GENRE_OPTIONS: { id: string | null; name: string; description: string }[] = [
   { id: null, name: 'Daily Rotation', description: 'Different genre each day' },
@@ -73,12 +71,6 @@ const TONES = [
   { value: 'neutral' as GuideTone, label: 'Neutral', description: 'Balanced tone' },
 ]
 
-const TIME_MODES = [
-  { value: 'quick' as TimeMode, label: 'Quick', duration: '~5 min' },
-  { value: 'normal' as TimeMode, label: 'Normal', duration: '~15 min' },
-  { value: 'full' as TimeMode, label: 'Full', duration: '~25 min' },
-]
-
 const SEGMENT_OPTIONS = [
   { id: 'morning_prime', label: 'Morning Greeting', icon: Sun, required: true },
   { id: 'movement', label: 'Quote of the Day', icon: Sparkles },
@@ -99,7 +91,9 @@ function SettingsContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [subscriptionMessage, setSubscriptionMessage] = useState<string | null>(null)
   const [isLoadingPortal, setIsLoadingPortal] = useState(false)
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const hasLoaded = useRef(false)
+  const saveTimeout = useRef<NodeJS.Timeout | null>(null)
 
   // Check for subscription success/cancel from Stripe redirect
   useEffect(() => {
@@ -127,7 +121,6 @@ function SettingsContent() {
   const [studyStartTime, setStudyStartTime] = useState('18:00')
   const [studyEndTime, setStudyEndTime] = useState('21:00')
   const [guideTone, setGuideTone] = useState<GuideTone>('calm')
-  const [defaultTimeMode, setDefaultTimeMode] = useState<TimeMode>('normal')
   const [enabledSegments, setEnabledSegments] = useState<string[]>(['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'])
   const [dailyReminder, setDailyReminder] = useState(true)
   const [reminderTime, setReminderTime] = useState('07:00')
@@ -157,7 +150,6 @@ function SettingsContent() {
           if (data.study_start_time) setStudyStartTime(data.study_start_time)
           if (data.study_end_time) setStudyEndTime(data.study_end_time)
           if (data.guide_tone) setGuideTone(data.guide_tone)
-          if (data.default_time_mode) setDefaultTimeMode(data.default_time_mode)
           if (data.enabled_segments) setEnabledSegments(data.enabled_segments)
           if (data.daily_reminder !== undefined) setDailyReminder(data.daily_reminder)
           if (data.reminder_time) setReminderTime(data.reminder_time)
@@ -169,15 +161,18 @@ function SettingsContent() {
         console.error('Failed to load preferences:', error)
       } finally {
         setIsLoading(false)
+        // Mark loaded so auto-save doesn't fire on initial mount
+        setTimeout(() => { hasLoaded.current = true }, 100)
       }
     }
     loadPreferences()
   }, [supabase.auth])
 
-  // Save preferences
-  const savePreferences = async () => {
+  // Auto-save preferences
+  const savePreferences = useCallback(async () => {
+    if (!hasLoaded.current) return
     setIsSaving(true)
-    setSaveMessage(null)
+    setSaveStatus('saving')
     try {
       const response = await fetch('/api/daily-guide/preferences', {
         method: 'POST',
@@ -194,7 +189,6 @@ function SettingsContent() {
           study_start_time: studyStartTime,
           study_end_time: studyEndTime,
           guide_tone: guideTone,
-          default_time_mode: defaultTimeMode,
           enabled_segments: enabledSegments,
           daily_reminder: dailyReminder,
           reminder_time: reminderTime,
@@ -207,23 +201,33 @@ function SettingsContent() {
         }),
       })
       const data = await response.json()
-      if (response.ok) {
-        if (data.isGuest) {
-          setSaveMessage({ type: 'error', text: 'Sign in to save your preferences' })
-        } else {
-          setSaveMessage({ type: 'success', text: 'Settings saved!' })
-          setTimeout(() => setSaveMessage(null), 3000)
-        }
+      if (response.ok && !data.isGuest) {
+        setSaveStatus('saved')
+        setTimeout(() => setSaveStatus('idle'), 2000)
       } else {
-        setSaveMessage({ type: 'error', text: data.error || 'Failed to save' })
+        setSaveStatus('error')
+        setTimeout(() => setSaveStatus('idle'), 3000)
       }
     } catch (error) {
       console.error('Failed to save preferences:', error)
-      setSaveMessage({ type: 'error', text: 'Failed to save preferences' })
+      setSaveStatus('error')
+      setTimeout(() => setSaveStatus('idle'), 3000)
     } finally {
       setIsSaving(false)
     }
-  }
+  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, backgroundMusicEnabled, preferredMusicGenre, bedtimeReminderEnabled])
+
+  // Debounced auto-save when any preference changes
+  useEffect(() => {
+    if (!hasLoaded.current) return
+    if (saveTimeout.current) clearTimeout(saveTimeout.current)
+    saveTimeout.current = setTimeout(() => {
+      savePreferences()
+    }, 800)
+    return () => {
+      if (saveTimeout.current) clearTimeout(saveTimeout.current)
+    }
+  }, [savePreferences])
 
   const toggleDay = (day: number, type: 'work' | 'class') => {
     if (type === 'work') {
@@ -266,24 +270,23 @@ function SettingsContent() {
             </Link>
             <h1 className="text-2xl font-light text-white">Settings</h1>
           </div>
-          <button
-            onClick={savePreferences}
-            disabled={isSaving}
-            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-medium transition-colors disabled:opacity-50"
-          >
-            {isSaving ? 'Saving...' : 'Save'}
-          </button>
+          {saveStatus === 'saving' && (
+            <span className="flex items-center gap-1.5 text-white/40 text-sm">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Saving
+            </span>
+          )}
+          {saveStatus === 'saved' && (
+            <span className="flex items-center gap-1.5 text-green-400 text-sm">
+              <Check className="w-3.5 h-3.5" />
+              Saved
+            </span>
+          )}
+          {saveStatus === 'error' && (
+            <span className="text-red-400 text-sm">Failed to save</span>
+          )}
         </div>
         <p className="text-white/60 text-sm mt-1">Customize your Daily Guide</p>
-        {saveMessage && (
-          <div className={`mt-3 p-3 rounded-xl text-sm ${
-            saveMessage.type === 'success'
-              ? 'bg-green-500/10 border border-green-500/20 text-green-400'
-              : 'bg-red-500/10 border border-red-500/20 text-red-400'
-          }`}>
-            {saveMessage.text}
-          </div>
-        )}
       </div>
 
       <div className="px-6 space-y-6">
@@ -473,35 +476,6 @@ function SettingsContent() {
                 </div>
               </>
             )}
-          </div>
-        </section>
-
-        {/* Session Length */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-white/10">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="font-medium text-white">Session Length</h2>
-              <p className="text-white/60 text-xs">Default morning session</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {TIME_MODES.map((mode) => (
-              <button
-                key={mode.value}
-                onClick={() => setDefaultTimeMode(mode.value)}
-                className={`p-3 rounded-xl text-center transition-all ${
-                  defaultTimeMode === mode.value
-                    ? 'bg-white/20 text-white border border-white/30'
-                    : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
-                }`}
-              >
-                <p className="font-medium text-sm">{mode.label}</p>
-                <p className="text-xs text-white/50 mt-0.5">{mode.duration}</p>
-              </button>
-            ))}
           </div>
         </section>
 
