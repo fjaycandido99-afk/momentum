@@ -2,14 +2,34 @@
 export type SubscriptionTier = 'free' | 'premium'
 export type SubscriptionStatus = 'active' | 'trialing' | 'canceled' | 'expired'
 
-// Free tier limits
+// Premium feature flags
+export type PremiumFeature =
+  | 'unlimited_sessions'
+  | 'extended_duration'
+  | 'checkpoints'
+  | 'ai_voice'
+  | 'ai_reflections'
+  | 'ai_coach'
+  | 'ai_affirmation'
+  | 'goal_tracker'
+  | 'weekly_ai_summary'
+
+// Free tier limits — sessions are now effectively unlimited
+// Free users get all modules as text-only; premium = AI voices + AI features
 export const FREE_TIER_LIMITS = {
-  sessions_per_day: 1,
-  session_duration_minutes: 10,
+  sessions_per_day: 99, // Effectively unlimited
+  session_duration_minutes: 999, // No meaningful limit
   music_genres: ['daily_rotation'], // Only daily rotation
-  checkpoints_enabled: false,
+  checkpoints_enabled: true,
   journal_history_enabled: false,
   offline_enabled: false,
+  // AI feature gates (free = false)
+  ai_voice_enabled: false,
+  ai_reflections_enabled: false,
+  ai_coach_enabled: false,
+  ai_affirmation_enabled: false,
+  goal_tracker_enabled: false,
+  weekly_ai_summary_enabled: false,
 }
 
 // Premium features
@@ -21,6 +41,13 @@ export const PREMIUM_FEATURES = {
   weekly_review_full: true,
   all_backgrounds: true,
   offline_downloads: true,
+  // AI features (premium = true)
+  ai_voice_enabled: true,
+  ai_reflections_enabled: true,
+  ai_coach_enabled: true,
+  ai_affirmation_enabled: true,
+  goal_tracker_enabled: true,
+  weekly_ai_summary_enabled: true,
 }
 
 // Trial duration
@@ -55,4 +82,37 @@ export function getSessionDurationLimit(
     return null // No limit
   }
   return FREE_TIER_LIMITS.session_duration_minutes * 60
+}
+
+// Check if a specific premium feature is available
+export function hasFeatureAccess(
+  tier: SubscriptionTier,
+  status: SubscriptionStatus,
+  feature: PremiumFeature
+): boolean {
+  if (hasPremiumAccess(tier, status)) {
+    return true
+  }
+
+  // Free users get access to basic features but not AI features
+  switch (feature) {
+    case 'unlimited_sessions':
+    case 'extended_duration':
+    case 'checkpoints':
+      return true // Free users now get these
+    case 'ai_voice':
+      return FREE_TIER_LIMITS.ai_voice_enabled
+    case 'ai_reflections':
+      return FREE_TIER_LIMITS.ai_reflections_enabled
+    case 'ai_coach':
+      return FREE_TIER_LIMITS.ai_coach_enabled
+    case 'ai_affirmation':
+      return FREE_TIER_LIMITS.ai_affirmation_enabled
+    case 'goal_tracker':
+      return FREE_TIER_LIMITS.goal_tracker_enabled
+    case 'weekly_ai_summary':
+      return FREE_TIER_LIMITS.weekly_ai_summary_enabled
+    default:
+      return false
+  }
 }

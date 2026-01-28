@@ -3,7 +3,9 @@ import {
   sendMorningReminders,
   sendStreakAtRiskReminders,
   sendWeeklyReviewReminders,
+  sendWeeklyInsights,
 } from '@/lib/push-service'
+import { cleanupExpiredAudioCache } from '@/lib/daily-guide/cache-cleanup'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -16,7 +18,9 @@ export const dynamic = 'force-dynamic'
  *   "crons": [
  *     { "path": "/api/cron/notifications?type=morning", "schedule": "0 7 * * *" },
  *     { "path": "/api/cron/notifications?type=streak", "schedule": "0 20 * * *" },
- *     { "path": "/api/cron/notifications?type=weekly", "schedule": "0 10 * * 0" }
+ *     { "path": "/api/cron/notifications?type=weekly", "schedule": "0 10 * * 0" },
+ *     { "path": "/api/cron/notifications?type=insight", "schedule": "0 12 * * 3" },
+ *     { "path": "/api/cron/notifications?type=cleanup", "schedule": "0 3 * * *" }
  *   ]
  * }
  */
@@ -46,16 +50,25 @@ export async function GET(request: NextRequest) {
         await sendWeeklyReviewReminders()
         return NextResponse.json({ success: true, type: 'weekly_review' })
 
+      case 'insight':
+        await sendWeeklyInsights()
+        return NextResponse.json({ success: true, type: 'weekly_insights' })
+
+      case 'cleanup':
+        await cleanupExpiredAudioCache()
+        return NextResponse.json({ success: true, type: 'cache_cleanup' })
+
       case 'all':
         // Send all types (for testing)
         await sendMorningReminders()
         await sendStreakAtRiskReminders()
         await sendWeeklyReviewReminders()
+        await sendWeeklyInsights()
         return NextResponse.json({ success: true, type: 'all' })
 
       default:
         return NextResponse.json(
-          { error: 'Invalid type. Use: morning, streak, weekly, or all' },
+          { error: 'Invalid type. Use: morning, streak, weekly, insight, cleanup, or all' },
           { status: 400 }
         )
     }

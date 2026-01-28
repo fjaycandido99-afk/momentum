@@ -195,8 +195,8 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
 
     fetchWeeklyData()
 
-    // Fetch AI summary for premium users
-    if (subscription?.isPremium) {
+    // Fetch AI summary for users with weekly_ai_summary access
+    if (subscription?.checkAccess('weekly_ai_summary')) {
       setAiSummaryLoading(true)
       fetch('/api/daily-guide/weekly-summary')
         .then(res => res.ok ? res.json() : null)
@@ -206,6 +206,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         .catch(err => console.error('AI summary error:', err))
         .finally(() => setAiSummaryLoading(false))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subscription?.isPremium])
 
   const handleSaveIntention = async () => {

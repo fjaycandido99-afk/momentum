@@ -52,6 +52,8 @@ interface ModuleCardProps {
   // For inline playback
   audioBase64?: string | null
   audioUrl?: string | null
+  // Text-only mode: show script as readable text when no audio
+  textOnly?: boolean
 }
 
 // Genre display labels
@@ -239,11 +241,16 @@ export function ModuleCard({
   onComplete,
   audioBase64,
   audioUrl,
+  textOnly,
 }: ModuleCardProps) {
   const content = MODULE_CONTENT[module] || MODULE_CONTENT.morning_prime
   const Icon = content.icon
   const dayName = getDayName()
   const audioContext = useAudioOptional()
+
+  // Text-only reading mode state
+  const [isReadingMode, setIsReadingMode] = useState(false)
+  const [readingScript, setReadingScript] = useState<string | null>(null)
 
   // Inline audio player state - simplified like MicroLessonVideo
   const [isPlaying, setIsPlaying] = useState(false)
@@ -316,10 +323,10 @@ export function ModuleCard({
     }
   }, [])
 
-  // Handle play - fetch audio if needed, then play
+  // Handle play - fetch audio if needed, then play (or enter reading mode for text-only)
   const handlePlay = useCallback(async () => {
-    // If already playing, this shouldn't be called
-    if (isPlaying) return
+    // If already playing or in reading mode, this shouldn't be called
+    if (isPlaying || isReadingMode) return
 
     setIsAudioLoading(true)
 
@@ -362,14 +369,21 @@ export function ModuleCard({
       console.error('[ModuleCard] Error playing audio:', error)
       setIsAudioLoading(false)
     }
-  }, [audioBase64, audioUrl, isPlaying, onPlay, onComplete])
+  }, [audioBase64, audioUrl, isPlaying, isReadingMode, onPlay, onComplete])
 
-  // Auto-play when audioBase64 arrives (after fetch)
+  // Auto-play when audioBase64 arrives (after fetch), or enter reading mode for text-only
   useEffect(() => {
-    if (audioBase64 && isAudioLoading && !isPlaying) {
-      handlePlay()
+    if (isAudioLoading && !isPlaying) {
+      if (audioBase64) {
+        handlePlay()
+      } else if (textOnly && script) {
+        // Text-only mode: show script as readable text instead of playing audio
+        setReadingScript(script)
+        setIsReadingMode(true)
+        setIsAudioLoading(false)
+      }
     }
-  }, [audioBase64, isAudioLoading, isPlaying, handlePlay])
+  }, [audioBase64, script, textOnly, isAudioLoading, isPlaying, handlePlay])
 
   // Handle pause/resume toggle
   const handlePauseToggle = useCallback(() => {
@@ -479,8 +493,36 @@ export function ModuleCard({
         )}
       </div>
 
+      {/* Text-only reading mode — shown for free users without AI voice */}
+      {isReadingMode && readingScript && !isCompleted && (
+        <div className="px-4 pb-4">
+          <div className="rounded-xl bg-white/[0.04] border border-white/10 p-4 max-h-60 overflow-y-auto">
+            <p className="text-sm text-white/80 leading-relaxed whitespace-pre-line">
+              {readingScript}
+            </p>
+          </div>
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-xs text-amber-400/70">
+              Text-only mode
+            </p>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsReadingMode(false)
+                setReadingScript(null)
+                onComplete?.()
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <Check className="w-3.5 h-3.5 text-white/70" />
+              <span className="text-xs text-white/70">Done</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Footer with label, duration, and actions */}
-      <div className={`px-4 pb-4 pt-2 ${isCompleted ? 'opacity-50' : ''}`}>
+      <div className={`px-4 pb-4 pt-2 ${isCompleted || isReadingMode ? 'opacity-50' : ''}`}>
         {/* Inline Player - shown when audio is playing */}
         {isPlaying && !isCompleted ? (
           <div className="space-y-3">

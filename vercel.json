@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/notifications?type=morning",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=streak",
+      "schedule": "0 20 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=weekly",
+      "schedule": "0 10 * * 0"
+    },
+    {
+      "path": "/api/cron/notifications?type=insight",
+      "schedule": "0 12 * * 3"
+    },
+    {
+      "path": "/api/cron/notifications?type=cleanup",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

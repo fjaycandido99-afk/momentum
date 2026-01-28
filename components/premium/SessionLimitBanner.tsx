@@ -1,6 +1,6 @@
 'use client'
 
-import { Clock, Crown, Sparkles } from 'lucide-react'
+import { Sparkles, Crown, Mic2 } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface SessionLimitBannerProps {
@@ -8,14 +8,12 @@ interface SessionLimitBannerProps {
 }
 
 export function SessionLimitBanner({ variant = 'full' }: SessionLimitBannerProps) {
-  const { canStartSession, sessionsToday, limits, openUpgradeModal, isPremium } = useSubscription()
+  const { isPremium, openUpgradeModal } = useSubscription()
 
-  // Don't show if user can start sessions or is premium
-  if (canStartSession || isPremium) {
+  // Don't show for premium users
+  if (isPremium) {
     return null
   }
-
-  const sessionLimit = limits?.sessions_per_day || 1
 
   if (variant === 'compact') {
     return (
@@ -23,8 +21,8 @@ export function SessionLimitBanner({ variant = 'full' }: SessionLimitBannerProps
         onClick={openUpgradeModal}
         className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 cursor-pointer hover:bg-amber-500/15 transition-colors"
       >
-        <Clock className="w-4 h-4 text-amber-400" />
-        <span className="text-sm text-white/80">Daily limit reached</span>
+        <Mic2 className="w-4 h-4 text-amber-400" />
+        <span className="text-sm text-white/80">Upgrade for AI voices</span>
         <Crown className="w-4 h-4 text-amber-400 ml-auto" />
       </div>
     )
@@ -32,25 +30,24 @@ export function SessionLimitBanner({ variant = 'full' }: SessionLimitBannerProps
 
   return (
     <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-orange-500/5 overflow-hidden">
-      <div className="p-6">
+      <div className="p-5">
         <div className="flex items-start gap-4">
-          <div className="p-3 rounded-xl bg-amber-500/20">
-            <Clock className="w-6 h-6 text-amber-400" />
+          <div className="p-2.5 rounded-xl bg-amber-500/20">
+            <Mic2 className="w-5 h-5 text-amber-400" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-white mb-1">
-              Daily Session Used
+            <h3 className="text-base font-semibold text-white mb-1">
+              Upgrade for AI Voices &amp; Coaching
             </h3>
-            <p className="text-white/60 text-sm mb-4">
-              You&apos;ve completed {sessionsToday} of {sessionLimit} free {sessionLimit === 1 ? 'session' : 'sessions'} today.
-              Come back tomorrow, or upgrade for unlimited access.
+            <p className="text-white/60 text-sm mb-3">
+              You have full access to all modules as text. Upgrade for AI-generated voices, personalized coaching, and deeper insights.
             </p>
             <button
               onClick={openUpgradeModal}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium hover:from-amber-400 hover:to-orange-400 transition-all"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Unlock Unlimited Sessions</span>
+              <span>Unlock Premium</span>
             </button>
           </div>
         </div>
@@ -61,9 +58,9 @@ export function SessionLimitBanner({ variant = 'full' }: SessionLimitBannerProps
 
 // Inline message for within cards/modules
 export function SessionLimitMessage() {
-  const { canStartSession, openUpgradeModal, isPremium } = useSubscription()
+  const { openUpgradeModal, isPremium } = useSubscription()
 
-  if (canStartSession || isPremium) {
+  if (isPremium) {
     return null
   }
 
@@ -75,7 +72,7 @@ export function SessionLimitMessage() {
       >
         Upgrade to Premium
       </button>
-      {' '}for unlimited sessions
+      {' '}for AI voices and coaching
     </p>
   )
 }

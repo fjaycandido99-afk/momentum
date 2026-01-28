@@ -459,20 +459,8 @@ export function DailyGuideHome() {
   }
 
   const playModule = async (moduleType: string, withMusic = false) => {
-    // Check session limits for free users
-    if (subscription && !subscription.canStartSession && !subscription.isPremium) {
-      subscription.openUpgradeModal()
-      return
-    }
-
-    // Record session for free tier tracking
-    if (subscription && !subscription.isPremium) {
-      const canContinue = await subscription.recordSession()
-      if (!canContinue) {
-        subscription.openUpgradeModal()
-        return
-      }
-    }
+    // Free users get text-only mode (no AI voice)
+    const isTextOnly = subscription && !subscription.isPremium && !subscription.checkAccess('ai_voice')
 
     setLoadingModule(moduleType)
     try {
@@ -497,7 +485,7 @@ export function DailyGuideHome() {
           const response = await fetch('/api/daily-guide/voices', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'breathing' }),
+            body: JSON.stringify({ type: 'breathing', textOnly: !!isTextOnly }),
           })
 
           if (response.ok) {
@@ -528,7 +516,7 @@ export function DailyGuideHome() {
           const response = await fetch('/api/daily-guide/voices', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: `${currentDayTypeVoice}_prime` }),
+            body: JSON.stringify({ type: `${currentDayTypeVoice}_prime`, textOnly: !!isTextOnly }),
           })
 
           if (response.ok) {
@@ -559,7 +547,7 @@ export function DailyGuideHome() {
           const response = await fetch('/api/daily-guide/voices', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: `${currentDayTypeVoice}_close` }),
+            body: JSON.stringify({ type: `${currentDayTypeVoice}_close`, textOnly: !!isTextOnly }),
           })
 
           if (response.ok) {
@@ -947,10 +935,12 @@ export function DailyGuideHome() {
         )}
       </div>
 
-      {/* AI Affirmation */}
-      <div className="px-6 mb-4">
-        <AffirmationCard isPremium={subscription?.isPremium ?? false} />
-      </div>
+      {/* AI Affirmation — gate behind ai_affirmation feature */}
+      {subscription?.checkAccess('ai_affirmation') && (
+        <div className="px-6 mb-4">
+          <AffirmationCard isPremium={subscription?.isPremium ?? false} />
+        </div>
+      )}
 
       {/* Session Limit Banner */}
       <div className="px-6 mb-4">
@@ -1124,7 +1114,7 @@ export function DailyGuideHome() {
                           <ModuleCard
                             key={module}
                             module={module as ModuleType}
-                            script={getModuleScript(module)}
+                            script={moduleAudioData[module]?.script || getModuleScript(module)}
                             duration={durations[module as ModuleType] || 60}
                             isCompleted={completedModules.includes(module)}
                             isLoading={loadingModule === module}
@@ -1134,6 +1124,7 @@ export function DailyGuideHome() {
                             onPlay={() => playModule(module, musicEnabled)}
                             onSkip={() => handleSkipModule(module)}
                             audioBase64={moduleAudioData[module]?.audioBase64}
+                            textOnly={!!(subscription && !subscription.isPremium && !subscription.checkAccess('ai_voice'))}
                             onComplete={() => {
                               console.log(`[ModuleCard ${module}] onComplete fired, saving checkin`)
                               setCompletedModules(prev => [...prev, module])
@@ -1281,7 +1272,7 @@ export function DailyGuideHome() {
               {eveningAvailability.isAvailable ? (
                 <ModuleCard
                   module="day_close"
-                  script={getModuleScript('day_close')}
+                  script={moduleAudioData['day_close']?.script || getModuleScript('day_close')}
                   duration={durations.day_close || 45}
                   isCompleted={completedModules.includes('day_close')}
                   isLoading={loadingModule === 'day_close'}
@@ -1289,6 +1280,7 @@ export function DailyGuideHome() {
                   musicGenre={currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)}
                   onPlay={() => playModule('day_close', musicEnabled)}
                   audioBase64={moduleAudioData['day_close']?.audioBase64}
+                  textOnly={!!(subscription && !subscription.isPremium && !subscription.checkAccess('ai_voice'))}
                   onComplete={() => {
                     setCompletedModules(prev => [...prev, 'day_close'])
                     fetch('/api/daily-guide/checkin', {
@@ -1352,8 +1344,8 @@ export function DailyGuideHome() {
                   {/* Journal Lookback - "This time last week" */}
                   <JournalLookback />
 
-                  {/* Goal Tracker - Premium only */}
-                  {subscription?.isPremium && <GoalTracker />}
+                  {/* Goal Tracker - gate behind goal_tracker feature */}
+                  {subscription?.checkAccess('goal_tracker') && <GoalTracker />}
 
                   {/* Bedtime Reminder Card */}
                   {preferences?.wake_time && (

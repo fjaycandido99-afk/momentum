@@ -307,6 +307,7 @@ model PushSubscription {
   evening_reminder  Boolean @default(true)
   streak_alerts     Boolean @default(true)
   weekly_review     Boolean @default(true)
+  insight_alerts    Boolean @default(true)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

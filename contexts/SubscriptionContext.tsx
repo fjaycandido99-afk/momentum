@@ -54,6 +54,12 @@ export type PremiumFeature =
   | 'weekly_review_full'
   | 'all_backgrounds'
   | 'offline'
+  | 'ai_voice'
+  | 'ai_reflections'
+  | 'ai_coach'
+  | 'ai_affirmation'
+  | 'goal_tracker'
+  | 'weekly_ai_summary'
 
 const SubscriptionContext = createContext<SubscriptionContextType | null>(null)
 
@@ -109,24 +115,24 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       return true
     }
 
-    // Free tier feature checks
+    // Free tier feature checks — basic features now available to all
     switch (feature) {
       case 'unlimited_sessions':
-        return false
       case 'extended_duration':
-        return false
-      case 'all_genres':
-        return false
       case 'checkpoints':
-        return false
+        return true // Free users now get these
+      case 'all_genres':
       case 'journal_history':
-        return false
       case 'weekly_review_full':
-        return false
       case 'all_backgrounds':
-        return false
       case 'offline':
-        return false
+      case 'ai_voice':
+      case 'ai_reflections':
+      case 'ai_coach':
+      case 'ai_affirmation':
+      case 'goal_tracker':
+      case 'weekly_ai_summary':
+        return false // Premium only
       default:
         return false
     }

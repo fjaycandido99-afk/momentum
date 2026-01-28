@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, BellOff, Loader2, Check, Sunrise, Clock, Moon, Flame, Calendar } from 'lucide-react'
+import { Bell, BellOff, Loader2, Check, Sunrise, Clock, Moon, Flame, Calendar, Lightbulb } from 'lucide-react'
 import {
   isPushSupported,
   getNotificationPermission,
@@ -32,6 +32,7 @@ interface NotificationPreferences {
   evening_reminder: boolean
   streak_alerts: boolean
   weekly_review: boolean
+  insight_alerts: boolean
 }
 
 export function NotificationSettings() {
@@ -53,6 +54,7 @@ export function NotificationSettings() {
     evening_reminder: true,
     streak_alerts: true,
     weekly_review: true,
+    insight_alerts: true,
   })
 
   useEffect(() => {
@@ -86,6 +88,7 @@ export function NotificationSettings() {
                 evening_reminder: sub.evening_reminder,
                 streak_alerts: sub.streak_alerts,
                 weekly_review: sub.weekly_review,
+                insight_alerts: sub.insight_alerts ?? true,
               })
             }
           }
@@ -140,6 +143,7 @@ export function NotificationSettings() {
                 evening_reminder: sub.evening_reminder,
                 streak_alerts: sub.streak_alerts,
                 weekly_review: sub.weekly_review,
+                insight_alerts: sub.insight_alerts ?? true,
               })
             }
           }
@@ -403,6 +407,15 @@ export function NotificationSettings() {
             description="Sunday reflection and intentions"
             enabled={preferences.weekly_review}
             onToggle={() => handlePreferenceChange('weekly_review')}
+          />
+
+          {/* Weekly insights */}
+          <NotificationToggle
+            icon={Lightbulb}
+            label="Weekly Insights"
+            description="Data-driven wellbeing insights"
+            enabled={preferences.insight_alerts}
+            onToggle={() => handlePreferenceChange('insight_alerts')}
           />
         </div>
       )}

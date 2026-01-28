@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { PenLine, Check, Loader2, X, Sparkles, Heart, Target } from 'lucide-react'
+import { PenLine, Check, Loader2, X, Sparkles, Heart, Target, Crown } from 'lucide-react'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 
 interface JournalEntryProps {
   date?: Date
@@ -10,6 +11,8 @@ interface JournalEntryProps {
 }
 
 export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntryProps) {
+  const subscription = useSubscriptionOptional()
+  const canSeeReflections = subscription?.checkAccess('ai_reflections') ?? false
   const [win, setWin] = useState('')
   const [gratitude, setGratitude] = useState('')
   const [intention, setIntention] = useState('')
@@ -202,8 +205,8 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
               </button>
             </div>
 
-            {/* AI Insight */}
-            {reflection && (
+            {/* AI Insight — gated behind ai_reflections */}
+            {reflection && canSeeReflections && (
               <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
                 <div className="flex items-start gap-2">
                   <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" />
@@ -211,6 +214,14 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
                     <p className="text-[10px] font-medium tracking-wider text-indigo-400/70 uppercase mb-1">AI Insight</p>
                     <p className="text-sm text-white/80 leading-relaxed italic">{reflection}</p>
                   </div>
+                </div>
+              </div>
+            )}
+            {reflection && !canSeeReflections && (
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <p className="text-xs text-white/50">Upgrade for AI reflections on your journal entries</p>
                 </div>
               </div>
             )}

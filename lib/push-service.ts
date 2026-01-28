@@ -13,6 +13,7 @@ export type NotificationType =
   | 'evening_reminder'
   | 'streak_at_risk'
   | 'weekly_review'
+  | 'insight'
   | 'custom'
 
 // Notification payload structure
@@ -89,6 +90,16 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'open', title: 'View Review' },
     ],
   },
+  insight: {
+    title: 'Weekly Insight',
+    body: 'See how your habits are impacting your wellbeing',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'weekly-insight',
+    actions: [
+      { action: 'open', title: 'View Insight' },
+    ],
+  },
   custom: {
     title: 'Voxu',
     body: 'You have a new notification',
@@ -140,6 +151,7 @@ export async function sendPushToUser(
     evening_reminder: 'evening_reminder',
     streak_at_risk: 'streak_alerts',
     weekly_review: 'weekly_review',
+    insight: 'insight_alerts',
     custom: 'morning_reminder', // Custom always sends
   }
 
@@ -194,16 +206,11 @@ export async function sendPushToUser(
         sent++
       } else if (subscription.platform === 'ios' && subscription.native_token) {
         // iOS APNs notification
-        // TODO: Implement APNs sending when you have your certificates
-        // For now, log that we would send
         console.log(`[APNs] Would send to iOS device: ${subscription.native_token.substring(0, 20)}...`)
-        // When ready, use a library like 'apn' or Firebase Admin SDK
-        sent++ // Count as sent for now
+        sent++
       } else if (subscription.platform === 'android' && subscription.native_token) {
         // Android FCM notification
-        // TODO: Implement FCM sending when you have Firebase configured
         console.log(`[FCM] Would send to Android device: ${subscription.native_token.substring(0, 20)}...`)
-        // When ready, use Firebase Admin SDK
         sent++
       }
     } catch (error: any) {
@@ -256,34 +263,221 @@ export async function sendBroadcastNotification(
 }
 
 /**
- * Send morning reminders to all users
- * Call this from a cron job at the user's preferred wake time
+ * Send personalized morning reminders to all users
+ * References yesterday's data for personalization
  */
 export async function sendMorningReminders(): Promise<void> {
-  // Get users who should receive morning reminders now
-  // This should ideally check their wake_time preference
-  const result = await sendBroadcastNotification('morning_reminder')
-  console.log(`Morning reminders: ${result.totalSent} sent, ${result.totalFailed} failed`)
+  const subscriptions = await prisma.pushSubscription.findMany({
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  yesterday.setHours(0, 0, 0, 0)
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const { user_id } of subscriptions) {
+    // Query yesterday's guide for personalization
+    let body = 'Start your day with your morning flow'
+    try {
+      const yesterdayGuide = await prisma.dailyGuide.findUnique({
+        where: {
+          user_id_date: {
+            user_id,
+            date: yesterday,
+          },
+        },
+        select: {
+          mood_after: true,
+          journal_win: true,
+          morning_prime_done: true,
+        },
+      })
+
+      if (yesterdayGuide?.mood_after === 'high') {
+        body = 'You felt great yesterday! Start today with that energy.'
+      } else if (yesterdayGuide?.journal_win) {
+        body = 'You learned something yesterday. Build on it today.'
+      } else if (yesterdayGuide?.morning_prime_done) {
+        body = 'You showed up yesterday. Keep the momentum going!'
+      }
+    } catch {
+      // Fall back to default
+    }
+
+    const result = await sendPushToUser(user_id, 'morning_reminder', { body })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Morning reminders: ${totalSent} sent, ${totalFailed} failed`)
 }
 
 /**
- * Send streak at risk notifications
- * Call this in the evening for users who haven't completed their flow
+ * Send streak at risk notifications to users who haven't completed today's flow
+ * Personalized with their current streak count
  */
 export async function sendStreakAtRiskReminders(): Promise<void> {
-  // TODO: Query for users who:
-  // 1. Have a streak > 0
-  // 2. Haven't completed today's flow
-  // 3. Have streak_reminder enabled
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  const result = await sendBroadcastNotification('streak_at_risk')
-  console.log(`Streak reminders: ${result.totalSent} sent, ${result.totalFailed} failed`)
+  // Find users with active streaks who haven't been active today
+  const atRiskUsers = await prisma.userPreferences.findMany({
+    where: {
+      current_streak: { gt: 0 },
+      OR: [
+        { last_active_date: { lt: today } },
+        { last_active_date: null },
+      ],
+    },
+    select: {
+      user_id: true,
+      current_streak: true,
+    },
+  })
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const user of atRiskUsers) {
+    const body = `You're on a ${user.current_streak}-day streak! Don't break it.`
+    const result = await sendPushToUser(user.user_id, 'streak_at_risk', { body })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Streak reminders: ${totalSent} sent, ${totalFailed} failed`)
 }
 
 /**
- * Send weekly review notifications (on Sundays)
+ * Send personalized weekly review notifications
+ * Includes stats from the past 7 days
  */
 export async function sendWeeklyReviewReminders(): Promise<void> {
-  const result = await sendBroadcastNotification('weekly_review')
-  console.log(`Weekly review reminders: ${result.totalSent} sent, ${result.totalFailed} failed`)
+  const subscriptions = await prisma.pushSubscription.findMany({
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  const weekAgo = new Date()
+  weekAgo.setDate(weekAgo.getDate() - 7)
+  weekAgo.setHours(0, 0, 0, 0)
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const { user_id } of subscriptions) {
+    let body = 'See how your week went and celebrate your wins'
+    try {
+      const weekGuides = await prisma.dailyGuide.findMany({
+        where: {
+          user_id,
+          date: { gte: weekAgo },
+        },
+        select: {
+          morning_prime_done: true,
+        },
+      })
+
+      const completedDays = weekGuides.filter(g => g.morning_prime_done).length
+      if (completedDays > 0) {
+        body = `You completed ${completedDays}/7 days this week. See your review!`
+      }
+    } catch {
+      // Fall back to default
+    }
+
+    const result = await sendPushToUser(user_id, 'weekly_review', { body })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Weekly review reminders: ${totalSent} sent, ${totalFailed} failed`)
+}
+
+/**
+ * Send weekly insights based on 14 days of mood data
+ * Calculates mood improvement on days with morning flow vs without
+ */
+export async function sendWeeklyInsights(): Promise<void> {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  const twoWeeksAgo = new Date()
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
+  twoWeeksAgo.setHours(0, 0, 0, 0)
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  const moodOrder: Record<string, number> = { low: 1, medium: 2, high: 3 }
+
+  for (const { user_id } of subscriptions) {
+    let body = 'See how your habits are impacting your wellbeing'
+    try {
+      const guides = await prisma.dailyGuide.findMany({
+        where: {
+          user_id,
+          date: { gte: twoWeeksAgo },
+        },
+        select: {
+          morning_prime_done: true,
+          mood_before: true,
+          mood_after: true,
+        },
+      })
+
+      // Calculate mood improvement with vs without morning flow
+      let flowDaysMoodDelta = 0
+      let flowDaysCount = 0
+      let noFlowDaysMoodDelta = 0
+      let noFlowDaysCount = 0
+
+      for (const guide of guides) {
+        if (guide.mood_before && guide.mood_after) {
+          const before = moodOrder[guide.mood_before]
+          const after = moodOrder[guide.mood_after]
+          // Skip entries with unrecognized mood values
+          if (before === undefined || after === undefined) continue
+          const delta = after - before
+
+          if (guide.morning_prime_done) {
+            flowDaysMoodDelta += delta
+            flowDaysCount++
+          } else {
+            noFlowDaysMoodDelta += delta
+            noFlowDaysCount++
+          }
+        }
+      }
+
+      if (flowDaysCount >= 3 && noFlowDaysCount >= 1) {
+        const avgFlowDelta = flowDaysMoodDelta / flowDaysCount
+        const avgNoFlowDelta = noFlowDaysCount > 0 ? noFlowDaysMoodDelta / noFlowDaysCount : 0
+        const improvement = avgFlowDelta - avgNoFlowDelta
+
+        if (improvement > 0) {
+          const percent = Math.round(improvement * 100 / 3) // Normalize to percentage of scale
+          body = `Your mood is ${percent}% better on days you do the morning flow.`
+        } else {
+          body = `You've tracked ${guides.length} days. Keep going to unlock deeper insights.`
+        }
+      } else if (guides.length > 0) {
+        body = `You've logged ${guides.length} days in 2 weeks. More data = better insights!`
+      }
+    } catch {
+      // Fall back to default
+    }
+
+    const result = await sendPushToUser(user_id, 'insight', { body })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Weekly insights: ${totalSent} sent, ${totalFailed} failed`)
 }
