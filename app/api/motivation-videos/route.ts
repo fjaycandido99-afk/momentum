@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
   const topic = searchParams.get('topic') || 'Discipline'
 
   // Check cache first - only fetch once per day per topic
-  const cachedVideos = getCachedVideos('motivation', topic)
+  const cachedVideos = await getCachedVideos('motivation', topic)
   if (cachedVideos && cachedVideos.length > 0) {
     console.log(`[Motivation Videos] Using cached videos for "${topic}"`)
     return NextResponse.json({
@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
       const fallback = FALLBACK_VIDEOS[topic] || FALLBACK_VIDEOS['Discipline']
 
       // Cache fallback so we don't keep hitting the API today
-      setCachedVideos('motivation', topic, fallback)
+      await setCachedVideos('motivation', topic, fallback)
 
       return NextResponse.json({
         videos: fallback,
@@ -247,7 +247,7 @@ export async function GET(request: NextRequest) {
 
     // Cache the results for today
     if (finalVideos.length > 0) {
-      setCachedVideos('motivation', topic, finalVideos)
+      await setCachedVideos('motivation', topic, finalVideos)
     }
 
     return NextResponse.json({

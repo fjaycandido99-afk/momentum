@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
-import fs from 'fs'
-import path from 'path'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
-
-const prisma = new PrismaClient()
 
 // Voice ID mapping by guide tone
 const TONE_VOICES: Record<string, string> = {
@@ -26,32 +22,32 @@ function getGroq() {
   return groq
 }
 
-// File-based cache directory for persistent audio storage
-const CACHE_DIR = path.join(process.cwd(), '.audio-cache')
-
-// Ensure cache directory exists
-if (!fs.existsSync(CACHE_DIR)) {
-  fs.mkdirSync(CACHE_DIR, { recursive: true })
-}
-
-// Helper to get cached audio from file
-function getCachedAudio(cacheKey: string): { script: string; audioBase64: string } | null {
-  const filePath = path.join(CACHE_DIR, `${cacheKey}.json`)
-  if (fs.existsSync(filePath)) {
-    try {
-      const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
-      return data
-    } catch {
-      return null
+// DB-backed cache for audio (persists across Vercel cold starts)
+async function getCachedAudio(cacheKey: string): Promise<{ script: string; audioBase64: string } | null> {
+  try {
+    const cached = await prisma.audioCache.findUnique({
+      where: { cache_key: cacheKey },
+    })
+    if (cached) {
+      return { script: '', audioBase64: cached.audio }
     }
+  } catch (e) {
+    console.error('[Calm Voice Cache] DB read error:', e)
   }
   return null
 }
 
-// Helper to save audio to file cache
-function setCachedAudio(cacheKey: string, script: string, audioBase64: string) {
-  const filePath = path.join(CACHE_DIR, `${cacheKey}.json`)
-  fs.writeFileSync(filePath, JSON.stringify({ script, audioBase64 }))
+// Save audio to DB cache
+async function setCachedAudio(cacheKey: string, script: string, audioBase64: string) {
+  try {
+    await prisma.audioCache.upsert({
+      where: { cache_key: cacheKey },
+      update: { audio: audioBase64, duration: 0 },
+      create: { cache_key: cacheKey, audio: audioBase64, duration: 0 },
+    })
+  } catch (e) {
+    console.error('[Calm Voice Cache] DB write error:', e)
+  }
 }
 
 // Pre-written 2-minute scripts (~250-300 words each for calm speaking pace)
@@ -319,12 +315,12 @@ export async function POST(request: NextRequest) {
     // Use script index + tone as cache key so different tones get different audio
     const cacheKey = `${type}-script${scriptIndex}-${tone}`
 
-    // Check file cache first (persists across server restarts)
-    const cached = getCachedAudio(cacheKey)
+    // Check DB cache first (persists across Vercel cold starts)
+    const cached = await getCachedAudio(cacheKey)
     if (cached) {
-      console.log(`[File Cache HIT] Serving cached audio for ${cacheKey}`)
+      console.log(`[DB Cache HIT] Serving cached audio for ${cacheKey}`)
       return NextResponse.json({
-        script: cached.script,
+        script: preWritten?.[scriptIndex] || '',
         audioBase64: cached.audioBase64,
         color: contentType.color,
         type,
@@ -381,9 +377,9 @@ export async function POST(request: NextRequest) {
         const audioBuffer = await ttsResponse.arrayBuffer()
         audioBase64 = Buffer.from(audioBuffer).toString('base64')
 
-        // Save to file cache (persists across restarts)
-        setCachedAudio(cacheKey, script, audioBase64)
-        console.log(`[File Cache SET] Saved audio for ${cacheKey}`)
+        // Save to DB cache (persists across Vercel cold starts)
+        await setCachedAudio(cacheKey, script, audioBase64)
+        console.log(`[DB Cache SET] Saved audio for ${cacheKey}`)
       } else {
         const errorText = await ttsResponse.text()
         console.error(`[ElevenLabs Error] Status: ${ttsResponse.status}, Response: ${errorText}`)

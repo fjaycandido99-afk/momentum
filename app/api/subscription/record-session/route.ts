@@ -22,49 +22,75 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Get subscription
-    let subscription = await prisma.subscription.findUnique({
-      where: { user_id: user.id },
-    })
+    // Use a transaction to prevent race conditions with concurrent requests
+    const result = await prisma.$transaction(async (tx) => {
+      let subscription = await tx.subscription.findUnique({
+        where: { user_id: user.id },
+      })
 
-    if (!subscription) {
-      // Create default free subscription
-      subscription = await prisma.subscription.create({
+      if (!subscription) {
+        subscription = await tx.subscription.create({
+          data: {
+            user_id: user.id,
+            tier: 'free',
+            status: 'active',
+          },
+        })
+      }
+
+      const isPremium = hasPremiumAccess(
+        subscription.tier as 'free' | 'premium',
+        subscription.status as 'active' | 'trialing' | 'canceled' | 'expired'
+      )
+
+      // Reset sessions count if it's a new day
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      let sessionsToday = subscription.sessions_today
+
+      if (subscription.last_session_date) {
+        const lastSessionDate = new Date(subscription.last_session_date)
+        lastSessionDate.setHours(0, 0, 0, 0)
+
+        if (lastSessionDate < today) {
+          sessionsToday = 0
+        }
+      }
+
+      // For free users, check if they can start another session
+      if (!isPremium && sessionsToday >= FREE_TIER_LIMITS.sessions_per_day) {
+        return {
+          error: true,
+          sessionsToday,
+          canStartMoreSessions: false,
+        }
+      }
+
+      // Increment session count atomically
+      const newSessionCount = sessionsToday + 1
+
+      await tx.subscription.update({
+        where: { user_id: user.id },
         data: {
-          user_id: user.id,
-          tier: 'free',
-          status: 'active',
+          sessions_today: newSessionCount,
+          last_session_date: today,
         },
       })
-    }
 
-    const isPremium = hasPremiumAccess(
-      subscription.tier as 'free' | 'premium',
-      subscription.status as 'active' | 'trialing' | 'canceled' | 'expired'
-    )
-
-    // Reset sessions count if it's a new day
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    let sessionsToday = subscription.sessions_today
-
-    if (subscription.last_session_date) {
-      const lastSessionDate = new Date(subscription.last_session_date)
-      lastSessionDate.setHours(0, 0, 0, 0)
-
-      if (lastSessionDate < today) {
-        sessionsToday = 0
+      return {
+        error: false,
+        sessionsToday: newSessionCount,
+        canStartMoreSessions: isPremium || newSessionCount < FREE_TIER_LIMITS.sessions_per_day,
       }
-    }
+    })
 
-    // For free users, check if they can start another session
-    if (!isPremium && sessionsToday >= FREE_TIER_LIMITS.sessions_per_day) {
+    if (result.error) {
       return NextResponse.json(
         {
           error: 'Daily session limit reached',
           data: {
-            sessionsToday,
+            sessionsToday: result.sessionsToday,
             canStartMoreSessions: false,
           }
         },
@@ -72,25 +98,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Increment session count
-    const newSessionCount = sessionsToday + 1
-
-    subscription = await prisma.subscription.update({
-      where: { user_id: user.id },
-      data: {
-        sessions_today: newSessionCount,
-        last_session_date: today,
-      },
-    })
-
-    const canStartMoreSessions = isPremium ||
-      newSessionCount < FREE_TIER_LIMITS.sessions_per_day
-
     return NextResponse.json({
       success: true,
       data: {
-        sessionsToday: newSessionCount,
-        canStartMoreSessions,
+        sessionsToday: result.sessionsToday,
+        canStartMoreSessions: result.canStartMoreSessions,
       },
     })
   } catch (error) {

@@ -135,9 +135,6 @@ model Session {
   duration_planned Int      // minutes planned
   duration_actual  Int?     // actual minutes completed
 
-  // Content played
-  content_segments ContentSegment[]
-
   // Timestamps
   started_at   DateTime @default(now())
   completed_at DateTime?
@@ -151,29 +148,6 @@ model Session {
   @@index([started_at])
 }
 
-model ContentSegment {
-  id         String  @id @default(cuid())
-  session_id String
-  session    Session @relation(fields: [session_id], references: [id], onDelete: Cascade)
-
-  // Content details
-  segment_type String   // "activation" | "breathing" | "micro_lesson" | "cooldown"
-  content_text String   // The actual script/text
-  duration     Int      // seconds
-  order        Int      // sequence in session
-
-  // AI generation metadata
-  ai_model     String?  // which model generated this
-  prompt_used  String?  // for debugging/improvement
-
-  // Audio (if pre-generated)
-  audio_url    String?
-
-  created_at DateTime @default(now())
-
-  @@index([session_id])
-}
-
 model FavoriteContent {
   id      String @id @default(cuid())
   user_id String
@@ -185,28 +159,6 @@ model FavoriteContent {
   created_at DateTime @default(now())
 
   @@index([user_id])
-}
-
-// Pre-built content library (admin-managed)
-model ContentTemplate {
-  id String @id @default(cuid())
-
-  segment_type String   // "activation" | "breathing" | "micro_lesson" | "cooldown"
-  category     String   // "discipline" | "resilience" | "focus" | "gratitude"
-  voice_style  String   // "calm" | "direct" | "energetic"
-
-  title        String
-  content_text String
-  duration     Int      // seconds
-
-  // For AI variation generation
-  is_seed      Boolean  @default(false) // Use as seed for AI variations
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@index([segment_type])
-  @@index([voice_style])
 }
 
 model DailyGuide {
@@ -243,7 +195,6 @@ model DailyGuide {
   // Legacy fields for backward compatibility
   workout_script       String?
   morning_script       String?
-  morning_audio_key    String?
   midday_script        String?
   afternoon_script     String?
   evening_script       String?
@@ -266,7 +217,6 @@ model DailyGuide {
   checkpoint_1_done    Boolean @default(false)
   checkpoint_2_done    Boolean @default(false)
   checkpoint_3_done    Boolean @default(false)
-  stressed_triggered   Boolean @default(false)
 
   // Background music used
   music_genre_used     String? // Which genre was played
@@ -383,4 +333,26 @@ model Goal {
 
   @@index([user_id])
   @@index([status])
+}
+
+// Shared audio cache for pre-written voice scripts (persists across Vercel cold starts)
+// Keyed by type+scriptIndex+tone, reused across all users forever
+model AudioCache {
+  id         String   @id @default(cuid())
+  cache_key  String   @unique // "breathing-s0-calm", "work_prime-s1-direct"
+  audio      String   // Base64 audio data
+  duration   Int      // Duration in seconds
+  created_at DateTime @default(now())
+
+  @@index([cache_key])
+}
+
+// Cache for YouTube video search results (persists across Vercel cold starts)
+model VideoCache {
+  id         String   @id @default(cuid())
+  cache_key  String   @unique // "motivation-confidence" or "music-lofi"
+  videos     Json     // Array of video objects
+  cached_at  DateTime @default(now())
+
+  @@index([cache_key])
 }

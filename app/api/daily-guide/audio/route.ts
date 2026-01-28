@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
     const date = dateStr ? new Date(dateStr) : new Date()
     const dateKey = getDateString(date)
 
-    // Check file cache first
-    const cached = getCachedAudio(user.id, dateKey, segment)
+    // Check DB cache first
+    const cached = await getCachedAudio(user.id, dateKey, segment)
     if (cached) {
       console.log(`[Daily Guide Audio Cache HIT] ${user.id}/${dateKey}/${segment}`)
       return NextResponse.json({
@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Cache the audio
-    setCachedAudio(
+    await setCachedAudio(
       user.id,
       dateKey,
       segment,

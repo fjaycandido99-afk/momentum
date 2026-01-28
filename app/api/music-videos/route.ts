@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
   const genre = searchParams.get('genre') || getTodaysGenre()
 
   // Check cache first - only fetch once per day per genre
-  const cachedVideos = getCachedVideos('music', genre)
+  const cachedVideos = await getCachedVideos('music', genre)
   if (cachedVideos && cachedVideos.length > 0) {
     console.log(`[Music Videos] Using cached videos for "${genre}"`)
     return NextResponse.json({
@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
       console.error('[YouTube API] Music search error:', error)
       // Return fallback videos on API error
       const fallback = FALLBACK_MUSIC[genre] || FALLBACK_MUSIC['lofi']
-      setCachedVideos('music', genre, fallback)
+      await setCachedVideos('music', genre, fallback)
       return NextResponse.json({
         videos: fallback,
         genre,
@@ -197,7 +197,7 @@ export async function GET(request: NextRequest) {
     const finalVideos = videos.slice(0, 10)
 
     if (finalVideos.length > 0) {
-      setCachedVideos('music', genre, finalVideos)
+      await setCachedVideos('music', genre, finalVideos)
     }
 
     return NextResponse.json({

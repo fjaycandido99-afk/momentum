@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import Groq from 'groq-sdk'
-import fs from 'fs'
-import path from 'path'
 import { createClient } from '@/lib/supabase/server'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
-
-const prisma = new PrismaClient()
 
 // Voice ID mapping by guide tone
 const TONE_VOICES: Record<string, string> = {
@@ -17,33 +13,32 @@ const TONE_VOICES: Record<string, string> = {
   direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
 }
 
-// Shared file cache — keyed by type+scriptIndex+tone, reused across all users and days
-const SHARED_CACHE_DIR = path.join(process.cwd(), '.audio-cache', 'shared-voices')
-
-function ensureSharedCacheDir() {
-  if (!fs.existsSync(SHARED_CACHE_DIR)) {
-    fs.mkdirSync(SHARED_CACHE_DIR, { recursive: true })
-  }
-}
-
-function getSharedCached(cacheKey: string): { audioBase64: string; duration: number } | null {
-  ensureSharedCacheDir()
-  const filePath = path.join(SHARED_CACHE_DIR, `${cacheKey}.json`)
-  if (fs.existsSync(filePath)) {
-    try {
-      return JSON.parse(fs.readFileSync(filePath, 'utf-8'))
-    } catch {
-      return null
+// DB-backed shared audio cache — persists across Vercel cold starts
+async function getSharedCached(cacheKey: string): Promise<{ audioBase64: string; duration: number } | null> {
+  try {
+    const cached = await prisma.audioCache.findUnique({
+      where: { cache_key: cacheKey },
+    })
+    if (cached) {
+      return { audioBase64: cached.audio, duration: cached.duration }
     }
+  } catch (e) {
+    console.error('[Shared Voice Cache] DB read error:', e)
   }
   return null
 }
 
-function setSharedCache(cacheKey: string, audioBase64: string, duration: number) {
-  ensureSharedCacheDir()
-  const filePath = path.join(SHARED_CACHE_DIR, `${cacheKey}.json`)
-  fs.writeFileSync(filePath, JSON.stringify({ audioBase64, duration }))
-  console.log(`[Shared Voice Cache SET] ${cacheKey}`)
+async function setSharedCache(cacheKey: string, audioBase64: string, duration: number) {
+  try {
+    await prisma.audioCache.upsert({
+      where: { cache_key: cacheKey },
+      update: { audio: audioBase64, duration },
+      create: { cache_key: cacheKey, audio: audioBase64, duration },
+    })
+    console.log(`[Shared Voice Cache SET] ${cacheKey}`)
+  } catch (e) {
+    console.error('[Shared Voice Cache] DB write error:', e)
+  }
 }
 
 // Lazy initialization to avoid build-time errors
@@ -564,7 +559,7 @@ export async function GET(request: NextRequest) {
       // Check shared file cache first (reused across all users and days)
       let audioBase64: string | null = null
       let duration = 0
-      const shared = getSharedCached(sharedKey)
+      const shared = await getSharedCached(sharedKey)
       if (shared) {
         console.log(`[Shared Voice Cache HIT] ${sharedKey}`)
         audioBase64 = shared.audioBase64
@@ -575,7 +570,7 @@ export async function GET(request: NextRequest) {
         audioBase64 = result.audioBase64
         duration = result.duration
         if (audioBase64) {
-          setSharedCache(sharedKey, audioBase64, duration)
+          await setSharedCache(sharedKey, audioBase64, duration)
         }
       }
 
@@ -692,7 +687,7 @@ export async function POST(request: NextRequest) {
     // Check shared file cache first (reused across all users and days)
     let audioBase64: string | null = null
     let duration = 0
-    const shared = getSharedCached(sharedKey)
+    const shared = await getSharedCached(sharedKey)
     if (shared) {
       console.log(`[Shared Voice Cache HIT] ${sharedKey}`)
       audioBase64 = shared.audioBase64
@@ -703,7 +698,7 @@ export async function POST(request: NextRequest) {
       audioBase64 = result.audioBase64
       duration = result.duration
       if (audioBase64) {
-        setSharedCache(sharedKey, audioBase64, duration)
+        await setSharedCache(sharedKey, audioBase64, duration)
       }
     }
 

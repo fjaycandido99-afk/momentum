@@ -1,19 +1,9 @@
-import fs from 'fs'
-import path from 'path'
+// Audio cache with DB persistence for Vercel serverless
+// Uses AudioCache model for shared audio (keyed by segment+tone, reused across all users)
+// Per-user per-day audio is stored on the DailyGuide model directly
+
+import { prisma } from '@/lib/prisma'
 import type { GuideSegment } from './day-type'
-
-// File-based cache directory for persistent audio storage
-const CACHE_DIR = path.join(process.cwd(), '.audio-cache', 'daily-guide')
-
-// Shared cache — keyed by segment+tone, reused across all users and days for pre-written scripts
-const SHARED_CACHE_DIR = path.join(process.cwd(), '.audio-cache', 'shared-voices')
-
-// Ensure cache directory exists
-function ensureCacheDir() {
-  if (!fs.existsSync(CACHE_DIR)) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true })
-  }
-}
 
 export interface CachedGuideAudio {
   script: string
@@ -26,58 +16,66 @@ function getCacheKey(userId: string, date: string, segment: GuideSegment): strin
   return `daily-${userId}-${date}-${segment}`
 }
 
-export function getCachedAudio(
+export async function getCachedAudio(
   userId: string,
   date: string,
   segment: GuideSegment
-): CachedGuideAudio | null {
-  ensureCacheDir()
+): Promise<CachedGuideAudio | null> {
   const cacheKey = getCacheKey(userId, date, segment)
-  const filePath = path.join(CACHE_DIR, `${cacheKey}.json`)
-
-  if (fs.existsSync(filePath)) {
-    try {
-      const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
-      return data as CachedGuideAudio
-    } catch {
-      return null
+  try {
+    const cached = await prisma.audioCache.findUnique({
+      where: { cache_key: cacheKey },
+    })
+    if (cached) {
+      return {
+        script: '',
+        audioBase64: cached.audio,
+        duration: cached.duration,
+        createdAt: cached.created_at.toISOString(),
+      }
     }
+  } catch (e) {
+    console.error('[Daily Guide Cache] DB read error:', e)
   }
   return null
 }
 
-export function setCachedAudio(
+export async function setCachedAudio(
   userId: string,
   date: string,
   segment: GuideSegment,
   script: string,
   audioBase64: string,
   duration: number
-): void {
-  ensureCacheDir()
+): Promise<void> {
   const cacheKey = getCacheKey(userId, date, segment)
-  const filePath = path.join(CACHE_DIR, `${cacheKey}.json`)
-
-  const data: CachedGuideAudio = {
-    script,
-    audioBase64,
-    duration,
-    createdAt: new Date().toISOString(),
+  try {
+    await prisma.audioCache.upsert({
+      where: { cache_key: cacheKey },
+      update: { audio: audioBase64, duration },
+      create: { cache_key: cacheKey, audio: audioBase64, duration },
+    })
+    console.log(`[Daily Guide Cache SET] Saved audio for ${cacheKey}`)
+  } catch (e) {
+    console.error('[Daily Guide Cache] DB write error:', e)
   }
-
-  fs.writeFileSync(filePath, JSON.stringify(data))
-  console.log(`[Daily Guide Cache SET] Saved audio for ${cacheKey}`)
 }
 
-export function hasCachedAudio(
+export async function hasCachedAudio(
   userId: string,
   date: string,
   segment: GuideSegment
-): boolean {
-  ensureCacheDir()
+): Promise<boolean> {
   const cacheKey = getCacheKey(userId, date, segment)
-  const filePath = path.join(CACHE_DIR, `${cacheKey}.json`)
-  return fs.existsSync(filePath)
+  try {
+    const cached = await prisma.audioCache.findUnique({
+      where: { cache_key: cacheKey },
+      select: { id: true },
+    })
+    return !!cached
+  } catch {
+    return false
+  }
 }
 
 // Voice ID mapping by guide tone
@@ -87,30 +85,32 @@ const TONE_VOICES: Record<string, string> = {
   direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
 }
 
-function ensureSharedCacheDir() {
-  if (!fs.existsSync(SHARED_CACHE_DIR)) {
-    fs.mkdirSync(SHARED_CACHE_DIR, { recursive: true })
-  }
-}
-
-function getSharedCached(cacheKey: string): { audioBase64: string; duration: number } | null {
-  ensureSharedCacheDir()
-  const filePath = path.join(SHARED_CACHE_DIR, `${cacheKey}.json`)
-  if (fs.existsSync(filePath)) {
-    try {
-      return JSON.parse(fs.readFileSync(filePath, 'utf-8'))
-    } catch {
-      return null
+// DB-backed shared cache for pre-written voice scripts
+async function getSharedCached(cacheKey: string): Promise<{ audioBase64: string; duration: number } | null> {
+  try {
+    const cached = await prisma.audioCache.findUnique({
+      where: { cache_key: cacheKey },
+    })
+    if (cached) {
+      return { audioBase64: cached.audio, duration: cached.duration }
     }
+  } catch (e) {
+    console.error('[Shared Audio Cache] DB read error:', e)
   }
   return null
 }
 
-function setSharedCached(cacheKey: string, audioBase64: string, duration: number) {
-  ensureSharedCacheDir()
-  const filePath = path.join(SHARED_CACHE_DIR, `${cacheKey}.json`)
-  fs.writeFileSync(filePath, JSON.stringify({ audioBase64, duration }))
-  console.log(`[Shared Audio Cache SET] ${cacheKey}`)
+async function setSharedCached(cacheKey: string, audioBase64: string, duration: number) {
+  try {
+    await prisma.audioCache.upsert({
+      where: { cache_key: cacheKey },
+      update: { audio: audioBase64, duration },
+      create: { cache_key: cacheKey, audio: audioBase64, duration },
+    })
+    console.log(`[Shared Audio Cache SET] ${cacheKey}`)
+  } catch (e) {
+    console.error('[Shared Audio Cache] DB write error:', e)
+  }
 }
 
 export async function generateAndCacheAudio(
@@ -120,7 +120,7 @@ export async function generateAndCacheAudio(
 ): Promise<{ audioBase64: string; duration: number } | null> {
   // Check shared cache first — keyed by segment+tone, reused forever
   const sharedKey = `segment-${segment}-${tone}`
-  const shared = getSharedCached(sharedKey)
+  const shared = await getSharedCached(sharedKey)
   if (shared) {
     console.log(`[Shared Audio Cache HIT] ${sharedKey}`)
     return shared
@@ -172,31 +172,11 @@ export async function generateAndCacheAudio(
     const result = { audioBase64, duration: estimatedDuration }
 
     // Save to shared cache so it's never regenerated
-    setSharedCached(sharedKey, audioBase64, estimatedDuration)
+    await setSharedCached(sharedKey, audioBase64, estimatedDuration)
 
     return result
   } catch (error) {
     console.error('[ElevenLabs Error]', error)
     return null
-  }
-}
-
-export function cleanOldCache(daysToKeep: number = 7): void {
-  ensureCacheDir()
-  const now = Date.now()
-  const maxAge = daysToKeep * 24 * 60 * 60 * 1000
-
-  try {
-    const files = fs.readdirSync(CACHE_DIR)
-    for (const file of files) {
-      const filePath = path.join(CACHE_DIR, file)
-      const stats = fs.statSync(filePath)
-      if (now - stats.mtimeMs > maxAge) {
-        fs.unlinkSync(filePath)
-        console.log(`[Daily Guide Cache] Cleaned old file: ${file}`)
-      }
-    }
-  } catch (error) {
-    console.error('[Daily Guide Cache] Error cleaning old cache:', error)
   }
 }
