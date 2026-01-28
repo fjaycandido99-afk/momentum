@@ -137,8 +137,20 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Generate audio
-    const audioResult = await generateAndCacheAudio(script, segment)
+    // Look up user's tone preference
+    let tone = 'calm'
+    try {
+      const prefs = await prisma.userPreferences.findUnique({
+        where: { user_id: user.id },
+        select: { guide_tone: true },
+      })
+      tone = prefs?.guide_tone || 'calm'
+    } catch {
+      // Fall back to calm
+    }
+
+    // Generate audio with user's preferred tone
+    const audioResult = await generateAndCacheAudio(script, segment, tone)
 
     if (!audioResult) {
       return NextResponse.json({

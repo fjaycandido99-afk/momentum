@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import Groq from 'groq-sdk'
+import { createClient } from '@/lib/supabase/server'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
 const prisma = new PrismaClient()
+
+// Voice ID mapping by guide tone
+const TONE_VOICES: Record<string, string> = {
+  calm: 'XB0fDUnXU5powFXDhCwa',     // Charlotte - calm and soothing
+  neutral: 'uju3wxzG5OhpWcoi3SMy',   // Neutral voice
+  direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
+}
 
 // Lazy initialization to avoid build-time errors
 let groq: Groq | null = null
@@ -396,7 +404,7 @@ function getTodayDayTypeScript(type: DayTypeVoiceType): string {
 }
 
 // Generate audio with ElevenLabs (max 2 min)
-async function generateAudio(script: string): Promise<{ audioBase64: string | null; duration: number }> {
+async function generateAudio(script: string, tone: string = 'calm'): Promise<{ audioBase64: string | null; duration: number }> {
   const apiKey = process.env.ELEVENLABS_API_KEY
   if (!apiKey) {
     console.error('[ElevenLabs] No API key')
@@ -404,8 +412,7 @@ async function generateAudio(script: string): Promise<{ audioBase64: string | nu
   }
 
   try {
-    // Charlotte voice - calm and soothing
-    const voiceId = 'XB0fDUnXU5powFXDhCwa'
+    const voiceId = TONE_VOICES[tone] || TONE_VOICES.calm
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
@@ -446,12 +453,30 @@ async function generateAudio(script: string): Promise<{ audioBase64: string | nu
   }
 }
 
+// Look up user's guide tone from preferences
+async function getUserTone(userId: string): Promise<string> {
+  try {
+    const prefs = await prisma.userPreferences.findUnique({
+      where: { user_id: userId },
+      select: { guide_tone: true },
+    })
+    return prefs?.guide_tone || 'calm'
+  } catch {
+    return 'calm'
+  }
+}
+
 // GET - Fetch today's voices (generate if needed)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') as VoiceGuideType | null
-    const userId = searchParams.get('userId') || 'demo-user'
+
+    // Get authenticated user
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const userId = user?.id || searchParams.get('userId') || 'demo-user'
+    const tone = user ? await getUserTone(userId) : 'calm'
 
     // Get today's date at midnight
     const today = new Date()
@@ -498,7 +523,7 @@ export async function GET(request: NextRequest) {
 
       // Generate new
       const script = getTodayScript(type)
-      const { audioBase64, duration } = await generateAudio(script)
+      const { audioBase64, duration } = await generateAudio(script, tone)
 
       // Save to database
       if (audioBase64) {
@@ -544,7 +569,13 @@ const VALID_DAY_TYPE_VOICES = ['work_prime', 'off_prime', 'recovery_prime', 'wor
 // POST - Generate a specific voice type
 export async function POST(request: NextRequest) {
   try {
-    const { type, userId = 'demo-user' } = await request.json()
+    const { type } = await request.json()
+
+    // Get authenticated user
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const userId = user?.id || 'demo-user'
+    const tone = user ? await getUserTone(userId) : 'calm'
 
     const isRegularVoice = VALID_VOICE_TYPES.includes(type)
     const isDayTypeVoice = VALID_DAY_TYPE_VOICES.includes(type)
@@ -597,7 +628,7 @@ export async function POST(request: NextRequest) {
       script = getTodayScript(type as VoiceGuideType)
     }
 
-    const { audioBase64, duration } = await generateAudio(script)
+    const { audioBase64, duration } = await generateAudio(script, tone)
 
     // Save to database
     if (audioBase64) {

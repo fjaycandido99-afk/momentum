@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import fs from 'fs'
 import path from 'path'
+import { PrismaClient } from '@prisma/client'
+import { createClient } from '@/lib/supabase/server'
+
+const prisma = new PrismaClient()
+
+// Voice ID mapping by guide tone
+const TONE_VOICES: Record<string, string> = {
+  calm: 'XB0fDUnXU5powFXDhCwa',     // Charlotte - calm and soothing
+  neutral: 'uju3wxzG5OhpWcoi3SMy',   // Neutral voice
+  direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
+}
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -288,9 +299,25 @@ export async function POST(request: NextRequest) {
     const contentType = CONTENT_TYPES[type as keyof typeof CONTENT_TYPES] || CONTENT_TYPES.breathing
     const preWritten = PRE_WRITTEN_SCRIPTS[type as keyof typeof PRE_WRITTEN_SCRIPTS]
 
+    // Get authenticated user's tone preference
+    let tone = 'calm'
+    try {
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.id) {
+        const prefs = await prisma.userPreferences.findUnique({
+          where: { user_id: user.id },
+          select: { guide_tone: true },
+        })
+        tone = prefs?.guide_tone || 'calm'
+      }
+    } catch {
+      // Fall back to calm tone
+    }
+
     const scriptIndex = getTodayScriptIndex(type)
-    // Use script index as cache key (not day-based, so audio persists)
-    const cacheKey = `${type}-script${scriptIndex}-charlotte`
+    // Use script index + tone as cache key so different tones get different audio
+    const cacheKey = `${type}-script${scriptIndex}-${tone}`
 
     // Check file cache first (persists across server restarts)
     const cached = getCachedAudio(cacheKey)
@@ -327,8 +354,8 @@ export async function POST(request: NextRequest) {
     let audioBase64 = null
 
     if (apiKey) {
-      // Charlotte voice - calm and soothing, perfect for meditation
-      const voiceId = 'XB0fDUnXU5powFXDhCwa'
+      // Select voice based on user's tone preference
+      const voiceId = TONE_VOICES[tone] || TONE_VOICES.calm
 
       const ttsResponse = await fetch(
         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,

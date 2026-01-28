@@ -77,9 +77,17 @@ export function hasCachedAudio(
   return fs.existsSync(filePath)
 }
 
+// Voice ID mapping by guide tone
+const TONE_VOICES: Record<string, string> = {
+  calm: 'XB0fDUnXU5powFXDhCwa',     // Charlotte - calm and soothing
+  neutral: 'uju3wxzG5OhpWcoi3SMy',   // Neutral voice
+  direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
+}
+
 export async function generateAndCacheAudio(
   script: string,
-  segment: GuideSegment
+  segment: GuideSegment,
+  tone: string = 'calm'
 ): Promise<{ audioBase64: string; duration: number } | null> {
   const apiKey = process.env.ELEVENLABS_API_KEY
   if (!apiKey) {
@@ -87,8 +95,7 @@ export async function generateAndCacheAudio(
     return null
   }
 
-  // Charlotte voice - calm and soothing
-  const voiceId = 'XB0fDUnXU5powFXDhCwa'
+  const voiceId = TONE_VOICES[tone] || TONE_VOICES.calm
 
   try {
     const ttsResponse = await fetch(
