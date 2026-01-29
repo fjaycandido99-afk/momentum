@@ -91,9 +91,19 @@ export function DailySpark() {
 
   // Initial spark on mount + activity listeners
   useEffect(() => {
-    const initialTimer = setTimeout(() => {
-      showSpark()
-    }, INITIAL_DELAY)
+    let initialTimer: ReturnType<typeof setTimeout> | null = null
+    const alreadyShown = sessionStorage.getItem('voxu_spark_shown')
+
+    if (!alreadyShown) {
+      // First time this session — show after delay
+      initialTimer = setTimeout(() => {
+        sessionStorage.setItem('voxu_spark_shown', '1')
+        showSpark()
+      }, INITIAL_DELAY)
+    } else {
+      // Already shown this session — just start idle/recurring timers
+      scheduleNext()
+    }
 
     // Track user activity for idle detection
     const onActivity = () => resetIdleTimer()
@@ -101,7 +111,7 @@ export function DailySpark() {
     events.forEach(e => window.addEventListener(e, onActivity, { passive: true }))
 
     return () => {
-      clearTimeout(initialTimer)
+      if (initialTimer) clearTimeout(initialTimer)
       clearAllTimers()
       events.forEach(e => window.removeEventListener(e, onActivity))
     }
