@@ -600,10 +600,7 @@ export function ImmersiveHome() {
       {/* --- Soundscapes --- */}
       <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.05s' }}>
         <h2 className="text-lg font-semibold text-white px-6 mb-4">Soundscapes</h2>
-        <div className="px-6">
-          <ModeSelector activeMode={activeMode} onSelectMode={setActiveMode} />
-        </div>
-        <div className="flex gap-3 overflow-x-auto px-6 pt-4 pb-2 scrollbar-hide">
+        <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
           {AMBIENT_SOUNDS.map((sound) => {
             const Icon = sound.icon
             return (
