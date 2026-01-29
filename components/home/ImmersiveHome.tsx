@@ -11,6 +11,7 @@ import { JournalEntry } from '@/components/daily-guide/JournalEntry'
 import { ModeSelector } from './ModeSelector'
 import { BottomPlayerBar } from './BottomPlayerBar'
 import { DailySpark } from './DailySpark'
+import { useAudioOptional } from '@/contexts/AudioContext'
 
 const WordAnimationPlayer = dynamic(
   () => import('@/components/player/WordAnimationPlayer').then(mod => mod.WordAnimationPlayer),
@@ -133,6 +134,7 @@ export function ImmersiveHome() {
   const [timeContext] = useState(getTimeContext)
   const [activeMode, setActiveMode] = useState<Mode>(timeContext.suggested)
   const [isPlaying, setIsPlaying] = useState(false)
+  const audioContext = useAudioOptional()
 
   // Overlays
   const [showMorningFlow, setShowMorningFlow] = useState(false)
@@ -161,6 +163,43 @@ export function ImmersiveHome() {
   const [guideIsPlaying, setGuideIsPlaying] = useState(false)
   const [loadingGuide, setLoadingGuide] = useState<string | null>(null)
   const guideAudioRef = useRef<HTMLAudioElement | null>(null)
+  // Track if home audio is active (to avoid re-entrancy)
+  const homeAudioActiveRef = useRef(false)
+
+  // Stop all home audio sources
+  const stopAllHomeAudio = useCallback(() => {
+    if (guideAudioRef.current) {
+      guideAudioRef.current.pause()
+      guideAudioRef.current.src = ''
+      guideAudioRef.current = null
+      setGuideLabel(null)
+      setGuideIsPlaying(false)
+    }
+    if (isPlaying) setIsPlaying(false)
+    setBackgroundMusic(null)
+    setMusicPlaying(false)
+    setPlayingSound(null)
+    setShowEndelPlayer(false)
+    setActiveCardId(null)
+    homeAudioActiveRef.current = false
+  }, [isPlaying])
+
+  // When daily guide starts a session, stop all home audio
+  useEffect(() => {
+    if (audioContext?.isSessionActive && !homeAudioActiveRef.current) {
+      stopAllHomeAudio()
+    }
+  }, [audioContext?.isSessionActive, stopAllHomeAudio])
+
+  // Notify audio context when home audio starts/stops
+  const setHomeAudioActive = useCallback((active: boolean) => {
+    homeAudioActiveRef.current = active
+    if (audioContext && active) {
+      audioContext.setSessionActive(true)
+    } else if (audioContext && !active) {
+      audioContext.setSessionActive(false)
+    }
+  }, [audioContext])
 
   const handlePlayGuide = async (guideId: string, guideName: string) => {
     // Stop any current guide audio
@@ -171,6 +210,8 @@ export function ImmersiveHome() {
     }
     // Stop soundscape if playing
     if (isPlaying) setIsPlaying(false)
+    // Signal home audio active
+    setHomeAudioActive(true)
 
     setLoadingGuide(guideId)
     setGuideLabel(guideName)
@@ -197,10 +238,12 @@ export function ImmersiveHome() {
         }
         audio.onended = () => {
           setGuideIsPlaying(false)
+          setHomeAudioActive(false)
         }
         audio.onerror = () => {
           setGuideIsPlaying(false)
           setGuideLabel(null)
+          setHomeAudioActive(false)
         }
       }
     } catch (err) {
@@ -349,6 +392,8 @@ export function ImmersiveHome() {
     // Stop previous background music
     setBackgroundMusic(null)
     setMusicPlaying(false)
+    // Signal home audio active
+    setHomeAudioActive(true)
 
     const backgrounds = getTodaysBackgrounds()
     setPlayingSound({
@@ -375,6 +420,8 @@ export function ImmersiveHome() {
     // Stop previous background music
     setBackgroundMusic(null)
     setMusicPlaying(false)
+    // Signal home audio active
+    setHomeAudioActive(true)
 
     const gBgs = genreBackgrounds[genreId] || []
     const bg = gBgs.length > 0
@@ -405,6 +452,7 @@ export function ImmersiveHome() {
     setBackgroundMusic(null)
     setMusicPlaying(false)
     setActiveCardId(null)
+    setHomeAudioActive(false)
   }
 
   return (
@@ -575,6 +623,8 @@ export function ImmersiveHome() {
                   // Stop background music
                   setBackgroundMusic(null)
                   setMusicPlaying(false)
+                  // Signal home audio active
+                  setHomeAudioActive(true)
 
                   setPlayingSound({
                     word: sound.label,
