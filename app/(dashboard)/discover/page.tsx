@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { Play, Pause, Wind, Sparkles, Heart, Anchor, Loader2, X, Moon, ChevronRight, Bookmark, Trash2 } from 'lucide-react'
@@ -302,6 +302,14 @@ function getTodaysMusicGenre() {
 }
 
 export default function DiscoverPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <DiscoverContent />
+    </Suspense>
+  )
+}
+
+function DiscoverContent() {
   const themeContext = useThemeOptional()
   const searchParams = useSearchParams()
   const initialTab = (searchParams.get('tab') as TabType) || 'motivation'
