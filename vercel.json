@@ -19,6 +19,18 @@
     {
       "path": "/api/cron/notifications?type=cleanup",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=daily_quote",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=daily_affirmation",
+      "schedule": "30 7 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=motivational_nudge",
+      "schedule": "0 14 * * *"
     }
   ]
 }

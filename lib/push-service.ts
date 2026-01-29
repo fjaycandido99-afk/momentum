@@ -7,6 +7,8 @@ import webPush from 'web-push'
 import { prisma } from './prisma'
 import { sendAPNsNotification, isAPNsConfigured } from './apns'
 import { sendFCMNotification, isFCMConfigured } from './fcm'
+import { getDayOfYearQuote } from './quotes'
+import { getGroq, GROQ_MODEL } from './groq'
 
 // Notification types that can be sent
 export type NotificationType =
@@ -16,6 +18,9 @@ export type NotificationType =
   | 'streak_at_risk'
   | 'weekly_review'
   | 'insight'
+  | 'daily_quote'
+  | 'daily_affirmation'
+  | 'motivational_nudge'
   | 'custom'
 
 // Notification payload structure
@@ -102,6 +107,36 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'open', title: 'View Insight' },
     ],
   },
+  daily_quote: {
+    title: 'Daily Quote',
+    body: 'Your daily dose of inspiration',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'daily-quote',
+    actions: [
+      { action: 'open', title: 'Read More' },
+    ],
+  },
+  daily_affirmation: {
+    title: 'Daily Affirmation',
+    body: 'Your personalized affirmation is ready',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'daily-affirmation',
+    actions: [
+      { action: 'open', title: 'View' },
+    ],
+  },
+  motivational_nudge: {
+    title: 'Midday Check-In',
+    body: 'A quick moment of encouragement',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'motivational-nudge',
+    actions: [
+      { action: 'open', title: 'Open' },
+    ],
+  },
   custom: {
     title: 'Voxu',
     body: 'You have a new notification',
@@ -154,6 +189,9 @@ export async function sendPushToUser(
     streak_at_risk: 'streak_alerts',
     weekly_review: 'weekly_review',
     insight: 'insight_alerts',
+    daily_quote: 'daily_quote_alerts',
+    daily_affirmation: 'daily_affirmation_alerts',
+    motivational_nudge: 'motivational_nudge_alerts',
     custom: 'morning_reminder', // Custom always sends
   }
 
@@ -528,4 +566,163 @@ export async function sendWeeklyInsights(): Promise<void> {
   }
 
   console.log(`Weekly insights: ${totalSent} sent, ${totalFailed} failed`)
+}
+
+/**
+ * Send daily quote notifications to all subscribed users
+ * Same quote for everyone (deterministic by day of year)
+ */
+export async function sendDailyQuotes(): Promise<void> {
+  const quote = getDayOfYearQuote()
+  const body = `"${quote.text}" — ${quote.author}`
+
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { daily_quote_alerts: true },
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const { user_id } of subscriptions) {
+    const result = await sendPushToUser(user_id, 'daily_quote', { body })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Daily quotes: ${totalSent} sent, ${totalFailed} failed`)
+}
+
+/**
+ * Send personalized daily affirmation notifications
+ * Generates AI affirmation via Groq and caches on DailyGuide
+ */
+export async function sendDailyAffirmations(): Promise<void> {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { daily_affirmation_alerts: true },
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const { user_id } of subscriptions) {
+    try {
+      // Check for cached affirmation
+      const guide = await prisma.dailyGuide.findUnique({
+        where: { user_id_date: { user_id, date: today } },
+        select: {
+          ai_affirmation: true,
+          day_type: true,
+          energy_level: true,
+          mood_before: true,
+        },
+      })
+
+      let affirmation = guide?.ai_affirmation
+
+      if (!affirmation) {
+        // Generate new affirmation via Groq
+        const context = [
+          guide?.day_type ? `Day type: ${guide.day_type}` : null,
+          guide?.energy_level ? `Energy: ${guide.energy_level}` : null,
+          guide?.mood_before ? `Current mood: ${guide.mood_before}` : null,
+        ].filter(Boolean).join('. ')
+
+        const completion = await getGroq().chat.completions.create({
+          model: GROQ_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: `You are a personal wellness coach. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. No quotes, no attribution. ${context ? `Context: ${context}` : ''}`,
+            },
+            {
+              role: 'user',
+              content: 'Generate my daily affirmation.',
+            },
+          ],
+          max_tokens: 60,
+          temperature: 0.8,
+        })
+
+        affirmation = completion.choices[0]?.message?.content?.trim() || 'I am capable, I am growing, and today matters.'
+
+        // Cache on DailyGuide
+        await prisma.dailyGuide.upsert({
+          where: { user_id_date: { user_id, date: today } },
+          update: { ai_affirmation: affirmation },
+          create: {
+            user_id,
+            date: today,
+            day_type: 'work',
+            ai_affirmation: affirmation,
+          },
+        })
+      }
+
+      const result = await sendPushToUser(user_id, 'daily_affirmation', { body: affirmation })
+      totalSent += result.sent
+      totalFailed += result.failed
+    } catch (error) {
+      console.error(`Failed to send affirmation to user ${user_id}:`, error)
+      totalFailed++
+    }
+  }
+
+  console.log(`Daily affirmations: ${totalSent} sent, ${totalFailed} failed`)
+}
+
+/**
+ * Send motivational nudge notifications based on user's streak and activity
+ * Contextual midday encouragement
+ */
+export async function sendMotivationalNudges(): Promise<void> {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { motivational_nudge_alerts: true },
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const { user_id } of subscriptions) {
+    let body = "A 2-minute check-in can shift your whole day. Ready?"
+
+    try {
+      // Check streak and today's activity
+      const [prefs, todayGuide] = await Promise.all([
+        prisma.userPreferences.findUnique({
+          where: { user_id },
+          select: { current_streak: true },
+        }),
+        prisma.dailyGuide.findUnique({
+          where: { user_id_date: { user_id, date: today } },
+          select: { morning_prime_done: true },
+        }),
+      ])
+
+      if (prefs?.current_streak && prefs.current_streak > 1) {
+        body = `You're on a ${prefs.current_streak}-day streak! Keep the momentum going.`
+      } else if (todayGuide?.morning_prime_done) {
+        body = "Great morning flow today! How are you feeling this afternoon?"
+      }
+    } catch {
+      // Fall back to default
+    }
+
+    const result = await sendPushToUser(user_id, 'motivational_nudge', { body })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Motivational nudges: ${totalSent} sent, ${totalFailed} failed`)
 }

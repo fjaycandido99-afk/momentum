@@ -112,6 +112,10 @@ export async function GET() {
         evening_reminder: true,
         streak_alerts: true,
         weekly_review: true,
+        insight_alerts: true,
+        daily_quote_alerts: true,
+        daily_affirmation_alerts: true,
+        motivational_nudge_alerts: true,
         created_at: true,
       },
     })
@@ -146,6 +150,9 @@ export async function PATCH(request: NextRequest) {
       evening_reminder,
       streak_alerts,
       weekly_review,
+      daily_quote_alerts,
+      daily_affirmation_alerts,
+      motivational_nudge_alerts,
     } = body
 
     // Update all user's subscriptions
@@ -157,6 +164,9 @@ export async function PATCH(request: NextRequest) {
         ...(evening_reminder !== undefined && { evening_reminder }),
         ...(streak_alerts !== undefined && { streak_alerts }),
         ...(weekly_review !== undefined && { weekly_review }),
+        ...(daily_quote_alerts !== undefined && { daily_quote_alerts }),
+        ...(daily_affirmation_alerts !== undefined && { daily_affirmation_alerts }),
+        ...(motivational_nudge_alerts !== undefined && { motivational_nudge_alerts }),
       },
     })
 

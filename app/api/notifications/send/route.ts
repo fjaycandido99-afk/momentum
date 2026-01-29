@@ -33,6 +33,9 @@ export async function POST(request: NextRequest) {
       'evening_reminder',
       'streak_at_risk',
       'weekly_review',
+      'daily_quote',
+      'daily_affirmation',
+      'motivational_nudge',
       'custom',
     ]
 

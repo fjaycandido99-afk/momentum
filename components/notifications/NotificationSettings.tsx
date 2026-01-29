@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, BellOff, Loader2, Check, Sunrise, Clock, Moon, Flame, Calendar, Lightbulb } from 'lucide-react'
+import { Bell, BellOff, Loader2, Check, Sunrise, Clock, Moon, Flame, Calendar, Lightbulb, Quote, Sparkles, Heart } from 'lucide-react'
 import {
   isPushSupported,
   getNotificationPermission,
@@ -33,6 +33,9 @@ interface NotificationPreferences {
   streak_alerts: boolean
   weekly_review: boolean
   insight_alerts: boolean
+  daily_quote_alerts: boolean
+  daily_affirmation_alerts: boolean
+  motivational_nudge_alerts: boolean
 }
 
 export function NotificationSettings() {
@@ -55,6 +58,9 @@ export function NotificationSettings() {
     streak_alerts: true,
     weekly_review: true,
     insight_alerts: true,
+    daily_quote_alerts: true,
+    daily_affirmation_alerts: true,
+    motivational_nudge_alerts: true,
   })
 
   useEffect(() => {
@@ -89,6 +95,9 @@ export function NotificationSettings() {
                 streak_alerts: sub.streak_alerts,
                 weekly_review: sub.weekly_review,
                 insight_alerts: sub.insight_alerts ?? true,
+                daily_quote_alerts: sub.daily_quote_alerts ?? true,
+                daily_affirmation_alerts: sub.daily_affirmation_alerts ?? true,
+                motivational_nudge_alerts: sub.motivational_nudge_alerts ?? true,
               })
             }
           }
@@ -144,6 +153,9 @@ export function NotificationSettings() {
                 streak_alerts: sub.streak_alerts,
                 weekly_review: sub.weekly_review,
                 insight_alerts: sub.insight_alerts ?? true,
+                daily_quote_alerts: sub.daily_quote_alerts ?? true,
+                daily_affirmation_alerts: sub.daily_affirmation_alerts ?? true,
+                motivational_nudge_alerts: sub.motivational_nudge_alerts ?? true,
               })
             }
           }
@@ -416,6 +428,33 @@ export function NotificationSettings() {
             description="Data-driven wellbeing insights"
             enabled={preferences.insight_alerts}
             onToggle={() => handlePreferenceChange('insight_alerts')}
+          />
+
+          {/* Daily quote */}
+          <NotificationToggle
+            icon={Quote}
+            label="Daily Quote"
+            description="Inspirational quote every morning at 8 AM"
+            enabled={preferences.daily_quote_alerts}
+            onToggle={() => handlePreferenceChange('daily_quote_alerts')}
+          />
+
+          {/* Daily affirmation */}
+          <NotificationToggle
+            icon={Sparkles}
+            label="Daily Affirmation"
+            description="Personalized AI affirmation at 7:30 AM"
+            enabled={preferences.daily_affirmation_alerts}
+            onToggle={() => handlePreferenceChange('daily_affirmation_alerts')}
+          />
+
+          {/* Motivational nudge */}
+          <NotificationToggle
+            icon={Heart}
+            label="Motivational Nudge"
+            description="Midday encouragement at 2 PM"
+            enabled={preferences.motivational_nudge_alerts}
+            onToggle={() => handlePreferenceChange('motivational_nudge_alerts')}
           />
         </div>
       )}

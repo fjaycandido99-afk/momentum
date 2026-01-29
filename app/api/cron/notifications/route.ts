@@ -4,6 +4,9 @@ import {
   sendStreakAtRiskReminders,
   sendWeeklyReviewReminders,
   sendWeeklyInsights,
+  sendDailyQuotes,
+  sendDailyAffirmations,
+  sendMotivationalNudges,
 } from '@/lib/push-service'
 import { cleanupExpiredAudioCache } from '@/lib/daily-guide/cache-cleanup'
 
@@ -58,17 +61,32 @@ export async function GET(request: NextRequest) {
         await cleanupExpiredAudioCache()
         return NextResponse.json({ success: true, type: 'cache_cleanup' })
 
+      case 'daily_quote':
+        await sendDailyQuotes()
+        return NextResponse.json({ success: true, type: 'daily_quotes' })
+
+      case 'daily_affirmation':
+        await sendDailyAffirmations()
+        return NextResponse.json({ success: true, type: 'daily_affirmations' })
+
+      case 'motivational_nudge':
+        await sendMotivationalNudges()
+        return NextResponse.json({ success: true, type: 'motivational_nudges' })
+
       case 'all':
         // Send all types (for testing)
         await sendMorningReminders()
         await sendStreakAtRiskReminders()
         await sendWeeklyReviewReminders()
         await sendWeeklyInsights()
+        await sendDailyQuotes()
+        await sendDailyAffirmations()
+        await sendMotivationalNudges()
         return NextResponse.json({ success: true, type: 'all' })
 
       default:
         return NextResponse.json(
-          { error: 'Invalid type. Use: morning, streak, weekly, insight, cleanup, or all' },
+          { error: 'Invalid type. Use: morning, streak, weekly, insight, cleanup, daily_quote, daily_affirmation, motivational_nudge, or all' },
           { status: 400 }
         )
     }
