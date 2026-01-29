@@ -162,6 +162,8 @@ export function ImmersiveHome() {
   const guideAudioRef = useRef<HTMLAudioElement | null>(null)
   // Track if home audio is active (to avoid re-entrancy)
   const homeAudioActiveRef = useRef(false)
+  // Ref for background music YouTube iframe (pause/play without remounting)
+  const bgMusicIframeRef = useRef<HTMLIFrameElement>(null)
 
   // Stop all home audio sources
   const stopAllHomeAudio = useCallback(() => {
@@ -180,6 +182,17 @@ export function ImmersiveHome() {
     setActiveCardId(null)
     homeAudioActiveRef.current = false
   }, [isPlaying])
+
+  // Pause/play background music via YouTube iframe API (no remount)
+  useEffect(() => {
+    const iframe = bgMusicIframeRef.current
+    if (!iframe || !backgroundMusic) return
+    const func = musicPlaying ? 'playVideo' : 'pauseVideo'
+    iframe.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func, args: '' }),
+      '*'
+    )
+  }, [musicPlaying, backgroundMusic])
 
   // When daily guide starts a session, stop all home audio
   useEffect(() => {
@@ -513,10 +526,11 @@ export function ImmersiveHome() {
       )}
 
       {/* --- Hidden YouTube player for background music (persists after closing fullscreen player) --- */}
-      {backgroundMusic && musicPlaying && (
+      {backgroundMusic && (
         <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
           <iframe
-            src={`https://www.youtube.com/embed/${backgroundMusic.youtubeId}?autoplay=1&loop=1&playlist=${backgroundMusic.youtubeId}`}
+            ref={bgMusicIframeRef}
+            src={`https://www.youtube.com/embed/${backgroundMusic.youtubeId}?autoplay=1&loop=1&playlist=${backgroundMusic.youtubeId}&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             className="w-[1px] h-[1px]"
           />

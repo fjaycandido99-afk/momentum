@@ -41,12 +41,28 @@ export const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
 export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, onClose, onSwitchSound }: SoundscapePlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const selectorRef = useRef<HTMLDivElement>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [iframeMounted, setIframeMounted] = useState(false)
 
   // Auto-play after mount
   useEffect(() => {
-    const timer = setTimeout(() => setIsPlaying(true), 800)
+    const timer = setTimeout(() => {
+      setIsPlaying(true)
+      setIframeMounted(true)
+    }, 800)
     return () => clearTimeout(timer)
   }, [])
+
+  // Pause/play via YouTube postMessage API (no iframe remount)
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe || !iframeMounted) return
+    const func = isPlaying ? 'playVideo' : 'pauseVideo'
+    iframe.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func, args: '' }),
+      '*'
+    )
+  }, [isPlaying, iframeMounted])
 
   // Scroll active item into view when sound changes
   useEffect(() => {
@@ -62,12 +78,13 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, onClose,
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      {/* Hidden YouTube player for audio */}
-      {isPlaying && (
+      {/* Hidden YouTube player for audio (stays mounted to avoid restart) */}
+      {iframeMounted && (
         <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
           <iframe
+            ref={iframeRef}
             key={youtubeId}
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             className="w-[1px] h-[1px]"
           />
