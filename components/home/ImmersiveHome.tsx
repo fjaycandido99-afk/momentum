@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Play, X, Home, Save, ChevronLeft, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot, CloudRain, Waves, Trees, Flame, CloudLightning, Star } from 'lucide-react'
+import { Settings, PenLine, Play, X, Home, Save, ChevronLeft, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Focus, Zap, Coffee, Music, Droplets } from 'lucide-react'
 import { ENDEL_MODES } from '@/components/player/EndelPlayer'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
@@ -86,14 +86,26 @@ const VOICE_GUIDES = [
   { id: 'anxiety', name: 'Grounding', tagline: 'Find your center', icon: Anchor },
 ]
 
-// Ambient sounds for soundscapes section
-const AMBIENT_SOUNDS = [
-  { id: 'rain', label: 'Rain', icon: CloudRain, youtubeId: 'mPZkdNFkNps' },
-  { id: 'ocean', label: 'Ocean', icon: Waves, youtubeId: 'WHPEKLQID4U' },
-  { id: 'forest', label: 'Forest', icon: Trees, youtubeId: 'xNN7iTA57jM' },
-  { id: 'fire', label: 'Fire', icon: Flame, youtubeId: 'UgHKb_7884o' },
-  { id: 'thunder', label: 'Thunder', icon: CloudLightning, youtubeId: 'nDq6TstdEi8' },
-  { id: 'night', label: 'Night', icon: Star, youtubeId: 'asSd6BOCmEY' },
+// Soundscapes: modes (open Endel orb) + ambient sounds (play YouTube)
+type SoundscapeItem =
+  | { type: 'mode'; id: 'focus' | 'relax' | 'sleep' | 'energy'; label: string; icon: typeof Focus }
+  | { type: 'sound'; id: string; label: string; icon: typeof CloudRain; youtubeId: string }
+
+const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
+  { type: 'mode', id: 'focus', label: 'Focus', icon: Focus },
+  { type: 'mode', id: 'relax', label: 'Relax', icon: Sparkles },
+  { type: 'mode', id: 'sleep', label: 'Sleep', icon: Moon },
+  { type: 'mode', id: 'energy', label: 'Energy', icon: Zap },
+  { type: 'sound', id: 'rain', label: 'Rain', icon: CloudRain, youtubeId: 'mPZkdNFkNps' },
+  { type: 'sound', id: 'ocean', label: 'Ocean', icon: Waves, youtubeId: 'WHPEKLQID4U' },
+  { type: 'sound', id: 'forest', label: 'Forest', icon: Trees, youtubeId: 'xNN7iTA57jM' },
+  { type: 'sound', id: 'fire', label: 'Fire', icon: Flame, youtubeId: 'UgHKb_7884o' },
+  { type: 'sound', id: 'thunder', label: 'Thunder', icon: CloudLightning, youtubeId: 'nDq6TstdEi8' },
+  { type: 'sound', id: 'night', label: 'Night', icon: Star, youtubeId: 'asSd6BOCmEY' },
+  { type: 'sound', id: 'wind', label: 'Wind', icon: Wind, youtubeId: '2dDuMb8XWTA' },
+  { type: 'sound', id: 'stream', label: 'Stream', icon: Droplets, youtubeId: 'IvjMgVS6kng' },
+  { type: 'sound', id: 'cafe', label: 'Cafe', icon: Coffee, youtubeId: 'gaGrHUekGrc' },
+  { type: 'sound', id: 'piano', label: 'Piano', icon: Music, youtubeId: '77ZozI0rw7w' },
 ]
 
 // Background images for motivation video player
@@ -601,11 +613,11 @@ export function ImmersiveHome() {
       <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.05s' }}>
         <h2 className="text-lg font-semibold text-white px-6 mb-4">Soundscapes</h2>
         <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
-          {AMBIENT_SOUNDS.map((sound) => {
-            const Icon = sound.icon
+          {SOUNDSCAPE_ITEMS.map((item) => {
+            const Icon = item.icon
             return (
               <button
-                key={sound.id}
+                key={item.id}
                 onClick={() => {
                   // Stop guide audio if playing
                   if (guideAudioRef.current) {
@@ -615,26 +627,28 @@ export function ImmersiveHome() {
                     setGuideLabel(null)
                     setGuideIsPlaying(false)
                   }
-                  // Stop soundscape
                   if (isPlaying) setIsPlaying(false)
-                  // Stop background music
                   setBackgroundMusic(null)
                   setMusicPlaying(false)
-                  // Signal home audio active
                   setHomeAudioActive(true)
 
-                  setPlayingSound({
-                    word: sound.label,
-                    color: 'from-white/[0.06] to-white/[0.02]',
-                    youtubeId: sound.youtubeId,
-                  })
+                  if (item.type === 'mode') {
+                    setActiveMode(item.id)
+                    setShowEndelPlayer(true)
+                  } else {
+                    setPlayingSound({
+                      word: item.label,
+                      color: 'from-white/[0.06] to-white/[0.02]',
+                      youtubeId: item.youtubeId,
+                    })
+                  }
                 }}
                 className="flex flex-col items-center gap-2 shrink-0 press-scale"
               >
                 <div className="w-14 h-14 rounded-full bg-transparent flex items-center justify-center transition-all duration-200 card-gradient-border-round">
                   <Icon className="w-5 h-5 text-white/80" strokeWidth={1.5} />
                 </div>
-                <span className="text-[11px] text-white/80">{sound.label}</span>
+                <span className="text-[11px] text-white/80">{item.label}</span>
               </button>
             )
           })}
