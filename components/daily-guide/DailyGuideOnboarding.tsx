@@ -337,7 +337,7 @@ export function DailyGuideOnboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex flex-col">
+    <div className="min-h-screen bg-black flex flex-col">
       {/* Progress */}
       <div className="p-4">
         <div className="flex justify-center gap-2">

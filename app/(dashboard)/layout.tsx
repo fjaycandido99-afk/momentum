@@ -14,7 +14,7 @@ export default function DashboardLayout({
 
   return (
     <Providers>
-      <div className="min-h-screen bg-[#0a0a0f]">
+      <div className="min-h-screen bg-black">
         <main className={`min-h-screen ${isHome ? '' : 'pb-16'}`}>
           {children}
         </main>

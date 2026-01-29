@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Play, X, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2 } from 'lucide-react'
+import { Settings, PenLine, Play, X, Home, Save, ChevronLeft, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot } from 'lucide-react'
 import { ENDEL_MODES } from '@/components/player/EndelPlayer'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
+import { JournalEntry } from '@/components/daily-guide/JournalEntry'
 import { ModeSelector } from './ModeSelector'
 import { BottomPlayerBar } from './BottomPlayerBar'
+import { DailySpark } from './DailySpark'
 
 const WordAnimationPlayer = dynamic(
   () => import('@/components/player/WordAnimationPlayer').then(mod => mod.WordAnimationPlayer),
@@ -124,6 +126,7 @@ export function ImmersiveHome() {
 
   // Overlays
   const [showMorningFlow, setShowMorningFlow] = useState(false)
+  const [showJournalSave, setShowJournalSave] = useState(false)
   const [showEndelPlayer, setShowEndelPlayer] = useState(false)
   const [playingSound, setPlayingSound] = useState<{
     word: string
@@ -131,6 +134,17 @@ export function ImmersiveHome() {
     youtubeId: string
     backgroundImage?: string
   } | null>(null)
+
+  // Track which card is actively playing (by youtubeId)
+  const [activeCardId, setActiveCardId] = useState<string | null>(null)
+  const [tappedCardId, setTappedCardId] = useState<string | null>(null)
+
+  // Background music — persists after closing fullscreen player
+  const [backgroundMusic, setBackgroundMusic] = useState<{
+    youtubeId: string
+    label: string
+  } | null>(null)
+  const [musicPlaying, setMusicPlaying] = useState(false)
 
   // Guided voice playback (plays through bottom bar)
   const [guideLabel, setGuideLabel] = useState<string | null>(null)
@@ -206,28 +220,31 @@ export function ImmersiveHome() {
   const PULL_THRESHOLD = 100
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (showMorningFlow) return
     const el = scrollRef.current
     if (el && el.scrollTop <= 0) {
       touchStartY.current = e.touches[0].clientY
       setIsPulling(true)
     }
-  }, [])
+  }, [showMorningFlow])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isPulling) return
+    if (!isPulling || showMorningFlow) return
     const delta = e.touches[0].clientY - touchStartY.current
     if (delta > 0) {
       setPullDistance(Math.min(delta * 0.5, 150))
     }
-  }, [isPulling])
+  }, [isPulling, showMorningFlow])
 
   const handleTouchEnd = useCallback(() => {
+    if (showMorningFlow) return
     if (pullDistance >= PULL_THRESHOLD) {
+      stopBackgroundMusic()
       setShowMorningFlow(true)
     }
     setPullDistance(0)
     setIsPulling(false)
-  }, [pullDistance])
+  }, [pullDistance, showMorningFlow])
 
   // Data
   const [streak, setStreak] = useState(0)
@@ -300,7 +317,29 @@ export function ImmersiveHome() {
     })
   }, [topicName, timeContext.suggested])
 
+  // Trigger tap ripple animation on a card
+  const triggerTap = (videoId: string) => {
+    setTappedCardId(videoId)
+    setTimeout(() => setTappedCardId(null), 400)
+  }
+
   const handlePlayMotivation = (video: VideoItem, index: number) => {
+    triggerTap(video.id)
+    setActiveCardId(video.id)
+    // Stop any guide audio
+    if (guideAudioRef.current) {
+      guideAudioRef.current.pause()
+      guideAudioRef.current.src = ''
+      guideAudioRef.current = null
+      setGuideLabel(null)
+      setGuideIsPlaying(false)
+    }
+    // Stop soundscape
+    if (isPlaying) setIsPlaying(false)
+    // Stop previous background music
+    setBackgroundMusic(null)
+    setMusicPlaying(false)
+
     const backgrounds = getTodaysBackgrounds()
     setPlayingSound({
       word: topicName,
@@ -311,6 +350,22 @@ export function ImmersiveHome() {
   }
 
   const handlePlayMusic = (video: VideoItem, index: number, genreId: string, genreWord: string) => {
+    triggerTap(video.id)
+    setActiveCardId(video.id)
+    // Stop any guide audio
+    if (guideAudioRef.current) {
+      guideAudioRef.current.pause()
+      guideAudioRef.current.src = ''
+      guideAudioRef.current = null
+      setGuideLabel(null)
+      setGuideIsPlaying(false)
+    }
+    // Stop soundscape
+    if (isPlaying) setIsPlaying(false)
+    // Stop previous background music
+    setBackgroundMusic(null)
+    setMusicPlaying(false)
+
     const gBgs = genreBackgrounds[genreId] || []
     const bg = gBgs.length > 0
       ? gBgs[index % gBgs.length]
@@ -323,10 +378,29 @@ export function ImmersiveHome() {
     })
   }
 
+  // Close fullscreen player but keep music going in background
+  const handleClosePlayer = () => {
+    if (playingSound) {
+      setBackgroundMusic({
+        youtubeId: playingSound.youtubeId,
+        label: playingSound.word,
+      })
+      setMusicPlaying(true)
+    }
+    setPlayingSound(null)
+  }
+
+  // Stop background music entirely
+  const stopBackgroundMusic = () => {
+    setBackgroundMusic(null)
+    setMusicPlaying(false)
+    setActiveCardId(null)
+  }
+
   return (
     <div
       ref={scrollRef}
-      className="min-h-screen bg-[#0a0a0f] text-white pb-28"
+      className={`min-h-screen bg-black text-white pb-28 ${showMorningFlow ? 'overflow-hidden max-h-screen' : ''}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -342,7 +416,7 @@ export function ImmersiveHome() {
           youtubeId={playingSound.youtubeId}
           backgroundImage={playingSound.backgroundImage}
           showRain={false}
-          onClose={() => setPlayingSound(null)}
+          onClose={handleClosePlayer}
         />
       )}
 
@@ -356,17 +430,19 @@ export function ImmersiveHome() {
 
       {/* Morning Flow Overlay (drop-down) */}
       {showMorningFlow && (
-        <div className="fixed inset-0 z-50 bg-[#0a0a0f] overflow-y-auto animate-fade-in-down">
-          <div className="sticky top-0 z-10 flex items-center justify-between px-6 pt-12 pb-4 bg-[#0a0a0f]/95 backdrop-blur-md">
-            <h1 className="text-xl font-light text-white">Your Daily Guide</h1>
+        <div className="fixed inset-0 z-50 bg-black flex flex-col animate-fade-in-down">
+          <div className="flex-1 overflow-y-auto pb-20">
+            <DailyGuideHome embedded />
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 z-[60] flex justify-center pb-6 pt-3 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
             <button
               onClick={() => setShowMorningFlow(false)}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/15 transition-colors"
+              className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors"
             >
-              <X className="w-5 h-5 text-white/70" />
+              <Home className="w-4 h-4 text-white/80" />
+              <span className="text-sm text-white/80">Home</span>
             </button>
           </div>
-          <DailyGuideHome embedded />
         </div>
       )}
 
@@ -381,6 +457,17 @@ export function ImmersiveHome() {
         </div>
       )}
 
+      {/* --- Hidden YouTube player for background music (persists after closing fullscreen player) --- */}
+      {backgroundMusic && musicPlaying && (
+        <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
+          <iframe
+            src={`https://www.youtube.com/embed/${backgroundMusic.youtubeId}?autoplay=1&loop=1&playlist=${backgroundMusic.youtubeId}`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            className="w-[1px] h-[1px]"
+          />
+        </div>
+      )}
+
       {/* --- Pull-down indicator --- */}
       <div
         className="flex flex-col items-center justify-end overflow-hidden transition-all duration-200"
@@ -389,10 +476,10 @@ export function ImmersiveHome() {
         <div className="flex flex-col items-center gap-1 pb-2">
           <ChevronDown
             className={`w-5 h-5 transition-transform duration-200 ${
-              pullDistance >= PULL_THRESHOLD ? 'text-white rotate-180' : 'text-white/40'
+              pullDistance >= PULL_THRESHOLD ? 'text-white rotate-180' : 'text-white/50'
             }`}
           />
-          <span className="text-xs text-white/50">
+          <span className="text-xs text-white/60">
             {pullDistance >= PULL_THRESHOLD ? 'Release for Daily Guide' : 'Pull down for Daily Guide'}
           </span>
         </div>
@@ -407,13 +494,19 @@ export function ImmersiveHome() {
         <div className="flex items-center gap-2">
           <Link
             href="/journal"
-            className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full border border-white/15 hover:border-white/30 transition-colors"
           >
             <PenLine className="w-5 h-5 text-white/60" />
           </Link>
           <Link
+            href="/saved"
+            className="p-2 rounded-full border border-white/15 hover:border-white/30 transition-colors"
+          >
+            <Save className="w-5 h-5 text-white/60" />
+          </Link>
+          <Link
             href="/settings"
-            className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full border border-white/15 hover:border-white/30 transition-colors"
           >
             <Settings className="w-5 h-5 text-white/60" />
           </Link>
@@ -423,24 +516,23 @@ export function ImmersiveHome() {
       {/* --- Morning Flow Card --- */}
       <div className="px-6 mt-4 mb-8 animate-fade-in">
         <button
-          onClick={() => setShowMorningFlow(true)}
+          onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
           className="w-full text-left group"
         >
-          <div className="relative p-6 rounded-3xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/10 overflow-hidden transition-all hover:border-white/20 hover:shadow-[0_0_30px_rgba(255,255,255,0.06)] press-scale">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/[0.03] blur-2xl -translate-y-8 translate-x-8" />
+          <div className="relative p-6 card-gradient-border-lg press-scale">
             <div className="relative">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-xl bg-white/10">
+                <div className="p-2 rounded-xl border border-white/15">
                   <Sun className="w-5 h-5 text-white/80" />
                 </div>
                 <div>
                   <h2 className="text-lg font-medium text-white">Your Daily Guide</h2>
-                  <p className="text-xs text-white/50">Morning flow, checkpoints & more</p>
+                  <p className="text-xs text-white/60">Morning flow, checkpoints & more</p>
                 </div>
               </div>
               <div className="flex items-center justify-between mt-4">
-                <p className="text-sm text-white/40">Tap to open your full guide</p>
-                <ChevronRight className="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors" />
+                <p className="text-sm text-white/50">Tap to open your full guide</p>
+                <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-white/70 transition-colors" />
               </div>
             </div>
           </div>
@@ -469,17 +561,17 @@ export function ImmersiveHome() {
                 disabled={isLoading}
                 className="flex flex-col items-center gap-2 press-scale"
               >
-                <div className={`w-14 h-14 rounded-full border-2 border-white/15 bg-white/[0.03] flex items-center justify-center transition-all duration-200 ${isLoading ? 'border-white/40 bg-white/10' : ''}`}>
+                <div className={`w-14 h-14 rounded-full bg-transparent flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isLoading ? 'bg-white/8' : ''}`}>
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 text-white/60 animate-spin" />
                   ) : (
                     <Icon
-                      className="w-5 h-5 text-white/40 transition-colors duration-200"
+                      className="w-5 h-5 text-white/80 transition-colors duration-200"
                       strokeWidth={1.5}
                     />
                   )}
                 </div>
-                <span className="text-[11px] text-white/40">{guide.name}</span>
+                <span className="text-[11px] text-white/80">{guide.name}</span>
               </button>
             )
           })}
@@ -491,9 +583,9 @@ export function ImmersiveHome() {
         <div className="flex items-center justify-between px-6 mb-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Motivation</h2>
-            <p className="text-xs text-white/40 mt-0.5">{topicName} &middot; {TOPIC_TAGLINES[topicName]}</p>
+            <p className="text-xs text-white/50 mt-0.5">{topicName} &middot; {TOPIC_TAGLINES[topicName]}</p>
           </div>
-          <Link href="/discover" className="text-xs text-white/50 hover:text-white/70 transition-colors">
+          <Link href="/discover" className="text-xs text-white/60 hover:text-white/80 transition-colors">
             Show all
           </Link>
         </div>
@@ -501,7 +593,7 @@ export function ImmersiveHome() {
           {loadingMotivation ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="shrink-0 w-40">
-                <div className="w-40 h-40 rounded-2xl bg-white/5 border border-white/5 skeleton-shimmer" />
+                <div className="w-40 h-40 rounded-2xl card-gradient-border skeleton-shimmer" />
                 <div className="h-3 bg-white/5 rounded mt-2 w-3/4" />
                 <div className="h-2 bg-white/5 rounded mt-1.5 w-1/2" />
               </div>
@@ -513,17 +605,19 @@ export function ImmersiveHome() {
                 onClick={() => handlePlayMotivation(video, index)}
                 className="shrink-0 w-40 text-left group press-scale"
               >
-                <div className="w-40 h-40 rounded-2xl bg-white/[0.04] border border-white/10 overflow-hidden relative flex items-center justify-center group-hover:border-white/20 transition-all">
+                <div className={`w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center ${activeCardId === video.id ? 'card-now-playing' : ''}`}>
                   <img
                     src={backgrounds[index % backgrounds.length]}
                     alt=""
-                    className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-60 transition-opacity"
+                    className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
-                  <Play className="w-8 h-8 text-white/60 relative z-10 group-hover:text-white/80 transition-colors" fill="rgba(255,255,255,0.3)" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
+                  <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
+                    <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                  </div>
                 </div>
-                <p className="text-sm text-white/80 mt-2 line-clamp-2 leading-tight">{video.title}</p>
-                <p className="text-xs text-white/40 mt-0.5">{video.channel}</p>
+                <p className="text-sm text-white/90 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+                <p className="text-xs text-white/50 mt-0.5">{video.channel}</p>
               </button>
             ))
           )}
@@ -541,9 +635,9 @@ export function ImmersiveHome() {
             <div className="flex items-center justify-between px-6 mb-4">
               <div>
                 <h2 className="text-lg font-semibold text-white">{g.word}</h2>
-                <p className="text-xs text-white/40 mt-0.5">{g.tagline}</p>
+                <p className="text-xs text-white/50 mt-0.5">{g.tagline}</p>
               </div>
-              <Link href="/discover" className="text-xs text-white/50 hover:text-white/70 transition-colors">
+              <Link href="/discover" className="text-xs text-white/60 hover:text-white/80 transition-colors">
                 Show all
               </Link>
             </div>
@@ -551,13 +645,13 @@ export function ImmersiveHome() {
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="shrink-0 w-40">
-                    <div className="w-40 h-40 rounded-2xl bg-white/5 border border-white/5 skeleton-shimmer" />
+                    <div className="w-40 h-40 rounded-2xl card-gradient-border skeleton-shimmer" />
                     <div className="h-3 bg-white/5 rounded mt-2 w-3/4" />
                     <div className="h-2 bg-white/5 rounded mt-1.5 w-1/2" />
                   </div>
                 ))
               ) : videos.length === 0 ? (
-                <div className="text-sm text-white/40 py-8 px-2">No tracks available</div>
+                <div className="text-sm text-white/50 py-8 px-2">No tracks available</div>
               ) : (
                 videos.slice(0, 8).map((video, index) => (
                   <button
@@ -565,21 +659,23 @@ export function ImmersiveHome() {
                     onClick={() => handlePlayMusic(video, index, g.id, g.word)}
                     className="shrink-0 w-40 text-left group press-scale"
                   >
-                    <div className="w-40 h-40 rounded-2xl bg-white/[0.04] border border-white/10 overflow-hidden relative flex items-center justify-center group-hover:border-white/20 transition-all">
+                    <div className={`w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center ${activeCardId === video.id ? 'card-now-playing' : ''}`}>
                       {(gBgs.length > 0 || backgrounds.length > 0) && (
                         <img
                           src={gBgs.length > 0
                             ? gBgs[index % gBgs.length]
                             : backgrounds[(index + 15 + gi * 5) % backgrounds.length]}
                           alt=""
-                          className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-60 transition-opacity"
+                          className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
-                      <Play className="w-8 h-8 text-white/60 relative z-10 group-hover:text-white/80 transition-colors" fill="rgba(255,255,255,0.3)" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
+                      <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
+                        <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                      </div>
                     </div>
-                    <p className="text-sm text-white/80 mt-2 line-clamp-2 leading-tight">{video.title}</p>
-                    <p className="text-xs text-white/40 mt-0.5">{video.channel}</p>
+                    <p className="text-sm text-white/90 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+                    <p className="text-xs text-white/50 mt-0.5">{video.channel}</p>
                   </button>
                 ))
               )}
@@ -588,21 +684,44 @@ export function ImmersiveHome() {
         )
       })}
 
+      {/* --- Daily Spark notification --- */}
+      {!showMorningFlow && <DailySpark />}
+
+      {/* --- Floating AI Coach Button --- */}
+      <Link
+        href="/coach"
+        className="fixed right-5 bottom-28 z-30 p-3.5 rounded-full bg-gradient-to-br from-amber-500/25 to-orange-500/25 border border-amber-500/25 hover:border-amber-500/40 shadow-lg shadow-amber-500/10 transition-all press-scale backdrop-blur-sm"
+      >
+        <Bot className="w-6 h-6 text-amber-400" />
+      </Link>
+
       {/* --- Bottom Player Bar --- */}
       <BottomPlayerBar
         mode={activeMode}
-        isPlaying={guideLabel ? guideIsPlaying : isPlaying}
+        isPlaying={
+          backgroundMusic ? musicPlaying :
+          guideLabel ? guideIsPlaying :
+          isPlaying
+        }
         onTogglePlay={() => {
-          if (guideLabel) {
+          if (backgroundMusic) {
+            if (musicPlaying) {
+              setMusicPlaying(false)
+            } else {
+              setMusicPlaying(true)
+            }
+          } else if (guideLabel) {
             toggleGuidePlay()
           } else {
             setIsPlaying(!isPlaying)
           }
         }}
         onOpenPlayer={() => {
+          // If background music is playing, don't reopen — it would restart audio
+          if (backgroundMusic) return
           if (!guideLabel) setShowEndelPlayer(true)
         }}
-        label={guideLabel || undefined}
+        label={backgroundMusic?.label || guideLabel || undefined}
       />
     </div>
   )

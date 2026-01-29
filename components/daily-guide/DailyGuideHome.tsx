@@ -289,7 +289,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         // Sync with global audio context
         if (audioContext) {
           audioContext.setMusicGenre(genre)
-          if (prefsData.background_music_enabled && !audioContext.musicEnabled) {
+          if (!embedded && prefsData.background_music_enabled && !audioContext.musicEnabled) {
             audioContext.setMusicEnabled(true)
           }
         }
@@ -788,7 +788,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   }
 
   return (
-    <div className={embedded ? 'bg-[#0a0a0f] pb-8' : 'min-h-screen bg-[#0a0a0f] pb-32'}>
+    <div className={embedded ? 'bg-black pb-8' : 'min-h-screen bg-black pb-32'}>
       {/* Trial Banner (hidden in embedded/drawer mode) */}
       {!embedded && <TrialBanner variant="compact" />}
       {!embedded && <TrialEndingBanner />}
@@ -891,7 +891,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         )}
 
         {/* Music toggle */}
-        {preferences?.background_music_enabled !== false && (
+        {!embedded && preferences?.background_music_enabled !== false && (
           <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 mb-4">
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -1040,7 +1040,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               </div>
 
               {morningAvailability.isAvailable ? (
-                <div className="rounded-2xl glass overflow-hidden animate-card-appear">
+                <div className="overflow-hidden animate-card-appear">
                   <button
                     onClick={() => setShowMorningFlow(!showMorningFlow)}
                     className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors press-scale"
@@ -1152,7 +1152,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 </div>
               ) : (
                 // Locked state - same pattern as Evening lock
-                <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4 opacity-60">
+                <div className="p-4 opacity-60">
                   <div className="flex items-center gap-4">
                     <div className="p-2.5 rounded-xl bg-white/5">
                       <Lock className="w-5 h-5 text-white/40" />
@@ -1170,7 +1170,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           {/* Student-specific section (for study/exam days) */}
           {(preferences?.user_type === 'student' || preferences?.user_type === 'hybrid') &&
            ['study', 'exam', 'class'].includes(guide.day_type) && (
-            <div className="rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/10 overflow-hidden">
+            <div className="overflow-hidden">
               <button
                 onClick={() => setShowStudentSection(!showStudentSection)}
                 className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
@@ -1301,7 +1301,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 />
               ) : (
                 // Locked state
-                <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4 opacity-60">
+                <div className="p-4 opacity-60">
                   <div className="flex items-center gap-4">
                     <div className="p-2.5 rounded-xl bg-white/5">
                       <Lock className="w-5 h-5 text-white/40" />
@@ -1316,7 +1316,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
               {/* Tomorrow Preview */}
               {guide.tomorrow_preview && eveningAvailability.isAvailable && (
-                <div className="rounded-2xl bg-white/5 border border-white/10 p-4 mt-3">
+                <div className="p-4 mt-3">
                   <p className="text-sm text-white/80 mb-2">Tomorrow</p>
                   <p className="text-white text-sm leading-relaxed">
                     {guide.tomorrow_preview}
@@ -1356,7 +1356,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
                   {/* Bedtime Reminder Card */}
                   {preferences?.wake_time && (
-                    <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4">
+                    <div className="p-4">
                       <div className="flex items-center gap-2 mb-1">
                         <Moon className="w-4 h-4 text-indigo-400" />
                         <span className="text-sm font-medium text-white">Bedtime Reminder</span>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { Play, Pause, Wind, Sparkles, Heart, Anchor, Loader2, X, Moon, ChevronRight, Bookmark, Trash2 } from 'lucide-react'
 import { useThemeOptional } from '@/contexts/ThemeContext'
@@ -302,7 +303,9 @@ function getTodaysMusicGenre() {
 
 export default function DiscoverPage() {
   const themeContext = useThemeOptional()
-  const [activeTab, setActiveTab] = useState<TabType>('motivation')
+  const searchParams = useSearchParams()
+  const initialTab = (searchParams.get('tab') as TabType) || 'motivation'
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab)
   const [playingSound, setPlayingSound] = useState<{
     id: string
     word: string
@@ -492,7 +495,7 @@ export default function DiscoverPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#08080c] text-white pb-24">
+    <div className="min-h-screen bg-black text-white pb-24">
       {/* Sound Player */}
       {playingSound && (
         <WordAnimationPlayer
@@ -839,7 +842,7 @@ function VoicePlayer({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-hidden bg-[#08080c]"
+      className="fixed inset-0 z-50 overflow-hidden bg-black"
     >
       {/* Background image based on theme */}
       {backgroundImage && (

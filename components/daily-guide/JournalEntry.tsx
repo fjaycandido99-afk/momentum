@@ -84,9 +84,9 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
   const hasContent = win.trim() || gratitude.trim() || intention.trim()
 
   const content = (
-    <div className={`${showAsModal ? '' : 'rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden'}`}>
+    <div className="w-full">
       {/* Header */}
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+      <div className="pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-xl bg-white/10">
             <PenLine className="w-4 h-4 text-amber-400" />
@@ -96,6 +96,25 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
             <p className="text-xs text-white/50">Capture your thoughts</p>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          {!isLoading && !isSaved && hasContent && (
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white"
+            >
+              {isSaving ? (
+                <><Loader2 className="w-3 h-3 animate-spin" /> Saving</>
+              ) : (
+                'Save'
+              )}
+            </button>
+          )}
+          {isSaved && !showAsModal && (
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 text-emerald-400">
+              <Check className="w-3 h-3" /> Saved
+            </span>
+          )}
         {showAsModal && onClose && (
           <button
             onClick={onClose}
@@ -104,10 +123,11 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
             <X className="w-4 h-4 text-white/70" />
           </button>
         )}
+        </div>
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div>
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
@@ -180,29 +200,6 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
                 rows={2}
                 maxLength={300}
               />
-            </div>
-
-            {/* Save button */}
-            <div className="flex justify-end">
-              <button
-                onClick={handleSave}
-                disabled={!hasContent || isSaving || isSaved}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
-                  isSaved
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : hasContent
-                    ? 'bg-white/10 hover:bg-white/20 text-white'
-                    : 'bg-white/5 text-white/30 cursor-not-allowed'
-                }`}
-              >
-                {isSaving ? (
-                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...</>
-                ) : isSaved ? (
-                  <><Check className="w-3.5 h-3.5" /> Saved</>
-                ) : (
-                  'Save'
-                )}
-              </button>
             </div>
 
             {/* AI Insight — gated behind ai_reflections */}

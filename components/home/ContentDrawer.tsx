@@ -81,7 +81,7 @@ export function ContentDrawer({ isOpen, onToggle }: ContentDrawerProps) {
 
       {/* Drawer */}
       <div
-        className="fixed left-0 right-0 bottom-0 z-50 bg-[#0a0a0f] rounded-t-3xl border-t border-white/10"
+        className="fixed left-0 right-0 bottom-0 z-50 bg-black rounded-t-3xl border-t border-white/10"
         style={{
           transform: isOpen ? 'translateY(0)' : 'translateY(calc(100% - 48px))',
           transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',

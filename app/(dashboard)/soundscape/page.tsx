@@ -144,7 +144,7 @@ export default function SoundscapePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08080c] text-white">
+    <div className="min-h-screen bg-black text-white">
       {/* Endel Player overlay */}
       {activeMode && (
         <EndelPlayer mode={activeMode} onClose={closePlayer} />

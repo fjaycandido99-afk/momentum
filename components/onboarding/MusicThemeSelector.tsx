@@ -173,7 +173,7 @@ export function MusicThemeSelector({
   const genres = Object.keys(MUSIC_SAMPLES)
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex flex-col" ref={containerRef}>
+    <div className="min-h-screen bg-black flex flex-col" ref={containerRef}>
       {/* Hidden YouTube Player */}
       <div id="youtube-player" className="hidden" />
 

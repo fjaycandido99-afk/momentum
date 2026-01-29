@@ -30,22 +30,22 @@ export function ModeSelector({ activeMode, onSelectMode }: ModeSelectorProps) {
             className="flex flex-col items-center gap-2 press-scale"
           >
             <div
-              className={`w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${
                 isActive
-                  ? 'border-white/60 bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.15)]'
-                  : 'border-white/15 bg-white/[0.03]'
+                  ? 'bg-white/8'
+                  : 'bg-transparent'
               }`}
             >
               <Icon
                 className={`w-6 h-6 transition-colors duration-200 ${
-                  isActive ? 'text-white' : 'text-white/40'
+                  isActive ? 'text-white' : 'text-white/80'
                 }`}
                 strokeWidth={1.5}
               />
             </div>
             <span
               className={`text-xs transition-colors duration-200 ${
-                isActive ? 'text-white font-medium' : 'text-white/40'
+                isActive ? 'text-white font-medium' : 'text-white/80'
               }`}
             >
               {mode.label}

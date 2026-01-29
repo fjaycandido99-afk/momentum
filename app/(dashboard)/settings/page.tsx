@@ -260,7 +260,7 @@ function SettingsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08080c] text-white pb-24">
+    <div className="min-h-screen bg-black text-white pb-24">
       {/* Header */}
       <div className="px-6 pt-12 pb-6">
         <div className="flex items-center justify-between mb-2">

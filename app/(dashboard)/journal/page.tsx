@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target, Sparkles, BookOpen, Calendar } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target, Sparkles, BookOpen, Calendar, X } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
 import { GoalTracker } from '@/components/daily-guide/GoalTracker'
@@ -14,6 +15,8 @@ interface JournalDay {
 }
 
 export default function JournalPage() {
+  const searchParams = useSearchParams()
+  const [sparkPrompt, setSparkPrompt] = useState<string | null>(null)
   const [win, setWin] = useState('')
   const [gratitude, setGratitude] = useState('')
   const [intention, setIntention] = useState('')
@@ -26,6 +29,12 @@ export default function JournalPage() {
   const [showWeeklyReview, setShowWeeklyReview] = useState(false)
   const [streak, setStreak] = useState(0)
   const [reflection, setReflection] = useState<string | null>(null)
+
+  // Read spark prompt from URL
+  useEffect(() => {
+    const spark = searchParams.get('spark')
+    if (spark) setSparkPrompt(spark)
+  }, [searchParams])
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
 
@@ -142,7 +151,7 @@ export default function JournalPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#08080c] text-white pb-24">
+    <div className="min-h-screen bg-black text-white pb-24">
       {/* Header */}
       <div className="px-6 pt-12 pb-4">
         <div className="flex items-center gap-3 mb-1">
@@ -176,6 +185,29 @@ export default function JournalPage() {
           </button>
         </div>
       </div>
+
+      {/* Spark Prompt */}
+      {sparkPrompt && (
+        <div className="px-6 mb-4 animate-fade-in">
+          <div className="relative p-4 rounded-2xl bg-gradient-to-br from-violet-500/15 to-amber-500/10 border border-violet-500/20">
+            <button
+              onClick={() => setSparkPrompt(null)}
+              className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors"
+            >
+              <X className="w-3.5 h-3.5 text-white/40" />
+            </button>
+            <div className="flex items-start gap-3 pr-6">
+              <div className="p-1.5 rounded-lg bg-violet-500/20 mt-0.5 shrink-0">
+                <Sparkles className="w-3.5 h-3.5 text-violet-300" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-violet-300/70 uppercase tracking-wider mb-1">Reflect on this</p>
+                <p className="text-sm text-white/90 leading-relaxed italic">&ldquo;{sparkPrompt}&rdquo;</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Journal Form */}
       <div className="px-6">
