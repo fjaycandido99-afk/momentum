@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target, Sparkles, BookOpen, Calendar, X } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
@@ -15,6 +15,14 @@ interface JournalDay {
 }
 
 export default function JournalPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <JournalContent />
+    </Suspense>
+  )
+}
+
+function JournalContent() {
   const searchParams = useSearchParams()
   const [sparkPrompt, setSparkPrompt] = useState<string | null>(null)
   const [win, setWin] = useState('')
