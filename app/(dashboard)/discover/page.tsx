@@ -16,9 +16,6 @@ type TabType = 'motivation' | 'guided' | 'music' | 'saved'
 
 // Pool of background images for MOTIVATION - each video gets a different one (randomized daily)
 const BACKGROUND_IMAGES = [
-  '/backgrounds/bg1.jpg',
-  '/backgrounds/bg2.jpg',
-  '/backgrounds/bg3.jpg',
   '/backgrounds/bg4.jpg',
   '/backgrounds/bg5.jpg',
   '/backgrounds/bg6.jpg',
@@ -32,7 +29,6 @@ const BACKGROUND_IMAGES = [
   '/backgrounds/bg14.jpg',
   '/backgrounds/bg15.jpg',
   '/backgrounds/bg16.jpg',
-  '/backgrounds/bg17.jpg',
   '/backgrounds/bg18.jpg',
   '/backgrounds/bg19.jpg',
   '/backgrounds/bg20.jpg',

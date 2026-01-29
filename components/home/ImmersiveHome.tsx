@@ -86,7 +86,7 @@ const VOICE_GUIDES = [
 ]
 
 // Background images for motivation video player
-const BACKGROUND_IMAGES = Array.from({ length: 31 }, (_, i) => `/backgrounds/bg${i + 1}.jpg`)
+const BACKGROUND_IMAGES = [4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29,30,31].map(i => `/backgrounds/bg${i}.jpg`)
 
 function seededRandom(seed: number) {
   const x = Math.sin(seed) * 10000
