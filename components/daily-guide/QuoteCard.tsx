@@ -167,7 +167,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
       className={`rounded-2xl overflow-hidden transition-all duration-500 ${
         isCompleted
           ? 'bg-white/[0.03] border border-white/10'
-          : 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10'
+          : 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/15 shadow-[0_0_15px_rgba(255,255,255,0.06)] card-hover'
       }`}
     >
       {/* Header */}

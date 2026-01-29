@@ -1040,7 +1040,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               </div>
 
               {morningAvailability.isAvailable ? (
-                <div className="overflow-hidden animate-card-appear">
+                <div className="overflow-hidden rounded-2xl animate-scale-in">
                   <button
                     onClick={() => setShowMorningFlow(!showMorningFlow)}
                     className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors press-scale"
@@ -1072,12 +1072,12 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
                   {showMorningFlow && (
                     <div className="p-4 pt-0 space-y-3">
-                      {morningModules.map(module => {
+                      {morningModules.map((module, index) => {
                         // Use QuoteCard for movement/workout (Quote of the Day)
                         if (module === 'movement' || module === 'workout') {
                           return (
+                            <div key={module} className={`animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}`}>
                             <QuoteCard
-                              key={module}
                               isCompleted={completedModules.includes(module)}
                               mood={moodBefore}
                               energy={selectedEnergy}
@@ -1093,14 +1093,15 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                                 }).catch(err => console.error('[QuoteCard checkin] error:', err))
                               }}
                             />
+                            </div>
                           )
                         }
 
                         // Use MicroLessonVideo for micro_lesson module to show Discover motivation videos
                         if (module === 'micro_lesson') {
                           return (
+                            <div key={module} className={`animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}`}>
                             <MicroLessonVideo
-                              key={module}
                               isCompleted={completedModules.includes(module)}
                               onComplete={() => {
                                 setCompletedModules(prev => [...prev, module])
@@ -1114,12 +1115,13 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                               }}
                               onSkip={() => handleSkipModule(module)}
                             />
+                            </div>
                           )
                         }
 
                         return (
+                          <div key={module} className={`animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}`}>
                           <ModuleCard
-                            key={module}
                             module={module as ModuleType}
                             script={moduleAudioData[module]?.script || getModuleScript(module)}
                             duration={durations[module as ModuleType] || 60}
@@ -1145,6 +1147,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                               }).catch(err => console.error(`[ModuleCard ${module} checkin] error:`, err))
                             }}
                           />
+                          </div>
                         )
                       })}
                     </div>
@@ -1263,7 +1266,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
           {/* Day Close */}
           {guide.modules?.includes('day_close') && (
-            <div className="space-y-3">
+            <div className="space-y-3 animate-scale-in">
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-label">
                   Evening
@@ -1277,6 +1280,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               </div>
 
               {eveningAvailability.isAvailable ? (
+                <div className="animate-card-appear rounded-2xl">
                 <ModuleCard
                   module="day_close"
                   script={moduleAudioData['day_close']?.script || getModuleScript('day_close')}
@@ -1299,6 +1303,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                     }).catch(err => console.error('[day_close checkin] error:', err))
                   }}
                 />
+                </div>
               ) : (
                 // Locked state
                 <div className="p-4 opacity-60">

@@ -332,7 +332,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
   // Card view with Discover-style dark background
   return (
     <div className={`rounded-2xl overflow-hidden transition-all ${
-      isCompleted ? 'bg-white/[0.03] border border-white/10' : ''
+      isCompleted ? 'bg-white/[0.03] border border-white/10' : 'border border-white/15 shadow-[0_0_15px_rgba(255,255,255,0.06)] card-hover'
     }`}>
       {/* Background with dark atmospheric image */}
       <button

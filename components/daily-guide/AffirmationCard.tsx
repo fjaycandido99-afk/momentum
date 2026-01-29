@@ -53,7 +53,7 @@ export function AffirmationCard({ isPremium }: AffirmationCardProps) {
   if (!affirmation) return null
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 p-4">
+    <div className="rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 p-4 animate-scale-in">
       <div className="flex items-start gap-3">
         <div className="p-2 rounded-xl bg-indigo-500/20 shrink-0">
           <Sparkles className="w-4 h-4 text-indigo-400" />

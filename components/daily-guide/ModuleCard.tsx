@@ -440,8 +440,8 @@ export function ModuleCard({
         ${isCompleted
           ? 'bg-white/[0.03] border-white/10 transition-opacity duration-500'
           : isActive
-            ? 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border-white/20 ring-1 ring-white/10 animate-card-appear'
-            : 'bg-gradient-to-br from-white/[0.06] to-white/[0.02] border-white/10 card-hover'
+            ? 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border-white/20 ring-1 ring-white/10 shadow-[0_0_25px_rgba(255,255,255,0.1)] animate-card-appear'
+            : 'bg-gradient-to-br from-white/[0.06] to-white/[0.02] border-white/15 shadow-[0_0_15px_rgba(255,255,255,0.06)] card-hover'
         }
       `}
     >
