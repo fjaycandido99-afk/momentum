@@ -890,53 +890,6 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           </div>
         )}
 
-        {/* Music toggle */}
-        {!embedded && preferences?.background_music_enabled !== false && (
-          <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Music className={`w-4 h-4 ${musicEnabled ? 'text-emerald-400' : 'text-white/70'}`} />
-                {musicEnabled && isMusicPlaying && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                )}
-              </div>
-              <div>
-                <span className="text-sm text-white">Background Music</span>
-                <p className="text-xs text-white/50">
-                  {musicEnabled && isMusicPlaying ? 'Now playing: ' : 'Today: '}
-                  {MUSIC_GENRES.find(g => g.id === (currentMusicGenre || getTodaysMusicGenre(preferences?.preferred_music_genre)))?.label || 'Lo-Fi'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {musicEnabled ? (
-                <>
-                  <button
-                    onClick={toggleMute}
-                    className={`p-2 rounded-lg transition-all ${isMuted ? 'bg-white/5 text-white/40' : 'bg-white/10 hover:bg-white/20 text-white'}`}
-                    title={isMuted ? 'Unmute' : 'Mute'}
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={skipTrack}
-                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white"
-                    title="Skip track"
-                  >
-                    <SkipForward className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setMusicEnabled(true)}
-                  className="p-2 rounded-lg transition-all bg-white/5 text-white/50"
-                >
-                  <Volume2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Gradient divider */}

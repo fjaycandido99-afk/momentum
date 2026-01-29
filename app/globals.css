@@ -456,7 +456,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 }
 
 .skeleton-shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+  background: linear-gradient(90deg, #111113 25%, #1a1a1e 50%, #111113 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.8s ease-in-out infinite;
 }
@@ -639,7 +639,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   position: relative;
   border-radius: 16px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
+  background: #111113;
   border: none;
 }
 
@@ -670,7 +670,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   position: relative;
   border-radius: 24px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
+  background: #111113;
   border: none;
 }
 
@@ -701,7 +701,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   position: relative;
   border-radius: 50%;
   overflow: hidden;
-  background: transparent;
+  background: #111113;
   border: none;
 }
 

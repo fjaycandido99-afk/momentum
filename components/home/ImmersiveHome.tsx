@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Play, X, Home, Save, ChevronLeft, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Focus, Zap, Coffee, Music, Droplets } from 'lucide-react'
-import { ENDEL_MODES } from '@/components/player/EndelPlayer'
+import { Settings, PenLine, Play, Home, Save, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot } from 'lucide-react'
+import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
+import { ConstellationBackground } from '@/components/player/ConstellationBackground'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
 import { JournalEntry } from '@/components/daily-guide/JournalEntry'
@@ -18,8 +19,8 @@ const WordAnimationPlayer = dynamic(
   { ssr: false }
 )
 
-const EndelPlayerComponent = dynamic(
-  () => import('@/components/player/EndelPlayer').then(mod => mod.EndelPlayer),
+const SoundscapePlayerComponent = dynamic(
+  () => import('@/components/player/SoundscapePlayer').then(mod => mod.SoundscapePlayer),
   { ssr: false }
 )
 
@@ -86,27 +87,6 @@ const VOICE_GUIDES = [
   { id: 'anxiety', name: 'Grounding', tagline: 'Find your center', icon: Anchor },
 ]
 
-// Soundscapes: modes (open Endel orb) + ambient sounds (play YouTube)
-type SoundscapeItem =
-  | { type: 'mode'; id: 'focus' | 'relax' | 'sleep' | 'energy'; label: string; icon: typeof Focus }
-  | { type: 'sound'; id: string; label: string; icon: typeof CloudRain; youtubeId: string }
-
-const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
-  { type: 'mode', id: 'focus', label: 'Focus', icon: Focus },
-  { type: 'mode', id: 'relax', label: 'Relax', icon: Sparkles },
-  { type: 'mode', id: 'sleep', label: 'Sleep', icon: Moon },
-  { type: 'mode', id: 'energy', label: 'Energy', icon: Zap },
-  { type: 'sound', id: 'rain', label: 'Rain', icon: CloudRain, youtubeId: 'mPZkdNFkNps' },
-  { type: 'sound', id: 'ocean', label: 'Ocean', icon: Waves, youtubeId: 'WHPEKLQID4U' },
-  { type: 'sound', id: 'forest', label: 'Forest', icon: Trees, youtubeId: 'xNN7iTA57jM' },
-  { type: 'sound', id: 'fire', label: 'Fire', icon: Flame, youtubeId: 'UgHKb_7884o' },
-  { type: 'sound', id: 'thunder', label: 'Thunder', icon: CloudLightning, youtubeId: 'nDq6TstdEi8' },
-  { type: 'sound', id: 'night', label: 'Night', icon: Star, youtubeId: 'asSd6BOCmEY' },
-  { type: 'sound', id: 'wind', label: 'Wind', icon: Wind, youtubeId: '2dDuMb8XWTA' },
-  { type: 'sound', id: 'stream', label: 'Stream', icon: Droplets, youtubeId: 'IvjMgVS6kng' },
-  { type: 'sound', id: 'cafe', label: 'Cafe', icon: Coffee, youtubeId: 'gaGrHUekGrc' },
-  { type: 'sound', id: 'piano', label: 'Piano', icon: Music, youtubeId: '77ZozI0rw7w' },
-]
 
 // Background images for motivation video player
 const BACKGROUND_IMAGES = [4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29,30,31].map(i => `/backgrounds/bg${i}.jpg`)
@@ -151,7 +131,12 @@ export function ImmersiveHome() {
   // Overlays
   const [showMorningFlow, setShowMorningFlow] = useState(false)
   const [showJournalSave, setShowJournalSave] = useState(false)
-  const [showEndelPlayer, setShowEndelPlayer] = useState(false)
+  const [activeSoundscape, setActiveSoundscape] = useState<{
+    soundId: string
+    label: string
+    subtitle: string
+    youtubeId: string
+  } | null>(null)
   const [playingSound, setPlayingSound] = useState<{
     word: string
     color: string
@@ -191,7 +176,7 @@ export function ImmersiveHome() {
     setBackgroundMusic(null)
     setMusicPlaying(false)
     setPlayingSound(null)
-    setShowEndelPlayer(false)
+    setActiveSoundscape(null)
     setActiveCardId(null)
     homeAudioActiveRef.current = false
   }, [isPlaying])
@@ -322,7 +307,6 @@ export function ImmersiveHome() {
   )
 
   const topicName = getTodaysTopicName()
-  const config = ENDEL_MODES[activeMode]
   const [backgrounds] = useState(getTodaysBackgrounds)
 
   // Fetch all data on mount
@@ -468,9 +452,15 @@ export function ImmersiveHome() {
   }
 
   return (
+    <div className="isolate min-h-screen bg-black">
+    {/* --- Constellation background (fixed behind everything) --- */}
+    <div className="fixed inset-0 -z-10 pointer-events-none">
+      <ConstellationBackground animate speed={0.15} nodeCount={35} connectionDist={100} />
+    </div>
+
     <div
       ref={scrollRef}
-      className={`min-h-screen bg-black text-white pb-28 ${showMorningFlow ? 'overflow-hidden max-h-screen' : ''}`}
+      className={`relative min-h-screen text-white pb-28 ${showMorningFlow ? 'overflow-hidden max-h-screen' : ''}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -490,11 +480,17 @@ export function ImmersiveHome() {
         />
       )}
 
-      {/* Endel Player (fullscreen orb) */}
-      {showEndelPlayer && (
-        <EndelPlayerComponent
-          mode={activeMode}
-          onClose={() => setShowEndelPlayer(false)}
+      {/* Soundscape Player (fullscreen orb) */}
+      {activeSoundscape && (
+        <SoundscapePlayerComponent
+          soundId={activeSoundscape.soundId}
+          label={activeSoundscape.label}
+          subtitle={activeSoundscape.subtitle}
+          youtubeId={activeSoundscape.youtubeId}
+          onClose={() => setActiveSoundscape(null)}
+          onSwitchSound={(id, label, subtitle, youtubeId) =>
+            setActiveSoundscape({ soundId: id, label, subtitle, youtubeId })
+          }
         />
       )}
 
@@ -513,17 +509,6 @@ export function ImmersiveHome() {
               <span className="text-sm text-white/80">Home</span>
             </button>
           </div>
-        </div>
-      )}
-
-      {/* --- Hidden YouTube player for soundscape audio --- */}
-      {isPlaying && config.sounds[0] && (
-        <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
-          <iframe
-            src={`https://www.youtube.com/embed/${config.sounds[0].youtubeId}?autoplay=1&loop=1&playlist=${config.sounds[0].youtubeId}`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            className="w-[1px] h-[1px]"
-          />
         </div>
       )}
 
@@ -556,7 +541,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Header --- */}
-      <div className="flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down">
+      <div className="flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down bg-black">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-white">Explore</h1>
           <StreakBadge streak={streak} />
@@ -564,19 +549,19 @@ export function ImmersiveHome() {
         <div className="flex items-center gap-2">
           <Link
             href="/journal"
-            className="p-2 rounded-full border border-white/15 hover:border-white/30 transition-colors"
+            className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors"
           >
             <PenLine className="w-5 h-5 text-white/60" />
           </Link>
           <Link
             href="/saved"
-            className="p-2 rounded-full border border-white/15 hover:border-white/30 transition-colors"
+            className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors"
           >
             <Save className="w-5 h-5 text-white/60" />
           </Link>
           <Link
             href="/settings"
-            className="p-2 rounded-full border border-white/15 hover:border-white/30 transition-colors"
+            className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors"
           >
             <Settings className="w-5 h-5 text-white/60" />
           </Link>
@@ -584,7 +569,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Morning Flow Card --- */}
-      <div className="px-6 mt-4 mb-8 animate-fade-in">
+      <div className="px-6 mt-4 mb-8 animate-fade-in bg-black">
         <button
           onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
           className="w-full text-left group"
@@ -592,7 +577,7 @@ export function ImmersiveHome() {
           <div className="relative p-6 card-gradient-border-lg press-scale">
             <div className="relative">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-xl border border-white/15">
+                <div className="p-2 rounded-xl bg-[#111113] border border-white/15">
                   <Sun className="w-5 h-5 text-white/80" />
                 </div>
                 <div>
@@ -610,7 +595,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Soundscapes --- */}
-      <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.05s' }}>
+      <div className="mb-8 animate-fade-in bg-black" style={{ animationDelay: '0.05s' }}>
         <h2 className="text-lg font-semibold text-white px-6 mb-4">Soundscapes</h2>
         <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
           {SOUNDSCAPE_ITEMS.map((item) => {
@@ -632,20 +617,16 @@ export function ImmersiveHome() {
                   setMusicPlaying(false)
                   setHomeAudioActive(true)
 
-                  if (item.type === 'mode') {
-                    setActiveMode(item.id)
-                    setShowEndelPlayer(true)
-                  } else {
-                    setPlayingSound({
-                      word: item.label,
-                      color: 'from-white/[0.06] to-white/[0.02]',
-                      youtubeId: item.youtubeId,
-                    })
-                  }
+                  setActiveSoundscape({
+                    soundId: item.id,
+                    label: item.label,
+                    subtitle: item.subtitle,
+                    youtubeId: item.youtubeId,
+                  })
                 }}
                 className="flex flex-col items-center gap-2 shrink-0 press-scale"
               >
-                <div className="w-14 h-14 rounded-full bg-transparent flex items-center justify-center transition-all duration-200 card-gradient-border-round">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round">
                   <Icon className="w-5 h-5 text-white/80" strokeWidth={1.5} />
                 </div>
                 <span className="text-[11px] text-white/80">{item.label}</span>
@@ -656,7 +637,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Guided (circular icons like Soundscapes) --- */}
-      <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.08s' }}>
+      <div className="mb-8 animate-fade-in bg-black" style={{ animationDelay: '0.08s' }}>
         <h2 className="text-lg font-semibold text-white px-6 mb-4">Guided</h2>
         <div className="flex justify-evenly px-2 pb-2">
           {VOICE_GUIDES.map((guide) => {
@@ -669,7 +650,7 @@ export function ImmersiveHome() {
                 disabled={isLoading}
                 className="flex flex-col items-center gap-2 press-scale"
               >
-                <div className={`w-14 h-14 rounded-full bg-transparent flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isLoading ? 'bg-white/8' : ''}`}>
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isLoading ? 'bg-white/8' : ''}`}>
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 text-white/60 animate-spin" />
                   ) : (
@@ -687,7 +668,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Motivation --- */}
-      <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+      <div className="mb-8 animate-fade-in bg-black" style={{ animationDelay: '0.1s' }}>
         <div className="flex items-center justify-between px-6 mb-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Motivation</h2>
@@ -702,8 +683,8 @@ export function ImmersiveHome() {
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="shrink-0 w-40">
                 <div className="w-40 h-40 rounded-2xl card-gradient-border skeleton-shimmer" />
-                <div className="h-3 bg-white/5 rounded mt-2 w-3/4" />
-                <div className="h-2 bg-white/5 rounded mt-1.5 w-1/2" />
+                <div className="h-3 bg-[#111113] rounded mt-2 w-3/4" />
+                <div className="h-2 bg-[#111113] rounded mt-1.5 w-1/2" />
               </div>
             ))
           ) : (
@@ -739,7 +720,7 @@ export function ImmersiveHome() {
         const isLoading = loadingGenres[g.id]
 
         return (
-          <div key={g.id} className="mb-8 animate-fade-in" style={{ animationDelay: `${0.2 + gi * 0.05}s` }}>
+          <div key={g.id} className="mb-8 animate-fade-in bg-black" style={{ animationDelay: `${0.2 + gi * 0.05}s` }}>
             <div className="flex items-center justify-between px-6 mb-4">
               <div>
                 <h2 className="text-lg font-semibold text-white">{g.word}</h2>
@@ -754,8 +735,8 @@ export function ImmersiveHome() {
                 Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="shrink-0 w-40">
                     <div className="w-40 h-40 rounded-2xl card-gradient-border skeleton-shimmer" />
-                    <div className="h-3 bg-white/5 rounded mt-2 w-3/4" />
-                    <div className="h-2 bg-white/5 rounded mt-1.5 w-1/2" />
+                    <div className="h-3 bg-[#111113] rounded mt-2 w-3/4" />
+                    <div className="h-2 bg-[#111113] rounded mt-1.5 w-1/2" />
                   </div>
                 ))
               ) : videos.length === 0 ? (
@@ -813,24 +794,26 @@ export function ImmersiveHome() {
         }
         onTogglePlay={() => {
           if (backgroundMusic) {
-            if (musicPlaying) {
-              setMusicPlaying(false)
-            } else {
-              setMusicPlaying(true)
-            }
+            setMusicPlaying(!musicPlaying)
           } else if (guideLabel) {
             toggleGuidePlay()
           } else {
-            setIsPlaying(!isPlaying)
+            // Open SoundscapePlayer with active mode
+            const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
+            setActiveSoundscape({ soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId })
           }
         }}
         onOpenPlayer={() => {
           // If background music is playing, don't reopen — it would restart audio
           if (backgroundMusic) return
-          if (!guideLabel) setShowEndelPlayer(true)
+          if (!guideLabel) {
+            const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
+            setActiveSoundscape({ soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId })
+          }
         }}
         label={backgroundMusic?.label || guideLabel || undefined}
       />
+    </div>
     </div>
   )
 }
