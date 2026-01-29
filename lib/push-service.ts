@@ -5,6 +5,8 @@
 
 import webPush from 'web-push'
 import { prisma } from './prisma'
+import { sendAPNsNotification, isAPNsConfigured } from './apns'
+import { sendFCMNotification, isFCMConfigured } from './fcm'
 
 // Notification types that can be sent
 export type NotificationType =
@@ -206,12 +208,58 @@ export async function sendPushToUser(
         sent++
       } else if (subscription.platform === 'ios' && subscription.native_token) {
         // iOS APNs notification
-        console.log(`[APNs] Would send to iOS device: ${subscription.native_token.substring(0, 20)}...`)
-        sent++
+        if (!isAPNsConfigured()) {
+          console.warn('[APNs] APNs credentials not configured, skipping iOS push')
+          failed++
+          continue
+        }
+
+        const apnsResult = await sendAPNsNotification(subscription.native_token, {
+          title: payload.title,
+          body: payload.body,
+          data: payload.data as Record<string, any>,
+        })
+
+        if (apnsResult.success) {
+          sent++
+        } else {
+          failed++
+          // 410 Gone or 400 BadDeviceToken — remove stale subscription
+          if (apnsResult.statusCode === 410 || apnsResult.reason === 'BadDeviceToken') {
+            await prisma.pushSubscription.delete({
+              where: { id: subscription.id },
+            }).catch(() => {})
+          }
+        }
       } else if (subscription.platform === 'android' && subscription.native_token) {
         // Android FCM notification
-        console.log(`[FCM] Would send to Android device: ${subscription.native_token.substring(0, 20)}...`)
-        sent++
+        if (!isFCMConfigured()) {
+          console.warn('[FCM] Firebase credentials not configured, skipping Android push')
+          failed++
+          continue
+        }
+
+        const fcmResult = await sendFCMNotification(subscription.native_token, {
+          title: payload.title,
+          body: payload.body,
+          data: payload.data
+            ? Object.fromEntries(
+                Object.entries(payload.data).map(([k, v]) => [k, String(v)])
+              )
+            : undefined,
+        })
+
+        if (fcmResult.success) {
+          sent++
+        } else {
+          failed++
+          // Token unregistered — remove stale subscription
+          if (fcmResult.unregistered) {
+            await prisma.pushSubscription.delete({
+              where: { id: subscription.id },
+            }).catch(() => {})
+          }
+        }
       }
     } catch (error: any) {
       console.error(`Failed to send notification to subscription ${subscription.id}:`, error.message)
