@@ -70,6 +70,11 @@ body {
   border-color: rgb(var(--border));
 }
 
+/* Section background with soft blurred edges over constellation */
+.section-fade-bg {
+  background: linear-gradient(to bottom, transparent, black 18px, black calc(100% - 18px), transparent);
+}
+
 /* Mobile-first touch improvements */
 @media (hover: none) {
   button, a, input, select, textarea {

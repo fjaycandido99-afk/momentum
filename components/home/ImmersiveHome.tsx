@@ -555,7 +555,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Header --- */}
-      <div className="flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down bg-black">
+      <div className="flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down section-fade-bg">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-white">Explore</h1>
           <StreakBadge streak={streak} />
@@ -583,7 +583,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Morning Flow Card --- */}
-      <div className="px-6 mt-4 mb-8 animate-fade-in bg-black">
+      <div className="px-6 mt-4 mb-8 animate-fade-in section-fade-bg">
         <button
           onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
           className="w-full text-left group"
@@ -609,7 +609,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Soundscapes --- */}
-      <div className="mb-8 animate-fade-in bg-black" style={{ animationDelay: '0.05s' }}>
+      <div className="mb-8 animate-fade-in section-fade-bg" style={{ animationDelay: '0.05s' }}>
         <h2 className="text-lg font-semibold text-white px-6 mb-4">Soundscapes</h2>
         <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
           {SOUNDSCAPE_ITEMS.map((item) => {
@@ -651,7 +651,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Guided (circular icons like Soundscapes) --- */}
-      <div className="mb-8 animate-fade-in bg-black" style={{ animationDelay: '0.08s' }}>
+      <div className="mb-8 animate-fade-in section-fade-bg" style={{ animationDelay: '0.08s' }}>
         <h2 className="text-lg font-semibold text-white px-6 mb-4">Guided</h2>
         <div className="flex justify-evenly px-2 pb-2">
           {VOICE_GUIDES.map((guide) => {
@@ -682,7 +682,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Motivation --- */}
-      <div className="mb-8 animate-fade-in bg-black" style={{ animationDelay: '0.1s' }}>
+      <div className="mb-8 animate-fade-in section-fade-bg" style={{ animationDelay: '0.1s' }}>
         <div className="flex items-center justify-between px-6 mb-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Motivation</h2>
@@ -734,7 +734,7 @@ export function ImmersiveHome() {
         const isLoading = loadingGenres[g.id]
 
         return (
-          <div key={g.id} className="mb-8 animate-fade-in bg-black" style={{ animationDelay: `${0.2 + gi * 0.05}s` }}>
+          <div key={g.id} className="mb-8 animate-fade-in section-fade-bg" style={{ animationDelay: `${0.2 + gi * 0.05}s` }}>
             <div className="flex items-center justify-between px-6 mb-4">
               <div>
                 <h2 className="text-lg font-semibold text-white">{g.word}</h2>
