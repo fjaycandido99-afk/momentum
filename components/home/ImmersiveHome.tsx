@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Play, X, Home, Save, ChevronLeft, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot } from 'lucide-react'
+import { Settings, PenLine, Play, X, Home, Save, ChevronLeft, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot, CloudRain, Waves, Trees, Flame, CloudLightning, Star } from 'lucide-react'
 import { ENDEL_MODES } from '@/components/player/EndelPlayer'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
@@ -83,6 +83,16 @@ const VOICE_GUIDES = [
   { id: 'gratitude', name: 'Gratitude', tagline: 'Appreciate the moment', icon: Heart },
   { id: 'sleep', name: 'Sleep', tagline: 'Peaceful sleep', icon: Moon },
   { id: 'anxiety', name: 'Grounding', tagline: 'Find your center', icon: Anchor },
+]
+
+// Ambient sounds for soundscapes section
+const AMBIENT_SOUNDS = [
+  { id: 'rain', label: 'Rain', icon: CloudRain, youtubeId: 'mPZkdNFkNps' },
+  { id: 'ocean', label: 'Ocean', icon: Waves, youtubeId: 'WHPEKLQID4U' },
+  { id: 'forest', label: 'Forest', icon: Trees, youtubeId: 'xNN7iTA57jM' },
+  { id: 'fire', label: 'Fire', icon: Flame, youtubeId: 'UgHKb_7884o' },
+  { id: 'thunder', label: 'Thunder', icon: CloudLightning, youtubeId: 'nDq6TstdEi8' },
+  { id: 'night', label: 'Night', icon: Star, youtubeId: 'asSd6BOCmEY' },
 ]
 
 // Background images for motivation video player
@@ -544,6 +554,43 @@ export function ImmersiveHome() {
         <h2 className="text-lg font-semibold text-white px-6 mb-4">Soundscapes</h2>
         <div className="px-6">
           <ModeSelector activeMode={activeMode} onSelectMode={setActiveMode} />
+        </div>
+        <div className="flex gap-3 overflow-x-auto px-6 pt-4 pb-2 scrollbar-hide">
+          {AMBIENT_SOUNDS.map((sound) => {
+            const Icon = sound.icon
+            return (
+              <button
+                key={sound.id}
+                onClick={() => {
+                  // Stop guide audio if playing
+                  if (guideAudioRef.current) {
+                    guideAudioRef.current.pause()
+                    guideAudioRef.current.src = ''
+                    guideAudioRef.current = null
+                    setGuideLabel(null)
+                    setGuideIsPlaying(false)
+                  }
+                  // Stop soundscape
+                  if (isPlaying) setIsPlaying(false)
+                  // Stop background music
+                  setBackgroundMusic(null)
+                  setMusicPlaying(false)
+
+                  setPlayingSound({
+                    word: sound.label,
+                    color: 'from-white/[0.06] to-white/[0.02]',
+                    youtubeId: sound.youtubeId,
+                  })
+                }}
+                className="flex flex-col items-center gap-2 shrink-0 press-scale"
+              >
+                <div className="w-14 h-14 rounded-full bg-transparent flex items-center justify-center transition-all duration-200 card-gradient-border-round">
+                  <Icon className="w-5 h-5 text-white/80" strokeWidth={1.5} />
+                </div>
+                <span className="text-[11px] text-white/80">{sound.label}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
