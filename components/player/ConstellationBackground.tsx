@@ -20,7 +20,7 @@ interface ConstellationBackgroundProps {
   pointerRef?: RefObject<{ x: number; y: number; active: boolean }>
 }
 
-const TOP_OFFSET = 120
+const TOP_OFFSET = 50
 
 function createNodes(count: number, speed: number, w: number, h: number): ConstellationNode[] {
   return Array.from({ length: count }, () => ({

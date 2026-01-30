@@ -16,7 +16,7 @@ interface WaveDot {
   phase: number
 }
 
-const TOP_OFFSET = 120
+const TOP_OFFSET = 50
 
 function createDots(w: number, h: number): WaveDot[] {
   const cols = 10

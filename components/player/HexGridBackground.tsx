@@ -51,7 +51,7 @@ function hexPerimeterPoint(
   ]
 }
 
-const TOP_OFFSET = 120
+const TOP_OFFSET = 50
 
 function buildHexGrid(w: number, h: number, radius: number): HexCell[] {
   const cells: HexCell[] = []

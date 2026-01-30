@@ -49,7 +49,7 @@ function rotateZ(v: [number, number, number], a: number): [number, number, numbe
   return [v[0] * cos - v[1] * sin, v[0] * sin + v[1] * cos, v[2]]
 }
 
-const TOP_OFFSET = 120
+const TOP_OFFSET = 50
 
 export function GeometricMeshBackground({
   animate = true,

@@ -18,7 +18,7 @@ interface Firefly {
   radius: number
 }
 
-const TOP_OFFSET = 120
+const TOP_OFFSET = 50
 
 function createFireflies(count: number, w: number, h: number): Firefly[] {
   return Array.from({ length: count }, () => ({

@@ -29,7 +29,7 @@ const FIRE_CHANCE = 0.003
 const FIRE_DURATION_DECAY = 0.025
 const RIPPLE_DELAY_PER_HOP = 12
 
-const TOP_OFFSET = 120
+const TOP_OFFSET = 50
 
 function createNodes(count: number, w: number, h: number): NeuralNode[] {
   return Array.from({ length: count }, () => ({
