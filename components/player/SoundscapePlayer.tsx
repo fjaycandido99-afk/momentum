@@ -42,27 +42,29 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, onClose,
   const [isPlaying, setIsPlaying] = useState(false)
   const selectorRef = useRef<HTMLDivElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const [iframeMounted, setIframeMounted] = useState(false)
+  // Track whether initial autoplay has fired (skip first postMessage)
+  const hasAutoPlayed = useRef(false)
 
-  // Auto-play after mount
+  // Set UI to playing after short delay (iframe is already mounted with autoplay=1)
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsPlaying(true)
-      setIframeMounted(true)
+      hasAutoPlayed.current = true
     }, 800)
     return () => clearTimeout(timer)
   }, [])
 
-  // Pause/play via YouTube postMessage API (no iframe remount)
+  // Pause/play via YouTube postMessage API (skip initial — autoplay=1 handles it)
   useEffect(() => {
+    if (!hasAutoPlayed.current) return
     const iframe = iframeRef.current
-    if (!iframe || !iframeMounted) return
+    if (!iframe) return
     const func = isPlaying ? 'playVideo' : 'pauseVideo'
     iframe.contentWindow?.postMessage(
       JSON.stringify({ event: 'command', func, args: '' }),
       '*'
     )
-  }, [isPlaying, iframeMounted])
+  }, [isPlaying])
 
   // Scroll active item into view when sound changes
   useEffect(() => {
@@ -78,18 +80,16 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, onClose,
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      {/* Hidden YouTube player for audio (stays mounted to avoid restart) */}
-      {iframeMounted && (
-        <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
-          <iframe
-            ref={iframeRef}
-            key={youtubeId}
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            className="w-[1px] h-[1px]"
-          />
-        </div>
-      )}
+      {/* Hidden YouTube player for audio (mounted immediately for autoplay on user gesture) */}
+      <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
+        <iframe
+          ref={iframeRef}
+          key={youtubeId}
+          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          className="w-[1px] h-[1px]"
+        />
+      </div>
 
       {/* Header */}
       <div className="flex items-center px-6 pt-12 pb-4 animate-fade-in-down">
