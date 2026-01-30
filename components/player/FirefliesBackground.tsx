@@ -18,10 +18,12 @@ interface Firefly {
   radius: number
 }
 
+const TOP_OFFSET = 120
+
 function createFireflies(count: number, w: number, h: number): Firefly[] {
   return Array.from({ length: count }, () => ({
     x: Math.random() * w,
-    y: Math.random() * h,
+    y: TOP_OFFSET + Math.random() * (h - TOP_OFFSET),
     vx: (Math.random() - 0.5) * 0.25,
     vy: (Math.random() - 0.5) * 0.25,
     blinkSpeed: 0.5 + Math.random() * 1.5,
@@ -105,9 +107,9 @@ export function FirefliesBackground({
           }
 
           if (f.x < 0 || f.x > w) f.vx *= -1
-          if (f.y < 0 || f.y > h) f.vy *= -1
+          if (f.y < TOP_OFFSET || f.y > h) f.vy *= -1
           f.x = Math.max(0, Math.min(w, f.x))
-          f.y = Math.max(0, Math.min(h, f.y))
+          f.y = Math.max(TOP_OFFSET, Math.min(h, f.y))
         }
       }
 

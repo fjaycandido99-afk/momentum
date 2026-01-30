@@ -49,6 +49,8 @@ function rotateZ(v: [number, number, number], a: number): [number, number, numbe
   return [v[0] * cos - v[1] * sin, v[0] * sin + v[1] * cos, v[2]]
 }
 
+const TOP_OFFSET = 120
+
 export function GeometricMeshBackground({
   animate = true,
   className = '',
@@ -88,8 +90,8 @@ export function GeometricMeshBackground({
       const w = rect.width
       const h = rect.height
       const cx = w / 2
-      const cy = h / 2
-      const scale = Math.min(w, h) * 0.25
+      const cy = TOP_OFFSET + (h - TOP_OFFSET) / 2
+      const scale = Math.min(w, h - TOP_OFFSET) * 0.25
       ctx.clearRect(0, 0, w, h)
 
       const targetOpacity = animateRef.current ? 1 : 0.15

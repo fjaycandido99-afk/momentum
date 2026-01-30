@@ -20,10 +20,12 @@ interface ConstellationBackgroundProps {
   pointerRef?: RefObject<{ x: number; y: number; active: boolean }>
 }
 
+const TOP_OFFSET = 120
+
 function createNodes(count: number, speed: number, w: number, h: number): ConstellationNode[] {
   return Array.from({ length: count }, () => ({
     x: Math.random() * w,
-    y: Math.random() * h,
+    y: TOP_OFFSET + Math.random() * (h - TOP_OFFSET),
     vx: (Math.random() - 0.5) * speed * 2,
     vy: (Math.random() - 0.5) * speed * 2,
     radius: 1.2 + Math.random() * 2,
@@ -104,9 +106,9 @@ export function ConstellationBackground({
           }
 
           if (n.x < 0 || n.x > w) n.vx *= -1
-          if (n.y < 0 || n.y > h) n.vy *= -1
+          if (n.y < TOP_OFFSET || n.y > h) n.vy *= -1
           n.x = Math.max(0, Math.min(w, n.x))
-          n.y = Math.max(0, Math.min(h, n.y))
+          n.y = Math.max(TOP_OFFSET, Math.min(h, n.y))
         }
       }
 

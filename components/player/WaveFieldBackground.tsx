@@ -16,11 +16,14 @@ interface WaveDot {
   phase: number
 }
 
+const TOP_OFFSET = 120
+
 function createDots(w: number, h: number): WaveDot[] {
   const cols = 10
   const rows = 7
   const spacingX = w / (cols + 1)
-  const spacingY = h / (rows + 1)
+  const usableHeight = h - TOP_OFFSET
+  const spacingY = usableHeight / (rows + 1)
   const dots: WaveDot[] = []
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -28,7 +31,7 @@ function createDots(w: number, h: number): WaveDot[] {
         col: c,
         row: r,
         baseX: spacingX * (c + 1),
-        baseY: spacingY * (r + 1),
+        baseY: TOP_OFFSET + spacingY * (r + 1),
         phase: (c + r) * 0.4,
       })
     }
@@ -102,7 +105,7 @@ export function WaveFieldBackground({
           }
         }
 
-        const y = d.baseY + yOffset
+        const y = Math.max(TOP_OFFSET, d.baseY + yOffset)
 
         const brightness = 0.4 + 0.4 * ((wave + 1) / 2)
 

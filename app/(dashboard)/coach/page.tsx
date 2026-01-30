@@ -137,20 +137,22 @@ export default function CoachPage() {
           <h1 className="text-2xl font-light">AI Coach</h1>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="p-4 rounded-full bg-amber-500/20 mb-4">
-            <Crown className="w-8 h-8 text-amber-400" />
+          <div className="card-gradient-border p-8 text-center">
+            <div className="p-4 rounded-full bg-amber-500/20 mb-4 mx-auto w-fit">
+              <Crown className="w-8 h-8 text-amber-400" />
+            </div>
+            <h2 className="text-xl font-medium text-white mb-2">Premium Feature</h2>
+            <p className="text-white/60 mb-6 max-w-xs">
+              Get personalized coaching, motivation, and support from your AI wellness coach.
+            </p>
+            <button
+              onClick={() => subscription?.openUpgradeModal()}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all mx-auto"
+            >
+              <Sparkles className="w-5 h-5" />
+              Upgrade to Premium
+            </button>
           </div>
-          <h2 className="text-xl font-medium text-white mb-2">Premium Feature</h2>
-          <p className="text-white/60 text-center mb-6 max-w-xs">
-            Get personalized coaching, motivation, and support from your AI wellness coach.
-          </p>
-          <button
-            onClick={() => subscription?.openUpgradeModal()}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all"
-          >
-            <Sparkles className="w-5 h-5" />
-            Upgrade to Premium
-          </button>
         </div>
       </div>
     )
@@ -181,7 +183,7 @@ export default function CoachPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-black/80">
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -234,7 +236,7 @@ export default function CoachPage() {
               <button
                 key={qr.label}
                 onClick={() => sendMessage(qr.label)}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/[0.06] border border-white/[0.1] text-sm text-white/80 hover:bg-white/[0.1] hover:border-white/[0.15] active:scale-95 transition-all"
+                className="flex items-center gap-1.5 px-3.5 py-2 card-gradient-border text-sm text-white/80 active:scale-95 transition-all"
               >
                 <span>{qr.icon}</span>
                 <span>{qr.label}</span>

@@ -108,7 +108,8 @@ export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
     <div
       className="fixed inset-0 z-50 flex flex-col"
       style={{
-        background: `linear-gradient(180deg, ${config.colors[0]} 0%, ${config.colors[1]} 50%, ${config.colors[2]} 100%)`,
+        backgroundColor: '#000000',
+        backgroundImage: `linear-gradient(180deg, ${config.colors[0]} 0%, ${config.colors[1]} 50%, ${config.colors[2]} 100%)`,
       }}
     >
       {/* Hidden YouTube player for audio */}

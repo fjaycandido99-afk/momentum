@@ -5,9 +5,10 @@ import { ConstellationBackground } from './ConstellationBackground'
 import { WaveFieldBackground } from './WaveFieldBackground'
 import { GeometricMeshBackground } from './GeometricMeshBackground'
 import { FirefliesBackground } from './FirefliesBackground'
-import { PerspectiveGridBackground } from './PerspectiveGridBackground'
-import { DotGridBackground } from './DotGridBackground'
 import { GridTraceBackground } from './GridTraceBackground'
+import { NeuralNetworkBackground } from './NeuralNetworkBackground'
+import { HexGridBackground } from './HexGridBackground'
+import { CircuitTraceBackground } from './CircuitTraceBackground'
 
 interface DailyBackgroundProps {
   animate?: boolean
@@ -19,9 +20,10 @@ const BACKGROUNDS = [
   WaveFieldBackground,
   GeometricMeshBackground,
   FirefliesBackground,
-  PerspectiveGridBackground,
-  DotGridBackground,
   GridTraceBackground,
+  NeuralNetworkBackground,
+  HexGridBackground,
+  CircuitTraceBackground,
 ] as const
 
 function getDailyIndex(): number {
@@ -35,7 +37,7 @@ function getDailyIndex(): number {
 
 export function DailyBackground({ animate = true, className = '' }: DailyBackgroundProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const index = useMemo(() => 6 /* TEST: GridTrace */, [])
+  const index = useMemo(() => getDailyIndex(), [])
   const Background = BACKGROUNDS[index]
 
   const containerRef = useRef<HTMLDivElement>(null)

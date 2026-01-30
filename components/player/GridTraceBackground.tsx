@@ -68,15 +68,18 @@ export function GridTraceBackground({
     const TRACE_FADE = 0.985
     const TRACER_SPEED = 0.004
 
+    const TOP_OFFSET = 120
+
     const buildGrid = (w: number, h: number) => {
       const spacingX = w / (COLS - 1)
-      const spacingY = h / (ROWS - 1)
+      const usableHeight = h - TOP_OFFSET
+      const spacingY = usableHeight / (ROWS - 1)
       const nodes: GridNode[] = []
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           nodes.push({
             x: spacingX * c,
-            y: spacingY * r,
+            y: TOP_OFFSET + spacingY * r,
             col: c,
             row: r,
           })
