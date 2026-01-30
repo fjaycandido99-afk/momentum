@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Play, Home, Save, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot } from 'lucide-react'
+import { Settings, PenLine, Play, Pause, Home, Save, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot } from 'lucide-react'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { ConstellationBackground } from '@/components/player/ConstellationBackground'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
@@ -732,7 +732,15 @@ export function ImmersiveHome() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
                   <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
-                    <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                    {activeCardId === video.id ? (
+                      musicPlaying ? (
+                        <div className="eq-bars"><span /><span /><span /></div>
+                      ) : (
+                        <Pause className="w-8 h-8 text-white drop-shadow-lg" fill="white" />
+                      )
+                    ) : (
+                      <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                    )}
                   </div>
                 </div>
                 <p className="text-sm text-white/90 mt-2 line-clamp-2 leading-tight">{video.title}</p>
@@ -790,7 +798,15 @@ export function ImmersiveHome() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
                       <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
-                        <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                        {activeCardId === video.id ? (
+                          musicPlaying ? (
+                            <div className="eq-bars"><span /><span /><span /></div>
+                          ) : (
+                            <Pause className="w-8 h-8 text-white drop-shadow-lg" fill="white" />
+                          )
+                        ) : (
+                          <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                        )}
                       </div>
                     </div>
                     <p className="text-sm text-white/90 mt-2 line-clamp-2 leading-tight">{video.title}</p>
