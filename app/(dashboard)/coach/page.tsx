@@ -196,10 +196,10 @@ export default function CoachPage() {
             )}
             <div className="flex flex-col">
               <div
-                className={`max-w-[80%] p-3.5 text-sm leading-relaxed ${
+                className={`max-w-[80%] p-3.5 text-sm leading-relaxed card-gradient-border ${
                   msg.role === 'user'
-                    ? 'bg-gradient-to-br from-white/15 to-white/10 text-white rounded-2xl rounded-br-md'
-                    : 'bg-white/[0.04] border border-white/[0.08] text-white/90 rounded-2xl rounded-bl-md'
+                    ? 'text-white rounded-2xl rounded-br-md'
+                    : 'text-white/90 rounded-2xl rounded-bl-md'
                 }`}
               >
                 {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
@@ -217,7 +217,7 @@ export default function CoachPage() {
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500/25 to-orange-500/25 border border-amber-500/15 flex items-center justify-center mr-2 mt-1 shrink-0">
               <Bot className="w-3.5 h-3.5 text-amber-400" />
             </div>
-            <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] rounded-bl-md">
+            <div className="p-3.5 card-gradient-border rounded-2xl rounded-bl-md">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
                 <span className="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />

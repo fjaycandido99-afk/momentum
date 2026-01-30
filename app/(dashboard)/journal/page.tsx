@@ -280,12 +280,12 @@ function JournalContent() {
             <button
               onClick={handleSave}
               disabled={!hasContent || isSaving || isSaved}
-              className={`w-full py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              className={`w-full py-3 card-gradient-border text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                 isSaved
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  ? 'text-emerald-400'
                   : hasContent
-                  ? 'bg-white/10 hover:bg-white/20 text-white'
-                  : 'bg-white/5 text-white/30 cursor-not-allowed'
+                  ? 'text-white'
+                  : 'text-white/30 cursor-not-allowed'
               }`}
             >
               {isSaving ? (
