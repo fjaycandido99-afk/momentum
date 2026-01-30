@@ -14,6 +14,12 @@ interface WordAnimationPlayerProps {
   backgroundImage?: string
   showRain?: boolean
   onClose: () => void
+  /** When true, audio is owned by the parent — no YT player is created here */
+  externalAudio?: boolean
+  /** Current play state from parent (used when externalAudio is true) */
+  externalPlaying?: boolean
+  /** Toggle play/pause on parent's audio (used when externalAudio is true) */
+  onTogglePlay?: () => void
 }
 
 // Clean dark theme - subtle and atmospheric
@@ -21,9 +27,8 @@ const colorMap: Record<string, { primary: string; glow: string; bg: string }> = 
   'from-white/[0.06] to-white/[0.02]': { primary: 'rgba(245, 245, 250, 0.95)', glow: 'rgba(245, 245, 250, 0.2)', bg: '#08080c' },
 }
 
-export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, onClose }: WordAnimationPlayerProps) {
-  console.log('[WordAnimationPlayer] Rendering with backgroundImage:', backgroundImage)
-  const [isPlaying, setIsPlaying] = useState(false)
+export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, onClose, externalAudio = false, externalPlaying, onTogglePlay }: WordAnimationPlayerProps) {
+  const [isPlayingLocal, setIsPlayingLocal] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [playerReady, setPlayerReady] = useState(false)
   const [embedError, setEmbedError] = useState(false)
@@ -32,6 +37,9 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
   const playerRef = useRef<YTPlayer | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Unified playing state: external mode uses parent state, local mode uses own state
+  const isPlaying = externalAudio ? (externalPlaying ?? false) : isPlayingLocal
 
   // Get background color from the gradient class
   const bgColor = colorMap[color]?.bg || '#08080c'
@@ -47,8 +55,10 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
   // Calculate progress percentage
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
 
-  // Load YouTube IFrame API
+  // Load YouTube IFrame API (only when NOT in external audio mode)
   useEffect(() => {
+    if (externalAudio) return
+
     const loadYouTubeAPI = () => {
       if (window.YT) {
         initPlayer()
@@ -90,11 +100,8 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
             event.target.setVolume(80)
             event.target.playVideo()
             setPlayerReady(true)
-            // Don't set isPlaying here — let onStateChange confirm actual playback
-            // Get video duration
             const videoDuration = event.target.getDuration()
             setDuration(videoDuration)
-            // Start progress tracking
             progressIntervalRef.current = setInterval(() => {
               if (playerRef.current) {
                 const time = playerRef.current.getCurrentTime()
@@ -103,18 +110,14 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
             }, 1000)
           },
           onStateChange: (event) => {
-            // 1 = playing, 2 = paused, 0 = ended, 3 = buffering, 5 = cued
             if (event.data === 1) {
-              setIsPlaying(true)
+              setIsPlayingLocal(true)
             } else if (event.data === 2 || event.data === 5 || event.data === 0) {
-              setIsPlaying(false)
+              setIsPlayingLocal(false)
             }
           },
           onError: (event) => {
             console.error('YouTube player error:', event.data)
-            // Error 150: embedding disabled by owner
-            // Error 101: video removed or private
-            // Error 2: invalid video ID
             if (event.data === 150 || event.data === 101 || event.data === 2) {
               setEmbedError(true)
             }
@@ -133,9 +136,9 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
         clearInterval(progressIntervalRef.current)
       }
     }
-  }, [youtubeId])
+  }, [youtubeId, externalAudio])
 
-  // Toggle mute
+  // Toggle mute (only for local audio mode)
   const toggleMute = useCallback(() => {
     if (playerRef.current) {
       if (isMuted) {
@@ -149,19 +152,24 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
 
   // Toggle play/pause
   const togglePlay = useCallback(() => {
+    if (externalAudio) {
+      onTogglePlay?.()
+      return
+    }
     if (playerRef.current) {
-      if (isPlaying) {
+      if (isPlayingLocal) {
         playerRef.current.pauseVideo()
-        setIsPlaying(false)
+        setIsPlayingLocal(false)
       } else {
         playerRef.current.playVideo()
-        setIsPlaying(true)
+        setIsPlayingLocal(true)
       }
     }
-  }, [isPlaying])
+  }, [externalAudio, onTogglePlay, isPlayingLocal])
 
-  // Seek to position
+  // Seek to position (only for local audio mode)
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (externalAudio) return
     if (playerRef.current && duration > 0) {
       const rect = e.currentTarget.getBoundingClientRect()
       const clickX = e.clientX - rect.left
@@ -170,7 +178,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
       playerRef.current.seekTo(seekTime, true)
       setCurrentTime(seekTime)
     }
-  }, [duration])
+  }, [duration, externalAudio])
 
   return (
     <div
@@ -184,9 +192,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
             src={backgroundImage}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
-            onLoad={() => console.log('[WordAnimationPlayer] Image loaded:', backgroundImage)}
             onError={(e) => {
-              console.error('[WordAnimationPlayer] Image failed:', backgroundImage)
               ;(e.target as HTMLImageElement).style.display = 'none'
             }}
           />
@@ -197,24 +203,28 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
         </>
       )}
 
-      {/* Hidden YouTube player container */}
-      <div
-        ref={containerRef}
-        className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden pointer-events-none"
-      />
+      {/* Hidden YouTube player container (only for local audio mode) */}
+      {!externalAudio && (
+        <div
+          ref={containerRef}
+          className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden pointer-events-none"
+        />
+      )}
 
       {/* Close & Mute buttons */}
       <div className="absolute top-4 right-4 z-20 flex gap-2">
-        <button
-          onClick={toggleMute}
-          className="p-3 rounded-full bg-black/30 hover:bg-black/50 transition-colors backdrop-blur-sm"
-        >
-          {isMuted ? (
-            <VolumeX className="w-6 h-6 text-white" />
-          ) : (
-            <Volume2 className="w-6 h-6 text-white" />
-          )}
-        </button>
+        {!externalAudio && (
+          <button
+            onClick={toggleMute}
+            className="p-3 rounded-full bg-black/30 hover:bg-black/50 transition-colors backdrop-blur-sm"
+          >
+            {isMuted ? (
+              <VolumeX className="w-6 h-6 text-white" />
+            ) : (
+              <Volume2 className="w-6 h-6 text-white" />
+            )}
+          </button>
+        )}
         <button
           onClick={onClose}
           className="p-3 rounded-full bg-black/30 hover:bg-black/50 transition-colors backdrop-blur-sm"
@@ -234,10 +244,10 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
         </h1>
 
         {/* Status text or error fallback */}
-        {embedError ? (
+        {!externalAudio && embedError ? (
           <div className="flex flex-col items-center gap-4">
             <p className="text-white/70 text-sm text-center">
-              This video can't be embedded
+              This video can&apos;t be embedded
             </p>
             <a
               href={`https://www.youtube.com/watch?v=${youtubeId}`}
@@ -254,7 +264,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
             {/* Play/Pause button */}
             <button
               onClick={togglePlay}
-              disabled={!playerReady}
+              disabled={!externalAudio && !playerReady}
               className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-all flex items-center justify-center disabled:opacity-50 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] animate-float"
             >
               {isPlaying ? (
@@ -264,29 +274,34 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
               )}
             </button>
 
-            {/* Seekable progress bar */}
-            <div className="w-full animate-fade-in">
-              <div
-                className="h-3 bg-white/20 rounded-full overflow-hidden cursor-pointer relative"
-                onClick={handleSeek}
-              >
-                {!playerReady && <div className="absolute inset-0 animate-shimmer" />}
+            {/* Seekable progress bar (only for local audio mode) */}
+            {!externalAudio && (
+              <div className="w-full animate-fade-in">
                 <div
-                  className="h-full rounded-full transition-all duration-100 shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                  style={{
-                    width: playerReady ? `${progressPercent}%` : '0%',
-                    backgroundColor: 'white',
-                  }}
-                />
+                  className="h-3 bg-white/20 rounded-full overflow-hidden cursor-pointer relative"
+                  onClick={handleSeek}
+                >
+                  {!playerReady && <div className="absolute inset-0 animate-shimmer" />}
+                  <div
+                    className="h-full rounded-full transition-all duration-100 shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                    style={{
+                      width: playerReady ? `${progressPercent}%` : '0%',
+                      backgroundColor: 'white',
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between mt-3 text-white/80 text-sm font-medium">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{duration > 0 ? formatTime(duration) : '--:--'}</span>
+                </div>
               </div>
-              <div className="flex justify-between mt-3 text-white/80 text-sm font-medium">
-                <span>{formatTime(currentTime)}</span>
-                <span>{duration > 0 ? formatTime(duration) : '--:--'}</span>
-              </div>
-            </div>
+            )}
 
             <p className="text-white/70 text-sm">
-              {!playerReady ? 'Loading...' : isPlaying ? 'Now playing' : 'Paused'}
+              {externalAudio
+                ? (isPlaying ? 'Now playing' : 'Paused')
+                : (!playerReady ? 'Loading...' : isPlaying ? 'Now playing' : 'Paused')
+              }
             </p>
           </div>
         )}

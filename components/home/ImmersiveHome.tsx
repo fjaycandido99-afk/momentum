@@ -416,11 +416,12 @@ export function ImmersiveHome() {
     }
     // Stop soundscape
     if (isPlaying) setIsPlaying(false)
-    // Stop previous background music
-    setBackgroundMusic(null)
-    setMusicPlaying(false)
     // Signal home audio active
     setHomeAudioActive(true)
+
+    // Set background music FIRST (single audio source — persists after closing player)
+    setBackgroundMusic({ youtubeId: video.youtubeId, label: topicName })
+    setMusicPlaying(true)
 
     const backgrounds = getTodaysBackgrounds()
     setPlayingSound({
@@ -444,11 +445,12 @@ export function ImmersiveHome() {
     }
     // Stop soundscape
     if (isPlaying) setIsPlaying(false)
-    // Stop previous background music
-    setBackgroundMusic(null)
-    setMusicPlaying(false)
     // Signal home audio active
     setHomeAudioActive(true)
+
+    // Set background music FIRST (single audio source — persists after closing player)
+    setBackgroundMusic({ youtubeId: video.youtubeId, label: genreWord })
+    setMusicPlaying(true)
 
     const gBgs = genreBackgrounds[genreId] || []
     const bg = gBgs.length > 0
@@ -462,15 +464,8 @@ export function ImmersiveHome() {
     })
   }
 
-  // Close fullscreen player but keep music going in background
+  // Close fullscreen player — audio continues via backgroundMusic iframe
   const handleClosePlayer = () => {
-    if (playingSound) {
-      setBackgroundMusic({
-        youtubeId: playingSound.youtubeId,
-        label: playingSound.word,
-      })
-      setMusicPlaying(true)
-    }
     setPlayingSound(null)
   }
 
@@ -498,7 +493,7 @@ export function ImmersiveHome() {
     >
       {/* --- Fullscreen overlays --- */}
 
-      {/* Video/Music Player */}
+      {/* Video/Music Player (visual overlay — audio owned by backgroundMusic iframe) */}
       {playingSound && (
         <WordAnimationPlayer
           word={playingSound.word}
@@ -508,6 +503,9 @@ export function ImmersiveHome() {
           backgroundImage={playingSound.backgroundImage}
           showRain={false}
           onClose={handleClosePlayer}
+          externalAudio
+          externalPlaying={musicPlaying}
+          onTogglePlay={() => setMusicPlaying(!musicPlaying)}
         />
       )}
 
