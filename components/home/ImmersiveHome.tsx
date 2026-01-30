@@ -160,6 +160,8 @@ export function ImmersiveHome() {
   const [guideIsPlaying, setGuideIsPlaying] = useState(false)
   const [loadingGuide, setLoadingGuide] = useState<string | null>(null)
   const guideAudioRef = useRef<HTMLAudioElement | null>(null)
+  // Increments on each guide request so stale fetches are discarded
+  const guideRequestId = useRef(0)
   // Track if home audio is active (to avoid re-entrancy)
   const homeAudioActiveRef = useRef(false)
   // Ref for background music YouTube iframe (pause/play without remounting)
@@ -218,6 +220,8 @@ export function ImmersiveHome() {
       guideAudioRef.current.src = ''
       guideAudioRef.current = null
     }
+    // Increment request ID so any in-flight fetch is discarded
+    const thisRequest = ++guideRequestId.current
     // Stop soundscape if playing
     if (isPlaying) setIsPlaying(false)
     // Signal home audio active
@@ -225,6 +229,7 @@ export function ImmersiveHome() {
 
     setLoadingGuide(guideId)
     setGuideLabel(guideName)
+    setGuideIsPlaying(false)
     try {
       const typeMap: Record<string, string> = { anxiety: 'grounding' }
       const mappedType = typeMap[guideId] || guideId
@@ -236,12 +241,21 @@ export function ImmersiveHome() {
       })
       const data = await response.json()
 
+      // Discard if a newer request was made while this one was in flight
+      if (guideRequestId.current !== thisRequest) return
+
       if (data.audioBase64) {
         const audioUrl = `data:audio/mpeg;base64,${data.audioBase64}`
         const audio = new Audio(audioUrl)
         guideAudioRef.current = audio
 
         audio.oncanplaythrough = () => {
+          // Double-check we're still the active request before playing
+          if (guideRequestId.current !== thisRequest) {
+            audio.pause()
+            audio.src = ''
+            return
+          }
           audio.play()
             .then(() => setGuideIsPlaying(true))
             .catch(err => console.error('Guide play error:', err))
@@ -258,9 +272,13 @@ export function ImmersiveHome() {
       }
     } catch (err) {
       console.error('Guide fetch error:', err)
-      setGuideLabel(null)
+      if (guideRequestId.current === thisRequest) {
+        setGuideLabel(null)
+      }
     } finally {
-      setLoadingGuide(null)
+      if (guideRequestId.current === thisRequest) {
+        setLoadingGuide(null)
+      }
     }
   }
 
