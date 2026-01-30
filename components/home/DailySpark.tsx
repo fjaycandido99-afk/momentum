@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Sparkles, X } from 'lucide-react'
+import { Sparkles, X, Heart, Send } from 'lucide-react'
 import { QUOTES } from '@/lib/quotes'
 import { getNextSpark, Spark } from '@/lib/daily-sparks'
 
@@ -10,6 +10,11 @@ const MIN_RECURRING = 30 * 60 * 1000     // 30 minutes
 const MAX_RECURRING = 60 * 60 * 1000     // 60 minutes
 const AUTO_DISMISS = 60 * 1000           // 60 seconds
 const INITIAL_DELAY = 2 * 1000           // 2 seconds on first mount
+
+// Shared popup lock — prevents AffirmationPopup and DailySpark from overlapping
+declare global {
+  interface Window { __popupActive?: boolean }
+}
 
 function randomBetween(min: number, max: number) {
   return min + Math.random() * (max - min)
@@ -20,25 +25,68 @@ export function DailySpark() {
   const [animating, setAnimating] = useState(false)
   const [dismissing, setDismissing] = useState(false)
   const [spark, setSpark] = useState<Spark | null>(null)
+  const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [answer, setAnswer] = useState('')
+  const [answerFocused, setAnswerFocused] = useState(false)
 
   const recurringTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isShowingRef = useRef(false)
 
-  const showSpark = useCallback(() => {
-    if (isShowingRef.current) return
+  const showSpark = useCallback(async () => {
+    if (isShowingRef.current || window.__popupActive) return
     isShowingRef.current = true
-    setSpark(getNextSpark(QUOTES))
+    window.__popupActive = true
     setDismissing(false)
+    setSaved(false)
+    setSaving(false)
+    setAnswer('')
+    setAnswerFocused(false)
+
+    // Try AI-powered spark API first, fall back to local
+    let picked: Spark | null = null
+    try {
+      const res = await fetch('/api/daily-guide/spark')
+      if (res.ok) {
+        const data = await res.json()
+        picked = {
+          type: data.type === 'quote' ? 'quote' : data.type === 'affirmation' ? 'affirmation' : 'question',
+          text: data.text,
+          ...(data.author ? { author: data.author } : {}),
+        }
+      }
+    } catch {
+      // fall through to local
+    }
+
+    if (!picked) {
+      picked = getNextSpark(QUOTES)
+    }
+
+    setSpark(picked)
     setVisible(true)
     requestAnimationFrame(() => setAnimating(true))
 
-    // Auto-dismiss after 10s
+    // Auto-dismiss after timeout (paused when user is answering)
     autoDismissTimer.current = setTimeout(() => {
       dismiss()
     }, AUTO_DISMISS)
   }, [])
+
+  // Pause auto-dismiss while user is typing an answer
+  useEffect(() => {
+    if (answerFocused && autoDismissTimer.current) {
+      clearTimeout(autoDismissTimer.current)
+      autoDismissTimer.current = null
+    } else if (!answerFocused && visible && !dismissing && !saved && isShowingRef.current) {
+      // Resume auto-dismiss with fresh timeout
+      autoDismissTimer.current = setTimeout(() => {
+        dismiss()
+      }, AUTO_DISMISS)
+    }
+  }, [answerFocused]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const clearAllTimers = useCallback(() => {
     if (recurringTimer.current) clearTimeout(recurringTimer.current)
@@ -83,6 +131,7 @@ export function DailySpark() {
       setAnimating(false)
       setDismissing(false)
       isShowingRef.current = false
+      window.__popupActive = false
       // Schedule next spark after dismissal
       scheduleNext()
       onComplete?.()
@@ -117,6 +166,59 @@ export function DailySpark() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleSubmitAnswer = async () => {
+    if (!spark || !answer.trim() || saving || saved) return
+    setSaving(true)
+    try {
+      const contentText = JSON.stringify({
+        question: spark.text,
+        answer: answer.trim(),
+      })
+      const res = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content_type: 'reflection',
+          content_text: contentText,
+        }),
+      })
+      if (res.ok) {
+        setSaved(true)
+        // Auto-dismiss after a short delay so user sees the saved state
+        setTimeout(() => dismiss(), 1500)
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!spark || saving || saved) return
+    setSaving(true)
+    try {
+      const contentText = spark.author
+        ? `"${spark.text}" — ${spark.author}`
+        : spark.text
+      const res = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content_type: spark.type === 'quote' ? 'quote' : 'affirmation',
+          content_text: contentText,
+        }),
+      })
+      if (res.ok) {
+        setSaved(true)
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (!visible || !spark) return null
 
   return (
@@ -149,15 +251,29 @@ export function DailySpark() {
                 <Sparkles className="w-4 h-4 text-violet-300 spark-icon-glow" />
               </div>
               <span className="text-xs font-semibold text-violet-300/80 uppercase tracking-wider">
-                {spark.type === 'quote' ? 'Daily Quote' : 'Daily Spark'}
+                {spark.type === 'quote' ? 'Daily Quote' : spark.type === 'affirmation' ? 'Daily Affirmation' : 'Daily Spark'}
               </span>
             </div>
-            <button
-              onClick={() => dismiss()}
-              className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
-            >
-              <X className="w-4 h-4 text-white/40" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleSave}
+                disabled={saving || saved}
+                className="p-1.5 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50"
+                title={saved ? 'Saved' : 'Save to favorites'}
+              >
+                <Heart
+                  className={`w-4 h-4 transition-colors ${
+                    saved ? 'text-rose-400 fill-rose-400' : 'text-white/40 hover:text-white/60'
+                  }`}
+                />
+              </button>
+              <button
+                onClick={() => dismiss()}
+                className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4 text-white/40" />
+              </button>
+            </div>
           </div>
 
           {/* Content — stagger 2 */}
@@ -170,15 +286,58 @@ export function DailySpark() {
             )}
           </div>
 
-          {/* Action — stagger 3 */}
-          <div className="mt-5 spark-text-in" style={{ animationDelay: '0.4s' }}>
-            <button
-              onClick={() => dismiss()}
-              className="w-full py-2.5 rounded-xl bg-violet-500/20 hover:bg-violet-500/30 border border-violet-400/20 text-sm text-violet-200 font-medium transition-colors"
-            >
-              Dismiss
-            </button>
-          </div>
+          {/* Answer input for questions — stagger 3 */}
+          {spark.type === 'question' && !saved ? (
+            <div className="mt-4 spark-text-in" style={{ animationDelay: '0.4s' }}>
+              <div className="relative">
+                <textarea
+                  value={answer}
+                  onChange={e => setAnswer(e.target.value)}
+                  onFocus={() => setAnswerFocused(true)}
+                  onBlur={() => setAnswerFocused(false)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSubmitAnswer()
+                    }
+                  }}
+                  placeholder="Type your reflection..."
+                  rows={2}
+                  className="w-full px-4 py-3 pr-12 rounded-xl bg-white/5 border border-white/10 focus:border-violet-400/40 focus:bg-white/[0.07] text-sm text-white/90 placeholder:text-white/30 outline-none resize-none transition-colors"
+                />
+                <button
+                  onClick={handleSubmitAnswer}
+                  disabled={!answer.trim() || saving}
+                  className="absolute right-2 bottom-2 p-2 rounded-lg bg-violet-500/30 hover:bg-violet-500/40 disabled:opacity-30 disabled:hover:bg-violet-500/30 transition-colors"
+                  title="Save reflection"
+                >
+                  <Send className={`w-4 h-4 ${saving ? 'text-white/30' : 'text-violet-300'}`} />
+                </button>
+              </div>
+              <button
+                onClick={() => dismiss()}
+                className="w-full mt-2 py-2 rounded-xl text-xs text-white/30 hover:text-white/50 transition-colors"
+              >
+                Skip
+              </button>
+            </div>
+          ) : spark.type === 'question' && saved ? (
+            <div className="mt-4 spark-text-in" style={{ animationDelay: '0.4s' }}>
+              <div className="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <p className="text-xs text-emerald-400 font-medium mb-1">Saved!</p>
+                <p className="text-sm text-white/70 italic">{answer}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-5 spark-text-in" style={{ animationDelay: '0.4s' }}>
+              <button
+                onClick={() => dismiss()}
+                className="w-full py-2.5 rounded-xl bg-violet-500/20 hover:bg-violet-500/30 border border-violet-400/20 text-sm text-violet-200 font-medium transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

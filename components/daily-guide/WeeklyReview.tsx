@@ -238,7 +238,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
   const weekLabel = `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
 
   const content = (
-    <div className={isModal ? '' : 'rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/10 overflow-hidden'}>
+    <div className={isModal ? '' : 'card-gradient-border'}>
       {/* Header */}
       <div className="p-4 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -641,7 +641,7 @@ export function WeeklyReviewPrompt({ onOpen }: { onOpen: () => void }) {
   return (
     <button
       onClick={onOpen}
-      className="w-full p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 hover:border-purple-500/40 transition-all group"
+      className="w-full p-4 card-gradient-border transition-all group"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

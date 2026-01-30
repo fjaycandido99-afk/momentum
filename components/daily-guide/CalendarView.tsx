@@ -207,7 +207,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
   }
 
   return (
-    <div className="rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden">
+    <div className="card-gradient-border">
       {/* Header */}
       <div className="p-4 border-b border-white/10">
         <div className="flex items-center justify-between mb-2">

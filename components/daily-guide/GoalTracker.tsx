@@ -109,7 +109,7 @@ export function GoalTracker() {
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4">
+      <div className="card-gradient-border p-4">
         <div className="flex items-center gap-3">
           <Loader2 className="w-4 h-4 text-white/40 animate-spin" />
           <span className="text-sm text-white/40">Loading goals...</span>
@@ -119,7 +119,7 @@ export function GoalTracker() {
   }
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/10 overflow-hidden">
+    <div className="card-gradient-border">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}

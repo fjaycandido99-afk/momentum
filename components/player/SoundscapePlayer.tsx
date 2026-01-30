@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Play, Pause, ChevronDown, Focus, Sparkles, Moon, Zap, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Wind, Droplets, Coffee, Music } from 'lucide-react'
-import { ConstellationBackground } from './ConstellationBackground'
+import { DailyBackground } from './DailyBackground'
 
 interface SoundscapePlayerProps {
   soundId: string
@@ -107,7 +107,7 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, onClose,
 
       {/* Animated center — constellation */}
       <div className="flex-1 relative overflow-hidden">
-        <ConstellationBackground animate={isPlaying} className="absolute inset-0" />
+        <DailyBackground animate={isPlaying} className="absolute inset-0" />
       </div>
 
       {/* Sound selector row */}

@@ -129,8 +129,8 @@ export default function CoachPage() {
   // Non-premium view
   if (subscription && !subscription.isPremium) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col">
-        <div className="px-6 pt-12 pb-6 flex items-center gap-3">
+      <div className="min-h-screen text-white flex flex-col">
+        <div className="px-6 pt-12 pb-6 flex items-center gap-3 section-fade-bg">
           <Link href="/" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
             <ChevronLeft className="w-5 h-5 text-white/80" />
           </Link>
@@ -157,9 +157,9 @@ export default function CoachPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen text-white flex flex-col">
       {/* Header with gradient */}
-      <div className="relative px-6 pt-12 pb-4 flex items-center gap-3 border-b border-white/10">
+      <div className="relative px-6 pt-12 pb-4 flex items-center gap-3 border-b border-white/10 section-fade-bg">
         {/* Subtle gradient glow behind header */}
         <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.06] to-transparent pointer-events-none" />
         <Link href="/" className="relative p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
@@ -247,7 +247,7 @@ export default function CoachPage() {
       </div>
 
       {/* Input */}
-      <div className="px-6 pb-8 pt-4 border-t border-white/10 bg-black/95 backdrop-blur-xl">
+      <div className="px-6 pb-8 pt-4 border-t border-white/10 bg-black/80 backdrop-blur-xl">
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}

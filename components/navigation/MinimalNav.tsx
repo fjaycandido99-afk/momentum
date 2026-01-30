@@ -6,7 +6,6 @@ import { Home } from 'lucide-react'
 
 const PAGE_LABELS: Record<string, string> = {
   '/settings': 'Settings',
-  '/discover': 'Discover',
   '/journal': 'Journal',
   '/soundscape': 'Soundscape',
   '/saved': 'Saved',

@@ -20,6 +20,12 @@ interface WordAnimationPlayerProps {
   externalPlaying?: boolean
   /** Toggle play/pause on parent's audio (used when externalAudio is true) */
   onTogglePlay?: () => void
+  /** Duration in seconds from parent's YT player */
+  externalDuration?: number
+  /** Current playback time from parent's YT player */
+  externalCurrentTime?: number
+  /** Seek to a specific time (seconds) on parent's YT player */
+  onSeek?: (seconds: number) => void
 }
 
 // Clean dark theme - subtle and atmospheric
@@ -27,7 +33,7 @@ const colorMap: Record<string, { primary: string; glow: string; bg: string }> = 
   'from-white/[0.06] to-white/[0.02]': { primary: 'rgba(245, 245, 250, 0.95)', glow: 'rgba(245, 245, 250, 0.2)', bg: '#08080c' },
 }
 
-export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, onClose, externalAudio = false, externalPlaying, onTogglePlay }: WordAnimationPlayerProps) {
+export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, onClose, externalAudio = false, externalPlaying, onTogglePlay, externalDuration, externalCurrentTime, onSeek }: WordAnimationPlayerProps) {
   const [isPlayingLocal, setIsPlayingLocal] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [playerReady, setPlayerReady] = useState(false)
@@ -41,19 +47,28 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
   // Unified playing state: external mode uses parent state, local mode uses own state
   const isPlaying = externalAudio ? (externalPlaying ?? false) : isPlayingLocal
 
+  // Unified duration/time: external mode uses parent values, local uses own
+  const activeDuration = externalAudio ? (externalDuration ?? 0) : duration
+  const activeCurrentTime = externalAudio ? (externalCurrentTime ?? 0) : currentTime
+  const activeReady = externalAudio ? (activeDuration > 0) : playerReady
+
   // Get background color from the gradient class
   const bgColor = colorMap[color]?.bg || '#08080c'
   const progressColor = colorMap[color]?.primary || 'rgba(139, 92, 246, 0.9)'
 
-  // Format seconds to mm:ss
+  // Format seconds to h:mm:ss or m:ss
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
+    const hrs = Math.floor(seconds / 3600)
+    const mins = Math.floor((seconds % 3600) / 60)
     const secs = Math.floor(seconds % 60)
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    }
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   // Calculate progress percentage
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
+  const progressPercent = activeDuration > 0 ? (activeCurrentTime / activeDuration) * 100 : 0
 
   // Load YouTube IFrame API (only when NOT in external audio mode)
   useEffect(() => {
@@ -167,18 +182,21 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
     }
   }, [externalAudio, onTogglePlay, isPlayingLocal])
 
-  // Seek to position (only for local audio mode)
+  // Seek to position
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (externalAudio) return
-    if (playerRef.current && duration > 0) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      const clickX = e.clientX - rect.left
-      const percent = clickX / rect.width
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clickX = e.clientX - rect.left
+    const percent = clickX / rect.width
+    if (externalAudio) {
+      if (activeDuration > 0 && onSeek) {
+        onSeek(percent * activeDuration)
+      }
+    } else if (playerRef.current && duration > 0) {
       const seekTime = percent * duration
       playerRef.current.seekTo(seekTime, true)
       setCurrentTime(seekTime)
     }
-  }, [duration, externalAudio])
+  }, [duration, externalAudio, activeDuration, onSeek])
 
   return (
     <div
@@ -264,7 +282,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
             {/* Play/Pause button */}
             <button
               onClick={togglePlay}
-              disabled={!externalAudio && !playerReady}
+              disabled={!activeReady && !externalAudio}
               className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-all flex items-center justify-center disabled:opacity-50 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] animate-float"
             >
               {isPlaying ? (
@@ -274,34 +292,29 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
               )}
             </button>
 
-            {/* Seekable progress bar (only for local audio mode) */}
-            {!externalAudio && (
-              <div className="w-full animate-fade-in">
+            {/* Seekable progress bar */}
+            <div className="w-full animate-fade-in">
+              <div
+                className="h-3 bg-white/20 rounded-full overflow-hidden cursor-pointer relative"
+                onClick={handleSeek}
+              >
+                {!activeReady && <div className="absolute inset-0 animate-shimmer" />}
                 <div
-                  className="h-3 bg-white/20 rounded-full overflow-hidden cursor-pointer relative"
-                  onClick={handleSeek}
-                >
-                  {!playerReady && <div className="absolute inset-0 animate-shimmer" />}
-                  <div
-                    className="h-full rounded-full transition-all duration-100 shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                    style={{
-                      width: playerReady ? `${progressPercent}%` : '0%',
-                      backgroundColor: 'white',
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between mt-3 text-white/80 text-sm font-medium">
-                  <span>{formatTime(currentTime)}</span>
-                  <span>{duration > 0 ? formatTime(duration) : '--:--'}</span>
-                </div>
+                  className="h-full rounded-full transition-all duration-100 shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                  style={{
+                    width: activeReady ? `${progressPercent}%` : '0%',
+                    backgroundColor: 'white',
+                  }}
+                />
               </div>
-            )}
+              <div className="flex justify-between mt-3 text-white/80 text-sm font-medium">
+                <span>{formatTime(activeCurrentTime)}</span>
+                <span>{activeDuration > 0 ? formatTime(activeDuration) : '--:--'}</span>
+              </div>
+            </div>
 
             <p className="text-white/70 text-sm">
-              {externalAudio
-                ? (isPlaying ? 'Now playing' : 'Paused')
-                : (!playerReady ? 'Loading...' : isPlaying ? 'Now playing' : 'Paused')
-              }
+              {!activeReady ? 'Loading...' : isPlaying ? 'Now playing' : 'Paused'}
             </p>
           </div>
         )}

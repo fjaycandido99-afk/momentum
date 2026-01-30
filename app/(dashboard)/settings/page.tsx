@@ -260,9 +260,9 @@ function SettingsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pb-24">
+    <div className="min-h-screen text-white pb-24">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6">
+      <div className="px-6 pt-12 pb-6 section-fade-bg">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <Link href="/" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
@@ -291,7 +291,7 @@ function SettingsContent() {
 
       <div className="px-6 space-y-6">
         {/* User Type */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
+        <section className="p-5 card-gradient-border">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-white/10">
               <Briefcase className="w-5 h-5 text-white" />
@@ -324,7 +324,7 @@ function SettingsContent() {
 
         {/* Work Days (for professional/hybrid) */}
         {(userType === 'professional' || userType === 'hybrid') && (
-          <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
+          <section className="p-5 card-gradient-border">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl bg-white/10">
                 <Calendar className="w-5 h-5 text-white" />
@@ -354,7 +354,7 @@ function SettingsContent() {
 
         {/* Class Days (for student/hybrid) */}
         {(userType === 'student' || userType === 'hybrid') && (
-          <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
+          <section className="p-5 card-gradient-border">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-xl bg-white/10">
                 <GraduationCap className="w-5 h-5 text-white" />
@@ -383,7 +383,7 @@ function SettingsContent() {
         )}
 
         {/* Schedule */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08] overflow-hidden">
+        <section className="p-5 card-gradient-border">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-white/10">
               <Clock className="w-5 h-5 text-white" />
@@ -480,7 +480,7 @@ function SettingsContent() {
         </section>
 
         {/* Segments */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
+        <section className="p-5 card-gradient-border">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-white/10">
               <Layers className="w-5 h-5 text-white" />
@@ -524,7 +524,7 @@ function SettingsContent() {
         </section>
 
         {/* Voice Tone */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
+        <section className="p-5 card-gradient-border">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-white/10">
               <Volume2 className="w-5 h-5 text-white" />
@@ -553,7 +553,7 @@ function SettingsContent() {
         </section>
 
         {/* Daily Reminder */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
+        <section className="p-5 card-gradient-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-white/10">
@@ -591,7 +591,7 @@ function SettingsContent() {
         </section>
 
         {/* Bedtime Reminder */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
+        <section className="p-5 card-gradient-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-white/10">
@@ -636,7 +636,7 @@ function SettingsContent() {
         </section>
 
         {/* Push Notifications */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
+        <section className="p-5 card-gradient-border">
           <h2 className="font-medium text-white mb-4 flex items-center gap-2">
             <Bell className="w-5 h-5" />
             Push Notifications
@@ -645,7 +645,7 @@ function SettingsContent() {
         </section>
 
         {/* Background Music */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
+        <section className="p-5 card-gradient-border">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-white/10">
@@ -727,7 +727,7 @@ function SettingsContent() {
         </section>
 
         {/* Subscription Management */}
-        <section className="p-5 rounded-2xl bg-white/5 border border-white/[0.08]">
+        <section className="p-5 card-gradient-border">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-xl bg-amber-500/20">
               <Crown className="w-5 h-5 text-amber-400" />
@@ -857,7 +857,7 @@ function SettingsContent() {
           {isAuthenticated ? (
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all"
+              className="w-full flex items-center justify-center gap-2 p-4 card-gradient-border text-red-400 hover:bg-red-500/20 transition-all"
             >
               <LogOut className="w-5 h-5" />
               Sign Out
@@ -865,7 +865,7 @@ function SettingsContent() {
           ) : (
             <Link
               href="/login"
-              className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
+              className="w-full flex items-center justify-center gap-2 p-4 card-gradient-border text-white hover:bg-white/20 transition-all"
             >
               Sign In to Save Progress
             </Link>

@@ -144,7 +144,7 @@ export default function SoundscapePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen text-white">
       {/* Endel Player overlay */}
       {activeMode && (
         <EndelPlayer mode={activeMode} onClose={closePlayer} />
@@ -164,7 +164,7 @@ export default function SoundscapePage() {
       {/* Main content */}
       <div className="px-6 py-12">
         {/* Header */}
-        <div className="mb-8 animate-fade-in-down">
+        <div className="mb-8 animate-fade-in-down section-fade-bg">
           <p className="text-white/60 text-sm mb-1">{timeContext.greeting}</p>
           <h1 className="text-3xl font-light text-white">How do you want to feel?</h1>
         </div>
@@ -178,7 +178,7 @@ export default function SoundscapePage() {
             <button
               key={mode.id}
               onClick={() => startMode(mode.id)}
-              className={`w-full p-6 rounded-3xl bg-gradient-to-br ${mode.gradient} border ${mode.borderColor} backdrop-blur-sm transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] active:scale-[0.98] animate-scale-in animate-glow-pulse`}
+              className={`w-full p-6 card-gradient-border-lg backdrop-blur-sm transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] active:scale-[0.98] animate-scale-in animate-glow-pulse`}
             >
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-2xl bg-white/5 ${mode.iconColor}`}>
@@ -201,7 +201,7 @@ export default function SoundscapePage() {
               <button
                 key={mode.id}
                 onClick={() => startMode(mode.id)}
-                className={`p-5 rounded-2xl bg-gradient-to-br ${mode.gradient} border ${mode.borderColor} backdrop-blur-sm transition-all hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(255,255,255,0.12)] active:scale-[0.98] animate-fade-in opacity-0 stagger-${index + 1} hover-lift`}
+                className={`p-5 card-gradient-border backdrop-blur-sm transition-all hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(255,255,255,0.12)] active:scale-[0.98] animate-fade-in opacity-0 stagger-${index + 1} hover-lift`}
               >
                 <div className={`p-2 rounded-xl bg-white/5 ${mode.iconColor} w-fit mb-3`}>
                   <mode.icon className="w-6 h-6" strokeWidth={1.5} />
@@ -221,7 +221,7 @@ export default function SoundscapePage() {
               <button
                 key={sound.id}
                 onClick={() => setPlayingSound(sound)}
-                className={`relative p-5 rounded-2xl bg-gradient-to-br ${sound.color} overflow-hidden group transition-all hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] active:scale-[0.98] animate-fade-in opacity-0 stagger-${index + 1} hover-lift`}
+                className={`relative p-5 card-gradient-border group transition-all hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] active:scale-[0.98] animate-fade-in opacity-0 stagger-${index + 1} hover-lift`}
               >
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Play className="w-5 h-5 text-white/80" fill="white" />

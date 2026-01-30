@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, type RefObject } from 'react'
 
 interface ConstellationNode {
   x: number
@@ -17,6 +17,7 @@ interface ConstellationBackgroundProps {
   connectionDist?: number // max px to draw a line (default 120)
   speed?: number          // drift speed multiplier (default 0.3)
   className?: string
+  pointerRef?: RefObject<{ x: number; y: number; active: boolean }>
 }
 
 function createNodes(count: number, speed: number, w: number, h: number): ConstellationNode[] {
@@ -36,6 +37,7 @@ export function ConstellationBackground({
   connectionDist = 120,
   speed = 0.3,
   className = '',
+  pointerRef,
 }: ConstellationBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const nodesRef = useRef<ConstellationNode[]>([])
@@ -82,9 +84,25 @@ export function ConstellationBackground({
       const nodes = nodesRef.current
 
       if (animateRef.current) {
+        const ptr = pointerRef?.current
+        const ptrActive = ptr?.active ?? false
+
         for (const n of nodes) {
           n.x += n.vx
           n.y += n.vy
+
+          // Magnetic attraction toward pointer
+          if (ptrActive && ptr) {
+            const dx = ptr.x - n.x
+            const dy = ptr.y - n.y
+            const dist = Math.sqrt(dx * dx + dy * dy)
+            if (dist < 120 && dist > 1) {
+              const strength = (1 - dist / 120) * 0.4
+              n.x += dx / dist * strength
+              n.y += dy / dist * strength
+            }
+          }
+
           if (n.x < 0 || n.x > w) n.vx *= -1
           if (n.y < 0 || n.y > h) n.vy *= -1
           n.x = Math.max(0, Math.min(w, n.x))

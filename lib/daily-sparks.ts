@@ -40,25 +40,21 @@ export const DAILY_QUESTIONS: string[] = [
 ]
 
 export interface Spark {
-  type: 'question' | 'quote'
+  type: 'question' | 'quote' | 'affirmation'
   text: string
   author?: string
 }
 
-// Session counters — alternate between questions and quotes
-let questionIndex = 0
-let quoteIndex = 0
+// Alternate between questions and quotes, picking randomly within each
 let showQuestion = true
 
 export function getNextSpark(quotes: Quote[]): Spark {
   if (showQuestion) {
-    const q = DAILY_QUESTIONS[questionIndex % DAILY_QUESTIONS.length]
-    questionIndex++
+    const q = DAILY_QUESTIONS[Math.floor(Math.random() * DAILY_QUESTIONS.length)]
     showQuestion = false
     return { type: 'question', text: q }
   } else {
-    const quote = quotes[quoteIndex % quotes.length]
-    quoteIndex++
+    const quote = quotes[Math.floor(Math.random() * quotes.length)]
     showQuestion = true
     return { type: 'quote', text: quote.text, author: quote.author }
   }

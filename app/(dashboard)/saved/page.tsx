@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Bookmark, Loader2, Play, Trash2 } from 'lucide-react'
 
-type SavedFilter = 'all' | 'quote' | 'journal' | 'breathing'
+type SavedFilter = 'all' | 'quote' | 'journal' | 'affirmation' | 'reflection'
 
 interface FavoriteItem {
   id: string
@@ -59,12 +59,23 @@ export default function SavedPage() {
     { id: 'all', label: 'All' },
     { id: 'quote', label: 'Quotes' },
     { id: 'journal', label: 'Journals' },
-    { id: 'breathing', label: 'Breathing' },
+    { id: 'affirmation', label: 'Affirmations' },
+    { id: 'reflection', label: 'Reflections' },
   ]
 
+  const parseReflection = (text: string): { question: string; answer: string } | null => {
+    try {
+      const parsed = JSON.parse(text)
+      if (parsed.question && parsed.answer) return parsed
+    } catch {
+      // not JSON
+    }
+    return null
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white pb-24">
-      <div className="px-6 pt-12 pb-4">
+    <div className="min-h-screen text-white pb-24">
+      <div className="px-6 pt-12 pb-4 section-fade-bg">
         <h1 className="text-2xl font-semibold text-white">Saved</h1>
       </div>
 
@@ -105,7 +116,7 @@ export default function SavedPage() {
             {filtered.map(item => (
               <div
                 key={item.id}
-                className="p-4 rounded-2xl bg-white/5 border border-white/10 group"
+                className="p-4 card-gradient-border group"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
@@ -113,6 +124,8 @@ export default function SavedPage() {
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
                         item.content_type === 'quote' ? 'bg-amber-500/20 text-amber-400' :
                         item.content_type === 'breathing' ? 'bg-blue-500/20 text-blue-400' :
+                        item.content_type === 'affirmation' ? 'bg-indigo-500/20 text-indigo-400' :
+                        item.content_type === 'reflection' ? 'bg-violet-500/20 text-violet-400' :
                         'bg-purple-500/20 text-purple-400'
                       }`}>
                         {item.content_type}
@@ -121,9 +134,20 @@ export default function SavedPage() {
                         {new Date(item.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-sm text-white/80 leading-relaxed">
-                      {item.content_text}
-                    </p>
+                    {item.content_type === 'reflection' && parseReflection(item.content_text) ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-white/50 italic leading-relaxed">
+                          &ldquo;{parseReflection(item.content_text)!.question}&rdquo;
+                        </p>
+                        <p className="text-sm text-white/80 leading-relaxed pl-3 border-l-2 border-violet-500/30">
+                          {parseReflection(item.content_text)!.answer}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-white/80 leading-relaxed">
+                        {item.content_text}
+                      </p>
+                    )}
                   </div>
                   <button
                     onClick={() => handleDelete(item.id)}

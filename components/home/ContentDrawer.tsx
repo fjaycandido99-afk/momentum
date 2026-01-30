@@ -4,17 +4,12 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import dynamic from 'next/dynamic'
 
-const DiscoverContent = dynamic(
-  () => import('@/app/(dashboard)/discover/page'),
-  { ssr: false }
-)
-
 const JournalContent = dynamic(
   () => import('@/app/(dashboard)/journal/page'),
   { ssr: false }
 )
 
-type DrawerTab = 'guide' | 'discover' | 'journal'
+type DrawerTab = 'guide' | 'journal'
 
 interface ContentDrawerProps {
   isOpen: boolean
@@ -29,7 +24,6 @@ export function ContentDrawer({ isOpen, onToggle }: ContentDrawerProps) {
 
   const TABS: { id: DrawerTab; label: string }[] = [
     { id: 'guide', label: 'Guide' },
-    { id: 'discover', label: 'Discover' },
     { id: 'journal', label: 'Journal' },
   ]
 
@@ -102,7 +96,7 @@ export function ContentDrawer({ isOpen, onToggle }: ContentDrawerProps) {
           {/* Peek label when closed */}
           {!isOpen && (
             <p className="text-xs text-white/50 animate-fade-in">
-              Swipe up for Guide, Discover & Journal
+              Swipe up for Guide & Journal
             </p>
           )}
         </div>
@@ -135,7 +129,6 @@ export function ContentDrawer({ isOpen, onToggle }: ContentDrawerProps) {
             style={{ maxHeight: 'calc(100vh - 200px)' }}
           >
             {activeTab === 'guide' && <DailyGuideHome embedded />}
-            {activeTab === 'discover' && <DiscoverContent />}
             {activeTab === 'journal' && <JournalContent />}
           </div>
         )}

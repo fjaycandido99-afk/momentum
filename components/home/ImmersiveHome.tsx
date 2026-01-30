@@ -5,7 +5,8 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { Settings, PenLine, Play, Pause, Home, Save, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot } from 'lucide-react'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
-import { ConstellationBackground } from '@/components/player/ConstellationBackground'
+import type { YTPlayer } from '@/lib/youtube-types'
+import '@/lib/youtube-types'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
 import { JournalEntry } from '@/components/daily-guide/JournalEntry'
@@ -162,10 +163,15 @@ export function ImmersiveHome() {
   const guideAudioRef = useRef<HTMLAudioElement | null>(null)
   // Increments on each guide request so stale fetches are discarded
   const guideRequestId = useRef(0)
+  // Background music YT API player
+  const bgPlayerRef = useRef<YTPlayer | null>(null)
+  const bgPlayerContainerRef = useRef<HTMLDivElement>(null)
+  const bgProgressIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [musicDuration, setMusicDuration] = useState(0)
+  const [musicCurrentTime, setMusicCurrentTime] = useState(0)
+
   // Track if home audio is active (to avoid re-entrancy)
   const homeAudioActiveRef = useRef(false)
-  // Ref for background music YouTube iframe (pause/play without remounting)
-  const bgMusicIframeRef = useRef<HTMLIFrameElement>(null)
 
   // Stop all home audio sources
   const stopAllHomeAudio = useCallback(() => {
@@ -177,23 +183,121 @@ export function ImmersiveHome() {
       setGuideIsPlaying(false)
     }
     if (isPlaying) setIsPlaying(false)
+    // Destroy YT player
+    if (bgPlayerRef.current) {
+      bgPlayerRef.current.destroy()
+      bgPlayerRef.current = null
+    }
+    if (bgProgressIntervalRef.current) {
+      clearInterval(bgProgressIntervalRef.current)
+      bgProgressIntervalRef.current = null
+    }
     setBackgroundMusic(null)
     setMusicPlaying(false)
+    setMusicDuration(0)
+    setMusicCurrentTime(0)
     setPlayingSound(null)
     setActiveSoundscape(null)
     setActiveCardId(null)
     homeAudioActiveRef.current = false
   }, [isPlaying])
 
-  // Pause/play background music via YouTube iframe API (no remount)
+  // Create / destroy YT API player when backgroundMusic changes
   useEffect(() => {
-    const iframe = bgMusicIframeRef.current
-    if (!iframe || !backgroundMusic) return
-    const func = musicPlaying ? 'playVideo' : 'pauseVideo'
-    iframe.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func, args: '' }),
-      '*'
-    )
+    if (!backgroundMusic) {
+      if (bgPlayerRef.current) {
+        bgPlayerRef.current.destroy()
+        bgPlayerRef.current = null
+      }
+      if (bgProgressIntervalRef.current) {
+        clearInterval(bgProgressIntervalRef.current)
+        bgProgressIntervalRef.current = null
+      }
+      setMusicDuration(0)
+      setMusicCurrentTime(0)
+      return
+    }
+
+    const createPlayer = () => {
+      if (!bgPlayerContainerRef.current) return
+
+      // Clear previous player div
+      bgPlayerContainerRef.current.innerHTML = ''
+      const playerDiv = document.createElement('div')
+      playerDiv.id = 'bg-yt-player-' + Date.now()
+      bgPlayerContainerRef.current.appendChild(playerDiv)
+
+      bgPlayerRef.current = new window.YT.Player(playerDiv.id, {
+        videoId: backgroundMusic.youtubeId,
+        height: '1',
+        width: '1',
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          iv_load_policy: 3,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+          loop: 1,
+          playlist: backgroundMusic.youtubeId,
+          playsinline: 1,
+        },
+        events: {
+          onReady: (event) => {
+            event.target.setVolume(80)
+            event.target.playVideo()
+            setMusicDuration(event.target.getDuration())
+            // Start progress tracking
+            if (bgProgressIntervalRef.current) clearInterval(bgProgressIntervalRef.current)
+            bgProgressIntervalRef.current = setInterval(() => {
+              if (bgPlayerRef.current) {
+                setMusicCurrentTime(bgPlayerRef.current.getCurrentTime())
+                // Update duration in case it wasn't available at onReady
+                const d = bgPlayerRef.current.getDuration()
+                if (d > 0) setMusicDuration(d)
+              }
+            }, 1000)
+          },
+          onStateChange: (event) => {
+            if (event.data === 1) setMusicPlaying(true)
+            else if (event.data === 2) setMusicPlaying(false)
+          },
+        },
+      })
+    }
+
+    // Load YT API if not already loaded
+    if (window.YT && window.YT.Player) {
+      createPlayer()
+    } else {
+      const tag = document.createElement('script')
+      tag.src = 'https://www.youtube.com/iframe_api'
+      const first = document.getElementsByTagName('script')[0]
+      first.parentNode?.insertBefore(tag, first)
+      window.onYouTubeIframeAPIReady = createPlayer
+    }
+
+    return () => {
+      if (bgPlayerRef.current) {
+        bgPlayerRef.current.destroy()
+        bgPlayerRef.current = null
+      }
+      if (bgProgressIntervalRef.current) {
+        clearInterval(bgProgressIntervalRef.current)
+        bgProgressIntervalRef.current = null
+      }
+    }
+  }, [backgroundMusic?.youtubeId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pause/play background music via YT API
+  useEffect(() => {
+    if (!bgPlayerRef.current || !backgroundMusic) return
+    try {
+      if (musicPlaying) bgPlayerRef.current.playVideo()
+      else bgPlayerRef.current.pauseVideo()
+    } catch {}
   }, [musicPlaying, backgroundMusic])
 
   // When daily guide starts a session, stop all home audio
@@ -464,26 +568,39 @@ export function ImmersiveHome() {
     })
   }
 
-  // Close fullscreen player — audio continues via backgroundMusic iframe
+  // Close fullscreen player — audio continues via backgroundMusic YT player
   const handleClosePlayer = () => {
     setPlayingSound(null)
   }
 
+  // Seek background music to a specific time
+  const handleMusicSeek = useCallback((seconds: number) => {
+    if (bgPlayerRef.current) {
+      bgPlayerRef.current.seekTo(seconds, true)
+      setMusicCurrentTime(seconds)
+    }
+  }, [])
+
   // Stop background music entirely
   const stopBackgroundMusic = () => {
+    if (bgPlayerRef.current) {
+      bgPlayerRef.current.destroy()
+      bgPlayerRef.current = null
+    }
+    if (bgProgressIntervalRef.current) {
+      clearInterval(bgProgressIntervalRef.current)
+      bgProgressIntervalRef.current = null
+    }
     setBackgroundMusic(null)
     setMusicPlaying(false)
+    setMusicDuration(0)
+    setMusicCurrentTime(0)
     setActiveCardId(null)
     setHomeAudioActive(false)
   }
 
   return (
-    <div className="isolate min-h-screen bg-black">
-    {/* --- Constellation background (fixed behind everything) --- */}
-    <div className="fixed inset-0 -z-10 pointer-events-none">
-      <ConstellationBackground animate speed={0.15} nodeCount={35} connectionDist={100} />
-    </div>
-
+    <div className="isolate min-h-screen">
     <div
       ref={scrollRef}
       className={`relative min-h-screen text-white pb-28 ${showMorningFlow ? 'overflow-hidden max-h-screen' : ''}`}
@@ -493,7 +610,7 @@ export function ImmersiveHome() {
     >
       {/* --- Fullscreen overlays --- */}
 
-      {/* Video/Music Player (visual overlay — audio owned by backgroundMusic iframe) */}
+      {/* Video/Music Player (visual overlay — audio owned by background YT player) */}
       {playingSound && (
         <WordAnimationPlayer
           word={playingSound.word}
@@ -506,6 +623,9 @@ export function ImmersiveHome() {
           externalAudio
           externalPlaying={musicPlaying}
           onTogglePlay={() => setMusicPlaying(!musicPlaying)}
+          externalDuration={musicDuration}
+          externalCurrentTime={musicCurrentTime}
+          onSeek={handleMusicSeek}
         />
       )}
 
@@ -541,17 +661,11 @@ export function ImmersiveHome() {
         </div>
       )}
 
-      {/* --- Hidden YouTube player for background music (persists after closing fullscreen player) --- */}
-      {backgroundMusic && (
-        <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
-          <iframe
-            ref={bgMusicIframeRef}
-            src={`https://www.youtube.com/embed/${backgroundMusic.youtubeId}?autoplay=1&loop=1&playlist=${backgroundMusic.youtubeId}&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            className="w-[1px] h-[1px]"
-          />
-        </div>
-      )}
+      {/* --- Hidden YouTube API player for background music --- */}
+      <div
+        ref={bgPlayerContainerRef}
+        className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden pointer-events-none"
+      />
 
       {/* --- Pull-down indicator --- */}
       <div
@@ -704,9 +818,6 @@ export function ImmersiveHome() {
             <h2 className="text-lg font-semibold text-white">Motivation</h2>
             <p className="text-xs text-white/50 mt-0.5">{topicName} &middot; {TOPIC_TAGLINES[topicName]}</p>
           </div>
-          <Link href="/discover" className="text-xs text-white/60 hover:text-white/80 transition-colors">
-            Show all
-          </Link>
         </div>
         <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
           {loadingMotivation ? (
@@ -764,9 +875,6 @@ export function ImmersiveHome() {
                 <h2 className="text-lg font-semibold text-white">{g.word}</h2>
                 <p className="text-xs text-white/50 mt-0.5">{g.tagline}</p>
               </div>
-              <Link href="/discover" className="text-xs text-white/60 hover:text-white/80 transition-colors">
-                Show all
-              </Link>
             </div>
             <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
               {isLoading ? (

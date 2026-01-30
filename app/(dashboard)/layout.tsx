@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { MinimalNav } from '@/components/navigation/MinimalNav'
+import { DailyBackground } from '@/components/player/DailyBackground'
 import { Providers } from './providers'
 
 export default function DashboardLayout({
@@ -14,7 +15,10 @@ export default function DashboardLayout({
 
   return (
     <Providers>
-      <div className="min-h-screen bg-black">
+      <div className="isolate min-h-screen bg-black">
+        <div className="fixed inset-0 -z-10 pointer-events-none">
+          <DailyBackground animate />
+        </div>
         <main className={`min-h-screen ${isHome ? '' : 'pb-16'}`}>
           {children}
         </main>

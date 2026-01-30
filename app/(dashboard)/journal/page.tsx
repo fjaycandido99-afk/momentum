@@ -16,7 +16,7 @@ interface JournalDay {
 
 export default function JournalPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <JournalContent />
     </Suspense>
   )
@@ -159,9 +159,9 @@ function JournalContent() {
   })
 
   return (
-    <div className="min-h-screen bg-black text-white pb-24">
+    <div className="min-h-screen text-white pb-24">
       {/* Header */}
-      <div className="px-6 pt-12 pb-4">
+      <div className="px-6 pt-12 pb-4 section-fade-bg">
         <div className="flex items-center gap-3 mb-1">
           <div className="p-2 rounded-xl bg-amber-500/20">
             <PenLine className="w-5 h-5 text-amber-400" />
@@ -173,7 +173,7 @@ function JournalContent() {
 
       {/* Date Picker */}
       <div className="px-6 mb-6">
-        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+        <div className="flex items-center justify-between p-3 card-gradient-border">
           <button
             onClick={() => goDay(-1)}
             className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
@@ -197,7 +197,7 @@ function JournalContent() {
       {/* Spark Prompt */}
       {sparkPrompt && (
         <div className="px-6 mb-4 animate-fade-in">
-          <div className="relative p-4 rounded-2xl bg-gradient-to-br from-violet-500/15 to-amber-500/10 border border-violet-500/20">
+          <div className="relative p-4 card-gradient-border">
             <button
               onClick={() => setSparkPrompt(null)}
               className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors"
@@ -226,7 +226,7 @@ function JournalContent() {
         ) : (
           <div className="space-y-4">
             {/* What did you learn */}
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10">
+            <div className="p-4 card-gradient-border">
               <label className="text-sm text-white/80 flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 What did you learn today?
@@ -243,7 +243,7 @@ function JournalContent() {
             </div>
 
             {/* Gratitude */}
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10">
+            <div className="p-4 card-gradient-border">
               <label className="text-sm text-white/80 flex items-center gap-2 mb-3">
                 <Heart className="w-4 h-4 text-pink-400" />
                 What are you grateful for?
@@ -260,7 +260,7 @@ function JournalContent() {
             </div>
 
             {/* Intention */}
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10">
+            <div className="p-4 card-gradient-border">
               <label className="text-sm text-white/80 flex items-center gap-2 mb-3">
                 <Target className="w-4 h-4 text-purple-400" />
                 Tomorrow&apos;s intention
@@ -299,7 +299,7 @@ function JournalContent() {
 
             {/* AI Insight */}
             {reflection && (
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+              <div className="p-4 card-gradient-border">
                 <div className="flex items-start gap-2">
                   <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
                   <div>
@@ -360,10 +360,10 @@ function JournalContent() {
                 <button
                   key={i}
                   onClick={() => setSelectedDate(entryDate)}
-                  className={`w-full text-left p-4 rounded-xl border transition-all ${
+                  className={`w-full text-left p-4 card-gradient-border transition-all ${
                     isSelected
-                      ? 'bg-amber-500/10 border-amber-500/30'
-                      : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06]'
+                      ? 'ring-1 ring-amber-500/40'
+                      : 'hover:bg-white/5'
                   }`}
                 >
                   <p className={`text-xs mb-1.5 ${isSelected ? 'text-amber-400' : 'text-white/40'}`}>
