@@ -53,30 +53,27 @@ export function SplashScreen({ onComplete, minDuration = 2500 }: SplashScreenPro
       {/* Animated logo */}
       <div className="w-28 h-28 relative flex items-center justify-center mb-8">
         {/* Outer glow */}
-        <div className="absolute inset-0 rounded-full bg-white/5 blur-xl" />
+        <div className="absolute inset-0 rounded-full bg-white/10 blur-2xl scale-150" />
 
         {/* Outer ring */}
         <div
-          className="absolute inset-0 rounded-full border-2 border-dashed border-white/15"
+          className="absolute inset-0 rounded-full border-2 border-dashed border-white/30"
           style={{ transform: `rotate(${rotation}deg)` }}
-        />
-        {/* Second ring */}
-        <div
-          className="absolute inset-3 rounded-full border-2 border-dotted border-white/25"
-          style={{ transform: `rotate(${-rotation * 1.2}deg)` }}
-        />
-        {/* Third ring */}
-        <div
-          className="absolute inset-6 rounded-full border-2 border-dashed border-white/35"
-          style={{ transform: `rotate(${rotation * 1.5}deg)` }}
         />
         {/* Inner ring */}
         <div
-          className="absolute inset-9 rounded-full border-2 border-dotted border-white/45"
-          style={{ transform: `rotate(${-rotation * 2}deg)` }}
+          className="absolute inset-4 rounded-full border-2 border-dotted border-white/20"
+          style={{ transform: `rotate(${-rotation * 1.3}deg)` }}
         />
-        {/* Center dot */}
-        <div className="w-4 h-4 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.6)]" />
+        {/* Logo icon */}
+        <svg
+          viewBox="0 0 192 192"
+          fill="none"
+          className="w-[50%] h-[50%]"
+        >
+          <path d="M96 40L136 80H112V112H80V80H56L96 40Z" fill="white" />
+          <path d="M56 128H136V152H56V128Z" fill="white" />
+        </svg>
       </div>
 
       {/* App name with fade in */}
