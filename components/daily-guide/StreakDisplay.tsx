@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Flame, Trophy, Star, Zap, Crown, Sparkles, X } from 'lucide-react'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 
 interface StreakDisplayProps {
   streak: number
@@ -78,6 +79,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
   return (
     <>
       {/* Streak Badge */}
+      <div>
       <div
         className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r ${
           currentMilestone ? currentMilestone.bg : 'from-amber-500/20 to-orange-500/20'
@@ -113,6 +115,8 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
             </div>
           </div>
         )}
+      </div>
+      <FeatureHint id="streak" text="Consistency builds momentum — rest days don't break your streak" mode="once" />
       </div>
 
       {/* Milestone Celebration Modal */}

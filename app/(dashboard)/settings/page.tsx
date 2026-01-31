@@ -33,6 +33,7 @@ import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { PremiumBadge, ProLabel } from '@/components/premium'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 type GuideTone = 'calm' | 'direct' | 'neutral'
@@ -471,6 +472,7 @@ function SettingsContent() {
               </>
             )}
           </div>
+          <FeatureHint id="schedule" text="Your schedule controls when modules unlock each day" mode="once" />
         </section>
 
         {/* Segments */}
@@ -544,6 +546,7 @@ function SettingsContent() {
               </button>
             ))}
           </div>
+          <FeatureHint id="voice-tone" text="Your tone affects how the AI speaks throughout your entire journey" mode="once" />
         </section>
 
         {/* Daily Reminder */}
@@ -690,6 +693,7 @@ function SettingsContent() {
                   className="w-full h-2 rounded-full appearance-none cursor-pointer bg-white/10 accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,0.3)]"
                 />
               </div>
+              <FeatureHint id="bg-animation" text="Animations create subtle visual interest without distraction" mode="persistent" />
 
               <div className="grid grid-cols-2 gap-3">
                 {/* Daily Rotation option */}

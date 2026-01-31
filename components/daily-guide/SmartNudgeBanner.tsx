@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Flame, PenLine, TrendingUp, Heart, Zap, X } from 'lucide-react'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 
 interface Nudge {
   type: string
@@ -92,6 +93,7 @@ export function SmartNudgeBanner() {
             Smart Nudge
           </p>
           <p className="text-sm text-white/95 italic leading-relaxed">{nudge.message}</p>
+          <FeatureHint id="smart-nudge" text="Nudges adapt to your patterns — dismiss if not relevant" mode="once" />
         </div>
         <button
           onClick={handleDismiss}

@@ -12,8 +12,10 @@ import {
   Clock,
   Mic2,
   Sparkles,
+  Layers,
 } from 'lucide-react'
 import type { GuideTone } from '@/lib/ai/daily-guide-prompts'
+import { BACKGROUND_ANIMATIONS, setPreferredAnimation } from '@/components/player/DailyBackground'
 
 type UserType = 'professional' | 'student'
 
@@ -66,8 +68,9 @@ export function DailyGuideOnboarding() {
     wakeTime: '07:00',
     guideTone: 'calm',
   })
+  const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null)
 
-  const totalSteps = 3
+  const totalSteps = 4
 
   const handleNext = () => {
     if (step < totalSteps - 1 && !animating) {
@@ -139,6 +142,9 @@ export function DailyGuideOnboarding() {
       })
 
       if (response.ok) {
+        // Save animation preference to localStorage
+        setPreferredAnimation(selectedAnimation)
+
         // Generate today's guide
         await fetch('/api/daily-guide/generate', {
           method: 'POST',
@@ -289,8 +295,66 @@ export function DailyGuideOnboarding() {
           </div>
         )
 
-      // Step 3: You're All Set
+      // Step 2: Background Style
       case 2:
+        return (
+          <div>
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.03] flex items-center justify-center mx-auto mb-6">
+                <Layers className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-xl font-semibold text-white mb-2">
+                Background Style
+              </h2>
+              <p className="text-white/95 text-sm">
+                Pick an ambient animation for your experience
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {/* Daily Rotation option */}
+              <button
+                onClick={() => setSelectedAnimation(null)}
+                className={`p-2 rounded-xl transition-all press-scale ${
+                  selectedAnimation === null
+                    ? 'bg-white/[0.08] border border-white/[0.15] shadow-[0_0_15px_rgba(255,255,255,0.08)] glow-sm'
+                    : 'bg-white/5 border border-transparent hover:bg-white/10'
+                }`}
+              >
+                <div className="aspect-square rounded-lg overflow-hidden bg-black/50 mb-1.5 relative flex items-center justify-center">
+                  <div className="text-center">
+                    <Sparkles className="w-4 h-4 text-white/60 mx-auto mb-0.5" />
+                    <span className="text-[9px] text-white/50">Auto</span>
+                  </div>
+                </div>
+                <p className="text-[10px] font-medium text-white text-center">Daily Rotation</p>
+              </button>
+
+              {/* Individual animation options with live preview */}
+              {BACKGROUND_ANIMATIONS.map(anim => {
+                const AnimComponent = anim.component
+                return (
+                  <button
+                    key={anim.id}
+                    onClick={() => setSelectedAnimation(anim.id)}
+                    className={`p-2 rounded-xl transition-all press-scale ${
+                      selectedAnimation === anim.id
+                        ? 'bg-white/[0.08] border border-white/[0.15] shadow-[0_0_15px_rgba(255,255,255,0.08)] glow-sm'
+                        : 'bg-white/5 border border-transparent hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="aspect-square rounded-lg overflow-hidden bg-black/50 mb-1.5 relative">
+                      <AnimComponent animate topOffset={0} className="absolute inset-0" />
+                    </div>
+                    <p className="text-[10px] font-medium text-white text-center">{anim.name}</p>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )
+
+      // Step 3: You're All Set
+      case 3:
         return (
           <div className="text-center">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.03] flex items-center justify-center mx-auto mb-8 animate-float animate-glow-pulse">
@@ -323,9 +387,13 @@ export function DailyGuideOnboarding() {
                   <Mic2 className="w-3.5 h-3.5 text-white/95" />
                   <span>Tone: {TONES.find(t => t.value === data.guideTone)?.label}</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <Layers className="w-3.5 h-3.5 text-white/95" />
+                  <span>Background: {selectedAnimation ? BACKGROUND_ANIMATIONS.find(a => a.id === selectedAnimation)?.name : 'Daily Rotation'}</span>
+                </div>
               </div>
               <div className="mt-3 pt-3 border-t border-white/10 text-xs text-white/95">
-                Wake: {data.wakeTime} &middot; Music: Daily rotation &middot; All modules on
+                Wake: {data.wakeTime} &middot; All modules on
               </div>
             </div>
           </div>

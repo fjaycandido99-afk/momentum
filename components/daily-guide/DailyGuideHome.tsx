@@ -45,6 +45,7 @@ import { SessionLimitBanner } from '@/components/premium/SessionLimitBanner'
 import { TrialBanner, TrialEndingBanner } from '@/components/premium/TrialBanner'
 import { FeatureLock, LockIcon } from '@/components/premium/FeatureLock'
 import { PremiumBadge } from '@/components/premium/PremiumBadge'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 import type { DayType, TimeMode, EnergyLevel, ModuleType, CheckpointConfig } from '@/lib/daily-guide/decision-tree'
 
 type UserType = 'professional' | 'student' | 'hybrid'
@@ -851,6 +852,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
         {/* Day type selector */}
         {guide && (
+          <>
           <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 -mx-6 px-6">
             {getAvailableDayTypes().map(type => (
               <button
@@ -870,10 +872,13 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               </button>
             ))}
           </div>
+          <FeatureHint id="day-type" text="Day type customizes your entire module flow" mode="once" />
+          </>
         )}
 
         {/* Energy selector (inline after initial selection) */}
         {guide && selectedEnergy && (
+          <>
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm text-white/95">Energy level</span>
             <EnergySelector
@@ -882,6 +887,8 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               disabled={isGenerating}
             />
           </div>
+          <FeatureHint id="energy-level" text="Your energy level adjusts how intense today's session feels" mode="once" />
+          </>
         )}
 
       </div>
@@ -947,6 +954,8 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
           {/* Morning Mood Check-In */}
           {!moodBefore && getTimeGreeting().period === 'morning' && (
+            <>
+            <FeatureHint id="mood-checkin" text="Mood tracking helps personalize your future sessions" mode="once" />
             <MoodCheckIn
               type="before"
               onSelect={async (mood) => {
@@ -962,6 +971,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 }
               }}
             />
+            </>
           )}
 
           {/* Smart Nudge */}
@@ -981,6 +991,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                   </div>
                 )}
               </div>
+              <FeatureHint id="morning-flow" text="Complete modules in order for the best experience" mode="once" />
 
               {morningAvailability.isAvailable ? (
                 <div className="overflow-hidden rounded-2xl animate-scale-in">
@@ -1193,6 +1204,8 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
           {/* Checkpoints */}
           {checkpoints.length > 0 && (
+            <>
+            <FeatureHint id="checkpoints" text="Checkpoints reinforce your intentions at key moments throughout the day" mode="persistent" />
             <CheckpointList
               checkpoints={checkpoints}
               scripts={{
@@ -1205,6 +1218,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               loadingCheckpoint={loadingModule?.startsWith('checkpoint') ? loadingModule : null}
               onPlayCheckpoint={(cp) => playModule(cp, musicEnabled)}
             />
+            </>
           )}
 
           {/* Day Close */}
@@ -1294,6 +1308,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                     />
                   )}
 
+                  <FeatureHint id="journal" text="Journaling anchors your progress — review entries to see growth" mode="once" />
                   <JournalEntry date={today} />
 
                   {/* Journal Lookback - "This time last week" */}

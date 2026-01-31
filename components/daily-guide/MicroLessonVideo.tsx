@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Play, Pause, Check, SkipForward, RotateCcw } from 'lucide-react'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 
 // Dark atmospheric background images (same as Discover page)
 const BACKGROUND_IMAGES = [
@@ -349,6 +350,11 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
                   {isCompleted ? 'Tap to rewatch' : video.duration ? formatTime(video.duration) : ''}
                 </p>
               </div>
+              {!isCompleted && (
+                <div className="text-center mt-3">
+                  <FeatureHint id="micro-lesson" text="Audio motivation from top creators — plays in the background" mode="once" />
+                </div>
+              )}
             </div>
           </button>
 
