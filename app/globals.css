@@ -97,6 +97,11 @@ body {
   background: linear-gradient(to bottom, transparent, black 18px, black calc(100% - 18px), transparent);
 }
 
+/* Header background — solid black top extending beyond status bar, fades at bottom */
+.header-fade-bg {
+  background: linear-gradient(to bottom, black, black calc(100% - 18px), transparent);
+}
+
 /* Mobile-first touch improvements */
 @media (hover: none) {
   button, a, input, select, textarea {

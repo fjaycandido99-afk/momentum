@@ -161,7 +161,7 @@ function JournalContent() {
   return (
     <div className="min-h-screen text-white pb-24">
       {/* Header */}
-      <div className="px-6 pt-12 pb-4 section-fade-bg">
+      <div className="px-6 pt-12 pb-4 header-fade-bg">
         <div className="flex items-center gap-3 mb-1">
           <div className="p-2 rounded-xl bg-amber-500/20">
             <PenLine className="w-5 h-5 text-amber-400" />

@@ -75,7 +75,7 @@ export default function SavedPage() {
 
   return (
     <div className="min-h-screen text-white pb-24">
-      <div className="px-6 pt-12 pb-4 section-fade-bg">
+      <div className="px-6 pt-12 pb-4 header-fade-bg">
         <h1 className="text-2xl font-semibold text-white">Saved</h1>
       </div>
 

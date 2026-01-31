@@ -130,7 +130,7 @@ export default function CoachPage() {
   if (subscription && !subscription.isPremium) {
     return (
       <div className="min-h-screen text-white flex flex-col">
-        <div className="px-6 pt-12 pb-6 flex items-center gap-3 section-fade-bg">
+        <div className="px-6 pt-12 pb-6 flex items-center gap-3 header-fade-bg">
           <Link href="/" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
             <ChevronLeft className="w-5 h-5 text-white/95" />
           </Link>
@@ -161,7 +161,7 @@ export default function CoachPage() {
   return (
     <div className="min-h-screen text-white flex flex-col">
       {/* Header with gradient */}
-      <div className="relative px-6 pt-12 pb-4 flex items-center gap-3 border-b border-white/10 section-fade-bg">
+      <div className="relative px-6 pt-12 pb-4 flex items-center gap-3 border-b border-white/10 header-fade-bg">
         {/* Subtle gradient glow behind header */}
         <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.06] to-transparent pointer-events-none" />
         <Link href="/" className="relative p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">

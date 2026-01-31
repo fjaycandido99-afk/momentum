@@ -257,7 +257,7 @@ function SettingsContent() {
   return (
     <div className="min-h-screen text-white pb-24">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6 section-fade-bg">
+      <div className="px-6 pt-12 pb-6 header-fade-bg">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <Link href="/" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">

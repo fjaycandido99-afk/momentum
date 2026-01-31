@@ -685,7 +685,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Header --- */}
-      <div className="flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down section-fade-bg">
+      <div className="flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down header-fade-bg">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-white">Explore</h1>
           <StreakBadge streak={streak} />
