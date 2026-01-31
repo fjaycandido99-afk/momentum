@@ -28,7 +28,6 @@ import { EnergyPrompt, EnergySelector } from './EnergyPrompt'
 import { ModuleCard, MorningFlowProgress } from './ModuleCard'
 import { MicroLessonVideo } from './MicroLessonVideo'
 import { QuoteCard } from './QuoteCard'
-import { AffirmationCard } from './AffirmationCard'
 import { GoalTracker } from './GoalTracker'
 import { SmartNudgeBanner } from './SmartNudgeBanner'
 import { StreakDisplay } from './StreakDisplay'
@@ -793,9 +792,6 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {!embedded && <TrialBanner variant="compact" />}
       {!embedded && <TrialEndingBanner />}
 
-      {/* Smart Nudge Popup */}
-      <SmartNudgeBanner />
-
       {/* Header */}
       <div className="p-6 animate-fade-in-down">
         {/* Greeting Section */}
@@ -893,12 +889,10 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {/* Gradient divider */}
       <div className="mx-6 divider" />
 
-      {/* AI Affirmation — gate behind ai_affirmation feature */}
-      {subscription?.checkAccess('ai_affirmation') && (
-        <div className="px-6 mb-4">
-          <AffirmationCard isPremium={subscription?.isPremium ?? false} />
-        </div>
-      )}
+      {/* Smart Nudge — inline card */}
+      <div className="px-6 mb-4">
+        <SmartNudgeBanner />
+      </div>
 
       {/* Session Limit Banner */}
       <div className="px-6 mb-4">

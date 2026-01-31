@@ -78,28 +78,27 @@ export function SmartNudgeBanner() {
   const Icon = ICON_MAP[nudge.icon] || Flame
 
   return (
-    <div className="fixed inset-0 z-50 pointer-events-none">
-      <div
-        className={`pointer-events-auto absolute bottom-24 left-4 right-4 transition-all duration-300 ease-out ${
-          isVisible
-            ? 'translate-y-0 opacity-100'
-            : 'translate-y-8 opacity-0'
-        }`}
-      >
-        <div className={`rounded-2xl bg-gradient-to-r ${colors.bg} border ${colors.border} p-4 flex items-center gap-3 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.5)]`}
-          style={{ backgroundColor: 'rgba(15, 15, 15, 0.85)' }}
-        >
-          <div className={`p-2.5 rounded-xl bg-white/10 shrink-0`}>
-            <Icon className={`w-5 h-5 ${colors.text}`} />
-          </div>
-          <p className="text-sm text-white/95 flex-1 leading-relaxed">&ldquo;{nudge.message}&rdquo;</p>
-          <button
-            onClick={handleDismiss}
-            className="p-2 rounded-xl hover:bg-white/10 transition-colors shrink-0"
-          >
-            <X className="w-4 h-4 text-white/95" />
-          </button>
+    <div
+      className={`rounded-2xl bg-gradient-to-br ${colors.bg} border ${colors.border} p-4 animate-scale-in transition-all duration-300 ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <div className={`p-2 rounded-xl bg-white/10 shrink-0`}>
+          <Icon className={`w-4 h-4 ${colors.text}`} />
         </div>
+        <div className="flex-1 min-w-0">
+          <p className={`text-[10px] font-medium tracking-widest uppercase mb-1 ${colors.text} opacity-70`}>
+            Smart Nudge
+          </p>
+          <p className="text-sm text-white/95 italic leading-relaxed">{nudge.message}</p>
+        </div>
+        <button
+          onClick={handleDismiss}
+          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors shrink-0"
+        >
+          <X className="w-3.5 h-3.5 text-white/95" />
+        </button>
       </div>
     </div>
   )
