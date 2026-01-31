@@ -99,7 +99,7 @@ export function NeuralNetworkBackground({
 
     if (nodesRef.current.length === 0) {
       const rect = canvas.getBoundingClientRect()
-      nodesRef.current = createNodes(NODE_COUNT, rect.width, rect.height)
+      nodesRef.current = createNodes(NODE_COUNT, rect.width, rect.height, topOffsetRef.current)
     }
 
     let currentOpacity = 0.2
