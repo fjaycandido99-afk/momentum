@@ -30,22 +30,31 @@ export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerPr
     lg: 'w-20 h-20',
   }
 
+  const dotSizes = {
+    sm: 'w-1.5 h-1.5',
+    md: 'w-2 h-2',
+    lg: 'w-3 h-3',
+  }
+
   return (
     <div className={`${sizeClasses[size]} relative flex items-center justify-center ${className}`}>
-      {/* Rotating ring */}
+      {/* Outer ring - dashed, rotates clockwise slow */}
       <div
-        className="absolute inset-0 rounded-full border-2 border-dashed border-white/30"
+        className="absolute inset-0 rounded-full border-2 border-dashed border-white/20"
         style={{ transform: `rotate(${rotation}deg)` }}
       />
-      {/* Logo icon */}
-      <svg
-        viewBox="0 0 192 192"
-        fill="none"
-        className="w-[55%] h-[55%] animate-pulse"
-      >
-        <path d="M96 40L136 80H112V112H80V80H56L96 40Z" fill="white" />
-        <path d="M56 128H136V152H56V128Z" fill="white" />
-      </svg>
+      {/* Middle ring - dotted, rotates counter-clockwise */}
+      <div
+        className="absolute inset-[15%] rounded-full border-2 border-dotted border-white/40"
+        style={{ transform: `rotate(${-rotation * 1.3}deg)` }}
+      />
+      {/* Inner ring - dashed, rotates clockwise faster */}
+      <div
+        className="absolute inset-[30%] rounded-full border-2 border-dashed border-white/30"
+        style={{ transform: `rotate(${rotation * 2}deg)` }}
+      />
+      {/* Center dot with glow */}
+      <div className={`${dotSizes[size]} rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]`} />
     </div>
   )
 }
@@ -53,13 +62,8 @@ export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerPr
 // Full page loading screen
 export function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6">
-      <div className="relative">
-        {/* Glow behind logo */}
-        <div className="absolute inset-0 rounded-full bg-white/10 blur-2xl scale-150" />
-        <LoadingSpinner size="lg" />
-      </div>
-      <p className="text-lg font-light text-white/80 tracking-widest">VOXU</p>
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <LoadingSpinner size="lg" />
     </div>
   )
 }
