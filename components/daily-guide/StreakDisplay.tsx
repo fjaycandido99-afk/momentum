@@ -67,8 +67,8 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
   if (streak === 0) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-        <Flame className="w-4 h-4 text-white/40" />
-        <span className="text-sm text-white/40">Start your streak!</span>
+        <Flame className="w-4 h-4 text-white/95" />
+        <span className="text-sm text-white/95">Start your streak!</span>
       </div>
     )
   }
@@ -103,12 +103,12 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
             </span>
           </div>
           {currentMilestone && (
-            <span className="text-[10px] text-white/50">{currentMilestone.label}</span>
+            <span className="text-[10px] text-white/95">{currentMilestone.label}</span>
           )}
         </div>
         {nextMilestone && (
           <div className="ml-2 pl-2 border-l border-white/10">
-            <div className="text-[10px] text-white/40">
+            <div className="text-[10px] text-white/95">
               {nextMilestone.days - streak} to {nextMilestone.label}
             </div>
           </div>
@@ -141,7 +141,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
                 onClick={handleCloseCelebration}
                 className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
               >
-                <X className="w-4 h-4 text-white/70" />
+                <X className="w-4 h-4 text-white/95" />
               </button>
 
               {/* Icon */}
@@ -160,7 +160,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
               </p>
 
               {/* Message */}
-              <p className="text-white/70 text-sm mb-6">
+              <p className="text-white/95 text-sm mb-6">
                 {streak >= 100
                   ? "Legendary! You're unstoppable!"
                   : streak >= 30
@@ -172,9 +172,9 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
 
               {/* Next milestone */}
               {nextMilestone && (
-                <div className="p-3 rounded-xl bg-white/5 text-sm text-white/60">
+                <div className="p-3 rounded-xl bg-white/5 text-sm text-white/95">
                   Next milestone: <span className="text-white font-medium">{nextMilestone.label}</span>
-                  <span className="text-white/40"> ({nextMilestone.days - streak} days away)</span>
+                  <span className="text-white/95"> ({nextMilestone.days - streak} days away)</span>
                 </div>
               )}
 
@@ -217,8 +217,8 @@ export function StreakBadge({ streak }: { streak: number }) {
   if (streak === 0) {
     return (
       <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5">
-        <Flame className="w-3.5 h-3.5 text-white/40" />
-        <span className="text-xs text-white/40">0</span>
+        <Flame className="w-3.5 h-3.5 text-white/95" />
+        <span className="text-xs text-white/95">0</span>
       </div>
     )
   }

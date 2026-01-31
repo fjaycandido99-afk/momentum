@@ -42,7 +42,7 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
             <p className="text-sm font-medium text-white leading-tight">
               {isPlaying ? 'Playing' : 'Paused'}
             </p>
-            <p className="text-xs text-white/45 leading-tight">{label || MODE_LABELS[mode]}</p>
+            <p className="text-xs text-white/95 leading-tight">{label || MODE_LABELS[mode]}</p>
           </div>
         </div>
 

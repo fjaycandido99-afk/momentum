@@ -208,7 +208,7 @@ export function AffirmationPopup() {
               >
                 <Heart
                   className={`w-4 h-4 transition-colors ${
-                    saved ? 'text-rose-400 fill-rose-400' : 'text-white/40 hover:text-white/60'
+                    saved ? 'text-rose-400 fill-rose-400' : 'text-white/95 hover:text-white/95'
                   }`}
                 />
               </button>
@@ -217,17 +217,17 @@ export function AffirmationPopup() {
                 className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
                 title="Dismiss"
               >
-                <X className="w-4 h-4 text-white/40" />
+                <X className="w-4 h-4 text-white/95" />
               </button>
             </div>
           </div>
 
           {/* Content */}
-          <p className="text-sm text-white/90 italic leading-relaxed">
+          <p className="text-sm text-white/95 italic leading-relaxed">
             &ldquo;{content.text}&rdquo;
           </p>
           {content.author && (
-            <p className="text-xs text-white/40 mt-1.5">&mdash; {content.author}</p>
+            <p className="text-xs text-white/95 mt-1.5">&mdash; {content.author}</p>
           )}
         </div>
       </div>

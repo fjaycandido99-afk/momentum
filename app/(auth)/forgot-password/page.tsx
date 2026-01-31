@@ -64,13 +64,13 @@ export default function ForgotPasswordPage() {
           >
             <CheckCircle className="w-10 h-10 text-green-400" />
           </div>
-          <h1 className="text-2xl font-light text-white/90">Check your email</h1>
-          <p className="text-white/40 text-sm mt-3">
-            We sent a password reset link to <span className="text-white/70">{email}</span>
+          <h1 className="text-2xl font-light text-white/95">Check your email</h1>
+          <p className="text-white/95 text-sm mt-3">
+            We sent a password reset link to <span className="text-white/95">{email}</span>
           </p>
           <Link
             href="/login"
-            className="inline-block mt-8 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 transition-all"
+            className="inline-block mt-8 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white/95 hover:bg-white/10 transition-all"
           >
             Back to login
           </Link>
@@ -103,8 +103,8 @@ export default function ForgotPasswordPage() {
             {/* Center dot with glow */}
             <div className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
           </div>
-          <h1 className="text-2xl font-light text-white/90">Reset password</h1>
-          <p className="text-white/40 text-sm mt-2">
+          <h1 className="text-2xl font-light text-white/95">Reset password</h1>
+          <p className="text-white/95 text-sm mt-2">
             Enter your email and we&apos;ll send you a reset link
           </p>
         </div>
@@ -112,7 +112,7 @@ export default function ForgotPasswordPage() {
         {/* Form */}
         <form onSubmit={handleResetPassword} className="space-y-5">
           <div>
-            <label className="block text-white/60 text-sm mb-2">Email</label>
+            <label className="block text-white/95 text-sm mb-2">Email</label>
             <input
               type="email"
               placeholder="you@email.com"
@@ -149,7 +149,7 @@ export default function ForgotPasswordPage() {
         {/* Footer */}
         <Link
           href="/login"
-          className="flex items-center justify-center gap-2 text-sm text-white/40 mt-8 hover:text-white/70 transition-colors"
+          className="flex items-center justify-center gap-2 text-sm text-white/95 mt-8 hover:text-white/95 transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           Back to login

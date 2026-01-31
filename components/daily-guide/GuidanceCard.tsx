@@ -115,7 +115,7 @@ export function GuidanceCard({
       <div className="relative p-4">
         <div className="flex items-center justify-between mb-3">
           {/* Segment label */}
-          <span className="text-xs font-semibold tracking-wider text-white/60">
+          <span className="text-xs font-semibold tracking-wider text-white/95">
             {config.label}
           </span>
 
@@ -133,7 +133,7 @@ export function GuidanceCard({
                 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
                 transition-all
                 ${isLoading
-                  ? 'bg-white/10 text-white/40 cursor-wait'
+                  ? 'bg-white/10 text-white/95 cursor-wait'
                   : 'bg-white/10 text-white hover:bg-white/20 active:scale-95'
                 }
               `}
@@ -151,7 +151,7 @@ export function GuidanceCard({
               )}
             </button>
           ) : (
-            <span className="flex items-center gap-1.5 text-xs text-white/40">
+            <span className="flex items-center gap-1.5 text-xs text-white/95">
               <Clock className="w-3.5 h-3.5" />
               Available {availableTime}
             </span>
@@ -160,15 +160,15 @@ export function GuidanceCard({
 
         {/* Script preview */}
         {scriptPreview && isAvailable ? (
-          <p className="text-sm text-white/60 leading-relaxed">
+          <p className="text-sm text-white/95 leading-relaxed">
             &ldquo;{scriptPreview}&rdquo;
           </p>
         ) : !isAvailable ? (
-          <p className="text-sm text-white/30 italic">
+          <p className="text-sm text-white/95 italic">
             Available at {availableTime}
           </p>
         ) : (
-          <p className="text-sm text-white/30 italic">
+          <p className="text-sm text-white/95 italic">
             Generating...
           </p>
         )}

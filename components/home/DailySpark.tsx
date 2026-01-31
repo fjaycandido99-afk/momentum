@@ -263,7 +263,7 @@ export function DailySpark() {
               >
                 <Heart
                   className={`w-4 h-4 transition-colors ${
-                    saved ? 'text-rose-400 fill-rose-400' : 'text-white/40 hover:text-white/60'
+                    saved ? 'text-rose-400 fill-rose-400' : 'text-white/95 hover:text-white/95'
                   }`}
                 />
               </button>
@@ -271,7 +271,7 @@ export function DailySpark() {
                 onClick={() => dismiss()}
                 className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
               >
-                <X className="w-4 h-4 text-white/40" />
+                <X className="w-4 h-4 text-white/95" />
               </button>
             </div>
           </div>
@@ -303,7 +303,7 @@ export function DailySpark() {
                   }}
                   placeholder="Type your reflection..."
                   rows={2}
-                  className="w-full px-4 py-3 pr-12 rounded-xl bg-white/5 border border-white/10 focus:border-violet-400/40 focus:bg-white/[0.07] text-sm text-white/90 placeholder:text-white/30 outline-none resize-none transition-colors"
+                  className="w-full px-4 py-3 pr-12 rounded-xl bg-white/5 border border-white/10 focus:border-violet-400/40 focus:bg-white/[0.07] text-sm text-white/95 placeholder:text-white/95 outline-none resize-none transition-colors"
                 />
                 <button
                   onClick={handleSubmitAnswer}
@@ -311,12 +311,12 @@ export function DailySpark() {
                   className="absolute right-2 bottom-2 p-2 rounded-lg bg-violet-500/30 hover:bg-violet-500/40 disabled:opacity-30 disabled:hover:bg-violet-500/30 transition-colors"
                   title="Save reflection"
                 >
-                  <Send className={`w-4 h-4 ${saving ? 'text-white/30' : 'text-violet-300'}`} />
+                  <Send className={`w-4 h-4 ${saving ? 'text-white/95' : 'text-violet-300'}`} />
                 </button>
               </div>
               <button
                 onClick={() => dismiss()}
-                className="w-full mt-2 py-2 rounded-xl text-xs text-white/30 hover:text-white/50 transition-colors"
+                className="w-full mt-2 py-2 rounded-xl text-xs text-white/95 hover:text-white/95 transition-colors"
               >
                 Skip
               </button>
@@ -325,7 +325,7 @@ export function DailySpark() {
             <div className="mt-4 spark-text-in" style={{ animationDelay: '0.4s' }}>
               <div className="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                 <p className="text-xs text-emerald-400 font-medium mb-1">Saved!</p>
-                <p className="text-sm text-white/70 italic">{answer}</p>
+                <p className="text-sm text-white/95 italic">{answer}</p>
               </div>
             </div>
           ) : (

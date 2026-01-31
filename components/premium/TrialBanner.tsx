@@ -29,7 +29,7 @@ export function TrialBanner({ variant = 'compact' }: TrialBannerProps) {
       <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-b border-amber-500/20">
         <div className="flex items-center gap-2">
           <Crown className="w-4 h-4 text-amber-400" />
-          <span className="text-sm text-white/80">
+          <span className="text-sm text-white/95">
             <span className="font-medium text-amber-400">{trialDaysLeft} days</span> left in your free trial
           </span>
         </div>
@@ -49,14 +49,14 @@ export function TrialBanner({ variant = 'compact' }: TrialBannerProps) {
             <p className="text-white font-medium">
               Premium Trial
             </p>
-            <p className="text-white/60 text-sm">
+            <p className="text-white/95 text-sm">
               {trialDaysLeft === 1
                 ? 'Last day of your trial!'
                 : `${trialDaysLeft} days remaining`
               }
             </p>
           </div>
-          <ChevronRight className="w-5 h-5 text-white/40" />
+          <ChevronRight className="w-5 h-5 text-white/95" />
         </div>
 
         {/* Progress bar */}
@@ -89,7 +89,7 @@ export function TrialEndingBanner() {
         </div>
         <div>
           <p className="text-white font-medium">Trial Ending Soon</p>
-          <p className="text-white/60 text-sm mt-0.5">
+          <p className="text-white/95 text-sm mt-0.5">
             {trialDaysLeft === 0
               ? 'Your trial ends today. Subscribe to keep premium features.'
               : 'Your trial ends tomorrow. Subscribe to keep premium features.'

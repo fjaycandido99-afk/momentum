@@ -311,7 +311,7 @@ export function SessionPlayer({ activityType, duration, onComplete }: SessionPla
           <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center">
             <Volume2 className="w-8 h-8 text-blue-400 animate-pulse" />
           </div>
-          <p className="text-white/60">Preparing your session...</p>
+          <p className="text-white/95">Preparing your session...</p>
         </div>
       </div>
     )
@@ -328,10 +328,10 @@ export function SessionPlayer({ activityType, duration, onComplete }: SessionPla
 
           <div className="text-center">
             <h2 className="text-2xl font-light text-white mb-2">Session complete.</h2>
-            <p className="text-white/50">Nice work.</p>
+            <p className="text-white/95">Nice work.</p>
           </div>
 
-          <div className="flex items-center gap-6 text-white/40 text-sm mt-4">
+          <div className="flex items-center gap-6 text-white/95 text-sm mt-4">
             <span>{formatTime(elapsedSeconds)}</span>
             <span>•</span>
             <span>{segments.length} segments</span>
@@ -344,7 +344,7 @@ export function SessionPlayer({ activityType, duration, onComplete }: SessionPla
             Done
           </button>
 
-          <p className="text-white/30 text-xs mt-4">
+          <p className="text-white/95 text-xs mt-4">
             Same time tomorrow?
           </p>
         </div>
@@ -363,7 +363,7 @@ export function SessionPlayer({ activityType, duration, onComplete }: SessionPla
         >
           <X className="w-6 h-6" />
         </button>
-        <span className="text-sm text-white/60">{formatTime(elapsedSeconds)}</span>
+        <span className="text-sm text-white/95">{formatTime(elapsedSeconds)}</span>
         <button
           onClick={skipSegment}
           className="p-2 rounded-full hover:bg-white/10 transition-colors"
@@ -376,10 +376,10 @@ export function SessionPlayer({ activityType, duration, onComplete }: SessionPla
       <div className="flex-1 flex flex-col items-center justify-center px-8">
         {/* Segment type indicator */}
         <div className="flex items-center gap-2 mb-6">
-          <span className="text-xs uppercase tracking-wider text-white/40">
+          <span className="text-xs uppercase tracking-wider text-white/95">
             {ACTIVITY_LABELS[activityType]}
           </span>
-          <span className="text-white/20">·</span>
+          <span className="text-white/95">·</span>
           <span className="text-sm uppercase tracking-wider text-blue-400 font-medium">
             {segmentTypeLabel}
           </span>
@@ -419,7 +419,7 @@ export function SessionPlayer({ activityType, duration, onComplete }: SessionPla
         <button
           onClick={() => setAmbientEnabled(!ambientEnabled)}
           className={`p-3 rounded-full transition-colors ${
-            ambientEnabled ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-white/40'
+            ambientEnabled ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-white/95'
           }`}
         >
           <Music className="w-5 h-5" />
@@ -443,7 +443,7 @@ export function SessionPlayer({ activityType, duration, onComplete }: SessionPla
         <button
           onClick={() => setUseElevenLabs(!useElevenLabs)}
           className={`p-3 rounded-full transition-colors ${
-            useElevenLabs ? 'bg-green-500/20 text-green-400' : 'bg-white/5 text-white/40'
+            useElevenLabs ? 'bg-green-500/20 text-green-400' : 'bg-white/5 text-white/95'
           }`}
           title={useElevenLabs ? 'AI Voice (ElevenLabs)' : 'Browser Voice'}
         >

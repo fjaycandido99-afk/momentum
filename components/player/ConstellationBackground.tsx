@@ -18,14 +18,13 @@ interface ConstellationBackgroundProps {
   speed?: number          // drift speed multiplier (default 0.3)
   className?: string
   pointerRef?: RefObject<{ x: number; y: number; active: boolean }>
+  topOffset?: number
 }
 
-const TOP_OFFSET = 50
-
-function createNodes(count: number, speed: number, w: number, h: number): ConstellationNode[] {
+function createNodes(count: number, speed: number, w: number, h: number, topOffset: number): ConstellationNode[] {
   return Array.from({ length: count }, () => ({
     x: Math.random() * w,
-    y: TOP_OFFSET + Math.random() * (h - TOP_OFFSET),
+    y: topOffset + Math.random() * (h - topOffset),
     vx: (Math.random() - 0.5) * speed * 2,
     vy: (Math.random() - 0.5) * speed * 2,
     radius: 1.2 + Math.random() * 2,
@@ -40,11 +39,13 @@ export function ConstellationBackground({
   speed = 0.3,
   className = '',
   pointerRef,
+  topOffset = 50,
 }: ConstellationBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const nodesRef = useRef<ConstellationNode[]>([])
   const animFrameRef = useRef<number>()
   const animateRef = useRef(animate)
+  const topOffsetRef = useRef(topOffset)
 
   useEffect(() => { animateRef.current = animate }, [animate])
 
@@ -61,7 +62,7 @@ export function ConstellationBackground({
       canvas.height = rect.height * dpr
       ctx.scale(dpr, dpr)
       if (nodesRef.current.length === 0) {
-        nodesRef.current = createNodes(nodeCount, speed, rect.width, rect.height)
+        nodesRef.current = createNodes(nodeCount, speed, rect.width, rect.height, topOffsetRef.current)
       }
     }
     resize()
@@ -69,7 +70,7 @@ export function ConstellationBackground({
 
     if (nodesRef.current.length === 0) {
       const rect = canvas.getBoundingClientRect()
-      nodesRef.current = createNodes(nodeCount, speed, rect.width, rect.height)
+      nodesRef.current = createNodes(nodeCount, speed, rect.width, rect.height, topOffsetRef.current)
     }
 
     let currentOpacity = 0.2
@@ -106,9 +107,9 @@ export function ConstellationBackground({
           }
 
           if (n.x < 0 || n.x > w) n.vx *= -1
-          if (n.y < TOP_OFFSET || n.y > h) n.vy *= -1
+          if (n.y < topOffsetRef.current || n.y > h) n.vy *= -1
           n.x = Math.max(0, Math.min(w, n.x))
-          n.y = Math.max(TOP_OFFSET, Math.min(h, n.y))
+          n.y = Math.max(topOffsetRef.current, Math.min(h, n.y))
         }
       }
 

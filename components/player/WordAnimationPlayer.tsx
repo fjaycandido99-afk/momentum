@@ -264,7 +264,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
         {/* Status text or error fallback */}
         {!externalAudio && embedError ? (
           <div className="flex flex-col items-center gap-4">
-            <p className="text-white/70 text-sm text-center">
+            <p className="text-white/95 text-sm text-center">
               This video can&apos;t be embedded
             </p>
             <a
@@ -307,13 +307,13 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
                   }}
                 />
               </div>
-              <div className="flex justify-between mt-3 text-white/80 text-sm font-medium">
+              <div className="flex justify-between mt-3 text-white/95 text-sm font-medium">
                 <span>{formatTime(activeCurrentTime)}</span>
                 <span>{activeDuration > 0 ? formatTime(activeDuration) : '--:--'}</span>
               </div>
             </div>
 
-            <p className="text-white/70 text-sm">
+            <p className="text-white/95 text-sm">
               {!activeReady ? 'Loading...' : isPlaying ? 'Now playing' : 'Paused'}
             </p>
           </div>

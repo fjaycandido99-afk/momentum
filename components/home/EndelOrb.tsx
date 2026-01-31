@@ -96,7 +96,7 @@ export function EndelOrb({ mode, isPlaying, onTogglePlay }: EndelOrbProps) {
         />
 
         {/* Play/Pause icon */}
-        <div className="relative z-10 text-white/80">
+        <div className="relative z-10 text-white/95">
           {isPlaying ? (
             <Pause className="w-12 h-12" strokeWidth={1.5} />
           ) : (

@@ -129,19 +129,19 @@ export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
           onClick={onClose}
           className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
         >
-          <ChevronDown className="w-6 h-6 text-white/80" />
+          <ChevronDown className="w-6 h-6 text-white/95" />
         </button>
 
         <div className="text-center">
           <h1 className="text-white text-lg font-medium">{config.title}</h1>
-          <p className="text-white/80 text-sm">{config.subtitle}</p>
+          <p className="text-white/95 text-sm">{config.subtitle}</p>
         </div>
 
         <button
           onClick={onClose}
           className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
         >
-          <X className="w-6 h-6 text-white/80" />
+          <X className="w-6 h-6 text-white/95" />
         </button>
       </div>
 
@@ -189,7 +189,7 @@ export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
             />
 
             {/* Play/Pause icon */}
-            <div className="relative z-10 text-white/80">
+            <div className="relative z-10 text-white/95">
               {isPlaying ? (
                 <Pause className="w-12 h-12" strokeWidth={1.5} />
               ) : (
@@ -226,7 +226,7 @@ export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
 
       {/* Bottom info */}
       <div className="p-8 text-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
-        <p className="text-white/50 text-sm">
+        <p className="text-white/95 text-sm">
           {isPlaying ? 'Tap orb to pause' : 'Tap orb to play'}
         </p>
       </div>

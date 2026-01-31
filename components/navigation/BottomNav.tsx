@@ -38,7 +38,7 @@ export function BottomNav() {
                 }`}>
                   <Icon className={`w-5 h-5 transition-all duration-200 ${isActive ? 'text-black' : 'text-white'}`} />
                 </div>
-                <span className={`text-[10px] ${isActive ? 'text-white' : 'text-white/60'}`}>
+                <span className={`text-[10px] ${isActive ? 'text-white' : 'text-white/95'}`}>
                   {item.label}
                 </span>
               </Link>
@@ -52,7 +52,7 @@ export function BottomNav() {
               className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg transition-all duration-200 press-scale ${
                 isActive
                   ? 'text-white'
-                  : 'text-white/60 hover:text-white/80'
+                  : 'text-white/95 hover:text-white/95'
               }`}
             >
               <Icon className="w-5 h-5 transition-all duration-200" strokeWidth={isActive ? 2 : 1.5} />

@@ -80,8 +80,8 @@ export default function LoginPage() {
             {/* Center dot with glow */}
             <div className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
           </div>
-          <h1 className="text-2xl font-light text-white/90">Welcome back</h1>
-          <p className="text-white/40 text-sm mt-2">
+          <h1 className="text-2xl font-light text-white/95">Welcome back</h1>
+          <p className="text-white/95 text-sm mt-2">
             Sign in to Voxu
           </p>
         </div>
@@ -89,7 +89,7 @@ export default function LoginPage() {
         {/* Form */}
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-white/60 text-sm mb-2">Email</label>
+            <label className="block text-white/95 text-sm mb-2">Email</label>
             <input
               type="email"
               placeholder="you@email.com"
@@ -102,7 +102,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-white/60 text-sm mb-2">Password</label>
+            <label className="block text-white/95 text-sm mb-2">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -116,7 +116,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/95 hover:text-white/95 transition-colors"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -147,15 +147,15 @@ export default function LoginPage() {
 
         {/* Forgot password */}
         <div className="text-center mt-6">
-          <Link href="/forgot-password" className="text-sm text-white/40 hover:text-white/70 transition-colors">
+          <Link href="/forgot-password" className="text-sm text-white/95 hover:text-white/95 transition-colors">
             Forgot your password?
           </Link>
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-white/40 mt-8">
+        <p className="text-center text-sm text-white/95 mt-8">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-white font-medium hover:text-white/80 transition-colors">
+          <Link href="/signup" className="text-white font-medium hover:text-white/95 transition-colors">
             Sign up
           </Link>
         </p>

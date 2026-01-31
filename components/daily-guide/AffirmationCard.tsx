@@ -62,7 +62,7 @@ export function AffirmationCard({ isPremium }: AffirmationCardProps) {
           <p className="text-[10px] font-medium tracking-widest text-indigo-400/70 uppercase mb-1">
             Daily Affirmation
           </p>
-          <p className="text-sm text-white/90 italic leading-relaxed">
+          <p className="text-sm text-white/95 italic leading-relaxed">
             {affirmation}
           </p>
         </div>

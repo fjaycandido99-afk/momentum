@@ -6,6 +6,7 @@ interface HexGridBackgroundProps {
   animate?: boolean
   className?: string
   pointerRef?: RefObject<{ x: number; y: number; active: boolean }>
+  topOffset?: number
 }
 
 interface HexCell {
@@ -51,9 +52,7 @@ function hexPerimeterPoint(
   ]
 }
 
-const TOP_OFFSET = 50
-
-function buildHexGrid(w: number, h: number, radius: number): HexCell[] {
+function buildHexGrid(w: number, h: number, radius: number, topOffset: number): HexCell[] {
   const cells: HexCell[] = []
   const hexWidth = radius * 2
   const hexHeight = Math.sqrt(3) * radius
@@ -61,7 +60,7 @@ function buildHexGrid(w: number, h: number, radius: number): HexCell[] {
   const rowSpacing = hexHeight
 
   const startX = -radius
-  const startY = TOP_OFFSET - radius
+  const startY = topOffset - radius
 
   const cols = Math.ceil((w - startX) / colSpacing) + 2
   const rows = Math.ceil((h - startY) / rowSpacing) + 2
@@ -89,11 +88,13 @@ export function HexGridBackground({
   animate = true,
   className = '',
   pointerRef,
+  topOffset = 50,
 }: HexGridBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cellsRef = useRef<HexCell[]>([])
   const animFrameRef = useRef<number>()
   const animateRef = useRef(animate)
+  const topOffsetRef = useRef(topOffset)
 
   useEffect(() => { animateRef.current = animate }, [animate])
 
@@ -103,7 +104,7 @@ export function HexGridBackground({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const HEX_RADIUS = 70
+    let HEX_RADIUS = 70
     const MIN_LIT = 8
     const MAX_LIT = 15
     const GLOW_MIN = 0.25
@@ -127,7 +128,8 @@ export function HexGridBackground({
       canvas.width = rect.width * dpr
       canvas.height = rect.height * dpr
       ctx.scale(dpr, dpr)
-      cellsRef.current = buildHexGrid(rect.width, rect.height, HEX_RADIUS)
+      HEX_RADIUS = Math.max(20, Math.min(70, Math.min(rect.width, rect.height) * 0.18))
+      cellsRef.current = buildHexGrid(rect.width, rect.height, HEX_RADIUS, topOffsetRef.current)
     }
     resize()
     window.addEventListener('resize', resize)

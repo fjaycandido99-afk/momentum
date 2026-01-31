@@ -654,8 +654,8 @@ export function ImmersiveHome() {
               onClick={() => setShowMorningFlow(false)}
               className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors"
             >
-              <Home className="w-4 h-4 text-white/80" />
-              <span className="text-sm text-white/80">Home</span>
+              <Home className="w-4 h-4 text-white/95" />
+              <span className="text-sm text-white/95">Home</span>
             </button>
           </div>
         </div>
@@ -675,10 +675,10 @@ export function ImmersiveHome() {
         <div className="flex flex-col items-center gap-1 pb-2">
           <ChevronDown
             className={`w-5 h-5 transition-transform duration-200 ${
-              pullDistance >= PULL_THRESHOLD ? 'text-white rotate-180' : 'text-white/50'
+              pullDistance >= PULL_THRESHOLD ? 'text-white rotate-180' : 'text-white/95'
             }`}
           />
-          <span className="text-xs text-white/60">
+          <span className="text-xs text-white/95">
             {pullDistance >= PULL_THRESHOLD ? 'Release for Daily Guide' : 'Pull down for Daily Guide'}
           </span>
         </div>
@@ -695,19 +695,19 @@ export function ImmersiveHome() {
             href="/journal"
             className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors"
           >
-            <PenLine className="w-5 h-5 text-white/60" />
+            <PenLine className="w-5 h-5 text-white/95" />
           </Link>
           <Link
             href="/saved"
             className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors"
           >
-            <Save className="w-5 h-5 text-white/60" />
+            <Save className="w-5 h-5 text-white/95" />
           </Link>
           <Link
             href="/settings"
             className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors"
           >
-            <Settings className="w-5 h-5 text-white/60" />
+            <Settings className="w-5 h-5 text-white/95" />
           </Link>
         </div>
       </div>
@@ -722,16 +722,16 @@ export function ImmersiveHome() {
             <div className="relative">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-xl bg-[#111113] border border-white/15">
-                  <Sun className="w-5 h-5 text-white/80" />
+                  <Sun className="w-5 h-5 text-white/95" />
                 </div>
                 <div>
                   <h2 className="text-lg font-medium text-white">Your Daily Guide</h2>
-                  <p className="text-xs text-white/60">Morning flow, checkpoints & more</p>
+                  <p className="text-xs text-white/95">Morning flow, checkpoints & more</p>
                 </div>
               </div>
               <div className="flex items-center justify-between mt-4">
-                <p className="text-sm text-white/50">Tap to open your full guide</p>
-                <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-white/70 transition-colors" />
+                <p className="text-sm text-white/95">Tap to open your full guide</p>
+                <ChevronRight className="w-5 h-5 text-white/95 group-hover:text-white/95 transition-colors" />
               </div>
             </div>
           </div>
@@ -771,9 +771,9 @@ export function ImmersiveHome() {
                 className="flex flex-col items-center gap-2 shrink-0 press-scale"
               >
                 <div className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round">
-                  <Icon className="w-5 h-5 text-white/80" strokeWidth={1.5} />
+                  <Icon className="w-5 h-5 text-white/95" strokeWidth={1.5} />
                 </div>
-                <span className="text-[11px] text-white/80">{item.label}</span>
+                <span className="text-[11px] text-white/95">{item.label}</span>
               </button>
             )
           })}
@@ -796,15 +796,15 @@ export function ImmersiveHome() {
               >
                 <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isLoading ? 'bg-white/8' : ''}`}>
                   {isLoading ? (
-                    <Loader2 className="w-5 h-5 text-white/60 animate-spin" />
+                    <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
                   ) : (
                     <Icon
-                      className="w-5 h-5 text-white/80 transition-colors duration-200"
+                      className="w-5 h-5 text-white/95 transition-colors duration-200"
                       strokeWidth={1.5}
                     />
                   )}
                 </div>
-                <span className="text-[11px] text-white/80">{guide.name}</span>
+                <span className="text-[11px] text-white/95">{guide.name}</span>
               </button>
             )
           })}
@@ -816,7 +816,7 @@ export function ImmersiveHome() {
         <div className="flex items-center justify-between px-6 mb-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Motivation</h2>
-            <p className="text-xs text-white/50 mt-0.5">{topicName} &middot; {TOPIC_TAGLINES[topicName]}</p>
+            <p className="text-xs text-white/95 mt-0.5">{topicName} &middot; {TOPIC_TAGLINES[topicName]}</p>
           </div>
         </div>
         <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
@@ -850,12 +850,12 @@ export function ImmersiveHome() {
                         <Pause className="w-8 h-8 text-white drop-shadow-lg" fill="white" />
                       )
                     ) : (
-                      <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                      <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
                     )}
                   </div>
                 </div>
-                <p className="text-sm text-white/90 mt-2 line-clamp-2 leading-tight">{video.title}</p>
-                <p className="text-xs text-white/50 mt-0.5">{video.channel}</p>
+                <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+                <p className="text-xs text-white/95 mt-0.5">{video.channel}</p>
               </button>
             ))
           )}
@@ -873,7 +873,7 @@ export function ImmersiveHome() {
             <div className="flex items-center justify-between px-6 mb-4">
               <div>
                 <h2 className="text-lg font-semibold text-white">{g.word}</h2>
-                <p className="text-xs text-white/50 mt-0.5">{g.tagline}</p>
+                <p className="text-xs text-white/95 mt-0.5">{g.tagline}</p>
               </div>
             </div>
             <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
@@ -886,7 +886,7 @@ export function ImmersiveHome() {
                   </div>
                 ))
               ) : videos.length === 0 ? (
-                <div className="text-sm text-white/50 py-8 px-2">No tracks available</div>
+                <div className="text-sm text-white/95 py-8 px-2">No tracks available</div>
               ) : (
                 videos.slice(0, 8).map((video, index) => (
                   <button
@@ -913,12 +913,12 @@ export function ImmersiveHome() {
                             <Pause className="w-8 h-8 text-white drop-shadow-lg" fill="white" />
                           )
                         ) : (
-                          <Play className="w-8 h-8 text-white/80 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                          <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
                         )}
                       </div>
                     </div>
-                    <p className="text-sm text-white/90 mt-2 line-clamp-2 leading-tight">{video.title}</p>
-                    <p className="text-xs text-white/50 mt-0.5">{video.channel}</p>
+                    <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+                    <p className="text-xs text-white/95 mt-0.5">{video.channel}</p>
                   </button>
                 ))
               )}

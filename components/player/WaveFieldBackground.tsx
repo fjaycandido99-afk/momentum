@@ -6,6 +6,7 @@ interface WaveFieldBackgroundProps {
   animate?: boolean
   className?: string
   pointerRef?: RefObject<{ x: number; y: number; active: boolean }>
+  topOffset?: number
 }
 
 interface WaveDot {
@@ -16,13 +17,11 @@ interface WaveDot {
   phase: number
 }
 
-const TOP_OFFSET = 50
-
-function createDots(w: number, h: number): WaveDot[] {
+function createDots(w: number, h: number, topOffset: number): WaveDot[] {
   const cols = 10
   const rows = 7
   const spacingX = w / (cols + 1)
-  const usableHeight = h - TOP_OFFSET
+  const usableHeight = h - topOffset
   const spacingY = usableHeight / (rows + 1)
   const dots: WaveDot[] = []
   for (let r = 0; r < rows; r++) {
@@ -31,7 +30,7 @@ function createDots(w: number, h: number): WaveDot[] {
         col: c,
         row: r,
         baseX: spacingX * (c + 1),
-        baseY: TOP_OFFSET + spacingY * (r + 1),
+        baseY: topOffset + spacingY * (r + 1),
         phase: (c + r) * 0.4,
       })
     }
@@ -43,11 +42,13 @@ export function WaveFieldBackground({
   animate = true,
   className = '',
   pointerRef,
+  topOffset = 50,
 }: WaveFieldBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const dotsRef = useRef<WaveDot[]>([])
   const animFrameRef = useRef<number>()
   const animateRef = useRef(animate)
+  const topOffsetRef = useRef(topOffset)
 
   useEffect(() => { animateRef.current = animate }, [animate])
 
@@ -63,7 +64,7 @@ export function WaveFieldBackground({
       canvas.width = rect.width * dpr
       canvas.height = rect.height * dpr
       ctx.scale(dpr, dpr)
-      dotsRef.current = createDots(rect.width, rect.height)
+      dotsRef.current = createDots(rect.width, rect.height, topOffsetRef.current)
     }
     resize()
     window.addEventListener('resize', resize)
@@ -105,7 +106,7 @@ export function WaveFieldBackground({
           }
         }
 
-        const y = Math.max(TOP_OFFSET, d.baseY + yOffset)
+        const y = Math.max(topOffsetRef.current, d.baseY + yOffset)
 
         const brightness = 0.4 + 0.4 * ((wave + 1) / 2)
 

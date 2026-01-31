@@ -54,17 +54,17 @@ export function RestDaySuggestion({ streak, dayType, onTakeRecoveryDay }: RestDa
           </div>
           <div>
             <h3 className="font-medium text-white text-sm">Rest Day Suggestion</h3>
-            <p className="text-xs text-white/50">{streak}-day streak! You&apos;ve earned it</p>
+            <p className="text-xs text-white/95">{streak}-day streak! You&apos;ve earned it</p>
           </div>
         </div>
         <button
           onClick={handleDismiss}
           className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
         >
-          <X className="w-4 h-4 text-white/40" />
+          <X className="w-4 h-4 text-white/95" />
         </button>
       </div>
-      <p className="text-sm text-white/70 mb-3">
+      <p className="text-sm text-white/95 mb-3">
         You&apos;ve been consistent for {streak} days straight. Recovery days help you come back stronger.
       </p>
       <div className="flex gap-2">
@@ -76,7 +76,7 @@ export function RestDaySuggestion({ streak, dayType, onTakeRecoveryDay }: RestDa
         </button>
         <button
           onClick={handleDismiss}
-          className="py-2 px-3 rounded-xl bg-white/5 text-white/50 text-sm hover:bg-white/10 transition-colors"
+          className="py-2 px-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 transition-colors"
         >
           Not today
         </button>

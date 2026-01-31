@@ -223,7 +223,7 @@ function PlayerUI({
             {title}
           </h1>
           {author && (
-            <p className="mt-4 text-white/50 text-sm">by {author}</p>
+            <p className="mt-4 text-white/95 text-sm">by {author}</p>
           )}
         </div>
 
@@ -244,7 +244,7 @@ function PlayerUI({
         </div>
 
         {/* Status */}
-        <div className="mt-16 text-white/50 text-sm">
+        <div className="mt-16 text-white/95 text-sm">
           {isPlaying ? 'Now playing...' : 'Loading...'}
         </div>
       </div>

@@ -149,12 +149,12 @@ export default function PricingPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Unlock Your Full Potential
           </h1>
-          <p className="text-lg text-white/60 max-w-2xl mx-auto mb-8">
+          <p className="text-lg text-white/95 max-w-2xl mx-auto mb-8">
             Get unlimited access to all premium features and take your focus sessions to the next level.
           </p>
 
           {/* Quick pricing preview */}
-          <div className="flex items-center justify-center gap-2 text-white/40">
+          <div className="flex items-center justify-center gap-2 text-white/95">
             <span>Starting at</span>
             <span className="text-2xl font-bold text-white">${YEARLY_MONTHLY}</span>
             <span>/month</span>
@@ -173,7 +173,7 @@ export default function PricingPage() {
                 className={`py-2.5 px-6 rounded-lg text-sm font-medium transition-all ${
                   billingPeriod === 'monthly'
                     ? 'bg-white/10 text-white'
-                    : 'text-white/50 hover:text-white/70'
+                    : 'text-white/95 hover:text-white/95'
                 }`}
               >
                 Monthly
@@ -183,7 +183,7 @@ export default function PricingPage() {
                 className={`py-2.5 px-6 rounded-lg text-sm font-medium transition-all ${
                   billingPeriod === 'yearly'
                     ? 'bg-white/10 text-white'
-                    : 'text-white/50 hover:text-white/70'
+                    : 'text-white/95 hover:text-white/95'
                 }`}
               >
                 Yearly
@@ -198,36 +198,36 @@ export default function PricingPage() {
             <div className="relative p-6 rounded-2xl bg-white/[0.02] border border-white/10">
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-white mb-2">Free</h3>
-                <p className="text-white/50 text-sm">Perfect for trying out Voxu</p>
+                <p className="text-white/95 text-sm">Perfect for trying out Voxu</p>
               </div>
 
               <div className="mb-6">
                 <span className="text-3xl font-bold text-white">$0</span>
-                <span className="text-white/40">/forever</span>
+                <span className="text-white/95">/forever</span>
               </div>
 
               <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/40 flex-shrink-0" />
+                <li className="flex items-center gap-3 text-white/95 text-sm">
+                  <Check className="w-4 h-4 text-white/95 flex-shrink-0" />
                   <span>1 session per day</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/40 flex-shrink-0" />
+                <li className="flex items-center gap-3 text-white/95 text-sm">
+                  <Check className="w-4 h-4 text-white/95 flex-shrink-0" />
                   <span>10-minute session limit</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/40 flex-shrink-0" />
+                <li className="flex items-center gap-3 text-white/95 text-sm">
+                  <Check className="w-4 h-4 text-white/95 flex-shrink-0" />
                   <span>Daily rotation music</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/40 text-sm">
+                <li className="flex items-center gap-3 text-white/95 text-sm">
                   <X className="w-4 h-4 flex-shrink-0" />
                   <span>Checkpoints</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/40 text-sm">
+                <li className="flex items-center gap-3 text-white/95 text-sm">
                   <X className="w-4 h-4 flex-shrink-0" />
                   <span>Journal history</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/40 text-sm">
+                <li className="flex items-center gap-3 text-white/95 text-sm">
                   <X className="w-4 h-4 flex-shrink-0" />
                   <span>Offline downloads</span>
                 </li>
@@ -255,19 +255,19 @@ export default function PricingPage() {
                   <Crown className="w-5 h-5 text-amber-400" />
                   <h3 className="text-xl font-semibold text-white">Premium</h3>
                 </div>
-                <p className="text-white/50 text-sm">The full Voxu experience</p>
+                <p className="text-white/95 text-sm">The full Voxu experience</p>
               </div>
 
               <div className="mb-6">
                 {billingPeriod === 'monthly' ? (
                   <>
                     <span className="text-3xl font-bold text-white">${MONTHLY_PRICE}</span>
-                    <span className="text-white/40">/month</span>
+                    <span className="text-white/95">/month</span>
                   </>
                 ) : (
                   <>
                     <span className="text-3xl font-bold text-white">${YEARLY_PRICE}</span>
-                    <span className="text-white/40">/year</span>
+                    <span className="text-white/95">/year</span>
                     <p className="text-amber-400/80 text-sm mt-1">
                       Just ${YEARLY_MONTHLY}/month
                     </p>
@@ -276,37 +276,37 @@ export default function PricingPage() {
               </div>
 
               <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-white/90 text-sm">
+                <li className="flex items-center gap-3 text-white/95 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
                   <span>Unlimited daily sessions</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/90 text-sm">
+                <li className="flex items-center gap-3 text-white/95 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
                   <span>No time limits</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/90 text-sm">
+                <li className="flex items-center gap-3 text-white/95 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
                   <span>All 6 music genres</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/90 text-sm">
+                <li className="flex items-center gap-3 text-white/95 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
                   <span>All checkpoints & features</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/90 text-sm">
+                <li className="flex items-center gap-3 text-white/95 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
                   <span>Full journal history</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/90 text-sm">
+                <li className="flex items-center gap-3 text-white/95 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
@@ -332,7 +332,7 @@ export default function PricingPage() {
                 )}
               </button>
 
-              <p className="text-center text-white/40 text-xs mt-3">
+              <p className="text-center text-white/95 text-xs mt-3">
                 Cancel anytime. No commitment required.
               </p>
             </div>
@@ -351,8 +351,8 @@ export default function PricingPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/10">
-                  <th className="text-left py-4 px-4 text-white/60 font-medium">Feature</th>
-                  <th className="text-center py-4 px-4 text-white/60 font-medium w-32">Free</th>
+                  <th className="text-left py-4 px-4 text-white/95 font-medium">Feature</th>
+                  <th className="text-center py-4 px-4 text-white/95 font-medium w-32">Free</th>
                   <th className="text-center py-4 px-4 text-amber-400 font-medium w-32">
                     <div className="flex items-center justify-center gap-1">
                       <Crown className="w-4 h-4" />
@@ -366,8 +366,8 @@ export default function PricingPage() {
                   <tr key={index} className="border-b border-white/5 hover:bg-white/[0.02]">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
-                        <feature.icon className="w-4 h-4 text-white/40" />
-                        <span className="text-white/80 text-sm">{feature.name}</span>
+                        <feature.icon className="w-4 h-4 text-white/95" />
+                        <span className="text-white/95 text-sm">{feature.name}</span>
                       </div>
                     </td>
                     <td className="text-center py-4 px-4">
@@ -375,10 +375,10 @@ export default function PricingPage() {
                         feature.free ? (
                           <Check className="w-4 h-4 text-green-400 mx-auto" />
                         ) : (
-                          <X className="w-4 h-4 text-white/20 mx-auto" />
+                          <X className="w-4 h-4 text-white/95 mx-auto" />
                         )
                       ) : (
-                        <span className="text-white/50 text-sm">{feature.free}</span>
+                        <span className="text-white/95 text-sm">{feature.free}</span>
                       )}
                     </td>
                     <td className="text-center py-4 px-4">
@@ -386,7 +386,7 @@ export default function PricingPage() {
                         feature.premium ? (
                           <Check className="w-4 h-4 text-amber-400 mx-auto" />
                         ) : (
-                          <X className="w-4 h-4 text-white/20 mx-auto" />
+                          <X className="w-4 h-4 text-white/95 mx-auto" />
                         )
                       ) : (
                         <span className="text-amber-400/80 text-sm font-medium">{feature.premium}</span>
@@ -419,14 +419,14 @@ export default function PricingPage() {
                 >
                   <span className="text-white font-medium">{item.question}</span>
                   <ChevronDown
-                    className={`w-5 h-5 text-white/40 transition-transform ${
+                    className={`w-5 h-5 text-white/95 transition-transform ${
                       openFaq === index ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
                 {openFaq === index && (
                   <div className="px-4 pb-4">
-                    <p className="text-white/60 text-sm leading-relaxed">
+                    <p className="text-white/95 text-sm leading-relaxed">
                       {item.answer}
                     </p>
                   </div>
@@ -442,11 +442,11 @@ export default function PricingPage() {
         <div className="max-w-xl mx-auto text-center">
           {/* Trust badges */}
           <div className="flex items-center justify-center gap-6 mb-8">
-            <div className="flex items-center gap-2 text-white/40 text-sm">
+            <div className="flex items-center gap-2 text-white/95 text-sm">
               <Shield className="w-4 h-4" />
               <span>Secure checkout</span>
             </div>
-            <div className="flex items-center gap-2 text-white/40 text-sm">
+            <div className="flex items-center gap-2 text-white/95 text-sm">
               <CreditCard className="w-4 h-4" />
               <span>Powered by Stripe</span>
             </div>
@@ -455,7 +455,7 @@ export default function PricingPage() {
           <h3 className="text-2xl font-bold text-white mb-4">
             Ready to upgrade your focus?
           </h3>
-          <p className="text-white/50 mb-8">
+          <p className="text-white/95 mb-8">
             Join thousands of users who have transformed their productivity with Voxu Premium.
           </p>
 
@@ -476,7 +476,7 @@ export default function PricingPage() {
               </>
             )}
           </button>
-          <p className="text-white/30 text-sm mt-3">
+          <p className="text-white/95 text-sm mt-3">
             7-day free trial. Cancel anytime.
           </p>
         </div>
@@ -484,12 +484,12 @@ export default function PricingPage() {
 
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-white/5">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-white/30 text-sm">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-white/95 text-sm">
           <span>Voxu {new Date().getFullYear()}</span>
           <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-white/50 transition-colors">Terms</a>
-            <a href="#" className="hover:text-white/50 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white/50 transition-colors">Support</a>
+            <a href="#" className="hover:text-white/95 transition-colors">Terms</a>
+            <a href="#" className="hover:text-white/95 transition-colors">Privacy</a>
+            <a href="#" className="hover:text-white/95 transition-colors">Support</a>
           </div>
         </div>
       </footer>

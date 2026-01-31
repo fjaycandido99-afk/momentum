@@ -6,6 +6,7 @@ interface GridTraceBackgroundProps {
   animate?: boolean
   className?: string
   pointerRef?: RefObject<{ x: number; y: number; active: boolean }>
+  topOffset?: number
 }
 
 interface GridNode {
@@ -46,10 +47,12 @@ export function GridTraceBackground({
   animate = true,
   className = '',
   pointerRef,
+  topOffset = 50,
 }: GridTraceBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animFrameRef = useRef<number>()
   const animateRef = useRef(animate)
+  const topOffsetRef = useRef(topOffset)
   const nodesRef = useRef<GridNode[]>([])
   const tracersRef = useRef<Tracer[]>([])
   const edgeBrightnessRef = useRef<Map<string, number>>(new Map())
@@ -62,24 +65,23 @@ export function GridTraceBackground({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const COLS = 4
-    const ROWS = 6
+    const minDim = Math.min(canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height)
+    const COLS = minDim < 200 ? 6 : 4
+    const ROWS = minDim < 200 ? 8 : 6
     const NUM_TRACERS = 3
     const TRACE_FADE = 0.985
     const TRACER_SPEED = 0.004
 
-    const TOP_OFFSET = 50
-
     const buildGrid = (w: number, h: number) => {
       const spacingX = w / (COLS - 1)
-      const usableHeight = h - TOP_OFFSET
+      const usableHeight = h - topOffsetRef.current
       const spacingY = usableHeight / (ROWS - 1)
       const nodes: GridNode[] = []
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           nodes.push({
             x: spacingX * c,
-            y: TOP_OFFSET + spacingY * r,
+            y: topOffsetRef.current + spacingY * r,
             col: c,
             row: r,
           })

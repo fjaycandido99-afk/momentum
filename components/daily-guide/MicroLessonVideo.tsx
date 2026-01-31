@@ -215,17 +215,17 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
         </div>
         <div className="relative p-5 text-center">
           <div className="mb-4 mt-2">
-            <h2 className="text-xl font-bold text-white/60 tracking-wide uppercase">
+            <h2 className="text-xl font-bold text-white/95 tracking-wide uppercase">
               {topic.word}
             </h2>
-            <p className="text-white/40 text-xs mt-1">{topic.tagline}</p>
+            <p className="text-white/95 text-xs mt-1">{topic.tagline}</p>
           </div>
           <div className="flex justify-center mb-4">
             <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-              <Lightbulb className="w-5 h-5 text-white/40" />
+              <Lightbulb className="w-5 h-5 text-white/95" />
             </div>
           </div>
-          <p className="text-white/40 text-sm">No video available today</p>
+          <p className="text-white/95 text-sm">No video available today</p>
         </div>
       </div>
     )
@@ -273,7 +273,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
           <h1 className="text-4xl md:text-5xl font-bold text-white tracking-wider uppercase mb-4">
             {topic.word}
           </h1>
-          <p className="text-white/60 text-sm">{topic.tagline}</p>
+          <p className="text-white/95 text-sm">{topic.tagline}</p>
         </div>
 
         {/* Bottom controls */}
@@ -301,7 +301,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
               />
             </div>
             {/* Timer */}
-            <div className="flex justify-between mt-2 text-xs text-white/50">
+            <div className="flex justify-between mt-2 text-xs text-white/95">
               <span>{formatDuration(currentTime)}</span>
               <span>{formatDuration(totalDuration)}</span>
             </div>
@@ -309,9 +309,9 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
 
           {/* Now playing info */}
           <div className="text-center">
-            <p className="text-white/60 text-xs uppercase tracking-wider mb-1">Now playing</p>
+            <p className="text-white/95 text-xs uppercase tracking-wider mb-1">Now playing</p>
             <p className="text-white text-sm truncate max-w-xs mx-auto">{video.title}</p>
-            <p className="text-white/50 text-xs mt-0.5">{video.channel}</p>
+            <p className="text-white/95 text-xs mt-0.5">{video.channel}</p>
           </div>
 
           {/* Done button */}
@@ -363,11 +363,11 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
           {/* Topic word - large centered */}
           <div className="text-center mb-6 mt-2">
             <h2 className={`text-2xl font-bold tracking-wide uppercase ${
-              isCompleted ? 'text-white/70' : 'text-white'
+              isCompleted ? 'text-white/95' : 'text-white'
             }`}>
               {topic.word}
             </h2>
-            <p className={`text-xs mt-1 ${isCompleted ? 'text-white/40' : 'text-white/60'}`}>
+            <p className={`text-xs mt-1 ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
               {topic.tagline}
             </p>
           </div>
@@ -376,7 +376,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
           <div className="flex justify-center mb-4">
             <div className={`flex items-center justify-center w-14 h-14 rounded-full transition-all ${
               isCompleted
-                ? 'bg-white/10 text-white/70 group-hover:bg-white/20 group-hover:scale-105'
+                ? 'bg-white/10 text-white/95 group-hover:bg-white/20 group-hover:scale-105'
                 : 'bg-white/20 backdrop-blur-sm text-white group-hover:bg-white/30 group-hover:scale-105'
             }`}>
               {isCompleted ? (
@@ -390,20 +390,20 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
           {/* Video info */}
           <div className="text-center">
             <h3 className={`font-medium text-sm leading-snug line-clamp-2 mb-1 ${
-              isCompleted ? 'text-white/70' : 'text-white'
+              isCompleted ? 'text-white/95' : 'text-white'
             }`}>
               {video.title}
             </h3>
-            <p className={`text-xs ${isCompleted ? 'text-white/40' : 'text-white/50'}`}>
+            <p className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
               {video.channel}
             </p>
             {video.duration && (
-              <p className={`text-xs mt-1 ${isCompleted ? 'text-white/30' : 'text-white/40'}`}>
+              <p className={`text-xs mt-1 ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
                 {formatDuration(video.duration)}
               </p>
             )}
             {isCompleted && (
-              <p className="text-xs text-white/50 mt-2">
+              <p className="text-xs text-white/95 mt-2">
                 Tap to rewatch
               </p>
             )}
@@ -415,7 +415,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
       {!isCompleted && onSkip && (
         <button
           onClick={onSkip}
-          className="w-full py-2.5 bg-white/5 text-xs text-white/40 hover:text-white/60 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
+          className="w-full py-2.5 bg-white/5 text-xs text-white/95 hover:text-white/95 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
         >
           <SkipForward className="w-3 h-3" />
           Skip for today

@@ -38,14 +38,14 @@ export function ModeSelector({ activeMode, onSelectMode }: ModeSelectorProps) {
             >
               <Icon
                 className={`w-6 h-6 transition-colors duration-200 ${
-                  isActive ? 'text-white' : 'text-white/80'
+                  isActive ? 'text-white' : 'text-white/95'
                 }`}
                 strokeWidth={1.5}
               />
             </div>
             <span
               className={`text-xs transition-colors duration-200 ${
-                isActive ? 'text-white font-medium' : 'text-white/80'
+                isActive ? 'text-white font-medium' : 'text-white/95'
               }`}
             >
               {mode.label}

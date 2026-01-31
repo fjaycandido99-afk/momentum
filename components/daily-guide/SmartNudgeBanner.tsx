@@ -73,12 +73,12 @@ export function SmartNudgeBanner() {
       <div className={`p-2 rounded-xl bg-white/10 shrink-0`}>
         <Icon className={`w-4 h-4 ${colors.text}`} />
       </div>
-      <p className="text-sm text-white/80 flex-1">{nudge.message}</p>
+      <p className="text-sm text-white/95 flex-1">{nudge.message}</p>
       <button
         onClick={handleDismiss}
         className="p-1.5 rounded-lg hover:bg-white/10 transition-colors shrink-0"
       >
-        <X className="w-3.5 h-3.5 text-white/40" />
+        <X className="w-3.5 h-3.5 text-white/95" />
       </button>
     </div>
   )

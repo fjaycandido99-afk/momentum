@@ -39,11 +39,11 @@ export function StressButton({ onActivate, isLoading, className = '' }: StressBu
 
       <div className="relative flex items-center gap-2">
         {isLoading ? (
-          <Loader2 className="w-4 h-4 text-white/90 animate-spin" />
+          <Loader2 className="w-4 h-4 text-white/95 animate-spin" />
         ) : (
-          <Heart className="w-4 h-4 text-white/90" />
+          <Heart className="w-4 h-4 text-white/95" />
         )}
-        <span className="text-sm font-medium text-white/90">
+        <span className="text-sm font-medium text-white/95">
           {isLoading ? 'Loading...' : 'Need a moment?'}
         </span>
       </div>

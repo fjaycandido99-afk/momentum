@@ -93,7 +93,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
           </div>
           <div>
             <h3 className="font-medium text-white">Daily Reflection</h3>
-            <p className="text-xs text-white/50">Capture your thoughts</p>
+            <p className="text-xs text-white/95">Capture your thoughts</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -120,7 +120,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
             onClick={onClose}
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
           >
-            <X className="w-4 h-4 text-white/70" />
+            <X className="w-4 h-4 text-white/95" />
           </button>
         )}
         </div>
@@ -130,7 +130,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
       <div>
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
+            <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
           </div>
         ) : isSaved && !showAsModal ? (
           <div className="py-4 space-y-3">
@@ -138,17 +138,17 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
               <Check className="w-4 h-4" />
               <span className="text-sm font-medium">Saved</span>
             </div>
-            {win && <p className="text-white/80 text-sm italic">&quot;{win}&quot;</p>}
+            {win && <p className="text-white/95 text-sm italic">&quot;{win}&quot;</p>}
             {gratitude && (
               <div className="flex items-start gap-2">
                 <Heart className="w-3.5 h-3.5 text-pink-400 mt-0.5 shrink-0" />
-                <p className="text-white/60 text-sm italic">{gratitude}</p>
+                <p className="text-white/95 text-sm italic">{gratitude}</p>
               </div>
             )}
             {intention && (
               <div className="flex items-start gap-2">
                 <Target className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
-                <p className="text-white/60 text-sm italic">{intention}</p>
+                <p className="text-white/95 text-sm italic">{intention}</p>
               </div>
             )}
           </div>
@@ -156,7 +156,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
           <div className="space-y-4">
             {/* What did you learn */}
             <div>
-              <label className="text-sm text-white/80 flex items-center gap-2 mb-2">
+              <label className="text-sm text-white/95 flex items-center gap-2 mb-2">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 What did you learn today?
               </label>
@@ -172,7 +172,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
 
             {/* Gratitude */}
             <div>
-              <label className="text-sm text-white/80 flex items-center gap-2 mb-2">
+              <label className="text-sm text-white/95 flex items-center gap-2 mb-2">
                 <Heart className="w-3.5 h-3.5 text-pink-400" />
                 What are you grateful for?
               </label>
@@ -188,7 +188,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
 
             {/* Tomorrow's intention */}
             <div>
-              <label className="text-sm text-white/80 flex items-center gap-2 mb-2">
+              <label className="text-sm text-white/95 flex items-center gap-2 mb-2">
                 <Target className="w-3.5 h-3.5 text-purple-400" />
                 Tomorrow&apos;s intention
               </label>
@@ -209,7 +209,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
                   <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-[10px] font-medium tracking-wider text-indigo-400/70 uppercase mb-1">AI Insight</p>
-                    <p className="text-sm text-white/80 leading-relaxed italic">{reflection}</p>
+                    <p className="text-sm text-white/95 leading-relaxed italic">{reflection}</p>
                   </div>
                 </div>
               </div>
@@ -218,7 +218,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
               <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                 <div className="flex items-center gap-2">
                   <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <p className="text-xs text-white/50">Upgrade for AI reflections on your journal entries</p>
+                  <p className="text-xs text-white/95">Upgrade for AI reflections on your journal entries</p>
                 </div>
               </div>
             )}
@@ -253,7 +253,7 @@ export function JournalPrompt({ onOpen }: { onOpen: () => void }) {
         </div>
         <div className="text-left">
           <h3 className="font-medium text-white">Reflect on your day</h3>
-          <p className="text-xs text-white/50">What did you learn today?</p>
+          <p className="text-xs text-white/95">What did you learn today?</p>
         </div>
       </div>
     </button>

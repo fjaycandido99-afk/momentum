@@ -6,8 +6,6 @@ import {
   Bell,
   LogOut,
   ChevronLeft,
-  ChevronRight,
-  Music,
   Briefcase,
   GraduationCap,
   BookOpen,
@@ -21,7 +19,6 @@ import {
   Moon,
   Check,
   Loader2,
-  VolumeX,
   Crown,
   CreditCard,
   ExternalLink,
@@ -31,6 +28,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useThemeOptional } from '@/contexts/ThemeContext'
+import { BACKGROUND_ANIMATIONS, getPreferredAnimation, setPreferredAnimation, getBackgroundBrightness, setBackgroundBrightness, getBackgroundEnabled, setBackgroundEnabled } from '@/components/player/DailyBackground'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
@@ -38,16 +36,6 @@ import { PremiumBadge, ProLabel } from '@/components/premium'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 type GuideTone = 'calm' | 'direct' | 'neutral'
-
-const GENRE_OPTIONS: { id: string | null; name: string; description: string }[] = [
-  { id: null, name: 'Daily Rotation', description: 'Different genre each day' },
-  { id: 'lofi', name: 'Lo-Fi', description: 'Chill beats to relax' },
-  { id: 'jazz', name: 'Jazz', description: 'Smooth vibes' },
-  { id: 'piano', name: 'Piano', description: 'Peaceful keys' },
-  { id: 'study', name: 'Study', description: 'Focus music' },
-  { id: 'classical', name: 'Classical', description: 'Timeless elegance' },
-  { id: 'ambient', name: 'Ambient', description: 'Atmospheric soundscapes' },
-]
 
 const DAYS = [
   { value: 0, label: 'Sun' },
@@ -87,7 +75,6 @@ function SettingsContent() {
   const subscription = useSubscriptionOptional()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [showGenreSelector, setShowGenreSelector] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [subscriptionMessage, setSubscriptionMessage] = useState<string | null>(null)
   const [isLoadingPortal, setIsLoadingPortal] = useState(false)
@@ -127,6 +114,9 @@ function SettingsContent() {
   const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(true)
   const [preferredMusicGenre, setPreferredMusicGenre] = useState<string | null>(null)
   const [bedtimeReminderEnabled, setBedtimeReminderEnabled] = useState(false)
+  const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null)
+  const [backgroundBrightness, setBackgroundBrightnessState] = useState(1)
+  const [backgroundEnabled, setBackgroundEnabledState] = useState(true)
 
   // Load preferences on mount
   useEffect(() => {
@@ -157,6 +147,10 @@ function SettingsContent() {
           if (data.preferred_music_genre !== undefined) setPreferredMusicGenre(data.preferred_music_genre)
           if (data.bedtime_reminder_enabled !== undefined) setBedtimeReminderEnabled(data.bedtime_reminder_enabled)
         }
+        // Load animation preference from localStorage
+        setSelectedAnimation(getPreferredAnimation())
+        setBackgroundBrightnessState(getBackgroundBrightness())
+        setBackgroundEnabledState(getBackgroundEnabled())
       } catch (error) {
         console.error('Failed to load preferences:', error)
       } finally {
@@ -266,12 +260,12 @@ function SettingsContent() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <Link href="/" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-              <ChevronLeft className="w-5 h-5 text-white/80" />
+              <ChevronLeft className="w-5 h-5 text-white/95" />
             </Link>
             <h1 className="text-2xl font-light text-white">Settings</h1>
           </div>
           {saveStatus === 'saving' && (
-            <span className="flex items-center gap-1.5 text-white/40 text-sm">
+            <span className="flex items-center gap-1.5 text-white/95 text-sm">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               Saving
             </span>
@@ -286,7 +280,7 @@ function SettingsContent() {
             <span className="text-red-400 text-sm">Failed to save</span>
           )}
         </div>
-        <p className="text-white/50 text-sm mt-1">Customize your Daily Guide</p>
+        <p className="text-white/95 text-sm mt-1">Customize your Daily Guide</p>
       </div>
 
       <div className="px-6 space-y-6">
@@ -298,7 +292,7 @@ function SettingsContent() {
             </div>
             <div>
               <h2 className="font-medium text-white">I am a</h2>
-              <p className="text-white/50 text-xs">This personalizes your experience</p>
+              <p className="text-white/95 text-xs">This personalizes your experience</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -311,7 +305,7 @@ function SettingsContent() {
                   className={`p-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-2 press-scale ${
                     userType === type.value
                       ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                      : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
+                      : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -331,7 +325,7 @@ function SettingsContent() {
               </div>
               <div>
                 <h2 className="font-medium text-white">Work Days</h2>
-                <p className="text-white/50 text-xs">Days you work</p>
+                <p className="text-white/95 text-xs">Days you work</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -342,7 +336,7 @@ function SettingsContent() {
                   className={`w-11 h-11 rounded-xl text-sm font-medium transition-all press-scale ${
                     workDays.includes(day.value)
                       ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                      : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
+                      : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
                   }`}
                 >
                   {day.label}
@@ -361,7 +355,7 @@ function SettingsContent() {
               </div>
               <div>
                 <h2 className="font-medium text-white">Class Days</h2>
-                <p className="text-white/50 text-xs">Days you have classes</p>
+                <p className="text-white/95 text-xs">Days you have classes</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -372,7 +366,7 @@ function SettingsContent() {
                   className={`w-11 h-11 rounded-xl text-sm font-medium transition-all press-scale ${
                     classDays.includes(day.value)
                       ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                      : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
+                      : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
                   }`}
                 >
                   {day.label}
@@ -390,12 +384,12 @@ function SettingsContent() {
             </div>
             <div>
               <h2 className="font-medium text-white">Schedule</h2>
-              <p className="text-white/50 text-xs">Your daily times</p>
+              <p className="text-white/95 text-xs">Your daily times</p>
             </div>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-white/70 mb-2">Wake time</label>
+              <label className="block text-sm text-white/95 mb-2">Wake time</label>
               <input
                 type="time"
                 value={wakeTime}
@@ -407,7 +401,7 @@ function SettingsContent() {
             {(userType === 'professional' || userType === 'hybrid') && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="min-w-0">
-                  <label className="block text-sm text-white/70 mb-2">Work starts</label>
+                  <label className="block text-sm text-white/95 mb-2">Work starts</label>
                   <input
                     type="time"
                     value={workStartTime}
@@ -417,7 +411,7 @@ function SettingsContent() {
                   />
                 </div>
                 <div className="min-w-0">
-                  <label className="block text-sm text-white/70 mb-2">Work ends</label>
+                  <label className="block text-sm text-white/95 mb-2">Work ends</label>
                   <input
                     type="time"
                     value={workEndTime}
@@ -432,7 +426,7 @@ function SettingsContent() {
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/70 mb-2">Classes start</label>
+                    <label className="block text-sm text-white/95 mb-2">Classes start</label>
                     <input
                       type="time"
                       value={classStartTime}
@@ -442,7 +436,7 @@ function SettingsContent() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/70 mb-2">Classes end</label>
+                    <label className="block text-sm text-white/95 mb-2">Classes end</label>
                     <input
                       type="time"
                       value={classEndTime}
@@ -454,7 +448,7 @@ function SettingsContent() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/70 mb-2">Study starts</label>
+                    <label className="block text-sm text-white/95 mb-2">Study starts</label>
                     <input
                       type="time"
                       value={studyStartTime}
@@ -464,7 +458,7 @@ function SettingsContent() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/70 mb-2">Study ends</label>
+                    <label className="block text-sm text-white/95 mb-2">Study ends</label>
                     <input
                       type="time"
                       value={studyEndTime}
@@ -487,7 +481,7 @@ function SettingsContent() {
             </div>
             <div>
               <h2 className="font-medium text-white">Daily Flow</h2>
-              <p className="text-white/50 text-xs">Which segments to include</p>
+              <p className="text-white/95 text-xs">Which segments to include</p>
             </div>
           </div>
           <div className="space-y-2">
@@ -506,10 +500,10 @@ function SettingsContent() {
                   } ${segment.required ? 'cursor-default' : 'cursor-pointer hover:bg-white/10 press-scale'}`}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isEnabled ? 'text-white' : 'text-white/50'}`} />
-                    <span className={isEnabled ? 'text-white' : 'text-white/60'}>{segment.label}</span>
+                    <Icon className={`w-4 h-4 ${isEnabled ? 'text-white' : 'text-white/95'}`} />
+                    <span className={isEnabled ? 'text-white' : 'text-white/95'}>{segment.label}</span>
                     {segment.required && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/50">Required</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/95">Required</span>
                     )}
                   </div>
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -531,7 +525,7 @@ function SettingsContent() {
             </div>
             <div>
               <h2 className="font-medium text-white">Voice Tone</h2>
-              <p className="text-white/50 text-xs">How the AI speaks to you</p>
+              <p className="text-white/95 text-xs">How the AI speaks to you</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -542,11 +536,11 @@ function SettingsContent() {
                 className={`p-3 rounded-xl text-center transition-all press-scale ${
                   guideTone === tone.value
                     ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                    : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
+                    : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
                 }`}
               >
                 <p className="font-medium text-sm">{tone.label}</p>
-                <p className="text-xs text-white/50 mt-0.5">{tone.description}</p>
+                <p className="text-xs text-white/95 mt-0.5">{tone.description}</p>
               </button>
             ))}
           </div>
@@ -561,7 +555,7 @@ function SettingsContent() {
               </div>
               <div>
                 <h2 className="font-medium text-white">Daily Reminder</h2>
-                <p className="text-white/50 text-xs">Get notified each morning</p>
+                <p className="text-white/95 text-xs">Get notified each morning</p>
               </div>
             </div>
             <button
@@ -599,7 +593,7 @@ function SettingsContent() {
               </div>
               <div>
                 <h2 className="font-medium text-white">Bedtime Reminder</h2>
-                <p className="text-white/50 text-xs">Reminder for 8 hours before wake time</p>
+                <p className="text-white/95 text-xs">Reminder for 8 hours before wake time</p>
               </div>
             </div>
             <button
@@ -617,7 +611,7 @@ function SettingsContent() {
           </div>
           {bedtimeReminderEnabled && wakeTime && (
             <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10">
-              <p className="text-sm text-white/70">
+              <p className="text-sm text-white/95">
                 You&apos;ll be reminded at{' '}
                 <span className="text-white font-medium">
                   {(() => {
@@ -644,84 +638,107 @@ function SettingsContent() {
           <NotificationSettings />
         </section>
 
-        {/* Background Music */}
+        {/* Background Animation */}
         <section className="p-5 card-gradient-border">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-white/10">
-                <Music className="w-5 h-5 text-white" />
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="font-medium text-white">Background Music</h2>
-                <p className="text-white/50 text-xs">Music during your sessions</p>
+                <h2 className="font-medium text-white">Background Animation</h2>
+                <p className="text-white/95 text-xs">Choose your pattern style</p>
               </div>
             </div>
             <button
-              onClick={() => setBackgroundMusicEnabled(!backgroundMusicEnabled)}
+              onClick={() => {
+                const next = !backgroundEnabled
+                setBackgroundEnabledState(next)
+                setBackgroundEnabled(next)
+              }}
               className={`w-12 h-7 rounded-full transition-all press-scale ${
-                backgroundMusicEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
+                backgroundEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
               }`}
             >
               <div
                 className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                  backgroundMusicEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+                  backgroundEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
                 }`}
               />
             </button>
           </div>
 
-          {backgroundMusicEnabled && (
+          {backgroundEnabled && (
             <>
-              <div
-                onClick={() => setShowGenreSelector(!showGenreSelector)}
-                className="p-4 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-white font-medium">
-                      {preferredMusicGenre === null
-                        ? 'Daily Rotation'
-                        : GENRE_OPTIONS.find(g => g.id === preferredMusicGenre)?.name || 'Lo-Fi'}
-                    </p>
-                    <p className="text-white/60 text-xs mt-0.5">
-                      {preferredMusicGenre === null
-                        ? 'Different genre each day'
-                        : GENRE_OPTIONS.find(g => g.id === preferredMusicGenre)?.description || 'Chill beats to relax'}
-                    </p>
-                  </div>
-                  <ChevronRight className={`w-5 h-5 text-white/60 transition-transform ${showGenreSelector ? 'rotate-90' : ''}`} />
+              {/* Brightness slider */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm text-white/95">Brightness</label>
+                  <span className="text-sm text-white/95">{Math.round(backgroundBrightness * 100)}%</span>
                 </div>
+                <input
+                  type="range"
+                  min="0.2"
+                  max="3"
+                  step="0.1"
+                  value={backgroundBrightness}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value)
+                    setBackgroundBrightnessState(val)
+                    setBackgroundBrightness(val)
+                  }}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer bg-white/10 accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,0.3)]"
+                />
               </div>
 
-              {showGenreSelector && (
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {GENRE_OPTIONS.map((genre, index) => {
-                    const isSelected = preferredMusicGenre === genre.id
-                    const isFirstItem = index === 0
-                    return (
-                      <button
-                        key={genre.id || 'rotation'}
-                        onClick={() => {
-                          setPreferredMusicGenre(genre.id)
-                          // Also update theme context for visual theming (only for non-null genres)
-                          if (genre.id !== null) {
-                            themeContext?.setGenre(genre.id)
-                          }
-                          setShowGenreSelector(false)
-                        }}
-                        className={`p-3 rounded-xl text-left transition-all press-scale ${
-                          isSelected
-                            ? 'bg-white/15 border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                            : 'bg-white/5 border border-transparent hover:bg-white/10'
-                        } ${isFirstItem ? 'col-span-2 max-w-[50%] mx-auto text-center' : ''}`}
-                      >
-                        <p className="text-sm font-medium text-white">{genre.name}</p>
-                        <p className="text-xs text-white/60 mt-0.5">{genre.description}</p>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Daily Rotation option */}
+                <button
+                  onClick={() => {
+                    setSelectedAnimation(null)
+                    setPreferredAnimation(null)
+                  }}
+                  className={`p-2 rounded-xl transition-all press-scale ${
+                    selectedAnimation === null
+                      ? 'bg-white/15 border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
+                      : 'bg-white/5 border border-transparent hover:bg-white/10'
+                  }`}
+                >
+                  <div className="aspect-[3/2] rounded-lg overflow-hidden bg-black/50 mb-2 relative flex items-center justify-center">
+                    <div className="text-center">
+                      <Sparkles className="w-5 h-5 text-white/95 mx-auto mb-1" />
+                      <span className="text-[10px] text-white/95">Auto</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium text-white">Daily Rotation</p>
+                  <p className="text-[10px] text-white/95">Changes each day</p>
+                </button>
+
+                {/* Individual animation options with live preview */}
+                {BACKGROUND_ANIMATIONS.map(anim => {
+                  const AnimComponent = anim.component
+                  return (
+                    <button
+                      key={anim.id}
+                      onClick={() => {
+                        setSelectedAnimation(anim.id)
+                        setPreferredAnimation(anim.id)
+                      }}
+                      className={`p-2 rounded-xl transition-all press-scale ${
+                        selectedAnimation === anim.id
+                          ? 'bg-white/15 border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
+                          : 'bg-white/5 border border-transparent hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="aspect-[3/2] rounded-lg overflow-hidden bg-black/50 mb-2 relative">
+                        <AnimComponent animate topOffset={0} className="absolute inset-0" />
+                      </div>
+                      <p className="text-xs font-medium text-white">{anim.name}</p>
+                      <p className="text-[10px] text-white/95">{anim.description}</p>
+                    </button>
+                  )
+                })}
+              </div>
             </>
           )}
         </section>
@@ -734,7 +751,7 @@ function SettingsContent() {
             </div>
             <div className="flex-1">
               <h2 className="font-medium text-white">Subscription</h2>
-              <p className="text-white/50 text-xs">Manage your plan</p>
+              <p className="text-white/95 text-xs">Manage your plan</p>
             </div>
             {subscription?.isPremium && <PremiumBadge size="sm" />}
           </div>
@@ -759,12 +776,12 @@ function SettingsContent() {
                   </span>
                 </div>
                 {subscription.isTrialing && subscription.trialDaysLeft > 0 && (
-                  <p className="text-sm text-white/60">
+                  <p className="text-sm text-white/95">
                     {subscription.trialDaysLeft} days left in trial
                   </p>
                 )}
                 {subscription.billingPeriodEnd && !subscription.isTrialing && (
-                  <p className="text-sm text-white/60">
+                  <p className="text-sm text-white/95">
                     Next billing: {subscription.billingPeriodEnd.toLocaleDateString()}
                   </p>
                 )}
@@ -800,7 +817,7 @@ function SettingsContent() {
                 </button>
                 <Link
                   href="/pricing"
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/70 text-sm hover:bg-white/10 transition-colors"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 transition-colors"
                 >
                   <ExternalLink className="w-4 h-4" />
                   View Plans
@@ -812,10 +829,10 @@ function SettingsContent() {
             <div className="space-y-4">
               <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                 <p className="text-white font-medium mb-1">Free Plan</p>
-                <p className="text-sm text-white/60 mb-3">
+                <p className="text-sm text-white/95 mb-3">
                   1 session/day · 10-min limit · Limited features
                 </p>
-                <ul className="space-y-2 text-sm text-white/50">
+                <ul className="space-y-2 text-sm text-white/95">
                   <li className="flex items-center gap-2">
                     <Lock className="w-3.5 h-3.5" />
                     Daily checkpoints locked
@@ -838,12 +855,12 @@ function SettingsContent() {
                 <Sparkles className="w-5 h-5" />
                 Upgrade to Premium - $4.99/mo
               </button>
-              <p className="text-center text-white/40 text-xs">
+              <p className="text-center text-white/95 text-xs">
                 7-day free trial · Cancel anytime
               </p>
               <Link
                 href="/pricing"
-                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/60 text-sm hover:bg-white/10 hover:text-white/80 transition-colors mt-2"
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 hover:text-white/95 transition-colors mt-2"
               >
                 <ExternalLink className="w-4 h-4" />
                 Compare plans
@@ -874,8 +891,8 @@ function SettingsContent() {
 
         {/* App Info */}
         <div className="text-center pt-6 pb-8">
-          <p className="text-white/20 text-sm">Voxu v0.1.0</p>
-          <p className="text-white/10 text-xs mt-1">Your AI Audio Coach</p>
+          <p className="text-white/95 text-sm">Voxu v0.1.0</p>
+          <p className="text-white/95 text-xs mt-1">Your AI Audio Coach</p>
         </div>
       </div>
     </div>

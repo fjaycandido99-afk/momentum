@@ -144,10 +144,10 @@ export function CheckpointCard({
       <div className={`px-4 pt-4 pb-2 ${isCompleted ? 'opacity-50' : ''}`}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className={`text-sm font-semibold tracking-wider ${isCompleted ? 'text-white/50' : 'text-white/90'}`}>
+            <h2 className={`text-sm font-semibold tracking-wider ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
               {content.theme}
             </h2>
-            <p className={`text-xs ${isCompleted ? 'text-white/30' : 'text-white/50'}`}>
+            <p className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
               {content.tagline}
             </p>
           </div>
@@ -161,7 +161,7 @@ export function CheckpointCard({
             )}
             {isCompleted && (
               <div className="p-1.5 rounded-full bg-white/10">
-                <Check className="w-4 h-4 text-white/70" />
+                <Check className="w-4 h-4 text-white/95" />
               </div>
             )}
           </div>
@@ -170,7 +170,7 @@ export function CheckpointCard({
 
       {/* Preview */}
       <div className={`px-4 py-3 ${isCompleted ? 'opacity-40' : ''}`}>
-        <p className={`text-sm leading-relaxed ${isCompleted ? 'text-white/40' : 'text-white/80'} line-clamp-2`}>
+        <p className={`text-sm leading-relaxed ${isCompleted ? 'text-white/95' : 'text-white/95'} line-clamp-2`}>
           {preview}
         </p>
       </div>
@@ -184,14 +184,14 @@ export function CheckpointCard({
           `}>
             <Icon className={`
               w-4 h-4 transition-all
-              ${isCompleted ? 'text-white/50' : isAvailable ? 'text-white animate-icon-bounce' : 'text-white/40'}
+              ${isCompleted ? 'text-white/95' : isAvailable ? 'text-white animate-icon-bounce' : 'text-white/95'}
             `} />
           </div>
           <div>
-            <p className={`text-sm font-medium ${isCompleted ? 'text-white/50' : 'text-white'}`}>
+            <p className={`text-sm font-medium ${isCompleted ? 'text-white/95' : 'text-white'}`}>
               {checkpoint.name}
             </p>
-            <span className={`text-xs ${isCompleted ? 'text-white/30' : 'text-white/50'}`}>
+            <span className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
               {formatTime(checkpoint.time)}
             </span>
           </div>
@@ -218,7 +218,7 @@ export function CheckpointCard({
 
         {/* Not available indicator */}
         {!isAvailable && !isCompleted && (
-          <div className="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-white/50">
+          <div className="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-white/95">
             {formatTime(checkpoint.time)}
           </div>
         )}
@@ -269,7 +269,7 @@ export function CheckpointList({
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-sm font-medium text-white/60 uppercase tracking-wider">
+          <h2 className="text-sm font-medium text-white/95 uppercase tracking-wider">
             Checkpoints
           </h2>
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-medium">
@@ -289,7 +289,7 @@ export function CheckpointList({
               <p className="text-white font-medium mb-1">
                 {checkpoints.length} Daily Checkpoints
               </p>
-              <p className="text-sm text-white/60">
+              <p className="text-sm text-white/95">
                 Stay on track with timed check-ins throughout your day
               </p>
             </div>
@@ -305,7 +305,7 @@ export function CheckpointList({
 
   return (
     <div className="space-y-3">
-      <h2 className="text-sm font-medium text-white/60 uppercase tracking-wider px-1">
+      <h2 className="text-sm font-medium text-white/95 uppercase tracking-wider px-1">
         Checkpoints
       </h2>
       <div className="space-y-3">

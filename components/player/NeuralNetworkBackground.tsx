@@ -20,21 +20,20 @@ interface NeuralNetworkBackgroundProps {
   animate?: boolean
   className?: string
   pointerRef?: RefObject<{ x: number; y: number; active: boolean }>
+  topOffset?: number
 }
 
 const NODE_COUNT = 35
 const CONNECTION_DIST = 150
 const DRIFT_SPEED = 0.15
-const FIRE_CHANCE = 0.003
+const FIRE_CHANCE = 0.008
 const FIRE_DURATION_DECAY = 0.025
 const RIPPLE_DELAY_PER_HOP = 12
 
-const TOP_OFFSET = 50
-
-function createNodes(count: number, w: number, h: number): NeuralNode[] {
+function createNodes(count: number, w: number, h: number, topOffset: number): NeuralNode[] {
   return Array.from({ length: count }, () => ({
     x: Math.random() * w,
-    y: TOP_OFFSET + Math.random() * (h - TOP_OFFSET),
+    y: topOffset + Math.random() * (h - topOffset),
     baseX: 0,
     baseY: 0,
     vx: (Math.random() - 0.5) * DRIFT_SPEED * 2,
@@ -69,11 +68,13 @@ export function NeuralNetworkBackground({
   animate = true,
   className = '',
   pointerRef,
+  topOffset = 50,
 }: NeuralNetworkBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const nodesRef = useRef<NeuralNode[]>([])
   const animFrameRef = useRef<number>()
   const animateRef = useRef(animate)
+  const topOffsetRef = useRef(topOffset)
 
   useEffect(() => { animateRef.current = animate }, [animate])
 
@@ -90,7 +91,7 @@ export function NeuralNetworkBackground({
       canvas.height = rect.height * dpr
       ctx.scale(dpr, dpr)
       if (nodesRef.current.length === 0) {
-        nodesRef.current = createNodes(NODE_COUNT, rect.width, rect.height)
+        nodesRef.current = createNodes(NODE_COUNT, rect.width, rect.height, topOffsetRef.current)
       }
     }
     resize()
@@ -185,9 +186,9 @@ export function NeuralNetworkBackground({
 
           // Bounce off edges
           if (n.x < 0 || n.x > w) n.vx *= -1
-          if (n.y < TOP_OFFSET || n.y > h) n.vy *= -1
+          if (n.y < topOffsetRef.current || n.y > h) n.vy *= -1
           n.x = Math.max(0, Math.min(w, n.x))
-          n.y = Math.max(TOP_OFFSET, Math.min(h, n.y))
+          n.y = Math.max(topOffsetRef.current, Math.min(h, n.y))
 
           // Slight random drift changes
           if (frameCount % 60 === 0) {
@@ -224,7 +225,7 @@ export function NeuralNetworkBackground({
             ctx.moveTo(nodes[i].x, nodes[i].y)
             ctx.lineTo(nodes[j].x, nodes[j].y)
             ctx.strokeStyle = `rgba(255, 255, 255, ${lineAlpha})`
-            ctx.lineWidth = fireBrightness > 0.3 ? 0.8 : 0.4
+            ctx.lineWidth = fireBrightness > 0.3 ? 1.2 : 0.4
             ctx.stroke()
           }
         }
@@ -243,7 +244,7 @@ export function NeuralNetworkBackground({
             n.x, n.y, 0,
             n.x, n.y, glowRadius
           )
-          gradient.addColorStop(0, `rgba(255, 255, 255, ${n.fireIntensity * 0.25 * currentOpacity})`)
+          gradient.addColorStop(0, `rgba(255, 255, 255, ${n.fireIntensity * 0.45 * currentOpacity})`)
           gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
 
           ctx.beginPath()
@@ -254,7 +255,7 @@ export function NeuralNetworkBackground({
 
         // Draw the node dot
         ctx.beginPath()
-        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2)
+        ctx.arc(n.x, n.y, n.fireIntensity > 0.2 ? n.radius * 1.5 : n.radius, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(255, 255, 255, ${totalAlpha})`
         ctx.fill()
       }

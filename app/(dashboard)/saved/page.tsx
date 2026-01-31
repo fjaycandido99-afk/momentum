@@ -89,7 +89,7 @@ export default function SavedPage() {
               className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all press-scale ${
                 filter === f.id
                   ? 'bg-white/15 text-white border border-white/20'
-                  : 'bg-white/5 text-white/60 border border-transparent hover:bg-white/10'
+                  : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
               }`}
             >
               {f.label}
@@ -99,15 +99,15 @@ export default function SavedPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
+            <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
-            <Bookmark className="w-8 h-8 text-white/20 mx-auto mb-3" />
-            <p className="text-white/50 text-sm">
+            <Bookmark className="w-8 h-8 text-white/95 mx-auto mb-3" />
+            <p className="text-white/95 text-sm">
               {filter === 'all' ? 'No saved items yet' : `No saved ${filter}s`}
             </p>
-            <p className="text-white/30 text-xs mt-1">
+            <p className="text-white/95 text-xs mt-1">
               Tap the heart icon on quotes or voice guides to save them
             </p>
           </div>
@@ -130,21 +130,21 @@ export default function SavedPage() {
                       }`}>
                         {item.content_type}
                       </span>
-                      <span className="text-[10px] text-white/30">
+                      <span className="text-[10px] text-white/95">
                         {new Date(item.created_at).toLocaleDateString()}
                       </span>
                     </div>
                     {item.content_type === 'reflection' && parseReflection(item.content_text) ? (
                       <div className="space-y-2">
-                        <p className="text-sm text-white/50 italic leading-relaxed">
+                        <p className="text-sm text-white/95 italic leading-relaxed">
                           &ldquo;{parseReflection(item.content_text)!.question}&rdquo;
                         </p>
-                        <p className="text-sm text-white/80 leading-relaxed pl-3 border-l-2 border-violet-500/30">
+                        <p className="text-sm text-white/95 leading-relaxed pl-3 border-l-2 border-violet-500/30">
                           {parseReflection(item.content_text)!.answer}
                         </p>
                       </div>
                     ) : (
-                      <p className="text-sm text-white/80 leading-relaxed">
+                      <p className="text-sm text-white/95 leading-relaxed">
                         {item.content_text}
                       </p>
                     )}
@@ -154,7 +154,7 @@ export default function SavedPage() {
                     className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 transition-colors opacity-0 group-hover:opacity-100"
                     title="Remove"
                   >
-                    <Trash2 className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
+                    <Trash2 className="w-3.5 h-3.5 text-white/95 hover:text-red-400" />
                   </button>
                 </div>
               </div>

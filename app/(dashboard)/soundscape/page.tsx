@@ -56,7 +56,7 @@ const MODES = [
     description: 'Deep work & concentration',
     icon: Focus,
     gradient: 'from-white/[0.04] to-white/[0.02]',
-    iconColor: 'text-white/80',
+    iconColor: 'text-white/95',
     borderColor: 'border-white/10',
   },
   {
@@ -65,7 +65,7 @@ const MODES = [
     description: 'Calm your mind',
     icon: Sparkles,
     gradient: 'from-white/[0.04] to-white/[0.02]',
-    iconColor: 'text-white/80',
+    iconColor: 'text-white/95',
     borderColor: 'border-white/10',
   },
   {
@@ -74,7 +74,7 @@ const MODES = [
     description: 'Drift into rest',
     icon: Moon,
     gradient: 'from-white/[0.04] to-white/[0.02]',
-    iconColor: 'text-white/80',
+    iconColor: 'text-white/95',
     borderColor: 'border-white/10',
   },
   {
@@ -83,7 +83,7 @@ const MODES = [
     description: 'Power & motivation',
     icon: Zap,
     gradient: 'from-white/[0.04] to-white/[0.02]',
-    iconColor: 'text-white/80',
+    iconColor: 'text-white/95',
     borderColor: 'border-white/10',
   },
 ]
@@ -165,13 +165,13 @@ export default function SoundscapePage() {
       <div className="px-6 py-12">
         {/* Header */}
         <div className="mb-8 animate-fade-in-down section-fade-bg">
-          <p className="text-white/60 text-sm mb-1">{timeContext.greeting}</p>
+          <p className="text-white/95 text-sm mb-1">{timeContext.greeting}</p>
           <h1 className="text-3xl font-light text-white">How do you want to feel?</h1>
         </div>
 
         {/* Suggested mode */}
         <div className="mb-8">
-          <p className="text-white/60 text-xs uppercase tracking-wider mb-3">
+          <p className="text-white/95 text-xs uppercase tracking-wider mb-3">
             {moodSuggested && moodData ? 'Suggested for your mood' : `Suggested for ${timeContext.period}`}
           </p>
           {MODES.filter(m => m.id === (moodSuggested || timeContext.suggested)).map(mode => (
@@ -186,7 +186,7 @@ export default function SoundscapePage() {
                 </div>
                 <div className="text-left">
                   <h2 className="text-xl font-medium text-white">{mode.label}</h2>
-                  <p className="text-white/60 text-sm">{mode.description}</p>
+                  <p className="text-white/95 text-sm">{mode.description}</p>
                 </div>
               </div>
             </button>
@@ -195,7 +195,7 @@ export default function SoundscapePage() {
 
         {/* All modes */}
         <div className="mb-10">
-          <p className="text-white/60 text-xs uppercase tracking-wider mb-3">All modes</p>
+          <p className="text-white/95 text-xs uppercase tracking-wider mb-3">All modes</p>
           <div className="grid grid-cols-2 gap-4">
             {MODES.map((mode, index) => (
               <button
@@ -207,7 +207,7 @@ export default function SoundscapePage() {
                   <mode.icon className="w-6 h-6" strokeWidth={1.5} />
                 </div>
                 <h3 className="text-lg font-medium text-white text-left">{mode.label}</h3>
-                <p className="text-white/60 text-xs text-left mt-1">{mode.description}</p>
+                <p className="text-white/95 text-xs text-left mt-1">{mode.description}</p>
               </button>
             ))}
           </div>
@@ -215,7 +215,7 @@ export default function SoundscapePage() {
 
         {/* Ambient Sounds */}
         <div>
-          <p className="text-white/60 text-xs uppercase tracking-wider mb-3">Ambient Sounds</p>
+          <p className="text-white/95 text-xs uppercase tracking-wider mb-3">Ambient Sounds</p>
           <div className="grid grid-cols-2 gap-3">
             {AMBIENT_SOUNDS.map((sound, index) => (
               <button
@@ -224,10 +224,10 @@ export default function SoundscapePage() {
                 className={`relative p-5 card-gradient-border group transition-all hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] active:scale-[0.98] animate-fade-in opacity-0 stagger-${index + 1} hover-lift`}
               >
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="w-5 h-5 text-white/80" fill="white" />
+                  <Play className="w-5 h-5 text-white/95" fill="white" />
                 </div>
                 <h3 className="text-lg font-medium text-white">{sound.word}</h3>
-                <p className="text-white/60 text-xs mt-1">Tap to play</p>
+                <p className="text-white/95 text-xs mt-1">Tap to play</p>
               </button>
             ))}
           </div>

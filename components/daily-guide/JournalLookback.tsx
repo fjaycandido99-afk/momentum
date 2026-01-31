@@ -36,7 +36,7 @@ export function JournalLookback() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-4">
-        <Loader2 className="w-4 h-4 text-white/30 animate-spin" />
+        <Loader2 className="w-4 h-4 text-white/95 animate-spin" />
       </div>
     )
   }
@@ -55,26 +55,26 @@ export function JournalLookback() {
         </div>
         <div>
           <h3 className="font-medium text-white text-sm">This Time Last Week</h3>
-          <p className="text-xs text-white/50">{dateLabel}</p>
+          <p className="text-xs text-white/95">{dateLabel}</p>
         </div>
       </div>
       <div className="p-4 space-y-2">
         {lookbackEntry.journal_win && (
           <div className="flex items-start gap-2">
             <BookOpen className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
-            <p className="text-sm text-white/70 italic">&quot;{lookbackEntry.journal_win}&quot;</p>
+            <p className="text-sm text-white/95 italic">&quot;{lookbackEntry.journal_win}&quot;</p>
           </div>
         )}
         {lookbackEntry.journal_gratitude && (
           <div className="flex items-start gap-2">
             <span className="text-pink-400 text-xs mt-0.5 shrink-0">&#9829;</span>
-            <p className="text-sm text-white/60 italic">{lookbackEntry.journal_gratitude}</p>
+            <p className="text-sm text-white/95 italic">{lookbackEntry.journal_gratitude}</p>
           </div>
         )}
         {lookbackEntry.journal_intention && (
           <div className="flex items-start gap-2">
             <span className="text-purple-400 text-xs mt-0.5 shrink-0">&#9678;</span>
-            <p className="text-sm text-white/60 italic">{lookbackEntry.journal_intention}</p>
+            <p className="text-sm text-white/95 italic">{lookbackEntry.journal_intention}</p>
           </div>
         )}
       </div>

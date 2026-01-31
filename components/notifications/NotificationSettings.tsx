@@ -287,7 +287,7 @@ export function NotificationSettings() {
   if (isLoading) {
     return (
       <div className="p-4 flex items-center justify-center">
-        <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
+        <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
       </div>
     )
   }
@@ -297,11 +297,11 @@ export function NotificationSettings() {
       <div className="p-4 rounded-xl bg-white/5 border border-white/10">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-white/10">
-            <BellOff className="w-5 h-5 text-white/40" />
+            <BellOff className="w-5 h-5 text-white/95" />
           </div>
           <div>
-            <p className="text-sm text-white/70">Push notifications not available</p>
-            <p className="text-xs text-white/40">
+            <p className="text-sm text-white/95">Push notifications not available</p>
+            <p className="text-xs text-white/95">
               {supportInfo?.reason || 'Your device does not support push notifications'}
             </p>
             {supportInfo?.platform === 'ios' && !supportInfo?.isInstalled && (
@@ -323,8 +323,8 @@ export function NotificationSettings() {
             <BellOff className="w-5 h-5 text-red-400" />
           </div>
           <div>
-            <p className="text-sm text-white/70">Notifications blocked</p>
-            <p className="text-xs text-white/40">Enable notifications in your browser settings</p>
+            <p className="text-sm text-white/95">Notifications blocked</p>
+            <p className="text-xs text-white/95">Enable notifications in your browser settings</p>
           </div>
         </div>
       </div>
@@ -341,12 +341,12 @@ export function NotificationSettings() {
               {isSubscribed ? (
                 <Bell className="w-5 h-5 text-emerald-400" />
               ) : (
-                <BellOff className="w-5 h-5 text-white/40" />
+                <BellOff className="w-5 h-5 text-white/95" />
               )}
             </div>
             <div>
               <p className="text-sm text-white">Push Notifications</p>
-              <p className="text-xs text-white/50">
+              <p className="text-xs text-white/95">
                 {isSubscribed ? 'Enabled' : 'Disabled'}
               </p>
             </div>
@@ -356,7 +356,7 @@ export function NotificationSettings() {
             disabled={isToggling}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               isSubscribed
-                ? 'bg-white/10 text-white/70 hover:bg-white/20'
+                ? 'bg-white/10 text-white/95 hover:bg-white/20'
                 : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
             } disabled:opacity-50`}
           >
@@ -374,7 +374,7 @@ export function NotificationSettings() {
       {/* Notification preferences (only show if subscribed) */}
       {isSubscribed && (
         <div className="space-y-2">
-          <p className="text-xs text-white/40 uppercase tracking-wider px-1">Notification Types</p>
+          <p className="text-xs text-white/95 uppercase tracking-wider px-1">Notification Types</p>
 
           {/* Morning reminder */}
           <NotificationToggle
@@ -479,10 +479,10 @@ function NotificationToggle({ icon: Icon, label, description, enabled, onToggle 
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Icon className={`w-4 h-4 ${enabled ? 'text-white/70' : 'text-white/30'}`} />
+          <Icon className={`w-4 h-4 ${enabled ? 'text-white/95' : 'text-white/95'}`} />
           <div className="text-left">
-            <p className={`text-sm ${enabled ? 'text-white' : 'text-white/50'}`}>{label}</p>
-            <p className="text-xs text-white/40">{description}</p>
+            <p className={`text-sm ${enabled ? 'text-white' : 'text-white/95'}`}>{label}</p>
+            <p className="text-xs text-white/95">{description}</p>
           </div>
         </div>
         <div

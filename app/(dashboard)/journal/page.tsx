@@ -168,7 +168,7 @@ function JournalContent() {
           </div>
           <h1 className="text-2xl font-light">Journal</h1>
         </div>
-        <p className="text-white/50 text-sm ml-12">Reflect, grow, remember</p>
+        <p className="text-white/95 text-sm ml-12">Reflect, grow, remember</p>
       </div>
 
       {/* Date Picker */}
@@ -178,7 +178,7 @@ function JournalContent() {
             onClick={() => goDay(-1)}
             className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
           >
-            <ChevronLeft className="w-5 h-5 text-white/60" />
+            <ChevronLeft className="w-5 h-5 text-white/95" />
           </button>
           <div className="text-center">
             <p className="text-sm font-medium text-white">{dateLabel}</p>
@@ -189,7 +189,7 @@ function JournalContent() {
             disabled={isToday}
             className={`p-1.5 rounded-lg transition-colors ${isToday ? 'opacity-30' : 'hover:bg-white/10'}`}
           >
-            <ChevronRight className="w-5 h-5 text-white/60" />
+            <ChevronRight className="w-5 h-5 text-white/95" />
           </button>
         </div>
       </div>
@@ -202,7 +202,7 @@ function JournalContent() {
               onClick={() => setSparkPrompt(null)}
               className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors"
             >
-              <X className="w-3.5 h-3.5 text-white/40" />
+              <X className="w-3.5 h-3.5 text-white/95" />
             </button>
             <div className="flex items-start gap-3 pr-6">
               <div className="p-1.5 rounded-lg bg-violet-500/20 mt-0.5 shrink-0">
@@ -210,7 +210,7 @@ function JournalContent() {
               </div>
               <div>
                 <p className="text-[10px] font-semibold text-violet-300/70 uppercase tracking-wider mb-1">Reflect on this</p>
-                <p className="text-sm text-white/90 leading-relaxed italic">&ldquo;{sparkPrompt}&rdquo;</p>
+                <p className="text-sm text-white/95 leading-relaxed italic">&ldquo;{sparkPrompt}&rdquo;</p>
               </div>
             </div>
           </div>
@@ -221,13 +221,13 @@ function JournalContent() {
       <div className="px-6">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
+            <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
           </div>
         ) : (
           <div className="space-y-4">
             {/* What did you learn */}
             <div className="p-4 card-gradient-border">
-              <label className="text-sm text-white/80 flex items-center gap-2 mb-3">
+              <label className="text-sm text-white/95 flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 What did you learn today?
               </label>
@@ -239,12 +239,12 @@ function JournalContent() {
                 rows={3}
                 maxLength={500}
               />
-              <p className="text-right text-[10px] text-white/20 mt-1">{win.length}/500</p>
+              <p className="text-right text-[10px] text-white/95 mt-1">{win.length}/500</p>
             </div>
 
             {/* Gratitude */}
             <div className="p-4 card-gradient-border">
-              <label className="text-sm text-white/80 flex items-center gap-2 mb-3">
+              <label className="text-sm text-white/95 flex items-center gap-2 mb-3">
                 <Heart className="w-4 h-4 text-pink-400" />
                 What are you grateful for?
               </label>
@@ -256,12 +256,12 @@ function JournalContent() {
                 rows={3}
                 maxLength={500}
               />
-              <p className="text-right text-[10px] text-white/20 mt-1">{gratitude.length}/500</p>
+              <p className="text-right text-[10px] text-white/95 mt-1">{gratitude.length}/500</p>
             </div>
 
             {/* Intention */}
             <div className="p-4 card-gradient-border">
-              <label className="text-sm text-white/80 flex items-center gap-2 mb-3">
+              <label className="text-sm text-white/95 flex items-center gap-2 mb-3">
                 <Target className="w-4 h-4 text-purple-400" />
                 Tomorrow&apos;s intention
               </label>
@@ -273,7 +273,7 @@ function JournalContent() {
                 rows={2}
                 maxLength={300}
               />
-              <p className="text-right text-[10px] text-white/20 mt-1">{intention.length}/300</p>
+              <p className="text-right text-[10px] text-white/95 mt-1">{intention.length}/300</p>
             </div>
 
             {/* Save Button */}
@@ -285,7 +285,7 @@ function JournalContent() {
                   ? 'text-emerald-400'
                   : hasContent
                   ? 'text-white'
-                  : 'text-white/30 cursor-not-allowed'
+                  : 'text-white/95 cursor-not-allowed'
               }`}
             >
               {isSaving ? (
@@ -304,7 +304,7 @@ function JournalContent() {
                   <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-[10px] font-medium tracking-wider text-indigo-400/70 uppercase mb-1">AI Insight</p>
-                    <p className="text-sm text-white/80 leading-relaxed italic">{reflection}</p>
+                    <p className="text-sm text-white/95 leading-relaxed italic">{reflection}</p>
                   </div>
                 </div>
               </div>
@@ -331,19 +331,19 @@ function JournalContent() {
       {/* Recent Entries */}
       <div className="px-6 mt-8">
         <div className="flex items-center gap-2 mb-4">
-          <Calendar className="w-4 h-4 text-white/50" />
-          <h2 className="text-sm font-medium text-white/70 uppercase tracking-wider">Recent Entries</h2>
+          <Calendar className="w-4 h-4 text-white/95" />
+          <h2 className="text-sm font-medium text-white/95 uppercase tracking-wider">Recent Entries</h2>
         </div>
 
         {loadingPast ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 className="w-4 h-4 text-white/30 animate-spin" />
+            <Loader2 className="w-4 h-4 text-white/95 animate-spin" />
           </div>
         ) : pastEntries.length === 0 ? (
           <div className="text-center py-8">
-            <PenLine className="w-6 h-6 text-white/20 mx-auto mb-2" />
-            <p className="text-white/40 text-sm">No entries yet</p>
-            <p className="text-white/25 text-xs mt-1">Start journaling to see your history here</p>
+            <PenLine className="w-6 h-6 text-white/95 mx-auto mb-2" />
+            <p className="text-white/95 text-sm">No entries yet</p>
+            <p className="text-white/95 text-xs mt-1">Start journaling to see your history here</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -366,14 +366,14 @@ function JournalContent() {
                       : 'hover:bg-white/5'
                   }`}
                 >
-                  <p className={`text-xs mb-1.5 ${isSelected ? 'text-amber-400' : 'text-white/40'}`}>
+                  <p className={`text-xs mb-1.5 ${isSelected ? 'text-amber-400' : 'text-white/95'}`}>
                     {label}
                   </p>
                   {entry.journal_win && (
-                    <p className="text-sm text-white/80 line-clamp-2">{entry.journal_win}</p>
+                    <p className="text-sm text-white/95 line-clamp-2">{entry.journal_win}</p>
                   )}
                   {entry.journal_gratitude && !entry.journal_win && (
-                    <p className="text-sm text-white/60 line-clamp-2 italic">{entry.journal_gratitude}</p>
+                    <p className="text-sm text-white/95 line-clamp-2 italic">{entry.journal_gratitude}</p>
                   )}
                   <div className="flex items-center gap-2 mt-2">
                     {entry.journal_win && <span className="text-[10px] text-amber-400/60">✦ Learned</span>}

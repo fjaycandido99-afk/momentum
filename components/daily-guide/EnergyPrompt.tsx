@@ -92,10 +92,10 @@ export function EnergyPrompt({ onSelect, isLoading }: EnergyPromptProps) {
       <div className="px-6 pt-6 pb-4">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h2 className="text-sm font-semibold tracking-wider text-white/90">
+            <h2 className="text-sm font-semibold tracking-wider text-white/95">
               CHECK-IN
             </h2>
-            <p className="text-xs text-white/50">
+            <p className="text-xs text-white/95">
               {greeting}, happy {dayName}
             </p>
           </div>
@@ -107,10 +107,10 @@ export function EnergyPrompt({ onSelect, isLoading }: EnergyPromptProps) {
 
       {/* Main Question */}
       <div className="px-6 pb-4">
-        <p className="text-lg text-white/90 leading-relaxed">
+        <p className="text-lg text-white/95 leading-relaxed">
           "How are you feeling this {dayName.toLowerCase()}?"
         </p>
-        <p className="text-sm text-white/60 mt-1">
+        <p className="text-sm text-white/95 mt-1">
           This personalizes your experience
         </p>
       </div>
@@ -147,14 +147,14 @@ export function EnergyPrompt({ onSelect, isLoading }: EnergyPromptProps) {
                 {isLoadingThis ? (
                   <Loader2 className="w-5 h-5 text-white animate-spin" />
                 ) : (
-                  <Icon className={`w-5 h-5 ${isSelected ? 'text-white animate-icon-bounce' : 'text-white/80'}`} />
+                  <Icon className={`w-5 h-5 ${isSelected ? 'text-white animate-icon-bounce' : 'text-white/95'}`} />
                 )}
               </div>
 
               {/* Content */}
               <div className="flex-1 text-left">
                 <div className="flex items-center gap-2">
-                  <span className={`font-medium ${isSelected ? 'text-white' : 'text-white/90'}`}>
+                  <span className={`font-medium ${isSelected ? 'text-white' : 'text-white/95'}`}>
                     {option.label}
                   </span>
                   <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 ${benefit.color}`}>
@@ -162,7 +162,7 @@ export function EnergyPrompt({ onSelect, isLoading }: EnergyPromptProps) {
                     <span className="text-xs">{benefit.label}</span>
                   </div>
                 </div>
-                <p className={`text-xs mt-0.5 ${isSelected ? 'text-white/70' : 'text-white/50'}`}>
+                <p className={`text-xs mt-0.5 ${isSelected ? 'text-white/95' : 'text-white/95'}`}>
                   {option.tagline}
                 </p>
               </div>
@@ -202,7 +202,7 @@ export function EnergySelector({
             px-3 py-1.5 rounded-lg text-sm font-medium transition-all
             ${value === option.value
               ? `${selectedClass} border`
-              : 'bg-white/5 text-white/80 border border-transparent hover:bg-white/10'
+              : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
             }
             disabled:opacity-50 disabled:cursor-not-allowed
           `}

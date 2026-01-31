@@ -6,6 +6,7 @@ interface CircuitTraceBackgroundProps {
   animate?: boolean
   className?: string
   pointerRef?: RefObject<{ x: number; y: number; active: boolean }>
+  topOffset?: number
 }
 
 // A junction node on the circuit board grid
@@ -36,19 +37,19 @@ function buildCircuitNetwork(
   w: number,
   h: number,
   spacingX: number,
-  spacingY: number
+  spacingY: number,
+  topOffset: number
 ): { junctions: Junction[]; traces: Trace[] } {
   const cols = Math.floor(w / spacingX) + 1
   const rows = Math.floor(h / spacingY) + 1
   const junctions: Junction[] = []
 
   // Create grid of potential junctions (start below header area)
-  const TOP_OFFSET = 50
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       junctions.push({
         x: c * spacingX,
-        y: TOP_OFFSET + r * spacingY,
+        y: topOffset + r * spacingY,
         col: c,
         row: r,
         connections: [],
@@ -156,10 +157,12 @@ export function CircuitTraceBackground({
   animate = true,
   className = '',
   pointerRef,
+  topOffset = 50,
 }: CircuitTraceBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animFrameRef = useRef<number>()
   const animateRef = useRef(animate)
+  const topOffsetRef = useRef(topOffset)
   const junctionsRef = useRef<Junction[]>([])
   const tracesRef = useRef<Trace[]>([])
   const pulsesRef = useRef<Pulse[]>([])
@@ -173,14 +176,13 @@ export function CircuitTraceBackground({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const GRID_SPACING_X = 60
-    const GRID_SPACING_Y = 60
+    let gridSpacing = 60
     const NUM_PULSES = 10
     const MAX_TRAIL_LENGTH = 18
     const TRAIL_FADE_RATE = 0.05
 
     const rebuild = (w: number, h: number) => {
-      const { junctions, traces } = buildCircuitNetwork(w, h, GRID_SPACING_X, GRID_SPACING_Y)
+      const { junctions, traces } = buildCircuitNetwork(w, h, gridSpacing, gridSpacing, topOffsetRef.current)
       junctionsRef.current = junctions
       tracesRef.current = traces
       pulsesRef.current = createPulses(NUM_PULSES, traces, junctions)
@@ -192,6 +194,7 @@ export function CircuitTraceBackground({
       canvas.width = rect.width * dpr
       canvas.height = rect.height * dpr
       ctx.scale(dpr, dpr)
+      gridSpacing = Math.max(20, Math.min(60, Math.min(rect.width, rect.height) * 0.155))
       rebuild(rect.width, rect.height)
     }
     resize()

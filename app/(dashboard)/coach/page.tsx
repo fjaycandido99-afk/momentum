@@ -38,7 +38,7 @@ function renderMarkdown(text: string) {
         return <strong key={ti} className="font-semibold text-white">{token.slice(2, -2)}</strong>
       }
       if (token.startsWith('*') && token.endsWith('*')) {
-        return <em key={ti} className="italic text-white/80">{token.slice(1, -1)}</em>
+        return <em key={ti} className="italic text-white/95">{token.slice(1, -1)}</em>
       }
       // Handle single line breaks
       return token.split('\n').map((line, li, arr) => (
@@ -132,7 +132,7 @@ export default function CoachPage() {
       <div className="min-h-screen text-white flex flex-col">
         <div className="px-6 pt-12 pb-6 flex items-center gap-3 section-fade-bg">
           <Link href="/" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-            <ChevronLeft className="w-5 h-5 text-white/80" />
+            <ChevronLeft className="w-5 h-5 text-white/95" />
           </Link>
           <h1 className="text-2xl font-light">AI Coach</h1>
         </div>
@@ -142,7 +142,7 @@ export default function CoachPage() {
               <Crown className="w-8 h-8 text-amber-400" />
             </div>
             <h2 className="text-xl font-medium text-white mb-2">Premium Feature</h2>
-            <p className="text-white/60 mb-6 max-w-xs">
+            <p className="text-white/95 mb-6 max-w-xs">
               Get personalized coaching, motivation, and support from your AI wellness coach.
             </p>
             <button
@@ -165,7 +165,7 @@ export default function CoachPage() {
         {/* Subtle gradient glow behind header */}
         <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.06] to-transparent pointer-events-none" />
         <Link href="/" className="relative p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-          <ChevronLeft className="w-5 h-5 text-white/80" />
+          <ChevronLeft className="w-5 h-5 text-white/95" />
         </Link>
         <div className="relative flex items-center gap-3">
           {/* Coach avatar */}
@@ -201,12 +201,12 @@ export default function CoachPage() {
                 className={`max-w-[80%] p-3.5 text-sm leading-relaxed card-gradient-border ${
                   msg.role === 'user'
                     ? 'text-white rounded-2xl rounded-br-md'
-                    : 'text-white/90 rounded-2xl rounded-bl-md'
+                    : 'text-white/95 rounded-2xl rounded-bl-md'
                 }`}
               >
                 {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
               </div>
-              <span className={`text-[10px] text-white/25 mt-1 ${msg.role === 'user' ? 'text-right' : 'ml-1'}`}>
+              <span className={`text-[10px] text-white/95 mt-1 ${msg.role === 'user' ? 'text-right' : 'ml-1'}`}>
                 {formatTime(msg.timestamp)}
               </span>
             </div>
@@ -236,7 +236,7 @@ export default function CoachPage() {
               <button
                 key={qr.label}
                 onClick={() => sendMessage(qr.label)}
-                className="flex items-center gap-1.5 px-3.5 py-2 card-gradient-border text-sm text-white/80 active:scale-95 transition-all"
+                className="flex items-center gap-1.5 px-3.5 py-2 card-gradient-border text-sm text-white/95 active:scale-95 transition-all"
               >
                 <span>{qr.icon}</span>
                 <span>{qr.label}</span>
@@ -266,7 +266,7 @@ export default function CoachPage() {
             className={`p-3 rounded-xl transition-all ${
               input.trim() && !isLoading
                 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-400'
-                : 'bg-white/5 text-white/30'
+                : 'bg-white/5 text-white/95'
             }`}
           >
             {isLoading ? (

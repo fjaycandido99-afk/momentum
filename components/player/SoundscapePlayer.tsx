@@ -97,11 +97,11 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, onClose,
           onClick={onClose}
           className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
         >
-          <ChevronDown className="w-6 h-6 text-white/80" />
+          <ChevronDown className="w-6 h-6 text-white/95" />
         </button>
         <div className="flex-1 text-center pr-10">
           <h1 className="text-xl font-semibold text-white">{label}</h1>
-          <p className="text-sm text-white/50 mt-0.5">{subtitle}</p>
+          <p className="text-sm text-white/95 mt-0.5">{subtitle}</p>
         </div>
       </div>
 
@@ -131,9 +131,9 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, onClose,
                   ? 'bg-white/15 border-2 border-white/40'
                   : 'bg-white/5 border border-white/10'
               }`}>
-                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-white' : 'text-white/50'}`} strokeWidth={1.5} />
+                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-white' : 'text-white/95'}`} strokeWidth={1.5} />
               </div>
-              <span className={`text-[10px] transition-colors ${isActive ? 'text-white' : 'text-white/40'}`}>{item.label}</span>
+              <span className={`text-[10px] transition-colors ${isActive ? 'text-white' : 'text-white/95'}`}>{item.label}</span>
             </button>
           )
         })}

@@ -9,7 +9,7 @@
   --primary: 255 255 255;
   --primary-foreground: 0 0 0;
   --muted: 18 18 18;
-  --muted-foreground: 160 160 160;
+  --muted-foreground: 210 210 210;
   --border: 50 50 50;
   --card: 12 12 12;
 
@@ -25,7 +25,7 @@
   --primary: 255 255 255;
   --primary-foreground: 0 0 0;
   --muted: 18 18 18;
-  --muted-foreground: 160 160 160;
+  --muted-foreground: 210 210 210;
   --border: 50 50 50;
   --card: 12 12 12;
 }
@@ -534,7 +534,7 @@ input:focus, select:focus, textarea:focus, button:focus {
   line-height: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.7);
   font-weight: 500;
 }
 

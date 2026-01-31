@@ -180,7 +180,7 @@ export function MusicThemeSelector({
       {/* Header */}
       <div className="px-6 pt-12 pb-6 text-center">
         <h1 className="text-2xl font-semibold text-white mb-2">Choose Your Vibe</h1>
-        <p className="text-white/60 text-sm">Your app will match your style</p>
+        <p className="text-white/95 text-sm">Your app will match your style</p>
       </div>
 
       {/* Genre Grid */}
@@ -221,7 +221,7 @@ export function MusicThemeSelector({
                 <div className="relative p-4 h-36 flex flex-col justify-between">
                   <div>
                     <h3 className="font-semibold text-white text-lg">{info?.name || genre}</h3>
-                    <p className="text-white/70 text-xs mt-0.5">{info?.tagline}</p>
+                    <p className="text-white/95 text-xs mt-0.5">{info?.tagline}</p>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -279,7 +279,7 @@ export function MusicThemeSelector({
             transition-all
             ${selectedGenre
               ? 'bg-white text-black shadow-[0_0_25px_rgba(255,255,255,0.3)]'
-              : 'bg-white/10 text-white/50 cursor-not-allowed'
+              : 'bg-white/10 text-white/95 cursor-not-allowed'
             }
             disabled:opacity-50
           `}
@@ -301,7 +301,7 @@ export function MusicThemeSelector({
           <button
             onClick={onSkip}
             disabled={isLoading}
-            className="w-full mt-3 py-3 text-white/50 text-sm hover:text-white/70 transition-colors"
+            className="w-full mt-3 py-3 text-white/95 text-sm hover:text-white/95 transition-colors"
           >
             Skip for now
           </button>

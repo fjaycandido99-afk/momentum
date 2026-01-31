@@ -6,6 +6,7 @@ interface FirefliesBackgroundProps {
   animate?: boolean
   className?: string
   pointerRef?: RefObject<{ x: number; y: number; active: boolean }>
+  topOffset?: number
 }
 
 interface Firefly {
@@ -18,12 +19,10 @@ interface Firefly {
   radius: number
 }
 
-const TOP_OFFSET = 50
-
-function createFireflies(count: number, w: number, h: number): Firefly[] {
+function createFireflies(count: number, w: number, h: number, topOffset: number): Firefly[] {
   return Array.from({ length: count }, () => ({
     x: Math.random() * w,
-    y: TOP_OFFSET + Math.random() * (h - TOP_OFFSET),
+    y: topOffset + Math.random() * (h - topOffset),
     vx: (Math.random() - 0.5) * 0.25,
     vy: (Math.random() - 0.5) * 0.25,
     blinkSpeed: 0.5 + Math.random() * 1.5,
@@ -36,11 +35,13 @@ export function FirefliesBackground({
   animate = true,
   className = '',
   pointerRef,
+  topOffset = 50,
 }: FirefliesBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const firefliesRef = useRef<Firefly[]>([])
   const animFrameRef = useRef<number>()
   const animateRef = useRef(animate)
+  const topOffsetRef = useRef(topOffset)
 
   useEffect(() => { animateRef.current = animate }, [animate])
 
@@ -57,7 +58,7 @@ export function FirefliesBackground({
       canvas.height = rect.height * dpr
       ctx.scale(dpr, dpr)
       if (firefliesRef.current.length === 0) {
-        firefliesRef.current = createFireflies(35, rect.width, rect.height)
+        firefliesRef.current = createFireflies(35, rect.width, rect.height, topOffsetRef.current)
       }
     }
     resize()
@@ -107,9 +108,9 @@ export function FirefliesBackground({
           }
 
           if (f.x < 0 || f.x > w) f.vx *= -1
-          if (f.y < TOP_OFFSET || f.y > h) f.vy *= -1
+          if (f.y < topOffsetRef.current || f.y > h) f.vy *= -1
           f.x = Math.max(0, Math.min(w, f.x))
-          f.y = Math.max(TOP_OFFSET, Math.min(h, f.y))
+          f.y = Math.max(topOffsetRef.current, Math.min(h, f.y))
         }
       }
 
