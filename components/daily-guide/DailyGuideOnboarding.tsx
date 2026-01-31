@@ -299,8 +299,8 @@ export function DailyGuideOnboarding() {
       case 2:
         return (
           <div>
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.03] flex items-center justify-center mx-auto mb-6">
+            <div className="text-center mb-5">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.03] flex items-center justify-center mx-auto mb-4">
                 <Layers className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-xl font-semibold text-white mb-2">
@@ -310,7 +310,7 @@ export function DailyGuideOnboarding() {
                 Pick an ambient animation for your experience
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               {/* Daily Rotation option */}
               <button
                 onClick={() => setSelectedAnimation(null)}
@@ -320,13 +320,14 @@ export function DailyGuideOnboarding() {
                     : 'bg-white/5 border border-transparent hover:bg-white/10'
                 }`}
               >
-                <div className="aspect-square rounded-lg overflow-hidden bg-black/50 mb-1.5 relative flex items-center justify-center">
+                <div className="aspect-[3/2] rounded-lg overflow-hidden bg-black/50 mb-2 relative flex items-center justify-center">
                   <div className="text-center">
-                    <Sparkles className="w-4 h-4 text-white/60 mx-auto mb-0.5" />
-                    <span className="text-[9px] text-white/50">Auto</span>
+                    <Sparkles className="w-5 h-5 text-white/60 mx-auto mb-1" />
+                    <span className="text-[10px] text-white/50">Auto</span>
                   </div>
                 </div>
-                <p className="text-[10px] font-medium text-white text-center">Daily Rotation</p>
+                <p className="text-xs font-medium text-white text-center">Daily Rotation</p>
+                <p className="text-[10px] text-white/95 text-center">Changes each day</p>
               </button>
 
               {/* Individual animation options with live preview */}
@@ -342,10 +343,11 @@ export function DailyGuideOnboarding() {
                         : 'bg-white/5 border border-transparent hover:bg-white/10'
                     }`}
                   >
-                    <div className="aspect-square rounded-lg overflow-hidden bg-black/50 mb-1.5 relative">
+                    <div className="aspect-[3/2] rounded-lg overflow-hidden bg-black/50 mb-2 relative">
                       <AnimComponent animate topOffset={0} className="absolute inset-0" />
                     </div>
-                    <p className="text-[10px] font-medium text-white text-center">{anim.name}</p>
+                    <p className="text-xs font-medium text-white text-center">{anim.name}</p>
+                    <p className="text-[10px] text-white/95 text-center">{anim.description}</p>
                   </button>
                 )
               })}
@@ -428,10 +430,10 @@ export function DailyGuideOnboarding() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-6 pb-32">
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto px-6 pb-32">
         <div
           key={step}
-          className={`w-full max-w-sm ${animating ? 'animate-slide-down-exit' : 'animate-slide-up-enter'}`}
+          className={`w-full max-w-sm my-auto ${animating ? 'animate-slide-down-exit' : 'animate-slide-up-enter'}`}
         >
           {renderStep()}
         </div>

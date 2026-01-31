@@ -43,7 +43,7 @@ export function FeatureHint({ id, text, mode }: FeatureHintProps) {
 
   return (
     <p
-      className={`text-[10px] italic tracking-wide mt-1.5 transition-opacity duration-1000 pointer-events-none ${
+      className={`text-[11px] leading-relaxed italic tracking-wide mt-1.5 transition-opacity duration-1000 pointer-events-none ${
         mode === 'persistent' ? 'text-white/25' : 'text-white/45'
       }`}
       style={{ opacity }}

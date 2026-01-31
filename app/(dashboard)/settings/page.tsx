@@ -284,7 +284,7 @@ function SettingsContent() {
         <p className="text-white/95 text-sm mt-1">Customize your Daily Guide</p>
       </div>
 
-      <div className="px-6 space-y-6">
+      <div className="px-6 space-y-4">
         {/* User Type */}
         <section className="p-5 card-gradient-border">
           <div className="flex items-center gap-3 mb-4">
@@ -329,12 +329,12 @@ function SettingsContent() {
                 <p className="text-white/95 text-xs">Days you work</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-7 gap-1.5">
               {DAYS.map((day) => (
                 <button
                   key={day.value}
                   onClick={() => toggleDay(day.value, 'work')}
-                  className={`w-11 h-11 rounded-xl text-sm font-medium transition-all press-scale ${
+                  className={`h-10 rounded-lg text-xs font-medium transition-all press-scale ${
                     workDays.includes(day.value)
                       ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                       : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
@@ -359,12 +359,12 @@ function SettingsContent() {
                 <p className="text-white/95 text-xs">Days you have classes</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-7 gap-1.5">
               {DAYS.map((day) => (
                 <button
                   key={day.value}
                   onClick={() => toggleDay(day.value, 'class')}
-                  className={`w-11 h-11 rounded-xl text-sm font-medium transition-all press-scale ${
+                  className={`h-10 rounded-lg text-xs font-medium transition-all press-scale ${
                     classDays.includes(day.value)
                       ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                       : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
@@ -395,7 +395,7 @@ function SettingsContent() {
                 type="time"
                 value={wakeTime}
                 onChange={(e) => setWakeTime(e.target.value)}
-                className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium cursor-pointer"
+                className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-base font-medium cursor-pointer"
                 style={{ colorScheme: 'dark' }}
               />
             </div>
@@ -575,12 +575,12 @@ function SettingsContent() {
             </button>
           </div>
           {dailyReminder && (
-            <div className="mt-4">
+            <div className="mt-3">
               <input
                 type="time"
                 value={reminderTime}
                 onChange={(e) => setReminderTime(e.target.value)}
-                className="w-full py-4 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-lg font-medium cursor-pointer"
+                className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-base font-medium cursor-pointer"
                 style={{ colorScheme: 'dark' }}
               />
             </div>
