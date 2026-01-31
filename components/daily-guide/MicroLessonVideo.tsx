@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Play, Pause, Lightbulb, Check, SkipForward, X, RotateCcw } from 'lucide-react'
 
 // Dark atmospheric background images (same as Discover page)
@@ -231,106 +232,106 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
     )
   }
 
-  // Audio-style player overlay (like Discover page)
-  if (isPlaying) {
-    const totalDuration = video.duration || 300 // Default 5 min if unknown
-    const progress = Math.min((currentTime / totalDuration) * 100, 100)
+  const totalDuration = video.duration || 300
+  const progress = Math.min((currentTime / totalDuration) * 100, 100)
 
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col">
-        {/* Dark background image */}
-        <div className="absolute inset-0">
-          <img
-            src={backgroundImage}
-            alt=""
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/50" />
-        </div>
+  const playerOverlay = isPlaying ? createPortal(
+    <div className="fixed inset-0 z-50 flex flex-col">
+      {/* Dark background image */}
+      <div className="absolute inset-0">
+        <img
+          src={backgroundImage}
+          alt=""
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
 
-        {/* Hidden YouTube iframe for audio */}
-        {!isPaused && (
-          <iframe
-            src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=1&rel=0&controls=0`}
-            allow="autoplay; encrypted-media"
-            className="absolute w-1 h-1 opacity-0 pointer-events-none"
-            title={video.title}
-          />
-        )}
+      {/* Hidden YouTube iframe for audio */}
+      {!isPaused && (
+        <iframe
+          src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=1&rel=0&controls=0`}
+          allow="autoplay; encrypted-media"
+          className="absolute w-1 h-1 opacity-0 pointer-events-none"
+          title={video.title}
+        />
+      )}
 
-        {/* Header with close button */}
-        <div className="relative p-4 flex items-center justify-end">
+      {/* Header with close button */}
+      <div className="relative p-4 flex items-center justify-end">
+        <button
+          onClick={handleClose}
+          className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Main content - Topic word centered */}
+      <div className="relative flex-1 flex flex-col items-center justify-center px-8">
+        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-wider uppercase mb-4">
+          {topic.word}
+        </h1>
+        <p className="text-white/70 text-sm">{topic.tagline}</p>
+      </div>
+
+      {/* Bottom controls */}
+      <div className="relative p-6 pb-12">
+        {/* Play/Pause button */}
+        <div className="flex justify-center mb-6">
           <button
-            onClick={handleClose}
-            className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            onClick={handlePauseToggle}
+            className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-all hover:scale-105"
           >
-            <X className="w-5 h-5" />
+            {isPaused ? (
+              <Play className="w-7 h-7 text-white ml-1" fill="white" />
+            ) : (
+              <Pause className="w-7 h-7 text-white" />
+            )}
           </button>
         </div>
 
-        {/* Main content - Topic word centered */}
-        <div className="relative flex-1 flex flex-col items-center justify-center px-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-white tracking-wider uppercase mb-4">
-            {topic.word}
-          </h1>
-          <p className="text-white/95 text-sm">{topic.tagline}</p>
+        {/* Progress bar */}
+        <div className="max-w-xs mx-auto mb-4">
+          <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-white/60 rounded-full transition-all duration-1000"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          {/* Timer */}
+          <div className="flex justify-between mt-2 text-xs text-white/50">
+            <span>{formatDuration(currentTime)}</span>
+            <span>{formatDuration(totalDuration)}</span>
+          </div>
         </div>
 
-        {/* Bottom controls */}
-        <div className="relative p-6 pb-12">
-          {/* Play/Pause button */}
-          <div className="flex justify-center mb-6">
-            <button
-              onClick={handlePauseToggle}
-              className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-all hover:scale-105"
-            >
-              {isPaused ? (
-                <Play className="w-7 h-7 text-white ml-1" fill="white" />
-              ) : (
-                <Pause className="w-7 h-7 text-white" />
-              )}
-            </button>
-          </div>
+        {/* Now playing info */}
+        <div className="text-center">
+          <p className="text-white/50 text-xs uppercase tracking-wider mb-1">Now playing</p>
+          <p className="text-white text-sm truncate max-w-xs mx-auto">{video.title}</p>
+          <p className="text-white/50 text-xs mt-0.5">{video.channel}</p>
+        </div>
 
-          {/* Progress bar */}
-          <div className="max-w-xs mx-auto mb-4">
-            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-white/60 rounded-full transition-all duration-1000"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            {/* Timer */}
-            <div className="flex justify-between mt-2 text-xs text-white/95">
-              <span>{formatDuration(currentTime)}</span>
-              <span>{formatDuration(totalDuration)}</span>
-            </div>
-          </div>
-
-          {/* Now playing info */}
-          <div className="text-center">
-            <p className="text-white/95 text-xs uppercase tracking-wider mb-1">Now playing</p>
-            <p className="text-white text-sm truncate max-w-xs mx-auto">{video.title}</p>
-            <p className="text-white/95 text-xs mt-0.5">{video.channel}</p>
-          </div>
-
-          {/* Done button */}
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={handleClose}
-              className="px-6 py-2.5 rounded-full bg-white/10 text-white text-sm hover:bg-white/20 transition-colors flex items-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Done
-            </button>
-          </div>
+        {/* Done button */}
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={handleClose}
+            className="px-6 py-2.5 rounded-full bg-white/10 text-white text-sm hover:bg-white/20 transition-colors flex items-center gap-2"
+          >
+            <Check className="w-4 h-4" />
+            Done
+          </button>
         </div>
       </div>
-    )
-  }
+    </div>,
+    document.body
+  ) : null
 
   // Card view with Discover-style dark background
   return (
+    <>
+    {playerOverlay}
     <div className={`rounded-2xl overflow-hidden transition-all ${
       isCompleted ? 'bg-white/[0.03] border border-white/10' : 'border border-white/15 shadow-[0_0_15px_rgba(255,255,255,0.06)] card-hover'
     }`}>
@@ -418,5 +419,6 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
         </button>
       )}
     </div>
+    </>
   )
 }
