@@ -1,5 +1,20 @@
 <svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="192" height="192" rx="40" fill="#2563eb"/>
-  <path d="M96 40L136 80H112V112H80V80H56L96 40Z" fill="white"/>
-  <path d="M56 128H136V152H56V128Z" fill="white"/>
+  <rect width="192" height="192" rx="40" fill="#0a0a0f"/>
+  <!-- Outer ring - dashed -->
+  <circle cx="96" cy="96" r="68" stroke="rgba(255,255,255,0.4)" stroke-width="2.5" stroke-dasharray="10 5" fill="none"/>
+  <!-- Middle ring - dotted -->
+  <circle cx="96" cy="96" r="52" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-dasharray="3 5" fill="none"/>
+  <!-- Inner ring - dashed -->
+  <circle cx="96" cy="96" r="36" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-dasharray="8 4" fill="none"/>
+  <!-- Center dot with glow -->
+  <circle cx="96" cy="96" r="8" fill="white" filter="url(#glow)"/>
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
 </svg>
