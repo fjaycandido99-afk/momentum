@@ -66,7 +66,7 @@ export function FirefliesBackground({
 
     if (firefliesRef.current.length === 0) {
       const rect = canvas.getBoundingClientRect()
-      firefliesRef.current = createFireflies(35, rect.width, rect.height)
+      firefliesRef.current = createFireflies(35, rect.width, rect.height, topOffsetRef.current)
     }
 
     let currentOpacity = 0.2
