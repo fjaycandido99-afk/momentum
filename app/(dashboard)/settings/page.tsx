@@ -391,35 +391,41 @@ function SettingsContent() {
           <div className="space-y-3">
             <div>
               <label className="block text-sm text-white/95 mb-1.5">Wake time</label>
-              <input
-                type="time"
-                value={wakeTime}
-                onChange={(e) => setWakeTime(e.target.value)}
-                className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
-                style={{ colorScheme: 'dark' }}
-              />
+              <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                <input
+                  type="time"
+                  value={wakeTime}
+                  onChange={(e) => setWakeTime(e.target.value)}
+                  className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                  style={{ colorScheme: 'dark' }}
+                />
+              </div>
             </div>
             {(userType === 'professional' || userType === 'hybrid') && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="min-w-0">
-                  <label className="block text-sm text-white/95 mb-2">Work starts</label>
-                  <input
-                    type="time"
-                    value={workStartTime}
-                    onChange={(e) => setWorkStartTime(e.target.value)}
-                    className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
-                    style={{ colorScheme: 'dark' }}
-                  />
+                  <label className="block text-sm text-white/95 mb-1.5">Work starts</label>
+                  <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                    <input
+                      type="time"
+                      value={workStartTime}
+                      onChange={(e) => setWorkStartTime(e.target.value)}
+                      className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                      style={{ colorScheme: 'dark' }}
+                    />
+                  </div>
                 </div>
                 <div className="min-w-0">
-                  <label className="block text-sm text-white/95 mb-2">Work ends</label>
-                  <input
-                    type="time"
-                    value={workEndTime}
-                    onChange={(e) => setWorkEndTime(e.target.value)}
-                    className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
-                    style={{ colorScheme: 'dark' }}
-                  />
+                  <label className="block text-sm text-white/95 mb-1.5">Work ends</label>
+                  <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                    <input
+                      type="time"
+                      value={workEndTime}
+                      onChange={(e) => setWorkEndTime(e.target.value)}
+                      className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                      style={{ colorScheme: 'dark' }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -427,46 +433,54 @@ function SettingsContent() {
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/95 mb-2">Classes start</label>
-                    <input
-                      type="time"
-                      value={classStartTime}
-                      onChange={(e) => setClassStartTime(e.target.value)}
-                      className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
-                      style={{ colorScheme: 'dark' }}
-                    />
+                    <label className="block text-sm text-white/95 mb-1.5">Classes start</label>
+                    <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                      <input
+                        type="time"
+                        value={classStartTime}
+                        onChange={(e) => setClassStartTime(e.target.value)}
+                        className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                        style={{ colorScheme: 'dark' }}
+                      />
+                    </div>
                   </div>
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/95 mb-2">Classes end</label>
-                    <input
-                      type="time"
-                      value={classEndTime}
-                      onChange={(e) => setClassEndTime(e.target.value)}
-                      className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
-                      style={{ colorScheme: 'dark' }}
-                    />
+                    <label className="block text-sm text-white/95 mb-1.5">Classes end</label>
+                    <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                      <input
+                        type="time"
+                        value={classEndTime}
+                        onChange={(e) => setClassEndTime(e.target.value)}
+                        className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                        style={{ colorScheme: 'dark' }}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/95 mb-2">Study starts</label>
-                    <input
-                      type="time"
-                      value={studyStartTime}
-                      onChange={(e) => setStudyStartTime(e.target.value)}
-                      className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
-                      style={{ colorScheme: 'dark' }}
-                    />
+                    <label className="block text-sm text-white/95 mb-1.5">Study starts</label>
+                    <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                      <input
+                        type="time"
+                        value={studyStartTime}
+                        onChange={(e) => setStudyStartTime(e.target.value)}
+                        className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                        style={{ colorScheme: 'dark' }}
+                      />
+                    </div>
                   </div>
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/95 mb-2">Study ends</label>
-                    <input
-                      type="time"
-                      value={studyEndTime}
-                      onChange={(e) => setStudyEndTime(e.target.value)}
-                      className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
-                      style={{ colorScheme: 'dark' }}
-                    />
+                    <label className="block text-sm text-white/95 mb-1.5">Study ends</label>
+                    <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                      <input
+                        type="time"
+                        value={studyEndTime}
+                        onChange={(e) => setStudyEndTime(e.target.value)}
+                        className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                        style={{ colorScheme: 'dark' }}
+                      />
+                    </div>
                   </div>
                 </div>
               </>
@@ -575,12 +589,12 @@ function SettingsContent() {
             </button>
           </div>
           {dailyReminder && (
-            <div className="mt-3">
+            <div className="mt-3 h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
               <input
                 type="time"
                 value={reminderTime}
                 onChange={(e) => setReminderTime(e.target.value)}
-                className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
+                className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
                 style={{ colorScheme: 'dark' }}
               />
             </div>
