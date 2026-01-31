@@ -889,11 +889,6 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {/* Gradient divider */}
       <div className="mx-6 divider" />
 
-      {/* Smart Nudge — inline card */}
-      <div className="px-6 mb-4">
-        <SmartNudgeBanner />
-      </div>
-
       {/* Session Limit Banner */}
       <div className="px-6 mb-4">
         <SessionLimitBanner />
@@ -968,6 +963,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               }}
             />
           )}
+
+          {/* Smart Nudge */}
+          <SmartNudgeBanner />
 
           {/* Morning Flow Section */}
           {morningModules.length > 0 && (
