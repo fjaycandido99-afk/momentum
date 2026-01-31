@@ -56,18 +56,24 @@ export const ENDEL_MODES = {
 }
 
 export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(true)
   const [pulseScale, setPulseScale] = useState(1)
   const [breathPhase, setBreathPhase] = useState(0)
   const animationRef = useRef<number>()
+  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const config = ENDEL_MODES[mode]
 
-  // Start playing automatically
+  // Control playback via postMessage when toggling play/pause
   useEffect(() => {
-    const timer = setTimeout(() => setIsPlaying(true), 1000)
-    return () => clearTimeout(timer)
-  }, [])
+    const iframe = iframeRef.current
+    if (!iframe?.contentWindow) return
+    const cmd = isPlaying ? 'playVideo' : 'pauseVideo'
+    iframe.contentWindow.postMessage(
+      JSON.stringify({ event: 'command', func: cmd, args: [] }),
+      '*'
+    )
+  }, [isPlaying])
 
   // Organic breathing animation for the orb
   useEffect(() => {
@@ -112,11 +118,12 @@ export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
         backgroundImage: `linear-gradient(180deg, ${config.colors[0]} 0%, ${config.colors[1]} 50%, ${config.colors[2]} 100%)`,
       }}
     >
-      {/* Hidden YouTube player for audio */}
-      {isPlaying && config.sounds[0] && (
+      {/* Hidden YouTube player for audio - always mounted for mobile autoplay */}
+      {config.sounds[0] && (
         <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
           <iframe
-            src={`https://www.youtube.com/embed/${config.sounds[0].youtubeId}?autoplay=1&loop=1&playlist=${config.sounds[0].youtubeId}`}
+            ref={iframeRef}
+            src={`https://www.youtube.com/embed/${config.sounds[0].youtubeId}?autoplay=1&loop=1&playlist=${config.sounds[0].youtubeId}&enablejsapi=1`}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             className="w-[1px] h-[1px]"
           />
