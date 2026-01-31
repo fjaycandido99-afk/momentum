@@ -30,6 +30,7 @@ import { MicroLessonVideo } from './MicroLessonVideo'
 import { QuoteCard } from './QuoteCard'
 import { AffirmationCard } from './AffirmationCard'
 import { GoalTracker } from './GoalTracker'
+import { SmartNudgeBanner } from './SmartNudgeBanner'
 import { StreakDisplay } from './StreakDisplay'
 import { JournalEntry } from './JournalEntry'
 import { MorningFlowComplete } from './MorningFlowComplete'
@@ -791,6 +792,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {/* Trial Banner (hidden in embedded/drawer mode) */}
       {!embedded && <TrialBanner variant="compact" />}
       {!embedded && <TrialEndingBanner />}
+
+      {/* Smart Nudge Popup */}
+      <SmartNudgeBanner />
 
       {/* Header */}
       <div className="p-6 animate-fade-in-down">
