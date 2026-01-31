@@ -8,6 +8,7 @@ import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
+import { SmartNudgeBanner } from '@/components/daily-guide/SmartNudgeBanner'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
 import { JournalEntry } from '@/components/daily-guide/JournalEntry'
 import { ModeSelector } from './ModeSelector'
@@ -601,6 +602,7 @@ export function ImmersiveHome() {
 
   return (
     <div className="isolate min-h-screen">
+    <SmartNudgeBanner />
     <div
       ref={scrollRef}
       className={`relative min-h-screen text-white pb-28 ${showMorningFlow ? 'overflow-hidden max-h-screen' : ''}`}

@@ -29,7 +29,6 @@ import { ModuleCard, MorningFlowProgress } from './ModuleCard'
 import { MicroLessonVideo } from './MicroLessonVideo'
 import { QuoteCard } from './QuoteCard'
 import { AffirmationCard } from './AffirmationCard'
-import { SmartNudgeBanner } from './SmartNudgeBanner'
 import { GoalTracker } from './GoalTracker'
 import { StreakDisplay } from './StreakDisplay'
 import { JournalEntry } from './JournalEntry'
@@ -792,11 +791,6 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {/* Trial Banner (hidden in embedded/drawer mode) */}
       {!embedded && <TrialBanner variant="compact" />}
       {!embedded && <TrialEndingBanner />}
-
-      {/* Smart Nudge */}
-      <div className="px-6 mb-2">
-        <SmartNudgeBanner />
-      </div>
 
       {/* Header */}
       <div className="p-6 animate-fade-in-down">
