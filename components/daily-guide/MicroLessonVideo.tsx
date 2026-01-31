@@ -361,49 +361,45 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
         {/* Content */}
         <div className="relative p-5">
           {/* Topic word - large centered */}
-          <div className="text-center mb-6 mt-2">
+          <div className="text-center mb-4 mt-2">
             <h2 className={`text-2xl font-bold tracking-wide uppercase ${
-              isCompleted ? 'text-white/95' : 'text-white'
+              isCompleted ? 'text-white/70' : 'text-white'
             }`}>
               {topic.word}
             </h2>
-            <p className={`text-xs mt-1 ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
+            <p className={`text-xs mt-1 ${isCompleted ? 'text-white/50' : 'text-white/70'}`}>
               {topic.tagline}
             </p>
           </div>
 
           {/* Play/Rewatch button centered */}
           <div className="flex justify-center mb-4">
-            <div className={`flex items-center justify-center w-14 h-14 rounded-full transition-all ${
+            <div className={`flex items-center justify-center w-12 h-12 rounded-full transition-all ${
               isCompleted
-                ? 'bg-white/10 text-white/95 group-hover:bg-white/20 group-hover:scale-105'
+                ? 'bg-white/10 text-white/60 group-hover:bg-white/20 group-hover:scale-105'
                 : 'bg-white/20 backdrop-blur-sm text-white group-hover:bg-white/30 group-hover:scale-105'
             }`}>
               {isCompleted ? (
-                <RotateCcw className="w-5 h-5" />
+                <RotateCcw className="w-4 h-4" />
               ) : (
-                <Play className="w-6 h-6 ml-1" fill="currentColor" />
+                <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
               )}
             </div>
           </div>
 
           {/* Video info */}
           <div className="text-center">
-            <h3 className={`font-medium text-sm leading-snug line-clamp-2 mb-1 ${
-              isCompleted ? 'text-white/95' : 'text-white'
+            <h3 className={`font-medium text-xs leading-snug line-clamp-1 mb-1 ${
+              isCompleted ? 'text-white/60' : 'text-white/90'
             }`}>
               {video.title}
             </h3>
-            <p className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
+            <p className={`text-xs ${isCompleted ? 'text-white/40' : 'text-white/50'}`}>
               {video.channel}
+              {video.duration && <span> · {formatDuration(video.duration)}</span>}
             </p>
-            {video.duration && (
-              <p className={`text-xs mt-1 ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
-                {formatDuration(video.duration)}
-              </p>
-            )}
             {isCompleted && (
-              <p className="text-xs text-white/95 mt-2">
+              <p className="text-xs text-white/40 mt-1.5">
                 Tap to rewatch
               </p>
             )}
@@ -415,7 +411,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
       {!isCompleted && onSkip && (
         <button
           onClick={onSkip}
-          className="w-full py-2.5 bg-white/5 text-xs text-white/95 hover:text-white/95 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
+          className="w-full py-2.5 bg-white/5 text-xs text-white/50 hover:text-white/70 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
         >
           <SkipForward className="w-3 h-3" />
           Skip for today
