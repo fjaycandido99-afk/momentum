@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { Play, Pause, Lightbulb, Check, SkipForward, X, RotateCcw } from 'lucide-react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { Play, Pause, Check, SkipForward, RotateCcw } from 'lucide-react'
 
 // Dark atmospheric background images (same as Discover page)
 const BACKGROUND_IMAGES = [
@@ -50,7 +49,7 @@ const DAILY_TOPICS = [
   { word: 'Confidence', tagline: 'Believe in yourself' },
 ]
 
-// Seeded random for consistent daily background
+// Seeded random for consistent daily selection
 function seededRandom(seed: number) {
   const x = Math.sin(seed) * 10000
   return x - Math.floor(x)
@@ -94,31 +93,13 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
   const [loading, setLoading] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [currentTime, setCurrentTime] = useState(0)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval>>()
 
   // Get today's dark background image (memoized)
   const backgroundImage = useMemo(() => getTodaysBackground(), [])
-
-  // Timer for tracking playback
-  useEffect(() => {
-    if (isPlaying && !isPaused) {
-      timerRef.current = setInterval(() => {
-        setCurrentTime(prev => prev + 1)
-      }, 1000)
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
-    }
-  }, [isPlaying, isPaused])
 
   // Fetch a motivation video for today's topic (same video all day)
   useEffect(() => {
@@ -129,22 +110,16 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
         const response = await fetch(`/api/motivation-videos?topic=${topic.word}`)
         const data = await response.json()
         if (data.videos && data.videos.length > 0) {
-          // Pick a short video (prefer shorter ones for micro lesson)
           const shortVideos = data.videos.filter((v: MotivationVideo) =>
-            v.duration && v.duration <= 300 // 5 minutes or less
+            v.duration && v.duration <= 300
           )
           const videoPool = shortVideos.length > 0 ? shortVideos : data.videos
+          const sortedVideos = [...videoPool].sort((a: MotivationVideo, b: MotivationVideo) => a.youtubeId.localeCompare(b.youtubeId))
 
-          // Sort videos by ID to ensure consistent order (API might return different orders)
-          const sortedVideos = [...videoPool].sort((a, b) => a.youtubeId.localeCompare(b.youtubeId))
-
-          // Use seeded random to get same video for the entire day
           const now = new Date()
           const dateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
           const videoIndex = Math.floor(seededRandom(dateSeed + 456) * sortedVideos.length)
-          const todaysVideo = sortedVideos[videoIndex]
-
-          setVideo(todaysVideo)
+          setVideo(sortedVideos[videoIndex])
         } else {
           setError('No videos available')
         }
@@ -158,27 +133,58 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
     fetchVideo()
   }, [topic.word])
 
-  const formatDuration = (seconds?: number) => {
-    if (!seconds) return ''
+  // Elapsed timer
+  useEffect(() => {
+    if (isPlaying && !isPaused) {
+      timerRef.current = setInterval(() => {
+        setElapsed(prev => prev + 1)
+      }, 1000)
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [isPlaying, isPaused])
+
+  const sendCommand = useCallback((command: string) => {
+    const iframe = iframeRef.current
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: command }),
+        '*'
+      )
+    }
+  }, [])
+
+  const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   const handlePlay = () => {
-    setCurrentTime(0)
-    setIsPaused(false)
     setIsPlaying(true)
+    setIsPaused(false)
+    setElapsed(0)
   }
 
   const handlePauseToggle = () => {
-    setIsPaused(!isPaused)
+    if (isPaused) {
+      sendCommand('playVideo')
+      setIsPaused(false)
+    } else {
+      sendCommand('pauseVideo')
+      setIsPaused(true)
+    }
   }
 
-  const handleClose = () => {
+  const handleDone = () => {
+    sendCommand('pauseVideo')
+    if (timerRef.current) clearInterval(timerRef.current)
     setIsPlaying(false)
     setIsPaused(false)
-    setCurrentTime(0)
+    setElapsed(0)
     onComplete()
   }
 
@@ -204,221 +210,160 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
   }
 
   if (error || !video) {
-    return (
-      <div className="rounded-2xl overflow-hidden relative">
-        <div className="absolute inset-0">
-          <img
-            src={backgroundImage}
-            alt=""
-            className="w-full h-full object-cover opacity-50"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
-        </div>
-        <div className="relative p-5 text-center">
-          <div className="mb-4 mt-2">
-            <h2 className="text-xl font-bold text-white/95 tracking-wide uppercase">
-              {topic.word}
-            </h2>
-            <p className="text-white/95 text-xs mt-1">{topic.tagline}</p>
-          </div>
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-              <Lightbulb className="w-5 h-5 text-white/95" />
-            </div>
-          </div>
-          <p className="text-white/95 text-sm">No video available today</p>
-        </div>
-      </div>
-    )
+    return null
   }
 
-  const totalDuration = video.duration || 300
-  const progress = Math.min((currentTime / totalDuration) * 100, 100)
+  const totalDuration = video.duration || 0
+  const progress = totalDuration > 0 ? Math.min(elapsed / totalDuration, 1) : 0
 
-  const playerOverlay = isPlaying ? createPortal(
-    <div className="fixed inset-0 z-50 flex flex-col">
-      {/* Dark background image */}
-      <div className="absolute inset-0">
-        <img
-          src={backgroundImage}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/50" />
-      </div>
-
-      {/* Hidden YouTube iframe for audio */}
-      {!isPaused && (
-        <iframe
-          src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=1&rel=0&controls=0`}
-          allow="autoplay; encrypted-media"
-          className="absolute w-1 h-1 opacity-0 pointer-events-none"
-          title={video.title}
-        />
-      )}
-
-      {/* Header with close button */}
-      <div className="relative p-4 flex items-center justify-end">
-        <button
-          onClick={handleClose}
-          className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Main content - Topic word centered */}
-      <div className="relative flex-1 flex flex-col items-center justify-center px-8">
-        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-wider uppercase mb-4">
-          {topic.word}
-        </h1>
-        <p className="text-white/70 text-sm">{topic.tagline}</p>
-      </div>
-
-      {/* Bottom controls */}
-      <div className="relative p-6 pb-12">
-        {/* Play/Pause button */}
-        <div className="flex justify-center mb-6">
-          <button
-            onClick={handlePauseToggle}
-            className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-all hover:scale-105"
-          >
-            {isPaused ? (
-              <Play className="w-7 h-7 text-white ml-1" fill="white" />
-            ) : (
-              <Pause className="w-7 h-7 text-white" />
-            )}
-          </button>
-        </div>
-
-        {/* Progress bar */}
-        <div className="max-w-xs mx-auto mb-4">
-          <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-white/60 rounded-full transition-all duration-1000"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          {/* Timer */}
-          <div className="flex justify-between mt-2 text-xs text-white/50">
-            <span>{formatDuration(currentTime)}</span>
-            <span>{formatDuration(totalDuration)}</span>
-          </div>
-        </div>
-
-        {/* Now playing info */}
-        <div className="text-center">
-          <p className="text-white/50 text-xs uppercase tracking-wider mb-1">Now playing</p>
-          <p className="text-white text-sm truncate max-w-xs mx-auto">{video.title}</p>
-          <p className="text-white/50 text-xs mt-0.5">{video.channel}</p>
-        </div>
-
-        {/* Done button */}
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={handleClose}
-            className="px-6 py-2.5 rounded-full bg-white/10 text-white text-sm hover:bg-white/20 transition-colors flex items-center gap-2"
-          >
-            <Check className="w-4 h-4" />
-            Done
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
-  ) : null
-
-  // Card view with Discover-style dark background
   return (
-    <>
-    {playerOverlay}
     <div className={`rounded-2xl overflow-hidden transition-all ${
-      isCompleted ? 'bg-white/[0.03] border border-white/10' : 'border border-white/15 shadow-[0_0_15px_rgba(255,255,255,0.06)] card-hover'
+      isCompleted && !isPlaying ? 'bg-white/[0.03] border border-white/10' : 'border border-white/15 shadow-[0_0_15px_rgba(255,255,255,0.06)]'
     }`}>
-      {/* Background with dark atmospheric image */}
-      <button
-        onClick={handlePlay}
-        className="w-full relative group"
-      >
-        {/* Dark background image */}
-        <div className="absolute inset-0">
-          <img
-            src={backgroundImage}
-            alt=""
-            className={`w-full h-full object-cover ${isCompleted ? 'opacity-60' : ''}`}
+      {/* Audio playing with motivational background */}
+      {isPlaying && (
+        <div className="relative">
+          {/* Hidden YouTube iframe for audio only */}
+          <iframe
+            ref={iframeRef}
+            src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=1&rel=0&enablejsapi=1`}
+            allow="autoplay; encrypted-media"
+            className="absolute w-0 h-0 opacity-0 pointer-events-none"
+            title={video.title}
           />
-          {/* Dark gradient overlays for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
-        </div>
-
-        {/* Completed badge */}
-        {isCompleted && (
-          <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">
-            <Check className="w-3 h-3" />
-            <span className="text-xs">Done</span>
+          {/* Visual: background image with topic overlay */}
+          <div className="absolute inset-0">
+            <img
+              src={backgroundImage}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
           </div>
-        )}
+          <div className="relative p-6">
+            <div className="text-center mb-4 mt-2">
+              <h2 className="text-3xl font-bold text-white tracking-wide uppercase mb-1">
+                {topic.word}
+              </h2>
+              <p className="text-xs text-white/60">{topic.tagline}</p>
+            </div>
 
-        {/* Content */}
-        <div className="relative p-5">
-          {/* Topic word - large centered */}
-          <div className="text-center mb-4 mt-2">
-            <h2 className={`text-2xl font-bold tracking-wide uppercase ${
-              isCompleted ? 'text-white/70' : 'text-white'
-            }`}>
-              {topic.word}
-            </h2>
-            <p className={`text-xs mt-1 ${isCompleted ? 'text-white/50' : 'text-white/70'}`}>
-              {topic.tagline}
-            </p>
-          </div>
+            {/* Pause/Play button */}
+            <div className="flex justify-center mb-4">
+              <button
+                onClick={handlePauseToggle}
+                className="flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 hover:scale-105 transition-all"
+              >
+                {isPaused ? (
+                  <Play className="w-6 h-6 ml-0.5" fill="currentColor" />
+                ) : (
+                  <Pause className="w-6 h-6" fill="currentColor" />
+                )}
+              </button>
+            </div>
 
-          {/* Play/Rewatch button centered */}
-          <div className="flex justify-center mb-4">
-            <div className={`flex items-center justify-center w-12 h-12 rounded-full transition-all ${
-              isCompleted
-                ? 'bg-white/10 text-white/60 group-hover:bg-white/20 group-hover:scale-105'
-                : 'bg-white/20 backdrop-blur-sm text-white group-hover:bg-white/30 group-hover:scale-105'
-            }`}>
-              {isCompleted ? (
-                <RotateCcw className="w-4 h-4" />
-              ) : (
-                <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
-              )}
+            {/* Progress bar + duration */}
+            <div className="mb-5">
+              <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-white/50 transition-all duration-1000"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-1.5">
+                <span className="text-[10px] text-white/40">{formatTime(elapsed)}</span>
+                <span className="text-[10px] text-white/40">
+                  {totalDuration > 0 ? formatTime(totalDuration) : '--:--'}
+                </span>
+              </div>
+            </div>
+
+            {/* Done button */}
+            <div className="flex justify-center">
+              <button
+                onClick={handleDone}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/15 text-white text-sm font-medium hover:bg-white/25 transition-colors"
+              >
+                <Check className="w-4 h-4" />
+                Done
+              </button>
             </div>
           </div>
-
-          {/* Video info */}
-          <div className="text-center">
-            <h3 className={`font-medium text-xs leading-snug line-clamp-1 mb-1 ${
-              isCompleted ? 'text-white/60' : 'text-white/90'
-            }`}>
-              {video.title}
-            </h3>
-            <p className={`text-xs ${isCompleted ? 'text-white/40' : 'text-white/50'}`}>
-              {video.channel}
-              {video.duration && <span> · {formatDuration(video.duration)}</span>}
-            </p>
-            {isCompleted && (
-              <p className="text-xs text-white/40 mt-1.5">
-                Tap to rewatch
-              </p>
-            )}
-          </div>
         </div>
-      </button>
+      )}
 
-      {/* Skip option - only show if not completed */}
-      {!isCompleted && onSkip && (
-        <button
-          onClick={onSkip}
-          className="w-full py-2.5 bg-white/5 text-xs text-white/50 hover:text-white/70 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
-        >
-          <SkipForward className="w-3 h-3" />
-          Skip for today
-        </button>
+      {/* Card preview when not playing */}
+      {!isPlaying && (
+        <>
+          <button
+            onClick={handlePlay}
+            className="w-full relative group"
+          >
+            {/* Dark background image */}
+            <div className="absolute inset-0">
+              <img
+                src={backgroundImage}
+                alt=""
+                className={`w-full h-full object-cover ${isCompleted ? 'opacity-60' : ''}`}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
+            </div>
+
+            {/* Completed badge */}
+            {isCompleted && (
+              <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">
+                <Check className="w-3 h-3" />
+                <span className="text-xs">Done</span>
+              </div>
+            )}
+
+            {/* Content */}
+            <div className="relative p-8 py-12">
+              <div className="text-center mb-6 mt-4">
+                <h2 className={`text-4xl font-bold tracking-wide uppercase ${
+                  isCompleted ? 'text-white/70' : 'text-white'
+                }`}>
+                  {topic.word}
+                </h2>
+                <p className={`text-sm mt-2 ${isCompleted ? 'text-white/50' : 'text-white/70'}`}>
+                  {topic.tagline}
+                </p>
+              </div>
+
+              <div className="flex justify-center mb-6">
+                <div className={`flex items-center justify-center w-16 h-16 rounded-full transition-all ${
+                  isCompleted
+                    ? 'bg-white/10 text-white/60 group-hover:bg-white/20 group-hover:scale-105'
+                    : 'bg-white/20 backdrop-blur-sm text-white group-hover:bg-white/30 group-hover:scale-105'
+                }`}>
+                  {isCompleted ? (
+                    <RotateCcw className="w-5 h-5" />
+                  ) : (
+                    <Play className="w-7 h-7 ml-0.5" fill="currentColor" />
+                  )}
+                </div>
+              </div>
+
+              <div className="text-center">
+                <p className={`text-sm ${isCompleted ? 'text-white/40' : 'text-white/50'}`}>
+                  {isCompleted ? 'Tap to rewatch' : video.duration ? formatTime(video.duration) : ''}
+                </p>
+              </div>
+            </div>
+          </button>
+
+          {/* Skip option */}
+          {!isCompleted && onSkip && (
+            <button
+              onClick={onSkip}
+              className="w-full py-2.5 bg-white/5 text-xs text-white/50 hover:text-white/70 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
+            >
+              <SkipForward className="w-3 h-3" />
+              Skip for today
+            </button>
+          )}
+        </>
       )}
     </div>
-    </>
   )
 }

@@ -1040,7 +1040,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                           )
                         }
 
-                        // Use MicroLessonVideo for micro_lesson module to show Discover motivation videos
+                        // Micro lesson uses inline YouTube player
                         if (module === 'micro_lesson') {
                           return (
                             <div key={module} className={`animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}`}>
