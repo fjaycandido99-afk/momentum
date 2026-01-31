@@ -53,30 +53,30 @@ export function SplashScreen({ onComplete, minDuration = 2500 }: SplashScreenPro
       {/* Animated logo */}
       <div className="w-28 h-28 relative flex items-center justify-center mb-8">
         {/* Outer glow */}
-        <div className="absolute inset-0 rounded-full bg-white/5 blur-xl" />
+        <div className="absolute inset-0 rounded-full bg-white/10 blur-xl" />
 
         {/* Outer ring */}
         <div
-          className="absolute inset-0 rounded-full border-2 border-dashed border-white/15"
+          className="absolute inset-0 rounded-full border-2 border-dashed border-white/35"
           style={{ transform: `rotate(${rotation}deg)` }}
         />
         {/* Second ring */}
         <div
-          className="absolute inset-3 rounded-full border-2 border-dotted border-white/25"
+          className="absolute inset-3 rounded-full border-2 border-dotted border-white/50"
           style={{ transform: `rotate(${-rotation * 1.2}deg)` }}
         />
         {/* Third ring */}
         <div
-          className="absolute inset-6 rounded-full border-2 border-dashed border-white/35"
+          className="absolute inset-6 rounded-full border-2 border-dashed border-white/60"
           style={{ transform: `rotate(${rotation * 1.5}deg)` }}
         />
         {/* Inner ring */}
         <div
-          className="absolute inset-9 rounded-full border-2 border-dotted border-white/45"
+          className="absolute inset-9 rounded-full border-2 border-dotted border-white/70"
           style={{ transform: `rotate(${-rotation * 2}deg)` }}
         />
         {/* Center dot */}
-        <div className="w-4 h-4 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.6)]" />
+        <div className="w-4 h-4 rounded-full bg-white shadow-[0_0_25px_rgba(255,255,255,0.9)]" />
       </div>
 
       {/* App name with fade in */}

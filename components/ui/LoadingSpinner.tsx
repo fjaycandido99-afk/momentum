@@ -40,21 +40,21 @@ export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerPr
     <div className={`${sizeClasses[size]} relative flex items-center justify-center ${className}`}>
       {/* Outer ring - dashed, rotates clockwise slow */}
       <div
-        className="absolute inset-0 rounded-full border-2 border-dashed border-white/20"
+        className="absolute inset-0 rounded-full border-2 border-dashed border-white/40"
         style={{ transform: `rotate(${rotation}deg)` }}
       />
       {/* Middle ring - dotted, rotates counter-clockwise */}
       <div
-        className="absolute inset-[15%] rounded-full border-2 border-dotted border-white/40"
+        className="absolute inset-[15%] rounded-full border-2 border-dotted border-white/60"
         style={{ transform: `rotate(${-rotation * 1.3}deg)` }}
       />
       {/* Inner ring - dashed, rotates clockwise faster */}
       <div
-        className="absolute inset-[30%] rounded-full border-2 border-dashed border-white/30"
+        className="absolute inset-[30%] rounded-full border-2 border-dashed border-white/50"
         style={{ transform: `rotate(${rotation * 2}deg)` }}
       />
       {/* Center dot with glow */}
-      <div className={`${dotSizes[size]} rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]`} />
+      <div className={`${dotSizes[size]} rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.8)]`} />
     </div>
   )
 }
