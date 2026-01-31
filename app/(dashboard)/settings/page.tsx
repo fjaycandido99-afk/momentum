@@ -395,7 +395,7 @@ function SettingsContent() {
                 type="time"
                 value={wakeTime}
                 onChange={(e) => setWakeTime(e.target.value)}
-                className="w-full py-2.5 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
+                className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
                 style={{ colorScheme: 'dark' }}
               />
             </div>
@@ -407,7 +407,7 @@ function SettingsContent() {
                     type="time"
                     value={workStartTime}
                     onChange={(e) => setWorkStartTime(e.target.value)}
-                    className="w-full py-2.5 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
+                    className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
                     style={{ colorScheme: 'dark' }}
                   />
                 </div>
@@ -417,7 +417,7 @@ function SettingsContent() {
                     type="time"
                     value={workEndTime}
                     onChange={(e) => setWorkEndTime(e.target.value)}
-                    className="w-full py-2.5 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
+                    className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
                     style={{ colorScheme: 'dark' }}
                   />
                 </div>
@@ -432,7 +432,7 @@ function SettingsContent() {
                       type="time"
                       value={classStartTime}
                       onChange={(e) => setClassStartTime(e.target.value)}
-                      className="w-full py-2.5 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
+                      className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
                       style={{ colorScheme: 'dark' }}
                     />
                   </div>
@@ -442,7 +442,7 @@ function SettingsContent() {
                       type="time"
                       value={classEndTime}
                       onChange={(e) => setClassEndTime(e.target.value)}
-                      className="w-full py-2.5 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
+                      className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
                       style={{ colorScheme: 'dark' }}
                     />
                   </div>
@@ -454,7 +454,7 @@ function SettingsContent() {
                       type="time"
                       value={studyStartTime}
                       onChange={(e) => setStudyStartTime(e.target.value)}
-                      className="w-full py-2.5 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
+                      className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
                       style={{ colorScheme: 'dark' }}
                     />
                   </div>
@@ -464,7 +464,7 @@ function SettingsContent() {
                       type="time"
                       value={studyEndTime}
                       onChange={(e) => setStudyEndTime(e.target.value)}
-                      className="w-full py-2.5 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
+                      className="w-full h-11 px-2 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
                       style={{ colorScheme: 'dark' }}
                     />
                   </div>
@@ -580,7 +580,7 @@ function SettingsContent() {
                 type="time"
                 value={reminderTime}
                 onChange={(e) => setReminderTime(e.target.value)}
-                className="w-full py-2.5 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
+                className="w-full h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-center text-sm font-medium cursor-pointer"
                 style={{ colorScheme: 'dark' }}
               />
             </div>
