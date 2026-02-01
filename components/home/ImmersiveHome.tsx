@@ -140,8 +140,9 @@ export function ImmersiveHome() {
   } | null>(null)
   const [showSoundscapePlayer, setShowSoundscapePlayer] = useState(false)
   const [soundscapeIsPlaying, setSoundscapeIsPlaying] = useState(false)
-  const soundscapeIframeRef = useRef<HTMLIFrameElement | null>(null)
-  const soundscapeAutoPlayed = useRef(false)
+  const soundscapePlayerRef = useRef<YTPlayer | null>(null)
+  const soundscapeContainerRef = useRef<HTMLDivElement>(null)
+  const soundscapeReady = useRef(false)
   const [playingSound, setPlayingSound] = useState<{
     word: string
     color: string
@@ -201,6 +202,12 @@ export function ImmersiveHome() {
     setMusicDuration(0)
     setMusicCurrentTime(0)
     setPlayingSound(null)
+    // Destroy soundscape YT player
+    if (soundscapePlayerRef.current) {
+      soundscapePlayerRef.current.destroy()
+      soundscapePlayerRef.current = null
+    }
+    soundscapeReady.current = false
     setActiveSoundscape(null)
     setShowSoundscapePlayer(false)
     setSoundscapeIsPlaying(false)
@@ -208,38 +215,90 @@ export function ImmersiveHome() {
     homeAudioActiveRef.current = false
   }, [isPlaying])
 
-  // Soundscape autoplay: when a new soundscape is selected, wait for iframe to load
+  // Soundscape: create / destroy YT.Player when activeSoundscape changes
   const soundscapeYoutubeId = activeSoundscape?.youtubeId
   useEffect(() => {
-    if (!soundscapeYoutubeId) return
-    soundscapeAutoPlayed.current = false
-    setSoundscapeIsPlaying(false)
-    const timer = setTimeout(() => {
-      setSoundscapeIsPlaying(true)
-      soundscapeAutoPlayed.current = true
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [soundscapeYoutubeId])
-
-  // Soundscape play/pause via YouTube postMessage API
-  useEffect(() => {
-    if (!soundscapeAutoPlayed.current) return
-    const iframe = soundscapeIframeRef.current
-    if (!iframe) return
-    const func = soundscapeIsPlaying ? 'playVideo' : 'pauseVideo'
-    iframe.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func, args: '' }),
-      '*'
-    )
-  }, [soundscapeIsPlaying])
-
-  // Clean up iframe ref when soundscape is cleared
-  useEffect(() => {
-    if (!activeSoundscape) {
-      soundscapeIframeRef.current = null
-      soundscapeAutoPlayed.current = false
+    if (!soundscapeYoutubeId) {
+      if (soundscapePlayerRef.current) {
+        soundscapePlayerRef.current.destroy()
+        soundscapePlayerRef.current = null
+      }
+      soundscapeReady.current = false
+      return
     }
-  }, [activeSoundscape])
+
+    const createSoundscapePlayer = () => {
+      if (!soundscapeContainerRef.current) return
+      // Clear previous player div
+      soundscapeContainerRef.current.innerHTML = ''
+      const div = document.createElement('div')
+      div.id = 'sc-yt-player-' + Date.now()
+      soundscapeContainerRef.current.appendChild(div)
+
+      soundscapePlayerRef.current = new window.YT.Player(div.id, {
+        videoId: soundscapeYoutubeId,
+        height: '1',
+        width: '1',
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          iv_load_policy: 3,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+          loop: 1,
+          playlist: soundscapeYoutubeId,
+          playsinline: 1,
+        },
+        events: {
+          onReady: (event) => {
+            event.target.setVolume(100)
+            event.target.playVideo()
+            soundscapeReady.current = true
+            setSoundscapeIsPlaying(true)
+          },
+          onStateChange: (event) => {
+            if (event.data === 1) setSoundscapeIsPlaying(true)
+            else if (event.data === 2) setSoundscapeIsPlaying(false)
+          },
+        },
+      })
+    }
+
+    // Load YT API if needed, then create player
+    if (window.YT && window.YT.Player) {
+      createSoundscapePlayer()
+    } else {
+      const tag = document.createElement('script')
+      tag.src = 'https://www.youtube.com/iframe_api'
+      const first = document.getElementsByTagName('script')[0]
+      first.parentNode?.insertBefore(tag, first)
+      const prev = window.onYouTubeIframeAPIReady
+      window.onYouTubeIframeAPIReady = () => {
+        prev?.()
+        createSoundscapePlayer()
+      }
+    }
+
+    return () => {
+      if (soundscapePlayerRef.current) {
+        soundscapePlayerRef.current.destroy()
+        soundscapePlayerRef.current = null
+      }
+      soundscapeReady.current = false
+    }
+  }, [soundscapeYoutubeId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Soundscape play/pause via YT Player API
+  useEffect(() => {
+    if (!soundscapeReady.current || !soundscapePlayerRef.current) return
+    try {
+      if (soundscapeIsPlaying) soundscapePlayerRef.current.playVideo()
+      else soundscapePlayerRef.current.pauseVideo()
+    } catch {}
+  }, [soundscapeIsPlaying])
 
   // Create / destroy YT API player when backgroundMusic changes
   useEffect(() => {
@@ -677,18 +736,8 @@ export function ImmersiveHome() {
         />
       )}
 
-      {/* Persistent soundscape YouTube iframe (stays alive when fullscreen player is closed) */}
-      {activeSoundscape && (
-        <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
-          <iframe
-            ref={soundscapeIframeRef}
-            key={activeSoundscape.youtubeId}
-            src={`https://www.youtube.com/embed/${activeSoundscape.youtubeId}?autoplay=1&loop=1&playlist=${activeSoundscape.youtubeId}&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            className="w-[1px] h-[1px]"
-          />
-        </div>
-      )}
+      {/* Persistent soundscape YouTube player container (stays alive when fullscreen player is closed) */}
+      <div ref={soundscapeContainerRef} className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden" />
 
       {/* Soundscape Player (fullscreen orb) */}
       {activeSoundscape && showSoundscapePlayer && (
