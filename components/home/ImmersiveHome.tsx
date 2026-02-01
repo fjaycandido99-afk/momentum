@@ -236,7 +236,17 @@ export function ImmersiveHome() {
     if (soundscapeContainerRef.current) soundscapeContainerRef.current.innerHTML = ''
   }, [])
 
-  // Create soundscape YT player — uses raw iframe with allow="autoplay" for mobile
+  // Helper: send command to a YouTube iframe via postMessage
+  const ytCommand = useCallback((iframe: HTMLIFrameElement | null, func: string, args?: unknown[]) => {
+    if (!iframe?.contentWindow) return
+    try {
+      iframe.contentWindow.postMessage(JSON.stringify({
+        event: 'command', func, args: args || [],
+      }), 'https://www.youtube.com')
+    } catch {}
+  }, [])
+
+  // Create soundscape YT player — muted autoplay + delayed YT.Player wrapper
   const createSoundscapePlayer = useCallback((youtubeId: string) => {
     // Clean up existing
     soundscapePlayerRef.current = null
@@ -245,7 +255,7 @@ export function ImmersiveHome() {
 
     soundscapeContainerRef.current.innerHTML = ''
 
-    // Create iframe directly with allow="autoplay" — in user gesture context
+    // Create iframe with muted autoplay — guaranteed to work on mobile
     const iframe = document.createElement('iframe')
     const frameId = 'sc-yt-' + Date.now()
     iframe.id = frameId
@@ -253,40 +263,51 @@ export function ImmersiveHome() {
     iframe.width = '1'
     iframe.height = '1'
     iframe.style.border = 'none'
-    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`
+    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&enablejsapi=1&origin=${window.location.origin}`
     soundscapeContainerRef.current.appendChild(iframe)
+    setSoundscapeIsPlaying(true)
 
-    // Wrap with YT.Player API after iframe loads for play/pause control
+    // After iframe loads, unmute via raw postMessage (no YT.Player wrapper yet)
     iframe.addEventListener('load', () => {
-      if (!window.YT?.Player) return
-      try {
-        soundscapePlayerRef.current = new window.YT.Player(frameId, {
-          events: {
-            onReady: (event) => {
-              event.target.setVolume(100)
-              soundscapeReady.current = true
-              setSoundscapeIsPlaying(true)
+      // Unmute + set volume via direct postMessage
+      ytCommand(iframe, 'unMute')
+      ytCommand(iframe, 'setVolume', [100])
+
+      // Delay YT.Player wrapper to avoid iframe reload that kills autoplay
+      setTimeout(() => {
+        if (!window.YT?.Player || !document.getElementById(frameId)) return
+        try {
+          soundscapePlayerRef.current = new window.YT.Player(frameId, {
+            events: {
+              onReady: () => {
+                soundscapeReady.current = true
+              },
+              onStateChange: (event) => {
+                if (event.data === 1) setSoundscapeIsPlaying(true)
+                else if (event.data === 2) setSoundscapeIsPlaying(false)
+              },
             },
-            onStateChange: (event) => {
-              if (event.data === 1) setSoundscapeIsPlaying(true)
-              else if (event.data === 2) setSoundscapeIsPlaying(false)
-            },
-          },
-        })
-      } catch {}
+          })
+        } catch {}
+      }, 3000)
     })
-  }, [])
+  }, [ytCommand])
 
-  // Soundscape play/pause via YT Player API
+  // Soundscape play/pause — use YT.Player if ready, otherwise postMessage
   useEffect(() => {
-    if (!soundscapeReady.current || !soundscapePlayerRef.current) return
-    try {
-      if (soundscapeIsPlaying) soundscapePlayerRef.current.playVideo()
-      else soundscapePlayerRef.current.pauseVideo()
-    } catch {}
-  }, [soundscapeIsPlaying])
+    if (soundscapeReady.current && soundscapePlayerRef.current) {
+      try {
+        if (soundscapeIsPlaying) soundscapePlayerRef.current.playVideo()
+        else soundscapePlayerRef.current.pauseVideo()
+      } catch {}
+    } else if (activeSoundscape) {
+      // YT.Player not ready yet — use raw postMessage to iframe
+      const iframe = soundscapeContainerRef.current?.querySelector('iframe') as HTMLIFrameElement | null
+      ytCommand(iframe, soundscapeIsPlaying ? 'playVideo' : 'pauseVideo')
+    }
+  }, [soundscapeIsPlaying, activeSoundscape, ytCommand])
 
-  // Create background music YT player — uses raw iframe with allow="autoplay" for mobile
+  // Create background music YT player — muted autoplay + delayed YT.Player wrapper
   const createBgMusicPlayer = useCallback((youtubeId: string) => {
     // Clean up existing
     bgPlayerRef.current = null
@@ -298,7 +319,7 @@ export function ImmersiveHome() {
 
     bgPlayerContainerRef.current.innerHTML = ''
 
-    // Create iframe directly with allow="autoplay" — in user gesture context
+    // Create iframe with muted autoplay — guaranteed to work on mobile
     const iframe = document.createElement('iframe')
     const frameId = 'bg-yt-' + Date.now()
     iframe.id = frameId
@@ -306,38 +327,44 @@ export function ImmersiveHome() {
     iframe.width = '1'
     iframe.height = '1'
     iframe.style.border = 'none'
-    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`
+    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&enablejsapi=1&origin=${window.location.origin}`
     bgPlayerContainerRef.current.appendChild(iframe)
 
-    // Wrap with YT.Player API after iframe loads for seek/pause control
+    // After iframe loads, unmute via raw postMessage (no YT.Player wrapper yet)
     iframe.addEventListener('load', () => {
-      if (!window.YT?.Player) return
-      try {
-        bgPlayerRef.current = new window.YT.Player(frameId, {
-          events: {
-            onReady: (event) => {
-              event.target.setVolume(80)
-              setMusicDuration(event.target.getDuration())
-              if (bgProgressIntervalRef.current) clearInterval(bgProgressIntervalRef.current)
-              bgProgressIntervalRef.current = setInterval(() => {
-                if (bgPlayerRef.current) {
-                  try {
-                    setMusicCurrentTime(bgPlayerRef.current.getCurrentTime())
-                    const d = bgPlayerRef.current.getDuration()
-                    if (d > 0) setMusicDuration(d)
-                  } catch {}
-                }
-              }, 1000)
+      // Unmute + set volume via direct postMessage
+      ytCommand(iframe, 'unMute')
+      ytCommand(iframe, 'setVolume', [80])
+
+      // Delay YT.Player wrapper to avoid iframe reload that kills autoplay
+      setTimeout(() => {
+        if (!window.YT?.Player || !document.getElementById(frameId)) return
+        try {
+          bgPlayerRef.current = new window.YT.Player(frameId, {
+            events: {
+              onReady: (event) => {
+                setMusicDuration(event.target.getDuration())
+                if (bgProgressIntervalRef.current) clearInterval(bgProgressIntervalRef.current)
+                bgProgressIntervalRef.current = setInterval(() => {
+                  if (bgPlayerRef.current) {
+                    try {
+                      setMusicCurrentTime(bgPlayerRef.current.getCurrentTime())
+                      const d = bgPlayerRef.current.getDuration()
+                      if (d > 0) setMusicDuration(d)
+                    } catch {}
+                  }
+                }, 1000)
+              },
+              onStateChange: (event) => {
+                if (event.data === 1) setMusicPlaying(true)
+                else if (event.data === 2) setMusicPlaying(false)
+              },
             },
-            onStateChange: (event) => {
-              if (event.data === 1) setMusicPlaying(true)
-              else if (event.data === 2) setMusicPlaying(false)
-            },
-          },
-        })
-      } catch {}
+          })
+        } catch {}
+      }, 3000)
     })
-  }, [])
+  }, [ytCommand])
 
   // Cleanup background music when cleared
   useEffect(() => {
@@ -353,14 +380,20 @@ export function ImmersiveHome() {
     }
   }, [backgroundMusic])
 
-  // Pause/play background music via YT API
+  // Pause/play background music — use YT.Player if ready, otherwise postMessage
   useEffect(() => {
-    if (!bgPlayerRef.current || !backgroundMusic) return
-    try {
-      if (musicPlaying) bgPlayerRef.current.playVideo()
-      else bgPlayerRef.current.pauseVideo()
-    } catch {}
-  }, [musicPlaying, backgroundMusic])
+    if (!backgroundMusic) return
+    if (bgPlayerRef.current) {
+      try {
+        if (musicPlaying) bgPlayerRef.current.playVideo()
+        else bgPlayerRef.current.pauseVideo()
+      } catch {}
+    } else {
+      // YT.Player not ready yet — use raw postMessage to iframe
+      const iframe = bgPlayerContainerRef.current?.querySelector('iframe') as HTMLIFrameElement | null
+      ytCommand(iframe, musicPlaying ? 'playVideo' : 'pauseVideo')
+    }
+  }, [musicPlaying, backgroundMusic, ytCommand])
 
   // When daily guide starts a session, stop all home audio
   useEffect(() => {
