@@ -215,81 +215,79 @@ export function ImmersiveHome() {
     homeAudioActiveRef.current = false
   }, [isPlaying])
 
-  // Soundscape: create / destroy YT.Player when activeSoundscape changes
-  const soundscapeYoutubeId = activeSoundscape?.youtubeId
+  // Load YouTube IFrame API early on mount so it's ready when user taps
+  const [ytReady, setYtReady] = useState(false)
   useEffect(() => {
-    if (!soundscapeYoutubeId) {
-      if (soundscapePlayerRef.current) {
-        soundscapePlayerRef.current.destroy()
-        soundscapePlayerRef.current = null
-      }
-      soundscapeReady.current = false
+    if (window.YT && window.YT.Player) {
+      setYtReady(true)
       return
     }
+    const tag = document.createElement('script')
+    tag.src = 'https://www.youtube.com/iframe_api'
+    const first = document.getElementsByTagName('script')[0]
+    first.parentNode?.insertBefore(tag, first)
+    const prev = window.onYouTubeIframeAPIReady
+    window.onYouTubeIframeAPIReady = () => {
+      prev?.()
+      setYtReady(true)
+    }
+  }, [])
 
-    const createSoundscapePlayer = () => {
-      if (!soundscapeContainerRef.current) return
-      // Clear previous player div
-      soundscapeContainerRef.current.innerHTML = ''
-      const div = document.createElement('div')
-      div.id = 'sc-yt-player-' + Date.now()
-      soundscapeContainerRef.current.appendChild(div)
+  // Destroy soundscape YT player
+  const destroySoundscapePlayer = useCallback(() => {
+    if (soundscapePlayerRef.current) {
+      soundscapePlayerRef.current.destroy()
+      soundscapePlayerRef.current = null
+    }
+    soundscapeReady.current = false
+  }, [])
 
-      soundscapePlayerRef.current = new window.YT.Player(div.id, {
-        videoId: soundscapeYoutubeId,
-        height: '1',
-        width: '1',
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          iv_load_policy: 3,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          loop: 1,
-          playlist: soundscapeYoutubeId,
-          playsinline: 1,
+  // Create soundscape YT player — called directly from click handler to preserve gesture context
+  const createSoundscapePlayer = useCallback((youtubeId: string) => {
+    // Destroy existing
+    if (soundscapePlayerRef.current) {
+      soundscapePlayerRef.current.destroy()
+      soundscapePlayerRef.current = null
+    }
+    soundscapeReady.current = false
+    if (!soundscapeContainerRef.current || !window.YT?.Player) return
+
+    soundscapeContainerRef.current.innerHTML = ''
+    const div = document.createElement('div')
+    div.id = 'sc-yt-player-' + Date.now()
+    soundscapeContainerRef.current.appendChild(div)
+
+    soundscapePlayerRef.current = new window.YT.Player(div.id, {
+      videoId: youtubeId,
+      height: '1',
+      width: '1',
+      playerVars: {
+        autoplay: 1,
+        controls: 0,
+        disablekb: 1,
+        fs: 0,
+        iv_load_policy: 3,
+        modestbranding: 1,
+        rel: 0,
+        showinfo: 0,
+        loop: 1,
+        playlist: youtubeId,
+        playsinline: 1,
+      },
+      events: {
+        onReady: (event) => {
+          event.target.setVolume(100)
+          event.target.playVideo()
+          soundscapeReady.current = true
+          setSoundscapeIsPlaying(true)
         },
-        events: {
-          onReady: (event) => {
-            event.target.setVolume(100)
-            event.target.playVideo()
-            soundscapeReady.current = true
-            setSoundscapeIsPlaying(true)
-          },
-          onStateChange: (event) => {
-            if (event.data === 1) setSoundscapeIsPlaying(true)
-            else if (event.data === 2) setSoundscapeIsPlaying(false)
-          },
+        onStateChange: (event) => {
+          if (event.data === 1) setSoundscapeIsPlaying(true)
+          else if (event.data === 2) setSoundscapeIsPlaying(false)
         },
-      })
-    }
-
-    // Load YT API if needed, then create player
-    if (window.YT && window.YT.Player) {
-      createSoundscapePlayer()
-    } else {
-      const tag = document.createElement('script')
-      tag.src = 'https://www.youtube.com/iframe_api'
-      const first = document.getElementsByTagName('script')[0]
-      first.parentNode?.insertBefore(tag, first)
-      const prev = window.onYouTubeIframeAPIReady
-      window.onYouTubeIframeAPIReady = () => {
-        prev?.()
-        createSoundscapePlayer()
-      }
-    }
-
-    return () => {
-      if (soundscapePlayerRef.current) {
-        soundscapePlayerRef.current.destroy()
-        soundscapePlayerRef.current = null
-      }
-      soundscapeReady.current = false
-    }
-  }, [soundscapeYoutubeId]) // eslint-disable-line react-hooks/exhaustive-deps
+      },
+    })
+  }, [])
 
   // Soundscape play/pause via YT Player API
   useEffect(() => {
@@ -300,7 +298,64 @@ export function ImmersiveHome() {
     } catch {}
   }, [soundscapeIsPlaying])
 
-  // Create / destroy YT API player when backgroundMusic changes
+  // Create background music YT player — called directly from click handler to preserve gesture context
+  const createBgMusicPlayer = useCallback((youtubeId: string) => {
+    // Destroy existing
+    if (bgPlayerRef.current) {
+      bgPlayerRef.current.destroy()
+      bgPlayerRef.current = null
+    }
+    if (bgProgressIntervalRef.current) {
+      clearInterval(bgProgressIntervalRef.current)
+      bgProgressIntervalRef.current = null
+    }
+    if (!bgPlayerContainerRef.current || !window.YT?.Player) return
+
+    bgPlayerContainerRef.current.innerHTML = ''
+    const playerDiv = document.createElement('div')
+    playerDiv.id = 'bg-yt-player-' + Date.now()
+    bgPlayerContainerRef.current.appendChild(playerDiv)
+
+    bgPlayerRef.current = new window.YT.Player(playerDiv.id, {
+      videoId: youtubeId,
+      height: '1',
+      width: '1',
+      playerVars: {
+        autoplay: 1,
+        controls: 0,
+        disablekb: 1,
+        fs: 0,
+        iv_load_policy: 3,
+        modestbranding: 1,
+        rel: 0,
+        showinfo: 0,
+        loop: 1,
+        playlist: youtubeId,
+        playsinline: 1,
+      },
+      events: {
+        onReady: (event) => {
+          event.target.setVolume(80)
+          event.target.playVideo()
+          setMusicDuration(event.target.getDuration())
+          if (bgProgressIntervalRef.current) clearInterval(bgProgressIntervalRef.current)
+          bgProgressIntervalRef.current = setInterval(() => {
+            if (bgPlayerRef.current) {
+              setMusicCurrentTime(bgPlayerRef.current.getCurrentTime())
+              const d = bgPlayerRef.current.getDuration()
+              if (d > 0) setMusicDuration(d)
+            }
+          }, 1000)
+        },
+        onStateChange: (event) => {
+          if (event.data === 1) setMusicPlaying(true)
+          else if (event.data === 2) setMusicPlaying(false)
+        },
+      },
+    })
+  }, [])
+
+  // Cleanup background music when cleared
   useEffect(() => {
     if (!backgroundMusic) {
       if (bgPlayerRef.current) {
@@ -313,81 +368,8 @@ export function ImmersiveHome() {
       }
       setMusicDuration(0)
       setMusicCurrentTime(0)
-      return
     }
-
-    const createPlayer = () => {
-      if (!bgPlayerContainerRef.current) return
-
-      // Clear previous player div
-      bgPlayerContainerRef.current.innerHTML = ''
-      const playerDiv = document.createElement('div')
-      playerDiv.id = 'bg-yt-player-' + Date.now()
-      bgPlayerContainerRef.current.appendChild(playerDiv)
-
-      bgPlayerRef.current = new window.YT.Player(playerDiv.id, {
-        videoId: backgroundMusic.youtubeId,
-        height: '1',
-        width: '1',
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          iv_load_policy: 3,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          loop: 1,
-          playlist: backgroundMusic.youtubeId,
-          playsinline: 1,
-        },
-        events: {
-          onReady: (event) => {
-            event.target.setVolume(80)
-            event.target.playVideo()
-            setMusicDuration(event.target.getDuration())
-            // Start progress tracking
-            if (bgProgressIntervalRef.current) clearInterval(bgProgressIntervalRef.current)
-            bgProgressIntervalRef.current = setInterval(() => {
-              if (bgPlayerRef.current) {
-                setMusicCurrentTime(bgPlayerRef.current.getCurrentTime())
-                // Update duration in case it wasn't available at onReady
-                const d = bgPlayerRef.current.getDuration()
-                if (d > 0) setMusicDuration(d)
-              }
-            }, 1000)
-          },
-          onStateChange: (event) => {
-            if (event.data === 1) setMusicPlaying(true)
-            else if (event.data === 2) setMusicPlaying(false)
-          },
-        },
-      })
-    }
-
-    // Load YT API if not already loaded
-    if (window.YT && window.YT.Player) {
-      createPlayer()
-    } else {
-      const tag = document.createElement('script')
-      tag.src = 'https://www.youtube.com/iframe_api'
-      const first = document.getElementsByTagName('script')[0]
-      first.parentNode?.insertBefore(tag, first)
-      window.onYouTubeIframeAPIReady = createPlayer
-    }
-
-    return () => {
-      if (bgPlayerRef.current) {
-        bgPlayerRef.current.destroy()
-        bgPlayerRef.current = null
-      }
-      if (bgProgressIntervalRef.current) {
-        clearInterval(bgProgressIntervalRef.current)
-        bgProgressIntervalRef.current = null
-      }
-    }
-  }, [backgroundMusic?.youtubeId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [backgroundMusic])
 
   // Pause/play background music via YT API
   useEffect(() => {
@@ -426,6 +408,7 @@ export function ImmersiveHome() {
     const thisRequest = ++guideRequestId.current
     // Stop soundscape if playing
     if (isPlaying) setIsPlaying(false)
+    destroySoundscapePlayer()
     setActiveSoundscape(null)
     setShowSoundscapePlayer(false)
     setSoundscapeIsPlaying(false)
@@ -621,15 +604,17 @@ export function ImmersiveHome() {
     }
     // Stop soundscape
     if (isPlaying) setIsPlaying(false)
+    destroySoundscapePlayer()
     setActiveSoundscape(null)
     setShowSoundscapePlayer(false)
     setSoundscapeIsPlaying(false)
     // Signal home audio active
     setHomeAudioActive(true)
 
-    // Set background music FIRST (single audio source — persists after closing player)
+    // Create player synchronously in tap gesture context (mobile autoplay)
     setBackgroundMusic({ youtubeId: video.youtubeId, label: topicName })
     setMusicPlaying(true)
+    createBgMusicPlayer(video.youtubeId)
 
     const backgrounds = getTodaysBackgrounds()
     setPlayingSound({
@@ -653,15 +638,17 @@ export function ImmersiveHome() {
     }
     // Stop soundscape
     if (isPlaying) setIsPlaying(false)
+    destroySoundscapePlayer()
     setActiveSoundscape(null)
     setShowSoundscapePlayer(false)
     setSoundscapeIsPlaying(false)
     // Signal home audio active
     setHomeAudioActive(true)
 
-    // Set background music FIRST (single audio source — persists after closing player)
+    // Create player synchronously in tap gesture context (mobile autoplay)
     setBackgroundMusic({ youtubeId: video.youtubeId, label: genreWord })
     setMusicPlaying(true)
+    createBgMusicPlayer(video.youtubeId)
 
     const gBgs = genreBackgrounds[genreId] || []
     const bg = gBgs.length > 0
@@ -749,9 +736,10 @@ export function ImmersiveHome() {
           isPlaying={soundscapeIsPlaying}
           onTogglePlay={() => setSoundscapeIsPlaying(!soundscapeIsPlaying)}
           onClose={() => setShowSoundscapePlayer(false)}
-          onSwitchSound={(id, label, subtitle, youtubeId) =>
+          onSwitchSound={(id, label, subtitle, youtubeId) => {
             setActiveSoundscape({ soundId: id, label, subtitle, youtubeId })
-          }
+            createSoundscapePlayer(youtubeId)
+          }}
         />
       )}
 
@@ -888,6 +876,8 @@ export function ImmersiveHome() {
                     subtitle: item.subtitle,
                     youtubeId: item.youtubeId,
                   })
+                  // Create player synchronously in tap gesture context (mobile autoplay)
+                  createSoundscapePlayer(item.youtubeId)
                   setShowSoundscapePlayer(true)
                 }}
                 className="flex flex-col items-center gap-2 shrink-0 press-scale"
@@ -1093,6 +1083,7 @@ export function ImmersiveHome() {
             // Open SoundscapePlayer with active mode
             const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
             setActiveSoundscape({ soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId })
+            createSoundscapePlayer(item.youtubeId)
             setShowSoundscapePlayer(true)
           }
         }}
@@ -1104,6 +1095,7 @@ export function ImmersiveHome() {
           } else {
             const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
             setActiveSoundscape({ soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId })
+            createSoundscapePlayer(item.youtubeId)
             setShowSoundscapePlayer(true)
           }
         }}
