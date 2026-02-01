@@ -677,7 +677,7 @@ export function ImmersiveHome() {
     <div className="isolate min-h-screen">
     <div
       ref={scrollRef}
-      className={`relative min-h-screen text-white pb-28 ${showMorningFlow ? 'overflow-hidden max-h-screen' : ''}`}
+      className={`relative min-h-screen text-white pb-28 ${showMorningFlow || playingSound || showSoundscapePlayer ? 'overflow-hidden max-h-screen' : ''}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
