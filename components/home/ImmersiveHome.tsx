@@ -287,7 +287,11 @@ export function ImmersiveHome() {
                 }
               }, 1000)
             } else if (event.data === 2) {
-              setMusicPlaying(false)
+              // Only mark as paused if the page is visible (user action)
+              // If hidden, browser paused it — we'll resume on visibilitychange
+              if (document.visibilityState === 'visible') {
+                setMusicPlaying(false)
+              }
             } else if (event.data === 0) {
               // Video ended — loop
               try { event.target.seekTo(0, true); event.target.playVideo() } catch {}
@@ -310,7 +314,10 @@ export function ImmersiveHome() {
           onReady: () => { soundscapeReady.current = true },
           onStateChange: (event) => {
             if (event.data === 1) setSoundscapeIsPlaying(true)
-            else if (event.data === 2) setSoundscapeIsPlaying(false)
+            else if (event.data === 2) {
+              // Only mark as paused if user action (page visible)
+              if (document.visibilityState === 'visible') setSoundscapeIsPlaying(false)
+            }
             else if (event.data === 0) {
               // Video ended — loop
               try { event.target.seekTo(0, true); event.target.playVideo() } catch {}
@@ -421,6 +428,46 @@ export function ImmersiveHome() {
       stopAllHomeAudio()
     })
   }, [backgroundMusic, guideLabel, activeSoundscape, musicPlaying, guideIsPlaying, soundscapeIsPlaying, stopAllHomeAudio])
+
+  // Resume audio when user returns to the app (visibilitychange)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return
+
+      // Resume background music if it was active
+      if (backgroundMusic && bgPlayerRef.current && bgPlayerReadyRef.current) {
+        try {
+          const state = bgPlayerRef.current.getPlayerState()
+          // If paused (2) or buffering/cued, resume
+          if (state !== 1) {
+            bgPlayerRef.current.playVideo()
+          }
+        } catch {}
+      }
+
+      // Resume soundscape if it was active
+      if (activeSoundscape && soundscapePlayerRef.current && soundscapeReady.current) {
+        try {
+          const state = soundscapePlayerRef.current.getPlayerState()
+          if (state !== 1) {
+            soundscapePlayerRef.current.playVideo()
+          }
+        } catch {}
+      }
+
+      // Resume guide audio if it was active
+      if (guideLabel && guideAudioRef.current) {
+        try {
+          if (guideAudioRef.current.paused) {
+            guideAudioRef.current.play().catch(() => {})
+          }
+        } catch {}
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [backgroundMusic, activeSoundscape, guideLabel])
 
   // When daily guide starts a session, stop all home audio
   useEffect(() => {
