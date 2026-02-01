@@ -175,8 +175,9 @@ function JournalContent() {
       <div className="px-6 mb-6">
         <div className="flex items-center justify-between p-3 card-gradient-border">
           <button
+            aria-label="Previous day"
             onClick={() => goDay(-1)}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             <ChevronLeft className="w-5 h-5 text-white/95" />
           </button>
@@ -185,9 +186,10 @@ function JournalContent() {
             {isToday && <p className="text-[10px] text-amber-400">Today</p>}
           </div>
           <button
+            aria-label="Next day"
             onClick={() => goDay(1)}
             disabled={isToday}
-            className={`p-1.5 rounded-lg transition-colors ${isToday ? 'opacity-30' : 'hover:bg-white/10'}`}
+            className={`p-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${isToday ? 'opacity-30' : 'hover:bg-white/10'}`}
           >
             <ChevronRight className="w-5 h-5 text-white/95" />
           </button>
@@ -199,8 +201,9 @@ function JournalContent() {
         <div className="px-6 mb-4 animate-fade-in">
           <div className="relative p-4 card-gradient-border">
             <button
+              aria-label="Dismiss prompt"
               onClick={() => setSparkPrompt(null)}
-              className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors"
+              className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               <X className="w-3.5 h-3.5 text-white/95" />
             </button>
@@ -235,7 +238,7 @@ function JournalContent() {
                 value={win}
                 onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
                 placeholder="Today I learned..."
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                 rows={3}
                 maxLength={500}
               />
@@ -252,7 +255,7 @@ function JournalContent() {
                 value={gratitude}
                 onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
                 placeholder="I'm grateful for..."
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                 rows={3}
                 maxLength={500}
               />
@@ -269,7 +272,7 @@ function JournalContent() {
                 value={intention}
                 onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
                 placeholder="Tomorrow I will..."
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                 rows={2}
                 maxLength={300}
               />

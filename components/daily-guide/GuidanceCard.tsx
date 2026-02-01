@@ -129,9 +129,11 @@ export function GuidanceCard({
             <button
               onClick={onPlay}
               disabled={isLoading || !script}
+              aria-label={`Play ${config.label.toLowerCase()} guidance`}
+              aria-busy={isLoading}
               className={`
                 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
-                transition-all
+                transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none
                 ${isLoading
                   ? 'bg-white/10 text-white/95 cursor-wait'
                   : 'bg-white/10 text-white hover:bg-white/20 active:scale-95'

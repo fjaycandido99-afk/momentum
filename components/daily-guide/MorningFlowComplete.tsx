@@ -57,7 +57,7 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div role="dialog" aria-modal="true" aria-label="Morning flow complete" className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-fade-in"
@@ -96,7 +96,8 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+          aria-label="Close"
+          className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           <X className="w-4 h-4 text-white/95" />
         </button>
@@ -169,7 +170,7 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
           {/* Dismiss button */}
           <button
             onClick={onClose}
-            className="mt-6 px-6 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 font-medium transition-all"
+            className="mt-6 px-6 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             Continue Your Day
           </button>

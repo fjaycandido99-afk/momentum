@@ -27,7 +27,9 @@ export function ModeSelector({ activeMode, onSelectMode }: ModeSelectorProps) {
           <button
             key={mode.id}
             onClick={() => onSelectMode(mode.id)}
-            className="flex flex-col items-center gap-2 press-scale"
+            aria-pressed={isActive}
+            aria-label={`${mode.label} mode`}
+            className="flex flex-col items-center gap-2 press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded-full"
           >
             <div
               className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${

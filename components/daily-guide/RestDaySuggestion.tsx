@@ -59,7 +59,8 @@ export function RestDaySuggestion({ streak, dayType, onTakeRecoveryDay }: RestDa
         </div>
         <button
           onClick={handleDismiss}
-          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+          aria-label="Dismiss suggestion"
+          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           <X className="w-4 h-4 text-white/95" />
         </button>
@@ -70,13 +71,13 @@ export function RestDaySuggestion({ streak, dayType, onTakeRecoveryDay }: RestDa
       <div className="flex gap-2">
         <button
           onClick={handleTakeRecovery}
-          className="flex-1 py-2 px-3 rounded-xl bg-pink-500/20 border border-pink-500/30 text-pink-400 text-sm font-medium hover:bg-pink-500/30 transition-colors"
+          className="flex-1 py-2 px-3 rounded-xl bg-pink-500/20 border border-pink-500/30 text-pink-400 text-sm font-medium hover:bg-pink-500/30 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           Take Recovery Day
         </button>
         <button
           onClick={handleDismiss}
-          className="py-2 px-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 transition-colors"
+          className="py-2 px-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           Not today
         </button>

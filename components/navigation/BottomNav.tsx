@@ -15,7 +15,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-2xl border-t border-white/5 safe-area-pb">
+    <nav aria-label="Main navigation" className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-2xl border-t border-white/5 safe-area-pb">
       <div className="flex items-center justify-around py-2">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href
@@ -27,7 +27,9 @@ export function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 px-2 py-1 transition-all press-scale ${
+                aria-current={isActive ? 'page' : undefined}
+                aria-label={item.label}
+                className={`flex flex-col items-center gap-1 px-2 py-1 transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded-lg ${
                   isActive ? 'scale-105' : ''
                 }`}
               >
@@ -49,7 +51,9 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg transition-all duration-200 press-scale ${
+              aria-current={isActive ? 'page' : undefined}
+              aria-label={item.label}
+              className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg transition-all duration-200 press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                 isActive
                   ? 'text-white'
                   : 'text-white/95 hover:text-white/95'

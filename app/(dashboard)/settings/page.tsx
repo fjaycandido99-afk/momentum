@@ -260,7 +260,7 @@ function SettingsContent() {
       <div className="px-6 pt-12 pb-6 header-fade-bg">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <Link href="/" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+            <Link href="/" aria-label="Back to home" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
               <ChevronLeft className="w-5 h-5 text-white/95" />
             </Link>
             <h1 className="text-2xl font-light text-white">Settings</h1>
@@ -278,7 +278,7 @@ function SettingsContent() {
             </span>
           )}
           {saveStatus === 'error' && (
-            <span className="text-red-400 text-sm">Failed to save</span>
+            <span role="alert" className="text-red-400 text-sm">Failed to save</span>
           )}
         </div>
         <p className="text-white/95 text-sm mt-1">Customize your Daily Guide</p>
@@ -303,7 +303,8 @@ function SettingsContent() {
                 <button
                   key={type.value}
                   onClick={() => setUserType(type.value)}
-                  className={`p-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-2 press-scale ${
+                  aria-pressed={userType === type.value}
+                  className={`p-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-2 press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                     userType === type.value
                       ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                       : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
@@ -334,7 +335,9 @@ function SettingsContent() {
                 <button
                   key={day.value}
                   onClick={() => toggleDay(day.value, 'work')}
-                  className={`h-10 rounded-lg text-xs font-medium transition-all press-scale ${
+                  aria-pressed={workDays.includes(day.value)}
+                  aria-label={`${day.label} work day`}
+                  className={`h-10 rounded-lg text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                     workDays.includes(day.value)
                       ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                       : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
@@ -364,7 +367,9 @@ function SettingsContent() {
                 <button
                   key={day.value}
                   onClick={() => toggleDay(day.value, 'class')}
-                  className={`h-10 rounded-lg text-xs font-medium transition-all press-scale ${
+                  aria-pressed={classDays.includes(day.value)}
+                  aria-label={`${day.label} class day`}
+                  className={`h-10 rounded-lg text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                     classDays.includes(day.value)
                       ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                       : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
@@ -509,7 +514,10 @@ function SettingsContent() {
                   key={segment.id}
                   onClick={() => toggleSegment(segment.id)}
                   disabled={segment.required}
-                  className={`w-full p-3 rounded-xl flex items-center justify-between transition-all ${
+                  role="switch"
+                  aria-checked={isEnabled}
+                  aria-label={`${segment.label}${segment.required ? ' (required)' : ''}`}
+                  className={`w-full p-3 rounded-xl flex items-center justify-between transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                     isEnabled
                       ? 'bg-white/10 border border-white/20'
                       : 'bg-white/5 border border-transparent'
@@ -549,7 +557,8 @@ function SettingsContent() {
               <button
                 key={tone.value}
                 onClick={() => setGuideTone(tone.value)}
-                className={`p-3 rounded-xl text-center transition-all press-scale ${
+                aria-pressed={guideTone === tone.value}
+                className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                   guideTone === tone.value
                     ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                     : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
@@ -577,7 +586,10 @@ function SettingsContent() {
             </div>
             <button
               onClick={() => setDailyReminder(!dailyReminder)}
-              className={`w-12 h-7 rounded-full transition-all press-scale ${
+              role="switch"
+              aria-checked={dailyReminder}
+              aria-label="Daily reminder"
+              className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                 dailyReminder ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
               }`}
             >
@@ -594,6 +606,7 @@ function SettingsContent() {
                 type="time"
                 value={reminderTime}
                 onChange={(e) => setReminderTime(e.target.value)}
+                aria-label="Reminder time"
                 className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
                 style={{ colorScheme: 'dark' }}
               />
@@ -615,7 +628,10 @@ function SettingsContent() {
             </div>
             <button
               onClick={() => setBedtimeReminderEnabled(!bedtimeReminderEnabled)}
-              className={`w-12 h-7 rounded-full transition-all press-scale ${
+              role="switch"
+              aria-checked={bedtimeReminderEnabled}
+              aria-label="Bedtime reminder"
+              className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                 bedtimeReminderEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
               }`}
             >
@@ -673,7 +689,10 @@ function SettingsContent() {
                 setBackgroundEnabledState(next)
                 setBackgroundEnabled(next)
               }}
-              className={`w-12 h-7 rounded-full transition-all press-scale ${
+              role="switch"
+              aria-checked={backgroundEnabled}
+              aria-label="Background animation"
+              className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                 backgroundEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
               }`}
             >
@@ -704,6 +723,7 @@ function SettingsContent() {
                     setBackgroundBrightnessState(val)
                     setBackgroundBrightness(val)
                   }}
+                  aria-label="Background brightness"
                   className="w-full h-2 rounded-full appearance-none cursor-pointer bg-white/10 accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,0.3)]"
                 />
               </div>
@@ -716,7 +736,8 @@ function SettingsContent() {
                     setSelectedAnimation(null)
                     setPreferredAnimation(null)
                   }}
-                  className={`p-2 rounded-xl transition-all press-scale ${
+                  aria-pressed={selectedAnimation === null}
+                  className={`p-2 rounded-xl transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                     selectedAnimation === null
                       ? 'bg-white/15 border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                       : 'bg-white/5 border border-transparent hover:bg-white/10'
@@ -742,7 +763,8 @@ function SettingsContent() {
                         setSelectedAnimation(anim.id)
                         setPreferredAnimation(anim.id)
                       }}
-                      className={`p-2 rounded-xl transition-all press-scale ${
+                      aria-pressed={selectedAnimation === anim.id}
+                      className={`p-2 rounded-xl transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                         selectedAnimation === anim.id
                           ? 'bg-white/15 border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
                           : 'bg-white/5 border border-transparent hover:bg-white/10'
@@ -776,7 +798,7 @@ function SettingsContent() {
 
           {/* Subscription message */}
           {subscriptionMessage && (
-            <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+            <div role="status" className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
               {subscriptionMessage}
             </div>
           )}
@@ -824,7 +846,7 @@ function SettingsContent() {
                     }
                   }}
                   disabled={isLoadingPortal}
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/10 text-white text-sm hover:bg-white/15 transition-colors disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/10 text-white text-sm hover:bg-white/15 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   {isLoadingPortal ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -835,7 +857,7 @@ function SettingsContent() {
                 </button>
                 <Link
                   href="/pricing"
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 transition-colors"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   <ExternalLink className="w-4 h-4" />
                   View Plans
@@ -868,7 +890,7 @@ function SettingsContent() {
 
               <button
                 onClick={() => subscription?.openUpgradeModal()}
-                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all"
+                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <Sparkles className="w-5 h-5" />
                 Upgrade to Premium - $4.99/mo
@@ -878,7 +900,7 @@ function SettingsContent() {
               </p>
               <Link
                 href="/pricing"
-                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 hover:text-white/95 transition-colors mt-2"
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 hover:text-white/95 transition-colors mt-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <ExternalLink className="w-4 h-4" />
                 Compare plans
@@ -892,7 +914,7 @@ function SettingsContent() {
           {isAuthenticated ? (
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center justify-center gap-2 p-4 card-gradient-border text-red-400 hover:bg-red-500/20 transition-all"
+              className="w-full flex items-center justify-center gap-2 p-4 card-gradient-border text-red-400 hover:bg-red-500/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               <LogOut className="w-5 h-5" />
               Sign Out
@@ -900,7 +922,7 @@ function SettingsContent() {
           ) : (
             <Link
               href="/login"
-              className="w-full flex items-center justify-center gap-2 p-4 card-gradient-border text-white hover:bg-white/20 transition-all"
+              className="w-full flex items-center justify-center gap-2 p-4 card-gradient-border text-white hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               Sign In to Save Progress
             </Link>

@@ -101,7 +101,8 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white"
+              aria-busy={isSaving}
+              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               {isSaving ? (
                 <><Loader2 className="w-3 h-3 animate-spin" /> Saving</>
@@ -118,7 +119,8 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
         {showAsModal && onClose && (
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Close journal"
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             <X className="w-4 h-4 text-white/95" />
           </button>
@@ -164,7 +166,8 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
                 value={win}
                 onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
                 placeholder="Today I learned..."
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
+                aria-label="What did you learn today?"
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                 rows={2}
                 maxLength={500}
               />
@@ -180,7 +183,8 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
                 value={gratitude}
                 onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
                 placeholder="I'm grateful for..."
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
+                aria-label="What are you grateful for?"
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                 rows={2}
                 maxLength={500}
               />
@@ -196,7 +200,8 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
                 value={intention}
                 onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
                 placeholder="Tomorrow I will..."
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
+                aria-label="Tomorrow's intention"
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                 rows={2}
                 maxLength={300}
               />
@@ -230,7 +235,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
 
   if (showAsModal) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+      <div role="dialog" aria-modal="true" aria-label="Daily reflection" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
         <div className="w-full max-w-md my-8 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10 overflow-hidden">
           {content}
         </div>
@@ -245,7 +250,8 @@ export function JournalPrompt({ onOpen }: { onOpen: () => void }) {
   return (
     <button
       onClick={onOpen}
-      className="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all group"
+      aria-label="Open daily reflection"
+      className="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all group focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
     >
       <div className="flex items-center gap-3">
         <div className="p-2.5 rounded-xl bg-amber-500/20 group-hover:bg-amber-500/30 transition-colors">

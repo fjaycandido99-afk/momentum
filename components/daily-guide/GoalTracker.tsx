@@ -123,7 +123,9 @@ export function GoalTracker() {
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+        aria-expanded={isExpanded}
+        aria-label="Toggle goals section"
+        className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
       >
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-purple-500/20">
@@ -145,6 +147,15 @@ export function GoalTracker() {
 
       {isExpanded && (
         <div className="p-4 pt-0 space-y-3">
+          {/* Empty State */}
+          {activeGoals.length === 0 && completedGoals.length === 0 && (
+            <div className="text-center py-4">
+              <Target className="w-5 h-5 text-white/95 mx-auto mb-2" />
+              <p className="text-sm text-white/95">No goals yet</p>
+              <p className="text-xs text-white/95 mt-0.5">Add a goal to start tracking</p>
+            </div>
+          )}
+
           {/* Active Goals */}
           {activeGoals.map(goal => {
             const progress = Math.min((goal.current_count / goal.target_count) * 100, 100)
@@ -155,7 +166,8 @@ export function GoalTracker() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleArchive(goal.id)}
-                      className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+                      aria-label={`Delete ${goal.title}`}
+                      className="p-1 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       <Trash2 className="w-3 h-3 text-white/95" />
                     </button>
@@ -163,7 +175,7 @@ export function GoalTracker() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex-1">
-                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div className="h-2 rounded-full bg-white/10 overflow-hidden" role="progressbar" aria-valuenow={goal.current_count} aria-valuemin={0} aria-valuemax={goal.target_count} aria-label={`${goal.title} progress`}>
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300"
                         style={{ width: `${progress}%` }}
@@ -179,7 +191,8 @@ export function GoalTracker() {
                   <button
                     onClick={() => handleIncrement(goal.id)}
                     disabled={incrementingId === goal.id}
-                    className="px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-xs font-medium transition-colors disabled:opacity-50"
+                    aria-label={`Increment ${goal.title}`}
+                    className="px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-xs font-medium transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                   >
                     {incrementingId === goal.id ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
@@ -210,7 +223,8 @@ export function GoalTracker() {
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
                 placeholder="Goal title..."
-                className="w-full p-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/30"
+                aria-label="Goal title"
+                className="w-full p-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20"
                 maxLength={100}
                 autoFocus
               />
@@ -218,7 +232,8 @@ export function GoalTracker() {
                 <select
                   value={newFrequency}
                   onChange={e => setNewFrequency(e.target.value)}
-                  className="p-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none appearance-none"
+                  aria-label="Goal frequency"
+                  className="p-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none appearance-none focus-visible:ring-1 focus-visible:ring-white/20"
                 >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
@@ -230,7 +245,8 @@ export function GoalTracker() {
                   onChange={e => setNewTarget(e.target.value)}
                   min="1"
                   max="100"
-                  className="w-16 p-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none text-center"
+                  aria-label="Target count"
+                  className="w-16 p-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none text-center focus-visible:ring-1 focus-visible:ring-white/20"
                   placeholder="Target"
                 />
                 <span className="text-xs text-white/95">times</span>
@@ -238,14 +254,15 @@ export function GoalTracker() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowAddForm(false)}
-                  className="flex-1 py-2 rounded-lg bg-white/5 text-white/95 text-xs hover:bg-white/10 transition-colors"
+                  className="flex-1 py-2 rounded-lg bg-white/5 text-white/95 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreate}
                   disabled={!newTitle.trim() || isSubmitting}
-                  className="flex-1 py-2 rounded-lg bg-purple-500/20 text-purple-400 text-xs font-medium hover:bg-purple-500/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                  aria-busy={isSubmitting}
+                  className="flex-1 py-2 rounded-lg bg-purple-500/20 text-purple-400 text-xs font-medium hover:bg-purple-500/30 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   {isSubmitting ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -261,7 +278,7 @@ export function GoalTracker() {
           ) : (
             <button
               onClick={() => setShowAddForm(true)}
-              className="w-full p-3 rounded-xl border border-dashed border-white/10 hover:border-white/20 text-white/95 hover:text-white/95 text-sm transition-colors flex items-center justify-center gap-2"
+              className="w-full p-3 rounded-xl border border-dashed border-white/10 hover:border-white/20 text-white/95 hover:text-white/95 text-sm transition-colors flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               <Plus className="w-4 h-4" />
               Add Goal

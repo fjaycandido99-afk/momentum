@@ -88,7 +88,11 @@ export function ContentDrawer({ isOpen, onToggle }: ContentDrawerProps) {
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onClick={handleClick}
-          className="flex flex-col items-center pt-3 pb-2 cursor-pointer select-none"
+          role="button"
+          tabIndex={0}
+          aria-label={isOpen ? 'Close drawer' : 'Open drawer'}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick() } }}
+          className="flex flex-col items-center pt-3 pb-2 cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           {/* Drag handle */}
           <div className="w-10 h-1 rounded-full bg-white/30 mb-3" />
@@ -104,12 +108,14 @@ export function ContentDrawer({ isOpen, onToggle }: ContentDrawerProps) {
         {/* Tab bar (visible when open) */}
         {isOpen && (
           <div className="px-6 pb-3">
-            <div className="flex gap-1 p-1 bg-white/5 rounded-xl">
+            <div role="tablist" className="flex gap-1 p-1 bg-white/5 rounded-xl">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                     activeTab === tab.id
                       ? 'bg-white/10 text-white'
                       : 'text-white/95 hover:text-white/95'

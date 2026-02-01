@@ -54,7 +54,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const savings = Math.round((1 - yearlyPrice / (monthlyPrice * 12)) * 100)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Upgrade to Premium">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
@@ -66,7 +66,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10"
+          aria-label="Close upgrade modal"
+          className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           <X className="w-5 h-5 text-white/95" />
         </button>
@@ -106,7 +107,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
           <div className="flex gap-2 p-1 bg-white/5 rounded-xl">
             <button
               onClick={() => setBillingPeriod('monthly')}
-              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+              aria-pressed={billingPeriod === 'monthly'}
+              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                 billingPeriod === 'monthly'
                   ? 'bg-white/10 text-white'
                   : 'text-white/95 hover:text-white/95'
@@ -116,7 +118,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             </button>
             <button
               onClick={() => setBillingPeriod('yearly')}
-              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+              aria-pressed={billingPeriod === 'yearly'}
+              className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                 billingPeriod === 'yearly'
                   ? 'bg-white/10 text-white'
                   : 'text-white/95 hover:text-white/95'
@@ -151,7 +154,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
           <button
             onClick={handleUpgrade}
             disabled={isLoading}
-            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-lg hover:from-amber-400 hover:to-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            aria-busy={isLoading}
+            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-lg hover:from-amber-400 hover:to-orange-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             {isLoading ? (
               <>

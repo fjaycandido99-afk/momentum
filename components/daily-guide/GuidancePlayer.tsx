@@ -686,7 +686,7 @@ export function GuidancePlayer({
   const progress = (currentTime / totalDuration) * 100
 
   return (
-    <div className={`fixed inset-0 z-50 bg-gradient-to-b ${config.gradient}`}>
+    <div role="dialog" aria-modal="true" aria-label={`${config.label} player`} className={`fixed inset-0 z-50 bg-gradient-to-b ${config.gradient}`}>
       {/* Background image based on music genre */}
       {backgroundImage && (
         <div className="absolute inset-0 z-0">
@@ -730,7 +730,8 @@ export function GuidancePlayer({
                   e.preventDefault()
                   toggleMusicMute()
                 }}
-                className={`p-2 rounded-full transition-colors ${
+                aria-label={isMusicMuted ? 'Music muted, tap to adjust volume' : 'Adjust music volume'}
+                className={`p-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                   isMusicMuted ? 'bg-white/5 text-white/95' : 'bg-white/10 hover:bg-white/20'
                 }`}
                 title="Tap to adjust volume, long press to mute"
@@ -745,7 +746,8 @@ export function GuidancePlayer({
                     <span className="text-xs text-white/95">Music Volume</span>
                     <button
                       onClick={toggleMusicMute}
-                      className="p-1 rounded hover:bg-white/10"
+                      aria-label={isMusicMuted ? 'Unmute music' : 'Mute music'}
+                      className="p-1 rounded hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       {isMusicMuted ? (
                         <VolumeX className="w-3.5 h-3.5 text-white/95" />
@@ -760,6 +762,7 @@ export function GuidancePlayer({
                     max="100"
                     value={musicVolume}
                     onChange={(e) => handleVolumeChange(parseInt(e.target.value))}
+                    aria-label={`Music volume ${musicVolume}%`}
                     className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer
                       [&::-webkit-slider-thumb]:appearance-none
                       [&::-webkit-slider-thumb]:w-3.5
@@ -788,7 +791,8 @@ export function GuidancePlayer({
           {audioBase64 && (
             <button
               onClick={toggleMute}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              aria-label={isMuted ? 'Unmute voice' : 'Mute voice'}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               title="Toggle voice audio"
             >
               {isMuted ? (
@@ -800,7 +804,8 @@ export function GuidancePlayer({
           )}
           <button
             onClick={handleClose}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Close player"
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             <X className="w-5 h-5 text-white" />
           </button>
@@ -829,7 +834,7 @@ export function GuidancePlayer({
       {/* Bottom controls */}
       <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
         {/* Progress bar */}
-        <div className="w-full h-1 bg-white/10 rounded-full mb-6 overflow-hidden">
+        <div role="progressbar" aria-valuenow={Math.round(currentTime)} aria-valuemin={0} aria-valuemax={totalDuration} aria-label="Playback progress" className="w-full h-1 bg-white/10 rounded-full mb-6 overflow-hidden">
           <div
             className="h-full bg-white/40 rounded-full transition-all duration-100"
             style={{ width: `${progress}%` }}
@@ -840,14 +845,16 @@ export function GuidancePlayer({
         <div className="flex items-center justify-center gap-6">
           <button
             onClick={restart}
-            className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Restart"
+            className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             <RotateCcw className="w-5 h-5 text-white" />
           </button>
 
           <button
             onClick={isCompleted ? restart : togglePlayPause}
-            className="p-5 rounded-full bg-white/20 hover:bg-white/30 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] animate-float"
+            aria-label={isCompleted ? 'Replay' : isPlaying ? 'Pause' : 'Play'}
+            className="p-5 rounded-full bg-white/20 hover:bg-white/30 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] animate-float focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             {isCompleted ? (
               <Check className="w-8 h-8 text-white/95" />
@@ -860,7 +867,8 @@ export function GuidancePlayer({
 
           <button
             onClick={handleClose}
-            className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Close"
+            className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             <X className="w-5 h-5 text-white" />
           </button>
@@ -879,7 +887,7 @@ export function GuidancePlayer({
 
       {/* Time limit reached overlay for free users */}
       {showTimeLimitReached && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div role="dialog" aria-modal="true" aria-label="Session limit reached" className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
           <div className="max-w-sm mx-4 p-6 rounded-2xl bg-gradient-to-b from-[#1a1a24] to-[#0f0f15] border border-white/10">
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/20 mb-4">
@@ -897,14 +905,14 @@ export function GuidancePlayer({
                     subscription?.openUpgradeModal()
                     handleClose()
                   }}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:from-amber-400 hover:to-orange-400 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:from-amber-400 hover:to-orange-400 transition-all flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   <Crown className="w-5 h-5" />
                   Upgrade to Premium
                 </button>
                 <button
                   onClick={handleClose}
-                  className="w-full py-3 px-4 rounded-xl bg-white/10 text-white/95 font-medium hover:bg-white/15 transition-colors"
+                  className="w-full py-3 px-4 rounded-xl bg-white/10 text-white/95 font-medium hover:bg-white/15 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   Close Session
                 </button>

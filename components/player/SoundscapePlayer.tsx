@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Play, Pause, ChevronDown, Focus, Sparkles, Moon, Zap, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Wind, Droplets, Coffee, Music } from 'lucide-react'
 import { DailyBackground } from './DailyBackground'
 
@@ -9,6 +9,8 @@ interface SoundscapePlayerProps {
   label: string
   subtitle: string
   youtubeId: string
+  isPlaying: boolean
+  onTogglePlay: () => void
   onClose: () => void
   onSwitchSound: (id: string, label: string, subtitle: string, youtubeId: string) => void
 }
@@ -38,33 +40,8 @@ export const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
   { id: 'piano', label: 'Piano', subtitle: 'Soft melodies', icon: Music, youtubeId: '77ZozI0rw7w' },
 ]
 
-export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, onClose, onSwitchSound }: SoundscapePlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
+export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlaying, onTogglePlay, onClose, onSwitchSound }: SoundscapePlayerProps) {
   const selectorRef = useRef<HTMLDivElement>(null)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-  // Track whether initial autoplay has fired (skip first postMessage)
-  const hasAutoPlayed = useRef(false)
-
-  // Set UI to playing after short delay (iframe is already mounted with autoplay=1)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPlaying(true)
-      hasAutoPlayed.current = true
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Pause/play via YouTube postMessage API (skip initial — autoplay=1 handles it)
-  useEffect(() => {
-    if (!hasAutoPlayed.current) return
-    const iframe = iframeRef.current
-    if (!iframe) return
-    const func = isPlaying ? 'playVideo' : 'pauseVideo'
-    iframe.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func, args: '' }),
-      '*'
-    )
-  }, [isPlaying])
 
   // Scroll active item into view when sound changes
   useEffect(() => {
@@ -76,26 +53,14 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, onClose,
     }
   }, [soundId])
 
-  const togglePlay = () => setIsPlaying(!isPlaying)
-
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      {/* Hidden YouTube player for audio (mounted immediately for autoplay on user gesture) */}
-      <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
-        <iframe
-          ref={iframeRef}
-          key={youtubeId}
-          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&loop=1&playlist=${youtubeId}&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          className="w-[1px] h-[1px]"
-        />
-      </div>
-
       {/* Header */}
       <div className="flex items-center px-6 pt-12 pb-4 animate-fade-in-down">
         <button
+          aria-label="Close player"
           onClick={onClose}
-          className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+          className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           <ChevronDown className="w-6 h-6 text-white/95" />
         </button>
@@ -142,8 +107,9 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, onClose,
       {/* Play controls */}
       <div className="flex justify-center pb-10 animate-fade-in" style={{ animationDelay: '0.2s' }}>
         <button
-          onClick={togglePlay}
-          className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/15 transition-colors press-scale"
+          aria-label={isPlaying ? 'Pause' : 'Play'}
+          onClick={onTogglePlay}
+          className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/15 transition-colors press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           {isPlaying ? (
             <Pause className="w-7 h-7 text-white" fill="white" />

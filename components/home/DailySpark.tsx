@@ -223,6 +223,9 @@ export function DailySpark() {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={spark.type === 'quote' ? 'Daily Quote' : spark.type === 'affirmation' ? 'Daily Affirmation' : 'Daily Spark'}
       className={`fixed inset-0 z-50 flex items-center justify-center px-6 ${
         dismissing ? 'animate-spark-out' : animating ? 'animate-spark-in' : 'opacity-0 scale-95'
       }`}
@@ -258,8 +261,9 @@ export function DailySpark() {
               <button
                 onClick={handleSave}
                 disabled={saving || saved}
-                className="p-1.5 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50"
-                title={saved ? 'Saved' : 'Save to favorites'}
+                aria-label={saved ? 'Saved to favorites' : 'Save to favorites'}
+                aria-pressed={saved}
+                className="p-1.5 rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <Heart
                   className={`w-4 h-4 transition-colors ${
@@ -269,7 +273,8 @@ export function DailySpark() {
               </button>
               <button
                 onClick={() => dismiss()}
-                className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                aria-label="Dismiss"
+                className="p-1.5 rounded-full hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <X className="w-4 h-4 text-white/95" />
               </button>
@@ -303,13 +308,14 @@ export function DailySpark() {
                   }}
                   placeholder="Type your reflection..."
                   rows={2}
-                  className="w-full px-4 py-3 pr-12 rounded-xl bg-white/5 border border-white/10 focus:border-violet-400/40 focus:bg-white/[0.07] text-sm text-white/95 placeholder:text-white/95 outline-none resize-none transition-colors"
+                  aria-label="Type your reflection"
+                  className="w-full px-4 py-3 pr-12 rounded-xl bg-white/5 border border-white/10 focus:border-violet-400/40 focus:bg-white/[0.07] text-sm text-white/95 placeholder:text-white/95 outline-none resize-none transition-colors focus-visible:ring-1 focus-visible:ring-violet-400/30"
                 />
                 <button
                   onClick={handleSubmitAnswer}
                   disabled={!answer.trim() || saving}
-                  className="absolute right-2 bottom-2 p-2 rounded-lg bg-violet-500/30 hover:bg-violet-500/40 disabled:opacity-30 disabled:hover:bg-violet-500/30 transition-colors"
-                  title="Save reflection"
+                  aria-label="Save reflection"
+                  className="absolute right-2 bottom-2 p-2 rounded-lg bg-violet-500/30 hover:bg-violet-500/40 disabled:opacity-30 disabled:hover:bg-violet-500/30 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   <Send className={`w-4 h-4 ${saving ? 'text-white/95' : 'text-violet-300'}`} />
                 </button>

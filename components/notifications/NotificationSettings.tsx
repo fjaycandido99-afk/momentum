@@ -354,11 +354,12 @@ export function NotificationSettings() {
           <button
             onClick={handleToggleNotifications}
             disabled={isToggling}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            aria-label={isSubscribed ? 'Disable push notifications' : 'Enable push notifications'}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
               isSubscribed
                 ? 'bg-white/10 text-white/95 hover:bg-white/20'
                 : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
-            } disabled:opacity-50`}
+            } disabled:opacity-40`}
           >
             {isToggling ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -475,7 +476,10 @@ function NotificationToggle({ icon: Icon, label, description, enabled, onToggle 
   return (
     <button
       onClick={onToggle}
-      className="w-full p-3 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] transition-colors"
+      role="switch"
+      aria-checked={enabled}
+      aria-label={label}
+      className="w-full p-3 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

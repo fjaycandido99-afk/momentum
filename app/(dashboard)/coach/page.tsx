@@ -131,7 +131,7 @@ export default function CoachPage() {
     return (
       <div className="min-h-screen text-white flex flex-col">
         <div className="px-6 pt-12 pb-6 flex items-center gap-3 header-fade-bg">
-          <Link href="/" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+          <Link href="/" aria-label="Back to home" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
             <ChevronLeft className="w-5 h-5 text-white/95" />
           </Link>
           <h1 className="text-2xl font-light">AI Coach</h1>
@@ -164,7 +164,7 @@ export default function CoachPage() {
       <div className="relative px-6 pt-12 pb-4 flex items-center gap-3 border-b border-white/10 header-fade-bg">
         {/* Subtle gradient glow behind header */}
         <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.06] to-transparent pointer-events-none" />
-        <Link href="/" className="relative p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+        <Link href="/" aria-label="Back to home" className="relative p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
           <ChevronLeft className="w-5 h-5 text-white/95" />
         </Link>
         <div className="relative flex items-center gap-3">
@@ -215,7 +215,7 @@ export default function CoachPage() {
 
         {/* Typing indicator */}
         {isLoading && (
-          <div className="flex justify-start animate-fade-in-up">
+          <div role="status" aria-label="Coach is typing" className="flex justify-start animate-fade-in-up">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500/25 to-orange-500/25 border border-amber-500/15 flex items-center justify-center mr-2 mt-1 shrink-0">
               <Bot className="w-3.5 h-3.5 text-amber-400" />
             </div>
@@ -235,8 +235,9 @@ export default function CoachPage() {
             {QUICK_REPLIES.map((qr) => (
               <button
                 key={qr.label}
+                aria-label={`Quick reply: ${qr.label}`}
                 onClick={() => sendMessage(qr.label)}
-                className="flex items-center gap-1.5 px-3.5 py-2 card-gradient-border text-sm text-white/95 active:scale-95 transition-all"
+                className="flex items-center gap-1.5 px-3.5 py-2 card-gradient-border text-sm text-white/95 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <span>{qr.icon}</span>
                 <span>{qr.label}</span>
@@ -253,17 +254,19 @@ export default function CoachPage() {
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}
+            aria-label="Message your AI coach"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask your coach..."
-            className="flex-1 p-3 rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.07] resize-none max-h-32 transition-all"
+            className="flex-1 p-3 rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-amber-500/20 resize-none max-h-32 transition-all"
             rows={1}
           />
           <button
+            aria-label={isLoading ? 'Sending...' : 'Send message'}
             onClick={() => sendMessage()}
             disabled={!input.trim() || isLoading}
-            className={`p-3 rounded-xl transition-all ${
+            className={`p-3 rounded-xl transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
               input.trim() && !isLoading
                 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-400'
                 : 'bg-white/5 text-white/95'

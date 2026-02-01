@@ -512,7 +512,8 @@ export function ModuleCard({
                 setReadingScript(null)
                 onComplete?.()
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+              aria-label="Done reading"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               <Check className="w-3.5 h-3.5 text-white/95" />
               <span className="text-xs text-white/95">Done</span>
@@ -528,6 +529,11 @@ export function ModuleCard({
           <div className="space-y-3">
             {/* Progress bar */}
             <div
+              role="progressbar"
+              aria-valuenow={Math.round(currentTime)}
+              aria-valuemin={0}
+              aria-valuemax={Math.round(audioDuration)}
+              aria-label="Playback progress"
               className="relative h-1.5 bg-white/10 rounded-full cursor-pointer group"
               onClick={handleSeek}
             >
@@ -550,7 +556,8 @@ export function ModuleCard({
                     e.stopPropagation()
                     handlePauseToggle()
                   }}
-                  className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+                  aria-label={isPaused ? 'Resume' : 'Pause'}
+                  className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   {isPaused ? (
                     <Play className="w-5 h-5 text-white fill-current" />
@@ -571,7 +578,8 @@ export function ModuleCard({
                   e.stopPropagation()
                   handleClose()
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+                aria-label="Done"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <Check className="w-3.5 h-3.5 text-white/95" />
                 <span className="text-xs text-white/95">Done</span>
@@ -628,7 +636,8 @@ export function ModuleCard({
                       e.stopPropagation()
                       onSkip()
                     }}
-                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors press-scale"
+                    aria-label={`Skip ${content.label}`}
+                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     title="Skip this module"
                   >
                     <SkipForward className="w-4 h-4 text-white/95" />
@@ -640,10 +649,13 @@ export function ModuleCard({
                     handlePlay()
                   }}
                   disabled={isLoading || isAudioLoading || !script}
+                  aria-label={`Play ${content.label}`}
+                  aria-busy={isLoading || isAudioLoading}
                   className={`
                     p-3 rounded-xl transition-all press-scale
                     bg-white/10 hover:bg-white/20 hover:scale-105
-                    disabled:opacity-50 disabled:cursor-not-allowed
+                    disabled:opacity-40 disabled:cursor-not-allowed
+                    focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none
                     ${isActive ? 'ring-2 ring-white/30' : ''}
                   `}
                 >
@@ -662,7 +674,8 @@ export function ModuleCard({
                   handlePlay()
                 }}
                 disabled={isLoading || isAudioLoading || !script}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-50"
+                aria-label={`Replay ${content.label}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 title="Listen again"
               >
                 {isLoading || isAudioLoading ? (

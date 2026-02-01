@@ -127,6 +127,8 @@ export function EnergyPrompt({ onSelect, isLoading }: EnergyPromptProps) {
           return (
             <button
               key={option.value}
+              aria-label={`${option.label}: ${option.description}`}
+              aria-pressed={isSelected}
               onClick={() => handleSelect(option.value)}
               disabled={isLoading}
               className={`
@@ -135,8 +137,8 @@ export function EnergyPrompt({ onSelect, isLoading }: EnergyPromptProps) {
                   ? 'bg-white/20 border border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.15)]'
                   : 'bg-white/5 border border-transparent hover:bg-white/10 hover:border-white/10'
                 }
-                disabled:opacity-50 disabled:cursor-not-allowed
-                active:scale-[0.98]
+                disabled:opacity-40 disabled:cursor-not-allowed
+                active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none
               `}
             >
               {/* Icon */}

@@ -233,8 +233,9 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
       <div className="absolute top-4 right-4 z-20 flex gap-2">
         {!externalAudio && (
           <button
+            aria-label={isMuted ? 'Unmute' : 'Mute'}
             onClick={toggleMute}
-            className="p-3 rounded-full bg-black/30 hover:bg-black/50 transition-colors backdrop-blur-sm"
+            className="p-3 rounded-full bg-black/30 hover:bg-black/50 transition-colors backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             {isMuted ? (
               <VolumeX className="w-6 h-6 text-white" />
@@ -244,8 +245,9 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
           </button>
         )}
         <button
+          aria-label="Close player"
           onClick={onClose}
-          className="p-3 rounded-full bg-black/30 hover:bg-black/50 transition-colors backdrop-blur-sm"
+          className="p-3 rounded-full bg-black/30 hover:bg-black/50 transition-colors backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           <X className="w-6 h-6 text-white" />
         </button>
@@ -281,9 +283,10 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
           <div className="flex flex-col items-center gap-6 w-full max-w-sm">
             {/* Play/Pause button */}
             <button
+              aria-label={isPlaying ? 'Pause' : 'Play'}
               onClick={togglePlay}
               disabled={!activeReady && !externalAudio}
-              className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-all flex items-center justify-center disabled:opacity-50 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] animate-float"
+              className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-all flex items-center justify-center disabled:opacity-40 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] animate-float focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               {isPlaying ? (
                 <Pause className="w-8 h-8 text-white" fill="white" />

@@ -76,7 +76,8 @@ export function EndelOrb({ mode, isPlaying, onTogglePlay }: EndelOrbProps) {
       {/* Main orb */}
       <button
         onClick={onTogglePlay}
-        className="relative w-56 h-56 rounded-full flex items-center justify-center transition-transform duration-500 press-scale"
+        aria-label={isPlaying ? `Pause ${mode} mode` : `Play ${mode} mode`}
+        className="relative w-56 h-56 rounded-full flex items-center justify-center transition-transform duration-500 press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         style={{
           background: `radial-gradient(circle at 30% 30%, ${config.orbColor}, transparent 70%)`,
           boxShadow: `

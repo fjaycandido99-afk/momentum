@@ -202,10 +202,13 @@ export function CheckpointCard({
           <button
             onClick={onPlay}
             disabled={isLoading}
+            aria-label={`Play ${checkpoint.name}`}
+            aria-busy={isLoading}
             className={`
               p-3 rounded-xl transition-all
               bg-white/10 hover:bg-white/20 hover:scale-105 active:scale-95
-              disabled:opacity-50 disabled:cursor-not-allowed
+              disabled:opacity-40 disabled:cursor-not-allowed
+              focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none
             `}
           >
             {isLoading ? (

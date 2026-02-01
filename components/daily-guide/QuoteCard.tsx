@@ -216,8 +216,9 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                   <div className="flex items-center gap-1">
                     <button
                       onClick={handleFavorite}
-                      className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-                      title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                      aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                      aria-pressed={isFavorited}
+                      className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       <Heart className={`w-3.5 h-3.5 transition-colors ${
                         isFavorited ? 'text-pink-400 fill-pink-400' : isCompleted ? 'text-white/95' : 'text-white/95 hover:text-pink-400'
@@ -225,8 +226,8 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                     </button>
                     <button
                       onClick={handleShare}
-                      className="p-1.5 rounded-lg hover:bg-white/10 transition-colors group/share"
-                      title="Share quote"
+                      aria-label="Share quote"
+                      className="p-1.5 rounded-lg hover:bg-white/10 transition-colors group/share focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       <Share2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-white/95' : 'text-white/95'} group-hover/share:text-white/95 transition-colors`} />
                     </button>
@@ -236,7 +237,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                 {!isCompleted && (
                   <button
                     onClick={handleDone}
-                    className="mt-3 w-full py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-sm font-medium hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1.5"
+                    className="mt-3 w-full py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-sm font-medium hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                   >
                     <Check className="w-3.5 h-3.5" />
                     Done
@@ -246,7 +247,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
             ) : (
               <button
                 onClick={handleReveal}
-                className="mt-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition-all text-sm text-white/95 flex items-center gap-2"
+                className="mt-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition-all text-sm text-white/95 flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <Sparkles className="w-4 h-4" />
                 Reveal Today's Quote
@@ -259,7 +260,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
       {/* Copied toast */}
       {showCopied && (
         <div className="px-4 pb-3">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
+          <div role="status" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
             <Check className="w-3.5 h-3.5 text-emerald-400" />
             <span className="text-xs text-emerald-400 font-medium">Copied!</span>
           </div>

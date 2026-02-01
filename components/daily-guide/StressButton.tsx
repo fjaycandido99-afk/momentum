@@ -24,12 +24,15 @@ export function StressButton({ onActivate, isLoading, className = '' }: StressBu
     <button
       onClick={handlePress}
       disabled={isLoading}
+      aria-label="Need a moment - open stress relief"
+      aria-busy={isLoading}
       className={`
         relative group flex items-center gap-2 px-4 py-2.5 rounded-2xl
         bg-white/[0.04] border border-white/[0.08]
         hover:bg-white/[0.06] hover:border-white/[0.12]
         active:scale-95 transition-all duration-200
-        disabled:opacity-50 disabled:cursor-not-allowed
+        disabled:opacity-40 disabled:cursor-not-allowed
+        focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none
         ${isPressed ? 'scale-95 bg-white/[0.08]' : ''}
         ${className}
       `}

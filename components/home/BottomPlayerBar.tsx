@@ -20,12 +20,18 @@ interface BottomPlayerBarProps {
 }
 
 export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, label }: BottomPlayerBarProps) {
+  const displayLabel = label || MODE_LABELS[mode]
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 safe-area-pb">
       {/* Main bar */}
       <div
-        className="mx-4 mb-2 flex items-center justify-between px-4 py-3 rounded-full bg-[#1a1a1a] border border-white/10 cursor-pointer"
+        role="button"
+        tabIndex={0}
+        aria-label={`Now playing: ${displayLabel}. ${isPlaying ? 'Playing' : 'Paused'}. Tap to open player.`}
+        className="mx-4 mb-2 flex items-center justify-between px-4 py-3 rounded-full bg-[#1a1a1a] border border-white/10 cursor-pointer focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         onClick={onOpenPlayer}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenPlayer() } }}
       >
         {/* Left: sound bars icon + text */}
         <div className="flex items-center gap-3">
@@ -42,14 +48,15 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
             <p className="text-sm font-medium text-white leading-tight">
               {isPlaying ? 'Playing' : 'Paused'}
             </p>
-            <p className="text-xs text-white/95 leading-tight">{label || MODE_LABELS[mode]}</p>
+            <p className="text-xs text-white/95 leading-tight">{displayLabel}</p>
           </div>
         </div>
 
         {/* Right: play/pause */}
         <button
+          aria-label={isPlaying ? 'Pause' : 'Play'}
           onClick={(e) => { e.stopPropagation(); onTogglePlay() }}
-          className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-white/40 transition-colors press-scale"
+          className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-white/40 transition-colors press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           {isPlaying ? (
             <Pause className="w-[18px] h-[18px] text-white" fill="white" />

@@ -50,8 +50,9 @@ export function MoodCheckIn({ type, onSelect, selected }: MoodCheckInProps) {
           return (
             <button
               key={option.value}
+              aria-label={`Rate mood as ${option.label}`}
               onClick={() => handleSelect(option.value)}
-              className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all hover:scale-105 ${option.bgColor}`}
+              className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all hover:scale-105 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${option.bgColor}`}
             >
               <Icon className={`w-6 h-6 ${option.color}`} />
               <span className={`text-xs font-medium ${option.color}`}>{option.label}</span>

@@ -158,8 +158,10 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
         key={day}
         onClick={() => handleDateClick(day)}
         disabled={isFuture}
+        aria-label={`${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}${completionLevel >= 4 ? ', complete' : completionLevel > 0 ? `, ${completionLevel} modules` : ''}${hasJournal ? ', has journal' : ''}`}
         className={`
           relative aspect-square flex flex-col items-center justify-center rounded-xl transition-all
+          focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none
           ${isFuture ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}
           ${isToday ? 'ring-2 ring-white/30' : ''}
           ${isSelected ? 'bg-white/20' : ''}
@@ -224,19 +226,22 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
         <div className="flex items-center justify-between">
           <button
             onClick={goToPreviousMonth}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="Previous month"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             <ChevronLeft className="w-4 h-4 text-white/95" />
           </button>
           <button
             onClick={goToToday}
-            className="text-sm font-medium text-white hover:text-white/95 transition-colors"
+            aria-label="Go to today"
+            className="text-sm font-medium text-white hover:text-white/95 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded-lg px-2 py-1"
           >
             {MONTHS[month]} {year}
           </button>
           <button
             onClick={goToNextMonth}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="Next month"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             <ChevronRight className="w-4 h-4 text-white/95" />
           </button>
@@ -311,6 +316,9 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
       {/* Journal Popup */}
       {showJournalPopup && selectedDayData && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Day details"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
           onClick={() => setShowJournalPopup(false)}
         >
@@ -344,7 +352,8 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
               </div>
               <button
                 onClick={() => setShowJournalPopup(false)}
-                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                aria-label="Close"
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <X className="w-5 h-5 text-white/95" />
               </button>

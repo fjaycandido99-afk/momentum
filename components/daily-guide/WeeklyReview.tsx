@@ -253,7 +253,8 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         {isModal && onClose && (
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Close weekly review"
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             <X className="w-4 h-4 text-white/95" />
           </button>
@@ -406,7 +407,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                 </h3>
                 <button
                   onClick={() => setShowFullJournal(true)}
-                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded"
                 >
                   View All
                   <ChevronRight className="w-3 h-3" />
@@ -462,7 +463,8 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                     setIsSaved(false)
                   }}
                   placeholder="What do you want to focus on this week?"
-                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none"
+                  aria-label="Weekly intention"
+                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                   rows={2}
                   maxLength={200}
                 />
@@ -471,7 +473,8 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                   <button
                     onClick={handleSaveIntention}
                     disabled={!intention.trim() || isSaving}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+                    aria-busy={isSaving}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                       intention.trim()
                         ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30'
                         : 'bg-white/5 text-white/95 cursor-not-allowed'
@@ -498,6 +501,9 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
   // Full Journal View Popup
   const fullJournalPopup = showFullJournal && stats?.dailyEntries && (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Weekly journal entries"
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
       onClick={() => setShowFullJournal(false)}
     >
@@ -518,7 +524,8 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           </div>
           <button
             onClick={() => setShowFullJournal(false)}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="Close journal"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             <X className="w-5 h-5 text-white/95" />
           </button>
@@ -613,7 +620,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
   if (isModal) {
     return (
       <>
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+        <div role="dialog" aria-modal="true" aria-label="Weekly review" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
           <div className="w-full max-w-md my-8 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10 overflow-hidden">
             {content}
           </div>
@@ -641,7 +648,8 @@ export function WeeklyReviewPrompt({ onOpen }: { onOpen: () => void }) {
   return (
     <button
       onClick={onOpen}
-      className="w-full p-4 card-gradient-border transition-all group"
+      aria-label="Open weekly review"
+      className="w-full p-4 card-gradient-border transition-all group focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

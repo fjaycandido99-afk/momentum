@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Play, Pause, Home, Save, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot } from 'lucide-react'
+import { Settings, PenLine, Play, Pause, Home, Save, ChevronDown, ChevronRight, Sun, Wind, Sparkles, Heart, Moon, Anchor, Loader2, Bot, Music } from 'lucide-react'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types'
@@ -138,6 +138,10 @@ export function ImmersiveHome() {
     subtitle: string
     youtubeId: string
   } | null>(null)
+  const [showSoundscapePlayer, setShowSoundscapePlayer] = useState(false)
+  const [soundscapeIsPlaying, setSoundscapeIsPlaying] = useState(false)
+  const soundscapeIframeRef = useRef<HTMLIFrameElement | null>(null)
+  const soundscapeAutoPlayed = useRef(false)
   const [playingSound, setPlayingSound] = useState<{
     word: string
     color: string
@@ -198,9 +202,44 @@ export function ImmersiveHome() {
     setMusicCurrentTime(0)
     setPlayingSound(null)
     setActiveSoundscape(null)
+    setShowSoundscapePlayer(false)
+    setSoundscapeIsPlaying(false)
     setActiveCardId(null)
     homeAudioActiveRef.current = false
   }, [isPlaying])
+
+  // Soundscape autoplay: when a new soundscape is selected, wait for iframe to load
+  const soundscapeYoutubeId = activeSoundscape?.youtubeId
+  useEffect(() => {
+    if (!soundscapeYoutubeId) return
+    soundscapeAutoPlayed.current = false
+    setSoundscapeIsPlaying(false)
+    const timer = setTimeout(() => {
+      setSoundscapeIsPlaying(true)
+      soundscapeAutoPlayed.current = true
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [soundscapeYoutubeId])
+
+  // Soundscape play/pause via YouTube postMessage API
+  useEffect(() => {
+    if (!soundscapeAutoPlayed.current) return
+    const iframe = soundscapeIframeRef.current
+    if (!iframe) return
+    const func = soundscapeIsPlaying ? 'playVideo' : 'pauseVideo'
+    iframe.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func, args: '' }),
+      '*'
+    )
+  }, [soundscapeIsPlaying])
+
+  // Clean up iframe ref when soundscape is cleared
+  useEffect(() => {
+    if (!activeSoundscape) {
+      soundscapeIframeRef.current = null
+      soundscapeAutoPlayed.current = false
+    }
+  }, [activeSoundscape])
 
   // Create / destroy YT API player when backgroundMusic changes
   useEffect(() => {
@@ -328,6 +367,9 @@ export function ImmersiveHome() {
     const thisRequest = ++guideRequestId.current
     // Stop soundscape if playing
     if (isPlaying) setIsPlaying(false)
+    setActiveSoundscape(null)
+    setShowSoundscapePlayer(false)
+    setSoundscapeIsPlaying(false)
     // Signal home audio active
     setHomeAudioActive(true)
 
@@ -520,6 +562,9 @@ export function ImmersiveHome() {
     }
     // Stop soundscape
     if (isPlaying) setIsPlaying(false)
+    setActiveSoundscape(null)
+    setShowSoundscapePlayer(false)
+    setSoundscapeIsPlaying(false)
     // Signal home audio active
     setHomeAudioActive(true)
 
@@ -549,6 +594,9 @@ export function ImmersiveHome() {
     }
     // Stop soundscape
     if (isPlaying) setIsPlaying(false)
+    setActiveSoundscape(null)
+    setShowSoundscapePlayer(false)
+    setSoundscapeIsPlaying(false)
     // Signal home audio active
     setHomeAudioActive(true)
 
@@ -629,14 +677,29 @@ export function ImmersiveHome() {
         />
       )}
 
-      {/* Soundscape Player (fullscreen orb) */}
+      {/* Persistent soundscape YouTube iframe (stays alive when fullscreen player is closed) */}
       {activeSoundscape && (
+        <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
+          <iframe
+            ref={soundscapeIframeRef}
+            key={activeSoundscape.youtubeId}
+            src={`https://www.youtube.com/embed/${activeSoundscape.youtubeId}?autoplay=1&loop=1&playlist=${activeSoundscape.youtubeId}&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            className="w-[1px] h-[1px]"
+          />
+        </div>
+      )}
+
+      {/* Soundscape Player (fullscreen orb) */}
+      {activeSoundscape && showSoundscapePlayer && (
         <SoundscapePlayerComponent
           soundId={activeSoundscape.soundId}
           label={activeSoundscape.label}
           subtitle={activeSoundscape.subtitle}
           youtubeId={activeSoundscape.youtubeId}
-          onClose={() => setActiveSoundscape(null)}
+          isPlaying={soundscapeIsPlaying}
+          onTogglePlay={() => setSoundscapeIsPlaying(!soundscapeIsPlaying)}
+          onClose={() => setShowSoundscapePlayer(false)}
           onSwitchSound={(id, label, subtitle, youtubeId) =>
             setActiveSoundscape({ soundId: id, label, subtitle, youtubeId })
           }
@@ -693,18 +756,21 @@ export function ImmersiveHome() {
         <div className="flex items-center gap-2">
           <Link
             href="/journal"
+            aria-label="Journal"
             className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors"
           >
             <PenLine className="w-5 h-5 text-white/95" />
           </Link>
           <Link
             href="/saved"
+            aria-label="Saved"
             className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors"
           >
             <Save className="w-5 h-5 text-white/95" />
           </Link>
           <Link
             href="/settings"
+            aria-label="Settings"
             className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors"
           >
             <Settings className="w-5 h-5 text-white/95" />
@@ -744,10 +810,17 @@ export function ImmersiveHome() {
         <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
           {SOUNDSCAPE_ITEMS.map((item) => {
             const Icon = item.icon
+            const isActive = activeSoundscape?.soundId === item.id && soundscapeIsPlaying
             return (
               <button
                 key={item.id}
+                aria-label={`${item.label} soundscape${isActive ? ' (playing)' : ''}`}
                 onClick={() => {
+                  // If this soundscape is already active, just reopen the player
+                  if (activeSoundscape?.soundId === item.id) {
+                    setShowSoundscapePlayer(true)
+                    return
+                  }
                   // Stop guide audio if playing
                   if (guideAudioRef.current) {
                     guideAudioRef.current.pause()
@@ -757,8 +830,7 @@ export function ImmersiveHome() {
                     setGuideIsPlaying(false)
                   }
                   if (isPlaying) setIsPlaying(false)
-                  setBackgroundMusic(null)
-                  setMusicPlaying(false)
+                  stopBackgroundMusic()
                   setHomeAudioActive(true)
 
                   setActiveSoundscape({
@@ -767,13 +839,18 @@ export function ImmersiveHome() {
                     subtitle: item.subtitle,
                     youtubeId: item.youtubeId,
                   })
+                  setShowSoundscapePlayer(true)
                 }}
                 className="flex flex-col items-center gap-2 shrink-0 press-scale"
               >
-                <div className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round">
-                  <Icon className="w-5 h-5 text-white/95" strokeWidth={1.5} />
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isActive ? 'card-now-playing' : ''}`}>
+                  {isActive ? (
+                    <div className="eq-bars"><span /><span /><span /></div>
+                  ) : (
+                    <Icon className="w-5 h-5 text-white/95" strokeWidth={1.5} />
+                  )}
                 </div>
-                <span className="text-[11px] text-white/95">{item.label}</span>
+                <span className={`text-[11px] ${isActive ? 'text-white' : 'text-white/95'}`}>{item.label}</span>
               </button>
             )
           })}
@@ -787,16 +864,20 @@ export function ImmersiveHome() {
           {VOICE_GUIDES.map((guide) => {
             const Icon = guide.icon
             const isLoading = loadingGuide === guide.id
+            const isGuideActive = guideLabel === guide.name && guideIsPlaying
             return (
               <button
                 key={guide.id}
+                aria-label={`${guide.name} guide${isGuideActive ? ' (playing)' : isLoading ? ' (loading)' : ''}`}
                 onClick={() => handlePlayGuide(guide.id, guide.name)}
                 disabled={isLoading}
                 className="flex flex-col items-center gap-2 press-scale"
               >
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isLoading ? 'bg-white/8' : ''}`}>
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isLoading ? 'bg-white/8' : ''} ${isGuideActive ? 'card-now-playing' : ''}`}>
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
+                  ) : isGuideActive ? (
+                    <div className="eq-bars"><span /><span /><span /></div>
                   ) : (
                     <Icon
                       className="w-5 h-5 text-white/95 transition-colors duration-200"
@@ -804,7 +885,7 @@ export function ImmersiveHome() {
                     />
                   )}
                 </div>
-                <span className="text-[11px] text-white/95">{guide.name}</span>
+                <span className={`text-[11px] ${isGuideActive ? 'text-white' : 'text-white/95'}`}>{guide.name}</span>
               </button>
             )
           })}
@@ -832,13 +913,14 @@ export function ImmersiveHome() {
             motivationVideos.slice(0, 8).map((video, index) => (
               <button
                 key={video.id}
+                aria-label={`Play ${video.title}`}
                 onClick={() => handlePlayMotivation(video, index)}
                 className="shrink-0 w-40 text-left group press-scale"
               >
                 <div className={`w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center ${activeCardId === video.id ? 'card-now-playing' : ''}`}>
                   <img
                     src={backgrounds[index % backgrounds.length]}
-                    alt=""
+                    alt={video.title}
                     className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
@@ -886,11 +968,15 @@ export function ImmersiveHome() {
                   </div>
                 ))
               ) : videos.length === 0 ? (
-                <div className="text-sm text-white/95 py-8 px-2">No tracks available</div>
+                <div className="flex flex-col items-center justify-center w-full py-10 gap-2">
+                  <Music className="w-6 h-6 text-white/30" />
+                  <p className="text-sm text-white/40">No tracks yet</p>
+                </div>
               ) : (
                 videos.slice(0, 8).map((video, index) => (
                   <button
                     key={video.id}
+                    aria-label={`Play ${video.title}`}
                     onClick={() => handlePlayMusic(video, index, g.id, g.word)}
                     className="shrink-0 w-40 text-left group press-scale"
                   >
@@ -900,7 +986,7 @@ export function ImmersiveHome() {
                           src={gBgs.length > 0
                             ? gBgs[index % gBgs.length]
                             : backgrounds[(index + 15 + gi * 5) % backgrounds.length]}
-                          alt=""
+                          alt={video.title}
                           className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
                         />
                       )}
@@ -944,6 +1030,7 @@ export function ImmersiveHome() {
         isPlaying={
           backgroundMusic ? musicPlaying :
           guideLabel ? guideIsPlaying :
+          activeSoundscape ? soundscapeIsPlaying :
           isPlaying
         }
         onTogglePlay={() => {
@@ -951,21 +1038,27 @@ export function ImmersiveHome() {
             setMusicPlaying(!musicPlaying)
           } else if (guideLabel) {
             toggleGuidePlay()
+          } else if (activeSoundscape) {
+            setSoundscapeIsPlaying(!soundscapeIsPlaying)
           } else {
             // Open SoundscapePlayer with active mode
             const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
             setActiveSoundscape({ soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId })
+            setShowSoundscapePlayer(true)
           }
         }}
         onOpenPlayer={() => {
-          // If background music is playing, don't reopen — it would restart audio
           if (backgroundMusic) return
-          if (!guideLabel) {
+          if (guideLabel) return
+          if (activeSoundscape) {
+            setShowSoundscapePlayer(true)
+          } else {
             const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
             setActiveSoundscape({ soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId })
+            setShowSoundscapePlayer(true)
           }
         }}
-        label={backgroundMusic?.label || guideLabel || undefined}
+        label={backgroundMusic?.label || guideLabel || activeSoundscape?.label || undefined}
       />
     </div>
     </div>
