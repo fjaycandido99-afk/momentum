@@ -15,6 +15,7 @@ export interface YTPlayer {
   getDuration: () => number
   getCurrentTime: () => number
   seekTo: (seconds: number, allowSeekAhead: boolean) => void
+  loadVideoById: (videoId: string) => void
 }
 
 declare global {
