@@ -178,6 +178,8 @@ export function ImmersiveHome() {
   // Track if home audio is active (to avoid re-entrancy)
   const homeAudioActiveRef = useRef(false)
   const bgPlayerReadyRef = useRef(false)
+  // Silent audio keepalive — keeps mobile browser audio session alive when backgrounded
+  const keepaliveRef = useRef<HTMLAudioElement | null>(null)
 
   // Stop all home audio sources (stop videos, don't destroy pre-created players)
   const stopAllHomeAudio = useCallback(() => {
@@ -211,6 +213,17 @@ export function ImmersiveHome() {
     setSoundscapeIsPlaying(false)
     setActiveCardId(null)
     homeAudioActiveRef.current = false
+    // Stop keepalive
+    if (keepaliveRef.current) {
+      keepaliveRef.current.pause()
+      keepaliveRef.current.src = ''
+      keepaliveRef.current = null
+    }
+    // Clear media session
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'none'
+      navigator.mediaSession.metadata = null
+    }
   }, [isPlaying])
 
   // Load YouTube IFrame API early on mount so it's ready when user taps
@@ -369,6 +382,46 @@ export function ImmersiveHome() {
     } catch {}
   }, [musicPlaying, backgroundMusic])
 
+  // Media Session API — lock screen controls + prevents browser from killing audio
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+
+    const label = backgroundMusic?.label || guideLabel || activeSoundscape?.label
+    const playing = musicPlaying || guideIsPlaying || soundscapeIsPlaying
+
+    if (!label) {
+      navigator.mediaSession.metadata = null
+      navigator.mediaSession.playbackState = 'none'
+      return
+    }
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: label,
+      artist: 'Voxu',
+      album: backgroundMusic ? 'Music' : guideLabel ? 'Guided' : 'Soundscape',
+    })
+    navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      if (backgroundMusic) setMusicPlaying(true)
+      else if (activeSoundscape) setSoundscapeIsPlaying(true)
+      else if (guideAudioRef.current) {
+        guideAudioRef.current.play().then(() => setGuideIsPlaying(true))
+      }
+    })
+    navigator.mediaSession.setActionHandler('pause', () => {
+      if (backgroundMusic) setMusicPlaying(false)
+      else if (activeSoundscape) setSoundscapeIsPlaying(false)
+      else if (guideAudioRef.current) {
+        guideAudioRef.current.pause()
+        setGuideIsPlaying(false)
+      }
+    })
+    navigator.mediaSession.setActionHandler('stop', () => {
+      stopAllHomeAudio()
+    })
+  }, [backgroundMusic, guideLabel, activeSoundscape, musicPlaying, guideIsPlaying, soundscapeIsPlaying, stopAllHomeAudio])
+
   // When daily guide starts a session, stop all home audio
   useEffect(() => {
     if (audioContext?.isSessionActive && !homeAudioActiveRef.current) {
@@ -376,13 +429,27 @@ export function ImmersiveHome() {
     }
   }, [audioContext?.isSessionActive, stopAllHomeAudio])
 
-  // Notify audio context when home audio starts/stops
+  // Notify audio context when home audio starts/stops + keepalive for background playback
   const setHomeAudioActive = useCallback((active: boolean) => {
     homeAudioActiveRef.current = active
     if (audioContext && active) {
       audioContext.setSessionActive(true)
     } else if (audioContext && !active) {
       audioContext.setSessionActive(false)
+    }
+    // Start/stop silent keepalive audio (must be in user gesture context)
+    if (active && !keepaliveRef.current) {
+      try {
+        const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==')
+        audio.loop = true
+        audio.volume = 0.01
+        audio.play().catch(() => {})
+        keepaliveRef.current = audio
+      } catch {}
+    } else if (!active && keepaliveRef.current) {
+      keepaliveRef.current.pause()
+      keepaliveRef.current.src = ''
+      keepaliveRef.current = null
     }
   }, [audioContext])
 
