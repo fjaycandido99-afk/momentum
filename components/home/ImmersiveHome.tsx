@@ -188,11 +188,9 @@ export function ImmersiveHome() {
       setGuideIsPlaying(false)
     }
     if (isPlaying) setIsPlaying(false)
-    // Destroy YT player
-    if (bgPlayerRef.current) {
-      bgPlayerRef.current.destroy()
-      bgPlayerRef.current = null
-    }
+    // Remove bg music iframe + player ref
+    bgPlayerRef.current = null
+    if (bgPlayerContainerRef.current) bgPlayerContainerRef.current.innerHTML = ''
     if (bgProgressIntervalRef.current) {
       clearInterval(bgProgressIntervalRef.current)
       bgProgressIntervalRef.current = null
@@ -202,12 +200,10 @@ export function ImmersiveHome() {
     setMusicDuration(0)
     setMusicCurrentTime(0)
     setPlayingSound(null)
-    // Destroy soundscape YT player
-    if (soundscapePlayerRef.current) {
-      soundscapePlayerRef.current.destroy()
-      soundscapePlayerRef.current = null
-    }
+    // Remove soundscape iframe + player ref
+    soundscapePlayerRef.current = null
     soundscapeReady.current = false
+    if (soundscapeContainerRef.current) soundscapeContainerRef.current.innerHTML = ''
     setActiveSoundscape(null)
     setShowSoundscapePlayer(false)
     setSoundscapeIsPlaying(false)
@@ -235,57 +231,49 @@ export function ImmersiveHome() {
 
   // Destroy soundscape YT player
   const destroySoundscapePlayer = useCallback(() => {
-    if (soundscapePlayerRef.current) {
-      soundscapePlayerRef.current.destroy()
-      soundscapePlayerRef.current = null
-    }
+    soundscapePlayerRef.current = null
     soundscapeReady.current = false
+    if (soundscapeContainerRef.current) soundscapeContainerRef.current.innerHTML = ''
   }, [])
 
-  // Create soundscape YT player — called directly from click handler to preserve gesture context
+  // Create soundscape YT player — uses raw iframe with allow="autoplay" for mobile
   const createSoundscapePlayer = useCallback((youtubeId: string) => {
-    // Destroy existing
-    if (soundscapePlayerRef.current) {
-      soundscapePlayerRef.current.destroy()
-      soundscapePlayerRef.current = null
-    }
+    // Clean up existing
+    soundscapePlayerRef.current = null
     soundscapeReady.current = false
-    if (!soundscapeContainerRef.current || !window.YT?.Player) return
+    if (!soundscapeContainerRef.current) return
 
     soundscapeContainerRef.current.innerHTML = ''
-    const div = document.createElement('div')
-    div.id = 'sc-yt-player-' + Date.now()
-    soundscapeContainerRef.current.appendChild(div)
 
-    soundscapePlayerRef.current = new window.YT.Player(div.id, {
-      videoId: youtubeId,
-      height: '1',
-      width: '1',
-      playerVars: {
-        autoplay: 1,
-        controls: 0,
-        disablekb: 1,
-        fs: 0,
-        iv_load_policy: 3,
-        modestbranding: 1,
-        rel: 0,
-        showinfo: 0,
-        loop: 1,
-        playlist: youtubeId,
-        playsinline: 1,
-      },
-      events: {
-        onReady: (event) => {
-          event.target.setVolume(100)
-          event.target.playVideo()
-          soundscapeReady.current = true
-          setSoundscapeIsPlaying(true)
-        },
-        onStateChange: (event) => {
-          if (event.data === 1) setSoundscapeIsPlaying(true)
-          else if (event.data === 2) setSoundscapeIsPlaying(false)
-        },
-      },
+    // Create iframe directly with allow="autoplay" — in user gesture context
+    const iframe = document.createElement('iframe')
+    const frameId = 'sc-yt-' + Date.now()
+    iframe.id = frameId
+    iframe.allow = 'autoplay; encrypted-media'
+    iframe.width = '1'
+    iframe.height = '1'
+    iframe.style.border = 'none'
+    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`
+    soundscapeContainerRef.current.appendChild(iframe)
+
+    // Wrap with YT.Player API after iframe loads for play/pause control
+    iframe.addEventListener('load', () => {
+      if (!window.YT?.Player) return
+      try {
+        soundscapePlayerRef.current = new window.YT.Player(frameId, {
+          events: {
+            onReady: (event) => {
+              event.target.setVolume(100)
+              soundscapeReady.current = true
+              setSoundscapeIsPlaying(true)
+            },
+            onStateChange: (event) => {
+              if (event.data === 1) setSoundscapeIsPlaying(true)
+              else if (event.data === 2) setSoundscapeIsPlaying(false)
+            },
+          },
+        })
+      } catch {}
     })
   }, [])
 
@@ -298,70 +286,64 @@ export function ImmersiveHome() {
     } catch {}
   }, [soundscapeIsPlaying])
 
-  // Create background music YT player — called directly from click handler to preserve gesture context
+  // Create background music YT player — uses raw iframe with allow="autoplay" for mobile
   const createBgMusicPlayer = useCallback((youtubeId: string) => {
-    // Destroy existing
-    if (bgPlayerRef.current) {
-      bgPlayerRef.current.destroy()
-      bgPlayerRef.current = null
-    }
+    // Clean up existing
+    bgPlayerRef.current = null
     if (bgProgressIntervalRef.current) {
       clearInterval(bgProgressIntervalRef.current)
       bgProgressIntervalRef.current = null
     }
-    if (!bgPlayerContainerRef.current || !window.YT?.Player) return
+    if (!bgPlayerContainerRef.current) return
 
     bgPlayerContainerRef.current.innerHTML = ''
-    const playerDiv = document.createElement('div')
-    playerDiv.id = 'bg-yt-player-' + Date.now()
-    bgPlayerContainerRef.current.appendChild(playerDiv)
 
-    bgPlayerRef.current = new window.YT.Player(playerDiv.id, {
-      videoId: youtubeId,
-      height: '1',
-      width: '1',
-      playerVars: {
-        autoplay: 1,
-        controls: 0,
-        disablekb: 1,
-        fs: 0,
-        iv_load_policy: 3,
-        modestbranding: 1,
-        rel: 0,
-        showinfo: 0,
-        loop: 1,
-        playlist: youtubeId,
-        playsinline: 1,
-      },
-      events: {
-        onReady: (event) => {
-          event.target.setVolume(80)
-          event.target.playVideo()
-          setMusicDuration(event.target.getDuration())
-          if (bgProgressIntervalRef.current) clearInterval(bgProgressIntervalRef.current)
-          bgProgressIntervalRef.current = setInterval(() => {
-            if (bgPlayerRef.current) {
-              setMusicCurrentTime(bgPlayerRef.current.getCurrentTime())
-              const d = bgPlayerRef.current.getDuration()
-              if (d > 0) setMusicDuration(d)
-            }
-          }, 1000)
-        },
-        onStateChange: (event) => {
-          if (event.data === 1) setMusicPlaying(true)
-          else if (event.data === 2) setMusicPlaying(false)
-        },
-      },
+    // Create iframe directly with allow="autoplay" — in user gesture context
+    const iframe = document.createElement('iframe')
+    const frameId = 'bg-yt-' + Date.now()
+    iframe.id = frameId
+    iframe.allow = 'autoplay; encrypted-media'
+    iframe.width = '1'
+    iframe.height = '1'
+    iframe.style.border = 'none'
+    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`
+    bgPlayerContainerRef.current.appendChild(iframe)
+
+    // Wrap with YT.Player API after iframe loads for seek/pause control
+    iframe.addEventListener('load', () => {
+      if (!window.YT?.Player) return
+      try {
+        bgPlayerRef.current = new window.YT.Player(frameId, {
+          events: {
+            onReady: (event) => {
+              event.target.setVolume(80)
+              setMusicDuration(event.target.getDuration())
+              if (bgProgressIntervalRef.current) clearInterval(bgProgressIntervalRef.current)
+              bgProgressIntervalRef.current = setInterval(() => {
+                if (bgPlayerRef.current) {
+                  try {
+                    setMusicCurrentTime(bgPlayerRef.current.getCurrentTime())
+                    const d = bgPlayerRef.current.getDuration()
+                    if (d > 0) setMusicDuration(d)
+                  } catch {}
+                }
+              }, 1000)
+            },
+            onStateChange: (event) => {
+              if (event.data === 1) setMusicPlaying(true)
+              else if (event.data === 2) setMusicPlaying(false)
+            },
+          },
+        })
+      } catch {}
     })
   }, [])
 
   // Cleanup background music when cleared
   useEffect(() => {
     if (!backgroundMusic) {
-      if (bgPlayerRef.current) {
-        bgPlayerRef.current.destroy()
-        bgPlayerRef.current = null
-      }
+      bgPlayerRef.current = null
+      if (bgPlayerContainerRef.current) bgPlayerContainerRef.current.innerHTML = ''
       if (bgProgressIntervalRef.current) {
         clearInterval(bgProgressIntervalRef.current)
         bgProgressIntervalRef.current = null
@@ -677,10 +659,8 @@ export function ImmersiveHome() {
 
   // Stop background music entirely
   const stopBackgroundMusic = () => {
-    if (bgPlayerRef.current) {
-      bgPlayerRef.current.destroy()
-      bgPlayerRef.current = null
-    }
+    bgPlayerRef.current = null
+    if (bgPlayerContainerRef.current) bgPlayerContainerRef.current.innerHTML = ''
     if (bgProgressIntervalRef.current) {
       clearInterval(bgProgressIntervalRef.current)
       bgProgressIntervalRef.current = null
