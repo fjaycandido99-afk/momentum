@@ -178,8 +178,11 @@ export function ImmersiveHome() {
   // Track if home audio is active (to avoid re-entrancy)
   const homeAudioActiveRef = useRef(false)
   const bgPlayerReadyRef = useRef(false)
-  // Silent audio keepalive — keeps mobile browser audio session alive when backgrounded
+  // Background persistence refs
   const keepaliveRef = useRef<HTMLAudioElement | null>(null)
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const wakeLockRef = useRef<any>(null)
 
   // Stop all home audio sources (stop videos, don't destroy pre-created players)
   const stopAllHomeAudio = useCallback(() => {
@@ -213,11 +216,19 @@ export function ImmersiveHome() {
     setSoundscapeIsPlaying(false)
     setActiveCardId(null)
     homeAudioActiveRef.current = false
-    // Stop keepalive
+    // Stop all keepalive mechanisms
     if (keepaliveRef.current) {
       keepaliveRef.current.pause()
       keepaliveRef.current.src = ''
       keepaliveRef.current = null
+    }
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close().catch(() => {})
+      audioCtxRef.current = null
+    }
+    if (wakeLockRef.current) {
+      try { wakeLockRef.current.release() } catch {}
+      wakeLockRef.current = null
     }
     // Clear media session
     if ('mediaSession' in navigator) {
@@ -431,17 +442,17 @@ export function ImmersiveHome() {
 
   // Resume audio when user returns to the app (visibilitychange)
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState !== 'visible') return
+    const resumeAll = () => {
+      // Resume AudioContext if suspended
+      if (audioCtxRef.current?.state === 'suspended') {
+        audioCtxRef.current.resume().catch(() => {})
+      }
 
       // Resume background music if it was active
       if (backgroundMusic && bgPlayerRef.current && bgPlayerReadyRef.current) {
         try {
           const state = bgPlayerRef.current.getPlayerState()
-          // If paused (2) or buffering/cued, resume
-          if (state !== 1) {
-            bgPlayerRef.current.playVideo()
-          }
+          if (state !== 1) bgPlayerRef.current.playVideo()
         } catch {}
       }
 
@@ -449,20 +460,30 @@ export function ImmersiveHome() {
       if (activeSoundscape && soundscapePlayerRef.current && soundscapeReady.current) {
         try {
           const state = soundscapePlayerRef.current.getPlayerState()
-          if (state !== 1) {
-            soundscapePlayerRef.current.playVideo()
-          }
+          if (state !== 1) soundscapePlayerRef.current.playVideo()
         } catch {}
       }
 
       // Resume guide audio if it was active
-      if (guideLabel && guideAudioRef.current) {
-        try {
-          if (guideAudioRef.current.paused) {
-            guideAudioRef.current.play().catch(() => {})
-          }
-        } catch {}
+      if (guideLabel && guideAudioRef.current?.paused) {
+        guideAudioRef.current.play().catch(() => {})
       }
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return
+
+      // Re-acquire wake lock (released when screen locks)
+      if ('wakeLock' in navigator && homeAudioActiveRef.current && !wakeLockRef.current) {
+        (navigator as any).wakeLock.request('screen').then((lock: any) => {
+          wakeLockRef.current = lock
+        }).catch(() => {})
+      }
+
+      // Resume immediately + retry (YT player may need time to wake up)
+      resumeAll()
+      setTimeout(resumeAll, 500)
+      setTimeout(resumeAll, 1500)
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
@@ -476,7 +497,7 @@ export function ImmersiveHome() {
     }
   }, [audioContext?.isSessionActive, stopAllHomeAudio])
 
-  // Notify audio context when home audio starts/stops + keepalive for background playback
+  // Notify audio context when home audio starts/stops + multi-layer keepalive for background playback
   const setHomeAudioActive = useCallback((active: boolean) => {
     homeAudioActiveRef.current = active
     if (audioContext && active) {
@@ -484,19 +505,73 @@ export function ImmersiveHome() {
     } else if (audioContext && !active) {
       audioContext.setSessionActive(false)
     }
-    // Start/stop silent keepalive audio (must be in user gesture context)
-    if (active && !keepaliveRef.current) {
-      try {
-        const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==')
-        audio.loop = true
-        audio.volume = 0.01
-        audio.play().catch(() => {})
-        keepaliveRef.current = audio
-      } catch {}
-    } else if (!active && keepaliveRef.current) {
-      keepaliveRef.current.pause()
-      keepaliveRef.current.src = ''
-      keepaliveRef.current = null
+
+    if (active) {
+      // 1. AudioContext keepalive — more persistent on mobile than <audio>
+      if (!audioCtxRef.current) {
+        try {
+          const AC = window.AudioContext || (window as any).webkitAudioContext
+          const ctx = new AC()
+          const oscillator = ctx.createOscillator()
+          const gain = ctx.createGain()
+          gain.gain.value = 0.001 // nearly silent
+          oscillator.connect(gain)
+          gain.connect(ctx.destination)
+          oscillator.start()
+          audioCtxRef.current = ctx
+        } catch {}
+      }
+
+      // 2. Screen Wake Lock — prevents device auto-sleep while audio plays
+      if ('wakeLock' in navigator && !wakeLockRef.current) {
+        (navigator as any).wakeLock.request('screen').then((lock: any) => {
+          wakeLockRef.current = lock
+          // Re-acquire if released (e.g. tab switch)
+          lock.addEventListener('release', () => {
+            wakeLockRef.current = null
+          })
+        }).catch(() => {})
+      }
+
+      // 3. Web Locks API — prevents browser from freezing the page
+      if ('locks' in navigator) {
+        (navigator as any).locks.request('voxu-audio-playback', () =>
+          new Promise<void>((resolve) => {
+            const check = setInterval(() => {
+              if (!homeAudioActiveRef.current) {
+                clearInterval(check)
+                resolve()
+              }
+            }, 2000)
+          })
+        ).catch(() => {})
+      }
+
+      // 4. Silent <audio> keepalive as fallback (started in user gesture context)
+      if (!keepaliveRef.current) {
+        try {
+          const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==')
+          audio.loop = true
+          audio.volume = 0.01
+          audio.play().catch(() => {})
+          keepaliveRef.current = audio
+        } catch {}
+      }
+    } else {
+      // Stop all keepalive mechanisms
+      if (keepaliveRef.current) {
+        keepaliveRef.current.pause()
+        keepaliveRef.current.src = ''
+        keepaliveRef.current = null
+      }
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {})
+        audioCtxRef.current = null
+      }
+      if (wakeLockRef.current) {
+        try { wakeLockRef.current.release() } catch {}
+        wakeLockRef.current = null
+      }
     }
   }, [audioContext])
 
