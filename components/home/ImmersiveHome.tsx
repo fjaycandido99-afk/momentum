@@ -180,9 +180,11 @@ export function ImmersiveHome() {
   const bgPlayerReadyRef = useRef(false)
   // Background persistence refs
   const keepaliveRef = useRef<HTMLAudioElement | null>(null)
-  const audioCtxRef = useRef<AudioContext | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const wakeLockRef = useRef<any>(null)
+  // Track current video IDs for reload-on-return
+  const currentBgVideoId = useRef<string | null>(null)
+  const currentScVideoId = useRef<string | null>(null)
 
   // Stop all home audio sources (stop videos, don't destroy pre-created players)
   const stopAllHomeAudio = useCallback(() => {
@@ -216,15 +218,13 @@ export function ImmersiveHome() {
     setSoundscapeIsPlaying(false)
     setActiveCardId(null)
     homeAudioActiveRef.current = false
-    // Stop all keepalive mechanisms
+    currentBgVideoId.current = null
+    currentScVideoId.current = null
+    // Stop keepalive mechanisms
     if (keepaliveRef.current) {
       keepaliveRef.current.pause()
       keepaliveRef.current.src = ''
       keepaliveRef.current = null
-    }
-    if (audioCtxRef.current) {
-      audioCtxRef.current.close().catch(() => {})
-      audioCtxRef.current = null
     }
     if (wakeLockRef.current) {
       try { wakeLockRef.current.release() } catch {}
@@ -298,11 +298,7 @@ export function ImmersiveHome() {
                 }
               }, 1000)
             } else if (event.data === 2) {
-              // Only mark as paused if the page is visible (user action)
-              // If hidden, browser paused it — we'll resume on visibilitychange
-              if (document.visibilityState === 'visible') {
-                setMusicPlaying(false)
-              }
+              setMusicPlaying(false)
             } else if (event.data === 0) {
               // Video ended — loop
               try { event.target.seekTo(0, true); event.target.playVideo() } catch {}
@@ -325,10 +321,7 @@ export function ImmersiveHome() {
           onReady: () => { soundscapeReady.current = true },
           onStateChange: (event) => {
             if (event.data === 1) setSoundscapeIsPlaying(true)
-            else if (event.data === 2) {
-              // Only mark as paused if user action (page visible)
-              if (document.visibilityState === 'visible') setSoundscapeIsPlaying(false)
-            }
+            else if (event.data === 2) setSoundscapeIsPlaying(false)
             else if (event.data === 0) {
               // Video ended — loop
               try { event.target.seekTo(0, true); event.target.playVideo() } catch {}
@@ -351,7 +344,7 @@ export function ImmersiveHome() {
   // Load a video on the soundscape player — called from click handlers (user gesture context)
   const createSoundscapePlayer = useCallback((youtubeId: string) => {
     if (soundscapePlayerRef.current && soundscapeReady.current) {
-      // Player pre-created — loadVideoById plays immediately (in gesture context)
+      currentScVideoId.current = youtubeId
       soundscapePlayerRef.current.loadVideoById(youtubeId)
       soundscapePlayerRef.current.setVolume(100)
       setSoundscapeIsPlaying(true)
@@ -370,7 +363,7 @@ export function ImmersiveHome() {
   // Load a video on the bg music player — called from click handlers (user gesture context)
   const createBgMusicPlayer = useCallback((youtubeId: string) => {
     if (bgPlayerRef.current && bgPlayerReadyRef.current) {
-      // Player pre-created — loadVideoById plays immediately (in gesture context)
+      currentBgVideoId.current = youtubeId
       bgPlayerRef.current.loadVideoById(youtubeId)
       bgPlayerRef.current.setVolume(80)
     }
@@ -442,29 +435,42 @@ export function ImmersiveHome() {
 
   // Resume audio when user returns to the app (visibilitychange)
   useEffect(() => {
-    const resumeAll = () => {
-      // Resume AudioContext if suspended
-      if (audioCtxRef.current?.state === 'suspended') {
-        audioCtxRef.current.resume().catch(() => {})
-      }
+    let reloadAttempted = false
 
-      // Resume background music if it was active
-      if (backgroundMusic && bgPlayerRef.current && bgPlayerReadyRef.current) {
+    const tryResume = () => {
+      // Resume background music
+      if (currentBgVideoId.current && bgPlayerRef.current && bgPlayerReadyRef.current) {
         try {
           const state = bgPlayerRef.current.getPlayerState()
-          if (state !== 1) bgPlayerRef.current.playVideo()
+          if (state !== 1) {
+            if (!reloadAttempted) {
+              // First try: just playVideo
+              bgPlayerRef.current.playVideo()
+            } else {
+              // Retry: reload the video entirely (more reliable after suspension)
+              bgPlayerRef.current.loadVideoById(currentBgVideoId.current)
+              bgPlayerRef.current.setVolume(80)
+            }
+          }
         } catch {}
       }
 
-      // Resume soundscape if it was active
-      if (activeSoundscape && soundscapePlayerRef.current && soundscapeReady.current) {
+      // Resume soundscape
+      if (currentScVideoId.current && soundscapePlayerRef.current && soundscapeReady.current) {
         try {
           const state = soundscapePlayerRef.current.getPlayerState()
-          if (state !== 1) soundscapePlayerRef.current.playVideo()
+          if (state !== 1) {
+            if (!reloadAttempted) {
+              soundscapePlayerRef.current.playVideo()
+            } else {
+              soundscapePlayerRef.current.loadVideoById(currentScVideoId.current)
+              soundscapePlayerRef.current.setVolume(100)
+            }
+          }
         } catch {}
       }
 
-      // Resume guide audio if it was active
+      // Resume guide audio
       if (guideLabel && guideAudioRef.current?.paused) {
         guideAudioRef.current.play().catch(() => {})
       }
@@ -472,23 +478,29 @@ export function ImmersiveHome() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState !== 'visible') return
+      if (!homeAudioActiveRef.current) return
 
       // Re-acquire wake lock (released when screen locks)
-      if ('wakeLock' in navigator && homeAudioActiveRef.current && !wakeLockRef.current) {
+      if ('wakeLock' in navigator && !wakeLockRef.current) {
         (navigator as any).wakeLock.request('screen').then((lock: any) => {
           wakeLockRef.current = lock
         }).catch(() => {})
       }
 
-      // Resume immediately + retry (YT player may need time to wake up)
-      resumeAll()
-      setTimeout(resumeAll, 500)
-      setTimeout(resumeAll, 1500)
+      // First attempt: playVideo
+      reloadAttempted = false
+      tryResume()
+
+      // Second attempt after 800ms: reload video if still not playing
+      setTimeout(() => {
+        reloadAttempted = true
+        tryResume()
+      }, 800)
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [backgroundMusic, activeSoundscape, guideLabel])
+  }, [guideLabel])
 
   // When daily guide starts a session, stop all home audio
   useEffect(() => {
@@ -497,7 +509,7 @@ export function ImmersiveHome() {
     }
   }, [audioContext?.isSessionActive, stopAllHomeAudio])
 
-  // Notify audio context when home audio starts/stops + multi-layer keepalive for background playback
+  // Notify audio context when home audio starts/stops + keepalive for background playback
   const setHomeAudioActive = useCallback((active: boolean) => {
     homeAudioActiveRef.current = active
     if (audioContext && active) {
@@ -507,33 +519,15 @@ export function ImmersiveHome() {
     }
 
     if (active) {
-      // 1. AudioContext keepalive — more persistent on mobile than <audio>
-      if (!audioCtxRef.current) {
-        try {
-          const AC = window.AudioContext || (window as any).webkitAudioContext
-          const ctx = new AC()
-          const oscillator = ctx.createOscillator()
-          const gain = ctx.createGain()
-          gain.gain.value = 0.001 // nearly silent
-          oscillator.connect(gain)
-          gain.connect(ctx.destination)
-          oscillator.start()
-          audioCtxRef.current = ctx
-        } catch {}
-      }
-
-      // 2. Screen Wake Lock — prevents device auto-sleep while audio plays
+      // 1. Screen Wake Lock — prevents device auto-sleep while audio plays
       if ('wakeLock' in navigator && !wakeLockRef.current) {
         (navigator as any).wakeLock.request('screen').then((lock: any) => {
           wakeLockRef.current = lock
-          // Re-acquire if released (e.g. tab switch)
-          lock.addEventListener('release', () => {
-            wakeLockRef.current = null
-          })
+          lock.addEventListener('release', () => { wakeLockRef.current = null })
         }).catch(() => {})
       }
 
-      // 3. Web Locks API — prevents browser from freezing the page
+      // 2. Web Locks API — prevents browser from freezing the page
       if ('locks' in navigator) {
         (navigator as any).locks.request('voxu-audio-playback', () =>
           new Promise<void>((resolve) => {
@@ -547,7 +541,7 @@ export function ImmersiveHome() {
         ).catch(() => {})
       }
 
-      // 4. Silent <audio> keepalive as fallback (started in user gesture context)
+      // 3. Silent <audio> keepalive (started in user gesture context)
       if (!keepaliveRef.current) {
         try {
           const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==')
@@ -558,15 +552,11 @@ export function ImmersiveHome() {
         } catch {}
       }
     } else {
-      // Stop all keepalive mechanisms
+      // Stop keepalive mechanisms
       if (keepaliveRef.current) {
         keepaliveRef.current.pause()
         keepaliveRef.current.src = ''
         keepaliveRef.current = null
-      }
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {})
-        audioCtxRef.current = null
       }
       if (wakeLockRef.current) {
         try { wakeLockRef.current.release() } catch {}
@@ -862,6 +852,7 @@ export function ImmersiveHome() {
       clearInterval(bgProgressIntervalRef.current)
       bgProgressIntervalRef.current = null
     }
+    currentBgVideoId.current = null
     setBackgroundMusic(null)
     setMusicPlaying(false)
     setMusicDuration(0)
