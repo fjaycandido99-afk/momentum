@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Play, Pause, X, ChevronDown } from 'lucide-react'
+import type { YTPlayer } from '@/lib/youtube-types'
 
 interface EndelPlayerProps {
   mode: 'focus' | 'relax' | 'sleep' | 'energy'
@@ -56,24 +57,117 @@ export const ENDEL_MODES = {
 }
 
 export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
   const [pulseScale, setPulseScale] = useState(1)
   const [breathPhase, setBreathPhase] = useState(0)
+  const [playerReady, setPlayerReady] = useState(false)
   const animationRef = useRef<number>()
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const playerRef = useRef<YTPlayer | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const isMountedRef = useRef(true)
 
   const config = ENDEL_MODES[mode]
 
-  // Control playback via postMessage when toggling play/pause
+  // Initialize YouTube player
   useEffect(() => {
-    const iframe = iframeRef.current
-    if (!iframe?.contentWindow) return
-    const cmd = isPlaying ? 'playVideo' : 'pauseVideo'
-    iframe.contentWindow.postMessage(
-      JSON.stringify({ event: 'command', func: cmd, args: [] }),
-      '*'
-    )
-  }, [isPlaying])
+    isMountedRef.current = true
+
+    const initPlayer = () => {
+      if (!containerRef.current || !window.YT?.Player) {
+        setTimeout(initPlayer, 100)
+        return
+      }
+
+      const playerId = 'endel-player-' + Date.now()
+      const playerDiv = document.createElement('div')
+      playerDiv.id = playerId
+      containerRef.current.appendChild(playerDiv)
+
+      playerRef.current = new window.YT.Player(playerId, {
+        videoId: config.sounds[0]?.youtubeId,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          loop: 1,
+          playlist: config.sounds[0]?.youtubeId,
+          playsinline: 1,
+          modestbranding: 1,
+        },
+        events: {
+          onReady: (event) => {
+            if (!isMountedRef.current) {
+              event.target.destroy()
+              return
+            }
+            event.target.setVolume(60)
+            event.target.playVideo()
+            setPlayerReady(true)
+            setIsPlaying(true)
+          },
+          onStateChange: (event) => {
+            if (isMountedRef.current) {
+              setIsPlaying(event.data === 1)
+            }
+          },
+          onError: (event) => {
+            console.error('Endel player error:', event.data)
+          },
+        },
+      })
+    }
+
+    // Load YouTube API if needed
+    if (!window.YT) {
+      const tag = document.createElement('script')
+      tag.src = 'https://www.youtube.com/iframe_api'
+      document.head.appendChild(tag)
+      window.onYouTubeIframeAPIReady = initPlayer
+    } else {
+      initPlayer()
+    }
+
+    // Cleanup on unmount - CRITICAL for stopping audio
+    return () => {
+      isMountedRef.current = false
+      if (playerRef.current) {
+        try {
+          playerRef.current.stopVideo()
+          playerRef.current.destroy()
+        } catch (e) {
+          // Player might already be destroyed
+        }
+        playerRef.current = null
+      }
+    }
+  }, [config.sounds])
+
+  // Toggle play/pause
+  const togglePlay = useCallback(() => {
+    if (!playerRef.current || !playerReady) return
+    try {
+      if (isPlaying) {
+        playerRef.current.pauseVideo()
+      } else {
+        playerRef.current.playVideo()
+      }
+    } catch (e) {
+      console.error('Toggle play error:', e)
+    }
+  }, [isPlaying, playerReady])
+
+  // Handle close - stop audio first
+  const handleClose = useCallback(() => {
+    if (playerRef.current) {
+      try {
+        playerRef.current.stopVideo()
+        playerRef.current.destroy()
+      } catch (e) {}
+      playerRef.current = null
+    }
+    onClose()
+  }, [onClose])
 
   // Organic breathing animation for the orb
   useEffect(() => {
@@ -108,8 +202,6 @@ export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
     }
   }, [isPlaying])
 
-  const togglePlay = () => setIsPlaying(!isPlaying)
-
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col"
@@ -118,22 +210,16 @@ export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
         backgroundImage: `linear-gradient(180deg, ${config.colors[0]} 0%, ${config.colors[1]} 50%, ${config.colors[2]} 100%)`,
       }}
     >
-      {/* Hidden YouTube player for audio - always mounted for mobile autoplay */}
-      {config.sounds[0] && (
-        <div className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden">
-          <iframe
-            ref={iframeRef}
-            src={`https://www.youtube.com/embed/${config.sounds[0].youtubeId}?autoplay=1&loop=1&playlist=${config.sounds[0].youtubeId}&enablejsapi=1`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            className="w-[1px] h-[1px]"
-          />
-        </div>
-      )}
+      {/* Hidden YouTube player container */}
+      <div
+        ref={containerRef}
+        className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden pointer-events-none"
+      />
 
       {/* Header */}
       <div className="flex items-center justify-between p-6 pt-12 animate-fade-in-down">
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
         >
           <ChevronDown className="w-6 h-6 text-white/95" />
@@ -145,7 +231,7 @@ export function EndelPlayer({ mode, onClose }: EndelPlayerProps) {
         </div>
 
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
         >
           <X className="w-6 h-6 text-white/95" />

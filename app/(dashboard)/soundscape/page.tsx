@@ -135,7 +135,15 @@ export default function SoundscapePage() {
   }, [])
 
   const startMode = (mode: Mode) => {
+    // Close any playing sound first to prevent overlap
+    setPlayingSound(null)
     setActiveMode(mode)
+  }
+
+  const startSound = (sound: typeof AMBIENT_SOUNDS[0]) => {
+    // Close any active mode first to prevent overlap
+    setActiveMode(null)
+    setPlayingSound(sound)
   }
 
   const closePlayer = () => {
@@ -220,7 +228,7 @@ export default function SoundscapePage() {
             {AMBIENT_SOUNDS.map((sound, index) => (
               <button
                 key={sound.id}
-                onClick={() => setPlayingSound(sound)}
+                onClick={() => startSound(sound)}
                 className={`relative p-5 card-gradient-border group transition-all hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(255,255,255,0.15)] active:scale-[0.98] animate-fade-in opacity-0 stagger-${index + 1} hover-lift`}
               >
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -14,6 +14,9 @@ import { ModeSelector } from './ModeSelector'
 import { BottomPlayerBar } from './BottomPlayerBar'
 import { DailySpark } from './DailySpark'
 import { useAudioOptional } from '@/contexts/AudioContext'
+import { useSubscription } from '@/contexts/SubscriptionContext'
+import { FREEMIUM_LIMITS } from '@/lib/subscription-constants'
+import { SoftLockBadge, PreviewPaywall, PreviewTimer, usePreview, AICoachNudge, useCoachNudge } from '@/components/premium/SoftLock'
 
 const WordAnimationPlayer = dynamic(
   () => import('@/components/player/WordAnimationPlayer').then(mod => mod.WordAnimationPlayer),
@@ -129,6 +132,39 @@ export function ImmersiveHome() {
   const [isPlaying, setIsPlaying] = useState(false)
   const audioContext = useAudioOptional()
 
+  // Subscription context for freemium gating
+  const { isPremium, isContentFree, dailyFreeUnlockUsed, useDailyFreeUnlock, openUpgradeModal } = useSubscription()
+
+  // Preview paywall state
+  const [showPaywall, setShowPaywall] = useState(false)
+  const [paywallContentName, setPaywallContentName] = useState('')
+  const [previewUnlockCallback, setPreviewUnlockCallback] = useState<(() => void) | null>(null)
+
+  // Preview timer hook
+  const handlePreviewEnd = useCallback(() => {
+    // Pause any playing audio
+    if (bgPlayerRef.current && bgPlayerReadyRef.current) {
+      try { bgPlayerRef.current.pauseVideo() } catch {}
+    }
+    if (soundscapePlayerRef.current && soundscapeReady.current) {
+      try { soundscapePlayerRef.current.pauseVideo() } catch {}
+    }
+    if (guideAudioRef.current) {
+      guideAudioRef.current.pause()
+    }
+    setShowPaywall(true)
+  }, [])
+
+  const { isPreviewActive, secondsLeft, startPreview, stopPreview } = usePreview({
+    onPreviewEnd: handlePreviewEnd,
+    previewDuration: FREEMIUM_LIMITS.previewSeconds,
+  })
+
+  // AI Coach nudge for free users
+  const { showNudge, dismissNudge } = useCoachNudge(
+    isPremium ? Infinity : FREEMIUM_LIMITS.coachNudgeDelayMs
+  )
+
   // Overlays
   const [showMorningFlow, setShowMorningFlow] = useState(false)
   const [showJournalSave, setShowJournalSave] = useState(false)
@@ -148,6 +184,15 @@ export function ImmersiveHome() {
     color: string
     youtubeId: string
     backgroundImage?: string
+  } | null>(null)
+
+  // Playlist state for skip functionality
+  const [currentPlaylist, setCurrentPlaylist] = useState<{
+    videos: VideoItem[]
+    index: number
+    type: 'motivation' | 'music'
+    genreId?: string
+    genreWord?: string
   } | null>(null)
 
   // Track which card is actively playing (by youtubeId)
@@ -185,6 +230,8 @@ export function ImmersiveHome() {
   // Track current video IDs for reload-on-return
   const currentBgVideoId = useRef<string | null>(null)
   const currentScVideoId = useRef<string | null>(null)
+  // Ref to store auto-skip callback (accessible from YT player event handler)
+  const autoSkipNextRef = useRef<(() => void) | null>(null)
 
   // Stop all home audio sources (stop videos, don't destroy pre-created players)
   const stopAllHomeAudio = useCallback(() => {
@@ -300,8 +347,12 @@ export function ImmersiveHome() {
             } else if (event.data === 2) {
               setMusicPlaying(false)
             } else if (event.data === 0) {
-              // Video ended — loop
-              try { event.target.seekTo(0, true); event.target.playVideo() } catch {}
+              // Video ended — auto-skip to next if available, otherwise loop
+              if (autoSkipNextRef.current) {
+                autoSkipNextRef.current()
+              } else {
+                try { event.target.seekTo(0, true); event.target.playVideo() } catch {}
+              }
             }
           },
         },
@@ -779,6 +830,13 @@ export function ImmersiveHome() {
     // Signal home audio active
     setHomeAudioActive(true)
 
+    // Set playlist for skip functionality
+    setCurrentPlaylist({
+      videos: motivationVideos.slice(0, 8),
+      index,
+      type: 'motivation',
+    })
+
     // Create player synchronously in tap gesture context (mobile autoplay)
     setBackgroundMusic({ youtubeId: video.youtubeId, label: topicName })
     setMusicPlaying(true)
@@ -813,6 +871,16 @@ export function ImmersiveHome() {
     // Signal home audio active
     setHomeAudioActive(true)
 
+    // Set playlist for skip functionality
+    const genreVids = (genreVideos[genreId] || []).slice(0, 8)
+    setCurrentPlaylist({
+      videos: genreVids,
+      index,
+      type: 'music',
+      genreId,
+      genreWord,
+    })
+
     // Create player synchronously in tap gesture context (mobile autoplay)
     setBackgroundMusic({ youtubeId: video.youtubeId, label: genreWord })
     setMusicPlaying(true)
@@ -833,6 +901,7 @@ export function ImmersiveHome() {
   // Close fullscreen player — audio continues via backgroundMusic YT player
   const handleClosePlayer = () => {
     setPlayingSound(null)
+    // Keep currentPlaylist so user can reopen the player from bottom bar
   }
 
   // Seek background music to a specific time
@@ -842,6 +911,101 @@ export function ImmersiveHome() {
       setMusicCurrentTime(seconds)
     }
   }, [])
+
+  // Skip to next video in playlist
+  const handleSkipNext = useCallback(() => {
+    if (!currentPlaylist || currentPlaylist.index >= currentPlaylist.videos.length - 1) return
+
+    const nextIndex = currentPlaylist.index + 1
+    const nextVideo = currentPlaylist.videos[nextIndex]
+    if (!nextVideo) return
+
+    setActiveCardId(nextVideo.id)
+    setCurrentPlaylist(prev => prev ? { ...prev, index: nextIndex } : null)
+
+    // Reset time tracking
+    setMusicCurrentTime(0)
+    setMusicDuration(0)
+
+    // Load next video
+    setBackgroundMusic({
+      youtubeId: nextVideo.youtubeId,
+      label: currentPlaylist.type === 'motivation' ? topicName : (currentPlaylist.genreWord || ''),
+    })
+    createBgMusicPlayer(nextVideo.youtubeId)
+
+    // Update background image
+    if (currentPlaylist.type === 'motivation') {
+      const bgs = getTodaysBackgrounds()
+      setPlayingSound(prev => prev ? {
+        ...prev,
+        youtubeId: nextVideo.youtubeId,
+        backgroundImage: bgs[nextIndex % bgs.length],
+      } : null)
+    } else {
+      const gBgs = genreBackgrounds[currentPlaylist.genreId || ''] || []
+      const bg = gBgs.length > 0
+        ? gBgs[nextIndex % gBgs.length]
+        : backgrounds[(nextIndex + 15) % backgrounds.length]
+      setPlayingSound(prev => prev ? {
+        ...prev,
+        youtubeId: nextVideo.youtubeId,
+        backgroundImage: bg,
+      } : null)
+    }
+  }, [currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer])
+
+  // Skip to previous video in playlist
+  const handleSkipPrevious = useCallback(() => {
+    if (!currentPlaylist || currentPlaylist.index <= 0) return
+
+    const prevIndex = currentPlaylist.index - 1
+    const prevVideo = currentPlaylist.videos[prevIndex]
+    if (!prevVideo) return
+
+    setActiveCardId(prevVideo.id)
+    setCurrentPlaylist(prev => prev ? { ...prev, index: prevIndex } : null)
+
+    // Reset time tracking
+    setMusicCurrentTime(0)
+    setMusicDuration(0)
+
+    // Load previous video
+    setBackgroundMusic({
+      youtubeId: prevVideo.youtubeId,
+      label: currentPlaylist.type === 'motivation' ? topicName : (currentPlaylist.genreWord || ''),
+    })
+    createBgMusicPlayer(prevVideo.youtubeId)
+
+    // Update background image
+    if (currentPlaylist.type === 'motivation') {
+      const bgs = getTodaysBackgrounds()
+      setPlayingSound(prev => prev ? {
+        ...prev,
+        youtubeId: prevVideo.youtubeId,
+        backgroundImage: bgs[prevIndex % bgs.length],
+      } : null)
+    } else {
+      const gBgs = genreBackgrounds[currentPlaylist.genreId || ''] || []
+      const bg = gBgs.length > 0
+        ? gBgs[prevIndex % gBgs.length]
+        : backgrounds[(prevIndex + 15) % backgrounds.length]
+      setPlayingSound(prev => prev ? {
+        ...prev,
+        youtubeId: prevVideo.youtubeId,
+        backgroundImage: bg,
+      } : null)
+    }
+  }, [currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer])
+
+  // Keep autoSkipNextRef in sync with handleSkipNext for YT player event handler
+  useEffect(() => {
+    if (currentPlaylist && currentPlaylist.index < currentPlaylist.videos.length - 1) {
+      autoSkipNextRef.current = handleSkipNext
+    } else {
+      autoSkipNextRef.current = null
+    }
+  }, [currentPlaylist, handleSkipNext])
 
   // Stop background music entirely (keep player alive for reuse)
   const stopBackgroundMusic = () => {
@@ -858,6 +1022,7 @@ export function ImmersiveHome() {
     setMusicDuration(0)
     setMusicCurrentTime(0)
     setActiveCardId(null)
+    setCurrentPlaylist(null)
     setHomeAudioActive(false)
   }
 
@@ -879,6 +1044,10 @@ export function ImmersiveHome() {
           script=""
           color={playingSound.color}
           youtubeId={playingSound.youtubeId}
+          onSkipNext={currentPlaylist && currentPlaylist.index < currentPlaylist.videos.length - 1 ? handleSkipNext : undefined}
+          onSkipPrevious={currentPlaylist && currentPlaylist.index > 0 ? handleSkipPrevious : undefined}
+          hasNext={!!currentPlaylist && currentPlaylist.index < currentPlaylist.videos.length - 1}
+          hasPrevious={!!currentPlaylist && currentPlaylist.index > 0}
           backgroundImage={playingSound.backgroundImage}
           showRain={false}
           onClose={handleClosePlayer}
@@ -1013,19 +1182,33 @@ export function ImmersiveHome() {
       <div className="mb-8 animate-fade-in section-fade-bg" style={{ animationDelay: '0.05s' }}>
         <h2 className="text-lg font-semibold text-white px-6 mb-4">Soundscapes</h2>
         <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
-          {SOUNDSCAPE_ITEMS.map((item) => {
+          {SOUNDSCAPE_ITEMS.map((item, index) => {
             const Icon = item.icon
             const isActive = activeSoundscape?.soundId === item.id && soundscapeIsPlaying
+            const isLocked = !isContentFree('soundscape', item.id)
+
             return (
               <button
                 key={item.id}
-                aria-label={`${item.label} soundscape${isActive ? ' (playing)' : ''}`}
+                aria-label={`${item.label} soundscape${isActive ? ' (playing)' : ''}${isLocked ? ' (premium)' : ''}`}
                 onClick={() => {
                   // If this soundscape is already active, just reopen the player
                   if (activeSoundscape?.soundId === item.id) {
                     setShowSoundscapePlayer(true)
                     return
                   }
+
+                  // Handle locked content - start preview
+                  if (isLocked) {
+                    stopPreview() // Stop any existing preview
+                    setPaywallContentName(item.label)
+                    setPreviewUnlockCallback(() => () => {
+                      // Callback when daily unlock is used
+                      createSoundscapePlayer(item.youtubeId)
+                      setShowSoundscapePlayer(true)
+                    })
+                  }
+
                   // Stop guide audio if playing
                   if (guideAudioRef.current) {
                     guideAudioRef.current.pause()
@@ -1047,14 +1230,22 @@ export function ImmersiveHome() {
                   // Create player synchronously in tap gesture context (mobile autoplay)
                   createSoundscapePlayer(item.youtubeId)
                   setShowSoundscapePlayer(true)
+
+                  // Start preview timer for locked content
+                  if (isLocked) {
+                    startPreview()
+                  }
                 }}
                 className="flex flex-col items-center gap-2 shrink-0 press-scale"
               >
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isActive ? 'card-now-playing' : ''}`}>
+                <div className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isActive ? 'card-now-playing' : ''}`}>
                   {isActive ? (
                     <div className="eq-bars"><span /><span /><span /></div>
                   ) : (
                     <Icon className="w-5 h-5 text-white/95" strokeWidth={1.5} />
+                  )}
+                  {isLocked && !isActive && (
+                    <SoftLockBadge isLocked={true} size="sm" className="top-0 right-0" />
                   )}
                 </div>
                 <span className={`text-[11px] ${isActive ? 'text-white' : 'text-white/95'}`}>{item.label}</span>
@@ -1072,15 +1263,30 @@ export function ImmersiveHome() {
             const Icon = guide.icon
             const isLoading = loadingGuide === guide.id
             const isGuideActive = guideLabel === guide.name && guideIsPlaying
+            const isLocked = !isContentFree('voiceGuide', guide.id)
+
             return (
               <button
                 key={guide.id}
-                aria-label={`${guide.name} guide${isGuideActive ? ' (playing)' : isLoading ? ' (loading)' : ''}`}
-                onClick={() => handlePlayGuide(guide.id, guide.name)}
+                aria-label={`${guide.name} guide${isGuideActive ? ' (playing)' : isLoading ? ' (loading)' : ''}${isLocked ? ' (premium)' : ''}`}
+                onClick={() => {
+                  if (isLocked) {
+                    stopPreview()
+                    setPaywallContentName(guide.name)
+                    setPreviewUnlockCallback(() => () => {
+                      handlePlayGuide(guide.id, guide.name)
+                    })
+                    // Start the guide with preview
+                    handlePlayGuide(guide.id, guide.name)
+                    startPreview()
+                  } else {
+                    handlePlayGuide(guide.id, guide.name)
+                  }
+                }}
                 disabled={isLoading}
                 className="flex flex-col items-center gap-2 press-scale"
               >
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isLoading ? 'bg-white/8' : ''} ${isGuideActive ? 'card-now-playing' : ''}`}>
+                <div className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isLoading ? 'bg-white/8' : ''} ${isGuideActive ? 'card-now-playing' : ''}`}>
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
                   ) : isGuideActive ? (
@@ -1090,6 +1296,9 @@ export function ImmersiveHome() {
                       className="w-5 h-5 text-white/95 transition-colors duration-200"
                       strokeWidth={1.5}
                     />
+                  )}
+                  {isLocked && !isGuideActive && !isLoading && (
+                    <SoftLockBadge isLocked={true} size="sm" className="top-0 right-0" />
                   )}
                 </div>
                 <span className={`text-[11px] ${isGuideActive ? 'text-white' : 'text-white/95'}`}>{guide.name}</span>
@@ -1117,36 +1326,56 @@ export function ImmersiveHome() {
               </div>
             ))
           ) : (
-            motivationVideos.slice(0, 8).map((video, index) => (
-              <button
-                key={video.id}
-                aria-label={`Play ${video.title}`}
-                onClick={() => handlePlayMotivation(video, index)}
-                className="shrink-0 w-40 text-left group press-scale"
-              >
-                <div className={`w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center ${activeCardId === video.id ? 'card-now-playing' : ''}`}>
-                  <img
-                    src={backgrounds[index % backgrounds.length]}
-                    alt={video.title}
-                    className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
-                  <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
-                    {activeCardId === video.id ? (
-                      musicPlaying ? (
-                        <div className="eq-bars"><span /><span /><span /></div>
+            motivationVideos.slice(0, 8).map((video, index) => {
+              const isLocked = !isContentFree('motivation', index)
+              const isCardActive = activeCardId === video.id
+
+              return (
+                <button
+                  key={video.id}
+                  aria-label={`Play ${video.title}${isLocked ? ' (premium)' : ''}`}
+                  onClick={() => {
+                    if (isLocked) {
+                      stopPreview()
+                      setPaywallContentName(video.title)
+                      setPreviewUnlockCallback(() => () => {
+                        handlePlayMotivation(video, index)
+                      })
+                      handlePlayMotivation(video, index)
+                      startPreview()
+                    } else {
+                      handlePlayMotivation(video, index)
+                    }
+                  }}
+                  className="shrink-0 w-40 text-left group press-scale"
+                >
+                  <div className={`relative w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center ${isCardActive ? 'card-now-playing' : ''}`}>
+                    <img
+                      src={backgrounds[index % backgrounds.length]}
+                      alt={video.title}
+                      className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
+                    <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
+                      {isCardActive ? (
+                        musicPlaying ? (
+                          <div className="eq-bars"><span /><span /><span /></div>
+                        ) : (
+                          <Pause className="w-8 h-8 text-white drop-shadow-lg" fill="white" />
+                        )
                       ) : (
-                        <Pause className="w-8 h-8 text-white drop-shadow-lg" fill="white" />
-                      )
-                    ) : (
-                      <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                        <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                      )}
+                    </div>
+                    {isLocked && !isCardActive && (
+                      <SoftLockBadge isLocked={true} size="md" />
                     )}
                   </div>
-                </div>
-                <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
-                <p className="text-xs text-white/95 mt-0.5">{video.channel}</p>
-              </button>
-            ))
+                  <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+                  <p className="text-xs text-white/95 mt-0.5">{video.channel}</p>
+                </button>
+              )
+            })
           )}
         </div>
       </div>
@@ -1180,40 +1409,60 @@ export function ImmersiveHome() {
                   <p className="text-sm text-white/40">No tracks yet</p>
                 </div>
               ) : (
-                videos.slice(0, 8).map((video, index) => (
-                  <button
-                    key={video.id}
-                    aria-label={`Play ${video.title}`}
-                    onClick={() => handlePlayMusic(video, index, g.id, g.word)}
-                    className="shrink-0 w-40 text-left group press-scale"
-                  >
-                    <div className={`w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center ${activeCardId === video.id ? 'card-now-playing' : ''}`}>
-                      {(gBgs.length > 0 || backgrounds.length > 0) && (
-                        <img
-                          src={gBgs.length > 0
-                            ? gBgs[index % gBgs.length]
-                            : backgrounds[(index + 15 + gi * 5) % backgrounds.length]}
-                          alt={video.title}
-                          className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
-                      <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
-                        {activeCardId === video.id ? (
-                          musicPlaying ? (
-                            <div className="eq-bars"><span /><span /><span /></div>
+                videos.slice(0, 8).map((video, index) => {
+                  const isLocked = !isContentFree('music', index)
+                  const isCardActive = activeCardId === video.id
+
+                  return (
+                    <button
+                      key={video.id}
+                      aria-label={`Play ${video.title}${isLocked ? ' (premium)' : ''}`}
+                      onClick={() => {
+                        if (isLocked) {
+                          stopPreview()
+                          setPaywallContentName(video.title)
+                          setPreviewUnlockCallback(() => () => {
+                            handlePlayMusic(video, index, g.id, g.word)
+                          })
+                          handlePlayMusic(video, index, g.id, g.word)
+                          startPreview()
+                        } else {
+                          handlePlayMusic(video, index, g.id, g.word)
+                        }
+                      }}
+                      className="shrink-0 w-40 text-left group press-scale"
+                    >
+                      <div className={`relative w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center ${isCardActive ? 'card-now-playing' : ''}`}>
+                        {(gBgs.length > 0 || backgrounds.length > 0) && (
+                          <img
+                            src={gBgs.length > 0
+                              ? gBgs[index % gBgs.length]
+                              : backgrounds[(index + 15 + gi * 5) % backgrounds.length]}
+                            alt={video.title}
+                            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
+                        <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
+                          {isCardActive ? (
+                            musicPlaying ? (
+                              <div className="eq-bars"><span /><span /><span /></div>
+                            ) : (
+                              <Pause className="w-8 h-8 text-white drop-shadow-lg" fill="white" />
+                            )
                           ) : (
-                            <Pause className="w-8 h-8 text-white drop-shadow-lg" fill="white" />
-                          )
-                        ) : (
-                          <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                            <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                          )}
+                        </div>
+                        {isLocked && !isCardActive && (
+                          <SoftLockBadge isLocked={true} size="md" />
                         )}
                       </div>
-                    </div>
-                    <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
-                    <p className="text-xs text-white/95 mt-0.5">{video.channel}</p>
-                  </button>
-                ))
+                      <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+                      <p className="text-xs text-white/95 mt-0.5">{video.channel}</p>
+                    </button>
+                  )
+                })
               )}
             </div>
           </div>
@@ -1230,6 +1479,36 @@ export function ImmersiveHome() {
       >
         <Bot className="w-6 h-6 text-amber-400" />
       </Link>
+
+      {/* --- AI Coach Nudge (for free users after 5 min) --- */}
+      {!isPremium && (
+        <AICoachNudge isVisible={showNudge} onDismiss={dismissNudge} />
+      )}
+
+      {/* --- Preview Timer (shows during 30-sec preview of locked content) --- */}
+      {isPreviewActive && (
+        <PreviewTimer secondsLeft={secondsLeft} />
+      )}
+
+      {/* --- Preview Paywall Modal --- */}
+      <PreviewPaywall
+        isOpen={showPaywall}
+        onClose={() => {
+          setShowPaywall(false)
+          stopPreview()
+        }}
+        contentName={paywallContentName}
+        showDailyUnlock={!dailyFreeUnlockUsed}
+        onUseDailyUnlock={() => {
+          useDailyFreeUnlock()
+          stopPreview()
+          // Resume playback if callback was set
+          if (previewUnlockCallback) {
+            previewUnlockCallback()
+            setPreviewUnlockCallback(null)
+          }
+        }}
+      />
 
       {/* --- Bottom Player Bar --- */}
       <BottomPlayerBar
@@ -1256,7 +1535,29 @@ export function ImmersiveHome() {
           }
         }}
         onOpenPlayer={() => {
-          if (backgroundMusic) return
+          if (backgroundMusic && currentPlaylist) {
+            // Reopen fullscreen player for currently playing music/motivation video
+            const currentVideo = currentPlaylist.videos[currentPlaylist.index]
+            if (currentVideo) {
+              let bg: string | undefined
+              if (currentPlaylist.type === 'motivation') {
+                const bgs = getTodaysBackgrounds()
+                bg = bgs[currentPlaylist.index % bgs.length]
+              } else {
+                const gBgs = genreBackgrounds[currentPlaylist.genreId || ''] || []
+                bg = gBgs.length > 0
+                  ? gBgs[currentPlaylist.index % gBgs.length]
+                  : backgrounds[(currentPlaylist.index + 15) % backgrounds.length]
+              }
+              setPlayingSound({
+                word: backgroundMusic.label,
+                color: 'from-white/[0.06] to-white/[0.02]',
+                youtubeId: currentVideo.youtubeId,
+                backgroundImage: bg,
+              })
+            }
+            return
+          }
           if (guideLabel) return
           if (activeSoundscape) {
             setShowSoundscapePlayer(true)

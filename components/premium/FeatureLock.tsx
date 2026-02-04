@@ -48,9 +48,7 @@ export function FeatureLock({
         onClick={openUpgradeModal}
       >
         <div className="flex flex-col items-center gap-2 p-4">
-          <div className="p-3 rounded-full bg-amber-500/20 border border-amber-500/30">
-            <Lock className="w-5 h-5 text-amber-400" />
-          </div>
+          <Lock className="w-6 h-6 text-white" />
           <p className="text-sm text-white/95 font-medium text-center">
             {message}
           </p>
@@ -83,10 +81,10 @@ export function LockIcon({ onClick, size = 'sm' }: LockIconProps) {
   return (
     <button
       onClick={handleClick}
-      className="p-1 rounded bg-amber-500/20 hover:bg-amber-500/30 transition-colors"
+      className="hover:opacity-80 transition-opacity"
       title="Premium feature - Click to upgrade"
     >
-      <Lock className={`${sizeClasses[size]} text-amber-400`} />
+      <Lock className={`${sizeClasses[size]} text-white`} />
     </button>
   )
 }

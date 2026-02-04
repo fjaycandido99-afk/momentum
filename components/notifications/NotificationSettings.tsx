@@ -181,12 +181,35 @@ export function NotificationSettings() {
           await cancelAllReminders()
           setIsSubscribed(false)
         } else {
-          // Request permission and schedule default reminders
+          // Request permission and schedule reminders based on user preferences
           const granted = await initNotifications()
           if (granted) {
-            // Schedule default reminders (7am morning, 6pm evening)
-            await scheduleMorningReminder(7, 0)
-            await scheduleEveningReminder(18, 0)
+            // Fetch user preferences for timing
+            let morningHour = 7, morningMin = 0
+            let eveningHour = 18, eveningMin = 0
+
+            try {
+              const prefsRes = await fetch('/api/daily-guide/preferences')
+              if (prefsRes.ok) {
+                const prefsData = await prefsRes.json()
+                if (prefsData.wake_time) {
+                  const [h, m] = prefsData.wake_time.split(':').map(Number)
+                  const totalMin = h * 60 + (m || 0) + 15
+                  morningHour = Math.floor(totalMin / 60)
+                  morningMin = totalMin % 60
+                }
+                if (prefsData.work_end_time) {
+                  const [h, m] = prefsData.work_end_time.split(':').map(Number)
+                  eveningHour = h
+                  eveningMin = m || 0
+                }
+              }
+            } catch {
+              // Use defaults
+            }
+
+            await scheduleMorningReminder(morningHour, morningMin)
+            await scheduleEveningReminder(eveningHour, eveningMin)
             await scheduleWeeklyReviewReminder(10, 0)
             setIsSubscribed(true)
             setPermission('granted')
@@ -236,10 +259,44 @@ export function NotificationSettings() {
           // Schedule the notification
           switch (key) {
             case 'morning_reminder':
-              await scheduleMorningReminder(7, 0)
+              // Use user's wake time + 15 min, or default to 7am
+              try {
+                const prefsRes = await fetch('/api/daily-guide/preferences')
+                if (prefsRes.ok) {
+                  const prefsData = await prefsRes.json()
+                  if (prefsData.wake_time) {
+                    const [h, m] = prefsData.wake_time.split(':').map(Number)
+                    // Add 15 minutes to wake time
+                    const totalMin = h * 60 + (m || 0) + 15
+                    await scheduleMorningReminder(Math.floor(totalMin / 60), totalMin % 60)
+                  } else {
+                    await scheduleMorningReminder(7, 0)
+                  }
+                } else {
+                  await scheduleMorningReminder(7, 0)
+                }
+              } catch {
+                await scheduleMorningReminder(7, 0)
+              }
               break
             case 'evening_reminder':
-              await scheduleEveningReminder(18, 0)
+              // Use user's work end time, or default to 6pm
+              try {
+                const prefsRes = await fetch('/api/daily-guide/preferences')
+                if (prefsRes.ok) {
+                  const prefsData = await prefsRes.json()
+                  if (prefsData.work_end_time) {
+                    const [h, m] = prefsData.work_end_time.split(':').map(Number)
+                    await scheduleEveningReminder(h, m || 0)
+                  } else {
+                    await scheduleEveningReminder(18, 0)
+                  }
+                } else {
+                  await scheduleEveningReminder(18, 0)
+                }
+              } catch {
+                await scheduleEveningReminder(18, 0)
+              }
               break
             case 'streak_alerts':
               await scheduleStreakReminder(20, 0) // 8pm reminder
@@ -248,10 +305,24 @@ export function NotificationSettings() {
               await scheduleWeeklyReviewReminder(10, 0)
               break
             case 'checkpoint_alerts':
-              // Schedule checkpoint reminders at common times
-              await scheduleCheckpointReminder(1, 10, 0, 'Mid-morning check-in')
-              await scheduleCheckpointReminder(2, 14, 0, 'Afternoon check-in')
-              await scheduleCheckpointReminder(3, 16, 0, 'Late afternoon check-in')
+              // Fetch actual checkpoint times from daily guide
+              try {
+                const guideRes = await fetch('/api/daily-guide/generate?date=' + new Date().toISOString())
+                if (guideRes.ok) {
+                  const guideData = await guideRes.json()
+                  const checkpoints = guideData.checkpoints || []
+                  for (const cp of checkpoints) {
+                    const [hour, minute] = cp.time.split(':').map(Number)
+                    const cpNum = parseInt(cp.id.replace('checkpoint_', '')) as 1 | 2 | 3
+                    await scheduleCheckpointReminder(cpNum, hour, minute, cp.name)
+                  }
+                }
+              } catch (e) {
+                // Fallback to default times if guide fetch fails
+                await scheduleCheckpointReminder(1, 9, 0, 'Focus Target')
+                await scheduleCheckpointReminder(2, 12, 30, 'Midday Reset')
+                await scheduleCheckpointReminder(3, 17, 0, 'Downshift')
+              }
               break
           }
         } else {

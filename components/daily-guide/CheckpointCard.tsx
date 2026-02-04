@@ -267,50 +267,21 @@ export function CheckpointList({
     return null
   }
 
-  // Show locked state for free users
-  if (!isPremium) {
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-sm font-medium text-white/95 uppercase tracking-wider">
-            Checkpoints
-          </h2>
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-medium">
-            <Crown className="w-3 h-3" />
-            Premium
-          </div>
-        </div>
-        <div
-          onClick={() => subscription?.openUpgradeModal()}
-          className="relative rounded-2xl border border-dashed border-white/20 bg-white/[0.02] p-6 cursor-pointer hover:bg-white/[0.04] hover:border-amber-500/30 transition-all"
-        >
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="p-3 rounded-full bg-amber-500/20">
-              <Lock className="w-5 h-5 text-amber-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium mb-1">
-                {checkpoints.length} Daily Checkpoints
-              </p>
-              <p className="text-sm text-white/95">
-                Stay on track with timed check-ins throughout your day
-              </p>
-            </div>
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-medium hover:bg-amber-500/30 transition-colors mt-2">
-              <Crown className="w-4 h-4" />
-              Unlock with Premium
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-3">
-      <h2 className="text-sm font-medium text-white/95 uppercase tracking-wider px-1">
-        Checkpoints
-      </h2>
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-sm font-medium text-white/95 uppercase tracking-wider">
+          Checkpoints
+        </h2>
+        {!isPremium && (
+          <button
+            onClick={() => subscription?.openUpgradeModal()}
+            className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+          >
+            <Lock className="w-3.5 h-3.5 text-white" />
+          </button>
+        )}
+      </div>
       <div className="space-y-3">
         {checkpoints.map((checkpoint, index) => (
           <div key={checkpoint.id} className={`animate-fade-in opacity-0 stagger-${Math.min(index + 1, 10)}`}>

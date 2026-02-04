@@ -87,6 +87,7 @@ model UserPreferences {
   work_start_time       String? // "09:00" format
   work_end_time         String? // "17:00" format
   guide_tone            String  @default("calm") // "calm" | "direct" | "neutral"
+  locked_tone           String? // Tone locked during onboarding for free users (can't change later)
   daily_guide_enabled   Boolean @default(false)
   guide_onboarding_done Boolean @default(false)
   theme_onboarding_done Boolean @default(false)

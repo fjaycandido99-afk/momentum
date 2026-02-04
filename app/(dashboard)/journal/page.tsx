@@ -2,10 +2,11 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target, Sparkles, BookOpen, Calendar, X } from 'lucide-react'
+import { PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target, Sparkles, BookOpen, Calendar, X, Crown, Lock } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
 import { GoalTracker } from '@/components/daily-guide/GoalTracker'
+import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface JournalDay {
   date: string
@@ -24,6 +25,9 @@ export default function JournalPage() {
 
 function JournalContent() {
   const searchParams = useSearchParams()
+  const { checkAccess, openUpgradeModal } = useSubscription()
+  const hasJournalHistory = checkAccess('journal_history')
+
   const [sparkPrompt, setSparkPrompt] = useState<string | null>(null)
   const [win, setWin] = useState('')
   const [gratitude, setGratitude] = useState('')
@@ -81,6 +85,11 @@ function JournalContent() {
   // Load past entries and streak
   useEffect(() => {
     const loadPastEntries = async () => {
+      // Skip loading for free users who can't see history
+      if (!hasJournalHistory) {
+        setLoadingPast(false)
+        return
+      }
       setLoadingPast(true)
       try {
         const end = new Date()
@@ -113,7 +122,7 @@ function JournalContent() {
     }
     loadPastEntries()
     loadStreak()
-  }, [])
+  }, [hasJournalHistory])
 
   const handleSave = async () => {
     if (!win.trim() && !gratitude.trim() && !intention.trim()) return
@@ -333,12 +342,42 @@ function JournalContent() {
 
       {/* Recent Entries */}
       <div className="px-6 mt-8">
-        <div className="flex items-center gap-2 mb-4">
-          <Calendar className="w-4 h-4 text-white/95" />
-          <h2 className="text-sm font-medium text-white/95 uppercase tracking-wider">Recent Entries</h2>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-white/95" />
+            <h2 className="text-sm font-medium text-white/95 uppercase tracking-wider">Recent Entries</h2>
+          </div>
+          {!hasJournalHistory && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">PRO</span>
+          )}
         </div>
 
-        {loadingPast ? (
+        {!hasJournalHistory ? (
+          // Locked state for free users
+          <button
+            onClick={openUpgradeModal}
+            className="w-full p-6 card-gradient-border hover:bg-white/5 transition-all group"
+          >
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <Calendar className="w-6 h-6 text-amber-400/70" />
+                </div>
+                <div className="absolute -top-1 -right-1 p-1 rounded-full bg-amber-500/30">
+                  <Lock className="w-3 h-3 text-amber-400" />
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-white/95 font-medium mb-1">Unlock Journal History</p>
+                <p className="text-xs text-white/60 mb-3">Look back on your growth journey</p>
+                <div className="flex items-center justify-center gap-1.5 text-amber-400 text-xs font-medium group-hover:scale-105 transition-transform">
+                  <Crown className="w-3.5 h-3.5" />
+                  Upgrade to Pro
+                </div>
+              </div>
+            </div>
+          </button>
+        ) : loadingPast ? (
           <div className="flex items-center justify-center py-6">
             <Loader2 className="w-4 h-4 text-white/95 animate-spin" />
           </div>

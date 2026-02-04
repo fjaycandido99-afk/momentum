@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Play, Pause, ChevronDown, Focus, Sparkles, Moon, Zap, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Wind, Droplets, Coffee, Music } from 'lucide-react'
+import { Play, Pause, ChevronDown, Focus, Sparkles, Moon, Zap, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Wind, Droplets, Coffee, Music, Lock } from 'lucide-react'
 import { DailyBackground } from './DailyBackground'
+import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface SoundscapePlayerProps {
   soundId: string
@@ -42,6 +43,7 @@ export const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
 
 export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlaying, onTogglePlay, onClose, onSwitchSound }: SoundscapePlayerProps) {
   const selectorRef = useRef<HTMLDivElement>(null)
+  const { isContentFree } = useSubscription()
 
   // Scroll active item into view when sound changes
   useEffect(() => {
@@ -80,6 +82,7 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
         {SOUNDSCAPE_ITEMS.map((item) => {
           const Icon = item.icon
           const isActive = item.id === soundId
+          const isLocked = !isContentFree('soundscape', item.id)
           return (
             <button
               key={item.id}
@@ -91,12 +94,15 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
               }}
               className="flex flex-col items-center gap-1.5 shrink-0"
             >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
+              <div className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
                 isActive
                   ? 'bg-white/15 border-2 border-white/40'
                   : 'bg-white/5 border border-white/10'
               }`}>
                 <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-white' : 'text-white/95'}`} strokeWidth={1.5} />
+                {isLocked && !isActive && (
+                  <Lock className="absolute -top-0.5 -right-0.5 w-3 h-3 text-white" />
+                )}
               </div>
               <span className={`text-[10px] transition-colors ${isActive ? 'text-white' : 'text-white/95'}`}>{item.label}</span>
             </button>

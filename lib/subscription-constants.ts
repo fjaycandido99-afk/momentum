@@ -14,6 +14,60 @@ export type PremiumFeature =
   | 'goal_tracker'
   | 'weekly_ai_summary'
 
+// Freemium content limits
+export const FREEMIUM_LIMITS = {
+  soundscapes: {
+    freeCount: 4, // First 4 by index: focus, relax, sleep, energy
+    freeIds: ['focus', 'relax', 'sleep', 'energy'],
+  },
+  voiceGuides: {
+    freeIds: ['breathing'], // Only breathing is free
+  },
+  motivation: {
+    freeCount: 2, // First 2 per topic
+  },
+  musicPerGenre: {
+    freeCount: 2, // First 2 per genre
+  },
+  voiceTones: {
+    freeCount: 1, // User picks one during onboarding, locked afterward
+  },
+  previewSeconds: 30,
+  coachNudgeDelayMs: 5 * 60 * 1000, // 5 minutes
+}
+
+// Content type for freemium checks
+export type FreemiumContentType = 'soundscape' | 'voiceGuide' | 'motivation' | 'music'
+
+// Check if content is free based on type and index/id
+export function isContentFree(
+  type: FreemiumContentType,
+  indexOrId: number | string,
+  isPremium: boolean
+): boolean {
+  if (isPremium) return true
+
+  switch (type) {
+    case 'soundscape':
+      if (typeof indexOrId === 'number') {
+        return indexOrId < FREEMIUM_LIMITS.soundscapes.freeCount
+      }
+      return FREEMIUM_LIMITS.soundscapes.freeIds.includes(indexOrId)
+
+    case 'voiceGuide':
+      return FREEMIUM_LIMITS.voiceGuides.freeIds.includes(String(indexOrId))
+
+    case 'motivation':
+      return typeof indexOrId === 'number' && indexOrId < FREEMIUM_LIMITS.motivation.freeCount
+
+    case 'music':
+      return typeof indexOrId === 'number' && indexOrId < FREEMIUM_LIMITS.musicPerGenre.freeCount
+
+    default:
+      return false
+  }
+}
+
 // Free tier limits — sessions are now effectively unlimited
 // Free users get all modules as text-only; premium = AI voices + AI features
 export const FREE_TIER_LIMITS = {

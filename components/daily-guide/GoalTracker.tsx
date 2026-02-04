@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Target, Plus, Check, Loader2, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Target, Plus, Check, Loader2, Trash2, ChevronDown, ChevronUp, Crown, Lock } from 'lucide-react'
+import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface Goal {
   id: string
@@ -15,6 +16,9 @@ interface Goal {
 }
 
 export function GoalTracker() {
+  const { checkAccess, openUpgradeModal } = useSubscription()
+  const hasGoalAccess = checkAccess('goal_tracker')
+
   const [goals, setGoals] = useState<Goal[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -26,8 +30,12 @@ export function GoalTracker() {
   const [incrementingId, setIncrementingId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchGoals()
-  }, [])
+    if (hasGoalAccess) {
+      fetchGoals()
+    } else {
+      setIsLoading(false)
+    }
+  }, [hasGoalAccess])
 
   const fetchGoals = async () => {
     try {
@@ -114,6 +122,35 @@ export function GoalTracker() {
           <Loader2 className="w-4 h-4 text-white/95 animate-spin" />
           <span className="text-sm text-white/95">Loading goals...</span>
         </div>
+      </div>
+    )
+  }
+
+  // Show locked state for free users
+  if (!hasGoalAccess) {
+    return (
+      <div className="card-gradient-border">
+        <button
+          onClick={openUpgradeModal}
+          className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-purple-500/20 relative">
+              <Target className="w-4 h-4 text-purple-400" />
+              <Lock className="absolute -top-1 -right-1 w-3 h-3 text-white" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-medium text-white flex items-center gap-2">
+                Goals
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">PRO</span>
+              </h3>
+              <p className="text-xs text-white/95">Track habits & achieve more</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Crown className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+          </div>
+        </button>
       </div>
     )
   }

@@ -1,7 +1,15 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react'
-import { FREE_TIER_LIMITS } from '@/lib/subscription-constants'
+import { FREE_TIER_LIMITS, FREEMIUM_LIMITS, isContentFree, FreemiumContentType } from '@/lib/subscription-constants'
+
+// Helper to get today's date key for localStorage
+function getTodayKey() {
+  return new Date().toISOString().split('T')[0]
+}
+
+// LocalStorage key for daily free unlock
+const DAILY_FREE_UNLOCK_KEY = 'voxu_daily_free_unlock'
 
 export type SubscriptionTier = 'free' | 'premium'
 export type SubscriptionStatus = 'active' | 'trialing' | 'canceled' | 'expired'
@@ -33,6 +41,14 @@ interface SubscriptionContextType {
 
   // Free tier limits
   limits: typeof FREE_TIER_LIMITS | null
+  freemiumLimits: typeof FREEMIUM_LIMITS
+
+  // Daily free unlock
+  dailyFreeUnlockUsed: boolean
+  useDailyFreeUnlock: () => void
+
+  // Content gating
+  isContentFree: (type: FreemiumContentType, indexOrId: number | string) => boolean
 
   // Actions
   checkAccess: (feature: PremiumFeature) => boolean
@@ -83,6 +99,33 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const isMountedRef = useRef(true)
+
+  // Daily free unlock state
+  const [dailyFreeUnlockUsed, setDailyFreeUnlockUsed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      const stored = localStorage.getItem(DAILY_FREE_UNLOCK_KEY)
+      if (stored) {
+        const { date } = JSON.parse(stored)
+        return date === getTodayKey()
+      }
+    } catch {}
+    return false
+  })
+
+  // Use daily free unlock
+  const useDailyFreeUnlock = useCallback(() => {
+    if (dailyFreeUnlockUsed) return
+    setDailyFreeUnlockUsed(true)
+    try {
+      localStorage.setItem(DAILY_FREE_UNLOCK_KEY, JSON.stringify({ date: getTodayKey() }))
+    } catch {}
+  }, [dailyFreeUnlockUsed])
+
+  // Check if content is free for this user
+  const checkContentFree = useCallback((type: FreemiumContentType, indexOrId: number | string) => {
+    return isContentFree(type, indexOrId, subscriptionData.isPremium)
+  }, [subscriptionData.isPremium])
 
   // Fetch subscription data
   const fetchSubscription = useCallback(async () => {
@@ -209,6 +252,10 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     billingPeriodEnd,
     isLoading,
     limits: subscriptionData.limits,
+    freemiumLimits: FREEMIUM_LIMITS,
+    dailyFreeUnlockUsed,
+    useDailyFreeUnlock,
+    isContentFree: checkContentFree,
     checkAccess,
     recordSession,
     refreshSubscription,
@@ -226,6 +273,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     subscriptionData.limits,
     billingPeriodEnd,
     isLoading,
+    dailyFreeUnlockUsed,
+    useDailyFreeUnlock,
+    checkContentFree,
     checkAccess,
     recordSession,
     refreshSubscription,
