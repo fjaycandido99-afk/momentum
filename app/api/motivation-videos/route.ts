@@ -17,74 +17,46 @@ const FALLBACK_VIDEOS: Record<string, Array<{
   duration?: number
 }>> = {
   Discipline: [
-    { id: 'd1', title: 'SELF DISCIPLINE - Best Motivational Speech', youtubeId: 'W_VkLpnVFFo', channel: 'Motiversity', duration: 300 },
-    { id: 'd2', title: 'THE POWER OF DISCIPLINE - Motivational Video', youtubeId: 'nm1TxQj9IsQ', channel: 'Motiversity', duration: 280 },
-    { id: 'd3', title: 'DISCIPLINE YOUR MIND - Motivational Speech', youtubeId: 'v_1iqtOnUMg', channel: 'MotivationHub', duration: 260 },
-    { id: 'd4', title: 'NO EXCUSES - Best Motivational Video', youtubeId: 'wnHW6o8WMas', channel: 'Motiversity', duration: 290 },
-    { id: 'd5', title: 'OUTWORK EVERYONE - David Goggins Motivation', youtubeId: '2bm47ypLvTA', channel: 'MotivationHub', duration: 275 },
-    { id: 'd6', title: 'THIS IS WHY DISCIPLINE MATTERS', youtubeId: 'dFfXEsnRHxE', channel: 'Absolute Motivation', duration: 285 },
-    { id: 'd7', title: 'DISCIPLINE IS FREEDOM - Jocko Willink', youtubeId: 'IdTMDpizis8', channel: 'T&H Inspiration', duration: 270 },
-    { id: 'd8', title: 'BUILD UNBREAKABLE DISCIPLINE', youtubeId: '8PGG2YPczU4', channel: 'MotivationHub', duration: 295 },
+    { id: 'd1', youtubeId: 'W_VkLpnVFFo', title: 'SELF DISCIPLINE - Best Motivational Speech', channel: 'Motiversity', duration: 1800 },
+    { id: 'd2', youtubeId: 'nm1TxQj9IsQ', title: 'THE POWER OF DISCIPLINE - Motivational Video', channel: 'Motiversity', duration: 1920 },
+    { id: 'd3', youtubeId: 'v_1iqtOnUMg', title: 'DISCIPLINE YOUR MIND - Motivational Speech', channel: 'MotivationHub', duration: 2100 },
+    { id: 'd4', youtubeId: 'wnHW6o8WMas', title: 'NO EXCUSES - Best Motivational Video', channel: 'Motiversity', duration: 1680 },
   ],
   Focus: [
-    { id: 'f1', title: 'FOCUS ON YOURSELF - Best Motivational Speech', youtubeId: 'J1R0hiaHdpM', channel: 'Motiversity', duration: 290 },
-    { id: 'f2', title: 'STOP WASTING TIME - Motivational Video', youtubeId: 'cDDWvj_q-o8', channel: 'Motiversity', duration: 275 },
-    { id: 'f3', title: 'LASER FOCUS - Powerful Motivational Speech', youtubeId: 'k9zTr2MAFRg', channel: 'MotivationHub', duration: 280 },
-    { id: 'f4', title: 'THIS IS HOW WINNERS THINK', youtubeId: 'nU3IbigrFFs', channel: 'Motiversity', duration: 265 },
-    { id: 'f5', title: 'CONTROL YOUR ATTENTION - Motivational Speech', youtubeId: 'fOGPpDzMWyE', channel: 'Absolute Motivation', duration: 285 },
-    { id: 'f6', title: 'BECOME OBSESSED - Motivational Video', youtubeId: 'hZZ5dZzvsEM', channel: 'MotivationHub', duration: 270 },
-    { id: 'f7', title: 'THE POWER OF FOCUS - Jim Rohn', youtubeId: 'vj-91dMvQQo', channel: 'T&H Inspiration', duration: 295 },
-    { id: 'f8', title: 'ELIMINATE DISTRACTIONS - Motivational Speech', youtubeId: '7z0fDsET3bM', channel: 'Motiversity', duration: 280 },
+    { id: 'f1', youtubeId: 'J1R0hiaHdpM', title: 'FOCUS ON YOURSELF - Best Motivational Speech', channel: 'Motiversity', duration: 1800 },
+    { id: 'f2', youtubeId: 'cDDWvj_q-o8', title: 'STOP WASTING TIME - Motivational Video', channel: 'Motiversity', duration: 1920 },
+    { id: 'f3', youtubeId: 'k9zTr2MAFRg', title: 'LASER FOCUS - Powerful Motivational Speech', channel: 'MotivationHub', duration: 2100 },
+    { id: 'f4', youtubeId: 'nU3IbigrFFs', title: 'THIS IS HOW WINNERS THINK', channel: 'Motiversity', duration: 1680 },
   ],
   Mindset: [
-    { id: 'm1', title: 'CHANGE YOUR MINDSET - Motivational Speech', youtubeId: 'GXoErccq0vw', channel: 'Motiversity', duration: 285 },
-    { id: 'm2', title: 'MINDSET IS EVERYTHING - Powerful Speech', youtubeId: '_UJfwCuLYbI', channel: 'Motiversity', duration: 275 },
-    { id: 'm3', title: 'THINK DIFFERENT - Steve Jobs', youtubeId: 'keCwRdbwNQY', channel: 'Motivation2Study', duration: 260 },
-    { id: 'm4', title: 'THE MINDSET OF A CHAMPION', youtubeId: 'yM8jrvF5zYs', channel: 'MotivationHub', duration: 290 },
-    { id: 'm5', title: 'TRAIN YOUR MIND TO WIN', youtubeId: 'R8V71MbHP7k', channel: 'Absolute Motivation', duration: 280 },
-    { id: 'm6', title: 'YOUR MIND IS POWERFUL - Les Brown', youtubeId: 'ULT_3CboVlE', channel: 'T&H Inspiration', duration: 295 },
-    { id: 'm7', title: 'DEVELOP A WINNING MINDSET', youtubeId: 'k0oZ38JnPvM', channel: 'MotivationHub', duration: 270 },
-    { id: 'm8', title: 'REPROGRAM YOUR MIND - Motivation', youtubeId: 'F1gIhn5lRl0', channel: 'Motiversity', duration: 285 },
+    { id: 'm1', youtubeId: 'GXoErccq0vw', title: 'CHANGE YOUR MINDSET - Motivational Speech', channel: 'Motiversity', duration: 1800 },
+    { id: 'm2', youtubeId: '_UJfwCuLYbI', title: 'MINDSET IS EVERYTHING - Powerful Speech', channel: 'Motiversity', duration: 1920 },
+    { id: 'm3', youtubeId: 'keCwRdbwNQY', title: 'THE MINDSET OF A CHAMPION', channel: 'MotivationHub', duration: 2100 },
+    { id: 'm4', youtubeId: 'yM8jrvF5zYs', title: 'TRAIN YOUR MIND TO WIN', channel: 'Absolute Motivation', duration: 1680 },
   ],
   Courage: [
-    { id: 'c1', title: 'FACE YOUR FEARS - Motivational Speech', youtubeId: 'II4xp4vzRT8', channel: 'Motiversity', duration: 280 },
-    { id: 'c2', title: 'BE FEARLESS - Powerful Motivation', youtubeId: '2MvAtEr0W3g', channel: 'MotivationHub', duration: 275 },
-    { id: 'c3', title: 'COURAGE - Best Motivational Video', youtubeId: 'mgmVOuLgFB0', channel: 'Motiversity', duration: 290 },
-    { id: 'c4', title: 'TAKE THE RISK - Motivational Speech', youtubeId: 'pO_Z0H3gDPg', channel: 'Motiversity', duration: 265 },
-    { id: 'c5', title: 'DO IT AFRAID - Powerful Speech', youtubeId: 'u7L89w3xmgY', channel: 'Absolute Motivation', duration: 285 },
-    { id: 'c6', title: 'STEP OUT OF YOUR COMFORT ZONE', youtubeId: 'qCEQbTf7SBc', channel: 'T&H Inspiration', duration: 270 },
-    { id: 'c7', title: 'CONQUER YOUR FEARS - Motivation', youtubeId: '1_9V5t6Wpfk', channel: 'MotivationHub', duration: 295 },
-    { id: 'c8', title: 'BE BRAVE - Motivational Video', youtubeId: 'vNrLPniDMvk', channel: 'Motiversity', duration: 280 },
+    { id: 'c1', youtubeId: 'II4xp4vzRT8', title: 'FACE YOUR FEARS - Motivational Speech', channel: 'Motiversity', duration: 1800 },
+    { id: 'c2', youtubeId: '2MvAtEr0W3g', title: 'BE FEARLESS - Powerful Motivation', channel: 'MotivationHub', duration: 1920 },
+    { id: 'c3', youtubeId: 'mgmVOuLgFB0', title: 'COURAGE - Best Motivational Video', channel: 'Motiversity', duration: 2100 },
+    { id: 'c4', youtubeId: 'pO_Z0H3gDPg', title: 'TAKE THE RISK - Motivational Speech', channel: 'Motiversity', duration: 1680 },
   ],
   Resilience: [
-    { id: 'r1', title: 'NEVER GIVE UP - Motivational Speech', youtubeId: 'kZlXWp6vFdE', channel: 'Motiversity', duration: 285 },
-    { id: 'r2', title: 'KEEP GOING - Best Motivation', youtubeId: '8ZhoeSaPF-k', channel: 'Motiversity', duration: 275 },
-    { id: 'r3', title: 'RISE UP - Powerful Motivational Speech', youtubeId: 'TqXLvwM8Ltk', channel: 'MotivationHub', duration: 290 },
-    { id: 'r4', title: 'UNBREAKABLE - Motivational Video', youtubeId: 'p6HPRqCIZOQ', channel: 'Motiversity', duration: 280 },
-    { id: 'r5', title: 'BOUNCE BACK STRONGER', youtubeId: '3eVIOiF9vF0', channel: 'Absolute Motivation', duration: 270 },
-    { id: 'r6', title: 'WHEN LIFE KNOCKS YOU DOWN', youtubeId: 'FFgwBHpbsgM', channel: 'MotivationHub', duration: 295 },
-    { id: 'r7', title: 'THE COMEBACK - Les Brown', youtubeId: 'rRNzpFbcNqI', channel: 'T&H Inspiration', duration: 265 },
-    { id: 'r8', title: 'I WILL NOT QUIT - Motivation', youtubeId: 'F7bE1LMN1QU', channel: 'Motiversity', duration: 285 },
+    { id: 'r1', youtubeId: 'kZlXWp6vFdE', title: 'NEVER GIVE UP - Motivational Speech', channel: 'Motiversity', duration: 1800 },
+    { id: 'r2', youtubeId: '8ZhoeSaPF-k', title: 'KEEP GOING - Best Motivation', channel: 'Motiversity', duration: 1920 },
+    { id: 'r3', youtubeId: 'TqXLvwM8Ltk', title: 'RISE UP - Powerful Motivational Speech', channel: 'MotivationHub', duration: 2100 },
+    { id: 'r4', youtubeId: 'p6HPRqCIZOQ', title: 'UNBREAKABLE - Motivational Video', channel: 'Motiversity', duration: 1680 },
   ],
   Hustle: [
-    { id: 'h1', title: 'WORK HARDER THAN EVERYONE - Motivation', youtubeId: 'g9_6RPn5VBs', channel: 'Motiversity', duration: 290 },
-    { id: 'h2', title: 'GRIND NOW SHINE LATER - Motivation', youtubeId: 'P8P6RgUIhFg', channel: 'Motiversity', duration: 275 },
-    { id: 'h3', title: 'NO DAYS OFF - Motivational Speech', youtubeId: '2X-8L5GBD-A', channel: 'Motiversity', duration: 280 },
-    { id: 'h4', title: 'RISE AND GRIND - Motivational Video', youtubeId: 'G-J0lkyhz7o', channel: 'MotivationHub', duration: 285 },
-    { id: 'h5', title: 'HUSTLE IN SILENCE - Powerful Speech', youtubeId: 'PyHXN_eYkpc', channel: 'Absolute Motivation', duration: 270 },
-    { id: 'h6', title: 'THE GRIND - Best Motivation', youtubeId: 'qZSb5gVW9lM', channel: 'MotivationHub', duration: 295 },
-    { id: 'h7', title: 'WORK WHILE THEY SLEEP', youtubeId: 'Rj_n7R0gptU', channel: 'T&H Inspiration', duration: 265 },
-    { id: 'h8', title: 'OUTWORK EVERYONE AROUND YOU', youtubeId: 'HQtZ4kud2qA', channel: 'Motiversity', duration: 280 },
+    { id: 'h1', youtubeId: 'g9_6RPn5VBs', title: 'WORK HARDER THAN EVERYONE - Motivation', channel: 'Motiversity', duration: 1800 },
+    { id: 'h2', youtubeId: 'P8P6RgUIhFg', title: 'GRIND NOW SHINE LATER - Motivation', channel: 'Motiversity', duration: 1920 },
+    { id: 'h3', youtubeId: '2X-8L5GBD-A', title: 'NO DAYS OFF - Motivational Speech', channel: 'Motiversity', duration: 2100 },
+    { id: 'h4', youtubeId: 'G-J0lkyhz7o', title: 'RISE AND GRIND - Motivational Video', channel: 'MotivationHub', duration: 1680 },
   ],
   Confidence: [
-    { id: 'cf1', title: 'BELIEVE IN YOURSELF - Motivational Speech', youtubeId: 'FTnCMxN_JCY', channel: 'Motiversity', duration: 285 },
-    { id: 'cf2', title: 'SELF CONFIDENCE - Powerful Motivation', youtubeId: 'w-HYZv6HzAs', channel: 'MotivationHub', duration: 275 },
-    { id: 'cf3', title: 'KNOW YOUR WORTH - Motivational Video', youtubeId: 'sPaJTS33Qzc', channel: 'Motiversity', duration: 290 },
-    { id: 'cf4', title: 'OWN YOUR POWER - Motivational Speech', youtubeId: 'lq_BvBpVeG8', channel: 'Motiversity', duration: 280 },
-    { id: 'cf5', title: 'YOU ARE ENOUGH - Powerful Speech', youtubeId: 'Rj_n7R0gptU', channel: 'Absolute Motivation', duration: 270 },
-    { id: 'cf6', title: 'BUILD UNSHAKEABLE CONFIDENCE', youtubeId: 'mK68F6YFkrQ', channel: 'MotivationHub', duration: 295 },
-    { id: 'cf7', title: 'TRUST YOURSELF - Motivation', youtubeId: 'FN7ao8dSEUE', channel: 'T&H Inspiration', duration: 265 },
-    { id: 'cf8', title: 'SELF BELIEF - Powerful Motivation', youtubeId: 'YKfV9GH4qYQ', channel: 'Motiversity', duration: 285 },
+    { id: 'cf1', youtubeId: 'FTnCMxN_JCY', title: 'BELIEVE IN YOURSELF - Motivational Speech', channel: 'Motiversity', duration: 1800 },
+    { id: 'cf2', youtubeId: 'w-HYZv6HzAs', title: 'SELF CONFIDENCE - Powerful Motivation', channel: 'MotivationHub', duration: 1920 },
+    { id: 'cf3', youtubeId: 'sPaJTS33Qzc', title: 'KNOW YOUR WORTH - Motivational Video', channel: 'Motiversity', duration: 2100 },
+    { id: 'cf4', youtubeId: 'lq_BvBpVeG8', title: 'OWN YOUR POWER - Motivational Speech', channel: 'Motiversity', duration: 1680 },
   ],
 }
 
@@ -156,7 +128,7 @@ export async function GET(request: NextRequest) {
       order: 'relevance',
       videoEmbeddable: 'true', // Only embeddable videos
       videoSyndicated: 'true', // Can play outside YouTube
-      videoDuration: 'medium', // 4-20 minutes
+      videoDuration: 'long', // 20+ minutes
       relevanceLanguage: 'en', // Prefer English results
       regionCode: 'US', // US region for English content
       key: YOUTUBE_API_KEY,
@@ -225,8 +197,8 @@ export async function GET(request: NextRequest) {
 
       const duration = parseDuration(video.contentDetails?.duration || '')
 
-      // Filter: 2-15 minutes for motivation videos
-      if (duration < 120 || duration > 900) {
+      // Filter: 10+ minutes for motivation videos
+      if (duration < 600) {
         continue
       }
 

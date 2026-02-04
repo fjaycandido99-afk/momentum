@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Play, Pause, Check, SkipForward, RotateCcw } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 
@@ -120,6 +120,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
   const [isPaused, setIsPaused] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [backgroundImage, setBackgroundImage] = useState<string>(getTodaysBackground())
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const timerRef = useRef<ReturnType<typeof setInterval>>()
 
@@ -131,8 +132,37 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
   const displayTitle = isMotivationMode ? topic.word : contentConfig.title
   const displayTagline = isMotivationMode ? topic.tagline : contentConfig.tagline
 
-  // Get today's dark background image (memoized)
-  const backgroundImage = useMemo(() => getTodaysBackground(), [])
+  // Fetch genre-specific background for music mode, use static for motivation mode
+  useEffect(() => {
+    if (isMotivationMode) {
+      // Use static local backgrounds for motivation mode
+      setBackgroundImage(getTodaysBackground())
+      return
+    }
+
+    // Fetch genre-specific backgrounds for music mode
+    async function fetchBackground() {
+      try {
+        const response = await fetch(`/api/backgrounds?genre=${contentConfig.genre}`)
+        const data = await response.json()
+
+        if (data.images && data.images.length > 0) {
+          // Sort by name for consistent selection
+          const sortedBgs = [...data.images].sort((a: { name: string; url: string }, b: { name: string; url: string }) => a.name.localeCompare(b.name))
+
+          // Use seeded random based on date for consistent daily selection
+          const now = new Date()
+          const dateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
+          const bgIndex = Math.floor(seededRandom(dateSeed + 999) * sortedBgs.length)
+          setBackgroundImage(sortedBgs[bgIndex].url)
+        }
+      } catch (err) {
+        console.error('Failed to fetch background:', err)
+        // Keep default background on error
+      }
+    }
+    fetchBackground()
+  }, [isMotivationMode, contentConfig.genre])
 
   // Fetch video based on day type (motivation or music)
   useEffect(() => {
@@ -154,15 +184,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
         }
 
         if (data.videos && data.videos.length > 0) {
-          let videoPool = data.videos
-
-          // For motivation videos, prefer shorter ones (under 5 min)
-          if (isMotivationMode) {
-            const shortVideos = videoPool.filter((v) => v.duration && v.duration <= 300)
-            if (shortVideos.length > 0) {
-              videoPool = shortVideos
-            }
-          }
+          const videoPool = data.videos
 
           // Sort for consistent daily selection
           const sortedVideos = [...videoPool].sort((a, b) => a.youtubeId.localeCompare(b.youtubeId))
@@ -219,6 +241,15 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
     setIsPlaying(true)
     setIsPaused(false)
     setElapsed(0)
+
+    // Override browser media session to show our title instead of YouTube's
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: displayTitle,
+        artist: 'Voxu',
+        album: displayTagline,
+      })
+    }
   }
 
   const handlePauseToggle = () => {

@@ -56,6 +56,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const isMountedRef = useRef(true)
   const userPausedRef = useRef(false)
   const musicEnabledRef = useRef(false)
+  const wasPlayingBeforeSessionRef = useRef(false)
 
   // Keep musicEnabledRef in sync with state
   useEffect(() => {
@@ -164,6 +165,14 @@ export function AudioProvider({ children }: AudioProviderProps) {
               if (isMountedRef.current) {
                 setIsMusicLoaded(true)
                 setIsMusicPlaying(true)
+                // Override browser media session to show Voxu branding
+                if ('mediaSession' in navigator) {
+                  navigator.mediaSession.metadata = new MediaMetadata({
+                    title: 'Background Music',
+                    artist: 'Voxu',
+                    album: musicGenre ? musicGenre.charAt(0).toUpperCase() + musicGenre.slice(1) : 'Soundscape',
+                  })
+                }
               }
             },
             onStateChange: (event) => {
@@ -191,12 +200,13 @@ export function AudioProvider({ children }: AudioProviderProps) {
     // No cleanup here - we want the player to persist
   }, [musicEnabled, bgMusicVideoId, isSessionActive])
 
-  // Resume music when session ends
+  // Resume music when session ends (only if it was playing before)
   useEffect(() => {
-    if (!isSessionActive && musicEnabled && bgMusicPlayerRef.current && isMusicLoaded) {
+    if (!isSessionActive && musicEnabled && bgMusicPlayerRef.current && isMusicLoaded && wasPlayingBeforeSessionRef.current) {
       try {
         bgMusicPlayerRef.current.playVideo()
         setIsMusicPlaying(true)
+        wasPlayingBeforeSessionRef.current = false
       } catch (e) {}
     }
   }, [isSessionActive, musicEnabled, isMusicLoaded])
@@ -231,6 +241,8 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const pauseMusic = useCallback(() => {
     if (bgMusicPlayerRef.current) {
       try {
+        // Track if music was playing before this pause (for session resume logic)
+        wasPlayingBeforeSessionRef.current = isMusicPlaying
         userPausedRef.current = true
         setSessionActive(true)
         bgMusicPlayerRef.current.pauseVideo()
@@ -239,13 +251,14 @@ export function AudioProvider({ children }: AudioProviderProps) {
         console.error('[AudioContext] Pause error:', e)
       }
     }
-  }, [])
+  }, [isMusicPlaying])
 
   const resumeMusic = useCallback(() => {
     userPausedRef.current = false
     setSessionActive(false)
 
-    if (bgMusicPlayerRef.current && musicEnabled) {
+    // Only resume if music was actually playing before the session paused it
+    if (bgMusicPlayerRef.current && musicEnabled && wasPlayingBeforeSessionRef.current) {
       try {
         bgMusicPlayerRef.current.playVideo()
         setIsMusicPlaying(true)
@@ -253,6 +266,8 @@ export function AudioProvider({ children }: AudioProviderProps) {
         console.error('[AudioContext] Resume error:', e)
       }
     }
+    // Reset the ref after checking
+    wasPlayingBeforeSessionRef.current = false
   }, [musicEnabled])
 
   const stopMusic = useCallback(() => {

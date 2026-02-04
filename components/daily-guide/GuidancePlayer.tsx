@@ -223,15 +223,23 @@ export function GuidancePlayer({
   const config = segmentConfig[segment] || defaultConfig
   const totalDuration = duration || 45
 
-  // Pause global soundscape when GuidancePlayer opens, resume when closed
+  // Track if soundscape was playing before we paused it
+  const wasPlayingBeforeRef = useRef(false)
+
+  // Pause global soundscape when GuidancePlayer opens, resume when closed (only if it was playing)
   useEffect(() => {
+    // Store whether music was playing before we pause it
+    wasPlayingBeforeRef.current = audioContext?.isMusicPlaying ?? false
+
     if (audioContext?.isMusicPlaying) {
       audioContext.pauseMusic()
     }
 
     return () => {
-      // Resume soundscape when player closes
-      audioContext?.resumeMusic()
+      // Only resume soundscape if it was actually playing before we opened
+      if (wasPlayingBeforeRef.current) {
+        audioContext?.resumeMusic()
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -348,6 +356,14 @@ export function GuidancePlayer({
             // Explicitly call playVideo to start playback (helps with autoplay restrictions)
             event.target.playVideo()
             setMusicLoaded(true)
+            // Override browser media session to show Voxu branding
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.metadata = new MediaMetadata({
+                title: config.label,
+                artist: 'Voxu',
+                album: musicGenre ? genreLabels[musicGenre] || musicGenre : 'Guidance',
+              })
+            }
           },
           onStateChange: (event) => {
             // If video is paused/ended unexpectedly, try to restart

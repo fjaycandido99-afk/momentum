@@ -5,7 +5,7 @@ import { Sparkles, X, Heart, Send } from 'lucide-react'
 import { QUOTES } from '@/lib/quotes'
 import { getNextSpark, Spark } from '@/lib/daily-sparks'
 
-const IDLE_TIMEOUT = 2.5 * 60 * 1000    // 2.5 minutes of no interaction
+const IDLE_TIMEOUT = 10 * 60 * 1000     // 10 minutes of no interaction
 const MIN_RECURRING = 30 * 60 * 1000     // 30 minutes
 const MAX_RECURRING = 60 * 60 * 1000     // 60 minutes
 const AUTO_DISMISS = 60 * 1000           // 60 seconds

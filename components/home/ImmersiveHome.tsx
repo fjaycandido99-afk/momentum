@@ -1372,7 +1372,6 @@ export function ImmersiveHome() {
                     )}
                   </div>
                   <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
-                  <p className="text-xs text-white/95 mt-0.5">{video.channel}</p>
                 </button>
               )
             })
@@ -1459,7 +1458,6 @@ export function ImmersiveHome() {
                         )}
                       </div>
                       <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
-                      <p className="text-xs text-white/95 mt-0.5">{video.channel}</p>
                     </button>
                   )
                 })
