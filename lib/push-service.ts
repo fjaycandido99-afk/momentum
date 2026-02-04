@@ -197,6 +197,7 @@ export async function sendPushToUser(
     morning_reminder: 'morning_reminder',
     checkpoint: 'checkpoint_alerts',
     evening_reminder: 'evening_reminder',
+    bedtime_reminder: 'evening_reminder', // Uses evening_reminder preference
     streak_at_risk: 'streak_alerts',
     weekly_review: 'weekly_review',
     insight: 'insight_alerts',
