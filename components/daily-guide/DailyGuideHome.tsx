@@ -419,7 +419,50 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         const errorData = await response.json().catch(() => ({}))
         console.error('Guide generation failed:', response.status, errorData)
         if (response.status === 401) {
-          setGenerationError('Please sign in to generate your daily guide')
+          // Show demo guide for guests
+          const demoGuide: DailyGuide = {
+            id: 'demo',
+            date: new Date().toISOString().split('T')[0],
+            day_type: 'work',
+            pace: 'normal',
+            time_mode: 'normal',
+            energy_level: energyLevel || 'normal',
+            modules: ['morning_prime', 'workout', 'micro_lesson', 'breath', 'day_close'],
+            morning_prime_script: 'Good morning! Take a deep breath and set your intention for today.',
+            movement_script: 'A moment of inspiration to start your day.',
+            workout_script: null,
+            micro_lesson_script: 'Watch a short motivation video.',
+            breath_script: 'Take a moment to center yourself with mindful breathing.',
+            day_close_script: 'Reflect on your day and celebrate your progress.',
+            tomorrow_preview: 'Tomorrow brings new opportunities.',
+            checkpoint_1_script: 'Mid-morning check-in.',
+            checkpoint_2_script: 'Afternoon focus reset.',
+            checkpoint_3_script: 'Evening wind-down.',
+            pre_study_script: null,
+            study_break_script: null,
+            exam_calm_script: null,
+            morning_script: null,
+            evening_script: null,
+            micro_lesson: null,
+            morning_played: false,
+            evening_played: false,
+            morning_prime_done: false,
+            movement_done: false,
+            micro_lesson_done: false,
+            breath_done: false,
+            day_close_done: false,
+          }
+          setGuide(demoGuide)
+          setCheckpoints([
+            { id: 'checkpoint_1', name: 'Focus Target', time: '10:00', description: 'Lock in your morning focus' },
+            { id: 'checkpoint_2', name: 'Midday Reset', time: '14:00', description: 'Reset and recharge' },
+            { id: 'checkpoint_3', name: 'Downshift', time: '17:00', description: 'Begin winding down' },
+          ])
+          setDurations({ morning_prime: 60, workout: 30, micro_lesson: 120, breath: 90, day_close: 60 } as Record<ModuleType, number>)
+          setShowEnergyPrompt(false)
+          if (energyLevel) {
+            setSelectedEnergy(energyLevel)
+          }
         } else {
           setGenerationError(errorData.error || 'Failed to generate guide. Please try again.')
         }
@@ -945,6 +988,17 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {/* Guide content */}
       {guide && (
         <div className="px-6 space-y-6 animate-slide-up-enter">
+          {/* Demo guide banner for guests */}
+          {guide.id === 'demo' && (
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+              <Lock className="w-5 h-5 text-white shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-white font-medium">Preview Mode</p>
+                <p className="text-xs text-white/70">Sign in to save your progress and unlock all features</p>
+              </div>
+            </div>
+          )}
+
           {/* Rest Day Suggestion */}
           <RestDaySuggestion
             streak={streak}
@@ -1052,11 +1106,13 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                         }
 
                         // Micro lesson uses inline YouTube player
+                        // Content adapts based on day type: work = motivation, student = focus music, etc.
                         if (module === 'micro_lesson') {
                           return (
                             <div key={module} className={`animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}`}>
                             <MicroLessonVideo
                               isCompleted={completedModules.includes(module)}
+                              dayType={guide.day_type as 'work' | 'off' | 'recovery' | 'class' | 'study' | 'exam'}
                               onComplete={() => {
                                 setCompletedModules(prev => [...prev, module])
                                 fetch('/api/daily-guide/checkin', {

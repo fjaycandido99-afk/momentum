@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   sendMorningReminders,
+  sendBedtimeReminders,
   sendStreakAtRiskReminders,
   sendWeeklyReviewReminders,
   sendWeeklyInsights,
@@ -19,13 +20,17 @@ export const dynamic = 'force-dynamic'
  * Configure in vercel.json:
  * {
  *   "crons": [
- *     { "path": "/api/cron/notifications?type=morning", "schedule": "0 7 * * *" },
+ *     { "path": "/api/cron/notifications?type=morning", "schedule": "0 * * * *" },
+ *     { "path": "/api/cron/notifications?type=bedtime", "schedule": "0 * * * *" },
  *     { "path": "/api/cron/notifications?type=streak", "schedule": "0 20 * * *" },
  *     { "path": "/api/cron/notifications?type=weekly", "schedule": "0 10 * * 0" },
  *     { "path": "/api/cron/notifications?type=insight", "schedule": "0 12 * * 3" },
  *     { "path": "/api/cron/notifications?type=cleanup", "schedule": "0 3 * * *" }
  *   ]
  * }
+ *
+ * Note: Morning and bedtime run hourly ("0 * * * *") to support user-specific reminder times.
+ * The functions check each user's preferred time and only send if it matches the current hour.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -44,6 +49,10 @@ export async function GET(request: NextRequest) {
       case 'morning':
         await sendMorningReminders()
         return NextResponse.json({ success: true, type: 'morning_reminders' })
+
+      case 'bedtime':
+        await sendBedtimeReminders()
+        return NextResponse.json({ success: true, type: 'bedtime_reminders' })
 
       case 'streak':
         await sendStreakAtRiskReminders()
@@ -76,6 +85,7 @@ export async function GET(request: NextRequest) {
       case 'all':
         // Send all types (for testing)
         await sendMorningReminders()
+        await sendBedtimeReminders()
         await sendStreakAtRiskReminders()
         await sendWeeklyReviewReminders()
         await sendWeeklyInsights()
@@ -86,7 +96,7 @@ export async function GET(request: NextRequest) {
 
       default:
         return NextResponse.json(
-          { error: 'Invalid type. Use: morning, streak, weekly, insight, cleanup, daily_quote, daily_affirmation, motivational_nudge, or all' },
+          { error: 'Invalid type. Use: morning, bedtime, streak, weekly, insight, cleanup, daily_quote, daily_affirmation, motivational_nudge, or all' },
           { status: 400 }
         )
     }

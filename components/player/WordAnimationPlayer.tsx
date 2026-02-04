@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Volume2, VolumeX, ExternalLink, Play, Pause } from 'lucide-react'
+import { X, Volume2, VolumeX, ExternalLink, Play, Pause, SkipForward, SkipBack } from 'lucide-react'
 import { RainEffect } from '@/components/effects/RainEffect'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
@@ -26,6 +26,14 @@ interface WordAnimationPlayerProps {
   externalCurrentTime?: number
   /** Seek to a specific time (seconds) on parent's YT player */
   onSeek?: (seconds: number) => void
+  /** Skip to next video in playlist */
+  onSkipNext?: () => void
+  /** Skip to previous video in playlist */
+  onSkipPrevious?: () => void
+  /** Whether there's a next video available */
+  hasNext?: boolean
+  /** Whether there's a previous video available */
+  hasPrevious?: boolean
 }
 
 // Clean dark theme - subtle and atmospheric
@@ -33,7 +41,7 @@ const colorMap: Record<string, { primary: string; glow: string; bg: string }> = 
   'from-white/[0.06] to-white/[0.02]': { primary: 'rgba(245, 245, 250, 0.95)', glow: 'rgba(245, 245, 250, 0.2)', bg: '#08080c' },
 }
 
-export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, onClose, externalAudio = false, externalPlaying, onTogglePlay, externalDuration, externalCurrentTime, onSeek }: WordAnimationPlayerProps) {
+export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, onClose, externalAudio = false, externalPlaying, onTogglePlay, externalDuration, externalCurrentTime, onSeek, onSkipNext, onSkipPrevious, hasNext = false, hasPrevious = false }: WordAnimationPlayerProps) {
   const [isPlayingLocal, setIsPlayingLocal] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [playerReady, setPlayerReady] = useState(false)
@@ -281,19 +289,46 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
           </div>
         ) : (
           <div className="flex flex-col items-center gap-6 w-full max-w-sm">
-            {/* Play/Pause button */}
-            <button
-              aria-label={isPlaying ? 'Pause' : 'Play'}
-              onClick={togglePlay}
-              disabled={!activeReady && !externalAudio}
-              className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-all flex items-center justify-center disabled:opacity-40 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] animate-float focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-            >
-              {isPlaying ? (
-                <Pause className="w-8 h-8 text-white" fill="white" />
-              ) : (
-                <Play className="w-8 h-8 text-white ml-1" fill="white" />
+            {/* Playback controls */}
+            <div className="flex items-center gap-3">
+              {/* Previous button */}
+              {(hasPrevious || onSkipPrevious) && (
+                <button
+                  aria-label="Previous"
+                  onClick={onSkipPrevious}
+                  disabled={!hasPrevious}
+                  className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-all flex items-center justify-center disabled:opacity-30 disabled:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                >
+                  <SkipBack className="w-5 h-5 text-white" fill="white" />
+                </button>
               )}
-            </button>
+
+              {/* Play/Pause button */}
+              <button
+                aria-label={isPlaying ? 'Pause' : 'Play'}
+                onClick={togglePlay}
+                disabled={!activeReady && !externalAudio}
+                className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 transition-all flex items-center justify-center disabled:opacity-40 shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] animate-float focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+              >
+                {isPlaying ? (
+                  <Pause className="w-8 h-8 text-white" fill="white" />
+                ) : (
+                  <Play className="w-8 h-8 text-white ml-1" fill="white" />
+                )}
+              </button>
+
+              {/* Next/Skip button */}
+              {(hasNext || onSkipNext) && (
+                <button
+                  aria-label="Next"
+                  onClick={onSkipNext}
+                  disabled={!hasNext}
+                  className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-all flex items-center justify-center disabled:opacity-30 disabled:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                >
+                  <SkipForward className="w-5 h-5 text-white" fill="white" />
+                </button>
+              )}
+            </div>
 
             {/* Seekable progress bar */}
             <div className="w-full animate-fade-in">

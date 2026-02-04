@@ -50,6 +50,29 @@ const DAILY_TOPICS = [
   { word: 'Confidence', tagline: 'Believe in yourself' },
 ]
 
+// Day type definition
+type DayType = 'work' | 'off' | 'recovery' | 'class' | 'study' | 'exam'
+
+// Day type to content mode mapping
+type ContentMode = 'motivation' | 'focus_music' | 'calm_music' | 'relax_music'
+
+const DAY_TYPE_CONTENT: Record<DayType, { mode: ContentMode; genre?: string; title: string; tagline: string }> = {
+  work: { mode: 'motivation', title: '', tagline: '' }, // Uses DAILY_TOPICS
+  class: { mode: 'focus_music', genre: 'study', title: 'Focus Mode', tagline: 'Music for concentration' },
+  study: { mode: 'focus_music', genre: 'lofi', title: 'Study Session', tagline: 'Lo-fi beats to study to' },
+  exam: { mode: 'calm_music', genre: 'ambient', title: 'Calm Mind', tagline: 'Peaceful sounds for clarity' },
+  off: { mode: 'relax_music', genre: 'piano', title: 'Unwind', tagline: 'Gentle melodies for rest' },
+  recovery: { mode: 'relax_music', genre: 'ambient', title: 'Restore', tagline: 'Ambient sounds for healing' },
+}
+
+interface MusicVideo {
+  id: string
+  title: string
+  youtubeId: string
+  channel?: string
+  duration?: number
+}
+
 // Seeded random for consistent daily selection
 function seededRandom(seed: number) {
   const x = Math.sin(seed) * 10000
@@ -77,6 +100,7 @@ interface MicroLessonVideoProps {
   isCompleted: boolean
   onComplete: () => void
   onSkip?: () => void
+  dayType?: DayType
 }
 
 // Get today's topic based on day of year
@@ -88,9 +112,9 @@ function getTodaysTopic() {
   return DAILY_TOPICS[dayOfYear % DAILY_TOPICS.length]
 }
 
-export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLessonVideoProps) {
+export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'work' }: MicroLessonVideoProps) {
   const [topic] = useState(getTodaysTopic())
-  const [video, setVideo] = useState<MotivationVideo | null>(null)
+  const [video, setVideo] = useState<MotivationVideo | MusicVideo | null>(null)
   const [loading, setLoading] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
@@ -99,24 +123,51 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const timerRef = useRef<ReturnType<typeof setInterval>>()
 
+  // Get content config based on day type
+  const contentConfig = DAY_TYPE_CONTENT[dayType]
+  const isMotivationMode = contentConfig.mode === 'motivation'
+
+  // Display title and tagline based on mode
+  const displayTitle = isMotivationMode ? topic.word : contentConfig.title
+  const displayTagline = isMotivationMode ? topic.tagline : contentConfig.tagline
+
   // Get today's dark background image (memoized)
   const backgroundImage = useMemo(() => getTodaysBackground(), [])
 
-  // Fetch a motivation video for today's topic (same video all day)
+  // Fetch video based on day type (motivation or music)
   useEffect(() => {
     async function fetchVideo() {
       setLoading(true)
       setError(null)
       try {
-        const response = await fetch(`/api/motivation-videos?topic=${topic.word}`)
-        const data = await response.json()
-        if (data.videos && data.videos.length > 0) {
-          const shortVideos = data.videos.filter((v: MotivationVideo) =>
-            v.duration && v.duration <= 300
-          )
-          const videoPool = shortVideos.length > 0 ? shortVideos : data.videos
-          const sortedVideos = [...videoPool].sort((a: MotivationVideo, b: MotivationVideo) => a.youtubeId.localeCompare(b.youtubeId))
+        let response: Response
+        let data: { videos?: (MotivationVideo | MusicVideo)[] }
 
+        if (isMotivationMode) {
+          // Fetch motivational video for work days
+          response = await fetch(`/api/motivation-videos?topic=${displayTitle}`)
+          data = await response.json()
+        } else {
+          // Fetch music video for student/off/recovery days
+          response = await fetch(`/api/music-videos?genre=${contentConfig.genre}`)
+          data = await response.json()
+        }
+
+        if (data.videos && data.videos.length > 0) {
+          let videoPool = data.videos
+
+          // For motivation videos, prefer shorter ones (under 5 min)
+          if (isMotivationMode) {
+            const shortVideos = videoPool.filter((v) => v.duration && v.duration <= 300)
+            if (shortVideos.length > 0) {
+              videoPool = shortVideos
+            }
+          }
+
+          // Sort for consistent daily selection
+          const sortedVideos = [...videoPool].sort((a, b) => a.youtubeId.localeCompare(b.youtubeId))
+
+          // Use seeded random for same video all day
           const now = new Date()
           const dateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
           const videoIndex = Math.floor(seededRandom(dateSeed + 456) * sortedVideos.length)
@@ -125,14 +176,14 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
           setError('No videos available')
         }
       } catch (err) {
-        console.error('Failed to fetch motivation video:', err)
+        console.error('Failed to fetch video:', err)
         setError('Failed to load video')
       } finally {
         setLoading(false)
       }
     }
     fetchVideo()
-  }, [topic.word])
+  }, [topic.word, isMotivationMode, contentConfig.genre])
 
   // Elapsed timer
   useEffect(() => {
@@ -244,9 +295,9 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
           <div className="relative p-6">
             <div className="text-center mb-4 mt-2">
               <h2 className="text-3xl font-bold text-white tracking-wide uppercase mb-1">
-                {topic.word}
+                {displayTitle}
               </h2>
-              <p className="text-xs text-white/60">{topic.tagline}</p>
+              <p className="text-xs text-white/60">{displayTagline}</p>
             </div>
 
             {/* Pause/Play button */}
@@ -324,10 +375,10 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
                 <h2 className={`text-4xl font-bold tracking-wide uppercase ${
                   isCompleted ? 'text-white/70' : 'text-white'
                 }`}>
-                  {topic.word}
+                  {displayTitle}
                 </h2>
                 <p className={`text-sm mt-2 ${isCompleted ? 'text-white/50' : 'text-white/70'}`}>
-                  {topic.tagline}
+                  {displayTagline}
                 </p>
               </div>
 
@@ -352,7 +403,14 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip }: MicroLesso
               </div>
               {!isCompleted && (
                 <div className="text-center mt-3">
-                  <FeatureHint id="micro-lesson" text="Audio motivation from top creators — plays in the background" mode="once" />
+                  <FeatureHint
+                    id={isMotivationMode ? "micro-lesson" : "micro-lesson-music"}
+                    text={isMotivationMode
+                      ? "Audio motivation from top creators — plays in the background"
+                      : "Focus music to help you concentrate — plays in the background"
+                    }
+                    mode="once"
+                  />
                 </div>
               )}
             </div>

@@ -6,6 +6,7 @@ import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { useThemeOptional } from '@/contexts/ThemeContext'
+import { useAudioOptional } from '@/contexts/AudioContext'
 import { Capacitor } from '@capacitor/core'
 import { NativeAudio } from '@capacitor-community/native-audio'
 import { App } from '@capacitor/app'
@@ -165,6 +166,7 @@ export function GuidancePlayer({
   const subscription = useSubscriptionOptional()
   const isPremium = subscription?.isPremium ?? false
   const themeContext = useThemeOptional()
+  const audioContext = useAudioOptional()
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -220,6 +222,18 @@ export function GuidancePlayer({
 
   const config = segmentConfig[segment] || defaultConfig
   const totalDuration = duration || 45
+
+  // Pause global soundscape when GuidancePlayer opens, resume when closed
+  useEffect(() => {
+    if (audioContext?.isMusicPlaying) {
+      audioContext.pauseMusic()
+    }
+
+    return () => {
+      // Resume soundscape when player closes
+      audioContext?.resumeMusic()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle app state changes for native background playback
   useEffect(() => {
