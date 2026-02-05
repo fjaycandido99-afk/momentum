@@ -499,6 +499,24 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     generateGuide(energy)
   }
 
+  const resetGuide = async () => {
+    try {
+      setGenerationError(null)
+      const response = await fetch('/api/daily-guide/reset', { method: 'DELETE' })
+      if (response.ok) {
+        setGuide(null)
+        setShowEnergyPrompt(true)
+        console.log('[reset] Guide cleared successfully')
+      } else {
+        const data = await response.json().catch(() => ({}))
+        setGenerationError(`Reset failed: ${data.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Reset error:', error)
+      setGenerationError('Failed to reset guide. Please try again.')
+    }
+  }
+
   const toggleDayType = async (newDayType: string) => {
     if (!guide) return
 
@@ -968,7 +986,13 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         <div className="px-6 mb-6">
           {generationError && (
             <div className="mb-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-              <p className="text-sm text-red-400">{generationError}</p>
+              <p className="text-sm text-red-400 mb-3">{generationError}</p>
+              <button
+                onClick={resetGuide}
+                className="text-sm text-white/70 hover:text-white underline"
+              >
+                Reset & Try Again
+              </button>
             </div>
           )}
           <EnergyPrompt
