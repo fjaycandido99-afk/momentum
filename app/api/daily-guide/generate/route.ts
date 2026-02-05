@@ -99,7 +99,11 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    console.log('[generate] Step 1: Preferences loaded', { userId: user.id, hasPrefs: !!preferences })
+    console.log('[generate] Step 1: Preferences loaded', {
+      userId: user.id,
+      hasPrefs: !!preferences,
+      hasGroqKey: !!process.env.GROQ_API_KEY
+    })
 
     // Build the day plan using decision tree
     const userPrefs = {

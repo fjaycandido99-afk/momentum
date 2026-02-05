@@ -510,6 +510,12 @@ export async function generateModuleContent(
   }
 
   try {
+    // Check if GROQ_API_KEY is set
+    if (!process.env.GROQ_API_KEY) {
+      console.warn('[generateModuleContent] GROQ_API_KEY not set, using fallback')
+      return getFallbackContent(moduleType, context)
+    }
+
     const response = await getGroq().chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
