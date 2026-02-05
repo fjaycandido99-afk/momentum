@@ -482,7 +482,8 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
             setSelectedEnergy(energyLevel)
           }
         } else {
-          setGenerationError(errorData.error || 'Failed to generate guide. Please try again.')
+          const errorDetails = errorData.details ? `: ${errorData.details}` : ''
+          setGenerationError((errorData.error || 'Failed to generate guide') + errorDetails)
         }
       }
     } catch (error) {
