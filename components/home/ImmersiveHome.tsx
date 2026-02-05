@@ -131,6 +131,7 @@ export function ImmersiveHome() {
   const [activeMode, setActiveMode] = useState<Mode>(timeContext.suggested)
   const [isPlaying, setIsPlaying] = useState(false)
   const audioContext = useAudioOptional()
+  const hasRestoredRef = useRef(false)
 
   // Subscription context for freemium gating
   const { isPremium, isContentFree, dailyFreeUnlockUsed, useDailyFreeUnlock, openUpgradeModal } = useSubscription()
@@ -804,6 +805,82 @@ export function ImmersiveHome() {
     })
   }, [topicName, timeContext.suggested])
 
+  // Restore last played content when returning to home page
+  useEffect(() => {
+    if (hasRestoredRef.current) return
+    if (!ytReady || !bgPlayerReadyRef.current) return
+    if (!audioContext?.lastPlayed) return
+    // Don't restore if Daily Guide session is active to prevent audio overlap
+    if (audioContext?.isSessionActive) return
+
+    const lastPlayed = audioContext.lastPlayed
+    hasRestoredRef.current = true
+
+    // Restore based on type
+    if (lastPlayed.type === 'music' && lastPlayed.genreId && lastPlayed.videoId) {
+      const genre = MUSIC_GENRES.find(g => g.id === lastPlayed.genreId)
+      if (genre) {
+        // Wait for genre videos to load, then restore
+        const checkAndRestore = () => {
+          const videos = genreVideos[lastPlayed.genreId!]
+          if (videos && videos.length > 0) {
+            const videoIndex = lastPlayed.playlistIndex ?? 0
+            const video = videos[videoIndex]
+            if (video) {
+              // Don't auto-play, but set up the state so bottom bar shows last played
+              setActiveCardId(video.id)
+              setCurrentPlaylist({
+                videos: videos.slice(0, 8),
+                index: videoIndex,
+                type: 'music',
+                genreId: lastPlayed.genreId,
+                genreWord: lastPlayed.genreWord || genre.word,
+              })
+              setBackgroundMusic({ youtubeId: video.youtubeId, label: lastPlayed.genreWord || genre.word })
+              // Don't auto-play - user can tap bottom bar to resume
+              setMusicPlaying(false)
+            }
+          }
+        }
+        // Check immediately and also after a delay (in case videos are still loading)
+        checkAndRestore()
+        setTimeout(checkAndRestore, 1000)
+      }
+    } else if (lastPlayed.type === 'motivation' && lastPlayed.videoId) {
+      // Wait for motivation videos to load
+      const checkAndRestore = () => {
+        if (motivationVideos.length > 0) {
+          const videoIndex = lastPlayed.playlistIndex ?? 0
+          const video = motivationVideos[videoIndex]
+          if (video) {
+            setActiveCardId(video.id)
+            setCurrentPlaylist({
+              videos: motivationVideos.slice(0, 8),
+              index: videoIndex,
+              type: 'motivation',
+            })
+            setBackgroundMusic({ youtubeId: video.youtubeId, label: topicName })
+            setMusicPlaying(false)
+          }
+        }
+      }
+      checkAndRestore()
+      setTimeout(checkAndRestore, 1000)
+    } else if (lastPlayed.type === 'soundscape' && lastPlayed.soundscapeId) {
+      const item = SOUNDSCAPE_ITEMS.find(i => i.id === lastPlayed.soundscapeId)
+      if (item) {
+        setActiveSoundscape({
+          soundId: item.id,
+          label: item.label,
+          subtitle: item.subtitle,
+          youtubeId: item.youtubeId,
+        })
+        // Don't auto-play or show player - just set state for bottom bar
+        setSoundscapeIsPlaying(false)
+      }
+    }
+  }, [ytReady, audioContext?.lastPlayed, genreVideos, motivationVideos, topicName])
+
   // Trigger tap ripple animation on a card
   const triggerTap = (videoId: string) => {
     setTappedCardId(videoId)
@@ -841,6 +918,14 @@ export function ImmersiveHome() {
     setBackgroundMusic({ youtubeId: video.youtubeId, label: topicName })
     setMusicPlaying(true)
     createBgMusicPlayer(video.youtubeId)
+
+    // Save last played to context for persistence
+    audioContext?.setLastPlayed({
+      type: 'motivation',
+      videoId: video.youtubeId,
+      label: topicName,
+      playlistIndex: index,
+    })
 
     const backgrounds = getTodaysBackgrounds()
     setPlayingSound({
@@ -885,6 +970,16 @@ export function ImmersiveHome() {
     setBackgroundMusic({ youtubeId: video.youtubeId, label: genreWord })
     setMusicPlaying(true)
     createBgMusicPlayer(video.youtubeId)
+
+    // Save last played to context for persistence
+    audioContext?.setLastPlayed({
+      type: 'music',
+      genreId,
+      genreWord,
+      videoId: video.youtubeId,
+      label: genreWord,
+      playlistIndex: index,
+    })
 
     const gBgs = genreBackgrounds[genreId] || []
     const bg = gBgs.length > 0
@@ -934,6 +1029,25 @@ export function ImmersiveHome() {
     })
     createBgMusicPlayer(nextVideo.youtubeId)
 
+    // Update last played info
+    if (currentPlaylist.type === 'motivation') {
+      audioContext?.setLastPlayed({
+        type: 'motivation',
+        videoId: nextVideo.youtubeId,
+        label: topicName,
+        playlistIndex: nextIndex,
+      })
+    } else {
+      audioContext?.setLastPlayed({
+        type: 'music',
+        genreId: currentPlaylist.genreId,
+        genreWord: currentPlaylist.genreWord,
+        videoId: nextVideo.youtubeId,
+        label: currentPlaylist.genreWord || '',
+        playlistIndex: nextIndex,
+      })
+    }
+
     // Update background image
     if (currentPlaylist.type === 'motivation') {
       const bgs = getTodaysBackgrounds()
@@ -953,7 +1067,7 @@ export function ImmersiveHome() {
         backgroundImage: bg,
       } : null)
     }
-  }, [currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer])
+  }, [currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer, audioContext])
 
   // Skip to previous video in playlist
   const handleSkipPrevious = useCallback(() => {
@@ -977,6 +1091,25 @@ export function ImmersiveHome() {
     })
     createBgMusicPlayer(prevVideo.youtubeId)
 
+    // Update last played info
+    if (currentPlaylist.type === 'motivation') {
+      audioContext?.setLastPlayed({
+        type: 'motivation',
+        videoId: prevVideo.youtubeId,
+        label: topicName,
+        playlistIndex: prevIndex,
+      })
+    } else {
+      audioContext?.setLastPlayed({
+        type: 'music',
+        genreId: currentPlaylist.genreId,
+        genreWord: currentPlaylist.genreWord,
+        videoId: prevVideo.youtubeId,
+        label: currentPlaylist.genreWord || '',
+        playlistIndex: prevIndex,
+      })
+    }
+
     // Update background image
     if (currentPlaylist.type === 'motivation') {
       const bgs = getTodaysBackgrounds()
@@ -996,7 +1129,7 @@ export function ImmersiveHome() {
         backgroundImage: bg,
       } : null)
     }
-  }, [currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer])
+  }, [currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer, audioContext])
 
   // Keep autoSkipNextRef in sync with handleSkipNext for YT player event handler
   useEffect(() => {
@@ -1088,7 +1221,11 @@ export function ImmersiveHome() {
           </div>
           <div className="absolute bottom-0 left-0 right-0 z-[60] flex justify-center pb-6 pt-3 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
             <button
-              onClick={() => setShowMorningFlow(false)}
+              onClick={() => {
+                // Clear session active when closing Morning Flow to prevent audio overlap issues
+                audioContext?.setSessionActive(false)
+                setShowMorningFlow(false)
+              }}
               className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors"
             >
               <Home className="w-4 h-4 text-white/95" />
@@ -1230,6 +1367,13 @@ export function ImmersiveHome() {
                   // Create player synchronously in tap gesture context (mobile autoplay)
                   createSoundscapePlayer(item.youtubeId)
                   setShowSoundscapePlayer(true)
+
+                  // Save last played to context for persistence
+                  audioContext?.setLastPlayed({
+                    type: 'soundscape',
+                    soundscapeId: item.id,
+                    label: item.label,
+                  })
 
                   // Start preview timer for locked content
                   if (isLocked) {
@@ -1518,6 +1662,11 @@ export function ImmersiveHome() {
           isPlaying
         }
         onTogglePlay={() => {
+          // Prevent audio overlap with Daily Guide session
+          if (audioContext?.isSessionActive && !guideLabel) {
+            // Daily Guide is active but this isn't guide audio - don't start new audio
+            return
+          }
           if (backgroundMusic) {
             setMusicPlaying(!musicPlaying)
           } else if (guideLabel) {
@@ -1525,6 +1674,8 @@ export function ImmersiveHome() {
           } else if (activeSoundscape) {
             setSoundscapeIsPlaying(!soundscapeIsPlaying)
           } else {
+            // Don't start new soundscape if Daily Guide is active
+            if (audioContext?.isSessionActive) return
             // Open SoundscapePlayer with active mode
             const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
             setActiveSoundscape({ soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId })
@@ -1533,6 +1684,9 @@ export function ImmersiveHome() {
           }
         }}
         onOpenPlayer={() => {
+          // Prevent opening player that could overlap with Daily Guide session
+          if (audioContext?.isSessionActive && !guideLabel) return
+
           if (backgroundMusic && currentPlaylist) {
             // Reopen fullscreen player for currently playing music/motivation video
             const currentVideo = currentPlaylist.videos[currentPlaylist.index]
@@ -1560,6 +1714,8 @@ export function ImmersiveHome() {
           if (activeSoundscape) {
             setShowSoundscapePlayer(true)
           } else {
+            // Don't start new soundscape if Daily Guide is active
+            if (audioContext?.isSessionActive) return
             const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
             setActiveSoundscape({ soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId })
             createSoundscapePlayer(item.youtubeId)

@@ -3,6 +3,18 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback, useMemo, ReactNode } from 'react'
 import type { YTPlayer } from '@/lib/youtube-types'
 
+// Last played content info for persistence
+interface LastPlayedInfo {
+  type: 'music' | 'motivation' | 'soundscape' | 'guide' | null
+  genreId?: string
+  genreWord?: string
+  videoId?: string
+  soundscapeId?: string
+  label?: string
+  playlistIndex?: number
+  timestamp?: number
+}
+
 interface AudioContextType {
   // Background music
   musicEnabled: boolean
@@ -23,6 +35,11 @@ interface AudioContextType {
   skipTrack: () => void
   toggleMute: () => void
   isMuted: boolean
+
+  // Last played persistence
+  lastPlayed: LastPlayedInfo | null
+  setLastPlayed: (info: LastPlayedInfo | null) => void
+  clearLastPlayed: () => void
 }
 
 const AudioContext = createContext<AudioContextType | null>(null)
@@ -43,6 +60,8 @@ interface AudioProviderProps {
   children: ReactNode
 }
 
+const LAST_PLAYED_KEY = 'voxu_last_played'
+
 export function AudioProvider({ children }: AudioProviderProps) {
   const [musicEnabled, setMusicEnabledState] = useState(false)
   const [musicGenre, setMusicGenre] = useState<string | null>(null)
@@ -52,11 +71,55 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const [bgMusicVideoId, setBgMusicVideoId] = useState<string | null>(null)
   const [isMuted, setIsMuted] = useState(false)
 
+  // Last played state - persisted to localStorage
+  const [lastPlayed, setLastPlayedState] = useState<LastPlayedInfo | null>(null)
+
   const bgMusicPlayerRef = useRef<YTPlayer | null>(null)
   const isMountedRef = useRef(true)
   const userPausedRef = useRef(false)
   const musicEnabledRef = useRef(false)
   const wasPlayingBeforeSessionRef = useRef(false)
+
+  // Load last played from localStorage on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const stored = localStorage.getItem(LAST_PLAYED_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored) as LastPlayedInfo
+        // Only restore if it was saved within the last 24 hours
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+          setLastPlayedState(parsed)
+        }
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, [])
+
+  // Persist last played to localStorage
+  const setLastPlayed = useCallback((info: LastPlayedInfo | null) => {
+    if (info) {
+      const infoWithTimestamp = { ...info, timestamp: Date.now() }
+      setLastPlayedState(infoWithTimestamp)
+      try {
+        localStorage.setItem(LAST_PLAYED_KEY, JSON.stringify(infoWithTimestamp))
+      } catch {
+        // Storage quota exceeded or unavailable
+      }
+    } else {
+      setLastPlayedState(null)
+    }
+  }, [])
+
+  const clearLastPlayed = useCallback(() => {
+    setLastPlayedState(null)
+    try {
+      localStorage.removeItem(LAST_PLAYED_KEY)
+    } catch {
+      // Ignore
+    }
+  }, [])
 
   // Keep musicEnabledRef in sync with state
   useEffect(() => {
@@ -338,6 +401,9 @@ export function AudioProvider({ children }: AudioProviderProps) {
     skipTrack,
     toggleMute,
     isMuted,
+    lastPlayed,
+    setLastPlayed,
+    clearLastPlayed,
   }), [
     musicEnabled,
     setMusicEnabled,
@@ -351,6 +417,9 @@ export function AudioProvider({ children }: AudioProviderProps) {
     stopMusic,
     skipTrack,
     toggleMute,
+    lastPlayed,
+    setLastPlayed,
+    clearLastPlayed,
   ])
 
   return (

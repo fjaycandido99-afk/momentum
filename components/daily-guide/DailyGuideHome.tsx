@@ -391,6 +391,15 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     }
   }, [audioContext, activePlayer])
 
+  // Cleanup: reset session active when component unmounts (e.g., when Morning Flow closes)
+  useEffect(() => {
+    return () => {
+      if (audioContext) {
+        audioContext.setSessionActive(false)
+      }
+    }
+  }, [audioContext])
+
   const generateGuide = async (energyLevel?: EnergyLevel) => {
     setIsGenerating(true)
     setGenerationError(null)
