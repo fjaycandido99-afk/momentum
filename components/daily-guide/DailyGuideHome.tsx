@@ -301,6 +301,14 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         const guideData = await guideRes.json()
         if (!isMountedRef.current) return
         if (guideData.data) {
+          // Check if guide has modules - if not, it's an old guide that needs regeneration
+          const hasModules = guideData.data.modules && guideData.data.modules.length > 0
+          if (!hasModules) {
+            console.log('[fetchData] Guide exists but has no modules, needs regeneration')
+            setShowEnergyPrompt(true)
+            return
+          }
+
           setGuide(guideData.data)
           setCheckpoints(guideData.checkpoints || [])
           setDurations(guideData.durations || {})
