@@ -99,6 +99,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    console.log('[generate] Step 1: Preferences loaded', { userId: user.id, hasPrefs: !!preferences })
+
     // Build the day plan using decision tree
     const userPrefs = {
       userType: (preferences.user_type || 'professional') as 'professional' | 'student' | 'hybrid',
@@ -132,12 +134,14 @@ export async function POST(request: NextRequest) {
       dayType = 'exam'
     }
 
+    console.log('[generate] Step 2: Building day plan', { dayType, timeMode })
     const { dayContext, modules } = buildDayPlan(date, userPrefs, {
       isRecoveryOverride: isRecoveryDay ?? false,
       energyLevel: energyLevel as EnergyLevel | undefined,
       timeMode,
       dayTypeOverride: dayType,
     })
+    console.log('[generate] Step 3: Day plan built', { modules: modules.modules })
 
     // Generation context for AI
     const genContext = {
@@ -215,13 +219,16 @@ export async function POST(request: NextRequest) {
     )
 
     // Wait for all generations
+    console.log('[generate] Step 4: Starting content generation', { promiseCount: generationPromises.length })
     const results = await Promise.all(generationPromises)
+    console.log('[generate] Step 5: Content generated', { resultCount: results.length })
     const contentMap: Record<string, { script: string; duration: number }> = {}
     results.forEach(({ key, result }) => {
       contentMap[key] = result
     })
 
     // Upsert the daily guide with all generated content
+    console.log('[generate] Step 6: Upserting guide to database')
     const guide = await prisma.dailyGuide.upsert({
       where: {
         user_id_date: {
