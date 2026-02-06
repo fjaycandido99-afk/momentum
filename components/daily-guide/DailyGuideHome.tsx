@@ -655,6 +655,35 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         return
       }
 
+      // For checkpoints, use inline playback like morning flow (no overlay)
+      if (moduleType.startsWith('checkpoint')) {
+        console.log(`[DailyGuideHome] Fetching ${moduleType} audio...`)
+        try {
+          const response = await fetch(
+            `/api/daily-guide/audio?segment=${moduleType}&date=${today.toISOString()}`
+          )
+
+          if (response.ok) {
+            const data = await response.json()
+            console.log(`[DailyGuideHome] Got ${moduleType} audio, has base64:`, !!data.audioBase64)
+            // Store for inline playback
+            setModuleAudioData(prev => ({
+              ...prev,
+              [moduleType]: {
+                script: data.script,
+                audioBase64: data.audioBase64,
+                duration: data.duration || 60,
+              }
+            }))
+          } else {
+            console.error(`[DailyGuideHome] ${moduleType} audio fetch failed:`, response.status)
+          }
+        } finally {
+          setLoadingModule(null)
+        }
+        return
+      }
+
       // For other modules, use the regular audio API
       const response = await fetch(
         `/api/daily-guide/audio?segment=${moduleType}&date=${today.toISOString()}`
@@ -1312,10 +1341,27 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 checkpoint_2: guide.checkpoint_2_script,
                 checkpoint_3: guide.checkpoint_3_script,
               }}
+              audioData={{
+                checkpoint_1: moduleAudioData['checkpoint_1'],
+                checkpoint_2: moduleAudioData['checkpoint_2'],
+                checkpoint_3: moduleAudioData['checkpoint_3'],
+              }}
               completedCheckpoints={completedModules.filter(m => m.startsWith('checkpoint'))}
               currentTime={today}
               loadingCheckpoint={loadingModule?.startsWith('checkpoint') ? loadingModule : null}
               onPlayCheckpoint={(cp) => playModule(cp, musicEnabled)}
+              onCompleteCheckpoint={(cp) => {
+                console.log(`[CheckpointCard ${cp}] onComplete fired, saving checkin`)
+                setCompletedModules(prev => [...prev, cp])
+                fetch('/api/daily-guide/checkin', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ segment: cp, date: guide.date }),
+                }).then(res => {
+                  if (!res.ok) res.text().then(t => console.error(`[CheckpointCard ${cp} checkin] failed:`, res.status, t))
+                  else console.log(`[CheckpointCard ${cp}] checkin saved OK`)
+                }).catch(err => console.error(`[CheckpointCard ${cp} checkin] error:`, err))
+              }}
             />
             </>
           )}

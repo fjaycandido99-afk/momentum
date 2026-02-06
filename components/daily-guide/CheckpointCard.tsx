@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useRef, useEffect, useCallback } from 'react'
 import {
   Target,
   Sun,
@@ -8,6 +9,7 @@ import {
   Heart,
   Clock,
   Play,
+  Pause,
   Check,
   Loader2,
   Zap,
@@ -15,9 +17,11 @@ import {
   Sparkles,
   Lock,
   Crown,
+  RotateCcw,
 } from 'lucide-react'
 import type { CheckpointConfig } from '@/lib/daily-guide/decision-tree'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { useAudioOptional } from '@/contexts/AudioContext'
 
 interface CheckpointCardProps {
   checkpoint: CheckpointConfig
@@ -26,6 +30,9 @@ interface CheckpointCardProps {
   isCompleted: boolean
   isLoading: boolean
   onPlay: () => void
+  // For inline playback
+  audioBase64?: string | null
+  onComplete?: () => void
 }
 
 // Benefit types
@@ -110,11 +117,172 @@ export function CheckpointCard({
   isCompleted,
   isLoading,
   onPlay,
+  audioBase64,
+  onComplete,
 }: CheckpointCardProps) {
   const content = getCheckpointContent(checkpoint.name)
   const Icon = content.icon
   const benefit = BENEFIT_CONFIG[content.benefit.type]
   const BenefitIcon = benefit.icon
+  const audioContext = useAudioOptional()
+
+  // Inline audio player state
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(60)
+  const [isAudioLoading, setIsAudioLoading] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const playbackInitiatedRef = useRef(false)
+
+  // Timer for tracking playback
+  useEffect(() => {
+    if (isPlaying && !isPaused) {
+      timerRef.current = setInterval(() => {
+        if (audioRef.current) {
+          setCurrentTime(audioRef.current.currentTime)
+        }
+      }, 100)
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [isPlaying, isPaused])
+
+  // Pause/resume background music when playing
+  useEffect(() => {
+    if (!audioContext) return
+
+    if (isPlaying && !isPaused) {
+      audioContext.pauseMusic()
+    } else {
+      audioContext.resumeMusic()
+    }
+  }, [isPlaying, isPaused, audioContext])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
+
+  // Handle play - fetch audio if needed, then play
+  const handlePlay = useCallback(async () => {
+    if (isPlaying) return
+
+    setIsAudioLoading(true)
+
+    // If no audio data, fetch it first
+    if (!audioBase64) {
+      playbackInitiatedRef.current = true
+      onPlay()
+      return
+    }
+
+    // Cleanup any previous audio instance
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.src = ''
+      audioRef.current = null
+    }
+
+    // Create audio and play
+    const audioSource = `data:audio/mpeg;base64,${audioBase64}`
+    const audio = new Audio(audioSource)
+    audioRef.current = audio
+
+    audio.onloadedmetadata = () => {
+      setAudioDuration(audio.duration)
+    }
+
+    audio.onended = () => {
+      setIsPlaying(false)
+      setIsPaused(false)
+      setCurrentTime(0)
+      onComplete?.()
+    }
+
+    try {
+      await audio.play()
+      setIsPlaying(true)
+      setIsPaused(false)
+      setIsAudioLoading(false)
+    } catch (error) {
+      console.error('[CheckpointCard] Error playing audio:', error)
+      setIsAudioLoading(false)
+    }
+  }, [audioBase64, isPlaying, onPlay, onComplete])
+
+  // Auto-play when audioBase64 arrives (after fetch)
+  useEffect(() => {
+    if (isAudioLoading && !isPlaying && playbackInitiatedRef.current) {
+      if (audioBase64) {
+        playbackInitiatedRef.current = false
+        handlePlay()
+      }
+    }
+  }, [audioBase64, isAudioLoading, isPlaying, handlePlay])
+
+  // Handle pause/resume toggle
+  const handlePauseToggle = useCallback(() => {
+    if (!audioRef.current) return
+
+    if (isPaused) {
+      audioRef.current.play()
+      setIsPaused(false)
+    } else {
+      audioRef.current.pause()
+      setIsPaused(true)
+    }
+  }, [isPaused])
+
+  // Handle close/done
+  const handleClose = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    setIsPlaying(false)
+    setIsPaused(false)
+    setCurrentTime(0)
+    playbackInitiatedRef.current = false
+    onComplete?.()
+  }, [onComplete])
+
+  const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !audioDuration) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const percentage = x / rect.width
+    const newTime = percentage * audioDuration
+
+    audioRef.current.currentTime = newTime
+    setCurrentTime(newTime)
+  }, [audioDuration])
+
+  const progress = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0
+
+  const formatPlaybackTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number)
@@ -176,53 +344,140 @@ export function CheckpointCard({
       </div>
 
       {/* Footer */}
-      <div className={`px-4 pb-4 pt-2 flex items-center justify-between ${isCompleted ? 'opacity-50' : ''}`}>
-        <div className="flex items-center gap-3">
-          <div className={`
-            p-2 rounded-xl transition-all
-            ${isCompleted ? 'bg-white/5' : isAvailable ? 'bg-white/10 animate-pulse-glow' : 'bg-white/5'}
-          `}>
-            <Icon className={`
-              w-4 h-4 transition-all
-              ${isCompleted ? 'text-white/95' : isAvailable ? 'text-white animate-icon-bounce' : 'text-white/95'}
-            `} />
-          </div>
-          <div>
-            <p className={`text-sm font-medium ${isCompleted ? 'text-white/95' : 'text-white'}`}>
-              {checkpoint.name}
-            </p>
-            <span className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
-              {formatTime(checkpoint.time)}
-            </span>
-          </div>
-        </div>
+      <div className={`px-4 pb-4 pt-2 ${isCompleted ? 'opacity-50' : ''}`}>
+        {/* Inline Player - shown when audio is playing */}
+        {isPlaying && !isCompleted ? (
+          <div className="space-y-3">
+            {/* Progress bar */}
+            <div
+              role="progressbar"
+              aria-valuenow={Math.round(currentTime)}
+              aria-valuemin={0}
+              aria-valuemax={Math.round(audioDuration)}
+              aria-label="Playback progress"
+              className="relative h-1.5 bg-white/10 rounded-full cursor-pointer group"
+              onClick={handleSeek}
+            >
+              <div
+                className="absolute left-0 top-0 h-full bg-white/80 rounded-full transition-all shadow-[0_0_6px_rgba(255,255,255,0.15)]"
+                style={{ width: `${progress}%` }}
+              />
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ left: `calc(${progress}% - 6px)` }}
+              />
+            </div>
 
-        {/* Play button */}
-        {isAvailable && !isCompleted && script && (
-          <button
-            onClick={onPlay}
-            disabled={isLoading}
-            aria-label={`Play ${checkpoint.name}`}
-            aria-busy={isLoading}
-            className={`
-              p-3 rounded-xl transition-all
-              bg-white/10 hover:bg-white/20 hover:scale-105 active:scale-95
-              disabled:opacity-40 disabled:cursor-not-allowed
-              focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none
-            `}
-          >
-            {isLoading ? (
-              <Loader2 className="w-5 h-5 text-white animate-spin" />
-            ) : (
-              <Play className="w-5 h-5 text-white fill-current" />
-            )}
-          </button>
-        )}
+            {/* Controls row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {/* Play/Pause button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handlePauseToggle()
+                  }}
+                  aria-label={isPaused ? 'Resume' : 'Pause'}
+                  className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                >
+                  {isPaused ? (
+                    <Play className="w-5 h-5 text-white fill-current" />
+                  ) : (
+                    <Pause className="w-5 h-5 text-white" />
+                  )}
+                </button>
 
-        {/* Not available indicator */}
-        {!isAvailable && !isCompleted && (
-          <div className="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-white/95">
-            {formatTime(checkpoint.time)}
+                {/* Time display */}
+                <div className="text-xs text-white/95 font-mono">
+                  {formatPlaybackTime(currentTime)} / {formatPlaybackTime(audioDuration)}
+                </div>
+              </div>
+
+              {/* Done button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleClose()
+                }}
+                aria-label="Done"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+              >
+                <Check className="w-3.5 h-3.5 text-white/95" />
+                <span className="text-xs text-white/95">Done</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Default view - not playing */
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`
+                p-2 rounded-xl transition-all
+                ${isCompleted ? 'bg-white/5' : isAvailable ? 'bg-white/10 animate-pulse-glow' : 'bg-white/5'}
+              `}>
+                <Icon className={`
+                  w-4 h-4 transition-all
+                  ${isCompleted ? 'text-white/95' : isAvailable ? 'text-white animate-icon-bounce' : 'text-white/95'}
+                `} />
+              </div>
+              <div>
+                <p className={`text-sm font-medium ${isCompleted ? 'text-white/95' : 'text-white'}`}>
+                  {checkpoint.name}
+                </p>
+                <span className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
+                  {formatTime(checkpoint.time)}
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            {isAvailable && !isCompleted && script ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handlePlay()
+                }}
+                disabled={isLoading || isAudioLoading}
+                aria-label={`Play ${checkpoint.name}`}
+                aria-busy={isLoading || isAudioLoading}
+                className={`
+                  p-3 rounded-xl transition-all
+                  bg-white/10 hover:bg-white/20 hover:scale-105 active:scale-95
+                  disabled:opacity-40 disabled:cursor-not-allowed
+                  focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none
+                `}
+              >
+                {isLoading || isAudioLoading ? (
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                ) : (
+                  <Play className="w-5 h-5 text-white fill-current" />
+                )}
+              </button>
+            ) : isCompleted ? (
+              // Replay button for completed checkpoints
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handlePlay()
+                }}
+                disabled={isLoading || isAudioLoading || !script}
+                aria-label={`Replay ${checkpoint.name}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                title="Listen again"
+              >
+                {isLoading || isAudioLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 text-white/95 animate-spin" />
+                ) : (
+                  <RotateCcw className="w-3.5 h-3.5 text-white/95" />
+                )}
+                <span className="text-xs text-white/95">Replay</span>
+              </button>
+            ) : !isAvailable ? (
+              // Not available indicator
+              <div className="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-white/95">
+                {formatTime(checkpoint.time)}
+              </div>
+            ) : null}
           </div>
         )}
       </div>
@@ -230,23 +485,34 @@ export function CheckpointCard({
   )
 }
 
+// Audio data type for checkpoints
+interface AudioData {
+  script: string
+  audioBase64: string | null
+  duration: number
+}
+
 // Compact list of checkpoints
 interface CheckpointListProps {
   checkpoints: CheckpointConfig[]
   scripts: Record<string, string | null>
+  audioData?: Record<string, AudioData | undefined>
   completedCheckpoints: string[]
   currentTime: Date
   loadingCheckpoint: string | null
   onPlayCheckpoint: (checkpointId: string) => void
+  onCompleteCheckpoint?: (checkpointId: string) => void
 }
 
 export function CheckpointList({
   checkpoints,
   scripts,
+  audioData,
   completedCheckpoints,
   currentTime,
   loadingCheckpoint,
   onPlayCheckpoint,
+  onCompleteCheckpoint,
 }: CheckpointListProps) {
   const subscription = useSubscriptionOptional()
   const isPremium = subscription?.isPremium ?? false
@@ -287,11 +553,13 @@ export function CheckpointList({
           <div key={checkpoint.id} className={`animate-fade-in opacity-0 stagger-${Math.min(index + 1, 10)}`}>
             <CheckpointCard
               checkpoint={checkpoint}
-              script={scripts[checkpoint.id] || null}
+              script={audioData?.[checkpoint.id]?.script || scripts[checkpoint.id] || null}
               isAvailable={isCheckpointAvailable(checkpoint)}
               isCompleted={completedCheckpoints.includes(checkpoint.id)}
               isLoading={loadingCheckpoint === checkpoint.id}
               onPlay={() => onPlayCheckpoint(checkpoint.id)}
+              audioBase64={audioData?.[checkpoint.id]?.audioBase64}
+              onComplete={() => onCompleteCheckpoint?.(checkpoint.id)}
             />
           </div>
         ))}
