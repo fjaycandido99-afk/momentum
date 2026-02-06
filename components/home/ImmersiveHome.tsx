@@ -862,14 +862,19 @@ export function ImmersiveHome() {
     if (lastPlayed.type === 'music' && lastPlayed.genreId && lastPlayed.videoId) {
       const genre = MUSIC_GENRES.find(g => g.id === lastPlayed.genreId)
       if (genre) {
-        // Wait for genre videos to load, then restore
+        // Immediately set backgroundMusic so bottom bar shows correct label
+        // This prevents falling through to soundscape if user clicks before videos load
+        setBackgroundMusic({ youtubeId: lastPlayed.videoId, label: lastPlayed.genreWord || genre.word })
+        setMusicPlaying(false)
+        userPausedMusicRef.current = true
+
+        // Wait for genre videos to load, then restore full playlist state
         const checkAndRestore = () => {
           const videos = genreVideos[lastPlayed.genreId!]
           if (videos && videos.length > 0) {
             const videoIndex = lastPlayed.playlistIndex ?? 0
             const video = videos[videoIndex]
             if (video) {
-              // Don't auto-play, but set up the state so bottom bar shows last played
               setActiveCardId(video.id)
               setCurrentPlaylist({
                 videos: videos.slice(0, 8),
@@ -878,11 +883,6 @@ export function ImmersiveHome() {
                 genreId: lastPlayed.genreId,
                 genreWord: lastPlayed.genreWord || genre.word,
               })
-              setBackgroundMusic({ youtubeId: video.youtubeId, label: lastPlayed.genreWord || genre.word })
-              // Don't auto-play - user can tap bottom bar to resume
-              // Mark as user paused so visibility change doesn't auto-resume
-              setMusicPlaying(false)
-              userPausedMusicRef.current = true
             }
           }
         }
@@ -891,7 +891,12 @@ export function ImmersiveHome() {
         setTimeout(checkAndRestore, 1000)
       }
     } else if (lastPlayed.type === 'motivation' && lastPlayed.videoId) {
-      // Wait for motivation videos to load
+      // Immediately set backgroundMusic so bottom bar shows correct label
+      setBackgroundMusic({ youtubeId: lastPlayed.videoId, label: lastPlayed.label || topicName })
+      setMusicPlaying(false)
+      userPausedMusicRef.current = true
+
+      // Wait for motivation videos to load, then restore full playlist state
       const checkAndRestore = () => {
         if (motivationVideos.length > 0) {
           const videoIndex = lastPlayed.playlistIndex ?? 0
@@ -903,10 +908,6 @@ export function ImmersiveHome() {
               index: videoIndex,
               type: 'motivation',
             })
-            setBackgroundMusic({ youtubeId: video.youtubeId, label: topicName })
-            // Don't auto-play - mark as user paused
-            setMusicPlaying(false)
-            userPausedMusicRef.current = true
           }
         }
       }
