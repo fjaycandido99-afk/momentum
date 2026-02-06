@@ -175,7 +175,7 @@ function JournalContent() {
           <div className="p-2 rounded-xl bg-amber-500/20">
             <PenLine className="w-5 h-5 text-amber-400" />
           </div>
-          <h1 className="text-2xl font-light">Journal</h1>
+          <h1 className="text-2xl font-light shimmer-text">Journal</h1>
         </div>
         <p className="text-white/95 text-sm ml-12">Reflect, grow, remember</p>
       </div>

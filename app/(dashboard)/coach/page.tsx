@@ -134,7 +134,7 @@ export default function CoachPage() {
           <Link href="/" aria-label="Back to home" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
             <ChevronLeft className="w-5 h-5 text-white/95" />
           </Link>
-          <h1 className="text-2xl font-light">AI Coach</h1>
+          <h1 className="text-2xl font-light shimmer-text">AI Coach</h1>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center p-6">
           <div className="card-gradient-border p-8 text-center">
@@ -176,7 +176,7 @@ export default function CoachPage() {
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#08080c]" />
           </div>
           <div>
-            <h1 className="text-lg font-medium">AI Coach</h1>
+            <h1 className="text-lg font-medium shimmer-text">AI Coach</h1>
             <p className="text-xs text-emerald-400/80">Online</p>
           </div>
         </div>

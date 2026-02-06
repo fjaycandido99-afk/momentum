@@ -74,6 +74,7 @@ export function ConstellationBackground({
     }
 
     let currentOpacity = 0.2
+    let time = 0
 
     const draw = () => {
       const rect = canvas.getBoundingClientRect()
@@ -83,6 +84,8 @@ export function ConstellationBackground({
 
       const targetOpacity = animateRef.current ? 1 : 0.15
       currentOpacity += (targetOpacity - currentOpacity) * 0.03
+
+      if (animateRef.current) time += 0.016
 
       const nodes = nodesRef.current
 
@@ -113,7 +116,7 @@ export function ConstellationBackground({
         }
       }
 
-      // Draw connections
+      // Draw connections with gradient fade
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const dx = nodes[i].x - nodes[j].x
@@ -125,17 +128,32 @@ export function ConstellationBackground({
             ctx.moveTo(nodes[i].x, nodes[i].y)
             ctx.lineTo(nodes[j].x, nodes[j].y)
             ctx.strokeStyle = `rgba(255, 255, 255, ${lineAlpha})`
-            ctx.lineWidth = 0.5
+            ctx.lineWidth = 0.6
             ctx.stroke()
           }
         }
       }
 
-      // Draw nodes
-      for (const n of nodes) {
+      // Draw nodes with glow halos and pulsing
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i]
+        const pulse = 0.7 + 0.3 * Math.sin(time * 0.8 + i * 1.2)
+        const alpha = n.brightness * pulse * currentOpacity
+
+        // Soft glow halo
+        const glowRadius = n.radius * 4
+        const glow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glowRadius)
+        glow.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.2})`)
+        glow.addColorStop(1, 'rgba(255, 255, 255, 0)')
+        ctx.beginPath()
+        ctx.arc(n.x, n.y, glowRadius, 0, Math.PI * 2)
+        ctx.fillStyle = glow
+        ctx.fill()
+
+        // Core dot
         ctx.beginPath()
         ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255, 255, 255, ${n.brightness * currentOpacity})`
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
         ctx.fill()
       }
 

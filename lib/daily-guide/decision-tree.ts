@@ -27,6 +27,7 @@ export type ModuleType =
   | 'exam_calm'
   | 'pre_study'
   | 'study_break'
+  | 'cosmic_insight'
 
 export interface UserPreferences {
   workDays: number[]
@@ -78,6 +79,7 @@ const TIME_DURATIONS: Record<TimeMode, Record<ModuleType, number>> = {
     pre_study: 30,
     study_break: 60,
     exam_calm: 45,
+    cosmic_insight: 0, // text-only, no duration
   },
   normal: {
     morning_prime: 60,
@@ -91,6 +93,7 @@ const TIME_DURATIONS: Record<TimeMode, Record<ModuleType, number>> = {
     pre_study: 60,
     study_break: 120,
     exam_calm: 90,
+    cosmic_insight: 0, // text-only, no duration
   },
   full: {
     morning_prime: 90,
@@ -104,6 +107,7 @@ const TIME_DURATIONS: Record<TimeMode, Record<ModuleType, number>> = {
     pre_study: 90,
     study_break: 180,
     exam_calm: 120,
+    cosmic_insight: 0, // text-only, no duration
   },
 }
 

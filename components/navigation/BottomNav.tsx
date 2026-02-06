@@ -2,11 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Sun, Settings, Radio, PenLine } from 'lucide-react'
+import { Sun, Settings, PenLine, Sparkles } from 'lucide-react'
 
 const NAV_ITEMS = [
   { href: '/', label: 'Guide', icon: Sun },
-  { href: '/soundscape', label: 'Sounds', icon: Radio, featured: true },
+  { href: '/astrology', label: 'Cosmic', icon: Sparkles },
   { href: '/journal', label: 'Journal', icon: PenLine },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
@@ -20,32 +20,6 @@ export function BottomNav() {
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href
           const Icon = item.icon
-
-          // Featured button (Sounds) - center highlighted button
-          if (item.featured) {
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? 'page' : undefined}
-                aria-label={item.label}
-                className={`flex flex-col items-center gap-1 px-2 py-1 transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded-lg ${
-                  isActive ? 'scale-105' : ''
-                }`}
-              >
-                <div className={`p-3 rounded-full transition-all duration-200 ${
-                  isActive
-                    ? 'bg-white shadow-[0_0_20px_rgba(255,255,255,0.5),0_0_40px_rgba(255,255,255,0.2)] animate-glow-pulse'
-                    : 'bg-white/10'
-                }`}>
-                  <Icon className={`w-5 h-5 transition-all duration-200 ${isActive ? 'text-black' : 'text-white'}`} />
-                </div>
-                <span className={`text-[10px] ${isActive ? 'text-white' : 'text-white/95'}`}>
-                  {item.label}
-                </span>
-              </Link>
-            )
-          }
 
           return (
             <Link

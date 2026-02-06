@@ -14,6 +14,8 @@ const VALID_SEGMENTS = [
   'workout',
   'micro_lesson',
   'breath',
+  // Astrology
+  'cosmic_insight',
   // Evening
   'day_close',
   // Checkpoints
@@ -112,6 +114,9 @@ export async function POST(request: NextRequest) {
         break
       case 'checkpoint_3':
         updateData.checkpoint_3_done = true
+        break
+      case 'cosmic_insight':
+        updateData.cosmic_insight_done = true
         break
       // Legacy segment mappings
       case 'morning':

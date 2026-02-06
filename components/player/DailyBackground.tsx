@@ -9,6 +9,9 @@ import { GridTraceBackground } from './GridTraceBackground'
 import { NeuralNetworkBackground } from './NeuralNetworkBackground'
 import { HexGridBackground } from './HexGridBackground'
 import { CircuitTraceBackground } from './CircuitTraceBackground'
+import { NebulaBackground } from './NebulaBackground'
+import { AstralVortexBackground } from './AstralVortexBackground'
+import { ShootingStarsBackground } from './ShootingStarsBackground'
 
 export const BACKGROUND_ANIMATIONS = [
   { id: 'constellation', name: 'Constellation', description: 'Connected star nodes', component: ConstellationBackground },
@@ -19,6 +22,9 @@ export const BACKGROUND_ANIMATIONS = [
   { id: 'neural', name: 'Neural Network', description: 'Neural connections', component: NeuralNetworkBackground },
   { id: 'hex', name: 'Hex Grid', description: 'Hexagonal patterns', component: HexGridBackground },
   { id: 'circuit', name: 'Circuit Trace', description: 'Circuit board paths', component: CircuitTraceBackground },
+  { id: 'nebula', name: 'Nebula', description: 'Cosmic nebula clouds', component: NebulaBackground },
+  { id: 'vortex', name: 'Astral Vortex', description: 'Swirling astral energy', component: AstralVortexBackground },
+  { id: 'shooting-stars', name: 'Shooting Stars', description: 'Meteor shower sky', component: ShootingStarsBackground },
 ] as const
 
 export type AnimationId = (typeof BACKGROUND_ANIMATIONS)[number]['id']
@@ -26,6 +32,10 @@ export type AnimationId = (typeof BACKGROUND_ANIMATIONS)[number]['id']
 const STORAGE_KEY = 'voxu_preferred_animation'
 const BRIGHTNESS_KEY = 'voxu_bg_brightness'
 const ENABLED_KEY = 'voxu_bg_enabled'
+const COLOR_KEY = 'voxu_bg_color'
+
+/** -1 = white (no tint), 0–360 = hue degrees */
+export type BgColorHue = number
 
 export function getPreferredAnimation(): string | null {
   if (typeof window === 'undefined') return null
@@ -66,6 +76,25 @@ export function setBackgroundEnabled(value: boolean) {
   window.dispatchEvent(new Event('bg-enabled-changed'))
 }
 
+export function getBackgroundColor(): BgColorHue {
+  if (typeof window === 'undefined') return -1
+  const val = localStorage.getItem(COLOR_KEY)
+  if (val === null) return -1
+  const num = parseFloat(val)
+  return isNaN(num) ? -1 : num
+}
+
+export function setBackgroundColor(value: BgColorHue) {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(COLOR_KEY, String(value))
+  window.dispatchEvent(new Event('bg-color-changed'))
+}
+
+export function getColorFilter(hue: BgColorHue): string {
+  if (hue < 0) return ''
+  return `sepia(1) hue-rotate(${hue}deg) saturate(2.5)`
+}
+
 interface DailyBackgroundProps {
   animate?: boolean
   className?: string
@@ -89,23 +118,28 @@ export function DailyBackground({ animate = true, className = '' }: DailyBackgro
   const [mounted, setMounted] = useState(false)
   const [brightness, setBrightness] = useState(1)
   const [enabled, setEnabled] = useState(true)
+  const [colorTint, setColorTint] = useState<BgColorHue>(-1)
 
   useEffect(() => {
     setOverrideId(getPreferredAnimation())
     setBrightness(getBackgroundBrightness())
     setEnabled(getBackgroundEnabled())
+    setColorTint(getBackgroundColor())
     setMounted(true)
 
     const handleChange = () => setOverrideId(getPreferredAnimation())
     const handleBrightness = () => setBrightness(getBackgroundBrightness())
     const handleEnabled = () => setEnabled(getBackgroundEnabled())
+    const handleColor = () => setColorTint(getBackgroundColor())
     window.addEventListener('animation-preference-changed', handleChange)
     window.addEventListener('bg-brightness-changed', handleBrightness)
     window.addEventListener('bg-enabled-changed', handleEnabled)
+    window.addEventListener('bg-color-changed', handleColor)
     return () => {
       window.removeEventListener('animation-preference-changed', handleChange)
       window.removeEventListener('bg-brightness-changed', handleBrightness)
       window.removeEventListener('bg-enabled-changed', handleEnabled)
+      window.removeEventListener('bg-color-changed', handleColor)
     }
   }, [])
 
@@ -149,7 +183,14 @@ export function DailyBackground({ animate = true, className = '' }: DailyBackgro
       onPointerDown={handlePointerDown}
       onPointerLeave={handlePointerLeave}
       className="w-full h-full"
-      style={{ touchAction: 'none', filter: `brightness(${brightness})`, backgroundColor: '#000' }}
+      style={{
+        touchAction: 'none',
+        filter: (() => {
+          const cf = getColorFilter(colorTint)
+          return cf ? `brightness(${brightness}) ${cf}` : `brightness(${brightness})`
+        })(),
+        backgroundColor: '#000',
+      }}
     >
       <Background animate={animate} className={className} pointerRef={pointerRef} />
     </div>

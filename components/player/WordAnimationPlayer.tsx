@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Volume2, VolumeX, ExternalLink, Play, Pause, SkipForward, SkipBack } from 'lucide-react'
 import { RainEffect } from '@/components/effects/RainEffect'
+import { ConstellationBackground } from '@/components/player/ConstellationBackground'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
 
@@ -13,6 +14,7 @@ interface WordAnimationPlayerProps {
   youtubeId: string
   backgroundImage?: string
   showRain?: boolean
+  showConstellation?: boolean
   onClose: () => void
   /** When true, audio is owned by the parent — no YT player is created here */
   externalAudio?: boolean
@@ -41,7 +43,7 @@ const colorMap: Record<string, { primary: string; glow: string; bg: string }> = 
   'from-white/[0.06] to-white/[0.02]': { primary: 'rgba(245, 245, 250, 0.95)', glow: 'rgba(245, 245, 250, 0.2)', bg: '#08080c' },
 }
 
-export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, onClose, externalAudio = false, externalPlaying, onTogglePlay, externalDuration, externalCurrentTime, onSeek, onSkipNext, onSkipPrevious, hasNext = false, hasPrevious = false }: WordAnimationPlayerProps) {
+export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, showConstellation = false, onClose, externalAudio = false, externalPlaying, onTogglePlay, externalDuration, externalCurrentTime, onSeek, onSkipNext, onSkipPrevious, hasNext = false, hasPrevious = false }: WordAnimationPlayerProps) {
   const [isPlayingLocal, setIsPlayingLocal] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [playerReady, setPlayerReady] = useState(false)
@@ -227,6 +229,13 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
           {/* Rain effect for lo-fi backgrounds */}
           {showRain && <RainEffect intensity="medium" showLightning />}
         </>
+      )}
+
+      {/* Constellation background for cosmic sounds */}
+      {showConstellation && !backgroundImage && (
+        <div className="absolute inset-0">
+          <ConstellationBackground animate nodeCount={60} connectionDist={130} speed={0.2} />
+        </div>
       )}
 
       {/* Hidden YouTube player container (only for local audio mode) */}

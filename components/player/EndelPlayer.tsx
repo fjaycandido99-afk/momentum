@@ -40,7 +40,7 @@ export const ENDEL_MODES = {
     orbColor: 'rgba(245, 245, 250, 0.35)',
     orbGlow: 'rgba(245, 245, 250, 0.08)',
     sounds: [
-      { id: 'night', youtubeId: 'asSd6BOCmEY', label: 'Night' },
+      { id: 'night', youtubeId: 'NgHhs3B1xnc', label: 'Night' },
       { id: 'rain', youtubeId: 'mPZkdNFkNps', label: 'Rain' },
     ],
   },

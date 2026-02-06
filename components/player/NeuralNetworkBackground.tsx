@@ -104,6 +104,7 @@ export function NeuralNetworkBackground({
 
     let currentOpacity = 0.2
     let frameCount = 0
+    let time = 0
 
     const draw = () => {
       const rect = canvas.getBoundingClientRect()
@@ -116,6 +117,7 @@ export function NeuralNetworkBackground({
 
       const nodes = nodesRef.current
       frameCount++
+      if (animateRef.current) time += 0.016
 
       if (animateRef.current) {
         const ptr = pointerRef?.current
@@ -231,25 +233,38 @@ export function NeuralNetworkBackground({
         }
       }
 
-      // Draw nodes
-      for (const n of nodes) {
-        const baseAlpha = n.brightness * currentOpacity
+      // Draw nodes with ambient pulsing
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i]
+        const ambientPulse = 0.8 + 0.2 * Math.sin(time * 0.6 + i * 0.9)
+        const baseAlpha = n.brightness * ambientPulse * currentOpacity
         const fireAlpha = n.fireIntensity * 0.7 * currentOpacity
         const totalAlpha = Math.min(baseAlpha + fireAlpha, 1)
 
         // Glow effect when firing
-        if (n.fireIntensity > 0.2) {
-          const glowRadius = n.radius + n.fireIntensity * 6
+        if (n.fireIntensity > 0.15) {
+          const glowRadius = n.radius + n.fireIntensity * 8
           const gradient = ctx.createRadialGradient(
             n.x, n.y, 0,
             n.x, n.y, glowRadius
           )
-          gradient.addColorStop(0, `rgba(255, 255, 255, ${n.fireIntensity * 0.45 * currentOpacity})`)
+          gradient.addColorStop(0, `rgba(255, 255, 255, ${n.fireIntensity * 0.5 * currentOpacity})`)
+          gradient.addColorStop(0.5, `rgba(255, 255, 255, ${n.fireIntensity * 0.15 * currentOpacity})`)
           gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
 
           ctx.beginPath()
           ctx.arc(n.x, n.y, glowRadius, 0, Math.PI * 2)
           ctx.fillStyle = gradient
+          ctx.fill()
+        } else if (baseAlpha > 0.15) {
+          // Subtle ambient glow even when not firing
+          const ambientGlowR = n.radius * 3
+          const ambientGlow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, ambientGlowR)
+          ambientGlow.addColorStop(0, `rgba(255, 255, 255, ${baseAlpha * 0.12})`)
+          ambientGlow.addColorStop(1, 'rgba(255, 255, 255, 0)')
+          ctx.beginPath()
+          ctx.arc(n.x, n.y, ambientGlowR, 0, Math.PI * 2)
+          ctx.fillStyle = ambientGlow
           ctx.fill()
         }
 

@@ -18,8 +18,8 @@ interface WaveDot {
 }
 
 function createDots(w: number, h: number, topOffset: number): WaveDot[] {
-  const cols = 10
-  const rows = 7
+  const cols = 14
+  const rows = 9
   const spacingX = w / (cols + 1)
   const usableHeight = h - topOffset
   const spacingY = usableHeight / (rows + 1)
@@ -31,7 +31,7 @@ function createDots(w: number, h: number, topOffset: number): WaveDot[] {
         row: r,
         baseX: spacingX * (c + 1),
         baseY: topOffset + spacingY * (r + 1),
-        phase: (c + r) * 0.4,
+        phase: (c + r) * 0.35,
       })
     }
   }
@@ -51,6 +51,9 @@ export function WaveFieldBackground({
   const topOffsetRef = useRef(topOffset)
 
   useEffect(() => { animateRef.current = animate }, [animate])
+
+  const COLS = 14
+  const ROWS = 9
 
   const startAnimation = useCallback(() => {
     const canvas = canvasRef.current
@@ -90,10 +93,17 @@ export function WaveFieldBackground({
       const ptr = pointerRef?.current
       const ptrActive = ptr?.active ?? false
 
+      // Compute positions for all dots
+      const positions: { x: number; y: number; brightness: number }[] = []
+
       for (const d of dots) {
         const wave = Math.sin(time * 0.8 + d.phase)
         let yOffset = wave * amplitude
         const x = d.baseX
+
+        // Secondary wave for depth
+        const wave2 = Math.sin(time * 0.5 + d.phase * 0.7 + 2.0)
+        yOffset += wave2 * amplitude * 0.3
 
         // Pointer ripple disturbance
         if (ptrActive && ptr) {
@@ -107,12 +117,65 @@ export function WaveFieldBackground({
         }
 
         const y = Math.max(topOffsetRef.current, d.baseY + yOffset)
+        const brightness = 0.35 + 0.45 * ((wave + 1) / 2)
 
-        const brightness = 0.4 + 0.4 * ((wave + 1) / 2)
+        positions.push({ x, y, brightness })
+      }
 
+      // Draw connecting lines between adjacent dots in same row
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS - 1; c++) {
+          const idx = r * COLS + c
+          const nextIdx = idx + 1
+          const p1 = positions[idx]
+          const p2 = positions[nextIdx]
+          const lineAlpha = Math.min(p1.brightness, p2.brightness) * 0.12 * currentOpacity
+
+          ctx.beginPath()
+          ctx.moveTo(p1.x, p1.y)
+          ctx.lineTo(p2.x, p2.y)
+          ctx.strokeStyle = `rgba(255, 255, 255, ${lineAlpha})`
+          ctx.lineWidth = 0.4
+          ctx.stroke()
+        }
+      }
+
+      // Draw connecting lines between adjacent dots in same column
+      for (let c = 0; c < COLS; c++) {
+        for (let r = 0; r < ROWS - 1; r++) {
+          const idx = r * COLS + c
+          const belowIdx = (r + 1) * COLS + c
+          const p1 = positions[idx]
+          const p2 = positions[belowIdx]
+          const lineAlpha = Math.min(p1.brightness, p2.brightness) * 0.06 * currentOpacity
+
+          ctx.beginPath()
+          ctx.moveTo(p1.x, p1.y)
+          ctx.lineTo(p2.x, p2.y)
+          ctx.strokeStyle = `rgba(255, 255, 255, ${lineAlpha})`
+          ctx.lineWidth = 0.3
+          ctx.stroke()
+        }
+      }
+
+      // Draw dots with glow
+      for (const p of positions) {
+        const alpha = p.brightness * currentOpacity
+
+        // Soft glow
+        const glowRadius = 6
+        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowRadius)
+        glow.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.15})`)
+        glow.addColorStop(1, 'rgba(255, 255, 255, 0)')
         ctx.beginPath()
-        ctx.arc(x, y, 1.8, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255, 255, 255, ${brightness * currentOpacity})`
+        ctx.arc(p.x, p.y, glowRadius, 0, Math.PI * 2)
+        ctx.fillStyle = glow
+        ctx.fill()
+
+        // Core dot
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`
         ctx.fill()
       }
 

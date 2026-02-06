@@ -23,12 +23,13 @@ import {
   CreditCard,
   ExternalLink,
   Lock,
+  Star,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useThemeOptional } from '@/contexts/ThemeContext'
-import { BACKGROUND_ANIMATIONS, getPreferredAnimation, setPreferredAnimation, getBackgroundBrightness, setBackgroundBrightness, getBackgroundEnabled, setBackgroundEnabled } from '@/components/player/DailyBackground'
+import { BACKGROUND_ANIMATIONS, getPreferredAnimation, setPreferredAnimation, getBackgroundBrightness, setBackgroundBrightness, getBackgroundEnabled, setBackgroundEnabled, getBackgroundColor, setBackgroundColor, type BgColorHue } from '@/components/player/DailyBackground'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
@@ -67,6 +68,8 @@ const SEGMENT_OPTIONS = [
   { id: 'breath', label: 'Breath', icon: Wind },
   { id: 'day_close', label: 'Day Close', icon: Moon, required: true },
 ]
+
+import { ZODIAC_SIGNS } from '@/lib/astrology/constants'
 
 function SettingsContent() {
   const router = useRouter()
@@ -118,6 +121,9 @@ function SettingsContent() {
   const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null)
   const [backgroundBrightness, setBackgroundBrightnessState] = useState(1)
   const [backgroundEnabled, setBackgroundEnabledState] = useState(true)
+  const [bgColorHue, setBgColorHue] = useState<BgColorHue>(-1)
+  const [astrologyEnabled, setAstrologyEnabled] = useState(false)
+  const [zodiacSign, setZodiacSign] = useState<string | null>(null)
 
   // Load preferences on mount
   useEffect(() => {
@@ -147,11 +153,14 @@ function SettingsContent() {
           if (data.background_music_enabled !== undefined) setBackgroundMusicEnabled(data.background_music_enabled)
           if (data.preferred_music_genre !== undefined) setPreferredMusicGenre(data.preferred_music_genre)
           if (data.bedtime_reminder_enabled !== undefined) setBedtimeReminderEnabled(data.bedtime_reminder_enabled)
+          if (data.astrology_enabled !== undefined) setAstrologyEnabled(data.astrology_enabled)
+          if (data.zodiac_sign !== undefined) setZodiacSign(data.zodiac_sign)
         }
         // Load animation preference from localStorage
         setSelectedAnimation(getPreferredAnimation())
         setBackgroundBrightnessState(getBackgroundBrightness())
         setBackgroundEnabledState(getBackgroundEnabled())
+        setBgColorHue(getBackgroundColor())
       } catch (error) {
         console.error('Failed to load preferences:', error)
       } finally {
@@ -190,6 +199,8 @@ function SettingsContent() {
           background_music_enabled: backgroundMusicEnabled,
           preferred_music_genre: preferredMusicGenre,
           bedtime_reminder_enabled: bedtimeReminderEnabled,
+          astrology_enabled: astrologyEnabled,
+          zodiac_sign: zodiacSign,
           workout_enabled: enabledSegments.includes('movement'),
           micro_lesson_enabled: enabledSegments.includes('micro_lesson'),
           breath_cues_enabled: enabledSegments.includes('breath'),
@@ -210,7 +221,7 @@ function SettingsContent() {
     } finally {
       setIsSaving(false)
     }
-  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, backgroundMusicEnabled, preferredMusicGenre, bedtimeReminderEnabled])
+  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, backgroundMusicEnabled, preferredMusicGenre, bedtimeReminderEnabled, astrologyEnabled, zodiacSign])
 
   // Debounced auto-save when any preference changes
   useEffect(() => {
@@ -263,7 +274,7 @@ function SettingsContent() {
             <Link href="/" aria-label="Back to home" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
               <ChevronLeft className="w-5 h-5 text-white/95" />
             </Link>
-            <h1 className="text-2xl font-light text-white">Settings</h1>
+            <h1 className="text-2xl font-light shimmer-text">Settings</h1>
           </div>
           {saveStatus === 'saving' && (
             <span className="flex items-center gap-1.5 text-white/95 text-sm">
@@ -662,6 +673,77 @@ function SettingsContent() {
           )}
         </section>
 
+        {/* Astrology Settings */}
+        <section className="p-5 card-gradient-border">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20">
+                <Star className="w-5 h-5 text-indigo-400" />
+              </div>
+              <div>
+                <h2 className="font-medium text-white">Astrology Mode</h2>
+                <p className="text-white/95 text-xs">Cosmic insights & zodiac wisdom</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setAstrologyEnabled(!astrologyEnabled)}
+              role="switch"
+              aria-checked={astrologyEnabled}
+              aria-label="Astrology mode"
+              className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                astrologyEnabled ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.3)]' : 'bg-white/10'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                  astrologyEnabled ? 'bg-white translate-x-6' : 'bg-white translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+
+          {astrologyEnabled && (
+            <div className="space-y-4">
+              <p className="text-sm text-white/70">Select your zodiac sign for personalized cosmic insights</p>
+              <div className="grid grid-cols-3 gap-2">
+                {ZODIAC_SIGNS.map((sign) => (
+                  <button
+                    key={sign.id}
+                    onClick={() => setZodiacSign(sign.id)}
+                    aria-pressed={zodiacSign === sign.id}
+                    className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                      zodiacSign === sign.id
+                        ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 shadow-[inset_0_0_12px_rgba(139,92,246,0.15)]'
+                        : 'bg-white/5 border border-transparent hover:bg-white/10'
+                    }`}
+                  >
+                    <span className="text-xl block mb-0.5">{sign.symbol}</span>
+                    <p className={`text-xs font-medium ${zodiacSign === sign.id ? 'text-white' : 'text-white/95'}`}>{sign.label}</p>
+                    <p className="text-[9px] text-white/60 mt-0.5">{sign.dates}</p>
+                  </button>
+                ))}
+              </div>
+              {zodiacSign && (
+                <div className="space-y-2">
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+                    <p className="text-sm text-white/80">
+                      <span className="text-indigo-400 font-medium">{ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}</span> selected.
+                      You&apos;ll receive cosmic insights tailored to your sign in your Morning Flow.
+                    </p>
+                  </div>
+                  <Link
+                    href="/astrology"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500/15 to-purple-500/15 hover:from-indigo-500/25 hover:to-purple-500/25 border border-indigo-500/20 transition-all text-sm text-indigo-300 press-scale"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Explore Cosmic Guide
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
         {/* Push Notifications */}
         <section className="p-5 card-gradient-border">
           <h2 className="font-medium text-white mb-4 flex items-center gap-2">
@@ -727,6 +809,52 @@ function SettingsContent() {
                   className="w-full h-2 rounded-full appearance-none cursor-pointer bg-white/10 accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,0.3)]"
                 />
               </div>
+              {/* Color hue slider */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm text-white/95">Color</label>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-4 h-4 rounded-full border border-white/20"
+                      style={{ backgroundColor: bgColorHue < 0 ? '#fff' : `hsl(${bgColorHue}, 70%, 60%)` }}
+                    />
+                    <span className="text-sm text-white/95">{bgColorHue < 0 ? 'White' : `${Math.round(bgColorHue)}°`}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setBgColorHue(-1)
+                      setBackgroundColor(-1)
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                      bgColorHue < 0
+                        ? 'bg-white/20 text-white border border-white/30'
+                        : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
+                    }`}
+                  >
+                    White
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="360"
+                    step="1"
+                    value={bgColorHue < 0 ? 220 : bgColorHue}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value)
+                      setBgColorHue(val)
+                      setBackgroundColor(val)
+                    }}
+                    aria-label="Background color hue"
+                    className="flex-1 h-2 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,0.3)]"
+                    style={{
+                      background: 'linear-gradient(to right, hsl(0,70%,50%), hsl(60,70%,50%), hsl(120,70%,50%), hsl(180,70%,50%), hsl(240,70%,50%), hsl(300,70%,50%), hsl(360,70%,50%))',
+                    }}
+                  />
+                </div>
+              </div>
+
               <FeatureHint id="bg-animation" text="Animations create subtle visual interest without distraction" mode="persistent" />
 
               <div className="grid grid-cols-2 gap-3">

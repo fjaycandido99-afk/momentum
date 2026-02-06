@@ -36,6 +36,9 @@ const DEFAULT_PREFERENCES = {
   bedtime_reminder_enabled: false,
   current_streak: 0,
   last_active_date: null,
+  // Astrology preferences
+  astrology_enabled: false,
+  zodiac_sign: null,
 }
 
 export async function GET() {
@@ -101,6 +104,10 @@ export async function GET() {
         // Streak tracking
         current_streak: true,
         last_active_date: true,
+
+        // Astrology preferences
+        astrology_enabled: true,
+        zodiac_sign: true,
       },
     })
 
@@ -152,6 +159,10 @@ export async function GET() {
         // Streak tracking
         current_streak: 0,
         last_active_date: null,
+
+        // Astrology preferences
+        astrology_enabled: false,
+        zodiac_sign: null,
       })
     }
 
@@ -223,6 +234,10 @@ export async function POST(request: NextRequest) {
       daily_reminder,
       reminder_time,
       bedtime_reminder_enabled,
+
+      // Astrology preferences
+      astrology_enabled,
+      zodiac_sign,
     } = body
 
     // If tone changed, clear today's cached voice audio so it regenerates with new tone
@@ -304,6 +319,10 @@ export async function POST(request: NextRequest) {
         ...(daily_reminder !== undefined && { daily_reminder }),
         ...(reminder_time !== undefined && { reminder_time }),
         ...(bedtime_reminder_enabled !== undefined && { bedtime_reminder_enabled }),
+
+        // Astrology preferences
+        ...(astrology_enabled !== undefined && { astrology_enabled }),
+        ...(zodiac_sign !== undefined && { zodiac_sign }),
       },
       create: {
         user_id: user.id,
@@ -350,6 +369,10 @@ export async function POST(request: NextRequest) {
         daily_reminder: daily_reminder ?? true,
         reminder_time: reminder_time || '07:00',
         bedtime_reminder_enabled: bedtime_reminder_enabled ?? false,
+
+        // Astrology preferences
+        astrology_enabled: astrology_enabled ?? false,
+        zodiac_sign: zodiac_sign || null,
       },
     })
 

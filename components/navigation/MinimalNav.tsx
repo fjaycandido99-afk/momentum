@@ -7,9 +7,9 @@ import { Home } from 'lucide-react'
 const PAGE_LABELS: Record<string, string> = {
   '/settings': 'Settings',
   '/journal': 'Journal',
-  '/soundscape': 'Soundscape',
   '/saved': 'Saved',
   '/coach': 'Coach',
+  '/astrology': 'Cosmic Guide',
 }
 
 export function MinimalNav() {

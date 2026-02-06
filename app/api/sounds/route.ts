@@ -86,7 +86,7 @@ function getFallbackSounds(category: string) {
     fire: { youtubeId: 'UgHKb_7884o', name: 'Crackling Fireplace' },
     wind: { youtubeId: '2dDuMb8XWTA', name: 'Wind Sounds' },
     thunder: { youtubeId: 'nDq6TstdEi8', name: 'Thunderstorm' },
-    night: { youtubeId: 'asSd6BOCmEY', name: 'Night Ambience' },
+    night: { youtubeId: 'NgHhs3B1xnc', name: 'Night Ambience' },
     stream: { youtubeId: 'IvjMgVS6kng', name: 'Stream Water' },
     cafe: { youtubeId: 'gaGrHUekGrc', name: 'Coffee Shop' },
     piano: { youtubeId: '77ZozI0rw7w', name: 'Calm Piano' },

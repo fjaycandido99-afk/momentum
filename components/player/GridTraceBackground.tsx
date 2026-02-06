@@ -66,10 +66,10 @@ export function GridTraceBackground({
     if (!ctx) return
 
     const minDim = Math.min(canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height)
-    const COLS = minDim < 200 ? 6 : 4
-    const ROWS = minDim < 200 ? 8 : 6
-    const NUM_TRACERS = 3
-    const TRACE_FADE = 0.985
+    const COLS = minDim < 200 ? 7 : 5
+    const ROWS = minDim < 200 ? 9 : 7
+    const NUM_TRACERS = 4
+    const TRACE_FADE = 0.982
     const TRACER_SPEED = 0.004
 
     const buildGrid = (w: number, h: number) => {
@@ -230,12 +230,22 @@ export function GridTraceBackground({
         const x = a.x + (b.x - a.x) * t.progress
         const y = a.y + (b.y - a.y) * t.progress
 
-        // Glow
-        const glow = ctx.createRadialGradient(x, y, 0, x, y, 8)
-        glow.addColorStop(0, `rgba(255, 255, 255, ${0.4 * currentOpacity})`)
+        // Outer glow
+        const outerGlow = ctx.createRadialGradient(x, y, 0, x, y, 14)
+        outerGlow.addColorStop(0, `rgba(255, 255, 255, ${0.3 * currentOpacity})`)
+        outerGlow.addColorStop(0.4, `rgba(255, 255, 255, ${0.1 * currentOpacity})`)
+        outerGlow.addColorStop(1, 'rgba(255, 255, 255, 0)')
+        ctx.beginPath()
+        ctx.arc(x, y, 14, 0, Math.PI * 2)
+        ctx.fillStyle = outerGlow
+        ctx.fill()
+
+        // Inner glow
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, 6)
+        glow.addColorStop(0, `rgba(255, 255, 255, ${0.5 * currentOpacity})`)
         glow.addColorStop(1, 'rgba(255, 255, 255, 0)')
         ctx.beginPath()
-        ctx.arc(x, y, 8, 0, Math.PI * 2)
+        ctx.arc(x, y, 6, 0, Math.PI * 2)
         ctx.fillStyle = glow
         ctx.fill()
 

@@ -27,18 +27,22 @@ export type SoundscapeItem = {
 export const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
   { id: 'focus', label: 'Focus', subtitle: 'Deep concentration', icon: Focus, youtubeId: 'mPZkdNFkNps' },
   { id: 'relax', label: 'Relax', subtitle: 'Calm your mind', icon: Sparkles, youtubeId: 'WHPEKLQID4U' },
-  { id: 'sleep', label: 'Sleep', subtitle: 'Drift away', icon: Moon, youtubeId: 'asSd6BOCmEY' },
+  { id: 'sleep', label: 'Sleep', subtitle: 'Drift away', icon: Moon, youtubeId: 'T8yEdNx4dB0' },
   { id: 'energy', label: 'Energy', subtitle: 'Power up', icon: Zap, youtubeId: 'jfKfPfyJRdk' },
   { id: 'rain', label: 'Rain', subtitle: 'Gentle rainfall', icon: CloudRain, youtubeId: 'mPZkdNFkNps' },
   { id: 'ocean', label: 'Ocean', subtitle: 'Crashing waves', icon: Waves, youtubeId: 'WHPEKLQID4U' },
   { id: 'forest', label: 'Forest', subtitle: 'Nature sounds', icon: Trees, youtubeId: 'xNN7iTA57jM' },
   { id: 'fire', label: 'Fire', subtitle: 'Crackling fireplace', icon: Flame, youtubeId: 'UgHKb_7884o' },
   { id: 'thunder', label: 'Thunder', subtitle: 'Thunderstorm', icon: CloudLightning, youtubeId: 'nDq6TstdEi8' },
-  { id: 'night', label: 'Night', subtitle: 'Nighttime ambience', icon: Star, youtubeId: 'asSd6BOCmEY' },
+  { id: 'night', label: 'Night', subtitle: 'Nighttime ambience', icon: Star, youtubeId: 'NgHhs3B1xnc' },
   { id: 'wind', label: 'Wind', subtitle: 'Gentle breeze', icon: Wind, youtubeId: '2dDuMb8XWTA' },
   { id: 'stream', label: 'Stream', subtitle: 'Flowing water', icon: Droplets, youtubeId: 'IvjMgVS6kng' },
   { id: 'cafe', label: 'Cafe', subtitle: 'Coffee shop ambience', icon: Coffee, youtubeId: 'gaGrHUekGrc' },
   { id: 'piano', label: 'Piano', subtitle: 'Soft melodies', icon: Music, youtubeId: '77ZozI0rw7w' },
+  // Cosmic soundscapes
+  { id: 'cosmic', label: 'Cosmic', subtitle: 'Space ambient', icon: Sparkles, youtubeId: 'GPvQ5ZWWF1w' },
+  { id: 'astral', label: 'Astral', subtitle: 'Celestial drift', icon: Star, youtubeId: 'e3fqE01YYWs' },
+  { id: 'starlight', label: 'Starlight', subtitle: 'Night sky', icon: Moon, youtubeId: 'zcm6nV7Bod8' },
 ]
 
 export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlaying, onTogglePlay, onClose, onSwitchSound }: SoundscapePlayerProps) {

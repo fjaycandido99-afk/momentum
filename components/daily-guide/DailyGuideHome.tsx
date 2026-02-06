@@ -21,6 +21,7 @@ import {
   Sun,
   Moon,
 } from 'lucide-react'
+import Link from 'next/link'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { DayTypeIndicator } from './DayTypeIndicator'
 import { GuidancePlayer } from './GuidancePlayer'
@@ -37,6 +38,7 @@ import { CheckpointList } from './CheckpointCard'
 import { MoodCheckIn } from './MoodCheckIn'
 import { JournalLookback } from './JournalLookback'
 import { RestDaySuggestion } from './RestDaySuggestion'
+import { CosmicInsightCard } from './CosmicInsightCard'
 import { getFormattedDate } from '@/lib/daily-guide/day-type'
 import { useThemeOptional } from '@/contexts/ThemeContext'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
@@ -135,6 +137,7 @@ interface DailyGuide {
   micro_lesson_done: boolean
   breath_done: boolean
   day_close_done: boolean
+  cosmic_insight_done?: boolean
 }
 
 interface Preferences {
@@ -158,6 +161,9 @@ interface Preferences {
   guide_tone: string
   enabled_segments: string[]
   segment_order: string[]
+  // Astrology preferences
+  astrology_enabled?: boolean
+  zodiac_sign?: string | null
 }
 
 interface AudioData {
@@ -183,6 +189,7 @@ const MODULE_LABELS: Record<string, { label: string; activeLabel: string; icon: 
   pre_study: { label: 'Pre-Study Focus', activeLabel: 'Preparing to study', icon: 'brain' },
   study_break: { label: 'Study Break', activeLabel: 'Taking a break', icon: 'coffee' },
   exam_calm: { label: 'Exam Calm', activeLabel: 'Finding calm', icon: 'shield' },
+  cosmic_insight: { label: 'Cosmic Insight', activeLabel: 'Reading the stars', icon: 'star' },
 }
 
 const DAY_TYPE_LABELS: Record<string, { label: string; description: string }> = {
@@ -324,6 +331,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           if (guideData.data.micro_lesson_done) completed.push('micro_lesson')
           if (guideData.data.breath_done) completed.push('breath')
           if (guideData.data.day_close_done) completed.push('day_close')
+          if (guideData.data.cosmic_insight_done) completed.push('cosmic_insight')
           console.log('[fetchData] Guide loaded, done states:', {
             date: guideData.data.date,
             morning_prime_done: guideData.data.morning_prime_done,
@@ -919,7 +927,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                     </div>
                     <span className="text-sm text-white/95">{greeting.text}</span>
                   </div>
-                  <h1 className="text-2xl font-semibold text-white">
+                  <h1 className="text-2xl font-semibold shimmer-text">
                     Happy {dayName}
                   </h1>
                   <p className="text-sm text-white/95 mt-1">
@@ -1249,6 +1257,33 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Cosmic Insight Card - only shown when astrology is enabled */}
+          {preferences?.astrology_enabled && morningAvailability.isAvailable && (
+            <div className="animate-card-appear">
+              <CosmicInsightCard
+                isCompleted={completedModules.includes('cosmic_insight')}
+                zodiacSign={preferences.zodiac_sign}
+                dayType={guide.day_type}
+                onComplete={() => {
+                  setCompletedModules(prev => [...prev, 'cosmic_insight'])
+                  fetch('/api/daily-guide/checkin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ segment: 'cosmic_insight', date: guide.date }),
+                  }).then(res => {
+                    if (!res.ok) res.text().then(t => console.error('[CosmicInsight checkin] failed:', res.status, t))
+                  }).catch(err => console.error('[CosmicInsight checkin] error:', err))
+                }}
+              />
+              <Link
+                href="/astrology"
+                className="mt-2 flex items-center justify-center gap-1.5 py-2 rounded-xl hover:bg-white/5 transition-colors text-xs text-indigo-400/80"
+              >
+                Explore your Cosmic Guide →
+              </Link>
             </div>
           )}
 

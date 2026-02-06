@@ -122,6 +122,10 @@ model UserPreferences {
   // Bedtime reminder
   bedtime_reminder_enabled Boolean @default(false)
 
+  // Astrology preferences
+  astrology_enabled Boolean @default(false)
+  zodiac_sign       String?
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
@@ -282,6 +286,10 @@ model DailyGuide {
   // AI features
   journal_ai_reflection String? // AI-generated insight after journal save
   ai_affirmation        String? // Daily AI-generated affirmation
+
+  // Astrology features
+  cosmic_insight_script String?
+  cosmic_insight_done   Boolean @default(false)
 
   created_at DateTime @default(now())
 

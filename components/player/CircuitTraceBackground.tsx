@@ -357,20 +357,30 @@ export function CircuitTraceBackground({
       for (const pulse of pulses) {
         const pos = getJunctionPosition(pulse, traces, junctions)
 
-        // Outer glow
-        const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 14)
-        glow.addColorStop(0, `rgba(255, 255, 255, ${0.55 * currentOpacity})`)
-        glow.addColorStop(0.5, `rgba(255, 255, 255, ${0.18 * currentOpacity})`)
+        // Wide outer glow
+        const outerGlow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 18)
+        outerGlow.addColorStop(0, `rgba(255, 255, 255, ${0.35 * currentOpacity})`)
+        outerGlow.addColorStop(0.3, `rgba(255, 255, 255, ${0.15 * currentOpacity})`)
+        outerGlow.addColorStop(0.7, `rgba(255, 255, 255, ${0.04 * currentOpacity})`)
+        outerGlow.addColorStop(1, 'rgba(255, 255, 255, 0)')
+        ctx.beginPath()
+        ctx.arc(pos.x, pos.y, 18, 0, Math.PI * 2)
+        ctx.fillStyle = outerGlow
+        ctx.fill()
+
+        // Inner glow
+        const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 8)
+        glow.addColorStop(0, `rgba(255, 255, 255, ${0.6 * currentOpacity})`)
         glow.addColorStop(1, 'rgba(255, 255, 255, 0)')
         ctx.beginPath()
-        ctx.arc(pos.x, pos.y, 14, 0, Math.PI * 2)
+        ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2)
         ctx.fillStyle = glow
         ctx.fill()
 
         // Core dot
         ctx.beginPath()
-        ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.7 * currentOpacity})`
+        ctx.arc(pos.x, pos.y, 2.5, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * currentOpacity})`
         ctx.fill()
       }
 

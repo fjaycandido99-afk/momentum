@@ -17,6 +17,7 @@ import { useAudioOptional } from '@/contexts/AudioContext'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { FREEMIUM_LIMITS } from '@/lib/subscription-constants'
 import { SoftLockBadge, PreviewPaywall, PreviewTimer, usePreview, AICoachNudge, useCoachNudge } from '@/components/premium/SoftLock'
+import { useScrollReveal, useParallax, useMagneticHover, useRippleBurst, getWordCascadeSpans } from '@/hooks/useHomeAnimations'
 
 const WordAnimationPlayer = dynamic(
   () => import('@/components/player/WordAnimationPlayer').then(mod => mod.WordAnimationPlayer),
@@ -743,6 +744,13 @@ export function ImmersiveHome() {
 
   // Pull-down gesture for Morning Flow
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Animation hooks
+  useScrollReveal(scrollRef)
+  useParallax(scrollRef)
+  const { handlePointerMove: magneticMove, handlePointerLeave: magneticLeave } = useMagneticHover()
+  const spawnRipple = useRippleBurst()
+
   const touchStartY = useRef(0)
   const [pullDistance, setPullDistance] = useState(0)
   const [isPulling, setIsPulling] = useState(false)
@@ -1335,10 +1343,17 @@ export function ImmersiveHome() {
       {/* --- Header --- */}
       <div className="flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down header-fade-bg">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold text-white">Explore</h1>
+          <h1 className="text-2xl font-semibold shimmer-text">Explore</h1>
           <StreakBadge streak={streak} />
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/astrology"
+            aria-label="Cosmic Guide"
+            className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors"
+          >
+            <Sparkles className="w-5 h-5 text-white/95" />
+          </Link>
           <Link
             href="/journal"
             aria-label="Journal"
@@ -1364,12 +1379,12 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Morning Flow Card --- */}
-      <div className="px-6 mt-4 mb-8 animate-fade-in section-fade-bg">
+      <div className="px-6 mt-4 mb-8 scroll-reveal section-fade-bg">
         <button
           onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
           className="w-full text-left group"
         >
-          <div className="relative p-6 card-gradient-border-lg press-scale">
+          <div className="relative p-6 card-gradient-border-lg press-scale magnetic-tilt" onPointerMove={magneticMove} onPointerLeave={magneticLeave}>
             <div className="relative">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-xl bg-[#111113] border border-white/15">
@@ -1390,8 +1405,8 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Soundscapes --- */}
-      <div className="mb-8 animate-fade-in section-fade-bg" style={{ animationDelay: '0.05s' }}>
-        <h2 className="text-lg font-semibold text-white px-6 mb-4">Soundscapes</h2>
+      <div className="mb-8 scroll-reveal section-fade-bg">
+        <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header">Soundscapes</h2>
         <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
           {SOUNDSCAPE_ITEMS.map((item, index) => {
             const Icon = item.icon
@@ -1459,17 +1474,17 @@ export function ImmersiveHome() {
                 }}
                 className="flex flex-col items-center gap-2 shrink-0 press-scale"
               >
-                <div className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isActive ? 'card-now-playing' : ''}`}>
+                <div className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isActive ? 'card-now-playing breathing-glow' : ''}`}>
                   {isActive ? (
                     <div className="eq-bars"><span /><span /><span /></div>
                   ) : (
-                    <Icon className="w-5 h-5 text-white/95" strokeWidth={1.5} />
+                    <Icon className="w-6 h-6 text-white" strokeWidth={1.5} />
                   )}
                   {isLocked && !isActive && (
                     <SoftLockBadge isLocked={true} size="sm" className="top-0 right-0" />
                   )}
                 </div>
-                <span className={`text-[11px] ${isActive ? 'text-white' : 'text-white/95'}`}>{item.label}</span>
+                <span className={`text-[11px] ${isActive ? 'text-white' : 'text-white'}`}>{item.label}</span>
               </button>
             )
           })}
@@ -1477,8 +1492,8 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Guided (circular icons like Soundscapes) --- */}
-      <div className="mb-8 animate-fade-in section-fade-bg" style={{ animationDelay: '0.08s' }}>
-        <h2 className="text-lg font-semibold text-white px-6 mb-4">Guided</h2>
+      <div className="mb-8 scroll-reveal section-fade-bg">
+        <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header">Guided</h2>
         <div className="flex justify-evenly px-2 pb-2">
           {VOICE_GUIDES.map((guide) => {
             const Icon = guide.icon
@@ -1507,14 +1522,14 @@ export function ImmersiveHome() {
                 disabled={isLoading}
                 className="flex flex-col items-center gap-2 press-scale"
               >
-                <div className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isLoading ? 'bg-white/8' : ''} ${isGuideActive ? 'card-now-playing' : ''}`}>
+                <div className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isLoading ? 'bg-white/8' : ''} ${isGuideActive ? 'card-now-playing breathing-glow' : ''}`}>
                   {isLoading ? (
-                    <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
                   ) : isGuideActive ? (
                     <div className="eq-bars"><span /><span /><span /></div>
                   ) : (
                     <Icon
-                      className="w-5 h-5 text-white/95 transition-colors duration-200"
+                      className="w-6 h-6 text-white transition-colors duration-200"
                       strokeWidth={1.5}
                     />
                   )}
@@ -1522,7 +1537,7 @@ export function ImmersiveHome() {
                     <SoftLockBadge isLocked={true} size="sm" className="top-0 right-0" />
                   )}
                 </div>
-                <span className={`text-[11px] ${isGuideActive ? 'text-white' : 'text-white/95'}`}>{guide.name}</span>
+                <span className={`text-[11px] ${isGuideActive ? 'text-white' : 'text-white'}`}>{guide.name}</span>
               </button>
             )
           })}
@@ -1530,10 +1545,10 @@ export function ImmersiveHome() {
       </div>
 
       {/* --- Motivation --- */}
-      <div className="mb-8 animate-fade-in section-fade-bg" style={{ animationDelay: '0.1s' }}>
+      <div className="mb-8 scroll-reveal section-fade-bg">
         <div className="flex items-center justify-between px-6 mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-white">Motivation</h2>
+            <h2 className="text-lg font-semibold text-white parallax-header">Motivation</h2>
             <p className="text-xs text-white/95 mt-0.5">{topicName} &middot; {TOPIC_TAGLINES[topicName]}</p>
           </div>
         </div>
@@ -1555,7 +1570,8 @@ export function ImmersiveHome() {
                 <button
                   key={video.id}
                   aria-label={`Play ${video.title}${isLocked ? ' (premium)' : ''}`}
-                  onClick={() => {
+                  onClick={(e) => {
+                    spawnRipple(e)
                     if (isLocked) {
                       stopPreview()
                       setPaywallContentName(video.title)
@@ -1570,7 +1586,11 @@ export function ImmersiveHome() {
                   }}
                   className="shrink-0 w-40 text-left group press-scale"
                 >
-                  <div className={`relative w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center ${isCardActive ? 'card-now-playing' : ''}`}>
+                  <div
+                    className={`relative w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center magnetic-tilt ${isCardActive ? 'card-now-playing breathing-glow' : ''}`}
+                    onPointerMove={magneticMove}
+                    onPointerLeave={magneticLeave}
+                  >
                     <img
                       src={backgrounds[index % backgrounds.length]}
                       alt={video.title}
@@ -1582,10 +1602,10 @@ export function ImmersiveHome() {
                         musicPlaying ? (
                           <div className="eq-bars"><span /><span /><span /></div>
                         ) : (
-                          <Pause className="w-8 h-8 text-white drop-shadow-lg" fill="white" />
+                          <Pause className="w-8 h-8 text-white drop-shadow-lg icon-morph" fill="white" />
                         )
                       ) : (
-                        <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                        <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
                       )}
                     </div>
                     {isLocked && !isCardActive && (
@@ -1607,10 +1627,10 @@ export function ImmersiveHome() {
         const isLoading = loadingGenres[g.id]
 
         return (
-          <div key={g.id} className="mb-8 animate-fade-in section-fade-bg" style={{ animationDelay: `${0.2 + gi * 0.05}s` }}>
+          <div key={g.id} className="mb-8 scroll-reveal section-fade-bg">
             <div className="flex items-center justify-between px-6 mb-4">
               <div>
-                <h2 className="text-lg font-semibold text-white">{g.word}</h2>
+                <h2 className="text-lg font-semibold text-white parallax-header">{g.word}</h2>
                 <p className="text-xs text-white/95 mt-0.5">{g.tagline}</p>
               </div>
             </div>
@@ -1637,7 +1657,8 @@ export function ImmersiveHome() {
                     <button
                       key={video.id}
                       aria-label={`Play ${video.title}${isLocked ? ' (premium)' : ''}`}
-                      onClick={() => {
+                      onClick={(e) => {
+                        spawnRipple(e)
                         if (isLocked) {
                           stopPreview()
                           setPaywallContentName(video.title)
@@ -1652,7 +1673,11 @@ export function ImmersiveHome() {
                       }}
                       className="shrink-0 w-40 text-left group press-scale"
                     >
-                      <div className={`relative w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center ${isCardActive ? 'card-now-playing' : ''}`}>
+                      <div
+                        className={`relative w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center magnetic-tilt ${isCardActive ? 'card-now-playing breathing-glow' : ''}`}
+                        onPointerMove={magneticMove}
+                        onPointerLeave={magneticLeave}
+                      >
                         {(gBgs.length > 0 || backgrounds.length > 0) && (
                           <img
                             src={gBgs.length > 0
@@ -1668,10 +1693,10 @@ export function ImmersiveHome() {
                             musicPlaying ? (
                               <div className="eq-bars"><span /><span /><span /></div>
                             ) : (
-                              <Pause className="w-8 h-8 text-white drop-shadow-lg" fill="white" />
+                              <Pause className="w-8 h-8 text-white drop-shadow-lg icon-morph" fill="white" />
                             )
                           ) : (
-                            <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                            <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
                           )}
                         </div>
                         {isLocked && !isCardActive && (
