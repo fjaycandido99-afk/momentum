@@ -858,7 +858,6 @@ export function ImmersiveHome() {
   // User must explicitly click to start playback (fixes auto-play on app open)
   useEffect(() => {
     if (hasRestoredRef.current) return
-    if (!ytReady || !bgPlayerReadyRef.current) return
     if (!audioContext?.lastPlayed) return
     // Don't restore if Daily Guide session is active to prevent audio overlap
     if (audioContext?.isSessionActive) return
@@ -936,7 +935,7 @@ export function ImmersiveHome() {
         userPausedSoundscapeRef.current = true
       }
     }
-  }, [ytReady, audioContext?.lastPlayed, genreVideos, motivationVideos, topicName])
+  }, [audioContext?.lastPlayed, genreVideos, motivationVideos, topicName])
 
   // Trigger tap ripple animation on a card
   const triggerTap = (videoId: string) => {
