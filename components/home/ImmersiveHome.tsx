@@ -1721,11 +1721,8 @@ export function ImmersiveHome() {
           isPlaying
         }
         onTogglePlay={() => debouncedToggle(() => {
-          // Prevent audio overlap with Daily Guide session
-          if (audioContext?.isSessionActive && !guideLabel) {
-            // Daily Guide is active but this isn't guide audio - don't start new audio
-            return
-          }
+          // Allow controlling existing audio (backgroundMusic, guideLabel, activeSoundscape)
+          // Only block if trying to start NEW audio while Daily Guide session is active
           if (backgroundMusic) {
             if (musicPlaying) {
               userPausedMusicRef.current = true // Track user pause
@@ -1764,9 +1761,7 @@ export function ImmersiveHome() {
           }
         })}
         onOpenPlayer={() => {
-          // Prevent opening player that could overlap with Daily Guide session
-          if (audioContext?.isSessionActive && !guideLabel) return
-
+          // Allow opening player for existing audio (backgroundMusic, guideLabel, activeSoundscape)
           if (backgroundMusic && currentPlaylist) {
             // Reopen fullscreen player for currently playing music/motivation video
             const currentVideo = currentPlaylist.videos[currentPlaylist.index]
