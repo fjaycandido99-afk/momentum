@@ -5,10 +5,8 @@ import { Play, Pause, Check, SkipForward, RotateCcw } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 
 // Dark atmospheric background images (same as Discover page)
+// Note: bg1-3 and bg17 don't exist
 const BACKGROUND_IMAGES = [
-  '/backgrounds/bg1.jpg',
-  '/backgrounds/bg2.jpg',
-  '/backgrounds/bg3.jpg',
   '/backgrounds/bg4.jpg',
   '/backgrounds/bg5.jpg',
   '/backgrounds/bg6.jpg',
@@ -22,7 +20,6 @@ const BACKGROUND_IMAGES = [
   '/backgrounds/bg14.jpg',
   '/backgrounds/bg15.jpg',
   '/backgrounds/bg16.jpg',
-  '/backgrounds/bg17.jpg',
   '/backgrounds/bg18.jpg',
   '/backgrounds/bg19.jpg',
   '/backgrounds/bg20.jpg',
