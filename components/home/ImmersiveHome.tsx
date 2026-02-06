@@ -421,17 +421,14 @@ export function ImmersiveHome() {
     }
   }, [])
 
-  // Soundscape play/pause - verify actual player state before sending commands
+  // Soundscape play/pause - send commands based on desired state
   useEffect(() => {
     if (!soundscapeReady.current || !soundscapePlayerRef.current) return
     try {
-      const state = soundscapePlayerRef.current.getPlayerState()
       if (soundscapeIsPlaying) {
-        // Only call playVideo if not already playing (state !== 1)
-        if (state !== 1) soundscapePlayerRef.current.playVideo()
+        soundscapePlayerRef.current.playVideo()
       } else {
-        // Only call pauseVideo if currently playing (state === 1)
-        if (state === 1) soundscapePlayerRef.current.pauseVideo()
+        soundscapePlayerRef.current.pauseVideo()
       }
     } catch (e) {
       console.error('[ImmersiveHome] Soundscape play/pause error:', e)
@@ -462,17 +459,14 @@ export function ImmersiveHome() {
     }
   }, [backgroundMusic])
 
-  // Pause/play background music - verify actual player state before sending commands
+  // Pause/play background music - send commands based on desired state
   useEffect(() => {
     if (!bgPlayerRef.current || !bgPlayerReadyRef.current || !backgroundMusic) return
     try {
-      const state = bgPlayerRef.current.getPlayerState()
       if (musicPlaying) {
-        // Only call playVideo if not already playing (state !== 1)
-        if (state !== 1) bgPlayerRef.current.playVideo()
+        bgPlayerRef.current.playVideo()
       } else {
-        // Only call pauseVideo if currently playing (state === 1)
-        if (state === 1) bgPlayerRef.current.pauseVideo()
+        bgPlayerRef.current.pauseVideo()
       }
     } catch (e) {
       console.error('[ImmersiveHome] Music play/pause error:', e)
