@@ -367,7 +367,6 @@ export async function GET(request: NextRequest) {
 
     const preferences = await prisma.userPreferences.findUnique({
       where: { user_id: user.id },
-      select: { current_streak: true },
     })
 
     const headers = {
@@ -380,6 +379,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: null, streak: preferences?.current_streak || 0 }, { headers })
     }
 
+    // Generate checkpoints and durations dynamically based on stored guide parameters
+    let checkpoints: any[] = []
+    let durations: Record<string, number> = {}
+
+    if (guide.day_type && guide.time_mode && guide.energy_level) {
+      const modules = buildDayPlan({
+        dayType: guide.day_type as DayType,
+        timeMode: guide.time_mode as TimeMode,
+        energyLevel: guide.energy_level as EnergyLevel,
+        tone: (preferences?.guide_tone || 'calm') as GuideTone,
+        workoutEnabled: preferences?.workout_enabled ?? true,
+        workoutIntensity: (preferences?.workout_intensity || 'full') as WorkoutIntensity,
+        microLessonEnabled: preferences?.micro_lesson_enabled ?? true,
+        breathCuesEnabled: preferences?.breath_cues_enabled ?? true,
+        enabledSegments: preferences?.enabled_segments || [],
+        segmentOrder: preferences?.segment_order || [],
+      })
+      checkpoints = modules.checkpoints
+      durations = modules.durations
+    }
+
     console.log('[generate GET] Returning guide with done states:', {
       dateKey,
       morning_prime_done: guide.morning_prime_done,
@@ -387,10 +407,13 @@ export async function GET(request: NextRequest) {
       micro_lesson_done: guide.micro_lesson_done,
       breath_done: guide.breath_done,
       day_close_done: guide.day_close_done,
+      checkpointCount: checkpoints.length,
     })
 
     return NextResponse.json({
       data: guide,
+      checkpoints,
+      durations,
       streak: preferences?.current_streak || 0,
     }, { headers })
   } catch (error) {
