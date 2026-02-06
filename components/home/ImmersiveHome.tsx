@@ -234,6 +234,20 @@ export function ImmersiveHome() {
   // Ref to store auto-skip callback (accessible from YT player event handler)
   const autoSkipNextRef = useRef<(() => void) | null>(null)
 
+  // User pause tracking - prevents auto-resume when user manually paused
+  const userPausedSoundscapeRef = useRef(false)
+  const userPausedMusicRef = useRef(false)
+  const toggleDebounceRef = useRef(false)
+  const TOGGLE_DEBOUNCE_MS = 300
+
+  // Debounced toggle helper - prevents rapid clicks from overwhelming player
+  const debouncedToggle = useCallback((action: () => void) => {
+    if (toggleDebounceRef.current) return
+    toggleDebounceRef.current = true
+    action()
+    setTimeout(() => { toggleDebounceRef.current = false }, TOGGLE_DEBOUNCE_MS)
+  }, [])
+
   // Stop all home audio sources (stop videos, don't destroy pre-created players)
   const stopAllHomeAudio = useCallback(() => {
     if (guideAudioRef.current) {
@@ -394,22 +408,34 @@ export function ImmersiveHome() {
   }, [])
 
   // Load a video on the soundscape player — called from click handlers (user gesture context)
-  const createSoundscapePlayer = useCallback((youtubeId: string) => {
+  // autoPlay: if true (default), starts playing immediately; if false, just loads the video
+  const createSoundscapePlayer = useCallback((youtubeId: string, autoPlay: boolean = true) => {
     if (soundscapePlayerRef.current && soundscapeReady.current) {
       currentScVideoId.current = youtubeId
       soundscapePlayerRef.current.loadVideoById(youtubeId)
       soundscapePlayerRef.current.setVolume(100)
-      setSoundscapeIsPlaying(true)
+      if (autoPlay) {
+        setSoundscapeIsPlaying(true)
+        userPausedSoundscapeRef.current = false // Reset pause state when auto-playing
+      }
     }
   }, [])
 
-  // Soundscape play/pause
+  // Soundscape play/pause - verify actual player state before sending commands
   useEffect(() => {
     if (!soundscapeReady.current || !soundscapePlayerRef.current) return
     try {
-      if (soundscapeIsPlaying) soundscapePlayerRef.current.playVideo()
-      else soundscapePlayerRef.current.pauseVideo()
-    } catch {}
+      const state = soundscapePlayerRef.current.getPlayerState()
+      if (soundscapeIsPlaying) {
+        // Only call playVideo if not already playing (state !== 1)
+        if (state !== 1) soundscapePlayerRef.current.playVideo()
+      } else {
+        // Only call pauseVideo if currently playing (state === 1)
+        if (state === 1) soundscapePlayerRef.current.pauseVideo()
+      }
+    } catch (e) {
+      console.error('[ImmersiveHome] Soundscape play/pause error:', e)
+    }
   }, [soundscapeIsPlaying])
 
   // Load a video on the bg music player — called from click handlers (user gesture context)
@@ -436,13 +462,21 @@ export function ImmersiveHome() {
     }
   }, [backgroundMusic])
 
-  // Pause/play background music
+  // Pause/play background music - verify actual player state before sending commands
   useEffect(() => {
     if (!bgPlayerRef.current || !bgPlayerReadyRef.current || !backgroundMusic) return
     try {
-      if (musicPlaying) bgPlayerRef.current.playVideo()
-      else bgPlayerRef.current.pauseVideo()
-    } catch {}
+      const state = bgPlayerRef.current.getPlayerState()
+      if (musicPlaying) {
+        // Only call playVideo if not already playing (state !== 1)
+        if (state !== 1) bgPlayerRef.current.playVideo()
+      } else {
+        // Only call pauseVideo if currently playing (state === 1)
+        if (state === 1) bgPlayerRef.current.pauseVideo()
+      }
+    } catch (e) {
+      console.error('[ImmersiveHome] Music play/pause error:', e)
+    }
   }, [musicPlaying, backgroundMusic])
 
   // Media Session API — lock screen controls + prevents browser from killing audio
@@ -486,12 +520,13 @@ export function ImmersiveHome() {
   }, [backgroundMusic, guideLabel, activeSoundscape, musicPlaying, guideIsPlaying, soundscapeIsPlaying, stopAllHomeAudio])
 
   // Resume audio when user returns to the app (visibilitychange)
+  // Respects user pause state - if user manually paused, don't auto-resume
   useEffect(() => {
     let reloadAttempted = false
 
     const tryResume = () => {
-      // Resume background music
-      if (currentBgVideoId.current && bgPlayerRef.current && bgPlayerReadyRef.current) {
+      // Resume background music - only if user didn't manually pause
+      if (currentBgVideoId.current && bgPlayerRef.current && bgPlayerReadyRef.current && !userPausedMusicRef.current) {
         try {
           const state = bgPlayerRef.current.getPlayerState()
           if (state !== 1) {
@@ -507,8 +542,8 @@ export function ImmersiveHome() {
         } catch {}
       }
 
-      // Resume soundscape
-      if (currentScVideoId.current && soundscapePlayerRef.current && soundscapeReady.current) {
+      // Resume soundscape - only if user didn't manually pause
+      if (currentScVideoId.current && soundscapePlayerRef.current && soundscapeReady.current && !userPausedSoundscapeRef.current) {
         try {
           const state = soundscapePlayerRef.current.getPlayerState()
           if (state !== 1) {
@@ -806,6 +841,8 @@ export function ImmersiveHome() {
   }, [topicName, timeContext.suggested])
 
   // Restore last played content when returning to home page
+  // Don't create players during restore - just set up state for bottom bar display
+  // User must explicitly click to start playback (fixes auto-play on app open)
   useEffect(() => {
     if (hasRestoredRef.current) return
     if (!ytReady || !bgPlayerReadyRef.current) return
@@ -838,7 +875,9 @@ export function ImmersiveHome() {
               })
               setBackgroundMusic({ youtubeId: video.youtubeId, label: lastPlayed.genreWord || genre.word })
               // Don't auto-play - user can tap bottom bar to resume
+              // Mark as user paused so visibility change doesn't auto-resume
               setMusicPlaying(false)
+              userPausedMusicRef.current = true
             }
           }
         }
@@ -860,7 +899,9 @@ export function ImmersiveHome() {
               type: 'motivation',
             })
             setBackgroundMusic({ youtubeId: video.youtubeId, label: topicName })
+            // Don't auto-play - mark as user paused
             setMusicPlaying(false)
+            userPausedMusicRef.current = true
           }
         }
       }
@@ -876,7 +917,9 @@ export function ImmersiveHome() {
           youtubeId: item.youtubeId,
         })
         // Don't auto-play or show player - just set state for bottom bar
+        // Mark as user paused so visibility change doesn't auto-resume
         setSoundscapeIsPlaying(false)
+        userPausedSoundscapeRef.current = true
       }
     }
   }, [ytReady, audioContext?.lastPlayed, genreVideos, motivationVideos, topicName])
@@ -914,6 +957,8 @@ export function ImmersiveHome() {
       type: 'motivation',
     })
 
+    // User explicitly clicked - reset pause state
+    userPausedMusicRef.current = false
     // Create player synchronously in tap gesture context (mobile autoplay)
     setBackgroundMusic({ youtubeId: video.youtubeId, label: topicName })
     setMusicPlaying(true)
@@ -966,6 +1011,8 @@ export function ImmersiveHome() {
       genreWord,
     })
 
+    // User explicitly clicked - reset pause state
+    userPausedMusicRef.current = false
     // Create player synchronously in tap gesture context (mobile autoplay)
     setBackgroundMusic({ youtubeId: video.youtubeId, label: genreWord })
     setMusicPlaying(true)
@@ -1186,7 +1233,14 @@ export function ImmersiveHome() {
           onClose={handleClosePlayer}
           externalAudio
           externalPlaying={musicPlaying}
-          onTogglePlay={() => setMusicPlaying(!musicPlaying)}
+          onTogglePlay={() => debouncedToggle(() => {
+            if (musicPlaying) {
+              userPausedMusicRef.current = true // Track user pause
+            } else {
+              userPausedMusicRef.current = false // User is resuming
+            }
+            setMusicPlaying(!musicPlaying)
+          })}
           externalDuration={musicDuration}
           externalCurrentTime={musicCurrentTime}
           onSeek={handleMusicSeek}
@@ -1204,10 +1258,18 @@ export function ImmersiveHome() {
           subtitle={activeSoundscape.subtitle}
           youtubeId={activeSoundscape.youtubeId}
           isPlaying={soundscapeIsPlaying}
-          onTogglePlay={() => setSoundscapeIsPlaying(!soundscapeIsPlaying)}
+          onTogglePlay={() => debouncedToggle(() => {
+            if (soundscapeIsPlaying) {
+              userPausedSoundscapeRef.current = true // Track user pause
+            } else {
+              userPausedSoundscapeRef.current = false // User is resuming
+            }
+            setSoundscapeIsPlaying(!soundscapeIsPlaying)
+          })}
           onClose={() => setShowSoundscapePlayer(false)}
           onSwitchSound={(id, label, subtitle, youtubeId) => {
             setActiveSoundscape({ soundId: id, label, subtitle, youtubeId })
+            userPausedSoundscapeRef.current = false // Reset pause state when switching
             createSoundscapePlayer(youtubeId)
           }}
         />
@@ -1341,6 +1403,7 @@ export function ImmersiveHome() {
                     setPaywallContentName(item.label)
                     setPreviewUnlockCallback(() => () => {
                       // Callback when daily unlock is used
+                      userPausedSoundscapeRef.current = false // Reset pause state
                       createSoundscapePlayer(item.youtubeId)
                       setShowSoundscapePlayer(true)
                     })
@@ -1364,6 +1427,8 @@ export function ImmersiveHome() {
                     subtitle: item.subtitle,
                     youtubeId: item.youtubeId,
                   })
+                  // User explicitly clicked - reset pause state and create player
+                  userPausedSoundscapeRef.current = false
                   // Create player synchronously in tap gesture context (mobile autoplay)
                   createSoundscapePlayer(item.youtubeId)
                   setShowSoundscapePlayer(true)
@@ -1661,17 +1726,37 @@ export function ImmersiveHome() {
           activeSoundscape ? soundscapeIsPlaying :
           isPlaying
         }
-        onTogglePlay={() => {
+        onTogglePlay={() => debouncedToggle(() => {
           // Prevent audio overlap with Daily Guide session
           if (audioContext?.isSessionActive && !guideLabel) {
             // Daily Guide is active but this isn't guide audio - don't start new audio
             return
           }
           if (backgroundMusic) {
+            if (musicPlaying) {
+              userPausedMusicRef.current = true // Track user pause
+            } else {
+              userPausedMusicRef.current = false // User is resuming
+              // Create player if it wasn't created during restore
+              if (!currentBgVideoId.current && backgroundMusic.youtubeId) {
+                createBgMusicPlayer(backgroundMusic.youtubeId)
+                setHomeAudioActive(true)
+              }
+            }
             setMusicPlaying(!musicPlaying)
           } else if (guideLabel) {
             toggleGuidePlay()
           } else if (activeSoundscape) {
+            if (soundscapeIsPlaying) {
+              userPausedSoundscapeRef.current = true // Track user pause
+            } else {
+              userPausedSoundscapeRef.current = false // User is resuming
+              // Create player if it wasn't created during restore
+              if (!currentScVideoId.current && activeSoundscape.youtubeId) {
+                createSoundscapePlayer(activeSoundscape.youtubeId)
+                setHomeAudioActive(true)
+              }
+            }
             setSoundscapeIsPlaying(!soundscapeIsPlaying)
           } else {
             // Don't start new soundscape if Daily Guide is active
@@ -1679,10 +1764,11 @@ export function ImmersiveHome() {
             // Open SoundscapePlayer with active mode
             const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
             setActiveSoundscape({ soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId })
+            userPausedSoundscapeRef.current = false // Reset pause state
             createSoundscapePlayer(item.youtubeId)
             setShowSoundscapePlayer(true)
           }
-        }}
+        })}
         onOpenPlayer={() => {
           // Prevent opening player that could overlap with Daily Guide session
           if (audioContext?.isSessionActive && !guideLabel) return

@@ -260,6 +260,8 @@ export function ModuleCard({
   const [isAudioLoading, setIsAudioLoading] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  // Track if playback was initiated from button click (prevents double-play from useEffect)
+  const playbackInitiatedRef = useRef(false)
 
   // Timer for tracking playback (like MicroLessonVideo)
   useEffect(() => {
@@ -332,8 +334,16 @@ export function ModuleCard({
 
     // If no audio data, fetch it first
     if (!audioBase64 && !audioUrl) {
+      playbackInitiatedRef.current = true // Mark that we initiated playback from button
       onPlay() // This will fetch and update the audioBase64 prop
       return
+    }
+
+    // Cleanup any previous audio instance before creating new one (prevents overlapping audio)
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.src = ''
+      audioRef.current = null
     }
 
     // Create audio and play
@@ -372,12 +382,15 @@ export function ModuleCard({
   }, [audioBase64, audioUrl, isPlaying, isReadingMode, onPlay, onComplete])
 
   // Auto-play when audioBase64 arrives (after fetch), or enter reading mode for text-only
+  // Only trigger if playback was initiated from button click (prevents auto-play on mount)
   useEffect(() => {
-    if (isAudioLoading && !isPlaying) {
+    if (isAudioLoading && !isPlaying && playbackInitiatedRef.current) {
       if (audioBase64) {
+        playbackInitiatedRef.current = false // Reset ref after handling
         handlePlay()
       } else if (textOnly && script) {
         // Text-only mode: show script as readable text instead of playing audio
+        playbackInitiatedRef.current = false // Reset ref after handling
         setReadingScript(script)
         setIsReadingMode(true)
         setIsAudioLoading(false)
@@ -407,6 +420,7 @@ export function ModuleCard({
     setIsPlaying(false)
     setIsPaused(false)
     setCurrentTime(0)
+    playbackInitiatedRef.current = false // Reset ref on close
     onComplete?.()
   }, [onComplete])
 
