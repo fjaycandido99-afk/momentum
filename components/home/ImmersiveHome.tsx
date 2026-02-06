@@ -1306,6 +1306,8 @@ export function ImmersiveHome() {
                 // Clear session active when closing Morning Flow to prevent audio overlap issues
                 audioContext?.setSessionActive(false)
                 setShowMorningFlow(false)
+                // Re-enable restore so last played audio shows in bottom bar
+                hasRestoredRef.current = false
               }}
               className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors"
             >
