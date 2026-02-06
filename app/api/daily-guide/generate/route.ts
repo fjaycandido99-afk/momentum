@@ -383,19 +383,30 @@ export async function GET(request: NextRequest) {
     let checkpoints: any[] = []
     let durations: Record<string, number> = {}
 
-    if (guide.day_type && guide.time_mode && guide.energy_level) {
-      const modules = buildDayPlan({
-        dayType: guide.day_type as DayType,
-        timeMode: guide.time_mode as TimeMode,
-        energyLevel: guide.energy_level as EnergyLevel,
-        tone: (preferences?.guide_tone || 'calm') as GuideTone,
-        workoutEnabled: preferences?.workout_enabled ?? true,
-        workoutIntensity: (preferences?.workout_intensity || 'full') as WorkoutIntensity,
-        microLessonEnabled: preferences?.micro_lesson_enabled ?? true,
-        breathCuesEnabled: preferences?.breath_cues_enabled ?? true,
-        enabledSegments: preferences?.enabled_segments || [],
-        segmentOrder: preferences?.segment_order || [],
-      })
+    if (guide.day_type && guide.time_mode && guide.energy_level && preferences) {
+      // Map database snake_case fields to camelCase for buildDayPlan
+      const userPrefs = {
+        workDays: preferences.work_days || [1, 2, 3, 4, 5],
+        workStartTime: preferences.work_start_time || '09:00',
+        workEndTime: preferences.work_end_time || '17:00',
+        wakeTime: preferences.wake_time || '07:00',
+        guideTone: (preferences.guide_tone || 'calm') as GuideTone,
+        workoutEnabled: preferences.workout_enabled ?? true,
+        workoutIntensity: (preferences.workout_intensity || 'full') as WorkoutIntensity,
+        microLessonEnabled: preferences.micro_lesson_enabled ?? true,
+        breathCuesEnabled: preferences.breath_cues_enabled ?? true,
+        defaultTimeMode: (preferences.default_time_mode || 'normal') as TimeMode,
+      }
+
+      const { modules } = buildDayPlan(
+        new Date(guide.date),
+        userPrefs,
+        {
+          energyLevel: guide.energy_level as EnergyLevel,
+          timeMode: guide.time_mode as TimeMode,
+          dayTypeOverride: guide.day_type as DayType,
+        }
+      )
       checkpoints = modules.checkpoints
       durations = modules.durations
     }
