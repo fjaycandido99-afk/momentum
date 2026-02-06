@@ -282,6 +282,9 @@ export function ImmersiveHome() {
     homeAudioActiveRef.current = false
     currentBgVideoId.current = null
     currentScVideoId.current = null
+    // Reset user pause tracking (fresh start)
+    userPausedMusicRef.current = false
+    userPausedSoundscapeRef.current = false
     // Stop keepalive mechanisms
     if (keepaliveRef.current) {
       keepaliveRef.current.pause()
@@ -494,16 +497,24 @@ export function ImmersiveHome() {
     navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'
 
     navigator.mediaSession.setActionHandler('play', () => {
-      if (backgroundMusic) setMusicPlaying(true)
-      else if (activeSoundscape) setSoundscapeIsPlaying(true)
-      else if (guideAudioRef.current) {
+      if (backgroundMusic) {
+        userPausedMusicRef.current = false // User is resuming via lock screen
+        setMusicPlaying(true)
+      } else if (activeSoundscape) {
+        userPausedSoundscapeRef.current = false // User is resuming via lock screen
+        setSoundscapeIsPlaying(true)
+      } else if (guideAudioRef.current) {
         guideAudioRef.current.play().then(() => setGuideIsPlaying(true))
       }
     })
     navigator.mediaSession.setActionHandler('pause', () => {
-      if (backgroundMusic) setMusicPlaying(false)
-      else if (activeSoundscape) setSoundscapeIsPlaying(false)
-      else if (guideAudioRef.current) {
+      if (backgroundMusic) {
+        userPausedMusicRef.current = true // User paused via lock screen
+        setMusicPlaying(false)
+      } else if (activeSoundscape) {
+        userPausedSoundscapeRef.current = true // User paused via lock screen
+        setSoundscapeIsPlaying(false)
+      } else if (guideAudioRef.current) {
         guideAudioRef.current.pause()
         setGuideIsPlaying(false)
       }
@@ -1056,6 +1067,9 @@ export function ImmersiveHome() {
     const nextVideo = currentPlaylist.videos[nextIndex]
     if (!nextVideo) return
 
+    // User is actively engaging - reset pause state
+    userPausedMusicRef.current = false
+
     setActiveCardId(nextVideo.id)
     setCurrentPlaylist(prev => prev ? { ...prev, index: nextIndex } : null)
 
@@ -1117,6 +1131,9 @@ export function ImmersiveHome() {
     const prevIndex = currentPlaylist.index - 1
     const prevVideo = currentPlaylist.videos[prevIndex]
     if (!prevVideo) return
+
+    // User is actively engaging - reset pause state
+    userPausedMusicRef.current = false
 
     setActiveCardId(prevVideo.id)
     setCurrentPlaylist(prev => prev ? { ...prev, index: prevIndex } : null)
