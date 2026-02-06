@@ -137,22 +137,10 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/sw.js', {
-      scope: '/',
-    })
-    console.log('Service Worker registered:', registration.scope)
-
-    // Wait for the service worker to be active
-    if (registration.installing) {
-      await new Promise<void>((resolve) => {
-        registration.installing!.addEventListener('statechange', (e) => {
-          if ((e.target as ServiceWorker).state === 'activated') {
-            resolve()
-          }
-        })
-      })
-    }
-
+    // Use navigator.serviceWorker.ready to avoid double-registering
+    // (SW is already registered by useServiceWorker hook on app load)
+    const registration = await navigator.serviceWorker.ready
+    console.log('Service Worker ready:', registration.scope)
     return registration
   } catch (error) {
     console.error('Service Worker registration failed:', error)

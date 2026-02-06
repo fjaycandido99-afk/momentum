@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, createContext, useContext, ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { SplashScreen } from '@/components/ui/SplashScreen'
+import { useServiceWorker } from '@/hooks/useServiceWorker'
 
 interface AppContextType {
   isGuest: boolean
@@ -25,6 +26,7 @@ interface AppWrapperProps {
 }
 
 export function AppWrapper({ children }: AppWrapperProps) {
+  useServiceWorker()
   const pathname = usePathname()
   const [showSplash, setShowSplash] = useState(true)
   const [hasSeenSplash, setHasSeenSplash] = useState(false)

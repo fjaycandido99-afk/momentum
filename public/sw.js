@@ -1,16 +1,142 @@
-// Service Worker for Push Notifications
+// Service Worker for Push Notifications + Offline Caching
 
-// Install event
+// --- Cache configuration ---
+const CACHE_VERSION = 'v1'
+const SHELL_CACHE = `${CACHE_VERSION}-shell`
+const IMAGE_CACHE = `${CACHE_VERSION}-images`
+const AUDIO_CACHE = `${CACHE_VERSION}-audio`
+const API_CACHE = `${CACHE_VERSION}-api`
+
+const ALL_CACHES = [SHELL_CACHE, IMAGE_CACHE, AUDIO_CACHE, API_CACHE]
+
+// Precache these on install
+const PRECACHE_URLS = [
+  '/',
+  '/manifest.json',
+  '/icon-192.svg',
+  '/apple-touch-icon.png',
+]
+
+const IMAGE_MAX_ENTRIES = 100
+const AUDIO_MAX_ENTRIES = 20
+const API_MAX_ENTRIES = 50
+
+// --- Install event: precache shell ---
 self.addEventListener('install', (event) => {
   console.log('Service Worker installed')
-  self.skipWaiting()
+  event.waitUntil(
+    caches.open(SHELL_CACHE).then((cache) => {
+      return cache.addAll(PRECACHE_URLS).catch((err) => {
+        console.warn('Precache failed for some URLs:', err)
+      })
+    }).then(() => self.skipWaiting())
+  )
 })
 
-// Activate event
+// --- Activate event: clean old caches ---
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activated')
-  event.waitUntil(clients.claim())
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys
+          .filter((key) => !ALL_CACHES.includes(key))
+          .map((key) => {
+            console.log('Deleting old cache:', key)
+            return caches.delete(key)
+          })
+      )
+    }).then(() => clients.claim())
+  )
 })
+
+// --- Fetch interception ---
+self.addEventListener('fetch', (event) => {
+  const { request } = event
+  const url = new URL(request.url)
+
+  // Skip non-GET requests
+  if (request.method !== 'GET') return
+
+  // Skip cross-origin requests (YouTube, external CDNs, etc.)
+  if (url.origin !== self.location.origin) return
+
+  // Skip Next.js internal paths — Next.js handles its own caching
+  // via content-hashed filenames in production, and these change
+  // constantly in dev mode (HMR/hot reload chunks)
+  if (url.pathname.startsWith('/_next/')) return
+
+  // Route to appropriate caching strategy
+  if (url.pathname.startsWith('/backgrounds/')) {
+    event.respondWith(cacheFirst(request, IMAGE_CACHE, IMAGE_MAX_ENTRIES))
+  } else if (url.pathname === '/api/daily-guide/audio' || url.pathname === '/api/tts') {
+    event.respondWith(networkFirst(request, AUDIO_CACHE, AUDIO_MAX_ENTRIES))
+  } else if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirst(request, API_CACHE, API_MAX_ENTRIES))
+  } else if (isStaticAsset(url.pathname)) {
+    event.respondWith(cacheFirst(request, SHELL_CACHE))
+  } else if (request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(networkFirst(request, SHELL_CACHE))
+  }
+  // Everything else: passthrough (browser default)
+})
+
+function isStaticAsset(pathname) {
+  return /\.(js|css|svg|png|jpg|jpeg|webp|gif|ico|woff|woff2|ttf|eot)$/.test(pathname)
+}
+
+// --- Cache-first strategy ---
+async function cacheFirst(request, cacheName, maxEntries) {
+  const cached = await caches.match(request)
+  if (cached) return cached
+
+  try {
+    const response = await fetch(request)
+    if (response.ok) {
+      const cache = await caches.open(cacheName)
+      cache.put(request, response.clone())
+      if (maxEntries) trimCache(cacheName, maxEntries)
+    }
+    return response
+  } catch {
+    // Offline and not cached — return a basic offline response
+    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' })
+  }
+}
+
+// --- Network-first strategy ---
+async function networkFirst(request, cacheName, maxEntries) {
+  try {
+    const response = await fetch(request)
+    if (response.ok) {
+      const cache = await caches.open(cacheName)
+      cache.put(request, response.clone())
+      if (maxEntries) trimCache(cacheName, maxEntries)
+    }
+    return response
+  } catch {
+    const cached = await caches.match(request)
+    if (cached) return cached
+    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' })
+  }
+}
+
+// --- Trim cache to max entries (LRU) ---
+async function trimCache(cacheName, maxEntries) {
+  const cache = await caches.open(cacheName)
+  const keys = await cache.keys()
+  if (keys.length > maxEntries) {
+    // Delete oldest entries first
+    const toDelete = keys.length - maxEntries
+    for (let i = 0; i < toDelete; i++) {
+      await cache.delete(keys[i])
+    }
+  }
+}
+
+// ==========================================
+// Push Notifications (preserved from original)
+// ==========================================
 
 // Push event - handle incoming push notifications
 self.addEventListener('push', (event) => {
@@ -90,6 +216,10 @@ self.addEventListener('sync', (event) => {
     // Could sync offline data here
   }
 })
+
+// ==========================================
+// Widget support (preserved from original)
+// ==========================================
 
 // Widget support - handle widget installation
 self.addEventListener('widgetinstall', (event) => {
