@@ -15,7 +15,7 @@ interface GuidedSectionProps {
 
 export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isContentFree, onPlay }: GuidedSectionProps) {
   return (
-    <div className="mb-8 scroll-reveal section-fade-bg">
+    <div className="mb-8 liquid-reveal section-fade-bg">
       <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header">Guided</h2>
       <div className="flex justify-evenly px-2 pb-2">
         {VOICE_GUIDES.map((guide) => {

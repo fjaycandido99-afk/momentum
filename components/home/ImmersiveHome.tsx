@@ -3,12 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sparkles, Bot, Menu, X } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sparkles, Bot, Menu, X, BarChart3 } from 'lucide-react'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
+import { MoodRecommendations } from './MoodRecommendations'
 import { BottomPlayerBar } from './BottomPlayerBar'
 import { DailySpark } from './DailySpark'
 import { SoundscapesSection } from './SoundscapesSection'
@@ -31,6 +32,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext'
 import { FREEMIUM_LIMITS } from '@/lib/subscription-constants'
 import { PreviewPaywall, PreviewTimer, usePreview, AICoachNudge, useCoachNudge } from '@/components/premium/SoftLock'
 import { useScrollReveal, useParallax, useMagneticHover, useRippleBurst } from '@/hooks/useHomeAnimations'
+import { useSectionTransitions } from '@/hooks/useSectionTransitions'
 import { useAudioStateMachine, type AudioState } from '@/hooks/useAudioStateMachine'
 import { useAudioSideEffects } from '@/hooks/useAudioSideEffects'
 import { useVisibilityResume } from '@/hooks/useVisibilityResume'
@@ -391,6 +393,7 @@ export function ImmersiveHome() {
   // --- Pull-down gesture ---
   const scrollRef = useRef<HTMLDivElement>(null)
   useScrollReveal(scrollRef)
+  useSectionTransitions(scrollRef)
   useParallax(scrollRef)
   const { handlePointerMove: magneticMove, handlePointerLeave: magneticLeave } = useMagneticHover()
   const spawnRipple = useRippleBurst()
@@ -993,6 +996,10 @@ export function ImmersiveHome() {
               <Save className="w-4 h-4 text-white/70" />
               <span className="text-sm text-white/90">Saved</span>
             </Link>
+            <Link href="/progress" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+              <BarChart3 className="w-4 h-4 text-white/70" />
+              <span className="text-sm text-white/90">Progress</span>
+            </Link>
             <div className="mx-3 my-1 border-t border-white/10" />
             <Link href="/settings" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
               <Settings className="w-4 h-4 text-white/70" />
@@ -1003,7 +1010,7 @@ export function ImmersiveHome() {
       )}
 
       {/* Morning Flow Card */}
-      <div className="px-6 mt-4 mb-8 scroll-reveal section-fade-bg">
+      <div className="px-6 mt-4 mb-8 liquid-reveal section-fade-bg">
         <button
           onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
           className="w-full text-left group"
@@ -1027,6 +1034,21 @@ export function ImmersiveHome() {
           </div>
         </button>
       </div>
+
+      {/* Mood Recommendations */}
+      <MoodRecommendations
+        onPlaySoundscape={(soundscapeId) => {
+          const item = SOUNDSCAPE_ITEMS.find(i => i.id === soundscapeId)
+          if (item) handleSoundscapePlay(item, false)
+        }}
+        onPlayGenre={(genreId) => {
+          const videos = genreVideos[genreId]
+          const genre = MUSIC_GENRES.find(g => g.id === genreId)
+          if (videos?.length && genre) {
+            handlePlayMusic(videos[0], 0, genreId, genre.word)
+          }
+        }}
+      />
 
       {/* Soundscapes */}
       <SoundscapesSection

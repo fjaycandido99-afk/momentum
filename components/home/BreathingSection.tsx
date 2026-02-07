@@ -8,7 +8,7 @@ interface BreathingSectionProps {
 
 export function BreathingSection({ onSelect }: BreathingSectionProps) {
   return (
-    <div className="mb-8 scroll-reveal section-fade-bg">
+    <div className="mb-8 liquid-reveal section-fade-bg">
       <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header">Breathwork</h2>
       <div className="flex justify-evenly px-2 pb-2">
         {BREATHING_TECHNIQUES.map((technique) => (

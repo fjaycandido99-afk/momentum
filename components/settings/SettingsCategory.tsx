@@ -63,7 +63,7 @@ export function SettingsCategory({
   }
 
   return (
-    <div className="card-gradient-border overflow-hidden">
+    <div className="glass-refined rounded-2xl overflow-hidden">
       <button
         onClick={toggle}
         aria-expanded={isOpen}

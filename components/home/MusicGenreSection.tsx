@@ -29,7 +29,7 @@ export function MusicGenreSection({
   onMagneticMove, onMagneticLeave, onRipple,
 }: MusicGenreSectionProps) {
   return (
-    <div className="mb-8 scroll-reveal section-fade-bg">
+    <div className="mb-8 liquid-reveal section-fade-bg">
       <div className="flex items-center justify-between px-6 mb-4">
         <div>
           <h2 className="text-lg font-semibold text-white parallax-header">{genre.word}</h2>

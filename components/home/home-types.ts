@@ -4,6 +4,8 @@ import { Wind, Sparkles, Heart, Moon, Anchor } from 'lucide-react'
 
 export type Mode = 'focus' | 'relax' | 'sleep' | 'energy'
 
+export type { ExtendedMood } from '@/lib/mood-recommendations'
+
 export interface VideoItem {
   id: string
   title: string

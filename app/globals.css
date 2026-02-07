@@ -764,8 +764,10 @@ input:focus, select:focus, textarea:focus, button:focus {
   position: relative;
   border-radius: 50%;
   overflow: hidden;
-  background: #1a1a1e;
-  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .card-gradient-border-round::before {
@@ -820,6 +822,56 @@ input:focus, select:focus, textarea:focus, button:focus {
   mask-composite: exclude;
   animation: border-rotate 6s linear infinite;
   pointer-events: none;
+}
+
+/* ========== Card & Circle Animations ========== */
+
+/* Subtle idle float on circles */
+@keyframes card-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.card-gradient-border-round {
+  animation: border-rotate 6s linear infinite, card-float 4s ease-in-out infinite;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card-gradient-border-round:hover,
+.card-gradient-border-round:active {
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.12), 0 0 6px rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px) scale(1.08);
+}
+
+/* Stagger float animation per circle */
+.card-gradient-border-round { animation-delay: 0s, 0s; }
+button:nth-child(2) > .card-gradient-border-round { animation-delay: 0s, 0.4s; }
+button:nth-child(3) > .card-gradient-border-round { animation-delay: 0s, 0.8s; }
+button:nth-child(4) > .card-gradient-border-round { animation-delay: 0s, 1.2s; }
+button:nth-child(5) > .card-gradient-border-round { animation-delay: 0s, 1.6s; }
+button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
+
+/* Soft glow pulse on rectangular cards */
+@keyframes card-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+  50% { box-shadow: 0 0 12px rgba(255, 255, 255, 0.06); }
+}
+
+.card-gradient-border {
+  animation: card-glow-pulse 5s ease-in-out infinite;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card-gradient-border:hover,
+.card-gradient-border:active {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.3);
+  transform: scale(1.03);
+}
+
+/* Border shimmer speed-up on hover */
+.card-gradient-border:hover::before,
+.card-gradient-border-round:hover::before {
+  animation-duration: 2s;
 }
 
 /* Now-playing card glow */
@@ -1127,4 +1179,102 @@ input:focus, select:focus, textarea:focus, button:focus {
 
 .cta-glow-pulse {
   animation: cta-glow-pulse 2s ease-in-out infinite;
+}
+
+/* ========== Glassmorphism Refined ========== */
+.glass-refined {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+}
+
+.glass-refined::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.glass-refined::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.03;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.glass-refined.glass-elevated {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.glass-refined.glass-elevated::after {
+  opacity: 0.04;
+}
+
+/* ========== Liquid Page Transitions ========== */
+@keyframes section-liquid-enter {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.97);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.liquid-reveal {
+  opacity: 0;
+  transform: translateY(30px) scale(0.97);
+  filter: blur(6px);
+}
+
+.liquid-reveal.revealed {
+  animation: section-liquid-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes overlay-open {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes overlay-close {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+    filter: blur(4px);
+  }
+}
+
+.overlay-enter {
+  animation: overlay-open 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.overlay-exit {
+  animation: overlay-close 0.25s ease-in both;
 }

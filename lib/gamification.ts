@@ -6,6 +6,7 @@ export const XP_REWARDS = {
   breathingSession: 15,
   focusSession: 25,
   coachChat: 10,
+  routineComplete: 30,
 } as const
 
 export type XPEventType = keyof typeof XP_REWARDS

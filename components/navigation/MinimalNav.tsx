@@ -10,6 +10,7 @@ const PAGE_LABELS: Record<string, string> = {
   '/saved': 'Saved',
   '/coach': 'Coach',
   '/astrology': 'Cosmic Guide',
+  '/progress': 'Progress',
 }
 
 export function MinimalNav() {

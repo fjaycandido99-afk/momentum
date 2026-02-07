@@ -233,7 +233,7 @@ export function DailySpark() {
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => dismiss()} />
 
-      <div className="relative max-w-sm w-full rounded-2xl overflow-hidden spark-card-glow">
+      <div className="relative max-w-sm w-full rounded-2xl overflow-hidden spark-card-glow glass-refined glass-elevated">
         {/* Gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-violet-600/30 via-[#1a1a1a] to-amber-500/20" />
         <div className="absolute inset-0 bg-[#1a1a1a]/70" />

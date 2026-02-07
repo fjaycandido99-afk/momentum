@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Flame, Trophy, Star, Zap, Crown, Sparkles, X } from 'lucide-react'
+import { Flame, Trophy, Star, Zap, Crown, Sparkles, X, Share2 } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { useShareCard } from '@/hooks/useShareCard'
+import { generateStreakCard } from '@/hooks/useShareCardTemplates'
 
 interface StreakDisplayProps {
   streak: number
@@ -49,6 +51,7 @@ function isNewMilestone(streak: number) {
 
 export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: StreakDisplayProps) {
   const [showMilestoneModal, setShowMilestoneModal] = useState(false)
+  const { shareFromHTML, isGenerating } = useShareCard()
   const currentMilestone = getCurrentMilestone(streak)
   const nextMilestone = getNextMilestone(streak)
   const isMilestone = isNewMilestone(streak)
@@ -182,13 +185,23 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
                 </div>
               )}
 
-              {/* Close button */}
-              <button
-                onClick={handleCloseCelebration}
-                className="mt-6 px-6 py-3 rounded-xl bg-white/20 hover:bg-white/30 text-white font-medium transition-colors"
-              >
-                Keep Going!
-              </button>
+              {/* Action buttons */}
+              <div className="mt-6 flex gap-3 justify-center">
+                <button
+                  onClick={handleCloseCelebration}
+                  className="px-6 py-3 rounded-xl bg-white/20 hover:bg-white/30 text-white font-medium transition-colors"
+                >
+                  Keep Going!
+                </button>
+                <button
+                  onClick={() => shareFromHTML(generateStreakCard(streak))}
+                  disabled={isGenerating}
+                  className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors disabled:opacity-50"
+                  aria-label="Share streak"
+                >
+                  <Share2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

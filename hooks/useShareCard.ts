@@ -6,6 +6,34 @@ export function useShareCard() {
   const [isGenerating, setIsGenerating] = useState(false)
   const cardRef = useRef<HTMLDivElement | null>(null)
 
+  const shareFromHTML = useCallback(async (html: string, width: number = 540, height: number = 540) => {
+    setIsGenerating(true)
+    try {
+      const card = document.createElement('div')
+      card.innerHTML = html
+      const inner = card.firstElementChild as HTMLElement
+      if (inner) {
+        inner.style.position = 'fixed'
+        document.body.appendChild(inner)
+        const html2canvas = (await import('html2canvas')).default
+        const canvas = await html2canvas(inner, { backgroundColor: null, scale: 2, width, height, useCORS: true })
+        document.body.removeChild(inner)
+        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'))
+        if (!blob) throw new Error('Failed to create image')
+        const file = new File([blob], 'voxu-share.png', { type: 'image/png' })
+        if (navigator.share && navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Shared from Voxu' })
+        } else {
+          await navigator.clipboard.writeText('Shared from Voxu')
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') console.error('Share error:', err)
+    } finally {
+      setIsGenerating(false)
+    }
+  }, [])
+
   const shareAsImage = useCallback(async (
     content: string,
     type: 'quote' | 'affirmation' | 'tarot',
@@ -97,5 +125,5 @@ export function useShareCard() {
     }
   }, [])
 
-  return { shareAsImage, isGenerating }
+  return { shareAsImage, shareFromHTML, isGenerating }
 }

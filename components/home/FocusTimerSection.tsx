@@ -9,7 +9,7 @@ interface FocusTimerSectionProps {
 
 export function FocusTimerSection({ onSelect }: FocusTimerSectionProps) {
   return (
-    <div className="mb-8 scroll-reveal section-fade-bg">
+    <div className="mb-8 liquid-reveal section-fade-bg">
       <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header">Focus Timer</h2>
       <div className="grid grid-cols-3 gap-2 px-6 pb-2">
         {POMODORO_PRESETS.map((preset) => (

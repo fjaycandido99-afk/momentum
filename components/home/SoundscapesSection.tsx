@@ -14,9 +14,9 @@ interface SoundscapesSectionProps {
 
 export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isContentFree, onPlay, onReopen }: SoundscapesSectionProps) {
   return (
-    <div className="mb-8 scroll-reveal section-fade-bg">
+    <div className="mb-8 liquid-reveal section-fade-bg">
       <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header">Soundscapes</h2>
-      <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
+      <div className="flex gap-4 overflow-x-auto px-6 pt-2 pb-4 scrollbar-hide">
         {SOUNDSCAPE_ITEMS.map((item) => {
           const Icon = item.icon
           const isActive = activeSoundscape?.soundId === item.id && soundscapeIsPlaying

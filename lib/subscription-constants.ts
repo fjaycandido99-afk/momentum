@@ -34,6 +34,8 @@ export const FREEMIUM_LIMITS = {
   },
   previewSeconds: 30,
   coachNudgeDelayMs: 5 * 60 * 1000, // 5 minutes
+  playlists: { freeCount: 1 },
+  routines: { freeCount: 1 },
 }
 
 // Content type for freemium checks

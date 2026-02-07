@@ -40,20 +40,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { content_type, content_text } = await request.json()
+    const { content_type, content_text, content_id, content_genre, content_title, thumbnail } = await request.json()
 
     if (!content_type || !content_text) {
       return NextResponse.json({ error: 'content_type and content_text required' }, { status: 400 })
     }
 
-    // Check for duplicate
-    const existing = await prisma.favoriteContent.findFirst({
-      where: {
-        user_id: user.id,
-        content_type,
-        content_text,
-      },
-    })
+    // Check for duplicate by content_id if provided, else by text
+    const existing = content_id
+      ? await prisma.favoriteContent.findFirst({
+          where: { user_id: user.id, content_type, content_id },
+        })
+      : await prisma.favoriteContent.findFirst({
+          where: { user_id: user.id, content_type, content_text },
+        })
 
     if (existing) {
       return NextResponse.json({ favorite: existing, duplicate: true })
@@ -64,6 +64,10 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         content_type,
         content_text,
+        content_id,
+        content_genre,
+        content_title,
+        thumbnail,
       },
     })
 

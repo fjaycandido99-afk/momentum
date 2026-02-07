@@ -21,6 +21,8 @@ model User {
   favorites    FavoriteContent[]
   subscription Subscription?
   goals        Goal[]
+  playlists    Playlist[]
+  routines     Routine[]
 }
 
 model Subscription {
@@ -158,8 +160,12 @@ model FavoriteContent {
   user_id String
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  content_type String // "quote" | "lesson" | "breathing"
-  content_text String
+  content_type  String // "quote" | "lesson" | "breathing" | "soundscape" | "music" | "motivation"
+  content_text  String
+  content_id    String?
+  content_genre String?
+  content_title String?
+  thumbnail     String?
 
   created_at DateTime @default(now())
 
@@ -368,4 +374,65 @@ model VideoCache {
   cached_at DateTime @default(now())
 
   @@index([cache_key])
+}
+
+model Playlist {
+  id          String         @id @default(cuid())
+  user_id     String
+  user        User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  items       PlaylistItem[]
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+
+  @@index([user_id])
+}
+
+model PlaylistItem {
+  id           String   @id @default(cuid())
+  playlist_id  String
+  playlist     Playlist @relation(fields: [playlist_id], references: [id], onDelete: Cascade)
+  content_type String // "soundscape" | "music" | "motivation"
+  content_id   String // soundscape id or youtubeId
+  title        String
+  subtitle     String?
+  genre_id     String?
+  thumbnail    String?
+  position     Int      @default(0)
+  created_at   DateTime @default(now())
+
+  @@unique([playlist_id, content_type, content_id])
+  @@index([playlist_id])
+}
+
+model Routine {
+  id              String        @id @default(cuid())
+  user_id         String
+  user            User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  icon            String?
+  steps           RoutineStep[]
+  times_completed Int           @default(0)
+  last_completed  DateTime?
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+
+  @@index([user_id])
+}
+
+model RoutineStep {
+  id               String   @id @default(cuid())
+  routine_id       String
+  routine          Routine  @relation(fields: [routine_id], references: [id], onDelete: Cascade)
+  activity_type    String // "soundscape" | "breathing" | "motivation" | "music" | "focus"
+  activity_id      String
+  title            String
+  subtitle         String?
+  duration_minutes Int?
+  position         Int      @default(0)
+  created_at       DateTime @default(now())
+
+  @@index([routine_id])
 }
