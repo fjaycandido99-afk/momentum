@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sparkles, Bot } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sparkles, Bot, Menu, X } from 'lucide-react'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types'
@@ -13,8 +13,15 @@ import { BottomPlayerBar } from './BottomPlayerBar'
 import { DailySpark } from './DailySpark'
 import { SoundscapesSection } from './SoundscapesSection'
 import { GuidedSection } from './GuidedSection'
+import { BreathingSection } from './BreathingSection'
+import { BreathingPlayer } from './BreathingPlayer'
+import { FocusTimerSection } from './FocusTimerSection'
+import { FocusTimerPlayer } from './FocusTimerPlayer'
+import { XPBadge } from './XPBadge'
 import { MotivationSection } from './MotivationSection'
 import { MusicGenreSection } from './MusicGenreSection'
+import type { BreathingTechnique } from '@/lib/breathing-exercises'
+import type { PomodoroConfig } from '@/lib/pomodoro'
 import {
   Mode, VideoItem, MUSIC_GENRES, TOPIC_TAGLINES,
   getTimeContext, getSuggestedMode, getTodaysTopicName, getTodaysBackgrounds, shuffleWithSeed,
@@ -80,6 +87,17 @@ export function ImmersiveHome() {
   const { showNudge, dismissNudge } = useCoachNudge(
     isPremium ? Infinity : FREEMIUM_LIMITS.coachNudgeDelayMs
   )
+
+  // Breathing exercise state
+  const [showBreathingPlayer, setShowBreathingPlayer] = useState(false)
+  const [activeBreathingTechnique, setActiveBreathingTechnique] = useState<BreathingTechnique | null>(null)
+
+  // Focus timer state
+  const [showFocusTimer, setShowFocusTimer] = useState(false)
+  const [focusPreset, setFocusPreset] = useState<PomodoroConfig | null>(null)
+
+  // Hamburger menu
+  const [showMenu, setShowMenu] = useState(false)
 
   // Overlays
   const [showMorningFlow, setShowMorningFlow] = useState(false)
@@ -791,7 +809,7 @@ export function ImmersiveHome() {
     <div className="isolate min-h-screen">
     <div
       ref={scrollRef}
-      className={`relative min-h-screen text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer ? 'overflow-hidden max-h-screen' : ''}`}
+      className={`relative min-h-screen text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer || showBreathingPlayer || showFocusTimer ? 'overflow-hidden max-h-screen' : ''}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -853,6 +871,48 @@ export function ImmersiveHome() {
         />
       )}
 
+      {/* Breathing Player Overlay */}
+      {showBreathingPlayer && activeBreathingTechnique && (
+        <BreathingPlayer
+          technique={activeBreathingTechnique}
+          onClose={() => {
+            setShowBreathingPlayer(false)
+            setActiveBreathingTechnique(null)
+          }}
+        />
+      )}
+
+      {/* Focus Timer Overlay */}
+      {showFocusTimer && focusPreset && (
+        <FocusTimerPlayer
+          preset={focusPreset}
+          onClose={() => {
+            setShowFocusTimer(false)
+            setFocusPreset(null)
+          }}
+          onFocusStart={() => {
+            // Auto-play study music during focus
+            const studyVideos = genreVideos['study'] || []
+            if (studyVideos.length > 0) {
+              const gBgs = genreBackgrounds['study'] || []
+              const bg = gBgs.length > 0 ? gBgs[0] : backgrounds[0]
+              dispatch({
+                type: 'PLAY_MUSIC',
+                youtubeId: studyVideos[0].youtubeId,
+                label: 'Study',
+                cardId: studyVideos[0].id,
+                playlist: { videos: studyVideos.slice(0, 8), index: 0, type: 'music', genreId: 'study', genreWord: 'Study' },
+                playingSound: null,
+              })
+              createBgMusicPlayer(studyVideos[0].youtubeId)
+            }
+          }}
+          onBreakStart={() => {
+            dispatch({ type: 'PAUSE_MUSIC' })
+          }}
+        />
+      )}
+
       {/* Morning Flow Overlay */}
       {showMorningFlow && (
         <div className="fixed inset-0 z-50 bg-black flex flex-col animate-fade-in-down">
@@ -899,26 +959,46 @@ export function ImmersiveHome() {
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down header-fade-bg">
+      <div className="relative z-50 flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down header-fade-bg">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold shimmer-text">Explore</h1>
           <StreakBadge streak={streak} />
+          <XPBadge />
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/astrology" aria-label="Cosmic Guide" className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors">
-            <Sparkles className="w-5 h-5 text-white/95" />
-          </Link>
-          <Link href="/journal" aria-label="Journal" className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors">
-            <PenLine className="w-5 h-5 text-white/95" />
-          </Link>
-          <Link href="/saved" aria-label="Saved" className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors">
-            <Save className="w-5 h-5 text-white/95" />
-          </Link>
-          <Link href="/settings" aria-label="Settings" className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors">
-            <Settings className="w-5 h-5 text-white/95" />
-          </Link>
-        </div>
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          aria-label={showMenu ? 'Close menu' : 'Open menu'}
+          className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors press-scale"
+        >
+          {showMenu ? <X className="w-5 h-5 text-white/95" /> : <Menu className="w-5 h-5 text-white/95" />}
+        </button>
       </div>
+
+      {/* Hamburger Menu Dropdown */}
+      {showMenu && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
+          <div className="absolute right-6 top-[72px] z-40 w-48 py-2 rounded-2xl bg-[#111113] border border-white/15 shadow-xl animate-fade-in-up">
+            <Link href="/astrology" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+              <Sparkles className="w-4 h-4 text-white/70" />
+              <span className="text-sm text-white/90">Cosmic Guide</span>
+            </Link>
+            <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+              <PenLine className="w-4 h-4 text-white/70" />
+              <span className="text-sm text-white/90">Journal</span>
+            </Link>
+            <Link href="/saved" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+              <Save className="w-4 h-4 text-white/70" />
+              <span className="text-sm text-white/90">Saved</span>
+            </Link>
+            <div className="mx-3 my-1 border-t border-white/10" />
+            <Link href="/settings" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+              <Settings className="w-4 h-4 text-white/70" />
+              <span className="text-sm text-white/90">Settings</span>
+            </Link>
+          </div>
+        </>
+      )}
 
       {/* Morning Flow Card */}
       <div className="px-6 mt-4 mb-8 scroll-reveal section-fade-bg">
@@ -962,6 +1042,22 @@ export function ImmersiveHome() {
         loadingGuide={audioState.loadingGuide}
         isContentFree={(type, id) => isContentFree(type, id)}
         onPlay={handleGuidePlay}
+      />
+
+      {/* Breathwork */}
+      <BreathingSection
+        onSelect={(technique) => {
+          setActiveBreathingTechnique(technique)
+          setShowBreathingPlayer(true)
+        }}
+      />
+
+      {/* Focus Timer */}
+      <FocusTimerSection
+        onSelect={(preset) => {
+          setFocusPreset(preset)
+          setShowFocusTimer(true)
+        }}
       />
 
       {/* Motivation */}

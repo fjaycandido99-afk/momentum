@@ -34,6 +34,8 @@ import { SmartNudgeBanner } from './SmartNudgeBanner'
 import { StreakDisplay } from './StreakDisplay'
 import { JournalEntry } from './JournalEntry'
 import { MorningFlowComplete } from './MorningFlowComplete'
+import { XPReward } from './XPReward'
+import { logXPEvent, XP_REWARDS } from '@/lib/gamification'
 import { CheckpointList } from './CheckpointCard'
 import { MoodCheckIn } from './MoodCheckIn'
 import { JournalLookback } from './JournalLookback'
@@ -241,6 +243,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const [showMorningComplete, setShowMorningComplete] = useState(false)
   const [morningCompleteCelebrated, setMorningCompleteCelebrated] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
+  // XP reward toast
+  const [xpRewardAmount, setXPRewardAmount] = useState(0)
+  const [showXPReward, setShowXPReward] = useState(false)
   // Mood tracking
   const [moodBefore, setMoodBefore] = useState<string | null>(null)
   const [moodAfter, setMoodAfter] = useState<string | null>(null)
@@ -717,8 +722,19 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     }
   }
 
+  const awardXP = (amount: number) => {
+    setXPRewardAmount(amount)
+    setShowXPReward(false)
+    // Force re-trigger by toggling
+    setTimeout(() => setShowXPReward(true), 10)
+  }
+
   const handlePlayerComplete = () => {
     if (!activePlayer) return
+
+    // Award XP
+    logXPEvent('moduleComplete')
+    awardXP(XP_REWARDS.moduleComplete)
 
     // Optimistic update
     setCompletedModules(prev => [...prev, activePlayer.module])
@@ -1548,6 +1564,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           onComplete={handlePlayerComplete}
         />
       )}
+
+      {/* XP Reward Toast */}
+      <XPReward xp={xpRewardAmount} show={showXPReward} />
     </div>
   )
 }

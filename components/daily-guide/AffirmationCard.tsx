@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { Sparkles, Loader2, Share2 } from 'lucide-react'
+import { useShareCard } from '@/hooks/useShareCard'
 
 interface AffirmationCardProps {
   isPremium: boolean
@@ -10,6 +11,7 @@ interface AffirmationCardProps {
 export function AffirmationCard({ isPremium }: AffirmationCardProps) {
   const [affirmation, setAffirmation] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const { shareAsImage, isGenerating: isShareGenerating } = useShareCard()
 
   useEffect(() => {
     if (!isPremium) return
@@ -58,10 +60,24 @@ export function AffirmationCard({ isPremium }: AffirmationCardProps) {
         <div className="p-2 rounded-xl bg-indigo-500/20 shrink-0">
           <Sparkles className="w-4 h-4 text-indigo-400" />
         </div>
-        <div>
-          <p className="text-[10px] font-medium tracking-widest text-indigo-400/70 uppercase mb-1">
-            Daily Affirmation
-          </p>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-medium tracking-widest text-indigo-400/70 uppercase">
+              Daily Affirmation
+            </p>
+            <button
+              onClick={() => affirmation && shareAsImage(affirmation, 'affirmation')}
+              disabled={isShareGenerating}
+              aria-label="Share affirmation as image"
+              className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              {isShareGenerating ? (
+                <Loader2 className="w-3.5 h-3.5 text-white/60 animate-spin" />
+              ) : (
+                <Share2 className="w-3.5 h-3.5 text-white/50 hover:text-white/80 transition-colors" />
+              )}
+            </button>
+          </div>
           <p className="text-sm text-white/95 italic leading-relaxed">
             {affirmation}
           </p>

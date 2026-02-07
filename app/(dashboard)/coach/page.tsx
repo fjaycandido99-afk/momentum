@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, Send, Loader2, Sparkles, Crown, Bot } from 'lucide-react'
+import { ChevronLeft, Send, Loader2, Sparkles, Crown, Bot, MessageSquare, ClipboardList } from 'lucide-react'
 import Link from 'next/link'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { CoachingPlans } from '@/components/coach/CoachingPlans'
+import { getActivePlan, COACHING_PLANS, getPlanProgress } from '@/lib/coaching-plans'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -59,6 +61,23 @@ function renderMarkdown(text: string) {
 
 export default function CoachPage() {
   const subscription = useSubscriptionOptional()
+  const [activeTab, setActiveTab] = useState<'chat' | 'plans'>('chat')
+  const [activePlanBanner, setActivePlanBanner] = useState<string | null>(null)
+
+  useEffect(() => {
+    const planId = getActivePlan()
+    if (planId) {
+      const plan = COACHING_PLANS.find(p => p.id === planId)
+      const progress = getPlanProgress(planId)
+      if (plan && progress) {
+        const day = progress.completedDays.length + 1
+        if (day <= 7) {
+          setActivePlanBanner(`Day ${day} of ${plan.title}`)
+        }
+      }
+    }
+  }, [activeTab])
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -126,34 +145,49 @@ export default function CoachPage() {
     }
   }
 
-  // Non-premium view
+  // Non-premium view — plans are free, chat is premium
   if (subscription && !subscription.isPremium) {
     return (
       <div className="min-h-screen text-white flex flex-col">
-        <div className="px-6 pt-12 pb-6 flex items-center gap-3 header-fade-bg">
+        <div className="px-6 pt-12 pb-4 flex items-center gap-3 header-fade-bg">
           <Link href="/" aria-label="Back to home" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
             <ChevronLeft className="w-5 h-5 text-white/95" />
           </Link>
           <h1 className="text-2xl font-light shimmer-text">AI Coach</h1>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="card-gradient-border p-8 text-center">
-            <div className="p-4 rounded-full bg-amber-500/20 mb-4 mx-auto w-fit">
-              <Crown className="w-8 h-8 text-amber-400" />
-            </div>
-            <h2 className="text-xl font-medium text-white mb-2">Premium Feature</h2>
-            <p className="text-white/95 mb-6 max-w-xs">
-              Get personalized coaching, motivation, and support from your AI wellness coach.
-            </p>
-            <button
-              onClick={() => subscription?.openUpgradeModal()}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all mx-auto"
-            >
-              <Sparkles className="w-5 h-5" />
-              Upgrade to Premium
-            </button>
-          </div>
+        {/* Tab bar */}
+        <div className="flex px-6 gap-2 pb-4 border-b border-white/10">
+          <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-white/15 text-white border border-white/20' : 'bg-white/5 text-white/60'}`}>
+            <MessageSquare className="w-3.5 h-3.5" /> Chat
+          </button>
+          <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-white/15 text-white border border-white/20' : 'bg-white/5 text-white/60'}`}>
+            <ClipboardList className="w-3.5 h-3.5" /> Plans
+          </button>
         </div>
+        {activeTab === 'plans' ? (
+          <div className="flex-1 overflow-y-auto">
+            <CoachingPlans />
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center p-6">
+            <div className="card-gradient-border p-8 text-center">
+              <div className="p-4 rounded-full bg-amber-500/20 mb-4 mx-auto w-fit">
+                <Crown className="w-8 h-8 text-amber-400" />
+              </div>
+              <h2 className="text-xl font-medium text-white mb-2">Premium Feature</h2>
+              <p className="text-white/95 mb-6 max-w-xs">
+                Get personalized coaching, motivation, and support from your AI wellness coach.
+              </p>
+              <button
+                onClick={() => subscription?.openUpgradeModal()}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all mx-auto"
+              >
+                <Sparkles className="w-5 h-5" />
+                Upgrade to Premium
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -161,7 +195,7 @@ export default function CoachPage() {
   return (
     <div className="min-h-screen text-white flex flex-col">
       {/* Header with gradient */}
-      <div className="relative px-6 pt-12 pb-4 flex items-center gap-3 border-b border-white/10 header-fade-bg">
+      <div className="relative px-6 pt-12 pb-4 flex items-center gap-3 header-fade-bg">
         {/* Subtle gradient glow behind header */}
         <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.06] to-transparent pointer-events-none" />
         <Link href="/" aria-label="Back to home" className="relative p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
@@ -182,6 +216,32 @@ export default function CoachPage() {
         </div>
       </div>
 
+      {/* Tab bar */}
+      <div className="flex px-6 gap-2 py-2 border-b border-white/10">
+        <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-white/15 text-white border border-white/20' : 'bg-white/5 text-white/60'}`}>
+          <MessageSquare className="w-3.5 h-3.5" /> Chat
+        </button>
+        <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-white/15 text-white border border-white/20' : 'bg-white/5 text-white/60'}`}>
+          <ClipboardList className="w-3.5 h-3.5" /> Plans
+        </button>
+      </div>
+
+      {/* Active plan banner in chat tab */}
+      {activeTab === 'chat' && activePlanBanner && (
+        <button
+          onClick={() => setActiveTab('plans')}
+          className="mx-6 mt-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 text-left hover:bg-amber-500/15 transition-colors"
+        >
+          {activePlanBanner} →
+        </button>
+      )}
+
+      {activeTab === 'plans' ? (
+        <div className="flex-1 overflow-y-auto">
+          <CoachingPlans />
+        </div>
+      ) : (
+      <>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {messages.map((msg, i) => (
@@ -280,6 +340,8 @@ export default function CoachPage() {
           </button>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

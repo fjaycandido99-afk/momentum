@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Quote, Check, Sparkles, Share2, Heart } from 'lucide-react'
+import { Quote, Check, Sparkles, Share2, Heart, Loader2 } from 'lucide-react'
 import { getDayOfYearQuote } from '@/lib/quotes'
+import { useShareCard } from '@/hooks/useShareCard'
 
 interface QuoteCardProps {
   isCompleted: boolean
@@ -24,6 +25,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
   const [showCopied, setShowCopied] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const [favoriteId, setFavoriteId] = useState<string | null>(null)
+  const { shareAsImage, isGenerating: isShareGenerating } = useShareCard()
 
   // Load quote: try smart API first, fall back to local
   useEffect(() => {
@@ -87,19 +89,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
 
   const handleShare = async () => {
     if (!quote) return
-
-    const shareText = `"${quote.text}" — ${quote.author}\n\nFrom Voxu`
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ text: shareText })
-      } catch {
-        // User cancelled or share failed, fall back to clipboard
-        await copyToClipboard(shareText)
-      }
-    } else {
-      await copyToClipboard(shareText)
-    }
+    await shareAsImage(quote.text, 'quote', quote.author)
   }
 
   const copyToClipboard = async (text: string) => {
@@ -226,10 +216,15 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                     </button>
                     <button
                       onClick={handleShare}
-                      aria-label="Share quote"
+                      disabled={isShareGenerating}
+                      aria-label="Share quote as image"
                       className="p-1.5 rounded-lg hover:bg-white/10 transition-colors group/share focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
-                      <Share2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-white/95' : 'text-white/95'} group-hover/share:text-white/95 transition-colors`} />
+                      {isShareGenerating ? (
+                        <Loader2 className="w-3.5 h-3.5 text-white/60 animate-spin" />
+                      ) : (
+                        <Share2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-white/95' : 'text-white/95'} group-hover/share:text-white/95 transition-colors`} />
+                      )}
                     </button>
                   </div>
                 </div>

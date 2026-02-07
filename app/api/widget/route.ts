@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { getDayOfYearQuote } from '@/lib/quotes'
+import { getDailyTarotCard } from '@/lib/astrology/tarot-data'
+import { BREATHING_TECHNIQUES } from '@/lib/breathing-exercises'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -10,6 +13,29 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+
+    const searchParamsEarly = request.nextUrl.searchParams
+    const widgetTypeEarly = searchParamsEarly.get('type') || 'progress'
+
+    // Types that don't require auth
+    if (widgetTypeEarly === 'quote') {
+      const quote = getDayOfYearQuote()
+      return NextResponse.json({ quote: quote.text, author: quote.author })
+    }
+
+    if (widgetTypeEarly === 'breathing') {
+      const hour = new Date().getHours()
+      let suggested = BREATHING_TECHNIQUES[0]
+      if (hour >= 21 || hour < 6) suggested = BREATHING_TECHNIQUES[1]
+      else if (hour >= 6 && hour < 10) suggested = BREATHING_TECHNIQUES[2]
+      else if (hour >= 14 && hour < 17) suggested = BREATHING_TECHNIQUES[3]
+      return NextResponse.json({
+        technique: suggested.name,
+        tagline: suggested.tagline,
+        pattern: suggested.pattern,
+        description: suggested.description,
+      })
+    }
 
     if (!user) {
       // Return default data for unauthenticated users
@@ -88,6 +114,59 @@ export async function GET(request: NextRequest) {
         message: streak > 0
           ? `${streak} days strong!`
           : 'Start your streak today!',
+      })
+    }
+
+    if (widgetType === 'quote') {
+      const quote = getDayOfYearQuote()
+      return NextResponse.json({
+        quote: quote.text,
+        author: quote.author,
+      })
+    }
+
+    if (widgetType === 'tarot') {
+      // Use a default sign if user hasn't set one
+      const userPrefs = await prisma.userPreferences.findUnique({
+        where: { user_id: user.id },
+        select: { zodiac_sign: true },
+      }).catch(() => null)
+      const sign = (userPrefs as { zodiac_sign?: string | null } | null)?.zodiac_sign || 'aries'
+      const { card, elementHint } = getDailyTarotCard(sign)
+      return NextResponse.json({
+        cardName: card.name,
+        numeral: card.numeral,
+        keywords: card.keywords,
+        meaning: card.uprightMeaning,
+        elementHint,
+      })
+    }
+
+    if (widgetType === 'breathing') {
+      const hour = new Date().getHours()
+      // Suggest technique based on time of day
+      let suggested = BREATHING_TECHNIQUES[0] // Box breathing default
+      if (hour >= 21 || hour < 6) suggested = BREATHING_TECHNIQUES[1] // 4-7-8 Sleep
+      else if (hour >= 6 && hour < 10) suggested = BREATHING_TECHNIQUES[2] // Power Breath
+      else if (hour >= 14 && hour < 17) suggested = BREATHING_TECHNIQUES[3] // Coherent
+      return NextResponse.json({
+        technique: suggested.name,
+        tagline: suggested.tagline,
+        pattern: suggested.pattern,
+        description: suggested.description,
+      })
+    }
+
+    if (widgetType === 'full') {
+      const quote = getDayOfYearQuote()
+      return NextResponse.json({
+        greeting: getGreeting(),
+        completedModules,
+        totalModules,
+        streak,
+        message,
+        quote: { text: quote.text, author: quote.author },
+        xpLevel: null, // XP is client-side only
       })
     }
 

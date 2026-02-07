@@ -8,6 +8,8 @@ import { MoonPhaseWidget } from './MoonPhaseWidget'
 import { ZodiacAffirmations } from './ZodiacAffirmations'
 import { CompatibilitySnapshot } from './CompatibilitySnapshot'
 import { CosmicInsightCard } from '@/components/daily-guide/CosmicInsightCard'
+import { TarotCardOfDay } from './TarotCardOfDay'
+import { PlanetaryTransits } from './PlanetaryTransits'
 
 const WordAnimationPlayer = dynamic(
   () => import('@/components/player/WordAnimationPlayer').then(mod => mod.WordAnimationPlayer),
@@ -107,18 +109,32 @@ export function AstrologyPage() {
         </div>
       )}
 
+      {/* Tarot Card of the Day */}
+      {zodiacSign && (
+        <div className="mb-5 animate-fade-in section-fade-bg" style={{ animationDelay: '0.2s' }}>
+          <TarotCardOfDay zodiacSign={zodiacSign} />
+        </div>
+      )}
+
+      {/* Planetary Transits */}
+      {zodiacSign && (
+        <div className="mb-5 animate-fade-in section-fade-bg" style={{ animationDelay: '0.25s' }}>
+          <PlanetaryTransits zodiacSign={zodiacSign} />
+        </div>
+      )}
+
       {/* Zodiac-Tuned Affirmations */}
-      <div className="mb-5 animate-fade-in section-fade-bg" style={{ animationDelay: '0.2s' }}>
+      <div className="mb-5 animate-fade-in section-fade-bg" style={{ animationDelay: '0.3s' }}>
         <ZodiacAffirmations zodiacSign={zodiacSign} />
       </div>
 
       {/* Compatibility Snapshot */}
-      <div className="mb-5 animate-fade-in section-fade-bg" style={{ animationDelay: '0.25s' }}>
+      <div className="mb-5 animate-fade-in section-fade-bg" style={{ animationDelay: '0.35s' }}>
         <CompatibilitySnapshot zodiacSign={zodiacSign} />
       </div>
 
       {/* Cosmic Soundscapes */}
-      <div className="mb-5 animate-fade-in section-fade-bg" style={{ animationDelay: '0.3s' }}>
+      <div className="mb-5 animate-fade-in section-fade-bg" style={{ animationDelay: '0.4s' }}>
         <h2 className="text-lg font-semibold text-white mb-4">Cosmic Soundscapes</h2>
         <div className="flex justify-evenly">
           {COSMIC_SOUNDS.map((sound) => {

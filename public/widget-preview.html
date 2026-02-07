@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voxu Widget Previews</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #08080c; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 32px; }
+    h1 { font-size: 24px; font-weight: 300; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 40px; }
+    .grid { display: flex; flex-wrap: wrap; gap: 24px; }
+    .widget-group { margin-bottom: 48px; }
+    .widget-group h2 { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+
+    .widget {
+      border-radius: 20px;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* Small widget (2x2) */
+    .widget-small { width: 160px; height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    .widget-small .streak-num { font-size: 40px; font-weight: 200; line-height: 1; }
+    .widget-small .streak-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+    .widget-small .flame { font-size: 24px; margin-bottom: 4px; }
+
+    /* Medium widget (4x2) */
+    .widget-medium { width: 344px; height: 160px; display: flex; flex-direction: column; justify-content: space-between; }
+    .widget-medium .top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .widget-medium .greeting { font-size: 16px; font-weight: 500; }
+    .widget-medium .progress-ring { width: 40px; height: 40px; }
+    .widget-medium .quote { font-size: 12px; color: rgba(255,255,255,0.7); font-style: italic; line-height: 1.5; }
+    .widget-medium .author { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+    .widget-medium .modules { font-size: 11px; color: rgba(255,255,255,0.5); }
+    .progress-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 8px; }
+    .progress-fill { height: 100%; background: linear-gradient(to right, #f59e0b, #f97316); border-radius: 4px; }
+
+    /* Large widget (4x4) */
+    .widget-large { width: 344px; height: 344px; display: flex; flex-direction: column; gap: 12px; }
+    .widget-large .header { display: flex; justify-content: space-between; align-items: center; }
+    .widget-large .header h3 { font-size: 16px; font-weight: 500; }
+    .widget-large .streak-badge { display: flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: rgba(251,191,36,0.15); font-size: 11px; color: #fbbf24; }
+    .widget-large .section { padding: 12px; background: rgba(255,255,255,0.04); border-radius: 12px; }
+    .widget-large .section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+    .widget-large .section-value { font-size: 13px; color: rgba(255,255,255,0.8); }
+    .widget-large .sections-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; }
+    .widget-large .module-status { font-size: 11px; color: rgba(255,255,255,0.6); }
+
+    .brand { font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 1px; text-align: right; }
+  </style>
+</head>
+<body>
+  <h1>Voxu Widget Designs</h1>
+  <p class="subtitle">Design reference for native iOS/Android home screen widgets</p>
+
+  <div class="widget-group">
+    <h2>Small (2x2) — Streak</h2>
+    <div class="grid">
+      <div class="widget widget-small">
+        <div class="flame">🔥</div>
+        <div class="streak-num">12</div>
+        <div class="streak-label">day streak</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="widget-group">
+    <h2>Medium (4x2) — Progress + Quote</h2>
+    <div class="grid">
+      <div class="widget widget-medium">
+        <div class="top">
+          <div>
+            <div class="greeting">Good morning</div>
+            <div class="modules">3 of 4 modules done</div>
+            <div class="progress-bar" style="width: 180px;">
+              <div class="progress-fill" style="width: 75%;"></div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 11px; color: rgba(255,255,255,0.4);">🔥 12</div>
+          </div>
+        </div>
+        <div>
+          <div class="quote">"The only way to do great work is to love what you do."</div>
+          <div class="author">— Steve Jobs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="widget-group">
+    <h2>Large (4x4) — Full Dashboard</h2>
+    <div class="grid">
+      <div class="widget widget-large">
+        <div class="header">
+          <h3>Good morning</h3>
+          <div class="streak-badge">🔥 12</div>
+        </div>
+
+        <div class="progress-bar" style="width: 100%;">
+          <div class="progress-fill" style="width: 75%;"></div>
+        </div>
+        <div class="module-status">3 of 4 modules complete</div>
+
+        <div class="sections-grid">
+          <div class="section">
+            <div class="section-label">Quote</div>
+            <div class="section-value" style="font-style: italic; font-size: 11px;">"Believe you can and you're halfway there."</div>
+          </div>
+          <div class="section">
+            <div class="section-label">Tarot</div>
+            <div class="section-value">The Sun ☀️</div>
+          </div>
+          <div class="section">
+            <div class="section-label">Breathwork</div>
+            <div class="section-value">Box Breathing</div>
+          </div>
+          <div class="section">
+            <div class="section-label">Level</div>
+            <div class="section-value" style="color: #fbbf24;">Lv 5 Warrior</div>
+          </div>
+        </div>
+
+        <div class="brand">VOXU</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
