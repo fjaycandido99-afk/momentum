@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { CloudRain, Music, Wind, Mic } from 'lucide-react'
 import {
   EXTENDED_MOODS, MOOD_ICONS, MOOD_MAP,
-  type ExtendedMood,
+  type ExtendedMood, type MoodRecommendation,
 } from '@/lib/mood-recommendations'
 
 interface MoodRecommendationsProps {
@@ -19,10 +19,10 @@ function getTodayKey() {
 }
 
 const REC_ITEMS = [
-  { key: 'soundscape', Icon: CloudRain, label: (r: ReturnType<typeof MOOD_MAP[ExtendedMood]>) => r.soundscape, suffix: 'soundscape' },
-  { key: 'music', Icon: Music, label: (r: any) => r.musicGenre, suffix: 'music' },
-  { key: 'breathing', Icon: Wind, label: (r: any) => r.breathing, suffix: 'breathing' },
-  { key: 'motivation', Icon: Mic, label: (r: any) => r.motivationTopic, suffix: 'motivation' },
+  { key: 'soundscape', Icon: CloudRain, label: (r: MoodRecommendation) => r.soundscape, suffix: 'soundscape' },
+  { key: 'music', Icon: Music, label: (r: MoodRecommendation) => r.musicGenre, suffix: 'music' },
+  { key: 'breathing', Icon: Wind, label: (r: MoodRecommendation) => r.breathing, suffix: 'breathing' },
+  { key: 'motivation', Icon: Mic, label: (r: MoodRecommendation) => r.motivationTopic, suffix: 'motivation' },
 ] as const
 
 export function MoodRecommendations({ onPlaySoundscape, onPlayGenre }: MoodRecommendationsProps) {
