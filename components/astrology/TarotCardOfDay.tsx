@@ -3,6 +3,7 @@
 import { Sparkles, Share2, Loader2 } from 'lucide-react'
 import { getDailyTarotCard } from '@/lib/astrology/tarot-data'
 import { useShareCard } from '@/hooks/useShareCard'
+import { TarotCardVisual } from './TarotCardVisual'
 
 interface TarotCardOfDayProps {
   zodiacSign: string
@@ -13,7 +14,7 @@ export function TarotCardOfDay({ zodiacSign }: TarotCardOfDayProps) {
   const { shareAsImage, isGenerating: isShareGenerating } = useShareCard()
 
   const handleShare = () => {
-    const content = `${card.name}\n${card.keywords.join(' • ')}\n\n${card.uprightMeaning}`
+    const content = `${card.name}\n${card.keywords.join(' \u2022 ')}\n\n${card.uprightMeaning}`
     shareAsImage(content, 'tarot', card.numeral)
   }
 
@@ -44,9 +45,9 @@ export function TarotCardOfDay({ zodiacSign }: TarotCardOfDayProps) {
 
       {/* Card Display */}
       <div className="flex items-start gap-4 mb-4">
-        {/* Numeral Badge */}
-        <div className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br from-amber-500/20 to-purple-500/20 border border-amber-400/20">
-          <span className="text-lg font-semibold text-amber-300">{card.numeral}</span>
+        {/* SVG Tarot Card Visual */}
+        <div className="flex-shrink-0 w-[70px]">
+          <TarotCardVisual numeral={card.numeral} />
         </div>
 
         <div className="flex-1 min-w-0">

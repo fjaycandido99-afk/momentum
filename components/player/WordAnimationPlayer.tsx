@@ -210,7 +210,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-hidden"
+      className="fixed inset-0 z-[55] overflow-hidden"
       style={{ backgroundColor: bgColor }}
     >
       {/* Background image */}

@@ -35,6 +35,7 @@ import { NotificationSettings } from '@/components/notifications/NotificationSet
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { SettingsCategory } from '@/components/settings/SettingsCategory'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 type GuideTone = 'calm' | 'direct' | 'neutral'
@@ -295,115 +296,89 @@ function SettingsContent() {
         <p className="text-white/95 text-sm mt-1">Customize your Daily Guide</p>
       </div>
 
-      <div className="px-6 space-y-4">
-        {/* User Type */}
-        <section className="p-5 card-gradient-border">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-white/10">
-              <Briefcase className="w-5 h-5 text-white" />
+      <div className="px-6 space-y-3">
+        {/* ═══════════════ 1. Profile & Schedule ═══════════════ */}
+        <SettingsCategory
+          id="profile-schedule"
+          icon={Briefcase}
+          title="Profile & Schedule"
+          description="User type, work/class days, schedule times"
+          defaultOpen
+        >
+          {/* User Type */}
+          <div>
+            <p className="text-sm text-white/70 mb-3">I am a</p>
+            <div className="grid grid-cols-3 gap-2">
+              {USER_TYPES.map((type) => {
+                const Icon = type.icon
+                return (
+                  <button
+                    key={type.value}
+                    onClick={() => setUserType(type.value)}
+                    aria-pressed={userType === type.value}
+                    className={`p-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-2 press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                      userType === type.value
+                        ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
+                        : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {type.label}
+                  </button>
+                )
+              })}
             </div>
+          </div>
+
+          {/* Work Days (for professional/hybrid) */}
+          {(userType === 'professional' || userType === 'hybrid') && (
             <div>
-              <h2 className="font-medium text-white">I am a</h2>
-              <p className="text-white/95 text-xs">This personalizes your experience</p>
+              <p className="text-sm text-white/70 mb-3">Work Days</p>
+              <div className="grid grid-cols-7 gap-1.5">
+                {DAYS.map((day) => (
+                  <button
+                    key={day.value}
+                    onClick={() => toggleDay(day.value, 'work')}
+                    aria-pressed={workDays.includes(day.value)}
+                    aria-label={`${day.label} work day`}
+                    className={`h-10 rounded-lg text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                      workDays.includes(day.value)
+                        ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
+                        : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {USER_TYPES.map((type) => {
-              const Icon = type.icon
-              return (
-                <button
-                  key={type.value}
-                  onClick={() => setUserType(type.value)}
-                  aria-pressed={userType === type.value}
-                  className={`p-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-2 press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    userType === type.value
-                      ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                      : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {type.label}
-                </button>
-              )
-            })}
-          </div>
-        </section>
+          )}
 
-        {/* Work Days (for professional/hybrid) */}
-        {(userType === 'professional' || userType === 'hybrid') && (
-          <section className="p-5 card-gradient-border">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-xl bg-white/10">
-                <Calendar className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="font-medium text-white">Work Days</h2>
-                <p className="text-white/95 text-xs">Days you work</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-7 gap-1.5">
-              {DAYS.map((day) => (
-                <button
-                  key={day.value}
-                  onClick={() => toggleDay(day.value, 'work')}
-                  aria-pressed={workDays.includes(day.value)}
-                  aria-label={`${day.label} work day`}
-                  className={`h-10 rounded-lg text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    workDays.includes(day.value)
-                      ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                      : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
-                  }`}
-                >
-                  {day.label}
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Class Days (for student/hybrid) */}
-        {(userType === 'student' || userType === 'hybrid') && (
-          <section className="p-5 card-gradient-border">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-xl bg-white/10">
-                <GraduationCap className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="font-medium text-white">Class Days</h2>
-                <p className="text-white/95 text-xs">Days you have classes</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-7 gap-1.5">
-              {DAYS.map((day) => (
-                <button
-                  key={day.value}
-                  onClick={() => toggleDay(day.value, 'class')}
-                  aria-pressed={classDays.includes(day.value)}
-                  aria-label={`${day.label} class day`}
-                  className={`h-10 rounded-lg text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    classDays.includes(day.value)
-                      ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                      : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
-                  }`}
-                >
-                  {day.label}
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Schedule */}
-        <section className="p-5 card-gradient-border">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-white/10">
-              <Clock className="w-5 h-5 text-white" />
-            </div>
+          {/* Class Days (for student/hybrid) */}
+          {(userType === 'student' || userType === 'hybrid') && (
             <div>
-              <h2 className="font-medium text-white">Schedule</h2>
-              <p className="text-white/95 text-xs">Your daily times</p>
+              <p className="text-sm text-white/70 mb-3">Class Days</p>
+              <div className="grid grid-cols-7 gap-1.5">
+                {DAYS.map((day) => (
+                  <button
+                    key={day.value}
+                    onClick={() => toggleDay(day.value, 'class')}
+                    aria-pressed={classDays.includes(day.value)}
+                    aria-label={`${day.label} class day`}
+                    className={`h-10 rounded-lg text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                      classDays.includes(day.value)
+                        ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
+                        : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Schedule Times */}
           <div className="space-y-3">
             <div>
               <label className="block text-sm text-white/95 mb-1.5">Wake time</label>
@@ -503,267 +478,253 @@ function SettingsContent() {
             )}
           </div>
           <FeatureHint id="schedule" text="Your schedule controls when modules unlock each day" mode="once" />
-        </section>
+        </SettingsCategory>
 
-        {/* Segments */}
-        <section className="p-5 card-gradient-border">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-white/10">
-              <Layers className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="font-medium text-white">Daily Flow</h2>
-              <p className="text-white/95 text-xs">Which segments to include</p>
+        {/* ═══════════════ 2. Daily Experience ═══════════════ */}
+        <SettingsCategory
+          id="daily-experience"
+          icon={Layers}
+          title="Daily Experience"
+          description="Segments, voice tone"
+        >
+          {/* Segments */}
+          <div>
+            <p className="text-sm text-white/70 mb-3">Daily Flow</p>
+            <div className="space-y-2">
+              {SEGMENT_OPTIONS.map((segment) => {
+                const Icon = segment.icon
+                const isEnabled = enabledSegments.includes(segment.id)
+                return (
+                  <button
+                    key={segment.id}
+                    onClick={() => toggleSegment(segment.id)}
+                    disabled={segment.required}
+                    role="switch"
+                    aria-checked={isEnabled}
+                    aria-label={`${segment.label}${segment.required ? ' (required)' : ''}`}
+                    className={`w-full p-3 rounded-xl flex items-center justify-between transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                      isEnabled
+                        ? 'bg-white/10 border border-white/20'
+                        : 'bg-white/5 border border-transparent'
+                    } ${segment.required ? 'cursor-default' : 'cursor-pointer hover:bg-white/10 press-scale'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4 h-4 ${isEnabled ? 'text-white' : 'text-white/95'}`} />
+                      <span className={isEnabled ? 'text-white' : 'text-white/95'}>{segment.label}</span>
+                      {segment.required && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/95">Required</span>
+                      )}
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      isEnabled ? 'bg-white border-white' : 'border-white/30'
+                    }`}>
+                      {isEnabled && <Check className="w-3 h-3 text-black" />}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           </div>
-          <div className="space-y-2">
-            {SEGMENT_OPTIONS.map((segment) => {
-              const Icon = segment.icon
-              const isEnabled = enabledSegments.includes(segment.id)
-              return (
+
+          {/* Voice Tone */}
+          <div>
+            <p className="text-sm text-white/70 mb-3">Voice Tone</p>
+            <div className="grid grid-cols-3 gap-2">
+              {TONES.map((tone) => (
                 <button
-                  key={segment.id}
-                  onClick={() => toggleSegment(segment.id)}
-                  disabled={segment.required}
-                  role="switch"
-                  aria-checked={isEnabled}
-                  aria-label={`${segment.label}${segment.required ? ' (required)' : ''}`}
-                  className={`w-full p-3 rounded-xl flex items-center justify-between transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    isEnabled
-                      ? 'bg-white/10 border border-white/20'
-                      : 'bg-white/5 border border-transparent'
-                  } ${segment.required ? 'cursor-default' : 'cursor-pointer hover:bg-white/10 press-scale'}`}
+                  key={tone.value}
+                  onClick={() => setGuideTone(tone.value)}
+                  aria-pressed={guideTone === tone.value}
+                  className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                    guideTone === tone.value
+                      ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
+                      : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isEnabled ? 'text-white' : 'text-white/95'}`} />
-                    <span className={isEnabled ? 'text-white' : 'text-white/95'}>{segment.label}</span>
-                    {segment.required && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/95">Required</span>
-                    )}
-                  </div>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    isEnabled ? 'bg-white border-white' : 'border-white/30'
-                  }`}>
-                    {isEnabled && <Check className="w-3 h-3 text-black" />}
-                  </div>
+                  <p className="font-medium text-sm">{tone.label}</p>
+                  <p className="text-xs text-white/95 mt-0.5">{tone.description}</p>
                 </button>
-              )
-            })}
+              ))}
+            </div>
+            <FeatureHint id="voice-tone" text="Your tone affects how the AI speaks throughout your entire journey" mode="once" />
           </div>
-        </section>
+        </SettingsCategory>
 
-        {/* Voice Tone */}
-        <section className="p-5 card-gradient-border">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-white/10">
-              <Volume2 className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="font-medium text-white">Voice Tone</h2>
-              <p className="text-white/95 text-xs">How the AI speaks to you</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {TONES.map((tone) => (
+        {/* ═══════════════ 3. Reminders ═══════════════ */}
+        <SettingsCategory
+          id="reminders"
+          icon={Bell}
+          title="Reminders"
+          description="Daily & bedtime reminders"
+        >
+          {/* Daily Reminder */}
+          <div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-white text-sm">Daily Reminder</p>
+                <p className="text-white/60 text-xs">Get notified each morning</p>
+              </div>
               <button
-                key={tone.value}
-                onClick={() => setGuideTone(tone.value)}
-                aria-pressed={guideTone === tone.value}
-                className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                  guideTone === tone.value
-                    ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                    : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                onClick={() => setDailyReminder(!dailyReminder)}
+                role="switch"
+                aria-checked={dailyReminder}
+                aria-label="Daily reminder"
+                className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                  dailyReminder ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
                 }`}
               >
-                <p className="font-medium text-sm">{tone.label}</p>
-                <p className="text-xs text-white/95 mt-0.5">{tone.description}</p>
+                <div
+                  className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                    dailyReminder ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+                  }`}
+                />
               </button>
-            ))}
-          </div>
-          <FeatureHint id="voice-tone" text="Your tone affects how the AI speaks throughout your entire journey" mode="once" />
-        </section>
-
-        {/* Daily Reminder */}
-        <section className="p-5 card-gradient-border">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-white/10">
-                <Bell className="w-5 h-5 text-white" />
+            </div>
+            {dailyReminder && (
+              <div className="mt-3 h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                <input
+                  type="time"
+                  value={reminderTime}
+                  onChange={(e) => setReminderTime(e.target.value)}
+                  aria-label="Reminder time"
+                  className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                  style={{ colorScheme: 'dark' }}
+                />
               </div>
+            )}
+          </div>
+
+          {/* Bedtime Reminder */}
+          <div>
+            <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-medium text-white">Daily Reminder</h2>
-                <p className="text-white/95 text-xs">Get notified each morning</p>
+                <p className="font-medium text-white text-sm">Bedtime Reminder</p>
+                <p className="text-white/60 text-xs">8 hours before wake time</p>
               </div>
-            </div>
-            <button
-              onClick={() => setDailyReminder(!dailyReminder)}
-              role="switch"
-              aria-checked={dailyReminder}
-              aria-label="Daily reminder"
-              className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                dailyReminder ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                  dailyReminder ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+              <button
+                onClick={() => setBedtimeReminderEnabled(!bedtimeReminderEnabled)}
+                role="switch"
+                aria-checked={bedtimeReminderEnabled}
+                aria-label="Bedtime reminder"
+                className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                  bedtimeReminderEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
                 }`}
-              />
-            </button>
-          </div>
-          {dailyReminder && (
-            <div className="mt-3 h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
-              <input
-                type="time"
-                value={reminderTime}
-                onChange={(e) => setReminderTime(e.target.value)}
-                aria-label="Reminder time"
-                className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                style={{ colorScheme: 'dark' }}
-              />
+              >
+                <div
+                  className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                    bedtimeReminderEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
-          )}
-        </section>
-
-        {/* Bedtime Reminder */}
-        <section className="p-5 card-gradient-border">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-white/10">
-                <Moon className="w-5 h-5 text-white" />
+            {bedtimeReminderEnabled && wakeTime && (
+              <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                <p className="text-sm text-white/95">
+                  You&apos;ll be reminded at{' '}
+                  <span className="text-white font-medium">
+                    {(() => {
+                      const [h, m] = wakeTime.split(':').map(Number)
+                      let bedH = h - 8
+                      if (bedH < 0) bedH += 24
+                      const period = bedH >= 12 ? 'PM' : 'AM'
+                      const display = bedH % 12 || 12
+                      return `${display}:${(m || 0).toString().padStart(2, '0')} ${period}`
+                    })()}
+                  </span>
+                  {' '}to get 8 hours of sleep
+                </p>
               </div>
+            )}
+          </div>
+        </SettingsCategory>
+
+        {/* ═══════════════ 4. Cosmic ═══════════════ */}
+        <SettingsCategory
+          id="cosmic"
+          icon={Star}
+          iconColor="text-indigo-400"
+          iconBg="bg-gradient-to-br from-indigo-500/20 to-purple-500/20"
+          title="Cosmic"
+          description="Astrology mode, zodiac sign"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="font-medium text-white">Bedtime Reminder</h2>
-                <p className="text-white/95 text-xs">Reminder for 8 hours before wake time</p>
+                <p className="font-medium text-white text-sm">Astrology Mode</p>
+                <p className="text-white/60 text-xs">Cosmic insights & zodiac wisdom</p>
               </div>
-            </div>
-            <button
-              onClick={() => setBedtimeReminderEnabled(!bedtimeReminderEnabled)}
-              role="switch"
-              aria-checked={bedtimeReminderEnabled}
-              aria-label="Bedtime reminder"
-              className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                bedtimeReminderEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                  bedtimeReminderEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+              <button
+                onClick={() => setAstrologyEnabled(!astrologyEnabled)}
+                role="switch"
+                aria-checked={astrologyEnabled}
+                aria-label="Astrology mode"
+                className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                  astrologyEnabled ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.3)]' : 'bg-white/10'
                 }`}
-              />
-            </button>
-          </div>
-          {bedtimeReminderEnabled && wakeTime && (
-            <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10">
-              <p className="text-sm text-white/95">
-                You&apos;ll be reminded at{' '}
-                <span className="text-white font-medium">
-                  {(() => {
-                    const [h, m] = wakeTime.split(':').map(Number)
-                    let bedH = h - 8
-                    if (bedH < 0) bedH += 24
-                    const period = bedH >= 12 ? 'PM' : 'AM'
-                    const display = bedH % 12 || 12
-                    return `${display}:${(m || 0).toString().padStart(2, '0')} ${period}`
-                  })()}
-                </span>
-                {' '}to get 8 hours of sleep
-              </p>
+              >
+                <div
+                  className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                    astrologyEnabled ? 'bg-white translate-x-6' : 'bg-white translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
-          )}
-        </section>
 
-        {/* Astrology Settings */}
-        <section className="p-5 card-gradient-border">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20">
-                <Star className="w-5 h-5 text-indigo-400" />
-              </div>
-              <div>
-                <h2 className="font-medium text-white">Astrology Mode</h2>
-                <p className="text-white/95 text-xs">Cosmic insights & zodiac wisdom</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setAstrologyEnabled(!astrologyEnabled)}
-              role="switch"
-              aria-checked={astrologyEnabled}
-              aria-label="Astrology mode"
-              className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                astrologyEnabled ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.3)]' : 'bg-white/10'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                  astrologyEnabled ? 'bg-white translate-x-6' : 'bg-white translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-
-          {astrologyEnabled && (
-            <div className="space-y-4">
-              <p className="text-sm text-white/70">Select your zodiac sign for personalized cosmic insights</p>
-              <div className="grid grid-cols-3 gap-2">
-                {ZODIAC_SIGNS.map((sign) => (
-                  <button
-                    key={sign.id}
-                    onClick={() => setZodiacSign(sign.id)}
-                    aria-pressed={zodiacSign === sign.id}
-                    className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                      zodiacSign === sign.id
-                        ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 shadow-[inset_0_0_12px_rgba(139,92,246,0.15)]'
-                        : 'bg-white/5 border border-transparent hover:bg-white/10'
-                    }`}
-                  >
-                    <span className="text-xl block mb-0.5">{sign.symbol}</span>
-                    <p className={`text-xs font-medium ${zodiacSign === sign.id ? 'text-white' : 'text-white/95'}`}>{sign.label}</p>
-                    <p className="text-[9px] text-white/60 mt-0.5">{sign.dates}</p>
-                  </button>
-                ))}
-              </div>
-              {zodiacSign && (
-                <div className="space-y-2">
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
-                    <p className="text-sm text-white/80">
-                      <span className="text-indigo-400 font-medium">{ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}</span> selected.
-                      You&apos;ll receive cosmic insights tailored to your sign in your Morning Flow.
-                    </p>
-                  </div>
-                  <Link
-                    href="/astrology"
-                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500/15 to-purple-500/15 hover:from-indigo-500/25 hover:to-purple-500/25 border border-indigo-500/20 transition-all text-sm text-indigo-300 press-scale"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Explore Cosmic Guide
-                  </Link>
+            {astrologyEnabled && (
+              <div className="space-y-4">
+                <p className="text-sm text-white/70">Select your zodiac sign for personalized cosmic insights</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {ZODIAC_SIGNS.map((sign) => (
+                    <button
+                      key={sign.id}
+                      onClick={() => setZodiacSign(sign.id)}
+                      aria-pressed={zodiacSign === sign.id}
+                      className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                        zodiacSign === sign.id
+                          ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 shadow-[inset_0_0_12px_rgba(139,92,246,0.15)]'
+                          : 'bg-white/5 border border-transparent hover:bg-white/10'
+                      }`}
+                    >
+                      <span className="text-xl block mb-0.5">{sign.symbol}</span>
+                      <p className={`text-xs font-medium ${zodiacSign === sign.id ? 'text-white' : 'text-white/95'}`}>{sign.label}</p>
+                      <p className="text-[9px] text-white/60 mt-0.5">{sign.dates}</p>
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
-          )}
-        </section>
-
-        {/* Push Notifications */}
-        <section className="p-5 card-gradient-border">
-          <h2 className="font-medium text-white mb-4 flex items-center gap-2">
-            <Bell className="w-5 h-5" />
-            Push Notifications
-          </h2>
-          <NotificationSettings />
-        </section>
-
-        {/* Background Animation */}
-        <section className="p-5 card-gradient-border">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-white/10">
-                <Sparkles className="w-5 h-5 text-white" />
+                {zodiacSign && (
+                  <div className="space-y-2">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+                      <p className="text-sm text-white/80">
+                        <span className="text-indigo-400 font-medium">{ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}</span> selected.
+                        You&apos;ll receive cosmic insights tailored to your sign in your Morning Flow.
+                      </p>
+                    </div>
+                    <Link
+                      href="/astrology"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500/15 to-purple-500/15 hover:from-indigo-500/25 hover:to-purple-500/25 border border-indigo-500/20 transition-all text-sm text-indigo-300 press-scale"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Explore Cosmic Guide
+                    </Link>
+                  </div>
+                )}
               </div>
-              <div>
-                <h2 className="font-medium text-white">Background Animation</h2>
-                <p className="text-white/95 text-xs">Choose your pattern style</p>
-              </div>
+            )}
+          </div>
+        </SettingsCategory>
+
+        {/* ═══════════════ 5. Appearance ═══════════════ */}
+        <SettingsCategory
+          id="appearance"
+          icon={Sparkles}
+          title="Appearance"
+          description="Background animation, brightness, color"
+        >
+          {/* Background Enable Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-white text-sm">Background Animation</p>
+              <p className="text-white/60 text-xs">Ambient visual pattern</p>
             </div>
             <button
               onClick={() => {
@@ -789,7 +750,7 @@ function SettingsContent() {
           {backgroundEnabled && (
             <>
               {/* Brightness slider */}
-              <div className="mb-4">
+              <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm text-white/95">Brightness</label>
                   <span className="text-sm text-white/95">{Math.round(backgroundBrightness * 100)}%</span>
@@ -809,8 +770,9 @@ function SettingsContent() {
                   className="w-full h-2 rounded-full appearance-none cursor-pointer bg-white/10 accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,0.3)]"
                 />
               </div>
+
               {/* Color hue slider */}
-              <div className="mb-4">
+              <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm text-white/95">Color</label>
                   <div className="flex items-center gap-2">
@@ -909,159 +871,171 @@ function SettingsContent() {
               </div>
             </>
           )}
-        </section>
+        </SettingsCategory>
 
-        {/* Subscription Management */}
-        <section className="p-5 card-gradient-border">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-amber-500/20">
-              <Crown className="w-5 h-5 text-amber-400" />
-            </div>
-            <div className="flex-1">
-              <h2 className="font-medium text-white">Subscription</h2>
-              <p className="text-white/95 text-xs">Manage your plan</p>
-            </div>
-            {subscription?.isPremium && <PremiumBadge size="sm" />}
-          </div>
+        {/* ═══════════════ 6. Notifications ═══════════════ */}
+        <SettingsCategory
+          id="notifications"
+          icon={Bell}
+          title="Notifications"
+          description="Push notification settings"
+        >
+          <NotificationSettings />
+        </SettingsCategory>
 
-          {/* Subscription message */}
-          {subscriptionMessage && (
-            <div role="status" className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
-              {subscriptionMessage}
+        {/* ═══════════════ 7. Account ═══════════════ */}
+        <SettingsCategory
+          id="account"
+          icon={Crown}
+          iconColor="text-amber-400"
+          iconBg="bg-amber-500/20"
+          title="Account"
+          description="Subscription, sign in/out"
+        >
+          {/* Subscription */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-medium text-white text-sm">Subscription</p>
+              {subscription?.isPremium && <PremiumBadge size="sm" />}
             </div>
-          )}
 
-          {subscription?.isPremium ? (
-            // Premium user view
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-white font-medium">
-                    {subscription.isTrialing ? 'Premium Trial' : 'Premium Plan'}
-                  </span>
-                  <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400">
-                    Active
-                  </span>
-                </div>
-                {subscription.isTrialing && subscription.trialDaysLeft > 0 && (
-                  <p className="text-sm text-white/95">
-                    {subscription.trialDaysLeft} days left in trial
-                  </p>
-                )}
-                {subscription.billingPeriodEnd && !subscription.isTrialing && (
-                  <p className="text-sm text-white/95">
-                    Next billing: {subscription.billingPeriodEnd.toLocaleDateString()}
-                  </p>
-                )}
+            {/* Subscription message */}
+            {subscriptionMessage && (
+              <div role="status" className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+                {subscriptionMessage}
               </div>
+            )}
 
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={async () => {
-                    setIsLoadingPortal(true)
-                    try {
-                      const response = await fetch('/api/stripe/portal', {
-                        method: 'POST',
-                      })
-                      const data = await response.json()
-                      if (data.url) {
-                        window.location.href = data.url
-                      }
-                    } catch (error) {
-                      console.error('Failed to open portal:', error)
-                    } finally {
-                      setIsLoadingPortal(false)
-                    }
-                  }}
-                  disabled={isLoadingPortal}
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/10 text-white text-sm hover:bg-white/15 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-                >
-                  {isLoadingPortal ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <CreditCard className="w-4 h-4" />
+            {subscription?.isPremium ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-white font-medium">
+                      {subscription.isTrialing ? 'Premium Trial' : 'Premium Plan'}
+                    </span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400">
+                      Active
+                    </span>
+                  </div>
+                  {subscription.isTrialing && subscription.trialDaysLeft > 0 && (
+                    <p className="text-sm text-white/95">
+                      {subscription.trialDaysLeft} days left in trial
+                    </p>
                   )}
-                  Manage Billing
+                  {subscription.billingPeriodEnd && !subscription.isTrialing && (
+                    <p className="text-sm text-white/95">
+                      Next billing: {subscription.billingPeriodEnd.toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={async () => {
+                      setIsLoadingPortal(true)
+                      try {
+                        const response = await fetch('/api/stripe/portal', {
+                          method: 'POST',
+                        })
+                        const data = await response.json()
+                        if (data.url) {
+                          window.location.href = data.url
+                        }
+                      } catch (error) {
+                        console.error('Failed to open portal:', error)
+                      } finally {
+                        setIsLoadingPortal(false)
+                      }
+                    }}
+                    disabled={isLoadingPortal}
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/10 text-white text-sm hover:bg-white/15 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  >
+                    {isLoadingPortal ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <CreditCard className="w-4 h-4" />
+                    )}
+                    Manage Billing
+                  </button>
+                  <Link
+                    href="/pricing"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    View Plans
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                  <p className="text-white font-medium mb-1">Free Plan</p>
+                  <p className="text-sm text-white/95 mb-3">
+                    1 session/day · 10-min limit · Limited features
+                  </p>
+                  <ul className="space-y-2 text-sm text-white/95">
+                    <li className="flex items-center gap-2">
+                      <Lock className="w-3.5 h-3.5" />
+                      Daily checkpoints locked
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Lock className="w-3.5 h-3.5" />
+                      Genre selection locked
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Lock className="w-3.5 h-3.5" />
+                      Journal history locked
+                    </li>
+                  </ul>
+                </div>
+
+                <button
+                  onClick={() => subscription?.openUpgradeModal()}
+                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Upgrade to Premium - $4.99/mo
                 </button>
+                <p className="text-center text-white/95 text-xs">
+                  7-day free trial · Cancel anytime
+                </p>
                 <Link
                   href="/pricing"
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 hover:text-white/95 transition-colors mt-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  View Plans
+                  Compare plans
                 </Link>
               </div>
-            </div>
-          ) : (
-            // Free user view
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-white font-medium mb-1">Free Plan</p>
-                <p className="text-sm text-white/95 mb-3">
-                  1 session/day · 10-min limit · Limited features
-                </p>
-                <ul className="space-y-2 text-sm text-white/95">
-                  <li className="flex items-center gap-2">
-                    <Lock className="w-3.5 h-3.5" />
-                    Daily checkpoints locked
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Lock className="w-3.5 h-3.5" />
-                    Genre selection locked
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Lock className="w-3.5 h-3.5" />
-                    Journal history locked
-                  </li>
-                </ul>
-              </div>
+            )}
+          </div>
 
+          {/* Sign In / Sign Out */}
+          <div className="pt-2">
+            {isAuthenticated ? (
               <button
-                onClick={() => subscription?.openUpgradeModal()}
-                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                onClick={handleSignOut}
+                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 text-red-400 hover:bg-red-500/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
-                <Sparkles className="w-5 h-5" />
-                Upgrade to Premium - $4.99/mo
+                <LogOut className="w-5 h-5" />
+                Sign Out
               </button>
-              <p className="text-center text-white/95 text-xs">
-                7-day free trial · Cancel anytime
-              </p>
+            ) : (
               <Link
-                href="/pricing"
-                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 hover:text-white/95 transition-colors mt-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                href="/login"
+                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
-                <ExternalLink className="w-4 h-4" />
-                Compare plans
+                Sign In to Save Progress
               </Link>
-            </div>
-          )}
-        </section>
+            )}
+          </div>
 
-        {/* Sign In / Sign Out */}
-        <section className="pt-2">
-          {isAuthenticated ? (
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center justify-center gap-2 p-4 card-gradient-border text-red-400 hover:bg-red-500/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-            >
-              <LogOut className="w-5 h-5" />
-              Sign Out
-            </button>
-          ) : (
-            <Link
-              href="/login"
-              className="w-full flex items-center justify-center gap-2 p-4 card-gradient-border text-white hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-            >
-              Sign In to Save Progress
-            </Link>
-          )}
-        </section>
-
-        {/* App Info */}
-        <div className="text-center pt-6 pb-8">
-          <p className="text-white/95 text-sm">Voxu v0.1.0</p>
-          <p className="text-white/95 text-xs mt-1">Your AI Audio Coach</p>
-        </div>
+          {/* App Info */}
+          <div className="text-center pt-2 pb-2">
+            <p className="text-white/95 text-sm">Voxu v0.1.0</p>
+            <p className="text-white/95 text-xs mt-1">Your AI Audio Coach</p>
+          </div>
+        </SettingsCategory>
       </div>
     </div>
   )

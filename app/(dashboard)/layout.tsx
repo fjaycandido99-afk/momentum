@@ -19,7 +19,7 @@ export default function DashboardLayout({
         <div className="fixed inset-0 -z-10 pointer-events-none">
           <DailyBackground animate />
         </div>
-        <main className={`min-h-screen ${isHome ? '' : 'pb-16'}`}>
+        <main key={pathname} className={`min-h-screen ${isHome ? '' : 'pb-16'}`}>
           {children}
         </main>
         {!isHome && <MinimalNav />}

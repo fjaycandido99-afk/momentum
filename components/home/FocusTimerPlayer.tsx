@@ -112,7 +112,7 @@ export function FocusTimerPlayer({ preset, onClose, onFocusStart, onBreakStart }
   const strokeOffset = circumference * (1 - progress)
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center animate-fade-in-up">
+    <div className="fixed inset-0 z-[55] bg-black flex flex-col items-center justify-center animate-fade-in-up">
       {/* Close button */}
       <button
         onClick={handleClose}

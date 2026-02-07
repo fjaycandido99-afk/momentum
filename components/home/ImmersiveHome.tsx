@@ -915,11 +915,11 @@ export function ImmersiveHome() {
 
       {/* Morning Flow Overlay */}
       {showMorningFlow && (
-        <div className="fixed inset-0 z-50 bg-black flex flex-col animate-fade-in-down">
+        <div className="fixed inset-0 z-[60] bg-black flex flex-col animate-fade-in-down">
           <div className="flex-1 overflow-y-auto pb-20">
             <DailyGuideHome embedded />
           </div>
-          <div className="absolute bottom-0 left-0 right-0 z-[60] flex justify-center pb-6 pt-3 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
+          <div className="absolute bottom-0 left-0 right-0 z-[70] flex justify-center pb-6 pt-3 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
             <button
               onClick={() => {
                 audioContext?.setSessionActive(false)
@@ -958,21 +958,23 @@ export function ImmersiveHome() {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="relative z-50 flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down header-fade-bg">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold shimmer-text">Explore</h1>
-          <StreakBadge streak={streak} />
-          <XPBadge />
+      {/* Header — hidden when any fullscreen overlay is active */}
+      {!showMorningFlow && !audioState.playingSound && !audioState.showSoundscapePlayer && !showBreathingPlayer && !showFocusTimer && (
+        <div className="relative z-50 flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down header-fade-bg">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold shimmer-text">Explore</h1>
+            <StreakBadge streak={streak} />
+            <XPBadge />
+          </div>
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            aria-label={showMenu ? 'Close menu' : 'Open menu'}
+            className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors press-scale"
+          >
+            {showMenu ? <X className="w-5 h-5 text-white/95" /> : <Menu className="w-5 h-5 text-white/95" />}
+          </button>
         </div>
-        <button
-          onClick={() => setShowMenu(!showMenu)}
-          aria-label={showMenu ? 'Close menu' : 'Open menu'}
-          className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors press-scale"
-        >
-          {showMenu ? <X className="w-5 h-5 text-white/95" /> : <Menu className="w-5 h-5 text-white/95" />}
-        </button>
-      </div>
+      )}
 
       {/* Hamburger Menu Dropdown */}
       {showMenu && (

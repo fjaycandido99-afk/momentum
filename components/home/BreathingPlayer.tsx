@@ -75,8 +75,19 @@ export function BreathingPlayer({ technique, onClose }: BreathingPlayerProps) {
   const minutes = Math.floor(elapsed / 60)
   const seconds = elapsed % 60
 
+  const transitionStyle = {
+    transform: `scale(${circleScale})`,
+    transitionDuration: `${getPhaseSeconds()}s`,
+    transitionTimingFunction: phase.phase === 'inhale' || phase.phase === 'exhale' ? 'ease-in-out' : 'linear',
+  }
+
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center animate-fade-in-up">
+    <div className="fixed inset-0 z-[55] bg-black flex flex-col items-center justify-center animate-fade-in-up">
+      {/* Radial gradient background overlay */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(circle at 50% 45%, rgba(255,255,255,0.03) 0%, transparent 60%)',
+      }} />
+
       {/* Close button */}
       <button
         onClick={onClose}
@@ -89,25 +100,27 @@ export function BreathingPlayer({ technique, onClose }: BreathingPlayerProps) {
       {/* Technique name */}
       <p className="text-sm text-white/60 mb-2">{technique.name}</p>
 
-      {/* Animated breathing circle */}
+      {/* Animated breathing circle with concentric rings */}
       <div className="relative flex items-center justify-center w-64 h-64 mb-8">
+        {/* Outer ring 2 (largest) */}
+        <div
+          className="absolute w-52 h-52 rounded-full border border-white/[0.04] transition-transform"
+          style={transitionStyle}
+        />
+        {/* Outer ring 1 */}
+        <div
+          className="absolute w-44 h-44 rounded-full border border-white/[0.07] transition-transform"
+          style={transitionStyle}
+        />
         {/* Outer glow */}
         <div
           className="absolute w-40 h-40 rounded-full bg-white/5 transition-transform"
-          style={{
-            transform: `scale(${circleScale})`,
-            transitionDuration: `${getPhaseSeconds()}s`,
-            transitionTimingFunction: phase.phase === 'inhale' || phase.phase === 'exhale' ? 'ease-in-out' : 'linear',
-          }}
+          style={transitionStyle}
         />
         {/* Inner circle */}
         <div
           className="absolute w-32 h-32 rounded-full border-2 border-white/30 bg-white/[0.08] flex items-center justify-center transition-transform"
-          style={{
-            transform: `scale(${circleScale})`,
-            transitionDuration: `${getPhaseSeconds()}s`,
-            transitionTimingFunction: phase.phase === 'inhale' || phase.phase === 'exhale' ? 'ease-in-out' : 'linear',
-          }}
+          style={transitionStyle}
         >
           <span className="text-lg font-medium text-white">
             {phase.isComplete ? 'Done' : phase.label}

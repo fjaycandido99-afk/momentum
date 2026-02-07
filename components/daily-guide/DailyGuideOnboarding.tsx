@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import type { GuideTone } from '@/lib/ai/daily-guide-prompts'
 import { BACKGROUND_ANIMATIONS, setPreferredAnimation } from '@/components/player/DailyBackground'
+import { ONBOARDING_COPY } from '@/lib/onboarding-copy'
+import { SuccessAnimation } from '@/components/ui/SuccessAnimation'
 
 type UserType = 'professional' | 'student'
 
@@ -40,18 +42,18 @@ const DAYS = [
 const TONES: { value: GuideTone; label: string; description: string }[] = [
   {
     value: 'calm',
-    label: 'Calm',
-    description: 'Soft, deliberate, and gentle. Like a trusted friend.',
+    label: ONBOARDING_COPY.step1.tones.calm.label,
+    description: ONBOARDING_COPY.step1.tones.calm.description,
   },
   {
     value: 'direct',
-    label: 'Direct',
-    description: 'Clear and concise. No fluff, just focus.',
+    label: ONBOARDING_COPY.step1.tones.direct.label,
+    description: ONBOARDING_COPY.step1.tones.direct.description,
   },
   {
     value: 'neutral',
-    label: 'Neutral',
-    description: 'Balanced and measured. Professional but personal.',
+    label: ONBOARDING_COPY.step1.tones.neutral.label,
+    description: ONBOARDING_COPY.step1.tones.neutral.description,
   },
 ]
 
@@ -165,15 +167,15 @@ export function DailyGuideOnboarding() {
 
   const renderStep = () => {
     switch (step) {
-      // Step 1: Your Schedule
+      // Step 0: Design Your Day
       case 0:
         return (
           <div>
-            <h2 className="text-xl font-semibold text-white mb-2 text-center">
-              Your Schedule
+            <h2 className="text-xl font-semibold text-white mb-1 text-center">
+              {ONBOARDING_COPY.step0.title}
             </h2>
-            <p className="text-white/95 text-sm mb-8 text-center">
-              Tell us about your lifestyle so we can personalize your experience
+            <p className="text-white/60 text-sm mb-8 text-center">
+              {ONBOARDING_COPY.step0.subtitle}
             </p>
 
             {/* User Type */}
@@ -206,6 +208,10 @@ export function DailyGuideOnboarding() {
                   )
                 })}
               </div>
+              {/* Why this matters micro-copy */}
+              <p className="text-xs text-white/40 text-center italic px-4">
+                {ONBOARDING_COPY.step0.whyMatters[data.userType]}
+              </p>
             </div>
 
             {/* Days Toggle */}
@@ -252,7 +258,7 @@ export function DailyGuideOnboarding() {
           </div>
         )
 
-      // Step 2: Pick Your Vibe
+      // Step 1: Choose Your Guide
       case 1:
         return (
           <div>
@@ -260,11 +266,11 @@ export function DailyGuideOnboarding() {
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.03] flex items-center justify-center mx-auto mb-6">
                 <Mic2 className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-xl font-semibold text-white mb-2">
-                Pick Your Vibe
+              <h2 className="text-xl font-semibold text-white mb-1">
+                {ONBOARDING_COPY.step1.title}
               </h2>
-              <p className="text-white/95 text-sm">
-                How should your guide speak to you?
+              <p className="text-white/60 text-sm">
+                {ONBOARDING_COPY.step1.subtitle}
               </p>
             </div>
             <div className="space-y-3">
@@ -283,7 +289,7 @@ export function DailyGuideOnboarding() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-medium text-white">{tone.label}</h3>
-                      <p className="text-sm text-white/95 mt-1">{tone.description}</p>
+                      <p className="text-sm text-white/60 mt-1">{tone.description}</p>
                     </div>
                     {data.guideTone === tone.value && (
                       <Check className="w-5 h-5 text-white" />
@@ -295,7 +301,7 @@ export function DailyGuideOnboarding() {
           </div>
         )
 
-      // Step 2: Background Style
+      // Step 2: Set Your Scene
       case 2:
         return (
           <div>
@@ -303,11 +309,11 @@ export function DailyGuideOnboarding() {
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.03] flex items-center justify-center mx-auto mb-4">
                 <Layers className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-xl font-semibold text-white mb-2">
-                Background Style
+              <h2 className="text-xl font-semibold text-white mb-1">
+                {ONBOARDING_COPY.step2.title}
               </h2>
-              <p className="text-white/95 text-sm">
-                Pick an ambient animation for your experience
+              <p className="text-white/60 text-sm">
+                {ONBOARDING_COPY.step2.subtitle}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -355,19 +361,23 @@ export function DailyGuideOnboarding() {
           </div>
         )
 
-      // Step 3: You're All Set
+      // Step 3: You're Ready
       case 3:
         return (
           <div className="text-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.03] flex items-center justify-center mx-auto mb-8 animate-float animate-glow-pulse">
-              <Sparkles className="w-10 h-10 text-white" />
+            {/* Success Animation */}
+            <div className="mb-6">
+              <SuccessAnimation />
             </div>
-            <h2 className="text-2xl font-semibold text-white mb-4">
-              You&apos;re all set!
+
+            <h2 className="text-2xl font-semibold text-white mb-3">
+              {ONBOARDING_COPY.step3.title}
             </h2>
-            <p className="text-white leading-relaxed max-w-sm mx-auto mb-8">
-              Your Daily Guide is ready. We&apos;ve set smart defaults for everything — you can customize anytime in settings.
+
+            <p className="text-white/60 text-sm leading-relaxed max-w-sm mx-auto mb-4">
+              {ONBOARDING_COPY.step3.affirmation}
             </p>
+
             <div className="glass rounded-xl p-4 text-left max-w-sm mx-auto glow-sm">
               <h3 className="text-sm font-medium text-white mb-3">Your setup</h3>
               <div className="space-y-2 text-sm text-white/95">
@@ -466,7 +476,7 @@ export function DailyGuideOnboarding() {
             <button
               onClick={handleComplete}
               disabled={isSubmitting}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black hover:bg-white/90 transition-colors disabled:opacity-50 shadow-[0_0_25px_rgba(255,255,255,0.3)] press-scale glow-md"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black hover:bg-white/90 transition-colors disabled:opacity-50 cta-glow-pulse press-scale"
             >
               {isSubmitting ? (
                 <>
@@ -475,7 +485,7 @@ export function DailyGuideOnboarding() {
                 </>
               ) : (
                 <>
-                  Start Daily Guide
+                  {ONBOARDING_COPY.step3.cta}
                   <ChevronRight className="w-5 h-5" />
                 </>
               )}

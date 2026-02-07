@@ -1047,3 +1047,84 @@ input:focus, select:focus, textarea:focus, button:focus {
 .icon-morph {
   animation: icon-morph-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
+
+/* ========== Tarot Card Flip ========== */
+@keyframes tarot-card-enter {
+  0% {
+    transform: perspective(600px) rotateY(90deg) scale(0.85);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: perspective(600px) rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.tarot-card-enter {
+  animation: tarot-card-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ========== Success Ring (Onboarding) ========== */
+@keyframes success-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+    border-width: 3px;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+.success-ring {
+  animation: success-ring 1.5s ease-out infinite;
+}
+
+/* ========== Confetti Particles ========== */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti-particle {
+  animation: confetti-fall 2s ease-out forwards;
+}
+
+/* ========== Decorative Glow ========== */
+@keyframes decorative-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.12);
+  }
+}
+
+.decorative-glow {
+  animation: decorative-glow-pulse 3s ease-in-out infinite;
+}
+
+/* ========== Pulsing CTA Glow ========== */
+@keyframes cta-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(255, 255, 255, 0.4), 0 0 60px rgba(255, 255, 255, 0.15);
+  }
+}
+
+.cta-glow-pulse {
+  animation: cta-glow-pulse 2s ease-in-out infinite;
+}
