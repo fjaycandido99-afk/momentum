@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, Send, Loader2, Sparkles, Crown, Bot, MessageSquare, ClipboardList } from 'lucide-react'
+import { ChevronLeft, Send, Loader2, Sparkles, Crown, Bot, MessageSquare, ClipboardList, Sun, Clock, Moon, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { CoachingPlans } from '@/components/coach/CoachingPlans'
 import { getActivePlan, COACHING_PLANS, getPlanProgress } from '@/lib/coaching-plans'
+import { logXPEvent } from '@/lib/gamification'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -19,6 +20,20 @@ const QUICK_REPLIES = [
   { label: 'Help me focus', icon: '🎯' },
   { label: "I can't sleep", icon: '🌙' },
 ]
+
+const CHECK_IN_TYPES = [
+  { id: 'morning', label: 'Morning', icon: Sun, color: 'text-amber-400' },
+  { id: 'midday', label: 'Midday', icon: Clock, color: 'text-blue-400' },
+  { id: 'evening', label: 'Evening', icon: Moon, color: 'text-purple-400' },
+  { id: 'goal-review', label: 'Goals', icon: BarChart3, color: 'text-green-400' },
+]
+
+const CHECK_IN_PROMPTS: Record<string, string> = {
+  morning: "Good morning! What am I committing to today?",
+  midday: "Midday check-in — how's my progress so far?",
+  evening: "Evening reflection — what did I accomplish today?",
+  'goal-review': "Let's review my goals. How am I doing?",
+}
 
 function formatTime(ts: number): string {
   const diff = Math.floor((Date.now() - ts) / 1000)
@@ -62,7 +77,9 @@ function renderMarkdown(text: string) {
 export default function CoachPage() {
   const subscription = useSubscriptionOptional()
   const [activeTab, setActiveTab] = useState<'chat' | 'plans'>('chat')
+  const [chatMode, setChatMode] = useState<'coach' | 'accountability'>('coach')
   const [activePlanBanner, setActivePlanBanner] = useState<string | null>(null)
+  const [hasLoggedCheckInXP, setHasLoggedCheckInXP] = useState(false)
 
   useEffect(() => {
     const planId = getActivePlan()
@@ -99,7 +116,7 @@ export default function CoachPage() {
     scrollToBottom()
   }, [messages])
 
-  const sendMessage = async (text?: string) => {
+  const sendMessage = async (text?: string, checkInType?: string) => {
     const trimmed = (text || input).trim()
     if (!trimmed || isLoading) return
 
@@ -118,12 +135,23 @@ export default function CoachPage() {
       const response = await fetch('/api/coach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed, context }),
+        body: JSON.stringify({
+          message: trimmed,
+          context,
+          mode: chatMode,
+          checkInType,
+        }),
       })
 
       if (response.ok) {
         const data = await response.json()
         setMessages(prev => [...prev, { role: 'assistant', content: data.reply, timestamp: Date.now() }])
+
+        // Award XP on first accountability check-in per session
+        if (chatMode === 'accountability' && !hasLoggedCheckInXP) {
+          logXPEvent('accountabilityCheckIn')
+          setHasLoggedCheckInXP(true)
+        }
       } else if (response.status === 403) {
         setMessages(prev => [...prev, { role: 'assistant', content: 'This feature requires a **Premium** subscription. Upgrade to chat with your AI Coach!', timestamp: Date.now() }])
       } else {
@@ -242,6 +270,52 @@ export default function CoachPage() {
         </div>
       ) : (
       <>
+      {/* Mode toggle pills */}
+      <div className="flex px-6 gap-2 pt-3 pb-1">
+        <button
+          onClick={() => setChatMode('coach')}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+            chatMode === 'coach'
+              ? 'bg-amber-500/20 border border-amber-500/30 text-amber-400'
+              : 'bg-white/5 border border-white/10 text-white/50 hover:bg-white/10'
+          }`}
+        >
+          Coach
+        </button>
+        <button
+          onClick={() => setChatMode('accountability')}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+            chatMode === 'accountability'
+              ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+              : 'bg-white/5 border border-white/10 text-white/50 hover:bg-white/10'
+          }`}
+        >
+          Check-in
+        </button>
+      </div>
+
+      {/* Check-in quick actions (only when accountability mode + at start) */}
+      {chatMode === 'accountability' && showQuickReplies && messages.length === 1 && (
+        <div className="px-6 py-3">
+          <p className="text-xs text-white/40 mb-2">Quick check-in</p>
+          <div className="grid grid-cols-2 gap-2">
+            {CHECK_IN_TYPES.map(type => {
+              const Icon = type.icon
+              return (
+                <button
+                  key={type.id}
+                  onClick={() => sendMessage(CHECK_IN_PROMPTS[type.id], type.id)}
+                  className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all"
+                >
+                  <Icon className={`w-4 h-4 ${type.color}`} />
+                  <span className="text-xs text-white/70">{type.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {messages.map((msg, i) => (
@@ -289,8 +363,8 @@ export default function CoachPage() {
           </div>
         )}
 
-        {/* Quick reply chips */}
-        {showQuickReplies && messages.length === 1 && (
+        {/* Quick reply chips (coach mode only) */}
+        {chatMode === 'coach' && showQuickReplies && messages.length === 1 && (
           <div className="flex flex-wrap gap-2 pt-2 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
             {QUICK_REPLIES.map((qr) => (
               <button
@@ -314,11 +388,11 @@ export default function CoachPage() {
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}
-            aria-label="Message your AI coach"
+            aria-label={chatMode === 'accountability' ? 'Share your progress...' : 'Ask your coach...'}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask your coach..."
+            placeholder={chatMode === 'accountability' ? 'Share your progress...' : 'Ask your coach...'}
             className="flex-1 p-3 rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-amber-500/20 resize-none max-h-32 transition-all"
             rows={1}
           />

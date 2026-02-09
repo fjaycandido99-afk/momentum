@@ -3,6 +3,7 @@ export interface BreathingTechnique {
   name: string
   tagline: string
   icon: string
+  color: string
   pattern: { inhale: number; hold1: number; exhale: number; hold2: number }
   rounds: number
   description: string
@@ -14,6 +15,7 @@ export const BREATHING_TECHNIQUES: BreathingTechnique[] = [
     name: 'Box Breathing',
     tagline: 'Calm & balanced',
     icon: '4',
+    color: 'from-cyan-500/40 to-blue-500/40',
     pattern: { inhale: 4, hold1: 4, exhale: 4, hold2: 4 },
     rounds: 5,
     description: 'Equal intervals of inhale, hold, exhale, and hold. Used by Navy SEALs to stay calm under pressure.',
@@ -23,6 +25,7 @@ export const BREATHING_TECHNIQUES: BreathingTechnique[] = [
     name: '4-7-8 Sleep',
     tagline: 'Fall asleep fast',
     icon: '8',
+    color: 'from-indigo-500/40 to-violet-500/40',
     pattern: { inhale: 4, hold1: 7, exhale: 8, hold2: 0 },
     rounds: 4,
     description: 'The relaxing breath technique. Naturally calms the nervous system and promotes sleep.',
@@ -32,6 +35,7 @@ export const BREATHING_TECHNIQUES: BreathingTechnique[] = [
     name: 'Power Breath',
     tagline: 'Energy boost',
     icon: '!',
+    color: 'from-orange-500/40 to-amber-500/40',
     pattern: { inhale: 2, hold1: 0, exhale: 2, hold2: 0 },
     rounds: 10,
     description: 'Rapid rhythmic breathing to energize the body and sharpen focus.',
@@ -41,6 +45,7 @@ export const BREATHING_TECHNIQUES: BreathingTechnique[] = [
     name: 'Coherent',
     tagline: 'Heart-brain sync',
     icon: '~',
+    color: 'from-fuchsia-500/40 to-purple-500/40',
     pattern: { inhale: 5.5, hold1: 0, exhale: 5.5, hold2: 0 },
     rounds: 6,
     description: 'Breathe at 5.5 breaths per minute to synchronize heart rate and brain waves.',

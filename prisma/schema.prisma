@@ -292,6 +292,13 @@ model DailyGuide {
   // AI features
   journal_ai_reflection String? // AI-generated insight after journal save
   ai_affirmation        String? // Daily AI-generated affirmation
+  ai_session_plan       String? // Cached smart session for the day
+  ai_journal_themes     String? // Cached journal theme analysis
+  ai_sound_mix          String? // Cached sound mix recommendation
+  accountability_streak Int     @default(0) // Days of accountability check-ins
+  accountability_last_checkin DateTime? // Last check-in timestamp
+  ai_weekly_insights    String? // Cached weekly insights JSON
+  ai_weekly_focus       String? // Next week focus suggestion
 
   // Astrology features
   cosmic_insight_script String?

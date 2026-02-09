@@ -13,6 +13,8 @@ export type PremiumFeature =
   | 'ai_affirmation'
   | 'goal_tracker'
   | 'weekly_ai_summary'
+  | 'ai_smart_session'
+  | 'ai_meditation'
 
 // Freemium content limits
 export const FREEMIUM_LIMITS = {
@@ -86,6 +88,8 @@ export const FREE_TIER_LIMITS = {
   ai_affirmation_enabled: false,
   goal_tracker_enabled: false,
   weekly_ai_summary_enabled: false,
+  ai_smart_session_enabled: false,
+  ai_meditation_enabled: false,
 }
 
 // Premium features
@@ -104,6 +108,8 @@ export const PREMIUM_FEATURES = {
   ai_affirmation_enabled: true,
   goal_tracker_enabled: true,
   weekly_ai_summary_enabled: true,
+  ai_smart_session_enabled: true,
+  ai_meditation_enabled: true,
 }
 
 // Trial duration
@@ -168,6 +174,10 @@ export function hasFeatureAccess(
       return FREE_TIER_LIMITS.goal_tracker_enabled
     case 'weekly_ai_summary':
       return FREE_TIER_LIMITS.weekly_ai_summary_enabled
+    case 'ai_smart_session':
+      return FREE_TIER_LIMITS.ai_smart_session_enabled
+    case 'ai_meditation':
+      return FREE_TIER_LIMITS.ai_meditation_enabled
     default:
       return false
   }

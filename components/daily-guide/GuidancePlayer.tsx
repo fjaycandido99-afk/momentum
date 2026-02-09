@@ -14,6 +14,198 @@ import { App } from '@capacitor/app'
 // Check if running in native app
 const isNativePlatform = Capacitor.isNativePlatform()
 
+// --- Animated SVG pattern overlays for each segment type ---
+function svgBg(svg: string) {
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
+}
+const W = 'rgba(255,255,255,'
+
+// Full-screen patterns per segment category
+const SEGMENT_PATTERNS: Record<string, React.CSSProperties> = {
+  morning: {
+    backgroundImage: svgBg(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" fill="none">
+      <g stroke="${W}0.08)" stroke-width="0.5">
+        <circle cx="200" cy="200" r="190"/><circle cx="200" cy="200" r="165"/>
+        <circle cx="200" cy="200" r="140"/><circle cx="200" cy="200" r="115"/>
+        <circle cx="200" cy="200" r="90"/><circle cx="200" cy="200" r="65"/>
+        <circle cx="200" cy="200" r="40"/>
+      </g>
+      <g stroke="${W}0.06)" stroke-width="0.5">
+        <line x1="200" y1="0" x2="200" y2="400"/><line x1="0" y1="200" x2="400" y2="200"/>
+        <line x1="0" y1="0" x2="400" y2="400"/><line x1="400" y1="0" x2="0" y2="400"/>
+        <line x1="100" y1="0" x2="100" y2="400" opacity="0.5"/><line x1="300" y1="0" x2="300" y2="400" opacity="0.5"/>
+        <line x1="0" y1="100" x2="400" y2="100" opacity="0.5"/><line x1="0" y1="300" x2="400" y2="300" opacity="0.5"/>
+      </g>
+      <g fill="${W}0.1)" stroke="none">
+        <circle cx="200" cy="200" r="4"/><circle cx="200" cy="10" r="2.5"/><circle cx="200" cy="390" r="2.5"/>
+        <circle cx="10" cy="200" r="2.5"/><circle cx="390" cy="200" r="2.5"/>
+      </g>
+    </svg>`),
+    backgroundSize: '400px 400px', backgroundPosition: 'center', backgroundRepeat: 'repeat',
+  },
+  breath: {
+    backgroundImage: svgBg(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" fill="none">
+      <g stroke="${W}0.07)" stroke-width="0.5">
+        <circle cx="200" cy="200" r="180"/><circle cx="200" cy="200" r="150"/>
+        <circle cx="200" cy="200" r="120"/><circle cx="200" cy="200" r="90"/>
+        <circle cx="200" cy="200" r="60"/><circle cx="200" cy="200" r="35"/>
+      </g>
+      <g stroke="${W}0.05)" stroke-width="0.5">
+        <line x1="200" y1="0" x2="200" y2="400"/><line x1="0" y1="200" x2="400" y2="200"/>
+        <line x1="30" y1="30" x2="370" y2="370"/><line x1="370" y1="30" x2="30" y2="370"/>
+        <line x1="0" y1="100" x2="400" y2="300"/><line x1="400" y1="100" x2="0" y2="300"/>
+      </g>
+      <circle cx="200" cy="200" r="8" fill="${W}0.12)" stroke="none"/>
+      <g fill="${W}0.06)" stroke="none">
+        <circle cx="200" cy="20" r="3"/><circle cx="200" cy="380" r="3"/>
+        <circle cx="20" cy="200" r="3"/><circle cx="380" cy="200" r="3"/>
+      </g>
+    </svg>`),
+    backgroundSize: '400px 400px', backgroundPosition: 'center', backgroundRepeat: 'repeat',
+  },
+  evening: {
+    backgroundImage: svgBg(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" fill="none">
+      <circle cx="280" cy="120" r="70" stroke="${W}0.08)" stroke-width="0.8"/>
+      <circle cx="310" cy="100" r="60" fill="rgba(0,0,0,0.8)" stroke="none"/>
+      <g fill="${W}0.12)" stroke="none">
+        <circle cx="50" cy="50" r="2"/><circle cx="120" cy="30" r="1.5"/><circle cx="30" cy="100" r="1.5"/>
+        <circle cx="350" cy="40" r="2"/><circle cx="380" cy="90" r="1"/><circle cx="320" cy="60" r="1"/>
+        <circle cx="80" cy="160" r="1.2"/><circle cx="150" cy="80" r="1"/><circle cx="360" cy="170" r="1.5"/>
+        <circle cx="20" cy="200" r="1"/><circle cx="170" cy="50" r="0.8"/><circle cx="240" cy="40" r="1.2"/>
+        <circle cx="60" cy="280" r="1"/><circle cx="340" cy="260" r="0.8"/><circle cx="190" cy="20" r="1"/>
+      </g>
+      <g stroke="${W}0.05)" stroke-width="0.5">
+        <path d="M0,220 Q100,200 200,220 T400,220"/><path d="M0,240 Q100,220 200,240 T400,240"/>
+        <path d="M0,260 Q100,240 200,260 T400,260"/><path d="M0,280 Q100,265 200,280 T400,280"/>
+        <path d="M0,300 Q100,290 200,300 T400,300"/>
+      </g>
+    </svg>`),
+    backgroundSize: '400px 400px', backgroundPosition: 'center', backgroundRepeat: 'repeat',
+  },
+  energy: {
+    backgroundImage: svgBg(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" fill="none">
+      <g stroke="${W}0.08)" stroke-width="0.8">
+        <path d="M200,200 L170,90 L185,110 L180,20"/><path d="M200,200 L230,90 L215,110 L220,20"/>
+        <path d="M200,200 L90,150 L115,165 L20,140"/><path d="M200,200 L310,150 L285,165 L380,140"/>
+        <path d="M200,200 L110,270 L130,250 L50,320"/><path d="M200,200 L290,270 L270,250 L350,320"/>
+        <path d="M200,200 L140,310 L165,285 L120,380" opacity="0.6"/><path d="M200,200 L260,310 L235,285 L280,380" opacity="0.6"/>
+      </g>
+      <g stroke="${W}0.06)" stroke-width="0.5" fill="none">
+        <circle cx="200" cy="200" r="45"/><circle cx="200" cy="200" r="30"/>
+        <circle cx="200" cy="200" r="80" opacity="0.5"/><circle cx="200" cy="200" r="120" opacity="0.3"/>
+      </g>
+      <circle cx="200" cy="200" r="8" fill="${W}0.1)" stroke="none"/>
+    </svg>`),
+    backgroundSize: '400px 400px', backgroundPosition: 'center', backgroundRepeat: 'repeat',
+  },
+  focus: {
+    backgroundImage: svgBg(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" fill="none">
+      <g stroke="${W}0.05)" stroke-width="0.5">
+        <line x1="0" y1="40" x2="400" y2="40"/><line x1="0" y1="80" x2="400" y2="80"/>
+        <line x1="0" y1="120" x2="400" y2="120"/><line x1="0" y1="160" x2="400" y2="160"/>
+        <line x1="0" y1="200" x2="400" y2="200"/><line x1="0" y1="240" x2="400" y2="240"/>
+        <line x1="0" y1="280" x2="400" y2="280"/><line x1="0" y1="320" x2="400" y2="320"/>
+        <line x1="0" y1="360" x2="400" y2="360"/>
+        <line x1="40" y1="0" x2="40" y2="400"/><line x1="80" y1="0" x2="80" y2="400"/>
+        <line x1="120" y1="0" x2="120" y2="400"/><line x1="160" y1="0" x2="160" y2="400"/>
+        <line x1="200" y1="0" x2="200" y2="400"/><line x1="240" y1="0" x2="240" y2="400"/>
+        <line x1="280" y1="0" x2="280" y2="400"/><line x1="320" y1="0" x2="320" y2="400"/>
+        <line x1="360" y1="0" x2="360" y2="400"/>
+      </g>
+      <g stroke="${W}0.08)" stroke-width="0.8">
+        <rect x="60" y="60" width="280" height="280"/>
+        <rect x="120" y="120" width="160" height="160"/>
+      </g>
+      <g stroke="${W}0.07)" stroke-width="0.5" fill="none">
+        <circle cx="200" cy="200" r="120"/><circle cx="200" cy="200" r="80"/>
+        <circle cx="200" cy="200" r="40"/><circle cx="200" cy="200" r="15"/>
+      </g>
+      <line x1="200" y1="0" x2="200" y2="400" stroke="${W}0.08)" stroke-width="0.8"/>
+      <line x1="0" y1="200" x2="400" y2="200" stroke="${W}0.08)" stroke-width="0.8"/>
+      <circle cx="200" cy="200" r="5" fill="${W}0.12)" stroke="none"/>
+    </svg>`),
+    backgroundSize: '400px 400px', backgroundPosition: 'center', backgroundRepeat: 'repeat',
+  },
+  calm: {
+    backgroundImage: svgBg(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" fill="none">
+      <g stroke="${W}0.06)" stroke-width="0.6">
+        <path d="M0,60 Q100,30 200,60 T400,60"/><path d="M0,110 Q100,80 200,110 T400,110"/>
+        <path d="M0,160 Q100,130 200,160 T400,160"/><path d="M0,210 Q100,180 200,210 T400,210"/>
+        <path d="M0,260 Q100,230 200,260 T400,260"/><path d="M0,310 Q100,280 200,310 T400,310"/>
+        <path d="M0,360 Q100,330 200,360 T400,360" opacity="0.5"/>
+      </g>
+      <g stroke="${W}0.04)" stroke-width="0.4">
+        <path d="M0,85 Q120,55 240,85 T400,85"/><path d="M0,185 Q120,155 240,185 T400,185"/>
+        <path d="M0,285 Q120,255 240,285 T400,285"/><path d="M0,335 Q120,305 240,335 T400,335"/>
+      </g>
+      <g fill="${W}0.08)" stroke="none">
+        <circle cx="200" cy="200" r="5"/><circle cx="80" cy="110" r="3"/>
+        <circle cx="320" cy="160" r="3"/><circle cx="140" cy="260" r="2.5"/>
+        <circle cx="260" cy="310" r="2"/>
+      </g>
+    </svg>`),
+    backgroundSize: '400px 400px', backgroundPosition: 'center', backgroundRepeat: 'repeat',
+  },
+}
+
+// Map segment types to pattern categories
+function getSegmentPattern(segment: string): string {
+  if (['morning', 'morning_prime'].includes(segment)) return 'morning'
+  if (['breath'].includes(segment)) return 'breath'
+  if (['evening', 'day_close', 'tomorrow_preview'].includes(segment)) return 'evening'
+  if (['movement', 'workout'].includes(segment)) return 'energy'
+  if (['micro_lesson', 'pre_study', 'study_break'].includes(segment)) return 'focus'
+  if (['checkpoint_1', 'checkpoint_2', 'checkpoint_3', 'exam_calm'].includes(segment)) return 'calm'
+  if (['midday', 'afternoon'].includes(segment)) return 'focus'
+  return 'morning' // fallback
+}
+
+// Animation configs per pattern category
+const SEGMENT_ANIM: Record<string, { pattern: string; patternTiming: string; overlay: string; overlayTiming: string; overlayStyle: React.CSSProperties }> = {
+  morning: {
+    pattern: 'gp-morning-pat',
+    patternTiming: '8s ease-in-out infinite',
+    overlay: 'gp-morning-ov',
+    overlayTiming: '6s ease-in-out infinite',
+    overlayStyle: { background: 'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.06) 0%, transparent 50%)' },
+  },
+  breath: {
+    pattern: 'gp-breath-pat',
+    patternTiming: '6s ease-in-out infinite',
+    overlay: 'gp-breath-ov',
+    overlayTiming: '4s ease-in-out infinite',
+    overlayStyle: { background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 25%, transparent 50%)' },
+  },
+  evening: {
+    pattern: 'gp-eve-pat',
+    patternTiming: '12s ease-in-out infinite',
+    overlay: 'gp-eve-ov',
+    overlayTiming: '3s ease-in-out infinite',
+    overlayStyle: { background: 'radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1) 0%, transparent 8%), radial-gradient(circle at 70% 15%, rgba(255,255,255,0.07) 0%, transparent 6%), radial-gradient(circle at 85% 35%, rgba(255,255,255,0.05) 0%, transparent 5%)' },
+  },
+  energy: {
+    pattern: 'gp-energy-pat',
+    patternTiming: '5s ease-in-out infinite',
+    overlay: 'gp-energy-ov',
+    overlayTiming: '3s ease-in-out infinite',
+    overlayStyle: { background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255,255,255,0.05) 30deg, transparent 60deg)' },
+  },
+  focus: {
+    pattern: 'gp-focus-pat',
+    patternTiming: '10s ease-in-out infinite',
+    overlay: 'gp-focus-ov',
+    overlayTiming: '5s ease-in-out infinite',
+    overlayStyle: { background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06) 0%, transparent 40%)' },
+  },
+  calm: {
+    pattern: 'gp-calm-pat',
+    patternTiming: '10s ease-in-out infinite',
+    overlay: 'gp-calm-ov',
+    overlayTiming: '6s ease-in-out infinite',
+    overlayStyle: { background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.04) 48%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 52%, transparent 100%)' },
+  },
+}
+
 // Free tier time limit in seconds (10 minutes)
 const FREE_TIER_TIME_LIMIT = 10 * 60
 
@@ -717,6 +909,103 @@ export function GuidancePlayer({
 
   return (
     <div role="dialog" aria-modal="true" aria-label={`${config.label} player`} className={`fixed inset-0 z-50 bg-gradient-to-b ${config.gradient}`}>
+      {/* Animated pattern keyframes */}
+      <style>{`
+        /* Morning: slow expanding rotation */
+        @keyframes gp-morning-pat {
+          0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+          50% { transform: scale(1.08) rotate(5deg); opacity: 0.7; }
+        }
+        @keyframes gp-morning-ov {
+          0%, 100% { transform: scale(0.8); opacity: 0; }
+          50% { transform: scale(1.5); opacity: 1; }
+        }
+        /* Breath: deep pulse + ring expand */
+        @keyframes gp-breath-pat {
+          0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+          25% { transform: scale(1.15) rotate(3deg); opacity: 0.75; }
+          50% { transform: scale(1.25) rotate(0deg); opacity: 0.55; }
+          75% { transform: scale(1.15) rotate(-3deg); opacity: 0.75; }
+        }
+        @keyframes gp-breath-ov {
+          0%, 100% { transform: scale(0.4); opacity: 0.5; }
+          50% { transform: scale(2); opacity: 0; }
+        }
+        /* Evening: slow drift + star twinkle */
+        @keyframes gp-eve-pat {
+          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.9; }
+          25% { transform: translateY(-5px) translateX(3px); opacity: 1; }
+          50% { transform: translateY(-8px) translateX(0); opacity: 0.7; }
+          75% { transform: translateY(-5px) translateX(-3px); opacity: 1; }
+        }
+        @keyframes gp-eve-ov {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          25% { opacity: 0.9; transform: scale(1.05); }
+          50% { opacity: 0.15; transform: scale(0.98); }
+          75% { opacity: 0.85; transform: scale(1.03); }
+        }
+        /* Energy: pulsing rotation + conic sweep */
+        @keyframes gp-energy-pat {
+          0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+          20% { transform: scale(1.04) rotate(3deg); opacity: 0.85; }
+          40% { transform: scale(0.97) rotate(-2deg); opacity: 1; }
+          60% { transform: scale(1.06) rotate(4deg); opacity: 0.8; }
+          80% { transform: scale(0.98) rotate(-1deg); opacity: 0.95; }
+        }
+        @keyframes gp-energy-ov {
+          0% { transform: rotate(0deg); opacity: 0.6; }
+          50% { transform: rotate(180deg); opacity: 1; }
+          100% { transform: rotate(360deg); opacity: 0.6; }
+        }
+        /* Focus: slow zoom + center glow pulse */
+        @keyframes gp-focus-pat {
+          0%, 100% { transform: scale(1); opacity: 0.9; }
+          50% { transform: scale(1.06); opacity: 1; }
+        }
+        @keyframes gp-focus-ov {
+          0%, 100% { transform: scale(1); opacity: 0; }
+          50% { transform: scale(1.3); opacity: 1; }
+        }
+        /* Calm: gentle wave drift + scan line */
+        @keyframes gp-calm-pat {
+          0%, 100% { transform: translateX(0) scale(1); opacity: 0.9; }
+          50% { transform: translateX(8px) scale(1.03); opacity: 1; }
+        }
+        @keyframes gp-calm-ov {
+          0% { transform: translateY(-100%); opacity: 0; }
+          10% { opacity: 0.8; }
+          90% { opacity: 0.8; }
+          100% { transform: translateY(100%); opacity: 0; }
+        }
+      `}</style>
+
+      {/* Animated SVG pattern layer */}
+      {(() => {
+        const patCat = getSegmentPattern(segment)
+        const patStyle = SEGMENT_PATTERNS[patCat]
+        const animCfg = SEGMENT_ANIM[patCat]
+        return (
+          <>
+            <div
+              className="absolute inset-0 z-[1] pointer-events-none"
+              style={{
+                ...patStyle,
+                ...(isPlaying && !isCompleted && animCfg ? { animation: `${animCfg.pattern} ${animCfg.patternTiming}` } : {}),
+              }}
+            />
+            {isPlaying && !isCompleted && animCfg && (
+              <div
+                className="absolute inset-0 z-[2] pointer-events-none"
+                style={{
+                  ...animCfg.overlayStyle,
+                  animation: `${animCfg.overlay} ${animCfg.overlayTiming}`,
+                }}
+              />
+            )}
+          </>
+        )
+      })()}
+
       {/* Background image based on music genre */}
       {backgroundImage && (
         <div className="absolute inset-0 z-0">

@@ -9,7 +9,6 @@ import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
-import { MoodRecommendations } from './MoodRecommendations'
 import { BottomPlayerBar } from './BottomPlayerBar'
 import { DailySpark } from './DailySpark'
 import { SoundscapesSection } from './SoundscapesSection'
@@ -21,6 +20,8 @@ import { FocusTimerPlayer } from './FocusTimerPlayer'
 import { XPBadge } from './XPBadge'
 import { MotivationSection } from './MotivationSection'
 import { MusicGenreSection } from './MusicGenreSection'
+import { SmartSessionCard } from './SmartSessionCard'
+import { AIMeditationPlayer } from './AIMeditationPlayer'
 import type { BreathingTechnique } from '@/lib/breathing-exercises'
 import type { PomodoroConfig } from '@/lib/pomodoro'
 import {
@@ -103,6 +104,7 @@ export function ImmersiveHome() {
 
   // Overlays
   const [showMorningFlow, setShowMorningFlow] = useState(false)
+  const [aiMeditationTheme, setAiMeditationTheme] = useState<string | null>(null)
 
   // Player refs (kept imperative — not in reducer)
   const soundscapePlayerRef = useRef<YTPlayer | null>(null)
@@ -1035,11 +1037,15 @@ export function ImmersiveHome() {
         </button>
       </div>
 
-      {/* Mood Recommendations */}
-      <MoodRecommendations
+      {/* AI Smart Session */}
+      <SmartSessionCard
+        isPremium={isPremium}
         onPlaySoundscape={(soundscapeId) => {
           const item = SOUNDSCAPE_ITEMS.find(i => i.id === soundscapeId)
           if (item) handleSoundscapePlay(item, false)
+        }}
+        onPlayGuide={(guideId) => {
+          handlePlayGuide(guideId, guideId)
         }}
         onPlayGenre={(genreId) => {
           const videos = genreVideos[genreId]
@@ -1048,6 +1054,7 @@ export function ImmersiveHome() {
             handlePlayMusic(videos[0], 0, genreId, genre.word)
           }
         }}
+        onOpenUpgrade={openUpgradeModal}
       />
 
       {/* Soundscapes */}
@@ -1066,6 +1073,8 @@ export function ImmersiveHome() {
         loadingGuide={audioState.loadingGuide}
         isContentFree={(type, id) => isContentFree(type, id)}
         onPlay={handleGuidePlay}
+        onPlayAIMeditation={(themeId) => isPremium ? setAiMeditationTheme(themeId) : openUpgradeModal()}
+        isPremium={isPremium}
       />
 
       {/* Breathwork */}
@@ -1139,6 +1148,14 @@ export function ImmersiveHome() {
 
       {/* Preview Timer */}
       {isPreviewActive && <PreviewTimer secondsLeft={secondsLeft} />}
+
+      {/* AI Meditation Player */}
+      {aiMeditationTheme && (
+        <AIMeditationPlayer
+          onClose={() => setAiMeditationTheme(null)}
+          preselectedTheme={aiMeditationTheme}
+        />
+      )}
 
       {/* Preview Paywall Modal */}
       <PreviewPaywall

@@ -1,4 +1,4 @@
-import { Wind, Sparkles, Heart, Moon, Anchor } from 'lucide-react'
+import { Wind, Sparkles, Heart, Moon, Anchor, Leaf, Target, HeartHandshake, Shield } from 'lucide-react'
 
 // --- Shared types ---
 
@@ -38,12 +38,23 @@ export const MUSIC_GENRES = [
 ]
 
 export const VOICE_GUIDES = [
-  { id: 'breathing', name: 'Breathing', tagline: 'Center your mind', icon: Wind },
-  { id: 'affirmation', name: 'Affirmations', tagline: 'Build self-belief', icon: Sparkles },
-  { id: 'gratitude', name: 'Gratitude', tagline: 'Appreciate the moment', icon: Heart },
-  { id: 'sleep', name: 'Sleep', tagline: 'Peaceful sleep', icon: Moon },
-  { id: 'anxiety', name: 'Grounding', tagline: 'Find your center', icon: Anchor },
+  { id: 'breathing', name: 'Breathing', tagline: 'Center your mind', icon: Wind, color: 'from-sky-500/40 to-cyan-500/40' },
+  { id: 'affirmation', name: 'Affirmations', tagline: 'Build self-belief', icon: Sparkles, color: 'from-violet-500/40 to-purple-500/40' },
+  { id: 'gratitude', name: 'Gratitude', tagline: 'Appreciate the moment', icon: Heart, color: 'from-rose-500/40 to-pink-500/40' },
+  { id: 'sleep', name: 'Sleep', tagline: 'Peaceful sleep', icon: Moon, color: 'from-slate-500/40 to-indigo-500/40' },
+  { id: 'anxiety', name: 'Grounding', tagline: 'Find your center', icon: Anchor, color: 'from-emerald-500/40 to-teal-500/40' },
 ]
+
+// Centralized valid soundscape IDs — used by smart-session API validation and anywhere else
+export const VALID_SOUNDSCAPE_IDS = ['focus', 'relax', 'sleep', 'energy', 'rain', 'ocean', 'forest', 'fire', 'thunder', 'night', 'wind', 'stream', 'cafe', 'piano', 'cosmic', 'astral', 'starlight'] as const
+
+// AI meditation themes (unique to AI — not overlapping with voice guides)
+export const AI_MEDITATION_THEMES = [
+  { id: 'stress-relief', name: 'Stress Relief', icon: Leaf, color: 'from-teal-500/30 to-emerald-500/30' },
+  { id: 'focus', name: 'Focus', icon: Target, color: 'from-blue-500/30 to-cyan-500/30' },
+  { id: 'self-compassion', name: 'Self-Love', icon: HeartHandshake, color: 'from-rose-500/30 to-pink-500/30' },
+  { id: 'confidence', name: 'Confidence', icon: Shield, color: 'from-yellow-500/30 to-amber-500/30' },
+] as const
 
 export const BACKGROUND_IMAGES = [4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29,30,31].map(i => `/backgrounds/bg${i}.jpg`)
 

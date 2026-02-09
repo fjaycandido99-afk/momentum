@@ -35,7 +35,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
               }}
               className="flex flex-col items-center gap-2 shrink-0 press-scale"
             >
-              <div className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 card-gradient-border-round ${isActive ? 'card-now-playing breathing-glow' : ''}`}>
+              <div className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 bg-black border border-white/[0.12] ${isActive ? 'card-now-playing breathing-glow' : ''}`}>
                 {isActive ? (
                   <div className="eq-bars"><span /><span /><span /></div>
                 ) : (

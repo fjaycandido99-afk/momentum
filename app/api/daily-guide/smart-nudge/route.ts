@@ -5,12 +5,16 @@ import { getGroq, GROQ_MODEL } from '@/lib/groq'
 
 export const dynamic = 'force-dynamic'
 
-type NudgeType = 'streak_risk' | 'journal_reminder' | 'mood_trend' | 'inactive' | 'energy_pattern' | 'none'
+type NudgeType = 'streak_risk' | 'journal_reminder' | 'mood_trend' | 'inactive' | 'energy_pattern' | 'completion_pattern' | 'mood_dip' | 'goal_reminder' | 'none'
 
 interface NudgeResult {
   type: NudgeType
   message: string
   icon: string
+  suggested_action?: {
+    label: string
+    action: string // deep-link action identifier
+  }
 }
 
 // Template messages for free users
@@ -20,6 +24,9 @@ const NUDGE_TEMPLATES: Record<NudgeType, string> = {
   mood_trend: "Your mood has been trending upward this week. Keep it up!",
   inactive: "We miss you! Take a moment to check in with yourself today.",
   energy_pattern: "You tend to have more energy in the mornings. Plan your important tasks then.",
+  completion_pattern: "Try mixing up your routine — exploring new modules can boost your growth.",
+  mood_dip: "Your mood has been dipping recently. A breathing exercise might help reset.",
+  goal_reminder: "One of your goals could use some attention. Small steps still count!",
   none: "",
 }
 
@@ -29,7 +36,22 @@ const NUDGE_ICONS: Record<NudgeType, string> = {
   mood_trend: 'trending-up',
   inactive: 'heart',
   energy_pattern: 'zap',
+  completion_pattern: 'refresh-cw',
+  mood_dip: 'wind',
+  goal_reminder: 'target',
   none: '',
+}
+
+const SUGGESTED_ACTIONS: Record<NudgeType, { label: string; action: string } | undefined> = {
+  streak_risk: { label: 'Start your day', action: 'open_daily_guide' },
+  journal_reminder: { label: 'Write in journal', action: 'open_journal' },
+  mood_trend: { label: 'Keep the momentum', action: 'open_daily_guide' },
+  inactive: { label: 'Quick check-in', action: 'open_daily_guide' },
+  energy_pattern: { label: 'Plan your morning', action: 'open_daily_guide' },
+  completion_pattern: { label: 'Try something new', action: 'open_explore' },
+  mood_dip: { label: 'Try breathing', action: 'open_breathing' },
+  goal_reminder: { label: 'Review goals', action: 'open_goals' },
+  none: undefined,
 }
 
 export async function GET() {
@@ -87,6 +109,48 @@ export async function GET() {
       recentMoods.slice(0, 3).reduce((a, b) => a + b, 0) / 3 >
       recentMoods.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, recentMoods.length)
 
+    // Mood dip detection (3+ consecutive declining or low mood days)
+    const moodDipping = recentMoods.length >= 3 &&
+      recentMoods.slice(0, 3).every(m => m <= 1) &&
+      recentMoods.slice(0, 3).reduce((a, b) => a + b, 0) / 3 < 1
+
+    // Completion pattern: user consistently skips certain modules
+    const moduleCompletion = {
+      morning_prime: recentDays.filter(g => g.morning_prime_done).length,
+      movement: recentDays.filter(g => g.movement_done).length,
+      micro_lesson: recentDays.filter(g => g.micro_lesson_done).length,
+      breath: recentDays.filter(g => g.breath_done).length,
+      day_close: recentDays.filter(g => g.day_close_done).length,
+    }
+    const totalActive = Math.max(activeDays, 1)
+    const hasSkippedModule = Object.values(moduleCompletion).some(
+      count => count < totalActive * 0.3 && totalActive >= 3
+    )
+    const skippedModules = Object.entries(moduleCompletion)
+      .filter(([, count]) => count < totalActive * 0.3 && totalActive >= 3)
+      .map(([mod]) => mod.replace('_', ' '))
+
+    // Goal stalling detection
+    let goalStalling = false
+    let stalledGoalTitle = ''
+    try {
+      const goals = await prisma.goal.findMany({
+        where: { user_id: user.id, status: 'active' },
+        select: { title: true, current_count: true, target_count: true, updated_at: true },
+        take: 5,
+      })
+      const stalledGoal = goals.find(g => {
+        const daysSinceUpdate = Math.floor((Date.now() - new Date(g.updated_at).getTime()) / (1000 * 60 * 60 * 24))
+        return daysSinceUpdate >= 3 && g.current_count < g.target_count
+      })
+      if (stalledGoal) {
+        goalStalling = true
+        stalledGoalTitle = stalledGoal.title
+      }
+    } catch {
+      // Goals table may not exist
+    }
+
     // Energy pattern
     const energyCounts = { low: 0, normal: 0, high: 0 }
     recentDays.forEach(g => {
@@ -95,12 +159,18 @@ export async function GET() {
       }
     })
 
-    // Determine nudge type
+    // Determine nudge type (priority order)
     let nudgeType: NudgeType = 'none'
-    if (!hasToday && activeDays >= 3) {
+    if (moodDipping) {
+      nudgeType = 'mood_dip'
+    } else if (!hasToday && activeDays >= 3) {
       nudgeType = 'streak_risk'
+    } else if (goalStalling) {
+      nudgeType = 'goal_reminder'
     } else if (journalCount >= 4 && !guides[0]?.journal_win) {
       nudgeType = 'journal_reminder'
+    } else if (hasSkippedModule) {
+      nudgeType = 'completion_pattern'
     } else if (moodTrending) {
       nudgeType = 'mood_trend'
     } else if (inactiveDays >= 4) {
@@ -129,8 +199,11 @@ export async function GET() {
           `Active days this week: ${activeDays}/7`,
           `Journal entries this week: ${journalCount}`,
           moodTrending ? 'Mood has been improving' : null,
+          moodDipping ? 'Mood has been declining for 3+ days' : null,
           energyCounts.low >= 3 ? 'Frequently low energy' : null,
           energyCounts.high >= 3 ? 'Frequently high energy' : null,
+          skippedModules.length > 0 ? `Often skips: ${skippedModules.join(', ')}` : null,
+          goalStalling ? `Goal "${stalledGoalTitle}" hasn't been updated in 3+ days` : null,
         ].filter(Boolean).join('. ')
 
         const completion = await getGroq().chat.completions.create({
@@ -138,7 +211,7 @@ export async function GET() {
           messages: [
             {
               role: 'system',
-              content: `You are a warm wellness coach. Write a single, short encouraging nudge message (1 sentence, max 20 words). Be personal and specific. Don't use emojis. Context: ${context}`,
+              content: `You are a warm wellness coach. Write a single, short encouraging nudge message (1 sentence, max 25 words). Be personal and reference specific patterns. Don't use emojis. Context: ${context}`,
             },
             {
               role: 'user',
@@ -161,6 +234,7 @@ export async function GET() {
       type: nudgeType,
       message,
       icon: NUDGE_ICONS[nudgeType],
+      suggested_action: SUGGESTED_ACTIONS[nudgeType],
     }
 
     return NextResponse.json({ nudge })
