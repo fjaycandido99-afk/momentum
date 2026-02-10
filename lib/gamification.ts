@@ -32,46 +32,6 @@ export const LEVELS: Level[] = [
   { level: 10, title: 'Cosmic Master', minXP: 5500, color: 'text-amber-400' },
 ]
 
-const XP_STORAGE_KEY = 'voxu_xp_log'
-
-interface XPLogEntry {
-  type: XPEventType
-  xp: number
-  timestamp: number
-}
-
-function getXPLog(): XPLogEntry[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const raw = localStorage.getItem(XP_STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function saveXPLog(log: XPLogEntry[]) {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(XP_STORAGE_KEY, JSON.stringify(log))
-  } catch {
-    // Storage full or unavailable
-  }
-}
-
-export function logXPEvent(eventType: XPEventType): number {
-  const xp = XP_REWARDS[eventType]
-  const log = getXPLog()
-  log.push({ type: eventType, xp, timestamp: Date.now() })
-  saveXPLog(log)
-  return xp
-}
-
-export function getTotalXP(): number {
-  const log = getXPLog()
-  return log.reduce((sum, entry) => sum + entry.xp, 0)
-}
-
 export function getLevelFromXP(xp: number): { current: Level; next: Level | null; progress: number } {
   let current = LEVELS[0]
   for (const level of LEVELS) {
@@ -94,12 +54,64 @@ export function getLevelFromXP(xp: number): { current: Level; next: Level | null
   return { current, next, progress }
 }
 
-export function getTodaysXP(): number {
-  const log = getXPLog()
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
-  const todayMs = todayStart.getTime()
-  return log
-    .filter(entry => entry.timestamp >= todayMs)
-    .reduce((sum, entry) => sum + entry.xp, 0)
+/** Log XP event to the server */
+export async function logXPEventServer(
+  eventType: XPEventType,
+  source?: string
+): Promise<{
+  totalXP: number
+  todaysXP: number
+  level: number
+  newAchievements: { id: string; title: string; xpReward: number }[]
+} | null> {
+  try {
+    const res = await fetch('/api/gamification/xp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventType, source }),
+    })
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+/** One-time migration from localStorage to server */
+export async function migrateLocalXP(): Promise<boolean> {
+  if (typeof window === 'undefined') return false
+
+  const XP_STORAGE_KEY = 'voxu_xp_log'
+  const MIGRATED_KEY = 'voxu_xp_migrated'
+
+  try {
+    // Skip if already migrated
+    if (localStorage.getItem(MIGRATED_KEY)) return false
+
+    const raw = localStorage.getItem(XP_STORAGE_KEY)
+    if (!raw) {
+      localStorage.setItem(MIGRATED_KEY, '1')
+      return false
+    }
+
+    const entries: { type: string; xp: number; timestamp: number }[] = JSON.parse(raw)
+    if (entries.length === 0) {
+      localStorage.setItem(MIGRATED_KEY, '1')
+      return false
+    }
+
+    const res = await fetch('/api/gamification/migrate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entries }),
+    })
+
+    if (res.ok) {
+      localStorage.setItem(MIGRATED_KEY, '1')
+      return true
+    }
+    return false
+  } catch {
+    return false
+  }
 }

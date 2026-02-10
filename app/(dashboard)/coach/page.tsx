@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { CoachingPlans } from '@/components/coach/CoachingPlans'
 import { getActivePlan, COACHING_PLANS, getPlanProgress } from '@/lib/coaching-plans'
-import { logXPEvent } from '@/lib/gamification'
+import { logXPEventServer } from '@/lib/gamification'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -149,7 +149,7 @@ export default function CoachPage() {
 
         // Award XP on first accountability check-in per session
         if (chatMode === 'accountability' && !hasLoggedCheckInXP) {
-          logXPEvent('accountabilityCheckIn')
+          logXPEventServer('accountabilityCheckIn')
           setHasLoggedCheckInXP(true)
         }
       } else if (response.status === 403) {

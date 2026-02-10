@@ -209,7 +209,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
   }
 
   return (
-    <div className="card-gradient-border">
+    <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
       {/* Header */}
       <div className="p-4 border-b border-white/10">
         <div className="flex items-center justify-between mb-2">
@@ -323,7 +323,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
           onClick={() => setShowJournalPopup(false)}
         >
           <div
-            className="w-full max-w-sm bg-[#12121a] rounded-2xl border border-white/10 overflow-hidden"
+            className="w-full max-w-sm bg-black rounded-2xl border border-white/20 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Popup Header */}

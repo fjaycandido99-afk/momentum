@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { type CoachingPlan, getPlanProgress, markDayComplete } from '@/lib/coaching-plans'
-import { logXPEvent } from '@/lib/gamification'
+import { logXPEventServer } from '@/lib/gamification'
 
 interface CoachingPlanDetailProps {
   plan: CoachingPlan
@@ -26,7 +26,7 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
   const handleMarkDone = (day: number) => {
     markDayComplete(plan.id, day)
     setCompletedDays(prev => [...prev, day])
-    logXPEvent('moduleComplete')
+    logXPEventServer('moduleComplete')
   }
 
   const progressPercent = Math.round((completedDays.length / plan.days.length) * 100)

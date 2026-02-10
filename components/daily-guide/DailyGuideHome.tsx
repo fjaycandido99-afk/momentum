@@ -35,7 +35,7 @@ import { StreakDisplay } from './StreakDisplay'
 import { JournalEntry } from './JournalEntry'
 import { MorningFlowComplete } from './MorningFlowComplete'
 import { XPReward } from './XPReward'
-import { logXPEvent, XP_REWARDS } from '@/lib/gamification'
+import { logXPEventServer, XP_REWARDS } from '@/lib/gamification'
 import { CheckpointList } from './CheckpointCard'
 import { MoodCheckIn } from './MoodCheckIn'
 import { JournalLookback } from './JournalLookback'
@@ -733,7 +733,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     if (!activePlayer) return
 
     // Award XP
-    logXPEvent('moduleComplete')
+    logXPEventServer('moduleComplete')
     awardXP(XP_REWARDS.moduleComplete)
 
     // Optimistic update

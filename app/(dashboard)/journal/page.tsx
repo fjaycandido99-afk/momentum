@@ -1,18 +1,30 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target, Sparkles, BookOpen, Calendar, X, Crown, Lock } from 'lucide-react'
+import {
+  PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target,
+  Sparkles, BookOpen, Calendar, X, Crown, Lock, Shuffle, ChevronDown,
+} from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
 import { GoalTracker } from '@/components/daily-guide/GoalTracker'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { MoodSelector, type MoodValue } from '@/components/journal/MoodSelector'
+import { VoiceInput } from '@/components/journal/VoiceInput'
+import { JournalStats, calculateJournalStats, type JournalStatsData } from '@/components/journal/JournalStats'
+import { HeatMapStrip } from '@/components/journal/HeatMapStrip'
+import { getPromptForDate, getShuffledPrompt } from '@/components/journal/JournalPrompts'
 
-interface JournalDay {
+interface JournalEntry {
   date: string
   journal_win?: string | null
   journal_gratitude?: string | null
+  journal_learned?: string | null
   journal_intention?: string | null
+  journal_freetext?: string | null
+  journal_mood?: string | null
+  journal_prompt?: string | null
 }
 
 export default function JournalPage() {
@@ -28,6 +40,7 @@ function JournalContent() {
   const { checkAccess, openUpgradeModal } = useSubscription()
   const hasJournalHistory = checkAccess('journal_history')
 
+  // Existing state
   const [sparkPrompt, setSparkPrompt] = useState<string | null>(null)
   const [win, setWin] = useState('')
   const [gratitude, setGratitude] = useState('')
@@ -36,11 +49,22 @@ function JournalContent() {
   const [isSaved, setIsSaved] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [pastEntries, setPastEntries] = useState<JournalDay[]>([])
   const [loadingPast, setLoadingPast] = useState(true)
   const [showWeeklyReview, setShowWeeklyReview] = useState(false)
   const [streak, setStreak] = useState(0)
   const [reflection, setReflection] = useState<string | null>(null)
+
+  // New state
+  const [mode, setMode] = useState<'guided' | 'freewrite'>('freewrite')
+  const [freeText, setFreeText] = useState('')
+  const [mood, setMood] = useState<MoodValue | null>(null)
+  const [currentPromptIndex, setCurrentPromptIndex] = useState(0)
+  const [interimText, setInterimText] = useState('')
+  const [allEntries, setAllEntries] = useState<JournalEntry[]>([])
+  const [journalStats, setJournalStats] = useState<JournalStatsData>({ currentStreak: 0, longestStreak: 0, totalEntries: 0, totalWords: 0 })
+  const [showAllRecent, setShowAllRecent] = useState(false)
+
+  const activeFieldRef = useRef<'win' | 'gratitude' | 'intention' | 'freewrite'>('freewrite')
 
   // Read spark prompt from URL
   useEffect(() => {
@@ -49,6 +73,12 @@ function JournalContent() {
   }, [searchParams])
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
+
+  // Set initial prompt for date
+  useEffect(() => {
+    const { index } = getPromptForDate(selectedDate)
+    setCurrentPromptIndex(index)
+  }, [selectedDate])
 
   // Load journal for selected date
   useEffect(() => {
@@ -64,14 +94,29 @@ function JournalContent() {
           setWin(data.journal_win || '')
           setGratitude(data.journal_gratitude || '')
           setIntention(data.journal_intention || '')
+          setFreeText(data.journal_freetext || '')
+          setMood(data.journal_mood || null)
           if (data.journal_ai_reflection) setReflection(data.journal_ai_reflection)
-          if (data.journal_win || data.journal_gratitude || data.journal_intention) {
+
+          // Auto-detect mode from existing data
+          const hasGuided = data.journal_win || data.journal_gratitude || data.journal_intention
+          const hasFreewrite = data.journal_freetext
+          if (hasGuided && !hasFreewrite) {
+            setMode('guided')
+          } else if (hasFreewrite && !hasGuided) {
+            setMode('freewrite')
+          }
+          // If both or neither, keep current mode
+
+          if (hasGuided || hasFreewrite) {
             setIsSaved(true)
           }
         } else {
           setWin('')
           setGratitude('')
           setIntention('')
+          setFreeText('')
+          setMood(null)
         }
       } catch (error) {
         console.error('Failed to load journal:', error)
@@ -82,31 +127,29 @@ function JournalContent() {
     loadJournal()
   }, [selectedDate])
 
-  // Load past entries and streak
+  // Load all entries (30 days) for stats, heatmap, mood sparkline
   useEffect(() => {
-    const loadPastEntries = async () => {
-      // Skip loading for free users who can't see history
-      if (!hasJournalHistory) {
-        setLoadingPast(false)
-        return
-      }
+    const loadAllEntries = async () => {
       setLoadingPast(true)
       try {
         const end = new Date()
         const start = new Date()
-        start.setDate(start.getDate() - 14)
+        start.setDate(start.getDate() - 30)
         const response = await fetch(
           `/api/daily-guide/journal?startDate=${start.toISOString()}&endDate=${end.toISOString()}`
         )
         if (response.ok) {
           const data = await response.json()
-          const entries = (data.entries || []).filter(
-            (e: any) => e.journal_win || e.journal_gratitude || e.journal_intention
+          const entries: JournalEntry[] = data.entries || []
+          setAllEntries(entries)
+
+          const withContent = entries.filter(
+            (e) => e.journal_win || e.journal_gratitude || e.journal_intention || e.journal_freetext
           )
-          setPastEntries(entries)
+          setJournalStats(calculateJournalStats(withContent))
         }
       } catch (error) {
-        console.error('Failed to load past entries:', error)
+        console.error('Failed to load entries:', error)
       } finally {
         setLoadingPast(false)
       }
@@ -120,29 +163,58 @@ function JournalContent() {
         }
       } catch {}
     }
-    loadPastEntries()
+    loadAllEntries()
     loadStreak()
-  }, [hasJournalHistory])
+  }, [])
 
   const handleSave = async () => {
-    if (!win.trim() && !gratitude.trim() && !intention.trim()) return
+    const guidedContent = win.trim() || gratitude.trim() || intention.trim()
+    const freeContent = freeText.trim()
+    if (!guidedContent && !freeContent && !mood) return
+
     setIsSaving(true)
     try {
+      const { prompt } = getPromptForDate(selectedDate)
+      const payload: Record<string, any> = {
+        date: selectedDate.toISOString(),
+        journal_mood: mood || undefined,
+      }
+
+      if (mode === 'guided') {
+        payload.journal_win = win.trim() || undefined
+        payload.journal_gratitude = gratitude.trim() || undefined
+        payload.journal_intention = intention.trim() || undefined
+      } else {
+        payload.journal_freetext = freeText.trim() || undefined
+        payload.journal_prompt = prompt.text
+      }
+
       const response = await fetch('/api/daily-guide/journal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: selectedDate.toISOString(),
-          journal_win: win.trim() || undefined,
-          journal_gratitude: gratitude.trim() || undefined,
-          journal_intention: intention.trim() || undefined,
-        }),
+        body: JSON.stringify(payload),
       })
       if (response.ok) {
         const data = await response.json()
         setIsSaved(true)
         if (data.data?.journal_ai_reflection) {
           setReflection(data.data.journal_ai_reflection)
+        }
+        // Refresh stats
+        const end = new Date()
+        const start = new Date()
+        start.setDate(start.getDate() - 30)
+        const refreshRes = await fetch(
+          `/api/daily-guide/journal?startDate=${start.toISOString()}&endDate=${end.toISOString()}`
+        )
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json()
+          const entries: JournalEntry[] = refreshData.entries || []
+          setAllEntries(entries)
+          const withContent = entries.filter(
+            (e) => e.journal_win || e.journal_gratitude || e.journal_intention || e.journal_freetext
+          )
+          setJournalStats(calculateJournalStats(withContent))
         }
       }
     } catch (error) {
@@ -160,35 +232,89 @@ function JournalContent() {
     }
   }
 
-  const hasContent = win.trim() || gratitude.trim() || intention.trim()
+  const handleShuffle = () => {
+    const { index } = getShuffledPrompt(selectedDate, currentPromptIndex)
+    setCurrentPromptIndex(index)
+  }
+
+  const handleVoiceTranscript = useCallback((text: string) => {
+    if (mode === 'freewrite') {
+      setFreeText(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text)
+    } else {
+      const field = activeFieldRef.current
+      if (field === 'win') setWin(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text)
+      else if (field === 'gratitude') setGratitude(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text)
+      else if (field === 'intention') setIntention(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text)
+    }
+    setIsSaved(false)
+  }, [mode])
+
+  const handleVoiceInterim = useCallback((text: string) => {
+    setInterimText(text)
+  }, [])
+
+  const hasContent = mode === 'guided'
+    ? (win.trim() || gratitude.trim() || intention.trim())
+    : freeText.trim()
+
   const dateLabel = selectedDate.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',
     day: 'numeric',
   })
 
+  const currentPrompt = getPromptForDate(selectedDate)
+  // Use the shuffled index if different from default
+  const displayPrompt = currentPromptIndex !== currentPrompt.index
+    ? getShuffledPrompt(selectedDate, currentPrompt.index)
+    : currentPrompt
+
+  const recentEntries = allEntries
+    .filter(e => e.journal_win || e.journal_gratitude || e.journal_intention || e.journal_freetext)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+  const visibleEntries = showAllRecent ? recentEntries : recentEntries.slice(0, 7)
+
+  const MOOD_EMOJI: Record<string, string> = {
+    awful: '😞', low: '😔', okay: '😐', good: '😊', great: '😄',
+  }
+
   return (
     <div className="min-h-screen text-white pb-24">
       {/* Header */}
       <div className="px-6 pt-12 pb-4 header-fade-bg">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="p-2 rounded-xl bg-amber-500/20">
-            <PenLine className="w-5 h-5 text-amber-400" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="p-2 rounded-xl bg-amber-500/20">
+              <PenLine className="w-5 h-5 text-amber-400" />
+            </div>
+            <h1 className="text-2xl font-light shimmer-text">Journal</h1>
           </div>
-          <h1 className="text-2xl font-light shimmer-text">Journal</h1>
+          {/* Streak badge */}
+          {journalStats.currentStreak > 0 && (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/20">
+              <span className="text-sm">🔥</span>
+              <span className="text-xs font-semibold text-orange-400">{journalStats.currentStreak}</span>
+            </div>
+          )}
         </div>
-        <p className="text-white/95 text-sm ml-12">Reflect, grow, remember</p>
+        <p className="text-white text-sm ml-12">Reflect, grow, remember</p>
+      </div>
+
+      {/* Stats Bar */}
+      <div className="px-6 mb-4">
+        <JournalStats stats={journalStats} />
       </div>
 
       {/* Date Picker */}
-      <div className="px-6 mb-6">
-        <div className="flex items-center justify-between p-3 card-gradient-border">
+      <div className="px-6 mb-4">
+        <div className="flex items-center justify-between p-3 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
           <button
             aria-label="Previous day"
             onClick={() => goDay(-1)}
             className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
-            <ChevronLeft className="w-5 h-5 text-white/95" />
+            <ChevronLeft className="w-5 h-5 text-white" />
           </button>
           <div className="text-center">
             <p className="text-sm font-medium text-white">{dateLabel}</p>
@@ -200,7 +326,42 @@ function JournalContent() {
             disabled={isToday}
             className={`p-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${isToday ? 'opacity-30' : 'hover:bg-white/10'}`}
           >
-            <ChevronRight className="w-5 h-5 text-white/95" />
+            <ChevronRight className="w-5 h-5 text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* Mood Selector */}
+      <div className="px-6 mb-4">
+        <MoodSelector
+          mood={mood}
+          onSelect={(m) => { setMood(m); setIsSaved(false) }}
+          moodHistory={allEntries}
+        />
+      </div>
+
+      {/* Mode Toggle */}
+      <div className="px-6 mb-4">
+        <div className="flex p-1 rounded-xl bg-black border border-white/20">
+          <button
+            onClick={() => setMode('guided')}
+            className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
+              mode === 'guided'
+                ? 'bg-white/20 text-white shadow-sm'
+                : 'text-white/80 hover:text-white'
+            }`}
+          >
+            Guided
+          </button>
+          <button
+            onClick={() => setMode('freewrite')}
+            className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
+              mode === 'freewrite'
+                ? 'bg-white/20 text-white shadow-sm'
+                : 'text-white/80 hover:text-white'
+            }`}
+          >
+            Free Write
           </button>
         </div>
       </div>
@@ -208,21 +369,21 @@ function JournalContent() {
       {/* Spark Prompt */}
       {sparkPrompt && (
         <div className="px-6 mb-4 animate-fade-in">
-          <div className="relative p-4 card-gradient-border">
+          <div className="relative p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
             <button
               aria-label="Dismiss prompt"
               onClick={() => setSparkPrompt(null)}
               className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
-              <X className="w-3.5 h-3.5 text-white/95" />
+              <X className="w-3.5 h-3.5 text-white/80" />
             </button>
             <div className="flex items-start gap-3 pr-6">
               <div className="p-1.5 rounded-lg bg-violet-500/20 mt-0.5 shrink-0">
                 <Sparkles className="w-3.5 h-3.5 text-violet-300" />
               </div>
               <div>
-                <p className="text-[10px] font-semibold text-violet-300/70 uppercase tracking-wider mb-1">Reflect on this</p>
-                <p className="text-sm text-white/95 leading-relaxed italic">&ldquo;{sparkPrompt}&rdquo;</p>
+                <p className="text-[10px] font-semibold text-violet-300 uppercase tracking-wider mb-1">Reflect on this</p>
+                <p className="text-sm text-white leading-relaxed italic">&ldquo;{sparkPrompt}&rdquo;</p>
               </div>
             </div>
           </div>
@@ -233,71 +394,141 @@ function JournalContent() {
       <div className="px-6">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
+            <Loader2 className="w-5 h-5 text-white/90 animate-spin" />
           </div>
-        ) : (
+        ) : mode === 'guided' ? (
+          /* Guided Mode — 3 structured textareas */
           <div className="space-y-4">
-            {/* What did you learn */}
-            <div className="p-4 card-gradient-border">
-              <label className="text-sm text-white/95 flex items-center gap-2 mb-3">
+            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+              <label className="text-sm text-white flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 What did you learn today?
               </label>
               <textarea
                 value={win}
                 onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
+                onFocus={() => { activeFieldRef.current = 'win' }}
                 placeholder="Today I learned..."
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
+                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
                 rows={3}
                 maxLength={500}
               />
-              <p className="text-right text-[10px] text-white/95 mt-1">{win.length}/500</p>
+              <p className="text-right text-[10px] text-white/70 mt-1">{win.length}/500</p>
             </div>
 
-            {/* Gratitude */}
-            <div className="p-4 card-gradient-border">
-              <label className="text-sm text-white/95 flex items-center gap-2 mb-3">
+            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+              <label className="text-sm text-white flex items-center gap-2 mb-3">
                 <Heart className="w-4 h-4 text-pink-400" />
                 What are you grateful for?
               </label>
               <textarea
                 value={gratitude}
                 onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
+                onFocus={() => { activeFieldRef.current = 'gratitude' }}
                 placeholder="I'm grateful for..."
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
+                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
                 rows={3}
                 maxLength={500}
               />
-              <p className="text-right text-[10px] text-white/95 mt-1">{gratitude.length}/500</p>
+              <p className="text-right text-[10px] text-white/70 mt-1">{gratitude.length}/500</p>
             </div>
 
-            {/* Intention */}
-            <div className="p-4 card-gradient-border">
-              <label className="text-sm text-white/95 flex items-center gap-2 mb-3">
+            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+              <label className="text-sm text-white flex items-center gap-2 mb-3">
                 <Target className="w-4 h-4 text-purple-400" />
                 Tomorrow&apos;s intention
               </label>
               <textarea
                 value={intention}
                 onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
+                onFocus={() => { activeFieldRef.current = 'intention' }}
                 placeholder="Tomorrow I will..."
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
+                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
                 rows={2}
                 maxLength={300}
               />
-              <p className="text-right text-[10px] text-white/95 mt-1">{intention.length}/300</p>
+              <p className="text-right text-[10px] text-white/70 mt-1">{intention.length}/300</p>
             </div>
 
-            {/* Save Button */}
+            {/* Voice button for guided mode */}
+            <div className="flex justify-end">
+              <VoiceInput
+                onTranscript={handleVoiceTranscript}
+                onInterim={handleVoiceInterim}
+              />
+            </div>
+            {interimText && (
+              <p className="text-xs text-white/60 italic px-1">{interimText}</p>
+            )}
+          </div>
+        ) : (
+          /* Free Write Mode */
+          <div className="space-y-4">
+            {/* Rotating prompt card */}
+            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 flex-1">
+                  <div className="p-1.5 rounded-lg bg-amber-500/20 mt-0.5 shrink-0">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-1">
+                      Today&apos;s Prompt
+                    </p>
+                    <p className="text-sm text-white leading-relaxed">
+                      {displayPrompt.prompt.text}
+                    </p>
+                    <p className="text-[10px] text-white/60 mt-1.5 capitalize">{displayPrompt.prompt.category}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleShuffle}
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors shrink-0"
+                  aria-label="New prompt"
+                >
+                  <Shuffle className="w-4 h-4 text-white/80" />
+                </button>
+              </div>
+            </div>
+
+            {/* Large textarea with voice */}
+            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm text-white">Write freely...</label>
+                <VoiceInput
+                  onTranscript={handleVoiceTranscript}
+                  onInterim={handleVoiceInterim}
+                />
+              </div>
+              <textarea
+                value={freeText}
+                onChange={(e) => { setFreeText(e.target.value); setIsSaved(false) }}
+                onFocus={() => { activeFieldRef.current = 'freewrite' }}
+                placeholder="Let your thoughts flow..."
+                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
+                rows={8}
+                maxLength={5000}
+              />
+              {interimText && (
+                <p className="text-xs text-white/60 italic mt-1 px-1">{interimText}</p>
+              )}
+              <p className="text-right text-[10px] text-white/70 mt-1">{freeText.length}/5000</p>
+            </div>
+          </div>
+        )}
+
+        {/* Save Button */}
+        {!isLoading && (
+          <div className="mt-4">
             <button
               onClick={handleSave}
-              disabled={!hasContent || isSaving || isSaved}
-              className={`w-full py-3 card-gradient-border text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              disabled={!hasContent && !mood || isSaving || isSaved}
+              className={`w-full py-3 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                 isSaved
                   ? 'text-emerald-400'
-                  : hasContent
+                  : hasContent || mood
                   ? 'text-white'
-                  : 'text-white/95 cursor-not-allowed'
+                  : 'text-white/70 cursor-not-allowed'
               }`}
             >
               {isSaving ? (
@@ -308,21 +539,26 @@ function JournalContent() {
                 'Save Entry'
               )}
             </button>
-
-            {/* AI Insight */}
-            {reflection && (
-              <div className="p-4 card-gradient-border">
-                <div className="flex items-start gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-[10px] font-medium tracking-wider text-indigo-400/70 uppercase mb-1">AI Insight</p>
-                    <p className="text-sm text-white/95 leading-relaxed italic">{reflection}</p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
+
+        {/* AI Insight */}
+        {reflection && (
+          <div className="mt-4 p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+            <div className="flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[10px] font-medium tracking-wider text-indigo-400 uppercase mb-1">AI Insight</p>
+                <p className="text-sm text-white leading-relaxed italic">{reflection}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 30-Day HeatMap */}
+      <div className="px-6 mt-8">
+        <HeatMapStrip entries={allEntries} />
       </div>
 
       {/* Goals */}
@@ -344,8 +580,8 @@ function JournalContent() {
       <div className="px-6 mt-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-white/95" />
-            <h2 className="text-sm font-medium text-white/95 uppercase tracking-wider">Recent Entries</h2>
+            <Calendar className="w-4 h-4 text-white/90" />
+            <h2 className="text-sm font-medium text-white/90 uppercase tracking-wider">Recent Entries</h2>
           </div>
           {!hasJournalHistory && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">PRO</span>
@@ -353,23 +589,22 @@ function JournalContent() {
         </div>
 
         {!hasJournalHistory ? (
-          // Locked state for free users
           <button
             onClick={openUpgradeModal}
-            className="w-full p-6 card-gradient-border hover:bg-white/5 transition-all group"
+            className="w-full p-6 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] hover:bg-white/5 transition-all group"
           >
             <div className="flex flex-col items-center gap-3">
               <div className="relative">
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                  <Calendar className="w-6 h-6 text-amber-400/70" />
+                  <Calendar className="w-6 h-6 text-amber-400" />
                 </div>
                 <div className="absolute -top-1 -right-1 p-1 rounded-full bg-amber-500/30">
                   <Lock className="w-3 h-3 text-amber-400" />
                 </div>
               </div>
               <div className="text-center">
-                <p className="text-sm text-white/95 font-medium mb-1">Unlock Journal History</p>
-                <p className="text-xs text-white/60 mb-3">Look back on your growth journey</p>
+                <p className="text-sm text-white font-medium mb-1">Unlock Journal History</p>
+                <p className="text-xs text-white/80 mb-3">Look back on your growth journey</p>
                 <div className="flex items-center justify-center gap-1.5 text-amber-400 text-xs font-medium group-hover:scale-105 transition-transform">
                   <Crown className="w-3.5 h-3.5" />
                   Upgrade to Pro
@@ -379,17 +614,17 @@ function JournalContent() {
           </button>
         ) : loadingPast ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 className="w-4 h-4 text-white/95 animate-spin" />
+            <Loader2 className="w-4 h-4 text-white/90 animate-spin" />
           </div>
-        ) : pastEntries.length === 0 ? (
+        ) : recentEntries.length === 0 ? (
           <div className="text-center py-8">
-            <PenLine className="w-6 h-6 text-white/95 mx-auto mb-2" />
-            <p className="text-white/95 text-sm">No entries yet</p>
-            <p className="text-white/95 text-xs mt-1">Start journaling to see your history here</p>
+            <PenLine className="w-6 h-6 text-white/60 mx-auto mb-2" />
+            <p className="text-white/80 text-sm">No entries yet</p>
+            <p className="text-white/60 text-xs mt-1">Start journaling to see your history here</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {pastEntries.map((entry, i) => {
+            {visibleEntries.map((entry, i) => {
               const entryDate = new Date(entry.date)
               const label = entryDate.toLocaleDateString('en-US', {
                 weekday: 'short',
@@ -397,34 +632,51 @@ function JournalContent() {
                 day: 'numeric',
               })
               const isSelected = entryDate.toDateString() === selectedDate.toDateString()
+              const moodEmoji = entry.journal_mood ? MOOD_EMOJI[entry.journal_mood] : null
 
               return (
                 <button
                   key={i}
                   onClick={() => setSelectedDate(entryDate)}
-                  className={`w-full text-left p-4 card-gradient-border transition-all ${
+                  className={`w-full text-left p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all ${
                     isSelected
                       ? 'ring-1 ring-amber-500/40'
                       : 'hover:bg-white/5'
                   }`}
                 >
-                  <p className={`text-xs mb-1.5 ${isSelected ? 'text-amber-400' : 'text-white/95'}`}>
-                    {label}
-                  </p>
-                  {entry.journal_win && (
-                    <p className="text-sm text-white/95 line-clamp-2">{entry.journal_win}</p>
-                  )}
-                  {entry.journal_gratitude && !entry.journal_win && (
-                    <p className="text-sm text-white/95 line-clamp-2 italic">{entry.journal_gratitude}</p>
-                  )}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className={`text-xs ${isSelected ? 'text-amber-400' : 'text-white/90'}`}>
+                      {label}
+                    </p>
+                    {moodEmoji && <span className="text-sm">{moodEmoji}</span>}
+                  </div>
+                  {entry.journal_freetext ? (
+                    <p className="text-sm text-white line-clamp-2">{entry.journal_freetext}</p>
+                  ) : entry.journal_win ? (
+                    <p className="text-sm text-white line-clamp-2">{entry.journal_win}</p>
+                  ) : entry.journal_gratitude ? (
+                    <p className="text-sm text-white line-clamp-2 italic">{entry.journal_gratitude}</p>
+                  ) : null}
                   <div className="flex items-center gap-2 mt-2">
-                    {entry.journal_win && <span className="text-[10px] text-amber-400/60">✦ Learned</span>}
-                    {entry.journal_gratitude && <span className="text-[10px] text-pink-400/60">♥ Grateful</span>}
-                    {entry.journal_intention && <span className="text-[10px] text-purple-400/60">◎ Intention</span>}
+                    {entry.journal_freetext && <span className="text-[10px] text-cyan-400">✎ Free Write</span>}
+                    {entry.journal_win && <span className="text-[10px] text-amber-400">✦ Learned</span>}
+                    {entry.journal_gratitude && <span className="text-[10px] text-pink-400">♥ Grateful</span>}
+                    {entry.journal_intention && <span className="text-[10px] text-purple-400">◎ Intention</span>}
                   </div>
                 </button>
               )
             })}
+
+            {/* Show more / less */}
+            {recentEntries.length > 7 && (
+              <button
+                onClick={() => setShowAllRecent(!showAllRecent)}
+                className="w-full flex items-center justify-center gap-1 py-2 text-xs text-white/70 hover:text-white/90 transition-colors"
+              >
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllRecent ? 'rotate-180' : ''}`} />
+                {showAllRecent ? 'Show less' : `Show all ${recentEntries.length} entries`}
+              </button>
+            )}
           </div>
         )}
       </div>

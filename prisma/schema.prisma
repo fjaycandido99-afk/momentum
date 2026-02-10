@@ -121,6 +121,9 @@ model UserPreferences {
   current_streak   Int       @default(0)
   last_active_date DateTime?
 
+  // Gamification
+  total_xp Int @default(0)
+
   // Bedtime reminder
   bedtime_reminder_enabled Boolean @default(false)
 
@@ -284,6 +287,9 @@ model DailyGuide {
   journal_gratitude String? // "What are you grateful for?"
   journal_learned   String? // "What did you learn?"
   journal_intention String? // Weekly intention (set on Sundays)
+  journal_freetext  String? // Free-form text from "Free Write" mode
+  journal_mood      String? // 5-level: "awful" | "low" | "okay" | "good" | "great"
+  journal_prompt    String? // Which rotating prompt was shown
 
   // Mood tracking
   mood_before String? // "low" | "medium" | "high" - before morning flow
@@ -426,6 +432,28 @@ model Routine {
   created_at      DateTime      @default(now())
   updated_at      DateTime      @updatedAt
 
+  @@index([user_id])
+}
+
+model XPEvent {
+  id         String   @id @default(cuid())
+  user_id    String
+  event_type String
+  xp_amount  Int
+  source     String?
+  created_at DateTime @default(now())
+
+  @@index([user_id])
+  @@index([user_id, created_at])
+}
+
+model UserAchievement {
+  id             String   @id @default(cuid())
+  user_id        String
+  achievement_id String
+  unlocked_at    DateTime @default(now())
+
+  @@unique([user_id, achievement_id])
   @@index([user_id])
 }
 

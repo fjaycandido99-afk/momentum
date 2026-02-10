@@ -1,14 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getTotalXP, getLevelFromXP } from '@/lib/gamification'
+import { getLevelFromXP } from '@/lib/gamification'
 
 export function XPBadge() {
   const [xp, setXP] = useState(0)
   const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
-    setXP(getTotalXP())
+    fetch('/api/gamification/status')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.xp?.total != null) setXP(d.xp.total) })
+      .catch(() => {})
   }, [])
 
   const { current, next, progress } = getLevelFromXP(xp)

@@ -20,6 +20,7 @@ export interface AudioState {
   // Guided voice
   guideLabel: string | null
   guideIsPlaying: boolean
+  userPausedGuide: boolean
   loadingGuide: string | null
 
   // Playlist / cards
@@ -57,6 +58,7 @@ export const initialAudioState: AudioState = {
   showSoundscapePlayer: false,
   guideLabel: null,
   guideIsPlaying: false,
+  userPausedGuide: false,
   loadingGuide: null,
   currentPlaylist: null,
   activeCardId: null,
@@ -199,6 +201,7 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         ...state,
         guideLabel: action.guideName,
         guideIsPlaying: false,
+        userPausedGuide: false,
         loadingGuide: action.guideId,
         homeAudioActive: true,
         // Stop soundscape
@@ -215,16 +218,16 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
       return { ...state, guideIsPlaying: true, loadingGuide: null }
 
     case 'PAUSE_GUIDE':
-      return { ...state, guideIsPlaying: false }
+      return { ...state, guideIsPlaying: false, userPausedGuide: true }
 
     case 'RESUME_GUIDE':
-      return { ...state, guideIsPlaying: true }
+      return { ...state, guideIsPlaying: true, userPausedGuide: false }
 
     case 'GUIDE_ENDED':
-      return { ...state, guideIsPlaying: false, homeAudioActive: false }
+      return { ...state, guideIsPlaying: false, guideLabel: null, userPausedGuide: false, homeAudioActive: false }
 
     case 'GUIDE_ERROR':
-      return { ...state, guideIsPlaying: false, guideLabel: null, loadingGuide: null, homeAudioActive: false }
+      return { ...state, guideIsPlaying: false, guideLabel: null, userPausedGuide: false, loadingGuide: null, homeAudioActive: false }
 
     case 'SKIP_NEXT':
     case 'SKIP_PREVIOUS': {

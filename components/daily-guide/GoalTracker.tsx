@@ -117,7 +117,7 @@ export function GoalTracker() {
 
   if (isLoading) {
     return (
-      <div className="card-gradient-border p-4">
+      <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-4">
         <div className="flex items-center gap-3">
           <Loader2 className="w-4 h-4 text-white/95 animate-spin" />
           <span className="text-sm text-white/95">Loading goals...</span>
@@ -129,7 +129,7 @@ export function GoalTracker() {
   // Show locked state for free users
   if (!hasGoalAccess) {
     return (
-      <div className="card-gradient-border">
+      <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
         <button
           onClick={openUpgradeModal}
           className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors group"
@@ -156,7 +156,7 @@ export function GoalTracker() {
   }
 
   return (
-    <div className="card-gradient-border">
+    <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}

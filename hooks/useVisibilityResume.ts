@@ -54,8 +54,8 @@ export function useVisibilityResume({
         } catch {}
       }
 
-      // Resume guide audio
-      if (state.guideLabel && guideAudioRef.current?.paused) {
+      // Resume guide audio - only if user didn't manually pause
+      if (state.guideLabel && guideAudioRef.current?.paused && !state.userPausedGuide) {
         guideAudioRef.current.play().catch(() => {})
       }
     }
@@ -84,7 +84,7 @@ export function useVisibilityResume({
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [state.guideLabel, state.homeAudioActive, state.userPausedMusic, state.userPausedSoundscape,
+  }, [state.guideLabel, state.homeAudioActive, state.userPausedMusic, state.userPausedSoundscape, state.userPausedGuide,
       bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef,
       currentBgVideoIdRef, currentScVideoIdRef, guideAudioRef, wakeLockRef])
 }

@@ -39,11 +39,14 @@ export async function GET(request: NextRequest) {
           journal_gratitude: true,
           journal_learned: true,
           journal_intention: true,
+          journal_freetext: true,
+          journal_mood: true,
+          journal_prompt: true,
           journal_ai_reflection: true,
         },
       })
 
-      return NextResponse.json(guide || { date: targetDate, journal_win: null, journal_gratitude: null, journal_learned: null, journal_intention: null, journal_ai_reflection: null })
+      return NextResponse.json(guide || { date: targetDate, journal_win: null, journal_gratitude: null, journal_learned: null, journal_intention: null, journal_freetext: null, journal_mood: null, journal_prompt: null, journal_ai_reflection: null })
     }
 
     // Date range query (for calendar/history)
@@ -67,6 +70,9 @@ export async function GET(request: NextRequest) {
           journal_gratitude: true,
           journal_learned: true,
           journal_intention: true,
+          journal_freetext: true,
+          journal_mood: true,
+          journal_prompt: true,
           day_close_done: true,
           morning_prime_done: true,
           movement_done: true,
@@ -104,6 +110,9 @@ export async function GET(request: NextRequest) {
         journal_gratitude: true,
         journal_learned: true,
         journal_intention: true,
+        journal_freetext: true,
+        journal_mood: true,
+        journal_prompt: true,
       },
       orderBy: {
         date: 'asc',
@@ -131,7 +140,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { date, journal_win, journal_gratitude, journal_learned, journal_intention } = body
+    const { date, journal_win, journal_gratitude, journal_learned, journal_intention, journal_freetext, journal_mood, journal_prompt } = body
 
     const targetDate = date ? new Date(date) : new Date()
     targetDate.setHours(0, 0, 0, 0)
@@ -149,15 +158,21 @@ export async function POST(request: NextRequest) {
         ...(journal_gratitude !== undefined && { journal_gratitude }),
         ...(journal_learned !== undefined && { journal_learned }),
         ...(journal_intention !== undefined && { journal_intention }),
+        ...(journal_freetext !== undefined && { journal_freetext }),
+        ...(journal_mood !== undefined && { journal_mood }),
+        ...(journal_prompt !== undefined && { journal_prompt }),
       },
       create: {
         user_id: user.id,
         date: targetDate,
-        day_type: 'work', // Default, will be updated by guide generation
+        day_type: 'work',
         journal_win,
         journal_gratitude,
         journal_learned,
         journal_intention,
+        journal_freetext,
+        journal_mood,
+        journal_prompt,
       },
     })
 
@@ -170,7 +185,7 @@ export async function POST(request: NextRequest) {
       const isPremium = subscription?.tier === 'premium' &&
         (subscription?.status === 'active' || subscription?.status === 'trialing')
 
-      if (isPremium && (journal_win || journal_gratitude || journal_learned)) {
+      if (isPremium && (journal_win || journal_gratitude || journal_learned || journal_freetext)) {
         // Fetch last 7 days of journals for pattern detection
         const weekAgo = new Date()
         weekAgo.setDate(weekAgo.getDate() - 7)
@@ -184,6 +199,7 @@ export async function POST(request: NextRequest) {
               { journal_win: { not: null } },
               { journal_gratitude: { not: null } },
               { journal_learned: { not: null } },
+              { journal_freetext: { not: null } },
             ],
           },
           select: {
@@ -220,6 +236,7 @@ export async function POST(request: NextRequest) {
           journal_win ? `Learned: "${journal_win}"` : null,
           journal_gratitude ? `Grateful for: "${journal_gratitude}"` : null,
           journal_learned ? `Insight: "${journal_learned}"` : null,
+          journal_freetext ? `Free write: "${journal_freetext}"` : null,
         ].filter(Boolean).join('\n')
 
         const completion = await getGroq().chat.completions.create({
@@ -265,6 +282,9 @@ export async function POST(request: NextRequest) {
         journal_gratitude: guide.journal_gratitude,
         journal_learned: guide.journal_learned,
         journal_intention: guide.journal_intention,
+        journal_freetext: guide.journal_freetext,
+        journal_mood: guide.journal_mood,
+        journal_prompt: guide.journal_prompt,
         journal_ai_reflection: reflection,
       },
     })

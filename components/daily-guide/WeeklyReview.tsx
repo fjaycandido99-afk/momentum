@@ -238,7 +238,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
   const weekLabel = `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
 
   const content = (
-    <div className={isModal ? '' : 'card-gradient-border'}>
+    <div className={isModal ? '' : 'rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]'}>
       {/* Header */}
       <div className="p-4 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -508,11 +508,11 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
       onClick={() => setShowFullJournal(false)}
     >
       <div
-        className="w-full max-w-md my-8 rounded-2xl bg-[#12121a] border border-white/10 overflow-hidden"
+        className="w-full max-w-md my-8 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-[#12121a]">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-black">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-blue-500/20">
               <PenLine className="w-5 h-5 text-blue-400" />
@@ -621,7 +621,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
     return (
       <>
         <div role="dialog" aria-modal="true" aria-label="Weekly review" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-md my-8 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10 overflow-hidden">
+          <div className="w-full max-w-md my-8 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] overflow-hidden">
             {content}
           </div>
         </div>
@@ -649,7 +649,7 @@ export function WeeklyReviewPrompt({ onOpen }: { onOpen: () => void }) {
     <button
       onClick={onOpen}
       aria-label="Open weekly review"
-      className="w-full p-4 card-gradient-border transition-all group focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+      className="w-full p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all group focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

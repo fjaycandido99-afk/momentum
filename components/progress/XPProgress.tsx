@@ -1,15 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getTotalXP, getLevelFromXP } from '@/lib/gamification'
+import { getLevelFromXP } from '@/lib/gamification'
 
-export function XPProgress() {
-  const [xp, setXP] = useState(0)
+interface XPProgressProps {
+  totalXP?: number
+  todaysXP?: number
+}
 
-  useEffect(() => {
-    setXP(getTotalXP())
-  }, [])
-
+export function XPProgress({ totalXP = 0, todaysXP }: XPProgressProps) {
+  const xp = totalXP
   const { current, next, progress } = getLevelFromXP(xp)
 
   const radius = 40
@@ -51,6 +50,11 @@ export function XPProgress() {
         {next && (
           <p className="text-[10px] text-white/40 mt-1">
             {next.minXP - xp} XP to {next.title}
+          </p>
+        )}
+        {todaysXP !== undefined && todaysXP > 0 && (
+          <p className="text-[10px] text-cyan-400/60 mt-0.5">
+            +{todaysXP} today
           </p>
         )}
       </div>

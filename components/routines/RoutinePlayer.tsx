@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, SkipForward, CheckCircle, Wind, Music, Mic, Timer, CloudRain } from 'lucide-react'
-import { logXPEvent } from '@/lib/gamification'
+import { logXPEventServer } from '@/lib/gamification'
 
 const STEP_ICONS: Record<string, typeof Wind> = {
   soundscape: CloudRain,
@@ -60,7 +60,7 @@ export function RoutinePlayer({ routineId, routineName, steps, onClose }: Routin
       // Complete
       if (intervalRef.current) clearInterval(intervalRef.current)
       setCompleted(true)
-      logXPEvent('moduleComplete')
+      logXPEventServer('moduleComplete')
       fetch(`/api/routines/${routineId}/complete`, { method: 'POST' }).catch(() => {})
     }
   }, [currentStep, steps.length, routineId])
