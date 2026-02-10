@@ -7,14 +7,10 @@ const ACTIVITY_OPTIONS = [
   { type: 'soundscape', id: 'focus', title: 'Focus Soundscape', subtitle: 'Concentration ambience' },
   { type: 'soundscape', id: 'relax', title: 'Relax Soundscape', subtitle: 'Calming ambience' },
   { type: 'soundscape', id: 'sleep', title: 'Sleep Soundscape', subtitle: 'Wind-down ambience' },
-  { type: 'breathing', id: 'box', title: 'Box Breathing', subtitle: '4-4-4-4 pattern' },
-  { type: 'breathing', id: '4-7-8', title: '4-7-8 Breathing', subtitle: 'Relaxation pattern' },
-  { type: 'breathing', id: 'energize', title: 'Energize Breathing', subtitle: 'Quick boost' },
   { type: 'motivation', id: 'default', title: 'Motivation', subtitle: "Today's topic" },
   { type: 'music', id: 'lofi', title: 'Lo-Fi Music', subtitle: 'Chill beats' },
   { type: 'music', id: 'piano', title: 'Piano Music', subtitle: 'Peaceful keys' },
   { type: 'music', id: 'classical', title: 'Classical Music', subtitle: 'Timeless' },
-  { type: 'focus', id: 'pomodoro', title: 'Focus Timer', subtitle: '25 min pomodoro' },
 ]
 
 interface RoutineStep {

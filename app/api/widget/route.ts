@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getDayOfYearQuote } from '@/lib/quotes'
 import { getDailyTarotCard } from '@/lib/astrology/tarot-data'
-import { BREATHING_TECHNIQUES } from '@/lib/breathing-exercises'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -21,20 +20,6 @@ export async function GET(request: NextRequest) {
     if (widgetTypeEarly === 'quote') {
       const quote = getDayOfYearQuote()
       return NextResponse.json({ quote: quote.text, author: quote.author })
-    }
-
-    if (widgetTypeEarly === 'breathing') {
-      const hour = new Date().getHours()
-      let suggested = BREATHING_TECHNIQUES[0]
-      if (hour >= 21 || hour < 6) suggested = BREATHING_TECHNIQUES[1]
-      else if (hour >= 6 && hour < 10) suggested = BREATHING_TECHNIQUES[2]
-      else if (hour >= 14 && hour < 17) suggested = BREATHING_TECHNIQUES[3]
-      return NextResponse.json({
-        technique: suggested.name,
-        tagline: suggested.tagline,
-        pattern: suggested.pattern,
-        description: suggested.description,
-      })
     }
 
     if (!user) {
@@ -139,21 +124,6 @@ export async function GET(request: NextRequest) {
         keywords: card.keywords,
         meaning: card.uprightMeaning,
         elementHint,
-      })
-    }
-
-    if (widgetType === 'breathing') {
-      const hour = new Date().getHours()
-      // Suggest technique based on time of day
-      let suggested = BREATHING_TECHNIQUES[0] // Box breathing default
-      if (hour >= 21 || hour < 6) suggested = BREATHING_TECHNIQUES[1] // 4-7-8 Sleep
-      else if (hour >= 6 && hour < 10) suggested = BREATHING_TECHNIQUES[2] // Power Breath
-      else if (hour >= 14 && hour < 17) suggested = BREATHING_TECHNIQUES[3] // Coherent
-      return NextResponse.json({
-        technique: suggested.name,
-        tagline: suggested.tagline,
-        pattern: suggested.pattern,
-        description: suggested.description,
       })
     }
 

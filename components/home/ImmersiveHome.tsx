@@ -13,17 +13,11 @@ import { BottomPlayerBar } from './BottomPlayerBar'
 import { DailySpark } from './DailySpark'
 import { SoundscapesSection } from './SoundscapesSection'
 import { GuidedSection } from './GuidedSection'
-import { BreathingSection } from './BreathingSection'
-import { BreathingPlayer } from './BreathingPlayer'
-import { FocusTimerSection } from './FocusTimerSection'
-import { FocusTimerPlayer } from './FocusTimerPlayer'
 import { XPBadge } from './XPBadge'
 import { MotivationSection } from './MotivationSection'
 import { MusicGenreSection } from './MusicGenreSection'
 import { SmartSessionCard } from './SmartSessionCard'
 import { AIMeditationPlayer } from './AIMeditationPlayer'
-import type { BreathingTechnique } from '@/lib/breathing-exercises'
-import type { PomodoroConfig } from '@/lib/pomodoro'
 import {
   Mode, VideoItem, MUSIC_GENRES, TOPIC_TAGLINES,
   getTimeContext, getSuggestedMode, getTodaysTopicName, getTodaysBackgrounds, shuffleWithSeed,
@@ -91,13 +85,6 @@ export function ImmersiveHome() {
     isPremium ? Infinity : FREEMIUM_LIMITS.coachNudgeDelayMs
   )
 
-  // Breathing exercise state
-  const [showBreathingPlayer, setShowBreathingPlayer] = useState(false)
-  const [activeBreathingTechnique, setActiveBreathingTechnique] = useState<BreathingTechnique | null>(null)
-
-  // Focus timer state
-  const [showFocusTimer, setShowFocusTimer] = useState(false)
-  const [focusPreset, setFocusPreset] = useState<PomodoroConfig | null>(null)
 
   // Hamburger menu
   const [showMenu, setShowMenu] = useState(false)
@@ -814,7 +801,7 @@ export function ImmersiveHome() {
     <div className="isolate min-h-screen">
     <div
       ref={scrollRef}
-      className={`relative min-h-screen text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer || showBreathingPlayer || showFocusTimer ? 'overflow-hidden max-h-screen' : ''}`}
+      className={`relative min-h-screen text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer ? 'overflow-hidden max-h-screen' : ''}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -876,48 +863,6 @@ export function ImmersiveHome() {
         />
       )}
 
-      {/* Breathing Player Overlay */}
-      {showBreathingPlayer && activeBreathingTechnique && (
-        <BreathingPlayer
-          technique={activeBreathingTechnique}
-          onClose={() => {
-            setShowBreathingPlayer(false)
-            setActiveBreathingTechnique(null)
-          }}
-        />
-      )}
-
-      {/* Focus Timer Overlay */}
-      {showFocusTimer && focusPreset && (
-        <FocusTimerPlayer
-          preset={focusPreset}
-          onClose={() => {
-            setShowFocusTimer(false)
-            setFocusPreset(null)
-          }}
-          onFocusStart={() => {
-            // Auto-play study music during focus
-            const studyVideos = genreVideos['study'] || []
-            if (studyVideos.length > 0) {
-              const gBgs = genreBackgrounds['study'] || []
-              const bg = gBgs.length > 0 ? gBgs[0] : backgrounds[0]
-              dispatch({
-                type: 'PLAY_MUSIC',
-                youtubeId: studyVideos[0].youtubeId,
-                label: 'Study',
-                cardId: studyVideos[0].id,
-                playlist: { videos: studyVideos.slice(0, 8), index: 0, type: 'music', genreId: 'study', genreWord: 'Study' },
-                playingSound: null,
-              })
-              createBgMusicPlayer(studyVideos[0].youtubeId)
-            }
-          }}
-          onBreakStart={() => {
-            dispatch({ type: 'PAUSE_MUSIC' })
-          }}
-        />
-      )}
-
       {/* Morning Flow Overlay */}
       {showMorningFlow && (
         <div className="fixed inset-0 z-[60] bg-black flex flex-col animate-fade-in-down">
@@ -964,7 +909,7 @@ export function ImmersiveHome() {
       </div>
 
       {/* Header — hidden when any fullscreen overlay is active */}
-      {!showMorningFlow && !audioState.playingSound && !audioState.showSoundscapePlayer && !showBreathingPlayer && !showFocusTimer && (
+      {!showMorningFlow && !audioState.playingSound && !audioState.showSoundscapePlayer && (
         <div className="relative z-50 flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down header-fade-bg">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold shimmer-text">Explore</h1>
@@ -1075,22 +1020,6 @@ export function ImmersiveHome() {
         onPlay={handleGuidePlay}
         onPlayAIMeditation={(themeId) => isPremium ? setAiMeditationTheme(themeId) : openUpgradeModal()}
         isPremium={isPremium}
-      />
-
-      {/* Breathwork */}
-      <BreathingSection
-        onSelect={(technique) => {
-          setActiveBreathingTechnique(technique)
-          setShowBreathingPlayer(true)
-        }}
-      />
-
-      {/* Focus Timer */}
-      <FocusTimerSection
-        onSelect={(preset) => {
-          setFocusPreset(preset)
-          setShowFocusTimer(true)
-        }}
       />
 
       {/* Motivation */}
