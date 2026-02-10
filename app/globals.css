@@ -1239,3 +1239,98 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 .overlay-exit {
   animation: overlay-close 0.25s ease-in both;
 }
+
+/* --- Heart bounce on favorite toggle --- */
+@keyframes heart-pop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.35); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.heart-pop {
+  animation: heart-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* --- Staggered card entry --- */
+@keyframes card-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.card-stagger {
+  opacity: 0;
+  animation: card-stagger-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- Scroll snap for horizontal rows --- */
+.snap-row {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.snap-card {
+  scroll-snap-align: start;
+}
+
+/* --- Progress ring on active card --- */
+.progress-ring-border {
+  position: absolute;
+  inset: -2px;
+  border-radius: 1rem;
+  pointer-events: none;
+  z-index: 11;
+  mask: conic-gradient(#fff var(--progress, 0%), transparent var(--progress, 0%));
+  -webkit-mask: conic-gradient(#fff var(--progress, 0%), transparent var(--progress, 0%));
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* --- Genre tint colors --- */
+.genre-tint-lofi,
+.genre-tint-classical,
+.genre-tint-piano,
+.genre-tint-jazz,
+.genre-tint-study,
+.genre-tint-ambient { border-color: rgba(255, 255, 255, 0.15); }
+
+.genre-accent-lofi,
+.genre-accent-classical,
+.genre-accent-piano,
+.genre-accent-jazz,
+.genre-accent-study,
+.genre-accent-ambient { color: rgb(255, 255, 255); }
+
+/* --- Shuffle toast --- */
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toast-slide-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(20px) scale(0.95); }
+}
+.toast-enter {
+  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.toast-exit {
+  animation: toast-slide-out 0.2s ease-in forwards;
+}
+
+/* --- Category pill on fullscreen player --- */
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.7);
+}

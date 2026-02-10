@@ -89,22 +89,36 @@ function getTodaysGenre(): string {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const genre = searchParams.get('genre') || getTodaysGenre()
+  const shuffle = searchParams.get('shuffle') === 'true'
+  const seedParam = searchParams.get('seed')
 
-  // Check cache first - only fetch once per day per genre
-  const cachedVideos = await getCachedVideos('music', genre)
-  if (cachedVideos && cachedVideos.length > 0) {
-    console.log(`[Music Videos] Using cached videos for "${genre}"`)
-    return NextResponse.json({
-      videos: cachedVideos,
-      genre,
-      todaysGenre: getTodaysGenre(),
-      cached: true,
-    })
+  // When shuffle is requested, skip normal cache and use seed for deterministic selection
+  if (!shuffle) {
+    // Check cache first - only fetch once per day per genre
+    const cachedVideos = await getCachedVideos('music', genre)
+    if (cachedVideos && cachedVideos.length > 0) {
+      console.log(`[Music Videos] Using cached videos for "${genre}"`)
+      return NextResponse.json({
+        videos: cachedVideos,
+        genre,
+        todaysGenre: getTodaysGenre(),
+        cached: true,
+      })
+    }
   }
 
-  // No API key - use fallback videos
+  // No API key - use fallback videos (shuffle with seed if requested)
   if (!YOUTUBE_API_KEY) {
-    const fallback = FALLBACK_MUSIC[genre] || FALLBACK_MUSIC['lofi']
+    let fallback = FALLBACK_MUSIC[genre] || FALLBACK_MUSIC['lofi']
+    if (shuffle && seedParam) {
+      const seed = parseInt(seedParam, 10) || Date.now()
+      fallback = [...fallback]
+      for (let i = fallback.length - 1; i > 0; i--) {
+        const x = Math.sin(seed + i) * 10000
+        const j = Math.floor((x - Math.floor(x)) * (i + 1))
+        ;[fallback[i], fallback[j]] = [fallback[j], fallback[i]]
+      }
+    }
     return NextResponse.json({
       videos: fallback,
       genre,
@@ -114,7 +128,15 @@ export async function GET(request: NextRequest) {
   }
 
   const searchTerms = GENRE_SEARCHES[genre] || GENRE_SEARCHES['lofi']
-  const randomSearch = searchTerms[Math.floor(Math.random() * searchTerms.length)]
+  let randomSearch: string
+  if (shuffle && seedParam) {
+    const seed = parseInt(seedParam, 10) || 0
+    const x = Math.sin(seed) * 10000
+    const idx = Math.floor((x - Math.floor(x)) * searchTerms.length)
+    randomSearch = searchTerms[idx]
+  } else {
+    randomSearch = searchTerms[Math.floor(Math.random() * searchTerms.length)]
+  }
 
   try {
     // Search for videos - filter by embeddable
@@ -193,10 +215,10 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Return up to 10 videos and cache them
+    // Return up to 10 videos and cache them (skip cache for shuffle — it's user-triggered)
     const finalVideos = videos.slice(0, 10)
 
-    if (finalVideos.length > 0) {
+    if (finalVideos.length > 0 && !shuffle) {
       await setCachedVideos('music', genre, finalVideos)
     }
 

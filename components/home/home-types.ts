@@ -12,6 +12,7 @@ export interface VideoItem {
   youtubeId: string
   channel: string
   thumbnail?: string
+  duration?: number
 }
 
 // --- Constants ---
@@ -106,4 +107,31 @@ export function getTodaysBackgrounds() {
   const now = new Date()
   const dateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
   return shuffleWithSeed(BACKGROUND_IMAGES, dateSeed + 777)
+}
+
+export function formatDuration(seconds: number): string {
+  if (!seconds || seconds <= 0) return ''
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.round((seconds % 3600) / 60)
+  if (hours > 0) return `${hours}h ${minutes}m`
+  return `${minutes} min`
+}
+
+const MOOD_TOPIC_MAP: Record<string, string[]> = {
+  awful: ['Resilience', 'Courage'],
+  low: ['Resilience', 'Courage'],
+  okay: ['Mindset', 'Focus'],
+  good: ['Hustle', 'Discipline', 'Confidence'],
+  great: ['Hustle', 'Discipline', 'Confidence'],
+}
+
+export function getMoodTopicName(journalMood: string | null | undefined): string | null {
+  if (!journalMood) return null
+  const options = MOOD_TOPIC_MAP[journalMood]
+  if (!options || options.length === 0) return null
+  // Deterministic daily pick: use day-of-year to pick from options
+  const now = new Date()
+  const startOfYear = new Date(now.getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24))
+  return options[dayOfYear % options.length]
 }

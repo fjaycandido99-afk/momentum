@@ -19,9 +19,11 @@ interface BottomPlayerBarProps {
   onTogglePlay: () => void
   onOpenPlayer: () => void
   label?: string // Override subtitle (e.g. guide name)
+  nextTrackTitle?: string
+  playlistPosition?: string // e.g. "2 of 8"
 }
 
-export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, label }: BottomPlayerBarProps) {
+export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, label, nextTrackTitle, playlistPosition }: BottomPlayerBarProps) {
   const displayLabel = label || MODE_LABELS[mode]
   const { shareFromHTML, isGenerating } = useShareCard()
 
@@ -37,8 +39,8 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenPlayer() } }}
       >
         {/* Left: sound bars icon + text */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-10 h-10 shrink-0 rounded-full border border-white/20 flex items-center justify-center">
             {/* Sound wave bars */}
             <div className="flex items-end gap-[2px] w-4 h-4">
               <div className={`w-[2.5px] rounded-full bg-white/70 ${isPlaying ? 'animate-sound-bar-1' : 'h-1.5'}`} />
@@ -47,16 +49,26 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
               <div className={`w-[2.5px] rounded-full bg-white/70 ${isPlaying ? 'animate-sound-bar-4' : 'h-2'}`} />
             </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-white leading-tight">
-              {isPlaying ? 'Playing' : 'Paused'}
-            </p>
-            <p className="text-xs text-white/95 leading-tight">{displayLabel}</p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-white leading-tight truncate">
+                {isPlaying ? 'Playing' : 'Paused'}
+              </p>
+              {playlistPosition && (
+                <span className="text-[10px] text-white/40 font-medium shrink-0">{playlistPosition}</span>
+              )}
+            </div>
+            <p className="text-xs text-white/95 leading-tight truncate">{displayLabel}</p>
+            {nextTrackTitle && isPlaying && (
+              <p className="text-[10px] text-white/40 leading-tight truncate mt-0.5">
+                Up next: {nextTrackTitle}
+              </p>
+            )}
           </div>
         </div>
 
         {/* Right: share + play/pause */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0 ml-2">
           {label && (
             <button
               aria-label="Share what's playing"

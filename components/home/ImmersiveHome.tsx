@@ -18,9 +18,12 @@ import { MotivationSection } from './MotivationSection'
 import { MusicGenreSection } from './MusicGenreSection'
 import { SmartSessionCard } from './SmartSessionCard'
 import { AIMeditationPlayer } from './AIMeditationPlayer'
+import { ContinueListeningCard } from './ContinueListeningCard'
+import { SavedMotivationSection } from './SavedMotivationSection'
 import {
-  Mode, VideoItem, MUSIC_GENRES, TOPIC_TAGLINES,
+  Mode, VideoItem, MUSIC_GENRES,
   getTimeContext, getSuggestedMode, getTodaysTopicName, getTodaysBackgrounds, shuffleWithSeed,
+  getMoodTopicName,
 } from './home-types'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { useSubscription } from '@/contexts/SubscriptionContext'
@@ -32,6 +35,9 @@ import { useAudioStateMachine, type AudioState } from '@/hooks/useAudioStateMach
 import { useAudioSideEffects } from '@/hooks/useAudioSideEffects'
 import { useVisibilityResume } from '@/hooks/useVisibilityResume'
 import { useMediaSession } from '@/hooks/useMediaSession'
+import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed'
+import { RecentlyPlayedSection } from './RecentlyPlayedSection'
+import { LongPressPreview } from './LongPressPreview'
 
 const WordAnimationPlayer = dynamic(
   () => import('@/components/player/WordAnimationPlayer').then(mod => mod.WordAnimationPlayer),
@@ -52,6 +58,34 @@ export function ImmersiveHome() {
 
   // Audio state machine
   const [audioState, dispatch] = useAudioStateMachine()
+
+  // Recently played
+  const { recentlyPlayed, addRecentlyPlayed } = useRecentlyPlayed()
+
+  // Shuffle toast
+  const [shuffleToast, setShuffleToast] = useState<string | null>(null)
+  const shuffleToastTimer = useRef<NodeJS.Timeout | null>(null)
+  const showShuffleToast = useCallback((message: string) => {
+    setShuffleToast(message)
+    if (shuffleToastTimer.current) clearTimeout(shuffleToastTimer.current)
+    shuffleToastTimer.current = setTimeout(() => setShuffleToast(null), 2000)
+  }, [])
+
+  // Long-press preview
+  const [previewVideo, setPreviewVideo] = useState<VideoItem | null>(null)
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null)
+  const handleLongPressStart = useCallback((video: VideoItem) => {
+    longPressTimer.current = setTimeout(() => {
+      if (navigator.vibrate) navigator.vibrate(30)
+      setPreviewVideo(video)
+    }, 500)
+  }, [])
+  const handleLongPressEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }, [])
 
   // Subscription context for freemium gating
   const { isPremium, isContentFree, dailyFreeUnlockUsed, useDailyFreeUnlock, openUpgradeModal } = useSubscription()
@@ -419,7 +453,17 @@ export function ImmersiveHome() {
 
   // --- Data fetching ---
   const [streak, setStreak] = useState(0)
-  const [motivationVideos, setMotivationVideos] = useState<VideoItem[]>([])
+  const [astrologyEnabled, setAstrologyEnabled] = useState(false)
+  const [motivationByTopic, setMotivationByTopic] = useState<Record<string, VideoItem[]>>({})
+  const [journalMood, setJournalMood] = useState<string | null>(null)
+  const [savedMotivationVideos, setSavedMotivationVideos] = useState<VideoItem[]>([])
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set())
+  const [favoriteRecordMap, setFavoriteRecordMap] = useState<Map<string, string>>(new Map())
+  const [shufflingTopic, setShufflingTopic] = useState<string | null>(null)
+  const [savedMusicVideos, setSavedMusicVideos] = useState<VideoItem[]>([])
+  const [musicFavoriteIds, setMusicFavoriteIds] = useState<Set<string>>(new Set())
+  const [musicFavoriteRecordMap, setMusicFavoriteRecordMap] = useState<Map<string, string>>(new Map())
+  const [shufflingGenre, setShufflingGenre] = useState<string | null>(null)
   const [genreVideos, setGenreVideos] = useState<Record<string, VideoItem[]>>({})
   const [genreBackgrounds, setGenreBackgrounds] = useState<Record<string, string[]>>({})
   const [loadingMotivation, setLoadingMotivation] = useState(true)
@@ -430,11 +474,25 @@ export function ImmersiveHome() {
   const topicName = getTodaysTopicName()
   const [backgrounds] = useState(getTodaysBackgrounds)
 
+  const moodTopic = getMoodTopicName(journalMood)
+  const featuredTopic = moodTopic || topicName
+
+  // Backward compat: derive motivationVideos from motivationByTopic for restore logic
+  const motivationVideos = motivationByTopic[topicName] || []
+
+  // Fetch preferences on mount and when page regains focus (e.g. back from settings)
   useEffect(() => {
-    fetch('/api/daily-guide/preferences')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.current_streak) setStreak(data.current_streak) })
-      .catch(() => {})
+    const fetchPrefs = () => {
+      fetch('/api/daily-guide/preferences')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.current_streak) setStreak(data.current_streak)
+          setAstrologyEnabled(!!data?.astrology_enabled)
+        })
+        .catch(() => {})
+    }
+    fetchPrefs()
+    window.addEventListener('focus', fetchPrefs)
 
     const today = new Date().toISOString().split('T')[0]
     fetch(`/api/daily-guide/journal?date=${today}`)
@@ -444,14 +502,74 @@ export function ImmersiveHome() {
           const suggested = getSuggestedMode(data.mood_before, data.energy_level, timeContext.suggested)
           setActiveMode(suggested)
         }
+        if (data?.journal_mood) {
+          setJournalMood(data.journal_mood)
+        }
       })
       .catch(() => {})
 
+    // Fetch today's motivation topic
     fetch(`/api/motivation-videos?topic=${topicName}`)
       .then(r => r.ok ? r.json() : { videos: [] })
-      .then(data => setMotivationVideos(data.videos || []))
+      .then(data => {
+        setMotivationByTopic(prev => ({ ...prev, [topicName]: data.videos || [] }))
+      })
       .catch(() => {})
       .finally(() => setLoadingMotivation(false))
+
+    // Fetch favorites (motivation type)
+    fetch('/api/favorites?type=motivation')
+      .then(r => r.ok ? r.json() : { favorites: [] })
+      .then((data: { favorites?: Array<{ id: string; content_id?: string; content_title?: string; content_text: string; thumbnail?: string }> }) => {
+        const favorites = data.favorites || []
+        const vids: VideoItem[] = []
+        const ids = new Set<string>()
+        const recordMap = new Map<string, string>()
+        for (const f of favorites) {
+          const youtubeId = f.content_id || ''
+          if (!youtubeId) continue
+          ids.add(youtubeId)
+          recordMap.set(youtubeId, f.id)
+          vids.push({
+            id: `fav-${f.id}`,
+            youtubeId,
+            title: f.content_title || f.content_text,
+            channel: '',
+            thumbnail: f.thumbnail,
+          })
+        }
+        setSavedMotivationVideos(vids)
+        setFavoriteIds(ids)
+        setFavoriteRecordMap(recordMap)
+      })
+      .catch(() => {})
+
+    // Fetch favorites (music type)
+    fetch('/api/favorites?type=music')
+      .then(r => r.ok ? r.json() : { favorites: [] })
+      .then((data: { favorites?: Array<{ id: string; content_id?: string; content_title?: string; content_text: string; thumbnail?: string }> }) => {
+        const favorites = data.favorites || []
+        const vids: VideoItem[] = []
+        const ids = new Set<string>()
+        const recordMap = new Map<string, string>()
+        for (const f of favorites) {
+          const youtubeId = f.content_id || ''
+          if (!youtubeId) continue
+          ids.add(youtubeId)
+          recordMap.set(youtubeId, f.id)
+          vids.push({
+            id: `mfav-${f.id}`,
+            youtubeId,
+            title: f.content_title || f.content_text,
+            channel: '',
+            thumbnail: f.thumbnail,
+          })
+        }
+        setSavedMusicVideos(vids)
+        setMusicFavoriteIds(ids)
+        setMusicFavoriteRecordMap(recordMap)
+      })
+      .catch(() => {})
 
     MUSIC_GENRES.forEach(g => {
       fetch(`/api/music-videos?genre=${g.id}`)
@@ -472,7 +590,20 @@ export function ImmersiveHome() {
         })
         .catch(() => {})
     })
+    return () => window.removeEventListener('focus', fetchPrefs)
   }, [topicName, timeContext.suggested])
+
+  // Fetch mood-based topic if it differs from already-fetched topics
+  useEffect(() => {
+    if (!moodTopic) return
+    if (motivationByTopic[moodTopic]) return // already fetched
+    fetch(`/api/motivation-videos?topic=${moodTopic}`)
+      .then(r => r.ok ? r.json() : { videos: [] })
+      .then(data => {
+        setMotivationByTopic(prev => ({ ...prev, [moodTopic]: data.videos || [] }))
+      })
+      .catch(() => {})
+  }, [moodTopic, motivationByTopic])
 
   // --- Restore last played ---
   const restoreLastPlayed = useCallback(() => {
@@ -517,16 +648,18 @@ export function ImmersiveHome() {
         setTimeout(checkAndRestore, 1000)
       }
     } else if (lastPlayed.type === 'motivation' && lastPlayed.videoId) {
+      const restoredTopic = lastPlayed.label || topicName
       const partial: Partial<AudioState> = {
-        backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.label || topicName },
+        backgroundMusic: { youtubeId: lastPlayed.videoId, label: restoredTopic },
         musicPlaying: false,
         userPausedMusic: true,
       }
 
       const checkAndRestore = () => {
-        if (motivationVideos.length > 0) {
+        const topicVideos = motivationByTopic[restoredTopic] || motivationVideos
+        if (topicVideos.length > 0) {
           const videoIndex = lastPlayed.playlistIndex ?? 0
-          const video = motivationVideos[videoIndex]
+          const video = topicVideos[videoIndex]
           if (video) {
             dispatch({
               type: 'RESTORE_LAST_PLAYED',
@@ -534,7 +667,7 @@ export function ImmersiveHome() {
                 ...partial,
                 activeCardId: video.id,
                 currentPlaylist: {
-                  videos: motivationVideos.slice(0, 8),
+                  videos: topicVideos.slice(0, 8),
                   index: videoIndex,
                   type: 'motivation',
                 },
@@ -560,7 +693,7 @@ export function ImmersiveHome() {
         })
       }
     }
-  }, [audioContext?.lastPlayed, genreVideos, motivationVideos, topicName, dispatch])
+  }, [audioContext?.lastPlayed, genreVideos, motivationVideos, motivationByTopic, topicName, dispatch])
 
   useEffect(() => {
     if (hasRestoredRef.current) return
@@ -577,7 +710,9 @@ export function ImmersiveHome() {
   }
 
   // --- Play handlers ---
-  const handlePlayMotivation = (video: VideoItem, index: number) => {
+  const handlePlayMotivation = (video: VideoItem, index: number, topic?: string) => {
+    const playTopic = topic || topicName
+    const topicVideos = motivationByTopic[playTopic] || motivationVideos
     triggerTap(video.id)
     // Stop guide audio imperatively
     if (guideAudioRef.current) {
@@ -596,15 +731,20 @@ export function ImmersiveHome() {
     dispatch({
       type: 'PLAY_MUSIC',
       youtubeId: video.youtubeId,
-      label: topicName,
+      label: playTopic,
       cardId: video.id,
-      playlist: { videos: motivationVideos.slice(0, 8), index, type: 'motivation' },
-      playingSound: { word: topicName, color: 'from-white/[0.06] to-white/[0.02]', youtubeId: video.youtubeId, backgroundImage: bg },
+      playlist: { videos: topicVideos.slice(0, 8), index, type: 'motivation' },
+      playingSound: { word: playTopic, color: 'from-white/[0.06] to-white/[0.02]', youtubeId: video.youtubeId, backgroundImage: bg },
     })
     createBgMusicPlayer(video.youtubeId)
 
     audioContext?.setLastPlayed({
-      type: 'motivation', videoId: video.youtubeId, label: topicName, playlistIndex: index,
+      type: 'motivation', videoId: video.youtubeId, label: playTopic, playlistIndex: index,
+    })
+
+    addRecentlyPlayed({
+      youtubeId: video.youtubeId, title: video.title, type: 'motivation',
+      label: playTopic, background: bg,
     })
   }
 
@@ -638,9 +778,114 @@ export function ImmersiveHome() {
     audioContext?.setLastPlayed({
       type: 'music', genreId, genreWord, videoId: video.youtubeId, label: genreWord, playlistIndex: index,
     })
+
+    addRecentlyPlayed({
+      youtubeId: video.youtubeId, title: video.title, type: 'music',
+      genreId, genreWord, label: genreWord, background: bg,
+    })
   }
 
   const handleClosePlayer = () => dispatch({ type: 'CLOSE_PLAYER' })
+
+  const handleShuffleTopic = useCallback(async (topic: string) => {
+    setShufflingTopic(topic)
+    try {
+      const seed = Date.now()
+      const res = await fetch(`/api/motivation-videos?topic=${topic}&shuffle=true&seed=${seed}`)
+      const data = res.ok ? await res.json() : { videos: [] }
+      const vids = data.videos || []
+      setMotivationByTopic(prev => ({ ...prev, [topic]: vids }))
+      if (vids.length > 0) showShuffleToast(`Shuffled ${vids.length} videos`)
+    } catch {}
+    setShufflingTopic(null)
+  }, [showShuffleToast])
+
+  const handleToggleFavorite = useCallback(async (video: VideoItem) => {
+    if (navigator.vibrate) navigator.vibrate(50)
+    const youtubeId = video.youtubeId
+    if (favoriteIds.has(youtubeId)) {
+      // Remove favorite
+      const recordId = favoriteRecordMap.get(youtubeId)
+      if (recordId) {
+        setFavoriteIds(prev => { const next = new Set(prev); next.delete(youtubeId); return next })
+        setSavedMotivationVideos(prev => prev.filter(v => v.youtubeId !== youtubeId))
+        setFavoriteRecordMap(prev => { const next = new Map(prev); next.delete(youtubeId); return next })
+        try { await fetch(`/api/favorites?id=${recordId}`, { method: 'DELETE' }) } catch {}
+      }
+    } else {
+      // Add favorite
+      setFavoriteIds(prev => new Set(prev).add(youtubeId))
+      setSavedMotivationVideos(prev => [...prev, video])
+      try {
+        const res = await fetch('/api/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content_type: 'motivation',
+            content_text: video.title,
+            content_id: youtubeId,
+            content_title: video.title,
+            thumbnail: video.thumbnail || `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.id) {
+            setFavoriteRecordMap(prev => new Map(prev).set(youtubeId, data.id))
+          }
+        }
+      } catch {}
+    }
+  }, [favoriteIds, favoriteRecordMap])
+
+  const handleShuffleGenre = useCallback(async (genreId: string) => {
+    setShufflingGenre(genreId)
+    try {
+      const seed = Date.now()
+      const res = await fetch(`/api/music-videos?genre=${genreId}&shuffle=true&seed=${seed}`)
+      const data = res.ok ? await res.json() : { videos: [] }
+      const vids = data.videos || []
+      setGenreVideos(prev => ({ ...prev, [genreId]: vids }))
+      if (vids.length > 0) showShuffleToast(`Shuffled ${vids.length} tracks`)
+    } catch {}
+    setShufflingGenre(null)
+  }, [showShuffleToast])
+
+  const handleToggleMusicFavorite = useCallback(async (video: VideoItem) => {
+    if (navigator.vibrate) navigator.vibrate(50)
+    const youtubeId = video.youtubeId
+    if (musicFavoriteIds.has(youtubeId)) {
+      const recordId = musicFavoriteRecordMap.get(youtubeId)
+      if (recordId) {
+        setMusicFavoriteIds(prev => { const next = new Set(prev); next.delete(youtubeId); return next })
+        setSavedMusicVideos(prev => prev.filter(v => v.youtubeId !== youtubeId))
+        setMusicFavoriteRecordMap(prev => { const next = new Map(prev); next.delete(youtubeId); return next })
+        try { await fetch('/api/favorites', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: recordId }) }) } catch {}
+      }
+    } else {
+      setMusicFavoriteIds(prev => new Set(prev).add(youtubeId))
+      setSavedMusicVideos(prev => [...prev, video])
+      try {
+        const res = await fetch('/api/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content_type: 'music',
+            content_text: video.title,
+            content_id: youtubeId,
+            content_title: video.title,
+            thumbnail: video.thumbnail || `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.favorite?.id) {
+            setMusicFavoriteRecordMap(prev => new Map(prev).set(youtubeId, data.favorite.id))
+          }
+        }
+      } catch {}
+    }
+  }, [musicFavoriteIds, musicFavoriteRecordMap])
 
   const handleMusicSeek = useCallback((seconds: number) => {
     if (bgPlayerRef.current) {
@@ -773,17 +1018,17 @@ export function ImmersiveHome() {
     }
   }, [stopPreview, startPreview])
 
-  const handleMotivationPlay = useCallback((video: VideoItem, index: number, isLocked: boolean) => {
+  const handleMotivationPlay = useCallback((video: VideoItem, index: number, isLocked: boolean, topic?: string) => {
     if (isLocked) {
       stopPreview()
       setPaywallContentName(video.title)
-      setPreviewUnlockCallback(() => () => handlePlayMotivation(video, index))
-      handlePlayMotivation(video, index)
+      setPreviewUnlockCallback(() => () => handlePlayMotivation(video, index, topic))
+      handlePlayMotivation(video, index, topic)
       startPreview()
     } else {
-      handlePlayMotivation(video, index)
+      handlePlayMotivation(video, index, topic)
     }
-  }, [stopPreview, startPreview, topicName, motivationVideos, backgrounds, createBgMusicPlayer, audioContext, dispatch])
+  }, [stopPreview, startPreview, topicName, motivationByTopic, motivationVideos, backgrounds, createBgMusicPlayer, audioContext, dispatch])
 
   const handleMusicGenrePlay = useCallback((video: VideoItem, index: number, genreId: string, genreWord: string, isLocked: boolean) => {
     if (isLocked) {
@@ -834,6 +1079,7 @@ export function ImmersiveHome() {
           externalDuration={audioState.musicDuration}
           externalCurrentTime={audioState.musicCurrentTime}
           onSeek={handleMusicSeek}
+          category={audioState.currentPlaylist?.type === 'motivation' ? 'Motivation' : 'Music'}
         />
       )}
 
@@ -931,10 +1177,12 @@ export function ImmersiveHome() {
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
           <div className="absolute right-6 top-[72px] z-40 w-48 py-2 rounded-2xl bg-[#111113] border border-white/15 shadow-xl animate-fade-in-up">
-            <Link href="/astrology" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-              <Sparkles className="w-4 h-4 text-white/70" />
-              <span className="text-sm text-white/90">Cosmic Guide</span>
-            </Link>
+            {astrologyEnabled && (
+              <Link href="/astrology" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+                <Sparkles className="w-4 h-4 text-white/70" />
+                <span className="text-sm text-white/90">Cosmic Guide</span>
+              </Link>
+            )}
             <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
               <PenLine className="w-4 h-4 text-white/70" />
               <span className="text-sm text-white/90">Journal</span>
@@ -1022,21 +1270,90 @@ export function ImmersiveHome() {
         isPremium={isPremium}
       />
 
-      {/* Motivation */}
+      {/* Continue Listening (when paused mid-motivation) */}
+      {audioState.backgroundMusic && !audioState.musicPlaying && audioState.userPausedMusic
+        && audioState.currentPlaylist?.type === 'motivation' && audioState.musicCurrentTime > 0 && (
+        <ContinueListeningCard
+          video={audioState.currentPlaylist.videos[audioState.currentPlaylist.index] || { id: '', title: audioState.backgroundMusic.label, youtubeId: audioState.backgroundMusic.youtubeId, channel: '' }}
+          currentTime={audioState.musicCurrentTime}
+          duration={audioState.musicDuration}
+          background={backgrounds[audioState.currentPlaylist.index % backgrounds.length]}
+          onResume={() => dispatch({ type: 'RESUME_MUSIC' })}
+          onOpenPlayer={() => {
+            const pl = audioState.currentPlaylist!
+            const currentVideo = pl.videos[pl.index]
+            if (currentVideo) {
+              const bgs = getTodaysBackgrounds()
+              dispatch({
+                type: 'OPEN_FULLSCREEN_PLAYER',
+                playingSound: { word: audioState.backgroundMusic!.label, color: 'from-white/[0.06] to-white/[0.02]', youtubeId: currentVideo.youtubeId, backgroundImage: bgs[pl.index % bgs.length] },
+              })
+            }
+          }}
+        />
+      )}
+
+      {/* Recently Played */}
+      <RecentlyPlayedSection
+        items={recentlyPlayed}
+        activeCardId={audioState.activeCardId}
+        musicPlaying={audioState.musicPlaying}
+        onPlay={(item, index) => {
+          if (item.type === 'motivation') {
+            const video: VideoItem = { id: item.youtubeId, youtubeId: item.youtubeId, title: item.title, channel: '' }
+            handlePlayMotivation(video, 0, item.label)
+          } else {
+            const video: VideoItem = { id: item.youtubeId, youtubeId: item.youtubeId, title: item.title, channel: '' }
+            handlePlayMusic(video, 0, item.genreId || '', item.genreWord || item.label)
+          }
+        }}
+        onMagneticMove={magneticMove}
+        onMagneticLeave={magneticLeave}
+        onRipple={spawnRipple}
+      />
+
+      {/* Featured Motivation Row — mood-based "For You" or today's topic */}
       <MotivationSection
-        videos={motivationVideos}
+        videos={motivationByTopic[featuredTopic] || []}
         loading={loadingMotivation}
-        topicName={topicName}
+        topicName={moodTopic ? 'For You' : featuredTopic}
+        tagline={moodTopic ? `Based on your mood \u00b7 ${featuredTopic}` : undefined}
+        heroCard={true}
         backgrounds={backgrounds}
         activeCardId={audioState.activeCardId}
         tappedCardId={audioState.tappedCardId}
         musicPlaying={audioState.musicPlaying}
         isContentFree={(type, index) => isContentFree(type, index)}
-        onPlay={handleMotivationPlay}
+        onPlay={(video, index, isLocked) => handleMotivationPlay(video, index, isLocked, featuredTopic)}
         onMagneticMove={magneticMove}
         onMagneticLeave={magneticLeave}
         onRipple={spawnRipple}
+        onShuffle={() => handleShuffleTopic(featuredTopic)}
+        shuffling={shufflingTopic === featuredTopic}
+        favoriteIds={favoriteIds}
+        onToggleFavorite={handleToggleFavorite}
+        progressPercent={audioState.currentPlaylist?.type === 'motivation' && audioState.musicDuration > 0
+          ? (audioState.musicCurrentTime / audioState.musicDuration) * 100
+          : undefined}
+        onLongPressStart={handleLongPressStart}
+        onLongPressEnd={handleLongPressEnd}
       />
+
+      {/* Your Saves */}
+      {savedMotivationVideos.length > 0 && (
+        <SavedMotivationSection
+          videos={savedMotivationVideos}
+          backgrounds={backgrounds}
+          activeCardId={audioState.activeCardId}
+          tappedCardId={audioState.tappedCardId}
+          musicPlaying={audioState.musicPlaying}
+          onPlay={(video, index) => handlePlayMotivation(video, index)}
+          onRemoveFavorite={handleToggleFavorite}
+          onMagneticMove={magneticMove}
+          onMagneticLeave={magneticLeave}
+          onRipple={spawnRipple}
+        />
+      )}
 
       {/* Music Genres */}
       {MUSIC_GENRES.map((g, gi) => (
@@ -1056,8 +1373,36 @@ export function ImmersiveHome() {
           onMagneticMove={magneticMove}
           onMagneticLeave={magneticLeave}
           onRipple={spawnRipple}
+          heroCard={true}
+          onShuffle={() => handleShuffleGenre(g.id)}
+          shuffling={shufflingGenre === g.id}
+          favoriteIds={musicFavoriteIds}
+          onToggleFavorite={handleToggleMusicFavorite}
+          progressPercent={audioState.currentPlaylist?.type === 'music' && audioState.currentPlaylist?.genreId === g.id && audioState.musicDuration > 0
+            ? (audioState.musicCurrentTime / audioState.musicDuration) * 100
+            : undefined}
+          onLongPressStart={handleLongPressStart}
+          onLongPressEnd={handleLongPressEnd}
         />
       ))}
+
+      {/* Saved Music */}
+      {savedMusicVideos.length > 0 && (
+        <SavedMotivationSection
+          label="Saved Music"
+          subtitle="Tracks you loved"
+          videos={savedMusicVideos}
+          backgrounds={backgrounds}
+          activeCardId={audioState.activeCardId}
+          tappedCardId={audioState.tappedCardId}
+          musicPlaying={audioState.musicPlaying}
+          onPlay={(video, index) => handlePlayMusic(video, index, '', 'Saved Music')}
+          onRemoveFavorite={handleToggleMusicFavorite}
+          onMagneticMove={magneticMove}
+          onMagneticLeave={magneticLeave}
+          onRipple={spawnRipple}
+        />
+      )}
 
       {/* Daily Spark */}
       {!showMorningFlow && <DailySpark />}
@@ -1170,7 +1515,27 @@ export function ImmersiveHome() {
           }
         }}
         label={audioState.backgroundMusic?.label || audioState.guideLabel || audioState.activeSoundscape?.label || undefined}
+        nextTrackTitle={
+          audioState.currentPlaylist && audioState.currentPlaylist.index < audioState.currentPlaylist.videos.length - 1
+            ? audioState.currentPlaylist.videos[audioState.currentPlaylist.index + 1]?.title
+            : undefined
+        }
+        playlistPosition={
+          audioState.currentPlaylist
+            ? `${audioState.currentPlaylist.index + 1} of ${audioState.currentPlaylist.videos.length}`
+            : undefined
+        }
       />
+
+      {/* Long-press Preview */}
+      <LongPressPreview video={previewVideo} onClose={() => setPreviewVideo(null)} />
+
+      {/* Shuffle Toast */}
+      {shuffleToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-md toast-enter">
+          <p className="text-sm text-white/90 font-medium whitespace-nowrap">{shuffleToast}</p>
+        </div>
+      )}
     </div>
     </div>
   )

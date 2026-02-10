@@ -36,6 +36,8 @@ interface WordAnimationPlayerProps {
   hasNext?: boolean
   /** Whether there's a previous video available */
   hasPrevious?: boolean
+  /** Category label shown as a pill above the title (e.g. "Music" or "Motivation") */
+  category?: string
 }
 
 // Clean dark theme - subtle and atmospheric
@@ -43,7 +45,7 @@ const colorMap: Record<string, { primary: string; glow: string; bg: string }> = 
   'from-white/[0.06] to-white/[0.02]': { primary: 'rgba(245, 245, 250, 0.95)', glow: 'rgba(245, 245, 250, 0.2)', bg: '#08080c' },
 }
 
-export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, showConstellation = false, onClose, externalAudio = false, externalPlaying, onTogglePlay, externalDuration, externalCurrentTime, onSeek, onSkipNext, onSkipPrevious, hasNext = false, hasPrevious = false }: WordAnimationPlayerProps) {
+export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, showRain = false, showConstellation = false, onClose, externalAudio = false, externalPlaying, onTogglePlay, externalDuration, externalCurrentTime, onSeek, onSkipNext, onSkipPrevious, hasNext = false, hasPrevious = false, category }: WordAnimationPlayerProps) {
   const [isPlayingLocal, setIsPlayingLocal] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [playerReady, setPlayerReady] = useState(false)
@@ -272,6 +274,11 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
 
       {/* Main content */}
       <div className="relative z-10 h-full flex flex-col items-center justify-center px-8">
+        {/* Category pill */}
+        {category && (
+          <span className="category-pill mb-4">{category}</span>
+        )}
+
         {/* Title */}
         <h1
           className="text-4xl md:text-5xl font-bold text-white uppercase tracking-widest text-center mb-8"

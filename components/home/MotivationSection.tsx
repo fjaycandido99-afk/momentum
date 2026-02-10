@@ -1,8 +1,8 @@
 'use client'
 
-import React from 'react'
-import { Play, Pause } from 'lucide-react'
-import { VideoItem, TOPIC_TAGLINES } from './home-types'
+import React, { useState } from 'react'
+import { Play, Pause, RefreshCw, Heart } from 'lucide-react'
+import { VideoItem, TOPIC_TAGLINES, formatDuration } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
 
@@ -19,33 +19,69 @@ interface MotivationSectionProps {
   onMagneticMove: (e: React.PointerEvent<any>) => void
   onMagneticLeave: (e: React.PointerEvent<any>) => void
   onRipple: (e: React.MouseEvent<any>) => void
+  tagline?: string
+  heroCard?: boolean
+  onShuffle?: () => void
+  shuffling?: boolean
+  favoriteIds?: Set<string>
+  onToggleFavorite?: (video: VideoItem) => void
+  progressPercent?: number
+  onLongPressStart?: (video: VideoItem) => void
+  onLongPressEnd?: () => void
 }
 
 export function MotivationSection({
   videos, loading, topicName, backgrounds, activeCardId, tappedCardId,
   musicPlaying, isContentFree, onPlay, onMagneticMove, onMagneticLeave, onRipple,
+  tagline, heroCard, onShuffle, shuffling, favoriteIds, onToggleFavorite, progressPercent,
+  onLongPressStart, onLongPressEnd,
 }: MotivationSectionProps) {
+  const [heartPopId, setHeartPopId] = useState<string | null>(null)
+
   return (
     <div className="mb-8 liquid-reveal section-fade-bg">
       <div className="flex items-center justify-between px-6 mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-white parallax-header">Motivation</h2>
-          <p className="text-xs text-white/95 mt-0.5">{topicName} &middot; {TOPIC_TAGLINES[topicName]}</p>
+          <h2 className="text-lg font-semibold text-white parallax-header">
+            {topicName}
+          </h2>
+          <p className="text-xs text-white/95 mt-0.5">
+            {tagline || (TOPIC_TAGLINES[topicName] || 'Motivation')}
+          </p>
         </div>
+        {onShuffle && (
+          <button
+            onClick={onShuffle}
+            disabled={shuffling}
+            aria-label="Shuffle videos"
+            className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors press-scale"
+          >
+            <RefreshCw className={`w-4 h-4 text-white/70 ${shuffling ? 'animate-spin' : ''}`} />
+          </button>
+        )}
       </div>
-      <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide">
+      <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide snap-row">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="shrink-0 w-40">
-              <div className="w-40 h-40 rounded-2xl card-gradient-border skeleton-shimmer" />
-              <div className="h-3 bg-[#111113] rounded mt-2 w-3/4" />
-              <div className="h-2 bg-[#111113] rounded mt-1.5 w-1/2" />
-            </div>
-          ))
+          Array.from({ length: 4 }).map((_, i) => {
+            const isHeroSkel = i === 0 && heroCard
+            const skelSize = isHeroSkel ? 'w-56 h-56' : 'w-40 h-40'
+            const skelWidth = isHeroSkel ? 'w-56' : 'w-40'
+            return (
+              <div key={i} className={`shrink-0 ${skelWidth}`}>
+                <div className={`${skelSize} rounded-2xl card-gradient-border skeleton-shimmer`} />
+                <div className="h-3 bg-[#111113] rounded mt-2 w-3/4" />
+                <div className="h-2 bg-[#111113] rounded mt-1.5 w-1/2" />
+              </div>
+            )
+          })
         ) : (
           videos.slice(0, 8).map((video, index) => {
             const isLocked = !isContentFree('motivation', index)
             const isCardActive = activeCardId === video.id
+            const isHero = index === 0 && heroCard
+            const isFavorited = favoriteIds?.has(video.youtubeId)
+            const cardSize = isHero ? 'w-56 h-56' : 'w-40 h-40'
+            const containerWidth = isHero ? 'w-56' : 'w-40'
 
             return (
               <button
@@ -55,10 +91,14 @@ export function MotivationSection({
                   onRipple(e)
                   onPlay(video, index, isLocked)
                 }}
-                className="shrink-0 w-40 text-left group press-scale"
+                className={`shrink-0 ${containerWidth} text-left group press-scale snap-card card-stagger`}
+                style={{ animationDelay: `${index * 60}ms` }}
+                onTouchStart={onLongPressStart ? () => onLongPressStart(video) : undefined}
+                onTouchEnd={onLongPressEnd}
+                onTouchCancel={onLongPressEnd}
               >
                 <div
-                  className={`relative w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center magnetic-tilt ${isCardActive ? 'card-now-playing breathing-glow' : ''}`}
+                  className={`relative ${cardSize} rounded-2xl card-gradient-border flex items-center justify-center magnetic-tilt ${isCardActive ? 'card-now-playing breathing-glow' : ''}`}
                   onPointerMove={onMagneticMove}
                   onPointerLeave={onMagneticLeave}
                 >
@@ -68,6 +108,42 @@ export function MotivationSection({
                     className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
+
+                  {/* Progress ring on active card */}
+                  {isCardActive && typeof progressPercent === 'number' && progressPercent > 0 && (
+                    <div
+                      className="progress-ring-border"
+                      style={{ '--progress': `${progressPercent}%` } as React.CSSProperties}
+                    />
+                  )}
+
+                  {/* Duration badge */}
+                  {video.duration && video.duration > 0 && (
+                    <span className="absolute bottom-2 right-2 z-10 px-1.5 py-0.5 rounded-md bg-black/70 text-[10px] text-white/90 font-medium">
+                      {formatDuration(video.duration)}
+                    </span>
+                  )}
+
+                  {/* Favorite heart */}
+                  {onToggleFavorite && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (navigator.vibrate) navigator.vibrate(50)
+                        setHeartPopId(video.youtubeId)
+                        setTimeout(() => setHeartPopId(null), 350)
+                        onToggleFavorite(video)
+                      }}
+                      aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                      className="absolute top-2 right-2 z-10 p-1 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+                    >
+                      <Heart
+                        className={`w-3.5 h-3.5 ${isFavorited ? 'text-red-500' : 'text-white/60'} ${heartPopId === video.youtubeId ? 'heart-pop' : ''}`}
+                        fill={isFavorited ? 'currentColor' : 'none'}
+                      />
+                    </button>
+                  )}
+
                   <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
                     {isCardActive ? (
                       musicPlaying ? (

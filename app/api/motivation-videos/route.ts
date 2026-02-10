@@ -93,21 +93,36 @@ function parseDuration(duration: string): number {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const topic = searchParams.get('topic') || 'Discipline'
+  const shuffle = searchParams.get('shuffle') === 'true'
+  const seedParam = searchParams.get('seed')
 
-  // Check cache first - only fetch once per day per topic
-  const cachedVideos = await getCachedVideos('motivation', topic)
-  if (cachedVideos && cachedVideos.length > 0) {
-    console.log(`[Motivation Videos] Using cached videos for "${topic}"`)
-    return NextResponse.json({
-      videos: cachedVideos,
-      topic,
-      cached: true,
-    })
+  // When shuffle is requested, skip normal cache and use seed for deterministic selection
+  if (!shuffle) {
+    // Check cache first - only fetch once per day per topic
+    const cachedVideos = await getCachedVideos('motivation', topic)
+    if (cachedVideos && cachedVideos.length > 0) {
+      console.log(`[Motivation Videos] Using cached videos for "${topic}"`)
+      return NextResponse.json({
+        videos: cachedVideos,
+        topic,
+        cached: true,
+      })
+    }
   }
 
-  // No API key - use fallback videos
+  // No API key - use fallback videos (shuffle with seed if requested)
   if (!YOUTUBE_API_KEY) {
-    const fallback = FALLBACK_VIDEOS[topic] || FALLBACK_VIDEOS['Discipline']
+    let fallback = FALLBACK_VIDEOS[topic] || FALLBACK_VIDEOS['Discipline']
+    if (shuffle && seedParam) {
+      const seed = parseInt(seedParam, 10) || Date.now()
+      // Seeded shuffle for fallback videos
+      fallback = [...fallback]
+      for (let i = fallback.length - 1; i > 0; i--) {
+        const x = Math.sin(seed + i) * 10000
+        const j = Math.floor((x - Math.floor(x)) * (i + 1))
+        ;[fallback[i], fallback[j]] = [fallback[j], fallback[i]]
+      }
+    }
     return NextResponse.json({
       videos: fallback,
       topic,
@@ -116,7 +131,16 @@ export async function GET(request: NextRequest) {
   }
 
   const searchTerms = TOPIC_SEARCHES[topic] || TOPIC_SEARCHES['Discipline']
-  const randomSearch = searchTerms[Math.floor(Math.random() * searchTerms.length)]
+  let randomSearch: string
+  if (shuffle && seedParam) {
+    // Use seed to deterministically pick a different search term
+    const seed = parseInt(seedParam, 10) || 0
+    const x = Math.sin(seed) * 10000
+    const idx = Math.floor((x - Math.floor(x)) * searchTerms.length)
+    randomSearch = searchTerms[idx]
+  } else {
+    randomSearch = searchTerms[Math.floor(Math.random() * searchTerms.length)]
+  }
 
   try {
     // Search for videos - filter by embeddable and English only
@@ -217,8 +241,8 @@ export async function GET(request: NextRequest) {
     // Return up to 8 videos and cache them
     const finalVideos = videos.slice(0, 8)
 
-    // Cache the results for today
-    if (finalVideos.length > 0) {
+    // Cache the results for today (skip cache for shuffle — it's user-triggered)
+    if (finalVideos.length > 0 && !shuffle) {
       await setCachedVideos('motivation', topic, finalVideos)
     }
 
