@@ -339,6 +339,8 @@ model PushSubscription {
   daily_quote_alerts        Boolean @default(true)
   daily_affirmation_alerts  Boolean @default(true)
   motivational_nudge_alerts Boolean @default(true)
+  daily_motivation_alerts   Boolean @default(true)
+  featured_music_alerts     Boolean @default(true)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

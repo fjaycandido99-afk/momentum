@@ -8,6 +8,8 @@ import {
   sendDailyQuotes,
   sendDailyAffirmations,
   sendMotivationalNudges,
+  sendDailyMotivation,
+  sendFeaturedMusic,
 } from '@/lib/push-service'
 import { cleanupExpiredAudioCache } from '@/lib/daily-guide/cache-cleanup'
 
@@ -25,6 +27,8 @@ export const dynamic = 'force-dynamic'
  *     { "path": "/api/cron/notifications?type=streak", "schedule": "0 20 * * *" },
  *     { "path": "/api/cron/notifications?type=weekly", "schedule": "0 10 * * 0" },
  *     { "path": "/api/cron/notifications?type=insight", "schedule": "0 12 * * 3" },
+ *     { "path": "/api/cron/notifications?type=daily_motivation", "schedule": "0 9 * * *" },
+ *     { "path": "/api/cron/notifications?type=featured_music", "schedule": "0 17 * * *" },
  *     { "path": "/api/cron/notifications?type=cleanup", "schedule": "0 3 * * *" }
  *   ]
  * }
@@ -82,6 +86,14 @@ export async function GET(request: NextRequest) {
         await sendMotivationalNudges()
         return NextResponse.json({ success: true, type: 'motivational_nudges' })
 
+      case 'daily_motivation':
+        await sendDailyMotivation()
+        return NextResponse.json({ success: true, type: 'daily_motivation' })
+
+      case 'featured_music':
+        await sendFeaturedMusic()
+        return NextResponse.json({ success: true, type: 'featured_music' })
+
       case 'all':
         // Send all types (for testing)
         await sendMorningReminders()
@@ -92,11 +104,13 @@ export async function GET(request: NextRequest) {
         await sendDailyQuotes()
         await sendDailyAffirmations()
         await sendMotivationalNudges()
+        await sendDailyMotivation()
+        await sendFeaturedMusic()
         return NextResponse.json({ success: true, type: 'all' })
 
       default:
         return NextResponse.json(
-          { error: 'Invalid type. Use: morning, bedtime, streak, weekly, insight, cleanup, daily_quote, daily_affirmation, motivational_nudge, or all' },
+          { error: 'Invalid type. Use: morning, bedtime, streak, weekly, insight, cleanup, daily_quote, daily_affirmation, motivational_nudge, daily_motivation, featured_music, or all' },
           { status: 400 }
         )
     }

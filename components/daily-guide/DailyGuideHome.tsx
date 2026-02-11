@@ -68,6 +68,16 @@ function getDayName(): string {
   return days[new Date().getDay()]
 }
 
+// Get time-of-day gradient for theming
+function getTimeGradient(): string {
+  const hour = new Date().getHours()
+  if (hour >= 5 && hour < 8) return 'bg-gradient-to-b from-amber-950/20 to-black'
+  if (hour >= 8 && hour < 12) return 'bg-gradient-to-b from-orange-950/15 to-black'
+  if (hour >= 12 && hour < 17) return 'bg-gradient-to-b from-sky-950/10 to-black'
+  if (hour >= 17 && hour < 20) return 'bg-gradient-to-b from-indigo-950/20 to-black'
+  return 'bg-gradient-to-b from-violet-950/15 to-black'
+}
+
 // Get motivational message based on time and day type
 function getMotivationalMessage(dayType: string, period: 'morning' | 'afternoon' | 'evening'): string {
   const messages: Record<string, Record<string, string>> = {
@@ -252,6 +262,13 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   // Store fetched audio data for inline playback
   const [moduleAudioData, setModuleAudioData] = useState<Record<string, AudioData>>({})
   const isMountedRef = useRef(true)
+  // Auto-advance state
+  const [justCompletedModule, setJustCompletedModule] = useState<string | null>(null)
+  const moduleRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  // Quick mode
+  const [quickModeActive, setQuickModeActive] = useState(false)
+  // Adaptive order banner
+  const [showAdaptiveBanner, setShowAdaptiveBanner] = useState(false)
 
   // Use global audio context for music
   const musicEnabled = audioContext?.musicEnabled ?? false
@@ -754,6 +771,12 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
   const handleSkipModule = (moduleType: string) => {
     setCompletedModules(prev => [...prev, moduleType])
+    // Track skip count for adaptive module ordering
+    if (typeof window !== 'undefined') {
+      const key = `module_skip_count_${moduleType}`
+      const count = parseInt(localStorage.getItem(key) || '0', 10)
+      localStorage.setItem(key, String(count + 1))
+    }
     // Also persist skip to server so progress survives reload
     if (guide?.date) {
       fetch('/api/daily-guide/checkin', {
@@ -813,8 +836,63 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     (enabledSegments.includes(m) || (m === 'workout' && enabledSegments.includes('movement')))
   )
 
+  // Improvement #7: Adaptive module order
+  const adaptedMorningModules = useMemo(() => {
+    const modules = [...morningModules]
+    // Low energy: move breath to first position
+    if (selectedEnergy === 'low') {
+      const breathIdx = modules.indexOf('breath')
+      if (breathIdx > 0) {
+        modules.splice(breathIdx, 1)
+        modules.unshift('breath')
+      }
+    }
+    // Skip tracking: modules skipped >3 times → move to end
+    if (typeof window !== 'undefined') {
+      const skippedModules: { module: string; count: number }[] = []
+      for (const m of modules) {
+        const count = parseInt(localStorage.getItem(`module_skip_count_${m}`) || '0', 10)
+        if (count > 3) skippedModules.push({ module: m, count })
+      }
+      if (skippedModules.length > 0) {
+        const skippedSet = new Set(skippedModules.map(s => s.module))
+        const kept = modules.filter(m => !skippedSet.has(m))
+        const moved = modules.filter(m => skippedSet.has(m))
+        if (moved.length > 0 && kept.length > 0) {
+          return { modules: [...kept, ...moved], wasAdapted: true }
+        }
+      }
+    }
+    return { modules, wasAdapted: false }
+  }, [morningModules, selectedEnergy])
+
+  // Show adaptive banner via effect (not inside useMemo)
+  useEffect(() => {
+    if (adaptedMorningModules.wasAdapted) {
+      setShowAdaptiveBanner(true)
+    }
+  }, [adaptedMorningModules.wasAdapted])
+
+  // Improvement #8: Quick mode modules
+  const quickModeModules = useMemo(() => {
+    const base = selectedEnergy === 'low'
+      ? ['morning_prime', 'breath']
+      : ['morning_prime', 'micro_lesson']
+    return base.filter(m => adaptedMorningModules.modules.includes(m))
+  }, [selectedEnergy, adaptedMorningModules])
+
+  const displayModules = quickModeActive ? quickModeModules : adaptedMorningModules.modules
+
+  // Improvement #3: Estimated time remaining
+  const timeRemaining = useMemo(() => {
+    const incompleteModules = displayModules.filter(m => !completedModules.includes(m))
+    const totalSeconds = incompleteModules.reduce((sum, m) => sum + (durations[m as ModuleType] || 60), 0)
+    const minutes = Math.ceil(totalSeconds / 60)
+    return minutes > 0 ? `~${minutes} min left` : null
+  }, [displayModules, completedModules, durations])
+
   const getCurrentMorningModule = (): string | null => {
-    for (const m of morningModules) {
+    for (const m of displayModules) {
       if (!completedModules.includes(m)) {
         return m
       }
@@ -824,14 +902,27 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
   // Check for morning flow completion and trigger celebration
   useEffect(() => {
-    if (!morningCompleteCelebrated && morningModules.length > 0) {
-      const allCompleted = morningModules.every(m => completedModules.includes(m))
+    if (!morningCompleteCelebrated && displayModules.length > 0) {
+      const allCompleted = displayModules.every(m => completedModules.includes(m))
       if (allCompleted) {
         setShowMorningComplete(true)
         setMorningCompleteCelebrated(true)
       }
     }
-  }, [completedModules, morningModules, morningCompleteCelebrated])
+  }, [completedModules, displayModules, morningCompleteCelebrated])
+
+  // Improvement #6: Auto-advance between modules
+  useEffect(() => {
+    if (!justCompletedModule) return
+    const timer = setTimeout(() => {
+      const nextModule = getCurrentMorningModule()
+      if (nextModule && moduleRefs.current[nextModule]) {
+        moduleRefs.current[nextModule]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+      setTimeout(() => setJustCompletedModule(null), 1500)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [justCompletedModule, completedModules])
 
   // User type icon
   const UserTypeIcon = preferences?.user_type === 'student' ? GraduationCap
@@ -920,8 +1011,10 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     return <LoadingScreen />
   }
 
+  const timeGradient = getTimeGradient()
+
   return (
-    <div className={embedded ? 'bg-black pb-8' : 'min-h-screen bg-black pb-32'}>
+    <div className={embedded ? `${timeGradient} pb-8` : `min-h-screen ${timeGradient} pb-32`}>
       {/* Trial Banner (hidden in embedded/drawer mode) */}
       {!embedded && <TrialBanner variant="compact" />}
       {!embedded && <TrialEndingBanner />}
@@ -1154,15 +1247,18 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                         <Zap className="w-4 h-4 text-white" />
                       </div>
                       <div className="text-left">
-                        <h2 className="font-medium text-white">Morning Flow</h2>
+                        <h2 className="font-medium text-white">
+                          {quickModeActive ? '5-Min Flow' : 'Morning Flow'}
+                        </h2>
                         <p className="text-xs text-white/95">
-                          {completedModules.filter(m => morningModules.includes(m)).length}/{morningModules.length} complete
+                          {completedModules.filter(m => displayModules.includes(m)).length}/{displayModules.length} complete
+                          {timeRemaining && <span className="ml-2 text-white/60">{timeRemaining}</span>}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <MorningFlowProgress
-                        modules={morningModules as ModuleType[]}
+                        modules={displayModules as ModuleType[]}
                         completedModules={completedModules}
                         currentModule={getCurrentMorningModule() as ModuleType}
                       />
@@ -1176,11 +1272,50 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
                   {showMorningFlow && (
                     <div className="p-4 pt-0 space-y-3">
-                      {morningModules.map((module, index) => {
+                      {/* Quick mode toggle - only show when 0 modules completed */}
+                      {completedModules.filter(m => displayModules.includes(m)).length === 0 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setQuickModeActive(!quickModeActive)
+                          }}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xs text-white/80 press-scale"
+                        >
+                          <Clock className="w-3 h-3" />
+                          {quickModeActive ? 'Full flow' : '5-min flow'}
+                        </button>
+                      )}
+
+                      {/* Adaptive order banner */}
+                      {showAdaptiveBanner && !quickModeActive && (
+                        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+                          <p className="text-xs text-white/60">Order adjusted based on your habits</p>
+                          <button
+                            onClick={() => setShowAdaptiveBanner(false)}
+                            className="text-xs text-white/40 hover:text-white/60 ml-2"
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      )}
+
+                      {displayModules.map((module, index) => {
                         // Use QuoteCard for movement/workout (Quote of the Day)
                         if (module === 'movement' || module === 'workout') {
                           return (
-                            <div key={module} className={`animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}`}>
+                            <div
+                              key={module}
+                              ref={(el) => { moduleRefs.current[module] = el }}
+                              className={`
+                                animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}
+                                ${justCompletedModule === module ? 'module-just-completed' : ''}
+                                ${completedModules.includes(module) && justCompletedModule !== module ? 'module-completed-collapse' : ''}
+                                ${getCurrentMorningModule() === module && justCompletedModule ? 'module-next-reveal' : ''}
+                              `}
+                            >
+                            {justCompletedModule === module && (
+                              <div className="nice-work-toast text-center text-xs text-emerald-400 font-medium py-1">Nice work!</div>
+                            )}
                             <QuoteCard
                               isCompleted={completedModules.includes(module)}
                               mood={moodBefore}
@@ -1188,6 +1323,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                               dayType={guide.day_type}
                               onComplete={() => {
                                 setCompletedModules(prev => [...prev, module])
+                                setJustCompletedModule(module)
                                 fetch('/api/daily-guide/checkin', {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
@@ -1205,12 +1341,25 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                         // Content adapts based on day type: work = motivation, student = focus music, etc.
                         if (module === 'micro_lesson') {
                           return (
-                            <div key={module} className={`animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}`}>
+                            <div
+                              key={module}
+                              ref={(el) => { moduleRefs.current[module] = el }}
+                              className={`
+                                animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}
+                                ${justCompletedModule === module ? 'module-just-completed' : ''}
+                                ${completedModules.includes(module) && justCompletedModule !== module ? 'module-completed-collapse' : ''}
+                                ${getCurrentMorningModule() === module && justCompletedModule ? 'module-next-reveal' : ''}
+                              `}
+                            >
+                            {justCompletedModule === module && (
+                              <div className="nice-work-toast text-center text-xs text-emerald-400 font-medium py-1">Nice work!</div>
+                            )}
                             <MicroLessonVideo
                               isCompleted={completedModules.includes(module)}
                               dayType={guide.day_type as 'work' | 'off' | 'recovery' | 'class' | 'study' | 'exam'}
                               onComplete={() => {
                                 setCompletedModules(prev => [...prev, module])
+                                setJustCompletedModule(module)
                                 fetch('/api/daily-guide/checkin', {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
@@ -1226,7 +1375,19 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                         }
 
                         return (
-                          <div key={module} className={`animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}`}>
+                          <div
+                            key={module}
+                            ref={(el) => { moduleRefs.current[module] = el }}
+                            className={`
+                              animate-card-appear opacity-0 stagger-${Math.min(index + 1, 10)}
+                              ${justCompletedModule === module ? 'module-just-completed' : ''}
+                              ${completedModules.includes(module) && justCompletedModule !== module ? 'module-completed-collapse' : ''}
+                              ${getCurrentMorningModule() === module && justCompletedModule ? 'module-next-reveal' : ''}
+                            `}
+                          >
+                          {justCompletedModule === module && (
+                            <div className="nice-work-toast text-center text-xs text-emerald-400 font-medium py-1">Nice work!</div>
+                          )}
                           <ModuleCard
                             module={module as ModuleType}
                             script={moduleAudioData[module]?.script || getModuleScript(module)}
@@ -1243,6 +1404,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                             onComplete={() => {
                               console.log(`[ModuleCard ${module}] onComplete fired, saving checkin`)
                               setCompletedModules(prev => [...prev, module])
+                              setJustCompletedModule(module)
                               fetch('/api/daily-guide/checkin', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -1548,7 +1710,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       <MorningFlowComplete
         isOpen={showMorningComplete}
         onClose={() => setShowMorningComplete(false)}
-        modulesCompleted={morningModules.length}
+        modulesCompleted={displayModules.length}
       />
 
       {/* Player overlay */}

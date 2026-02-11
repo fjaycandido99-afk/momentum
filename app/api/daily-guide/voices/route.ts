@@ -3,44 +3,10 @@ import { prisma } from '@/lib/prisma'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { VOICE_SCRIPTS, DAY_TYPE_VOICE_SCRIPTS } from '@/lib/daily-guide/voice-scripts'
+import { getSharedCached } from '@/lib/daily-guide/audio-utils'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
-
-// Voice ID mapping by guide tone
-const TONE_VOICES: Record<string, string> = {
-  calm: 'XB0fDUnXU5powFXDhCwa',     // Charlotte - calm and soothing
-  neutral: 'uju3wxzG5OhpWcoi3SMy',   // Neutral voice
-  direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
-}
-
-// DB-backed shared audio cache — persists across Vercel cold starts
-async function getSharedCached(cacheKey: string): Promise<{ audioBase64: string; duration: number } | null> {
-  try {
-    const cached = await prisma.audioCache.findUnique({
-      where: { cache_key: cacheKey },
-    })
-    if (cached) {
-      return { audioBase64: cached.audio, duration: cached.duration }
-    }
-  } catch (e) {
-    console.error('[Shared Voice Cache] DB read error:', e)
-  }
-  return null
-}
-
-async function setSharedCache(cacheKey: string, audioBase64: string, duration: number) {
-  try {
-    await prisma.audioCache.upsert({
-      where: { cache_key: cacheKey },
-      update: { audio: audioBase64, duration },
-      create: { cache_key: cacheKey, audio: audioBase64, duration },
-    })
-    console.log(`[Shared Voice Cache SET] ${cacheKey}`)
-  } catch (e) {
-    console.error('[Shared Voice Cache] DB write error:', e)
-  }
-}
 
 // Lazy initialization to avoid build-time errors
 let groq: Groq | null = null
@@ -60,32 +26,7 @@ type DayTypeVoiceType = 'work_prime' | 'off_prime' | 'recovery_prime' | 'work_cl
 // All voice types combined
 type AllVoiceType = VoiceGuideType | DayTypeVoiceType
 
-// AI generation prompts for voice types
-const VOICE_TYPE_PROMPTS: Record<VoiceGuideType, string> = {
-  breathing: 'Write a 2-minute guided breathing exercise script. Include slow breathing instructions with counts, calming imagery, and pauses. About 200-250 words.',
-  affirmation: 'Write a 2-minute positive affirmation script using "I am" statements. Include themes of self-worth, capability, and inner peace. About 200-250 words.',
-  gratitude: 'Write a 2-minute gratitude meditation script. Guide the listener to notice and appreciate various aspects of their life. About 200-250 words.',
-  sleep: 'Write a 2-minute sleep meditation script. Use progressive relaxation and soothing imagery to help the listener drift into sleep. About 200-250 words.',
-  grounding: 'Write a 2-minute grounding exercise. Include sensory awareness techniques and reassuring messages to bring the listener to the present. About 200-250 words.',
-}
-
-// AI generation prompts for day-type voices
-const DAY_TYPE_PROMPTS: Record<DayTypeVoiceType, string> = {
-  work_prime: 'Write a 2-minute morning intention-setting script for a work day. Help the listener set priorities, embody focus, and feel prepared. About 200-250 words.',
-  off_prime: 'Write a 2-minute morning script for a day off. Encourage rest, joy, and permission to do nothing productive. About 200-250 words.',
-  recovery_prime: 'Write a 2-minute morning script for a recovery day. Emphasize self-compassion, gentle healing, and lowered expectations. About 200-250 words.',
-  work_close: 'Write a 2-minute evening wind-down script for after a work day. Help release work stress, reflect on accomplishments, and transition to rest. About 200-250 words.',
-  off_close: 'Write a 2-minute evening script for the end of a day off. Express gratitude for rest, contentment, and gentle preparation for sleep. About 200-250 words.',
-  recovery_close: 'Write a 2-minute evening script for the end of a recovery day. Acknowledge healing, release guilt, and set a gentle intention for tomorrow. About 200-250 words.',
-}
-
-// Get today's date string for cache key
-function getTodayDateString(): string {
-  const today = new Date()
-  return today.toISOString().split('T')[0] // YYYY-MM-DD
-}
-
-// Get day-of-year for fallback script rotation
+// Get day-of-year for script rotation
 function getDayOfYear(): number {
   return Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24))
 }
@@ -104,88 +45,104 @@ function getFallbackDayTypeScript(type: DayTypeVoiceType): { script: string; ind
   return { script: scripts[index], index }
 }
 
-// Try AI generation, fall back to pre-written
-async function getOrGenerateScript(
+// Get the script and its pool index for a given type
+function getScriptForType(type: AllVoiceType, isRegularVoice: boolean): { script: string; index: number } {
+  if (isRegularVoice) {
+    return getFallbackScript(type as VoiceGuideType)
+  }
+  return getFallbackDayTypeScript(type as DayTypeVoiceType)
+}
+
+// Build library cache key: library-{type}-s{index}-{tone}
+function getLibraryCacheKey(type: string, index: number, tone: string): string {
+  return `library-${type}-s${index}-${tone}`
+}
+
+// Fetch yesterday's journal entries for personalization
+async function getYesterdayContext(userId: string): Promise<string | null> {
+  try {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(0, 0, 0, 0)
+
+    const yesterdayGuide = await prisma.dailyGuide.findUnique({
+      where: {
+        user_id_date: {
+          user_id: userId,
+          date: yesterday,
+        },
+      },
+      select: {
+        journal_win: true,
+        journal_intention: true,
+        journal_gratitude: true,
+      },
+    })
+
+    if (!yesterdayGuide) return null
+
+    const parts: string[] = []
+    if (yesterdayGuide.journal_win) {
+      parts.push(`Yesterday they noted this win: "${yesterdayGuide.journal_win}"`)
+    }
+    if (yesterdayGuide.journal_intention) {
+      parts.push(`Their intention was: "${yesterdayGuide.journal_intention}"`)
+    }
+    if (yesterdayGuide.journal_gratitude) {
+      parts.push(`They expressed gratitude for: "${yesterdayGuide.journal_gratitude}"`)
+    }
+
+    return parts.length > 0 ? parts.join('. ') + '.' : null
+  } catch (e) {
+    console.error('[Yesterday Context] Error fetching:', e)
+    return null
+  }
+}
+
+// Generate personalized text via Groq (text only, no audio generation)
+async function generatePersonalizedText(
   type: AllVoiceType,
   isRegularVoice: boolean,
-  dateString: string,
-): Promise<string> {
-  // Try AI generation
+  yesterdayContext: string,
+): Promise<string | null> {
   try {
+    const VOICE_TYPE_PROMPTS: Record<VoiceGuideType, string> = {
+      breathing: 'Write a 2-minute guided breathing exercise script. Include slow breathing instructions with counts, calming imagery, and pauses. About 200-250 words.',
+      affirmation: 'Write a 2-minute positive affirmation script using "I am" statements. Include themes of self-worth, capability, and inner peace. About 200-250 words.',
+      gratitude: 'Write a 2-minute gratitude meditation script. Guide the listener to notice and appreciate various aspects of their life. About 200-250 words.',
+      sleep: 'Write a 2-minute sleep meditation script. Use progressive relaxation and soothing imagery to help the listener drift into sleep. About 200-250 words.',
+      grounding: 'Write a 2-minute grounding exercise. Include sensory awareness techniques and reassuring messages to bring the listener to the present. About 200-250 words.',
+    }
+
+    const DAY_TYPE_PROMPTS: Record<DayTypeVoiceType, string> = {
+      work_prime: 'Write a 2-minute morning intention-setting script for a work day. Help the listener set priorities, embody focus, and feel prepared. About 200-250 words.',
+      off_prime: 'Write a 2-minute morning script for a day off. Encourage rest, joy, and permission to do nothing productive. About 200-250 words.',
+      recovery_prime: 'Write a 2-minute morning script for a recovery day. Emphasize self-compassion, gentle healing, and lowered expectations. About 200-250 words.',
+      work_close: 'Write a 2-minute evening wind-down script for after a work day. Help release work stress, reflect on accomplishments, and transition to rest. About 200-250 words.',
+      off_close: 'Write a 2-minute evening script for the end of a day off. Express gratitude for rest, contentment, and gentle preparation for sleep. About 200-250 words.',
+      recovery_close: 'Write a 2-minute evening script for the end of a recovery day. Acknowledge healing, release guilt, and set a gentle intention for tomorrow. About 200-250 words.',
+    }
+
     const prompt = isRegularVoice
       ? VOICE_TYPE_PROMPTS[type as VoiceGuideType]
       : DAY_TYPE_PROMPTS[type as DayTypeVoiceType]
+
+    const userMessage = `${prompt} Make this unique and fresh.\n\nIMPORTANT PERSONALIZATION: ${yesterdayContext} Briefly reference one of these naturally in the opening, without quoting them verbatim.`
 
     const completion = await getGroq().chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: 'You are a calm, soothing wellness guide. Write scripts that are peaceful and reassuring. Use ellipses (...) for pauses. No markdown formatting.' },
-        { role: 'user', content: `${prompt} Make this unique and fresh.` },
+        { role: 'user', content: userMessage },
       ],
       max_tokens: 500,
       temperature: 0.8,
     })
 
-    const content = completion.choices[0]?.message?.content
-    if (content) return content
+    return completion.choices[0]?.message?.content || null
   } catch (e) {
-    console.error('[Groq] AI generation failed, falling back to pre-written:', e)
-  }
-
-  // Fallback to pre-written
-  if (isRegularVoice) {
-    return getFallbackScript(type as VoiceGuideType).script
-  }
-  return getFallbackDayTypeScript(type as DayTypeVoiceType).script
-}
-
-// Generate audio with ElevenLabs (max 2 min)
-async function generateAudio(script: string, tone: string = 'calm'): Promise<{ audioBase64: string | null; duration: number }> {
-  const apiKey = process.env.ELEVENLABS_API_KEY
-  if (!apiKey) {
-    console.error('[ElevenLabs] No API key')
-    return { audioBase64: null, duration: 0 }
-  }
-
-  try {
-    const voiceId = TONE_VOICES[tone] || TONE_VOICES.calm
-
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Accept': 'audio/mpeg',
-          'Content-Type': 'application/json',
-          'xi-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          text: script,
-          model_id: 'eleven_turbo_v2_5',
-          voice_settings: {
-            stability: 0.6,
-            similarity_boost: 0.75,
-          },
-        }),
-      }
-    )
-
-    if (!response.ok) {
-      const error = await response.text()
-      console.error(`[ElevenLabs] Error: ${response.status} - ${error}`)
-      return { audioBase64: null, duration: 0 }
-    }
-
-    const audioBuffer = await response.arrayBuffer()
-    const audioBase64 = Buffer.from(audioBuffer).toString('base64')
-
-    // Estimate duration: ~150 words per minute for calm speech, ~5 chars per word
-    const estimatedDuration = Math.ceil((script.length / 5) / 150 * 60)
-
-    return { audioBase64, duration: Math.min(estimatedDuration, 120) } // Cap at 2 min
-  } catch (error) {
-    console.error('[ElevenLabs] Exception:', error)
-    return { audioBase64: null, duration: 0 }
+    console.error('[Groq] Personalized text generation failed:', e)
+    return null
   }
 }
 
@@ -202,7 +159,11 @@ async function getUserTone(userId: string): Promise<string> {
   }
 }
 
-// GET - Fetch today's voices (generate if needed)
+// All valid voice types
+const VALID_VOICE_TYPES = ['breathing', 'affirmation', 'gratitude', 'sleep', 'grounding']
+const VALID_DAY_TYPE_VOICES = ['work_prime', 'off_prime', 'recovery_prime', 'work_close', 'off_close', 'recovery_close']
+
+// GET - Fetch today's voices (library-first, no on-demand ElevenLabs)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -229,7 +190,6 @@ export async function GET(request: NextRequest) {
     })
 
     if (!guide) {
-      // Create a basic guide entry for today
       guide = await prisma.dailyGuide.create({
         data: {
           user_id: userId,
@@ -246,7 +206,7 @@ export async function GET(request: NextRequest) {
       const audioField = `${type}_audio` as keyof typeof guide
       const durationField = `${type}_duration` as keyof typeof guide
 
-      // Check if already saved to this user's daily guide
+      // 1. Check if already saved to this user's daily guide
       if (guide[scriptField] && guide[audioField]) {
         return NextResponse.json({
           type,
@@ -257,32 +217,21 @@ export async function GET(request: NextRequest) {
         })
       }
 
-      const dateString = getTodayDateString()
-      const cacheKey = `voice-${type}-${dateString}-${tone}`
+      // 2. Look up from pre-recorded library
+      const { script, index } = getFallbackScript(type)
+      const libraryCacheKey = getLibraryCacheKey(type, index, tone)
+      const libraryHit = await getSharedCached(libraryCacheKey)
 
-      // Check date-based shared cache
       let audioBase64: string | null = null
       let duration = 0
-      const shared = await getSharedCached(cacheKey)
-      if (shared) {
-        console.log(`[Shared Voice Cache HIT] ${cacheKey}`)
-        audioBase64 = shared.audioBase64
-        duration = shared.duration
-      } else {
-        // Generate or fall back to pre-written
-        const script = await getOrGenerateScript(type, true, dateString)
-        const result = await generateAudio(script, tone)
-        audioBase64 = result.audioBase64
-        duration = result.duration
-        if (audioBase64) {
-          await setSharedCache(cacheKey, audioBase64, duration)
-        }
+
+      if (libraryHit) {
+        console.log(`[Voice Library HIT] ${libraryCacheKey}`)
+        audioBase64 = libraryHit.audioBase64
+        duration = libraryHit.duration
       }
 
-      // Get script for response (use fallback for display)
-      const { script } = getFallbackScript(type)
-
-      // Save to user's daily guide DB record
+      // Save to user's daily guide DB record if we have audio
       if (audioBase64) {
         await prisma.dailyGuide.update({
           where: { id: guide.id },
@@ -297,9 +246,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         type,
         script,
-        audioBase64,
+        audioBase64, // null if library miss — text-only fallback
         duration,
-        cached: !!shared,
+        cached: !!libraryHit,
+        libraryKey: libraryCacheKey,
       })
     }
 
@@ -319,11 +269,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// All valid voice types
-const VALID_VOICE_TYPES = ['breathing', 'affirmation', 'gratitude', 'sleep', 'grounding']
-const VALID_DAY_TYPE_VOICES = ['work_prime', 'off_prime', 'recovery_prime', 'work_close', 'off_close', 'recovery_close']
-
-// POST - Generate a specific voice type
+// POST - Generate a specific voice type (library-first, no on-demand ElevenLabs)
 export async function POST(request: NextRequest) {
   try {
     const { type, textOnly } = await request.json()
@@ -366,7 +312,7 @@ export async function POST(request: NextRequest) {
     const audioField = `${type}_audio` as keyof typeof guide
     const durationField = `${type}_duration` as keyof typeof guide
 
-    // Check if already saved to this user's daily guide (skip for textOnly)
+    // 1. Check if already saved to this user's daily guide (skip for textOnly)
     if (!textOnly && guide[scriptField] && guide[audioField]) {
       return NextResponse.json({
         type,
@@ -377,47 +323,57 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const dateString = getTodayDateString()
-    const cacheKey = `voice-${type}-${dateString}-${tone}`
+    // 2. Get the pre-written script and its pool index
+    const { script: baseScript, index } = getScriptForType(type, isRegularVoice)
 
-    // Get or generate script
-    const script = await getOrGenerateScript(type, isRegularVoice, dateString)
+    // 3. Check for personalization (Groq text only, no ElevenLabs)
+    const isPrimeType = type.endsWith('_prime')
+    let personalizedText: string | null = null
+    let yesterdayContext: string | null = null
 
-    // If textOnly, return script without generating audio
+    if (isPrimeType && userId !== 'demo-user') {
+      yesterdayContext = await getYesterdayContext(userId)
+      if (yesterdayContext) {
+        personalizedText = await generatePersonalizedText(type, isRegularVoice, yesterdayContext)
+      }
+    }
+
+    // The script shown to the user: personalized if available, otherwise base
+    const displayScript = personalizedText || baseScript
+
+    // If textOnly, return script without audio
     if (textOnly) {
-      // Still save script to guide record for reference
       if (!guide[scriptField]) {
         await prisma.dailyGuide.update({
           where: { id: guide.id },
-          data: { [scriptField]: script },
+          data: { [scriptField]: displayScript },
         }).catch(() => {})
       }
 
       return NextResponse.json({
         type,
-        script,
+        script: displayScript,
         audioBase64: null,
         duration: 0,
         textOnly: true,
+        personalized: !!personalizedText,
       })
     }
 
-    // Check date-based shared cache
+    // 4. Look up audio from pre-recorded library (keyed to base script index)
+    const libraryCacheKey = getLibraryCacheKey(type, index, tone)
+    const libraryHit = await getSharedCached(libraryCacheKey)
+
     let audioBase64: string | null = null
     let duration = 0
-    const shared = await getSharedCached(cacheKey)
-    if (shared) {
-      console.log(`[Shared Voice Cache HIT] ${cacheKey}`)
-      audioBase64 = shared.audioBase64
-      duration = shared.duration
+
+    if (libraryHit) {
+      console.log(`[Voice Library HIT] ${libraryCacheKey}`)
+      audioBase64 = libraryHit.audioBase64
+      duration = libraryHit.duration
     } else {
-      // Generate audio
-      const result = await generateAudio(script, tone)
-      audioBase64 = result.audioBase64
-      duration = result.duration
-      if (audioBase64) {
-        await setSharedCache(cacheKey, audioBase64, duration)
-      }
+      // Library miss — serve text-only, NO on-demand ElevenLabs call
+      console.log(`[Voice Library MISS] ${libraryCacheKey} — serving text-only`)
     }
 
     // Save to user's daily guide DB record
@@ -425,19 +381,27 @@ export async function POST(request: NextRequest) {
       await prisma.dailyGuide.update({
         where: { id: guide.id },
         data: {
-          [scriptField]: script,
+          [scriptField]: displayScript,
           [audioField]: audioBase64,
           [durationField]: duration,
         },
       })
+    } else if (!guide[scriptField]) {
+      // Save script even without audio
+      await prisma.dailyGuide.update({
+        where: { id: guide.id },
+        data: { [scriptField]: displayScript },
+      }).catch(() => {})
     }
 
     return NextResponse.json({
       type,
-      script,
-      audioBase64,
+      script: displayScript,
+      audioBase64, // null if library miss
       duration,
-      cached: !!shared,
+      cached: !!libraryHit,
+      personalized: !!personalizedText,
+      libraryKey: libraryCacheKey,
     })
   } catch (error) {
     console.error('Daily voices POST error:', error)

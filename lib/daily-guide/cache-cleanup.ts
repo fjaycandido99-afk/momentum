@@ -6,6 +6,9 @@ import { prisma } from '@/lib/prisma'
  *   calm-{type}-{YYYY-MM-DD}-{tone}
  *   voice-{type}-{YYYY-MM-DD}-{tone}
  * Entries older than maxAgeDays are deleted to prevent unbounded growth.
+ *
+ * PRESERVED (not deleted):
+ *   library-{type}-s{index}-{tone}  — pre-recorded voice library (permanent)
  */
 export async function cleanupExpiredAudioCache(maxAgeDays = 3): Promise<{ deleted: number }> {
   const cutoffDate = new Date()
@@ -15,6 +18,7 @@ export async function cleanupExpiredAudioCache(maxAgeDays = 3): Promise<{ delete
     // Delete date-based cache entries older than maxAgeDays
     // Date-based keys start with "calm-" or "voice-" prefixes
     // Static/fallback keys use different patterns (e.g. "breathing-s0-calm")
+    // Library keys ("library-*") are NOT matched — they persist permanently
     const result = await prisma.audioCache.deleteMany({
       where: {
         AND: [

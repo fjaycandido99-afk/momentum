@@ -116,6 +116,8 @@ export async function GET() {
         daily_quote_alerts: true,
         daily_affirmation_alerts: true,
         motivational_nudge_alerts: true,
+        daily_motivation_alerts: true,
+        featured_music_alerts: true,
         created_at: true,
       },
     })
@@ -153,6 +155,8 @@ export async function PATCH(request: NextRequest) {
       daily_quote_alerts,
       daily_affirmation_alerts,
       motivational_nudge_alerts,
+      daily_motivation_alerts,
+      featured_music_alerts,
     } = body
 
     // Update all user's subscriptions
@@ -167,6 +171,8 @@ export async function PATCH(request: NextRequest) {
         ...(daily_quote_alerts !== undefined && { daily_quote_alerts }),
         ...(daily_affirmation_alerts !== undefined && { daily_affirmation_alerts }),
         ...(motivational_nudge_alerts !== undefined && { motivational_nudge_alerts }),
+        ...(daily_motivation_alerts !== undefined && { daily_motivation_alerts }),
+        ...(featured_music_alerts !== undefined && { featured_music_alerts }),
       },
     })
 

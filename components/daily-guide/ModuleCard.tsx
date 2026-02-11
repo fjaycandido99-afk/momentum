@@ -725,28 +725,24 @@ export function MorningFlowProgress({ modules, completedModules, currentModule }
   )
 
   return (
-    <div className="flex items-center justify-center gap-2">
-      {morningModules.map((module, index) => {
+    <div className="flex items-center gap-1.5 w-24">
+      {morningModules.map((module) => {
         const isCompleted = completedModules.includes(module)
         const isCurrent = currentModule === module
 
         return (
-          <div key={module} className="flex items-center">
-            <div
-              className={`
-                w-2.5 h-2.5 rounded-full transition-all
-                ${isCompleted
-                  ? 'bg-white'
-                  : isCurrent
-                    ? 'bg-white/60 animate-pulse'
-                    : 'bg-white/20'
-                }
-              `}
-            />
-            {index < morningModules.length - 1 && (
-              <div className={`w-6 h-0.5 ${isCompleted ? 'bg-white/50' : 'bg-white/10'}`} />
-            )}
-          </div>
+          <div
+            key={module}
+            className={`
+              flex-1 h-2 rounded-full transition-all duration-500
+              ${isCompleted
+                ? 'bg-emerald-400'
+                : isCurrent
+                  ? 'bg-white/40 animate-pulse'
+                  : 'bg-white/10'
+              }
+            `}
+          />
         )
       })}
     </div>

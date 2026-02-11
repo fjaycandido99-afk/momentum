@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, BellOff, Loader2, Check, Sunrise, Clock, Moon, Flame, Calendar, Lightbulb, Quote, Sparkles, Heart } from 'lucide-react'
+import { Bell, BellOff, Loader2, Check, Sunrise, Clock, Moon, Flame, Calendar, Lightbulb, Quote, Sparkles, Heart, Play, Music } from 'lucide-react'
 import {
   isPushSupported,
   getNotificationPermission,
@@ -36,6 +36,8 @@ interface NotificationPreferences {
   daily_quote_alerts: boolean
   daily_affirmation_alerts: boolean
   motivational_nudge_alerts: boolean
+  daily_motivation_alerts: boolean
+  featured_music_alerts: boolean
 }
 
 export function NotificationSettings() {
@@ -61,6 +63,8 @@ export function NotificationSettings() {
     daily_quote_alerts: true,
     daily_affirmation_alerts: true,
     motivational_nudge_alerts: true,
+    daily_motivation_alerts: true,
+    featured_music_alerts: true,
   })
 
   useEffect(() => {
@@ -98,6 +102,8 @@ export function NotificationSettings() {
                 daily_quote_alerts: sub.daily_quote_alerts ?? true,
                 daily_affirmation_alerts: sub.daily_affirmation_alerts ?? true,
                 motivational_nudge_alerts: sub.motivational_nudge_alerts ?? true,
+                daily_motivation_alerts: sub.daily_motivation_alerts ?? true,
+                featured_music_alerts: sub.featured_music_alerts ?? true,
               })
             }
           }
@@ -156,6 +162,8 @@ export function NotificationSettings() {
                 daily_quote_alerts: sub.daily_quote_alerts ?? true,
                 daily_affirmation_alerts: sub.daily_affirmation_alerts ?? true,
                 motivational_nudge_alerts: sub.motivational_nudge_alerts ?? true,
+                daily_motivation_alerts: sub.daily_motivation_alerts ?? true,
+                featured_music_alerts: sub.featured_music_alerts ?? true,
               })
             }
           }
@@ -527,6 +535,24 @@ export function NotificationSettings() {
             description="Midday encouragement at 2 PM"
             enabled={preferences.motivational_nudge_alerts}
             onToggle={() => handlePreferenceChange('motivational_nudge_alerts')}
+          />
+
+          {/* Daily motivation */}
+          <NotificationToggle
+            icon={Play}
+            label="Daily Motivation"
+            description="Today's motivation topic at 9 AM"
+            enabled={preferences.daily_motivation_alerts}
+            onToggle={() => handlePreferenceChange('daily_motivation_alerts')}
+          />
+
+          {/* Featured music */}
+          <NotificationToggle
+            icon={Music}
+            label="Featured Music"
+            description="Featured genre to set your mood at 5 PM"
+            enabled={preferences.featured_music_alerts}
+            onToggle={() => handlePreferenceChange('featured_music_alerts')}
           />
         </div>
       )}

@@ -22,6 +22,8 @@ export type NotificationType =
   | 'daily_quote'
   | 'daily_affirmation'
   | 'motivational_nudge'
+  | 'daily_motivation'
+  | 'featured_music'
   | 'custom'
 
 // Notification payload structure
@@ -148,6 +150,28 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'open', title: 'Open' },
     ],
   },
+  daily_motivation: {
+    title: "Today's Motivation",
+    body: 'Fresh motivation videos are ready for you',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'daily-motivation',
+    actions: [
+      { action: 'open', title: 'Watch Now' },
+      { action: 'dismiss', title: 'Later' },
+    ],
+  },
+  featured_music: {
+    title: 'Featured Music',
+    body: 'Set the mood with today\'s featured genre',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'featured-music',
+    actions: [
+      { action: 'open', title: 'Listen' },
+      { action: 'dismiss', title: 'Later' },
+    ],
+  },
   custom: {
     title: 'Voxu',
     body: 'You have a new notification',
@@ -204,6 +228,8 @@ export async function sendPushToUser(
     daily_quote: 'daily_quote_alerts',
     daily_affirmation: 'daily_affirmation_alerts',
     motivational_nudge: 'motivational_nudge_alerts',
+    daily_motivation: 'daily_motivation_alerts',
+    featured_music: 'featured_music_alerts',
     custom: 'morning_reminder', // Custom always sends
   }
 
@@ -831,4 +857,131 @@ export async function sendMotivationalNudges(): Promise<void> {
   }
 
   console.log(`Motivational nudges: ${totalSent} sent, ${totalFailed} failed`)
+}
+
+// Topic names and taglines for motivation notifications
+const MOTIVATION_TOPICS = ['Discipline', 'Focus', 'Mindset', 'Courage', 'Resilience', 'Hustle', 'Confidence']
+const MOTIVATION_TAGLINES: Record<string, string> = {
+  Discipline: 'Master yourself first',
+  Focus: 'Eliminate distractions',
+  Mindset: 'Your thoughts shape reality',
+  Courage: 'Face your fears',
+  Resilience: 'You are unbreakable',
+  Hustle: 'Outwork everyone',
+  Confidence: 'Believe in yourself',
+}
+
+// Music genres for featured music notifications
+const MUSIC_GENRE_NOTIFS = [
+  { id: 'lofi', word: 'Lo-Fi', tagline: 'Chill beats to help you focus' },
+  { id: 'classical', word: 'Classical', tagline: 'Timeless compositions for deep work' },
+  { id: 'piano', word: 'Piano', tagline: 'Peaceful keys for a calm mind' },
+  { id: 'jazz', word: 'Jazz', tagline: 'Smooth vibes for your evening' },
+  { id: 'study', word: 'Study', tagline: 'Focus music to power through tasks' },
+  { id: 'ambient', word: 'Ambient', tagline: 'Atmospheric sounds for deep relaxation' },
+]
+
+/**
+ * Send daily motivation topic notifications
+ * Features today's rotating topic with personalized context
+ */
+export async function sendDailyMotivation(): Promise<void> {
+  const now = new Date()
+  const startOfYear = new Date(now.getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24))
+  const todayTopic = MOTIVATION_TOPICS[dayOfYear % MOTIVATION_TOPICS.length]
+  const tagline = MOTIVATION_TAGLINES[todayTopic] || ''
+
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { daily_motivation_alerts: true },
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const { user_id } of subscriptions) {
+    let body = `Today's theme: ${todayTopic}. ${tagline}. New videos waiting for you.`
+
+    try {
+      // Check if user has watched motivation recently for personalization
+      const prefs = await prisma.userPreferences.findUnique({
+        where: { user_id },
+        select: { current_streak: true },
+      })
+
+      if (prefs?.current_streak && prefs.current_streak > 2) {
+        body = `${todayTopic}: ${tagline}. Keep your ${prefs.current_streak}-day streak fueled.`
+      }
+    } catch {
+      // Fall back to default
+    }
+
+    const result = await sendPushToUser(user_id, 'daily_motivation', {
+      title: `${todayTopic} Day`,
+      body,
+      data: { type: 'daily_motivation', url: '/' },
+    })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Daily motivation: ${totalSent} sent, ${totalFailed} failed`)
+}
+
+/**
+ * Send featured music genre notifications
+ * Rotates through genres, personalized by user's preferred genre
+ */
+export async function sendFeaturedMusic(): Promise<void> {
+  const now = new Date()
+  const startOfYear = new Date(now.getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24))
+  const todayGenre = MUSIC_GENRE_NOTIFS[dayOfYear % MUSIC_GENRE_NOTIFS.length]
+
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { featured_music_alerts: true },
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const { user_id } of subscriptions) {
+    let title = `${todayGenre.word} Music`
+    let body = todayGenre.tagline
+
+    try {
+      // Check user's preferred genre for personalization
+      const prefs = await prisma.userPreferences.findUnique({
+        where: { user_id },
+        select: { preferred_music_genre: true },
+      })
+
+      if (prefs?.preferred_music_genre) {
+        const preferred = MUSIC_GENRE_NOTIFS.find(g => g.id === prefs.preferred_music_genre)
+        if (preferred && preferred.id === todayGenre.id) {
+          // Their favorite genre is featured today
+          body = `Your favorite — ${preferred.tagline.toLowerCase()}. Tap to listen.`
+        } else if (preferred) {
+          // Suggest today's genre as a change
+          body = `Try something different today. ${todayGenre.tagline}.`
+        }
+      }
+    } catch {
+      // Fall back to default
+    }
+
+    const result = await sendPushToUser(user_id, 'featured_music', {
+      title,
+      body,
+      data: { type: 'featured_music', url: '/' },
+    })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Featured music: ${totalSent} sent, ${totalFailed} failed`)
 }

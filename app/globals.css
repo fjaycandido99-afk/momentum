@@ -1334,3 +1334,101 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   letter-spacing: 0.1em;
   color: rgba(255, 255, 255, 0.7);
 }
+
+/* ========== Morning Flow Module Transitions ========== */
+
+/* Green glow flash when a module completes */
+@keyframes module-complete-flash {
+  0% {
+    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+  }
+  30% {
+    box-shadow: 0 0 20px rgba(52, 211, 153, 0.4), 0 0 40px rgba(52, 211, 153, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+  }
+}
+
+.module-just-completed {
+  animation: module-complete-flash 1.2s ease-out;
+}
+
+/* Collapse completed module slightly */
+@keyframes module-complete-collapse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.98);
+    opacity: 0.7;
+  }
+}
+
+.module-completed-collapse {
+  animation: module-complete-collapse 0.5s ease-out forwards;
+}
+
+/* Reveal next module */
+@keyframes module-next-reveal {
+  0% {
+    transform: translateY(15px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.module-next-reveal {
+  animation: module-next-reveal 0.5s ease-out 0.3s both;
+}
+
+/* "Nice work" toast animation */
+@keyframes nice-work-pop {
+  0% {
+    transform: scale(0) translateY(10px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) translateY(-5px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes nice-work-fade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.nice-work-toast {
+  animation: nice-work-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             nice-work-fade 0.3s ease-in 1.2s forwards;
+}
+
+/* Enhanced confetti burst for streak milestones */
+@keyframes confetti-burst {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(400px) rotate(1080deg) scale(0.3);
+    opacity: 0;
+  }
+}
+
+.confetti-burst {
+  animation: confetti-burst 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}

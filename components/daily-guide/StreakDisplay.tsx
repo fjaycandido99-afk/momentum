@@ -14,14 +14,14 @@ interface StreakDisplayProps {
 
 // Milestone thresholds and their rewards
 const MILESTONES = [
-  { days: 7, label: '1 Week', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/20 to-cyan-500/20', border: 'border-blue-500/30' },
-  { days: 14, label: '2 Weeks', icon: Zap, color: 'text-purple-400', bg: 'from-purple-500/20 to-pink-500/20', border: 'border-purple-500/30' },
-  { days: 21, label: '3 Weeks', icon: Sparkles, color: 'text-emerald-400', bg: 'from-emerald-500/20 to-teal-500/20', border: 'border-emerald-500/30' },
-  { days: 30, label: '1 Month', icon: Trophy, color: 'text-amber-400', bg: 'from-amber-500/20 to-orange-500/20', border: 'border-amber-500/30' },
-  { days: 60, label: '2 Months', icon: Crown, color: 'text-rose-400', bg: 'from-rose-500/20 to-red-500/20', border: 'border-rose-500/30' },
-  { days: 90, label: '3 Months', icon: Crown, color: 'text-yellow-400', bg: 'from-yellow-500/20 to-amber-500/20', border: 'border-yellow-500/30' },
-  { days: 100, label: 'Century', icon: Crown, color: 'text-white', bg: 'from-white/20 to-white/10', border: 'border-white/40' },
-  { days: 365, label: '1 Year', icon: Crown, color: 'text-yellow-300', bg: 'from-yellow-400/30 to-amber-500/30', border: 'border-yellow-400/50' },
+  { days: 7, label: '1 Week', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/20 to-cyan-500/20', border: 'border-blue-500/30', message: "You're building a habit!", confettiCount: 20 },
+  { days: 14, label: '2 Weeks', icon: Zap, color: 'text-purple-400', bg: 'from-purple-500/20 to-pink-500/20', border: 'border-purple-500/30', message: 'Two weeks strong! Consistency is your superpower.', confettiCount: 30 },
+  { days: 21, label: '3 Weeks', icon: Sparkles, color: 'text-emerald-400', bg: 'from-emerald-500/20 to-teal-500/20', border: 'border-emerald-500/30', message: '21 days — they say this is where habits stick!', confettiCount: 40 },
+  { days: 30, label: '1 Month', icon: Trophy, color: 'text-amber-400', bg: 'from-amber-500/20 to-orange-500/20', border: 'border-amber-500/30', message: 'A full month! You are a force of nature.', confettiCount: 50 },
+  { days: 60, label: '2 Months', icon: Crown, color: 'text-rose-400', bg: 'from-rose-500/20 to-red-500/20', border: 'border-rose-500/30', message: '60 days of dedication. Truly remarkable.', confettiCount: 60 },
+  { days: 90, label: '3 Months', icon: Crown, color: 'text-yellow-400', bg: 'from-yellow-500/20 to-amber-500/20', border: 'border-yellow-500/30', message: 'A quarter year! This is who you are now.', confettiCount: 70 },
+  { days: 100, label: 'Century', icon: Crown, color: 'text-white', bg: 'from-white/20 to-white/10', border: 'border-white/40', message: 'Legendary! 100 days of transformation.', confettiCount: 80 },
+  { days: 365, label: '1 Year', icon: Crown, color: 'text-yellow-300', bg: 'from-yellow-400/30 to-amber-500/30', border: 'border-yellow-400/50', message: 'One full year. You are unstoppable.', confettiCount: 80 },
 ]
 
 // Get current milestone info
@@ -90,13 +90,30 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
           isMilestone ? 'animate-pulse' : ''
         }`}
       >
-        <div className="relative">
-          <Flame className={`w-5 h-5 ${currentMilestone?.color || 'text-amber-400'} animate-bounce`}
-            style={{ animationDuration: '1s' }}
-          />
-          {streak >= 7 && (
-            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
-          )}
+        {/* Progress ring toward next milestone */}
+        <div className="relative w-8 h-8 flex items-center justify-center">
+          {nextMilestone && (() => {
+            const prevDays = currentMilestone?.days || 0
+            const progress = ((streak - prevDays) / (nextMilestone.days - prevDays)) * 100
+            const radius = 14
+            const circumference = 2 * Math.PI * radius
+            const strokeDashoffset = circumference - (progress / 100) * circumference
+            return (
+              <svg className="absolute inset-0 w-8 h-8 -rotate-90" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2.5" />
+                <circle
+                  cx="16" cy="16" r={radius} fill="none"
+                  stroke={currentMilestone?.color === 'text-amber-400' ? '#fbbf24' : currentMilestone?.color === 'text-blue-400' ? '#60a5fa' : currentMilestone?.color === 'text-purple-400' ? '#c084fc' : '#fbbf24'}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  className="transition-all duration-700"
+                />
+              </svg>
+            )
+          })()}
+          <Flame className={`w-4 h-4 ${currentMilestone?.color || 'text-amber-400'} relative z-10`} />
         </div>
         <div className="flex flex-col">
           <div className="flex items-baseline gap-1">
@@ -126,17 +143,18 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
       {showMilestoneModal && currentMilestone && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="relative w-full max-w-sm">
-            {/* Confetti effect */}
+            {/* Confetti effect - scaled by milestone tier */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(20)].map((_, i) => (
+              {[...Array(currentMilestone.confettiCount)].map((_, i) => (
                 <div
                   key={i}
-                  className="absolute w-2 h-2 rounded-full animate-confetti"
+                  className="absolute w-2 h-2 rounded-full confetti-burst"
                   style={{
                     left: `${Math.random() * 100}%`,
-                    backgroundColor: ['#fbbf24', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'][i % 5],
-                    animationDelay: `${Math.random() * 0.5}s`,
-                    animationDuration: `${1 + Math.random()}s`,
+                    top: `${-10 - Math.random() * 20}%`,
+                    backgroundColor: ['#fbbf24', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#10b981', '#f472b6'][i % 7],
+                    animationDelay: `${Math.random() * 0.8}s`,
+                    animationDuration: `${2 + Math.random() * 0.5}s`,
                   }}
                 />
               ))}
@@ -168,22 +186,37 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
 
               {/* Message */}
               <p className="text-white/95 text-sm mb-6">
-                {streak >= 100
-                  ? "Legendary! You're unstoppable!"
-                  : streak >= 30
-                  ? "Amazing dedication! Keep it going!"
-                  : streak >= 7
-                  ? "Great start! You're building a habit!"
-                  : "You're on fire!"}
+                {currentMilestone.message}
               </p>
 
-              {/* Next milestone */}
-              {nextMilestone && (
-                <div className="p-3 rounded-xl bg-white/5 text-sm text-white/95">
-                  Next milestone: <span className="text-white font-medium">{nextMilestone.label}</span>
-                  <span className="text-white/95"> ({nextMilestone.days - streak} days away)</span>
-                </div>
-              )}
+              {/* Next milestone with progress ring */}
+              {nextMilestone && (() => {
+                const prevDays = currentMilestone.days
+                const progress = ((streak - prevDays) / (nextMilestone.days - prevDays)) * 100
+                const radius = 20
+                const circumference = 2 * Math.PI * radius
+                const strokeDashoffset = circumference - (progress / 100) * circumference
+                return (
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                    <svg className="w-12 h-12 -rotate-90 shrink-0" viewBox="0 0 48 48">
+                      <circle cx="24" cy="24" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
+                      <circle
+                        cx="24" cy="24" r={radius} fill="none"
+                        stroke="rgba(255,255,255,0.6)"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        className="transition-all duration-1000"
+                      />
+                    </svg>
+                    <div className="text-sm text-white/95">
+                      Next: <span className="text-white font-medium">{nextMilestone.label}</span>
+                      <span className="text-white/60 ml-1">({nextMilestone.days - streak} days)</span>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Action buttons */}
               <div className="mt-6 flex gap-3 justify-center">
@@ -207,22 +240,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
         </div>
       )}
 
-      {/* Add confetti animation styles */}
-      <style jsx>{`
-        @keyframes confetti {
-          0% {
-            transform: translateY(-10px) rotate(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(400px) rotate(720deg);
-            opacity: 0;
-          }
-        }
-        .animate-confetti {
-          animation: confetti 2s ease-out forwards;
-        }
-      `}</style>
+      {/* Confetti animation uses .confetti-burst class from globals.css */}
     </>
   )
 }

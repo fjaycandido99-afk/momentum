@@ -55,6 +55,7 @@ export function ImmersiveHome() {
   const [isPlaying, setIsPlaying] = useState(false)
   const audioContext = useAudioOptional()
   const hasRestoredRef = useRef(false)
+  const isRestorePendingRef = useRef(!!audioContext?.lastPlayed)
 
   // Audio state machine
   const [audioState, dispatch] = useAudioStateMachine()
@@ -606,80 +607,41 @@ export function ImmersiveHome() {
   }, [moodTopic, motivationByTopic])
 
   // --- Restore last played ---
-  const restoreLastPlayed = useCallback(() => {
+  // Phase 1: Immediately set backgroundMusic/activeSoundscape so the BottomPlayerBar
+  // never falls through to the default soundscape during the restore window.
+  const hasPlaylistRestoredRef = useRef(false)
+
+  useEffect(() => {
+    if (hasRestoredRef.current) return
     const lastPlayed = audioContext?.lastPlayed
-    if (!lastPlayed) return
+    if (!lastPlayed) {
+      isRestorePendingRef.current = false
+      return
+    }
+    if (audioContext?.isSessionActive) return
+    hasRestoredRef.current = true
 
     if (lastPlayed.type === 'music' && lastPlayed.genreId && lastPlayed.videoId) {
       const genre = MUSIC_GENRES.find(g => g.id === lastPlayed.genreId)
       if (genre) {
-        const partial: Partial<AudioState> = {
-          backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.genreWord || genre.word },
-          musicPlaying: false,
-          userPausedMusic: true,
-        }
-
-        const checkAndRestore = () => {
-          const videos = genreVideos[lastPlayed.genreId!]
-          if (videos && videos.length > 0) {
-            const videoIndex = lastPlayed.playlistIndex ?? 0
-            const video = videos[videoIndex]
-            if (video) {
-              dispatch({
-                type: 'RESTORE_LAST_PLAYED',
-                partial: {
-                  ...partial,
-                  activeCardId: video.id,
-                  currentPlaylist: {
-                    videos: videos.slice(0, 8),
-                    index: videoIndex,
-                    type: 'music',
-                    genreId: lastPlayed.genreId,
-                    genreWord: lastPlayed.genreWord || genre.word,
-                  },
-                },
-              })
-              return
-            }
-          }
-          dispatch({ type: 'RESTORE_LAST_PLAYED', partial })
-        }
-        checkAndRestore()
-        setTimeout(checkAndRestore, 1000)
+        dispatch({
+          type: 'RESTORE_LAST_PLAYED',
+          partial: {
+            backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.genreWord || genre.word },
+            musicPlaying: false,
+            userPausedMusic: true,
+          },
+        })
       }
     } else if (lastPlayed.type === 'motivation' && lastPlayed.videoId) {
-      const restoredTopic = lastPlayed.label || topicName
-      const partial: Partial<AudioState> = {
-        backgroundMusic: { youtubeId: lastPlayed.videoId, label: restoredTopic },
-        musicPlaying: false,
-        userPausedMusic: true,
-      }
-
-      const checkAndRestore = () => {
-        const topicVideos = motivationByTopic[restoredTopic] || motivationVideos
-        if (topicVideos.length > 0) {
-          const videoIndex = lastPlayed.playlistIndex ?? 0
-          const video = topicVideos[videoIndex]
-          if (video) {
-            dispatch({
-              type: 'RESTORE_LAST_PLAYED',
-              partial: {
-                ...partial,
-                activeCardId: video.id,
-                currentPlaylist: {
-                  videos: topicVideos.slice(0, 8),
-                  index: videoIndex,
-                  type: 'motivation',
-                },
-              },
-            })
-            return
-          }
-        }
-        dispatch({ type: 'RESTORE_LAST_PLAYED', partial })
-      }
-      checkAndRestore()
-      setTimeout(checkAndRestore, 1000)
+      dispatch({
+        type: 'RESTORE_LAST_PLAYED',
+        partial: {
+          backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.label || topicName },
+          musicPlaying: false,
+          userPausedMusic: true,
+        },
+      })
     } else if (lastPlayed.type === 'soundscape' && lastPlayed.soundscapeId) {
       const item = SOUNDSCAPE_ITEMS.find(i => i.id === lastPlayed.soundscapeId)
       if (item) {
@@ -693,15 +655,68 @@ export function ImmersiveHome() {
         })
       }
     }
-  }, [audioContext?.lastPlayed, genreVideos, motivationVideos, motivationByTopic, topicName, dispatch])
+    // Clear pending flag after dispatch propagates
+    isRestorePendingRef.current = false
+  }, [audioContext?.lastPlayed, audioContext?.isSessionActive, topicName, dispatch])
 
+  // Phase 2: Once genre/motivation videos load, upgrade the restore with full playlist data.
+  // This runs reactively on genreVideos/motivationByTopic changes — no stale closure issues.
   useEffect(() => {
-    if (hasRestoredRef.current) return
-    if (!audioContext?.lastPlayed) return
-    if (audioContext?.isSessionActive) return
-    hasRestoredRef.current = true
-    restoreLastPlayed()
-  }, [audioContext?.lastPlayed, audioContext?.isSessionActive, restoreLastPlayed])
+    if (hasPlaylistRestoredRef.current) return
+    if (!hasRestoredRef.current) return // Phase 1 hasn't run yet
+    const lastPlayed = audioContext?.lastPlayed
+    if (!lastPlayed) return
+
+    if (lastPlayed.type === 'music' && lastPlayed.genreId && lastPlayed.videoId) {
+      const videos = genreVideos[lastPlayed.genreId]
+      if (!videos || videos.length === 0) return // Not loaded yet — will re-run when it loads
+      const genre = MUSIC_GENRES.find(g => g.id === lastPlayed.genreId)
+      if (!genre) return
+      hasPlaylistRestoredRef.current = true
+      const videoIndex = lastPlayed.playlistIndex ?? 0
+      const video = videos[videoIndex]
+      dispatch({
+        type: 'RESTORE_LAST_PLAYED',
+        partial: {
+          backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.genreWord || genre.word },
+          musicPlaying: false,
+          userPausedMusic: true,
+          activeCardId: video?.id || null,
+          currentPlaylist: {
+            videos: videos.slice(0, 8),
+            index: videoIndex,
+            type: 'music',
+            genreId: lastPlayed.genreId,
+            genreWord: lastPlayed.genreWord || genre.word,
+          },
+        },
+      })
+    } else if (lastPlayed.type === 'motivation' && lastPlayed.videoId) {
+      const restoredTopic = lastPlayed.label || topicName
+      const topicVideos = motivationByTopic[restoredTopic] || motivationVideos
+      if (topicVideos.length === 0) return // Not loaded yet
+      hasPlaylistRestoredRef.current = true
+      const videoIndex = lastPlayed.playlistIndex ?? 0
+      const video = topicVideos[videoIndex]
+      dispatch({
+        type: 'RESTORE_LAST_PLAYED',
+        partial: {
+          backgroundMusic: { youtubeId: lastPlayed.videoId, label: restoredTopic },
+          musicPlaying: false,
+          userPausedMusic: true,
+          activeCardId: video?.id || null,
+          currentPlaylist: {
+            videos: topicVideos.slice(0, 8),
+            index: videoIndex,
+            type: 'motivation',
+          },
+        },
+      })
+    } else {
+      // Soundscape — no playlist needed, already fully restored in phase 1
+      hasPlaylistRestoredRef.current = true
+    }
+  }, [audioContext?.lastPlayed, genreVideos, motivationVideos, motivationByTopic, topicName, dispatch])
 
   // --- Card tap animation ---
   const triggerTap = (videoId: string) => {
@@ -1120,7 +1135,9 @@ export function ImmersiveHome() {
               onClick={() => {
                 audioContext?.setSessionActive(false)
                 setShowMorningFlow(false)
-                restoreLastPlayed()
+                // Re-trigger restore on next render by resetting refs
+                hasRestoredRef.current = false
+                hasPlaylistRestoredRef.current = false
               }}
               className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors"
             >
@@ -1478,7 +1495,8 @@ export function ImmersiveHome() {
               }
             }
           } else {
-            if (audioContext?.isSessionActive) return
+            // Don't default to soundscape if restore is still pending or session is active
+            if (audioContext?.isSessionActive || isRestorePendingRef.current) return
             const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
             dispatch({ type: 'PLAY_SOUNDSCAPE', soundscape: { soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId } })
             createSoundscapePlayer(item.youtubeId)
@@ -1508,7 +1526,8 @@ export function ImmersiveHome() {
           if (audioState.activeSoundscape) {
             dispatch({ type: 'SHOW_SOUNDSCAPE_PLAYER' })
           } else {
-            if (audioContext?.isSessionActive) return
+            // Don't default to soundscape if restore is still pending or session is active
+            if (audioContext?.isSessionActive || isRestorePendingRef.current) return
             const item = SOUNDSCAPE_ITEMS.find(i => i.id === activeMode) || SOUNDSCAPE_ITEMS[0]
             dispatch({ type: 'PLAY_SOUNDSCAPE', soundscape: { soundId: item.id, label: item.label, subtitle: item.subtitle, youtubeId: item.youtubeId } })
             createSoundscapePlayer(item.youtubeId)
