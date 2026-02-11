@@ -35,6 +35,14 @@
     {
       "path": "/api/cron/notifications?type=motivational_nudge",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=daily_motivation",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=featured_music",
+      "schedule": "0 17 * * *"
     }
   ]
 }
