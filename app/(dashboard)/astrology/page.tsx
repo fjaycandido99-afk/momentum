@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AstrologyPage } from '@/components/astrology/AstrologyPage'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
@@ -9,6 +9,12 @@ import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 export default function AstrologyRoute() {
   const router = useRouter()
   const mindsetCtx = useMindsetOptional()
+  const [minDelayDone, setMinDelayDone] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinDelayDone(true), 3000)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     // Redirect non-Scholar users away from astrology
@@ -17,7 +23,7 @@ export default function AstrologyRoute() {
     }
   }, [mindsetCtx, router])
 
-  if (!mindsetCtx || mindsetCtx.isLoading) {
+  if (!minDelayDone || !mindsetCtx || mindsetCtx.isLoading) {
     return <LoadingScreen />
   }
 

@@ -314,11 +314,13 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   }
 
   const fetchData = useCallback(async () => {
+    const minDelay = new Promise(resolve => setTimeout(resolve, 3000))
     try {
       const [guideRes, prefsRes] = await Promise.all([
         fetch('/api/daily-guide/generate?date=' + today.toISOString(), { cache: 'no-store' }),
         fetch('/api/daily-guide/preferences', { cache: 'no-store' }),
-      ])
+        minDelay,
+      ]) as [Response, Response, unknown]
 
       if (!isMountedRef.current) return
 

@@ -134,9 +134,13 @@ function SettingsContent() {
   // Load preferences on mount
   useEffect(() => {
     const loadPreferences = async () => {
+      const minDelay = new Promise(resolve => setTimeout(resolve, 3000))
       try {
         // Check auth status
-        const { data: { user } } = await supabase.auth.getUser()
+        const [{ data: { user } }] = await Promise.all([
+          supabase.auth.getUser(),
+          minDelay,
+        ])
         setIsAuthenticated(!!user)
 
         const response = await fetch('/api/daily-guide/preferences')
