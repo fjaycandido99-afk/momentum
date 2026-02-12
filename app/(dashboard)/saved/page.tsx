@@ -117,7 +117,7 @@ export default function SavedPage() {
             {filtered.map(item => (
               <div
                 key={item.id}
-                className="p-4 glass-refined rounded-2xl group"
+                className="p-4 rounded-2xl group bg-black border border-white/[0.08]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
