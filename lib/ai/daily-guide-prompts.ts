@@ -8,6 +8,8 @@ import type {
   ModuleType,
   WorkoutIntensity,
 } from '../daily-guide/decision-tree'
+import type { MindsetId } from '../mindset/types'
+import { buildMindsetSystemPrompt } from '../mindset/prompt-builder'
 
 export type { DayType, GuideTone }
 export type GuideSegment =
@@ -429,6 +431,7 @@ interface GenerationContext {
   isStressTriggered?: boolean
   skippedPrevious?: boolean
   tomorrowDayType?: DayType
+  mindset?: MindsetId
 }
 
 export async function generateModuleContent(
@@ -516,15 +519,17 @@ export async function generateModuleContent(
       return getFallbackContent(moduleType, context)
     }
 
+    const baseGuidePrompt = `You are a mindful daily guide and coach. Generate warm, personal audio scripts.
+Tone: ${context.tone}. ${TONE_GUIDELINES[context.tone]}
+Day type: ${context.dayType}. Pace: ${context.pace}.
+Always respond with valid JSON only. No markdown, no code blocks, just raw JSON.`
+
     const response = await getGroq().chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         {
           role: 'system',
-          content: `You are a mindful daily guide and coach. Generate warm, personal audio scripts.
-Tone: ${context.tone}. ${TONE_GUIDELINES[context.tone]}
-Day type: ${context.dayType}. Pace: ${context.pace}.
-Always respond with valid JSON only. No markdown, no code blocks, just raw JSON.`,
+          content: buildMindsetSystemPrompt(baseGuidePrompt, context.mindset),
         },
         {
           role: 'user',

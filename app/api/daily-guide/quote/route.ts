@@ -3,6 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { QUOTES, getRandomQuotes, getHeuristicQuote, getDayOfYearQuote } from '@/lib/quotes'
+import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
+import { getWeightedQuotePool } from '@/lib/mindset/quotes'
 
 export const dynamic = 'force-dynamic'
 
@@ -96,12 +99,17 @@ export async function GET(request: NextRequest) {
           journalThemes ? `Recent journal themes: ${journalThemes}` : null,
         ].filter(Boolean).join('\n')
 
+        // Fetch user's mindset
+        const mindset = await getUserMindset(user.id)
+
+        const baseQuotePrompt = `You are a quote selector. Given a user's current state, mood trends, and life themes, pick the single best quote that will resonate most deeply. Reply with ONLY the number (0-9) of the best quote. Nothing else.`
+
         const completion = await getGroq().chat.completions.create({
           model: GROQ_MODEL,
           messages: [
             {
               role: 'system',
-              content: `You are a quote selector. Given a user's current state, mood trends, and life themes, pick the single best quote that will resonate most deeply. Reply with ONLY the number (0-9) of the best quote. Nothing else.`,
+              content: buildMindsetSystemPrompt(baseQuotePrompt, mindset),
             },
             {
               role: 'user',

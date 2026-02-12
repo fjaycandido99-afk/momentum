@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
+import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -239,12 +241,15 @@ export async function POST(request: NextRequest) {
           journal_freetext ? `Free write: "${journal_freetext}"` : null,
         ].filter(Boolean).join('\n')
 
+        const mindset = await getUserMindset(user.id)
+        const baseReflectionPrompt = `You are a thoughtful wellness coach. Based on today's journal entry and recent patterns, provide a 1-2 sentence insight or reflection. Be specific, reference their actual words, notice patterns or growth. Don't be generic. Be warm but substantive.${goalsContext}`
+
         const completion = await getGroq().chat.completions.create({
           model: GROQ_MODEL,
           messages: [
             {
               role: 'system',
-              content: `You are a thoughtful wellness coach. Based on today's journal entry and recent patterns, provide a 1-2 sentence insight or reflection. Be specific, reference their actual words, notice patterns or growth. Don't be generic. Be warm but substantive.${goalsContext}`,
+              content: buildMindsetSystemPrompt(baseReflectionPrompt, mindset),
             },
             {
               role: 'user',

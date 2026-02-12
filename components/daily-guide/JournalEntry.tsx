@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { PenLine, Check, Loader2, X, Sparkles, Heart, Target, Crown } from 'lucide-react'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 
 interface JournalEntryProps {
   date?: Date
@@ -13,6 +15,11 @@ interface JournalEntryProps {
 export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntryProps) {
   const subscription = useSubscriptionOptional()
   const canSeeReflections = subscription?.checkAccess('ai_reflections') ?? false
+  const mindsetCtx = useMindsetOptional()
+  const prompts = useMemo(() => {
+    const mindset = mindsetCtx?.mindset || 'scholar'
+    return MINDSET_JOURNAL_PROMPTS[mindset]
+  }, [mindsetCtx?.mindset])
   const [win, setWin] = useState('')
   const [gratitude, setGratitude] = useState('')
   const [intention, setIntention] = useState('')
@@ -156,51 +163,51 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
           </div>
         ) : (
           <div className="space-y-4">
-            {/* What did you learn */}
+            {/* Prompt 1 */}
             <div>
               <label className="text-sm text-white/95 flex items-center gap-2 mb-2">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                What did you learn today?
+                {prompts.prompt1.label}
               </label>
               <textarea
                 value={win}
                 onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
-                placeholder="Today I learned..."
-                aria-label="What did you learn today?"
+                placeholder={prompts.prompt1.placeholder}
+                aria-label={prompts.prompt1.label}
                 className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                 rows={2}
                 maxLength={500}
               />
             </div>
 
-            {/* Gratitude */}
+            {/* Prompt 2 */}
             <div>
               <label className="text-sm text-white/95 flex items-center gap-2 mb-2">
                 <Heart className="w-3.5 h-3.5 text-pink-400" />
-                What are you grateful for?
+                {prompts.prompt2.label}
               </label>
               <textarea
                 value={gratitude}
                 onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
-                placeholder="I'm grateful for..."
-                aria-label="What are you grateful for?"
+                placeholder={prompts.prompt2.placeholder}
+                aria-label={prompts.prompt2.label}
                 className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                 rows={2}
                 maxLength={500}
               />
             </div>
 
-            {/* Tomorrow's intention */}
+            {/* Prompt 3 */}
             <div>
               <label className="text-sm text-white/95 flex items-center gap-2 mb-2">
                 <Target className="w-3.5 h-3.5 text-purple-400" />
-                Tomorrow&apos;s intention
+                {prompts.prompt3.label}
               </label>
               <textarea
                 value={intention}
                 onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
-                placeholder="Tomorrow I will..."
-                aria-label="Tomorrow's intention"
+                placeholder={prompts.prompt3.placeholder}
+                aria-label={prompts.prompt3.label}
                 className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                 rows={2}
                 maxLength={300}

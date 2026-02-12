@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Lock,
   Star,
+  Compass,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -36,6 +37,8 @@ import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { SettingsCategory } from '@/components/settings/SettingsCategory'
+import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 type GuideTone = 'calm' | 'direct' | 'neutral'
@@ -78,6 +81,7 @@ function SettingsContent() {
   const supabase = createClient()
   const themeContext = useThemeOptional()
   const subscription = useSubscriptionOptional()
+  const mindsetCtx = useMindsetOptional()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -638,80 +642,108 @@ function SettingsContent() {
           </div>
         </SettingsCategory>
 
-        {/* ═══════════════ 4. Cosmic ═══════════════ */}
+        {/* ═══════════════ 4. Your Mindset ═══════════════ */}
         <SettingsCategory
-          id="cosmic"
-          icon={Star}
-          iconColor="text-indigo-400"
-          iconBg="bg-gradient-to-br from-indigo-500/20 to-purple-500/20"
-          title="Cosmic"
-          description="Astrology mode, zodiac sign"
+          id="mindset"
+          icon={Compass}
+          title="Your Mindset"
+          description={mindsetCtx ? MINDSET_CONFIGS[mindsetCtx.mindset].subtitle : 'Philosophy & path'}
         >
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="font-medium text-white text-sm">Astrology Mode</p>
-                <p className="text-white/60 text-xs">Cosmic insights & zodiac wisdom</p>
-              </div>
-              <button
-                onClick={() => setAstrologyEnabled(!astrologyEnabled)}
-                role="switch"
-                aria-checked={astrologyEnabled}
-                aria-label="Astrology mode"
-                className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                  astrologyEnabled ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.3)]' : 'bg-white/10'
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                    astrologyEnabled ? 'bg-white translate-x-6' : 'bg-white translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {astrologyEnabled && (
-              <div className="space-y-4">
-                <p className="text-sm text-white/70">Select your zodiac sign for personalized cosmic insights</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {ZODIAC_SIGNS.map((sign) => (
-                    <button
-                      key={sign.id}
-                      onClick={() => setZodiacSign(sign.id)}
-                      aria-pressed={zodiacSign === sign.id}
-                      className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                        zodiacSign === sign.id
-                          ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 shadow-[inset_0_0_12px_rgba(139,92,246,0.15)]'
-                          : 'bg-white/5 border border-transparent hover:bg-white/10'
-                      }`}
-                    >
-                      <span className="text-xl block mb-0.5">{sign.symbol}</span>
-                      <p className={`text-xs font-medium ${zodiacSign === sign.id ? 'text-white' : 'text-white/95'}`}>{sign.label}</p>
-                      <p className="text-[9px] text-white/60 mt-0.5">{sign.dates}</p>
-                    </button>
-                  ))}
+            {mindsetCtx && (
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">{MINDSET_CONFIGS[mindsetCtx.mindset].icon}</span>
+                <div>
+                  <p className="font-medium text-white text-sm">{MINDSET_CONFIGS[mindsetCtx.mindset].name}</p>
+                  <p className="text-white/60 text-xs">{MINDSET_CONFIGS[mindsetCtx.mindset].subtitle}</p>
                 </div>
-                {zodiacSign && (
-                  <div className="space-y-2">
-                    <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
-                      <p className="text-sm text-white/80">
-                        <span className="text-indigo-400 font-medium">{ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}</span> selected.
-                        You&apos;ll receive cosmic insights tailored to your sign in your Morning Flow.
-                      </p>
-                    </div>
-                    <Link
-                      href="/astrology"
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500/15 to-purple-500/15 hover:from-indigo-500/25 hover:to-purple-500/25 border border-indigo-500/20 transition-all text-sm text-indigo-300 press-scale"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      Explore Cosmic Guide
-                    </Link>
-                  </div>
-                )}
               </div>
             )}
+            <Link
+              href="/mindset-selection"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 text-white/90 text-sm hover:bg-white/10 transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            >
+              Reset My Path
+            </Link>
           </div>
         </SettingsCategory>
+
+        {/* ═══════════════ 4b. Cosmic (Scholar only) ═══════════════ */}
+        {mindsetCtx?.isScholar && (
+          <SettingsCategory
+            id="cosmic"
+            icon={Star}
+            iconColor="text-indigo-400"
+            iconBg="bg-gradient-to-br from-indigo-500/20 to-purple-500/20"
+            title="Cosmic"
+            description="Astrology mode, zodiac sign"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="font-medium text-white text-sm">Astrology Mode</p>
+                  <p className="text-white/60 text-xs">Cosmic insights & zodiac wisdom</p>
+                </div>
+                <button
+                  onClick={() => setAstrologyEnabled(!astrologyEnabled)}
+                  role="switch"
+                  aria-checked={astrologyEnabled}
+                  aria-label="Astrology mode"
+                  className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                    astrologyEnabled ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.3)]' : 'bg-white/10'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                      astrologyEnabled ? 'bg-white translate-x-6' : 'bg-white translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {astrologyEnabled && (
+                <div className="space-y-4">
+                  <p className="text-sm text-white/70">Select your zodiac sign for personalized cosmic insights</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {ZODIAC_SIGNS.map((sign) => (
+                      <button
+                        key={sign.id}
+                        onClick={() => setZodiacSign(sign.id)}
+                        aria-pressed={zodiacSign === sign.id}
+                        className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                          zodiacSign === sign.id
+                            ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 shadow-[inset_0_0_12px_rgba(139,92,246,0.15)]'
+                            : 'bg-white/5 border border-transparent hover:bg-white/10'
+                        }`}
+                      >
+                        <span className="text-xl block mb-0.5">{sign.symbol}</span>
+                        <p className={`text-xs font-medium ${zodiacSign === sign.id ? 'text-white' : 'text-white/95'}`}>{sign.label}</p>
+                        <p className="text-[9px] text-white/60 mt-0.5">{sign.dates}</p>
+                      </button>
+                    ))}
+                  </div>
+                  {zodiacSign && (
+                    <div className="space-y-2">
+                      <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+                        <p className="text-sm text-white/80">
+                          <span className="text-indigo-400 font-medium">{ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}</span> selected.
+                          You&apos;ll receive cosmic insights tailored to your sign in your Morning Flow.
+                        </p>
+                      </div>
+                      <Link
+                        href="/astrology"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500/15 to-purple-500/15 hover:from-indigo-500/25 hover:to-purple-500/25 border border-indigo-500/20 transition-all text-sm text-indigo-300 press-scale"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Explore Cosmic Guide
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </SettingsCategory>
+        )}
 
         {/* ═══════════════ 5. Appearance ═══════════════ */}
         <SettingsCategory
@@ -843,8 +875,12 @@ function SettingsContent() {
                   <p className="text-[10px] text-white/95">Changes each day</p>
                 </button>
 
-                {/* Individual animation options with live preview */}
-                {BACKGROUND_ANIMATIONS.map(anim => {
+                {/* Individual animation options with live preview — filtered by mindset */}
+                {BACKGROUND_ANIMATIONS.filter(anim => {
+                  const pool = mindsetCtx?.config?.backgroundPool
+                  if (!pool || pool.length === 0) return true
+                  return pool.includes(anim.id)
+                }).map(anim => {
                   const AnimComponent = anim.component
                   return (
                     <button

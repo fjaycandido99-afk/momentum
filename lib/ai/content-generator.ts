@@ -1,4 +1,6 @@
 import Groq from 'groq-sdk'
+import type { MindsetId } from '../mindset/types'
+import { buildMindsetSystemPrompt } from '../mindset/prompt-builder'
 
 // Lazy initialization to avoid build-time errors
 let groq: Groq | null = null
@@ -36,7 +38,8 @@ const SEGMENT_GUIDELINES: Record<SegmentType, string> = {
 export async function generateSessionContent(
   activityType: ActivityType,
   durationMinutes: number,
-  voiceStyle: 'calm' | 'direct' | 'energetic' = 'calm'
+  voiceStyle: 'calm' | 'direct' | 'energetic' = 'calm',
+  mindset?: MindsetId
 ): Promise<ContentSegment[]> {
   const totalSeconds = durationMinutes * 60
 
@@ -63,14 +66,14 @@ export async function generateSessionContent(
       messages: [
         {
           role: 'system',
-          content: `You are a mindful audio coach. Generate motivational audio scripts.
+          content: buildMindsetSystemPrompt(`You are a mindful audio coach. Generate motivational audio scripts.
 Voice style: ${voiceStyle}.
 ${voiceStyle === 'calm' ? 'Speak slowly, deliberately. Pauses between thoughts.' : ''}
 ${voiceStyle === 'direct' ? 'Clear, no fluff. Get to the point.' : ''}
 ${voiceStyle === 'energetic' ? 'Upbeat but not cheesy. Confident energy.' : ''}
 
 NEVER use toxic positivity, fake hype, or aggressive motivation.
-Always respond with valid JSON only. No markdown, no code blocks, just raw JSON.`,
+Always respond with valid JSON only. No markdown, no code blocks, just raw JSON.`, mindset),
         },
         {
           role: 'user',

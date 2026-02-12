@@ -39,6 +39,9 @@ const DEFAULT_PREFERENCES = {
   // Astrology preferences
   astrology_enabled: false,
   zodiac_sign: null,
+  // Mindset
+  mindset: 'stoic',
+  mindset_selected_at: null,
 }
 
 export async function GET() {
@@ -108,6 +111,10 @@ export async function GET() {
         // Astrology preferences
         astrology_enabled: true,
         zodiac_sign: true,
+
+        // Mindset
+        mindset: true,
+        mindset_selected_at: true,
       },
     })
 
@@ -163,6 +170,10 @@ export async function GET() {
         // Astrology preferences
         astrology_enabled: false,
         zodiac_sign: null,
+
+        // Mindset
+        mindset: 'stoic',
+        mindset_selected_at: null,
       })
     }
 
@@ -238,7 +249,48 @@ export async function POST(request: NextRequest) {
       // Astrology preferences
       astrology_enabled,
       zodiac_sign,
+
+      // Mindset
+      mindset,
     } = body
+
+    // If mindset changed, clear today's cached AI content so it regenerates with new mindset
+    if (mindset !== undefined) {
+      const currentPrefs = await prisma.userPreferences.findUnique({
+        where: { user_id: user.id },
+        select: { mindset: true },
+      })
+      if (currentPrefs && currentPrefs.mindset !== mindset) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        try {
+          await prisma.dailyGuide.updateMany({
+            where: { user_id: user.id, date: today },
+            data: {
+              // Clear AI-generated content so it regenerates with new mindset
+              ai_affirmation: null,
+              ai_session_plan: null,
+              cosmic_insight_script: null,
+              // Clear voice scripts so they regenerate
+              breathing_audio: null, breathing_script: null, breathing_duration: null,
+              affirmation_audio: null, affirmation_script: null, affirmation_duration: null,
+              gratitude_audio: null, gratitude_script: null, gratitude_duration: null,
+              sleep_audio: null, sleep_script: null, sleep_duration: null,
+              grounding_audio: null, grounding_script: null, grounding_duration: null,
+              work_prime_audio: null, work_prime_script: null, work_prime_duration: null,
+              off_prime_audio: null, off_prime_script: null, off_prime_duration: null,
+              recovery_prime_audio: null, recovery_prime_script: null, recovery_prime_duration: null,
+              work_close_audio: null, work_close_script: null, work_close_duration: null,
+              off_close_audio: null, off_close_script: null, off_close_duration: null,
+              recovery_close_audio: null, recovery_close_script: null, recovery_close_duration: null,
+            },
+          })
+          console.log(`[Mindset Change] Cleared cached content for user ${user.id}, new mindset: ${mindset}`)
+        } catch (e) {
+          console.error('[Mindset Change] Failed to clear cache:', e)
+        }
+      }
+    }
 
     // If tone changed, clear today's cached voice audio so it regenerates with new tone
     if (guide_tone !== undefined) {
@@ -323,6 +375,9 @@ export async function POST(request: NextRequest) {
         // Astrology preferences
         ...(astrology_enabled !== undefined && { astrology_enabled }),
         ...(zodiac_sign !== undefined && { zodiac_sign }),
+
+        // Mindset
+        ...(mindset !== undefined && { mindset, mindset_selected_at: new Date() }),
       },
       create: {
         user_id: user.id,
@@ -373,6 +428,10 @@ export async function POST(request: NextRequest) {
         // Astrology preferences
         astrology_enabled: astrology_enabled ?? false,
         zodiac_sign: zodiac_sign || null,
+
+        // Mindset
+        mindset: mindset || 'stoic',
+        mindset_selected_at: mindset ? new Date() : null,
       },
     })
 

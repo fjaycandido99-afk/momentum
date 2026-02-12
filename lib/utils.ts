@@ -5,15 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function generateReportToken(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
-  let token = ''
-  for (let i = 0; i < 24; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return token
-}
-
 export function formatDate(date: Date | string): string {
   const d = new Date(date)
   return d.toLocaleDateString('en-US', {
@@ -70,32 +61,6 @@ export function isTomorrow(date: Date | string): boolean {
     d.getMonth() === tomorrow.getMonth() &&
     d.getFullYear() === tomorrow.getFullYear()
   )
-}
-
-export function getJobStatusColor(status: string): string {
-  switch (status) {
-    case 'completed':
-      return 'bg-green-100 text-green-700 border-green-200'
-    case 'in_progress':
-      return 'bg-blue-100 text-blue-700 border-blue-200'
-    case 'scheduled':
-      return 'bg-gray-100 text-gray-700 border-gray-200'
-    default:
-      return 'bg-gray-100 text-gray-700 border-gray-200'
-  }
-}
-
-export function getJobStatusLabel(status: string): string {
-  switch (status) {
-    case 'completed':
-      return 'Completed'
-    case 'in_progress':
-      return 'In Progress'
-    case 'scheduled':
-      return 'Scheduled'
-    default:
-      return status
-  }
 }
 
 export function truncate(str: string, length: number): string {

@@ -1,4 +1,6 @@
 import { Quote, QUOTES } from './quotes'
+import type { MindsetId } from './mindset/types'
+import { MINDSET_DAILY_QUESTIONS } from './mindset/daily-questions'
 
 export const DAILY_QUESTIONS: string[] = [
   // Forward-looking
@@ -45,12 +47,24 @@ export interface Spark {
   author?: string
 }
 
+/**
+ * Get a weighted question pool: mindset-specific questions appear 3x
+ * alongside the general pool for higher selection probability.
+ */
+export function getWeightedQuestions(mindset?: MindsetId): string[] {
+  if (!mindset) return DAILY_QUESTIONS
+  const mindsetQs = MINDSET_DAILY_QUESTIONS[mindset] || []
+  // Add mindset questions 3x for higher weight
+  return [...DAILY_QUESTIONS, ...mindsetQs, ...mindsetQs, ...mindsetQs]
+}
+
 // Alternate between questions and quotes, picking randomly within each
 let showQuestion = true
 
-export function getNextSpark(quotes: Quote[]): Spark {
+export function getNextSpark(quotes: Quote[], mindset?: MindsetId): Spark {
+  const pool = getWeightedQuestions(mindset)
   if (showQuestion) {
-    const q = DAILY_QUESTIONS[Math.floor(Math.random() * DAILY_QUESTIONS.length)]
+    const q = pool[Math.floor(Math.random() * pool.length)]
     showQuestion = false
     return { type: 'question', text: q }
   } else {

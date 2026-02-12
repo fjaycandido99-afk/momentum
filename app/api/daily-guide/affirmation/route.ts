@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
+import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 
 export const dynamic = 'force-dynamic'
 
@@ -124,12 +126,17 @@ export async function GET() {
       zodiacText || null,
     ].filter(Boolean).join('\n')
 
+    // Fetch user's mindset for prompt injection
+    const mindset = await getUserMindset(user.id)
+
+    const baseSystemPrompt = `You are a deeply personal wellness coach who knows this user's journey. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. Reference their specific goals, journal themes, or zodiac energy if available — but subtly, not by name-dropping. No quotes, no attribution.\n\nUser context:\n${context || 'No specific context available.'}`
+
     const completion = await getGroq().chat.completions.create({
       model: GROQ_MODEL,
       messages: [
         {
           role: 'system',
-          content: `You are a deeply personal wellness coach who knows this user's journey. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. Reference their specific goals, journal themes, or zodiac energy if available — but subtly, not by name-dropping. No quotes, no attribution.\n\nUser context:\n${context || 'No specific context available.'}`,
+          content: buildMindsetSystemPrompt(baseSystemPrompt, mindset),
         },
         {
           role: 'user',

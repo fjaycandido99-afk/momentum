@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getGroq } from '@/lib/groq'
+import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,12 +83,17 @@ export async function POST(request: NextRequest) {
       `Duration: approximately ${duration} minutes.`,
     ].filter(Boolean).join(' ')
 
+    // Fetch user's mindset
+    const mindset = await getUserMindset(user.id)
+
+    const baseMeditationPrompt = `You are a calm, soothing meditation guide. Write scripts that are peaceful and reassuring. Use ellipses (...) for natural pauses. No markdown formatting. No section headers. Just flowing, gentle guidance. ${themePrompt}`
+
     const completion = await getGroq().chat.completions.create({
       model: DEEP_MODEL,
       messages: [
         {
           role: 'system',
-          content: `You are a calm, soothing meditation guide. Write scripts that are peaceful and reassuring. Use ellipses (...) for natural pauses. No markdown formatting. No section headers. Just flowing, gentle guidance. ${themePrompt}`,
+          content: buildMindsetSystemPrompt(baseMeditationPrompt, mindset),
         },
         {
           role: 'user',

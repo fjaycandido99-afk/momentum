@@ -117,12 +117,3 @@ export function useRippleBurst() {
   return spawnRipple
 }
 
-/**
- * Word Cascade - splits text into spans with staggered delays
- */
-export function getWordCascadeSpans(text: string, baseDelay: number = 0) {
-  return text.split(' ').map((word, i) => ({
-    word: word + ' ',
-    delay: `${baseDelay + i * 0.08}s`,
-  }))
-}

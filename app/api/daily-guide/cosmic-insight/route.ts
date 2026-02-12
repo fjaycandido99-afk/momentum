@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getZodiacTraits, getElementContext, getRandomCosmicTheme } from '@/lib/ai/zodiac-traits'
+import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,6 +56,17 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+
+    // Scholar-only: cosmic insights require the Scholar mindset
+    if (user) {
+      const mindset = await getUserMindset(user.id)
+      if (mindset !== 'scholar') {
+        return NextResponse.json(
+          { error: 'Cosmic insights are available with the Scholar mindset' },
+          { status: 403 }
+        )
+      }
+    }
 
     // Allow guests to get a basic insight
     const { searchParams } = new URL(request.url)

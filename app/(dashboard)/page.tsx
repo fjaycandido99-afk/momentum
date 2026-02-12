@@ -9,7 +9,7 @@ export default function HomePage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
-  const [needsThemeSetup, setNeedsThemeSetup] = useState(false)
+  const [needsMindsetSelection, setNeedsMindsetSelection] = useState(false)
 
   useEffect(() => {
     async function checkOnboarding() {
@@ -24,11 +24,16 @@ export default function HomePage() {
             return
           }
 
-          // For signed-in users, check onboarding status
+          // For signed-in users, check mindset selection first
+          if (!prefs.mindset_selected_at) {
+            setNeedsMindsetSelection(true)
+            setIsLoading(false)
+            return
+          }
+
+          // Then check onboarding status
           if (!prefs.guide_onboarding_done) {
             setNeedsOnboarding(true)
-          } else if (!prefs.theme_onboarding_done) {
-            setNeedsThemeSetup(true)
           }
         }
       } catch (error) {
@@ -42,14 +47,18 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
+    if (needsMindsetSelection) {
+      router.push('/mindset-selection')
+    }
+  }, [needsMindsetSelection, router])
+
+  useEffect(() => {
     if (needsOnboarding) {
       router.push('/daily-guide/onboarding')
-    } else if (needsThemeSetup) {
-      router.push('/theme-setup')
     }
-  }, [needsOnboarding, needsThemeSetup, router])
+  }, [needsOnboarding, router])
 
-  if (isLoading || needsOnboarding || needsThemeSetup) {
+  if (isLoading || needsOnboarding || needsMindsetSelection) {
     return <LoadingScreen />
   }
 

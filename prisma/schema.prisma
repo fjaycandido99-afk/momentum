@@ -131,6 +131,10 @@ model UserPreferences {
   astrology_enabled Boolean @default(false)
   zodiac_sign       String?
 
+  // Mindset system
+  mindset             String    @default("stoic")
+  mindset_selected_at DateTime?
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

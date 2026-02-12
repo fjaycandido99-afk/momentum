@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getGroq } from '@/lib/groq'
 import { VALID_SOUNDSCAPE_IDS } from '@/components/home/home-types'
+import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 
 export const dynamic = 'force-dynamic'
 
@@ -109,12 +111,10 @@ export async function POST(request: NextRequest) {
       avgEnergy.length > 0 ? `Recent energy levels: ${avgEnergy.slice(0, 3).join(', ')}` : null,
     ].filter(Boolean).join('\n')
 
-    const completion = await getGroq().chat.completions.create({
-      model: DEEP_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a wellness session planner. Create a personalized session plan with 3-4 steps. Each step uses one of these content types:
+    // Fetch user's mindset
+    const mindset = await getUserMindset(user.id)
+
+    const baseSessionPrompt = `You are a wellness session planner. Create a personalized session plan with 3-4 steps. Each step uses one of these content types:
 
 Available soundscapes (type "soundscape"): ${VALID_SOUNDSCAPES.join(', ')}
 Available voice guides (type "breathing"): ${VALID_GUIDES.join(', ')}
@@ -128,7 +128,14 @@ Return a JSON array of steps. Each step must have:
 - "durationMinutes": suggested duration (1-10 min)
 - "reason": a brief explanation why this step fits (max 15 words)
 
-Total duration should roughly match the user's available time. Vary the content types. Respond with a JSON array only.`,
+Total duration should roughly match the user's available time. Vary the content types. Respond with a JSON array only.`
+
+    const completion = await getGroq().chat.completions.create({
+      model: DEEP_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: buildMindsetSystemPrompt(baseSessionPrompt, mindset),
         },
         {
           role: 'user',

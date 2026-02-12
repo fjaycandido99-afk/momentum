@@ -4,6 +4,10 @@ import { prisma } from '@/lib/prisma'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { DAILY_QUESTIONS } from '@/lib/daily-sparks'
 import { QUOTES } from '@/lib/quotes'
+import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
+import { getWeightedQuestions } from '@/lib/daily-sparks'
+import { getWeightedQuotePool } from '@/lib/mindset/quotes'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,12 +87,15 @@ export async function GET(request: NextRequest) {
           guide?.mood_before ? `Current mood: ${guide.mood_before}` : null,
         ].filter(Boolean).join('. ')
 
+        const mindset = await getUserMindset(user.id)
+        const affirmationPrompt = `You are a personal wellness coach. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. No quotes, no attribution. ${context ? `Context: ${context}` : ''}`
+
         const completion = await getGroq().chat.completions.create({
           model: GROQ_MODEL,
           messages: [
             {
               role: 'system',
-              content: `You are a personal wellness coach. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. No quotes, no attribution. ${context ? `Context: ${context}` : ''}`,
+              content: buildMindsetSystemPrompt(affirmationPrompt, mindset),
             },
             { role: 'user', content: 'Generate my daily affirmation.' },
           ],
@@ -115,6 +122,7 @@ export async function GET(request: NextRequest) {
 
     if (useAI) {
       try {
+        const sparkMindset = await getUserMindset(user.id)
         const context = [
           guide?.day_type ? `Day type: ${guide.day_type}` : null,
           guide?.energy_level ? `Energy level: ${guide.energy_level}` : null,
@@ -135,7 +143,7 @@ export async function GET(request: NextRequest) {
         const completion = await getGroq().chat.completions.create({
           model: GROQ_MODEL,
           messages: [
-            { role: 'system', content: systemPrompt },
+            { role: 'system', content: buildMindsetSystemPrompt(systemPrompt, sparkMindset) },
             { role: 'user', content: `Give me a ${sparkType === 'question' ? 'reflective question' : sparkType === 'quote' ? 'quote' : 'motivational spark'} for right now.` },
           ],
           max_tokens: 80,
@@ -171,6 +179,11 @@ export async function GET(request: NextRequest) {
         // AI failed, fall through to smart pick
       }
     }
+
+    // Fetch mindset for static pool weighting
+    const userMindset = await getUserMindset(user.id)
+    const weightedQuestionPool = getWeightedQuestions(userMindset)
+    const weightedQuotePool = getWeightedQuotePool(userMindset, QUOTES, 3)
 
     // Smart pick from static pool based on context
     if (sparkType === 'question' || sparkType === 'motivation') {
@@ -218,8 +231,8 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Fallback: random question
-      const q = DAILY_QUESTIONS[Math.floor(Math.random() * DAILY_QUESTIONS.length)]
+      // Fallback: random question (mindset-weighted)
+      const q = weightedQuestionPool[Math.floor(Math.random() * weightedQuestionPool.length)]
       return NextResponse.json({ type: 'question', text: q, ai: false })
     }
 
@@ -242,15 +255,15 @@ export async function GET(request: NextRequest) {
     const preferredCats = [...new Set([...moodCats, ...energyCats])]
 
     if (preferredCats.length > 0) {
-      const matching = QUOTES.filter(q => q.category && preferredCats.includes(q.category))
+      const matching = weightedQuotePool.filter(q => q.category && preferredCats.includes(q.category))
       if (matching.length > 0) {
         const pick = matching[Math.floor(Math.random() * matching.length)]
         return NextResponse.json({ type: 'quote', text: pick.text, author: pick.author, ai: false })
       }
     }
 
-    // Fallback: random quote
-    const pick = QUOTES[Math.floor(Math.random() * QUOTES.length)]
+    // Fallback: random quote (mindset-weighted)
+    const pick = weightedQuotePool[Math.floor(Math.random() * weightedQuotePool.length)]
     return NextResponse.json({ type: 'quote', text: pick.text, author: pick.author, ai: false })
   } catch (error) {
     console.error('Spark API error:', error)

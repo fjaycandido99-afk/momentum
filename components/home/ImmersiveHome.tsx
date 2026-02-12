@@ -488,7 +488,7 @@ export function ImmersiveHome() {
         .then(r => r.ok ? r.json() : null)
         .then(data => {
           if (data?.current_streak) setStreak(data.current_streak)
-          setAstrologyEnabled(!!data?.astrology_enabled)
+          setAstrologyEnabled(data?.mindset === 'scholar')
         })
         .catch(() => {})
     }

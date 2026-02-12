@@ -17,6 +17,7 @@ import {
 import type { GuideTone } from '@/lib/ai/daily-guide-prompts'
 import { BACKGROUND_ANIMATIONS, setPreferredAnimation } from '@/components/player/DailyBackground'
 import { ONBOARDING_COPY } from '@/lib/onboarding-copy'
+import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { SuccessAnimation } from '@/components/ui/SuccessAnimation'
 
 type UserType = 'professional' | 'student'
@@ -71,6 +72,12 @@ export function DailyGuideOnboarding() {
     guideTone: 'calm',
   })
   const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null)
+  const mindsetCtx = useMindsetOptional()
+
+  // Filter backgrounds to the user's mindset pool
+  const filteredAnimations = mindsetCtx?.backgroundPool
+    ? BACKGROUND_ANIMATIONS.filter(a => mindsetCtx.backgroundPool.includes(a.id))
+    : BACKGROUND_ANIMATIONS
 
   const totalSteps = 4
 
@@ -337,7 +344,7 @@ export function DailyGuideOnboarding() {
               </button>
 
               {/* Individual animation options with live preview */}
-              {BACKGROUND_ANIMATIONS.map(anim => {
+              {filteredAnimations.map(anim => {
                 const AnimComponent = anim.component
                 return (
                   <button
@@ -401,7 +408,7 @@ export function DailyGuideOnboarding() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Layers className="w-3.5 h-3.5 text-white/95" />
-                  <span>Background: {selectedAnimation ? BACKGROUND_ANIMATIONS.find(a => a.id === selectedAnimation)?.name : 'Daily Rotation'}</span>
+                  <span>Background: {selectedAnimation ? filteredAnimations.find(a => a.id === selectedAnimation)?.name : 'Daily Rotation'}</span>
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t border-white/10 text-xs text-white/95">
@@ -450,7 +457,7 @@ export function DailyGuideOnboarding() {
       </div>
 
       {/* Navigation */}
-      <div className="fixed bottom-20 left-0 right-0 p-6 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f] to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-6 pb-8 bg-gradient-to-t from-black from-60% to-transparent">
         <div className="flex items-center justify-between max-w-sm mx-auto">
           {step > 0 ? (
             <button
