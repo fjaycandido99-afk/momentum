@@ -80,9 +80,14 @@ function pickRandom(pool: string[], count: number): string[] {
 export function LoadingScreen() {
   const mindsetCtx = useMindsetOptional()
   const pool = mindsetCtx ? MINDSET_WORDS[mindsetCtx.mindset] : GENERIC_WORDS
-  const [words] = useState(() => pickRandom(pool, 4))
+  const [words, setWords] = useState(pool.slice(0, 4))
   const [wordIndex, setWordIndex] = useState(0)
   const [visible, setVisible] = useState(false)
+
+  // Shuffle words on client mount to avoid hydration mismatch
+  useEffect(() => {
+    setWords(pickRandom(pool, 4))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const initialDelay = setTimeout(() => setVisible(true), 400)
