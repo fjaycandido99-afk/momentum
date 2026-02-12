@@ -12,7 +12,7 @@ export default function DailyGuidePage() {
 
   useEffect(() => {
     const checkOnboarding = async () => {
-      const minDelay = new Promise(resolve => setTimeout(resolve, 3000))
+      const minDelay = new Promise(resolve => setTimeout(resolve, 2500))
       try {
         const [response] = await Promise.all([
           fetch('/api/daily-guide/preferences'),

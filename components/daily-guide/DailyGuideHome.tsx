@@ -314,7 +314,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   }
 
   const fetchData = useCallback(async () => {
-    const minDelay = new Promise(resolve => setTimeout(resolve, 3000))
+    const minDelay = new Promise(resolve => setTimeout(resolve, 2500))
     try {
       const [guideRes, prefsRes] = await Promise.all([
         fetch('/api/daily-guide/generate?date=' + today.toISOString(), { cache: 'no-store' }),

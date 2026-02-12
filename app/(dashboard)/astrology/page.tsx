@@ -12,7 +12,7 @@ export default function AstrologyRoute() {
   const [minDelayDone, setMinDelayDone] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setMinDelayDone(true), 3000)
+    const timer = setTimeout(() => setMinDelayDone(true), 2500)
     return () => clearTimeout(timer)
   }, [])
 

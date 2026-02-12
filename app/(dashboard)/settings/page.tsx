@@ -134,7 +134,7 @@ function SettingsContent() {
   // Load preferences on mount
   useEffect(() => {
     const loadPreferences = async () => {
-      const minDelay = new Promise(resolve => setTimeout(resolve, 3000))
+      const minDelay = new Promise(resolve => setTimeout(resolve, 2500))
       try {
         // Check auth status
         const [{ data: { user } }] = await Promise.all([
