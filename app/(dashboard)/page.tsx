@@ -13,8 +13,12 @@ export default function HomePage() {
 
   useEffect(() => {
     async function checkOnboarding() {
+      const minDelay = new Promise(resolve => setTimeout(resolve, 3000))
       try {
-        const response = await fetch('/api/daily-guide/preferences')
+        const [response] = await Promise.all([
+          fetch('/api/daily-guide/preferences'),
+          minDelay,
+        ])
         if (response.ok) {
           const prefs = await response.json()
 
