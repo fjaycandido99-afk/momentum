@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MINDSET_IDS, type MindsetId } from '@/lib/mindset/types'
+import { MindsetIcon } from './MindsetIcon'
 
 interface MindsetSelectionScreenProps {
   /** If true, show as a "Reset My Path" picker instead of onboarding */
@@ -44,7 +45,7 @@ export function MindsetSelectionScreen({ isReset }: MindsetSelectionScreenProps)
               onClick={() => handleCardTap(id)}
               className="relative p-4 rounded-2xl text-left transition-all duration-200 min-h-[120px] bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
-              <span className="text-2xl block mb-2">{config.icon}</span>
+              <MindsetIcon mindsetId={id} className="w-7 h-7 text-white mb-2" />
               <p className="font-medium text-sm text-white/90">
                 {config.name}
               </p>

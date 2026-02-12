@@ -26,6 +26,8 @@ import {
   getMoodTopicName,
 } from './home-types'
 import { useAudioOptional } from '@/contexts/AudioContext'
+import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { FREEMIUM_LIMITS } from '@/lib/subscription-constants'
 import { PreviewPaywall, PreviewTimer, usePreview, AICoachNudge, useCoachNudge } from '@/components/premium/SoftLock'
@@ -54,6 +56,7 @@ export function ImmersiveHome() {
   const [activeMode, setActiveMode] = useState<Mode>(timeContext.suggested)
   const [isPlaying, setIsPlaying] = useState(false)
   const audioContext = useAudioOptional()
+  const mindsetCtx = useMindsetOptional()
   const hasRestoredRef = useRef(false)
   const isRestorePendingRef = useRef(!!audioContext?.lastPlayed)
 
@@ -1178,6 +1181,11 @@ export function ImmersiveHome() {
             <h1 className="text-2xl font-semibold shimmer-text">Explore</h1>
             <StreakBadge streak={streak} />
             <XPBadge />
+            {mindsetCtx && (
+              <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
+                <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
+              </div>
+            )}
           </div>
           <button
             onClick={() => setShowMenu(!showMenu)}

@@ -1,6 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useMindsetOptional } from '@/contexts/MindsetContext'
+import type { MindsetId } from '@/lib/mindset/types'
+
+const MINDSET_WORDS: Record<MindsetId, string[]> = {
+  stoic: ['stillness', 'virtue', 'endure', 'clarity', 'patience', 'resolve', 'equanimity', 'reason'],
+  existentialist: ['freedom', 'create', 'meaning', 'become', 'choose', 'authentic', 'exist', 'transcend'],
+  cynic: ['truth', 'simplify', 'question', 'liberate', 'strip', 'expose', 'reject', 'distill'],
+  hedonist: ['savor', 'bloom', 'gratitude', 'warmth', 'delight', 'radiance', 'cherish', 'indulge'],
+  samurai: ['discipline', 'honor', 'focus', 'master', 'sharpen', 'forge', 'strike', 'resolve'],
+  scholar: ['wonder', 'discover', 'awaken', 'seek', 'unravel', 'illuminate', 'ponder', 'fathom'],
+}
+
+const GENERIC_WORDS = ['breathe', 'focus', 'flow', 'calm', 'center', 'ground', 'drift', 'settle']
+
+function pickRandom(pool: string[], count: number): string[] {
+  const shuffled = [...pool].sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, count)
+}
 
 interface SplashScreenProps {
   onComplete: () => void
@@ -8,30 +26,34 @@ interface SplashScreenProps {
 }
 
 export function SplashScreen({ onComplete, minDuration = 2500 }: SplashScreenProps) {
-  const [rotation, setRotation] = useState(0)
+  const mindsetCtx = useMindsetOptional()
+  const pool = mindsetCtx ? MINDSET_WORDS[mindsetCtx.mindset] : GENERIC_WORDS
+  const [words] = useState(() => pickRandom(pool, 4))
+  const [wordIndex, setWordIndex] = useState(0)
+  const [visible, setVisible] = useState(false)
   const [fadeOut, setFadeOut] = useState(false)
-  const [showText, setShowText] = useState(false)
 
-  // Rotation animation
+  // Start first word
   useEffect(() => {
-    let frame: number
-    let start = performance.now()
-
-    const animate = (time: number) => {
-      const elapsed = (time - start) / 1000
-      setRotation(elapsed * 60)
-      frame = requestAnimationFrame(animate)
-    }
-
-    frame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frame)
+    const initialDelay = setTimeout(() => setVisible(true), 400)
+    return () => clearTimeout(initialDelay)
   }, [])
 
-  // Show text after delay
+  // Word cycling
   useEffect(() => {
-    const textTimer = setTimeout(() => setShowText(true), 500)
-    return () => clearTimeout(textTimer)
-  }, [])
+    if (!visible) return
+    const holdTimer = setTimeout(() => setVisible(false), 2000)
+    return () => clearTimeout(holdTimer)
+  }, [visible, wordIndex])
+
+  useEffect(() => {
+    if (visible) return
+    const nextTimer = setTimeout(() => {
+      setWordIndex((prev) => (prev + 1) % words.length)
+      setVisible(true)
+    }, 1000)
+    return () => clearTimeout(nextTimer)
+  }, [visible, words.length])
 
   // Fade out and complete
   useEffect(() => {
@@ -46,48 +68,24 @@ export function SplashScreen({ onComplete, minDuration = 2500 }: SplashScreenPro
 
   return (
     <div
-      className={`fixed inset-0 z-50 bg-black flex flex-col items-center justify-center transition-opacity duration-500 ${
+      className={`fixed inset-0 z-50 bg-black flex items-center justify-center transition-opacity duration-500 ${
         fadeOut ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      {/* Animated logo */}
-      <div className="w-28 h-28 relative flex items-center justify-center mb-8">
-        {/* Outer glow */}
-        <div className="absolute inset-0 rounded-full bg-white/10 blur-xl" />
-
-        {/* Outer ring */}
-        <div
-          className="absolute inset-0 rounded-full border-2 border-dashed border-white/35"
-          style={{ transform: `rotate(${rotation}deg)` }}
-        />
-        {/* Second ring */}
-        <div
-          className="absolute inset-3 rounded-full border-2 border-dotted border-white/50"
-          style={{ transform: `rotate(${-rotation * 1.2}deg)` }}
-        />
-        {/* Third ring */}
-        <div
-          className="absolute inset-6 rounded-full border-2 border-dashed border-white/60"
-          style={{ transform: `rotate(${rotation * 1.5}deg)` }}
-        />
-        {/* Inner ring */}
-        <div
-          className="absolute inset-9 rounded-full border-2 border-dotted border-white/70"
-          style={{ transform: `rotate(${-rotation * 2}deg)` }}
-        />
-        {/* Center dot */}
-        <div className="w-4 h-4 rounded-full bg-white shadow-[0_0_25px_rgba(255,255,255,0.9)]" />
-      </div>
-
-      {/* App name with fade in */}
-      <div
-        className={`text-center transition-all duration-700 ${
-          showText ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-        }`}
+      <span
+        className="text-[44px] font-medium tracking-[0.35em] lowercase text-white select-none"
+        style={{
+          fontFamily: 'var(--font-cormorant), Georgia, serif',
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(4px)',
+          filter: visible ? 'blur(0px)' : 'blur(6px)',
+          transition: visible
+            ? 'opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 1s cubic-bezier(0.16, 1, 0.3, 1)'
+            : 'opacity 0.8s cubic-bezier(0.4, 0, 1, 1), transform 0.8s cubic-bezier(0.4, 0, 1, 1), filter 0.6s cubic-bezier(0.4, 0, 1, 1)',
+        }}
       >
-        <h1 className="text-3xl font-light text-white tracking-widest">VOXU</h1>
-        <p className="text-white/95 text-sm mt-2 tracking-wide">Your AI Audio Coach</p>
-      </div>
+        {words[wordIndex]}
+      </span>
     </div>
   )
 }

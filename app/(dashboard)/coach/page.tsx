@@ -4,7 +4,10 @@ import { useState, useRef, useEffect } from 'react'
 import { ChevronLeft, Send, Loader2, Sparkles, Crown, Bot, MessageSquare, ClipboardList, Sun, Clock, Moon, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { CoachingPlans } from '@/components/coach/CoachingPlans'
+import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { getActivePlan, COACHING_PLANS, getPlanProgress } from '@/lib/coaching-plans'
 import { logXPEventServer } from '@/lib/gamification'
 
@@ -33,6 +36,15 @@ const CHECK_IN_PROMPTS: Record<string, string> = {
   midday: "Midday check-in — how's my progress so far?",
   evening: "Evening reflection — what did I accomplish today?",
   'goal-review': "Let's review my goals. How am I doing?",
+}
+
+const COACH_GREETINGS: Record<string, string> = {
+  stoic: "Hey! I'm your **Voxu Coach**, grounded in **Stoic** wisdom. I'll help you focus on what you can control, build resilience, and find clarity. How are you feeling today?",
+  existentialist: "Hey! I'm your **Voxu Coach**, guided by **Existentialist** philosophy. I'm here to help you embrace freedom, find meaning, and make bold choices. What's on your mind?",
+  cynic: "Hey! I'm your **Voxu Coach**, channeling the **Cynic** spirit. Let's cut through the noise, question assumptions, and find what truly matters. What do you need today?",
+  hedonist: "Hey! I'm your **Voxu Coach**, inspired by **Epicurean** wisdom. I'll help you find genuine joy, cultivate gratitude, and savor what matters. How can I support you today?",
+  samurai: "Hey! I'm your **Voxu Coach**, walking the **Samurai** path with you. I'll help you train with discipline, act with honor, and sharpen your focus. What shall we work on?",
+  scholar: "Hey! I'm your **Voxu Coach**, exploring the mysteries of mind and cosmos alongside you. I'll draw from **psychology, mythology, and the stars**. What are you seeking today?",
 }
 
 function formatTime(ts: number): string {
@@ -76,6 +88,7 @@ function renderMarkdown(text: string) {
 
 export default function CoachPage() {
   const subscription = useSubscriptionOptional()
+  const mindsetCtx = useMindsetOptional()
   const [activeTab, setActiveTab] = useState<'chat' | 'plans'>('chat')
   const [chatMode, setChatMode] = useState<'coach' | 'accountability'>('coach')
   const [activePlanBanner, setActivePlanBanner] = useState<string | null>(null)
@@ -95,13 +108,25 @@ export default function CoachPage() {
     }
   }, [activeTab])
 
+  const defaultGreeting = "Hey! I'm your **Voxu Coach**. How are you feeling today? I can help with motivation, goal-setting, stress, or just be here to listen."
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hey! I'm your **Voxu Coach**. How are you feeling today? I can help with motivation, goal-setting, stress, or just be here to listen.",
+      content: mindsetCtx ? (COACH_GREETINGS[mindsetCtx.mindset] || defaultGreeting) : defaultGreeting,
       timestamp: Date.now(),
     }
   ])
+
+  // Update greeting once mindset loads (it may load after initial render)
+  useEffect(() => {
+    if (!mindsetCtx) return
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].role === 'assistant') {
+        return [{ ...prev[0], content: COACH_GREETINGS[mindsetCtx.mindset] || defaultGreeting }]
+      }
+      return prev
+    })
+  }, [mindsetCtx?.mindset])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showQuickReplies, setShowQuickReplies] = useState(true)
@@ -229,7 +254,7 @@ export default function CoachPage() {
         <Link href="/" aria-label="Back to home" className="relative p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
           <ChevronLeft className="w-5 h-5 text-white/95" />
         </Link>
-        <div className="relative flex items-center gap-3">
+        <div className="relative flex items-center gap-3 flex-1">
           {/* Coach avatar */}
           <div className="relative">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/30 to-orange-500/30 border border-amber-500/20 flex items-center justify-center">
@@ -241,6 +266,11 @@ export default function CoachPage() {
             <h1 className="text-lg font-medium shimmer-text">AI Coach</h1>
             <p className="text-xs text-emerald-400/80">Online</p>
           </div>
+          {mindsetCtx && (
+            <div className="ml-auto flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
+              <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
+            </div>
+          )}
         </div>
       </div>
 

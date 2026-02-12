@@ -39,6 +39,7 @@ import { FeatureHint } from '@/components/ui/FeatureHint'
 import { SettingsCategory } from '@/components/settings/SettingsCategory'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
+import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 type GuideTone = 'calm' | 'direct' | 'neutral'
@@ -652,7 +653,7 @@ function SettingsContent() {
           <div>
             {mindsetCtx && (
               <div className="flex items-center gap-3 mb-4">
-                <span className="text-2xl">{MINDSET_CONFIGS[mindsetCtx.mindset].icon}</span>
+                <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-7 h-7 text-white" />
                 <div>
                   <p className="font-medium text-white text-sm">{MINDSET_CONFIGS[mindsetCtx.mindset].name}</p>
                   <p className="text-white/60 text-xs">{MINDSET_CONFIGS[mindsetCtx.mindset].subtitle}</p>

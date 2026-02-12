@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
 import { AppWrapper } from '@/components/AppWrapper'
 
 const inter = Inter({ subsets: ['latin'] })
+const cormorant = Cormorant_Garamond({ subsets: ['latin'], weight: ['300'], variable: '--font-cormorant' })
 
 export const metadata: Metadata = {
   title: 'Voxu - Your AI Audio Coach',
@@ -42,7 +43,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.className} ${cormorant.variable} antialiased`}>
         <AppWrapper>
           {children}
         </AppWrapper>

@@ -12,7 +12,7 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptTone:
       'Measured, calm, and unwavering. Like a wise mentor who has weathered many storms. No fluff — every word serves a purpose.',
     promptReferences: ['Marcus Aurelius', 'Epictetus', 'Seneca', 'Zeno of Citium'],
-    backgroundPool: ['falling-sand', 'stone-ripples', 'hex', 'hourglass', 'columns', 'marble-veins', 'falling-leaves', 'pendulum'],
+    backgroundPool: ['falling-sand', 'stone-ripples', 'hex', 'hourglass', 'columns', 'marble-veins', 'falling-leaves', 'pendulum', 'newtons-cradle'],
     astrologyEnabled: false,
   },
   existentialist: {
@@ -26,7 +26,7 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptTone:
       'Raw honesty with depth. Poetic yet grounded. You don\'t sugarcoat, but you don\'t despair either — you illuminate.',
     promptReferences: ['Albert Camus', 'Jean-Paul Sartre', 'Simone de Beauvoir', 'Soren Kierkegaard'],
-    backgroundPool: ['nebula', 'neural', 'grid'],
+    backgroundPool: ['nebula', 'neural', 'grid', 'void', 'dissolution'],
     astrologyEnabled: false,
   },
   cynic: {
@@ -54,7 +54,7 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptTone:
       'Warm, inviting, and gently encouraging. Like a trusted friend sharing wisdom over a long meal. Sensory and present-focused.',
     promptReferences: ['Epicurus', 'Lucretius', 'Metrodorus'],
-    backgroundPool: ['petals', 'water-drops', 'neural'],
+    backgroundPool: ['petals', 'water-drops', 'neural', 'bubbles', 'candle-flames', 'dandelion-seeds'],
     astrologyEnabled: false,
   },
   samurai: {
@@ -68,7 +68,7 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptTone:
       'Precise, disciplined, and deliberate. Every word is placed with intention. Like a master swordsman — calm before action, decisive in execution.',
     promptReferences: ['Miyamoto Musashi', 'Yamamoto Tsunetomo (Hagakure)', 'Takuan Soho', 'Dogen Zenji'],
-    backgroundPool: ['cherry-blossoms', 'ink-wash', 'fireflies'],
+    backgroundPool: ['cherry-blossoms', 'ink-wash', 'fireflies', 'katana-slash', 'bamboo-forest', 'katana-sword', 'samurai-helmet'],
     astrologyEnabled: false,
   },
   scholar: {

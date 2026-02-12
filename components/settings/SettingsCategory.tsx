@@ -63,7 +63,7 @@ export function SettingsCategory({
   }
 
   return (
-    <div className="glass-refined rounded-2xl overflow-hidden">
+    <div className="bg-black rounded-2xl overflow-hidden border border-white/10">
       <button
         onClick={toggle}
         aria-expanded={isOpen}

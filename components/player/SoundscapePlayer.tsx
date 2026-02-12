@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { Play, Pause, ChevronDown, Focus, Sparkles, Moon, Zap, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Wind, Droplets, Coffee, Music, Lock } from 'lucide-react'
 import { DailyBackground } from './DailyBackground'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { useMindsetOptional } from '@/contexts/MindsetContext'
 
 interface SoundscapePlayerProps {
   soundId: string
@@ -48,6 +49,7 @@ export const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
 export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlaying, onTogglePlay, onClose, onSwitchSound }: SoundscapePlayerProps) {
   const selectorRef = useRef<HTMLDivElement>(null)
   const { isContentFree } = useSubscription()
+  const mindsetCtx = useMindsetOptional()
 
   // Scroll active item into view when sound changes
   useEffect(() => {
@@ -78,7 +80,7 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
 
       {/* Animated center — constellation */}
       <div className="flex-1 relative overflow-hidden">
-        <DailyBackground animate={isPlaying} className="absolute inset-0" />
+        <DailyBackground animate={isPlaying} className="absolute inset-0" mindsetFilter={mindsetCtx?.backgroundPool} />
       </div>
 
       {/* Sound selector row */}

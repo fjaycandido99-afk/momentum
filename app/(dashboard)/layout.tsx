@@ -18,14 +18,16 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname()
   const isHome = pathname === '/'
+  const isDailyGuide = pathname === '/daily-guide'
   const isMindsetSelection = pathname?.startsWith('/mindset-selection')
   const isOnboarding = pathname?.startsWith('/daily-guide/onboarding')
   const hideChrome = isMindsetSelection || isOnboarding
+  const hideBackground = hideChrome || isDailyGuide
 
   return (
     <Providers>
       <div className="isolate min-h-screen bg-black">
-        {!hideChrome && (
+        {!hideBackground && (
           <div className="fixed inset-0 -z-10 pointer-events-none">
             <MindsetBackground />
           </div>

@@ -49,17 +49,30 @@ import { SessionLimitBanner } from '@/components/premium/SessionLimitBanner'
 import { TrialBanner, TrialEndingBanner } from '@/components/premium/TrialBanner'
 import { FeatureLock, LockIcon } from '@/components/premium/FeatureLock'
 import { PremiumBadge } from '@/components/premium/PremiumBadge'
+import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import type { DayType, TimeMode, EnergyLevel, ModuleType, CheckpointConfig } from '@/lib/daily-guide/decision-tree'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 
+// Per-mindset address terms
+const MINDSET_ADDRESS: Record<string, string> = {
+  stoic: 'philosopher',
+  existentialist: 'creator',
+  cynic: 'truth-seeker',
+  hedonist: 'friend',
+  samurai: 'warrior',
+  scholar: 'seeker',
+}
+
 // Get time-based greeting with icon
-function getTimeGreeting(): { text: string; icon: typeof Sunrise; period: 'morning' | 'afternoon' | 'evening' } {
+function getTimeGreeting(mindsetId?: string): { text: string; icon: typeof Sunrise; period: 'morning' | 'afternoon' | 'evening' } {
   const hour = new Date().getHours()
-  if (hour < 12) return { text: 'Good morning', icon: Sunrise, period: 'morning' }
-  if (hour < 17) return { text: 'Good afternoon', icon: Sun, period: 'afternoon' }
-  return { text: 'Good evening', icon: Moon, period: 'evening' }
+  const suffix = mindsetId && MINDSET_ADDRESS[mindsetId] ? `, ${MINDSET_ADDRESS[mindsetId]}` : ''
+  if (hour < 12) return { text: `Good morning${suffix}`, icon: Sunrise, period: 'morning' }
+  if (hour < 17) return { text: `Good afternoon${suffix}`, icon: Sun, period: 'afternoon' }
+  return { text: `Good evening${suffix}`, icon: Moon, period: 'evening' }
 }
 
 // Get day name
@@ -230,6 +243,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const themeContext = useThemeOptional()
   const subscription = useSubscriptionOptional()
   const audioContext = useAudioOptional()
+  const mindsetCtx = useMindsetOptional()
   const [guide, setGuide] = useState<DailyGuide | null>(null)
   const [checkpoints, setCheckpoints] = useState<CheckpointConfig[]>([])
   const [durations, setDurations] = useState<Record<ModuleType, number>>({} as Record<ModuleType, number>)
@@ -315,12 +329,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         setPreferences(prefsData)
         const genre = prefsData.preferred_music_genre || getTodaysMusicGenre(prefsData.preferred_music_genre)
         setCurrentMusicGenre(genre)
-        // Sync with global audio context
+        // Sync genre preference with global audio context (don't auto-enable — ImmersiveHome handles playback)
         if (audioContext) {
           audioContext.setMusicGenre(genre)
-          if (!embedded && prefsData.background_music_enabled && !audioContext.musicEnabled) {
-            audioContext.setMusicEnabled(true)
-          }
         }
       }
 
@@ -1025,7 +1036,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         <div className="flex items-center justify-between mb-4">
           <div>
             {(() => {
-              const greeting = getTimeGreeting()
+              const greeting = getTimeGreeting(mindsetCtx?.mindset)
               const GreetingIcon = greeting.icon
               const dayName = getDayName()
               return (
@@ -1051,6 +1062,11 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
             <PremiumBadge size="sm" />
             {/* Streak indicator */}
             <StreakDisplay streak={streak} />
+            {mindsetCtx && (
+              <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/5">
+                <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
+              </div>
+            )}
           </div>
         </div>
 

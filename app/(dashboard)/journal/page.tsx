@@ -10,6 +10,9 @@ import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
 import { GoalTracker } from '@/components/daily-guide/GoalTracker'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { MindsetIcon } from '@/components/mindset/MindsetIcon'
+import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 import { MoodSelector, type MoodValue } from '@/components/journal/MoodSelector'
 import { VoiceInput } from '@/components/journal/VoiceInput'
 import { JournalStats, calculateJournalStats, type JournalStatsData } from '@/components/journal/JournalStats'
@@ -38,6 +41,7 @@ export default function JournalPage() {
 function JournalContent() {
   const searchParams = useSearchParams()
   const { checkAccess, openUpgradeModal } = useSubscription()
+  const mindsetCtx = useMindsetOptional()
   const hasJournalHistory = checkAccess('journal_history')
 
   // Existing state
@@ -290,13 +294,20 @@ function JournalContent() {
             </div>
             <h1 className="text-2xl font-light shimmer-text">Journal</h1>
           </div>
-          {/* Streak badge */}
-          {journalStats.currentStreak > 0 && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/20">
-              <span className="text-sm">🔥</span>
-              <span className="text-xs font-semibold text-orange-400">{journalStats.currentStreak}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5">
+            {mindsetCtx && (
+              <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/5">
+                <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
+              </div>
+            )}
+            {/* Streak badge */}
+            {journalStats.currentStreak > 0 && (
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/20">
+                <span className="text-sm">🔥</span>
+                <span className="text-xs font-semibold text-orange-400">{journalStats.currentStreak}</span>
+              </div>
+            )}
+          </div>
         </div>
         <p className="text-white text-sm ml-12">Reflect, grow, remember</p>
       </div>
@@ -397,58 +408,65 @@ function JournalContent() {
             <Loader2 className="w-5 h-5 text-white/90 animate-spin" />
           </div>
         ) : mode === 'guided' ? (
-          /* Guided Mode — 3 structured textareas */
+          /* Guided Mode — 3 structured textareas (mindset-aware) */
           <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
-              <label className="text-sm text-white flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                What did you learn today?
-              </label>
-              <textarea
-                value={win}
-                onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
-                onFocus={() => { activeFieldRef.current = 'win' }}
-                placeholder="Today I learned..."
-                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
-                rows={3}
-                maxLength={500}
-              />
-              <p className="text-right text-[10px] text-white/70 mt-1">{win.length}/500</p>
-            </div>
+            {(() => {
+              const mp = mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset] : null
+              return (
+                <>
+                <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+                  <label className="text-sm text-white flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    {mp?.prompt1.label || 'What did you learn today?'}
+                  </label>
+                  <textarea
+                    value={win}
+                    onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
+                    onFocus={() => { activeFieldRef.current = 'win' }}
+                    placeholder={mp?.prompt1.placeholder || 'Today I learned...'}
+                    className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <p className="text-right text-[10px] text-white/70 mt-1">{win.length}/500</p>
+                </div>
 
-            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
-              <label className="text-sm text-white flex items-center gap-2 mb-3">
-                <Heart className="w-4 h-4 text-pink-400" />
-                What are you grateful for?
-              </label>
-              <textarea
-                value={gratitude}
-                onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
-                onFocus={() => { activeFieldRef.current = 'gratitude' }}
-                placeholder="I'm grateful for..."
-                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
-                rows={3}
-                maxLength={500}
-              />
-              <p className="text-right text-[10px] text-white/70 mt-1">{gratitude.length}/500</p>
-            </div>
+                <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+                  <label className="text-sm text-white flex items-center gap-2 mb-3">
+                    <Heart className="w-4 h-4 text-pink-400" />
+                    {mp?.prompt2.label || 'What are you grateful for?'}
+                  </label>
+                  <textarea
+                    value={gratitude}
+                    onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
+                    onFocus={() => { activeFieldRef.current = 'gratitude' }}
+                    placeholder={mp?.prompt2.placeholder || "I'm grateful for..."}
+                    className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <p className="text-right text-[10px] text-white/70 mt-1">{gratitude.length}/500</p>
+                </div>
 
-            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
-              <label className="text-sm text-white flex items-center gap-2 mb-3">
-                <Target className="w-4 h-4 text-purple-400" />
-                Tomorrow&apos;s intention
-              </label>
-              <textarea
-                value={intention}
-                onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
-                onFocus={() => { activeFieldRef.current = 'intention' }}
-                placeholder="Tomorrow I will..."
-                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
-                rows={2}
-                maxLength={300}
-              />
-              <p className="text-right text-[10px] text-white/70 mt-1">{intention.length}/300</p>
-            </div>
+                <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+                  <label className="text-sm text-white flex items-center gap-2 mb-3">
+                    <Target className="w-4 h-4 text-purple-400" />
+                    {mp?.prompt3.label || "Tomorrow\u0027s intention"}
+                  </label>
+                  <textarea
+                    value={intention}
+                    onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
+                    onFocus={() => { activeFieldRef.current = 'intention' }}
+                    placeholder={mp?.prompt3.placeholder || 'Tomorrow I will...'}
+                    className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
+                    rows={2}
+                    maxLength={300}
+                  />
+                  <p className="text-right text-[10px] text-white/70 mt-1">{intention.length}/300</p>
+                </div>
+                </>
+              )
+            })()}
 
             {/* Voice button for guided mode */}
             <div className="flex justify-end">

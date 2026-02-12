@@ -29,6 +29,18 @@ import { ColumnsBackground } from './ColumnsBackground'
 import { MarbleVeinsBackground } from './MarbleVeinsBackground'
 import { FallingLeavesBackground } from './FallingLeavesBackground'
 import { PendulumBackground } from './PendulumBackground'
+import { NewtonsCradleBackground } from './NewtonsCradleBackground'
+import { VoidBackground } from './VoidBackground'
+import { DissolutionBackground } from './DissolutionBackground'
+import { BubblesBackground } from './BubblesBackground'
+import { CandleFlamesBackground } from './CandleFlamesBackground'
+import { DandelionSeedsBackground } from './DandelionSeedsBackground'
+import { KatanaSlashBackground } from './KatanaSlashBackground'
+import { BambooForestBackground } from './BambooForestBackground'
+import { ZenGardenBackground } from './ZenGardenBackground'
+import { IncenseSmokeBackground } from './IncenseSmokeBackground'
+import { KatanaSwordBackground } from './KatanaSwordBackground'
+import { SamuraiHelmetBackground } from './SamuraiHelmetBackground'
 
 export const BACKGROUND_ANIMATIONS = [
   { id: 'constellation', name: 'Constellation', description: 'Connected star nodes', component: ConstellationBackground },
@@ -59,6 +71,18 @@ export const BACKGROUND_ANIMATIONS = [
   { id: 'marble-veins', name: 'Marble Veins', description: 'Tracing stone patterns', component: MarbleVeinsBackground },
   { id: 'falling-leaves', name: 'Falling Leaves', description: 'Drifting single leaves', component: FallingLeavesBackground },
   { id: 'pendulum', name: 'Pendulum', description: 'Swinging steady rhythm', component: PendulumBackground },
+  { id: 'newtons-cradle', name: "Newton's Cradle", description: 'Momentum transfer physics toy', component: NewtonsCradleBackground },
+  { id: 'void', name: 'Void', description: 'Particles pulled into nothingness', component: VoidBackground },
+  { id: 'dissolution', name: 'Dissolution', description: 'Shapes forming and crumbling', component: DissolutionBackground },
+  { id: 'bubbles', name: 'Bubbles', description: 'Rising translucent bubbles', component: BubblesBackground },
+  { id: 'candle-flames', name: 'Candle Flames', description: 'Flickering gentle flames', component: CandleFlamesBackground },
+  { id: 'dandelion-seeds', name: 'Dandelion Seeds', description: 'Floating wispy seeds', component: DandelionSeedsBackground },
+  { id: 'katana-slash', name: 'Katana Slash', description: 'Swift blade strikes', component: KatanaSlashBackground },
+  { id: 'bamboo-forest', name: 'Bamboo Forest', description: 'Swaying bamboo stalks', component: BambooForestBackground },
+  { id: 'zen-garden', name: 'Zen Garden', description: 'Raked sand patterns', component: ZenGardenBackground },
+  { id: 'incense-smoke', name: 'Incense Smoke', description: 'Rising wisps of smoke', component: IncenseSmokeBackground },
+  { id: 'katana-sword', name: 'Katana Sword', description: 'Floating katana blade', component: KatanaSwordBackground },
+  { id: 'samurai-helmet', name: 'Samurai Helmet', description: 'Floating kabuto helmet', component: SamuraiHelmetBackground },
 ] as const
 
 export type AnimationId = (typeof BACKGROUND_ANIMATIONS)[number]['id']
