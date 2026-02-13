@@ -5,6 +5,8 @@ import { ThemeProvider } from '@/contexts/ThemeContext'
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext'
 import { MindsetProvider } from '@/contexts/MindsetContext'
 import { AudioProvider } from '@/contexts/AudioContext'
+import { OfflineProvider } from '@/contexts/OfflineContext'
+import { OfflineBanner } from '@/components/OfflineBanner'
 import { UpgradeModalWithContext } from '@/components/premium/UpgradeModal'
 
 interface ProvidersProps {
@@ -16,10 +18,13 @@ export function Providers({ children }: ProvidersProps) {
     <SubscriptionProvider>
       <MindsetProvider>
         <ThemeProvider>
-          <AudioProvider>
-              {children}
-              <UpgradeModalWithContext />
-          </AudioProvider>
+          <OfflineProvider>
+            <AudioProvider>
+                <OfflineBanner />
+                {children}
+                <UpgradeModalWithContext />
+            </AudioProvider>
+          </OfflineProvider>
         </ThemeProvider>
       </MindsetProvider>
     </SubscriptionProvider>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sparkles, Bot, Menu, X, BarChart3 } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sparkles, Bot, Menu, X, BarChart3, Compass } from 'lucide-react'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types'
@@ -17,6 +17,7 @@ import { XPBadge } from './XPBadge'
 import { MotivationSection } from './MotivationSection'
 import { MusicGenreSection } from './MusicGenreSection'
 import { SmartSessionCard } from './SmartSessionCard'
+import { PathChallengeBanner } from './PathChallengeBanner'
 import { AIMeditationPlayer } from './AIMeditationPlayer'
 import { ContinueListeningCard } from './ContinueListeningCard'
 import { SavedMotivationSection } from './SavedMotivationSection'
@@ -1202,10 +1203,22 @@ export function ImmersiveHome() {
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
           <div className="absolute right-6 top-[72px] z-40 w-48 py-2 rounded-2xl bg-[#111113] border border-white/15 shadow-xl animate-fade-in-up">
-            {astrologyEnabled && (
+            {astrologyEnabled ? (
               <Link href="/astrology" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
                 <Sparkles className="w-4 h-4 text-white/70" />
                 <span className="text-sm text-white/90">Cosmic Guide</span>
+              </Link>
+            ) : (
+              <Link href="/my-path" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+                <Compass className="w-4 h-4 text-white/70" />
+                <span className="text-sm text-white/90">
+                  {mindsetCtx?.mindset === 'stoic' ? 'Stoic Path'
+                    : mindsetCtx?.mindset === 'existentialist' ? 'The Existentialist'
+                    : mindsetCtx?.mindset === 'cynic' ? "Cynic's Way"
+                    : mindsetCtx?.mindset === 'hedonist' ? 'Garden of Epicurus'
+                    : mindsetCtx?.mindset === 'samurai' ? 'Way of the Warrior'
+                    : 'My Path'}
+                </span>
               </Link>
             )}
             <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
@@ -1254,6 +1267,13 @@ export function ImmersiveHome() {
           </div>
         </button>
       </div>
+
+      {/* Path Challenge Banner (non-Scholar only) */}
+      {mindsetCtx && mindsetCtx.mindset !== 'scholar' && (
+        <div className="px-6 mb-4 liquid-reveal section-fade-bg">
+          <PathChallengeBanner mindsetId={mindsetCtx.mindset as Exclude<import('@/lib/mindset/types').MindsetId, 'scholar'>} />
+        </div>
+      )}
 
       {/* AI Smart Session */}
       <SmartSessionCard

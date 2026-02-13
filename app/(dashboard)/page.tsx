@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ImmersiveHome } from '@/components/home/ImmersiveHome'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export default function HomePage() {
   const router = useRouter()
@@ -66,5 +67,5 @@ export default function HomePage() {
     return <LoadingScreen />
   }
 
-  return <ImmersiveHome />
+  return <ErrorBoundary><ImmersiveHome /></ErrorBoundary>
 }

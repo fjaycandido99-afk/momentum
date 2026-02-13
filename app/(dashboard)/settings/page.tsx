@@ -75,6 +75,8 @@ const SEGMENT_OPTIONS = [
 ]
 
 import { ZODIAC_SIGNS } from '@/lib/astrology/constants'
+import { LanguageSelector } from '@/components/settings/LanguageSelector'
+import { Globe } from 'lucide-react'
 
 function SettingsContent() {
   const router = useRouter()
@@ -924,7 +926,20 @@ function SettingsContent() {
           <NotificationSettings />
         </SettingsCategory>
 
-        {/* ═══════════════ 7. Account ═══════════════ */}
+        {/* ═══════════════ 7. Language ═══════════════ */}
+        <SettingsCategory
+          id="language"
+          icon={Globe}
+          title="Language"
+          description="App display language"
+        >
+          <div>
+            <p className="text-sm text-white/70 mb-3">Display Language</p>
+            <LanguageSelector />
+          </div>
+        </SettingsCategory>
+
+        {/* ═══════════════ 8. Account ═══════════════ */}
         <SettingsCategory
           id="account"
           icon={Crown}

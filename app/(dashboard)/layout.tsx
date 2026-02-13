@@ -32,7 +32,7 @@ export default function DashboardLayout({
             <MindsetBackground />
           </div>
         )}
-        <main key={pathname} className={`min-h-screen ${isHome ? '' : 'pb-16'}`}>
+        <main id="main-content" key={pathname} className={`min-h-screen ${isHome ? '' : 'pb-16'}`}>
           {children}
         </main>
         {!isHome && !hideChrome && <MinimalNav />}

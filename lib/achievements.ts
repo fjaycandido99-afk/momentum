@@ -88,6 +88,14 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'breathing_10', title: 'Breathe Deep', description: 'Complete 10 breathing sessions', icon: '🌬️', category: 'growth', rarity: 'rare', xpReward: 75, condition: { type: 'count', action: 'breathingSession', count: 10 } },
   { id: 'goal_complete', title: 'Goal Getter', description: 'Complete your first goal', icon: '🎯', category: 'growth', rarity: 'common', xpReward: 50, condition: { type: 'first_action', action: 'goal_complete' } },
 
+  // --- Path (6) ---
+  { id: 'path_first', title: 'Path Finder', description: 'Complete your first path day (4/4)', icon: '🧭', category: 'explorer', rarity: 'common', xpReward: 30, condition: { type: 'first_action', action: 'path_complete' } },
+  { id: 'path_7', title: 'Path Walker', description: 'Complete 7 full path days', icon: '🛤️', category: 'consistency', rarity: 'rare', xpReward: 100, condition: { type: 'count', action: 'path_complete', count: 7 } },
+  { id: 'path_21', title: 'Path Master', description: 'Complete 21 full path days', icon: '🏔️', category: 'consistency', rarity: 'epic', xpReward: 250, condition: { type: 'count', action: 'path_complete', count: 21 } },
+  { id: 'path_streak_7', title: 'Devoted Seeker', description: 'Reach a 7-day path streak', icon: '🔗', category: 'consistency', rarity: 'rare', xpReward: 75, condition: { type: 'consecutive_days', days: 7, action: 'path_activity' } },
+  { id: 'path_streak_30', title: 'Unwavering', description: 'Reach a 30-day path streak', icon: '⛓️', category: 'consistency', rarity: 'epic', xpReward: 300, condition: { type: 'consecutive_days', days: 30, action: 'path_activity' } },
+  { id: 'virtue_tracker', title: 'Virtue Seeker', description: 'Track a virtue for 7 days', icon: '🌿', category: 'growth', rarity: 'rare', xpReward: 75, condition: { type: 'consecutive_days', days: 7, action: 'virtue_track' } },
+
   // --- Secret (2) ---
   { id: 'midnight_owl', title: 'Midnight Owl', description: 'Use the app at exactly midnight', icon: '🌑', category: 'secret', rarity: 'epic', xpReward: 100, condition: { type: 'time_range', start: 0, end: 1, action: 'any' } },
   { id: 'perfect_week', title: 'Perfect Week', description: 'Complete all modules every day for a week', icon: '✨', category: 'secret', rarity: 'legendary', xpReward: 500, condition: { type: 'consecutive_days', days: 7, action: 'full_day_complete' } },
@@ -122,6 +130,10 @@ export function checkNewAchievements(
     hasFirstSoundscape: boolean
     hasFirstRoutine: boolean
     hasCompletedGoal: boolean
+    hasFirstPathComplete: boolean
+    pathCompleteCount: number
+    consecutivePathDays: number
+    consecutiveVirtueDays: number
     currentHour: number
     consecutiveFullDays: number
   },
@@ -144,6 +156,7 @@ export function checkNewAchievements(
         else if (c.action === 'soundscape') qualified = stats.hasFirstSoundscape
         else if (c.action === 'routine') qualified = stats.hasFirstRoutine
         else if (c.action === 'goal_complete') qualified = stats.hasCompletedGoal
+        else if (c.action === 'path_complete') qualified = stats.hasFirstPathComplete
         break
       case 'count':
         if (c.action === 'journal') qualified = stats.journalCount >= c.count
@@ -154,6 +167,7 @@ export function checkNewAchievements(
         else if (c.action === 'weekend_active') qualified = stats.weekendActiveCount >= c.count
         else if (c.action === 'unique_genres') qualified = stats.uniqueGenres >= c.count
         else if (c.action === 'unique_modules') qualified = stats.uniqueModuleTypes >= c.count
+        else if (c.action === 'path_complete') qualified = stats.pathCompleteCount >= c.count
         break
       case 'xp_total':
         qualified = stats.totalXP >= c.amount
@@ -170,7 +184,9 @@ export function checkNewAchievements(
         }
         break
       case 'consecutive_days':
-        qualified = stats.consecutiveFullDays >= c.days
+        if (c.action === 'path_activity') qualified = stats.consecutivePathDays >= c.days
+        else if (c.action === 'virtue_track') qualified = stats.consecutiveVirtueDays >= c.days
+        else qualified = stats.consecutiveFullDays >= c.days
         break
     }
 

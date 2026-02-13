@@ -314,6 +314,20 @@ model DailyGuide {
   cosmic_insight_script String?
   cosmic_insight_done   Boolean @default(false)
 
+  // Path insight (non-Scholar mindsets)
+  path_insight_script String?
+
+  // Path journey tracking
+  path_reflection_done   Boolean @default(false)
+  path_exercise_done     Boolean @default(false)
+  path_quote_viewed      Boolean @default(false)
+  path_soundscape_played Boolean @default(false)
+  path_streak            Int     @default(0)
+
+  // Virtue tracking
+  virtue_focus     String?
+  virtue_rating    Int?
+
   created_at DateTime @default(now())
 
   @@unique([user_id, date])

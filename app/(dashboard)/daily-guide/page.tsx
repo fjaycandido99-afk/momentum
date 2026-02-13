@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export default function DailyGuidePage() {
   const router = useRouter()
@@ -58,5 +59,5 @@ export default function DailyGuidePage() {
     return null
   }
 
-  return <DailyGuideHome />
+  return <ErrorBoundary><DailyGuideHome /></ErrorBoundary>
 }

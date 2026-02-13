@@ -1,0 +1,245 @@
+import type { MindsetId } from './types'
+
+export interface Virtue {
+  name: string
+  description: string
+  practices: string[]
+}
+
+export const MINDSET_VIRTUES: Record<Exclude<MindsetId, 'scholar'>, Virtue[]> = {
+  stoic: [
+    {
+      name: 'Wisdom',
+      description: 'The ability to navigate complex situations with clear judgment and understanding of what truly matters.',
+      practices: [
+        'Before reacting, pause and ask: "Is this within my control?"',
+        'Read one passage from a philosophical text and reflect on it.',
+        'Identify one assumption you made today and question it.',
+      ],
+    },
+    {
+      name: 'Courage',
+      description: 'Acting rightly despite fear, discomfort, or social pressure.',
+      practices: [
+        'Do one thing today that makes you uncomfortable but is right.',
+        'Speak a truth you have been avoiding.',
+        'Face a fear you have been postponing.',
+      ],
+    },
+    {
+      name: 'Justice',
+      description: 'Treating others with fairness, kindness, and respect regardless of their status.',
+      practices: [
+        'Help someone today without expecting anything in return.',
+        'Listen fully to someone you disagree with before responding.',
+        'Acknowledge someone whose contribution often goes unnoticed.',
+      ],
+    },
+    {
+      name: 'Temperance',
+      description: 'Self-restraint and moderation in all things — desires, emotions, and reactions.',
+      practices: [
+        'Skip one indulgence you normally reach for automatically.',
+        'When provoked, count to ten before responding.',
+        'Practice eating one meal today slowly and mindfully.',
+      ],
+    },
+    {
+      name: 'Discipline',
+      description: 'Consistent commitment to your principles regardless of mood or circumstance.',
+      practices: [
+        'Complete your most important task before checking your phone.',
+        'Follow through on one commitment you have been delaying.',
+        'Maintain your routine even when you don\'t feel motivated.',
+      ],
+    },
+  ],
+  existentialist: [
+    {
+      name: 'Authenticity',
+      description: 'Living in alignment with your true self rather than conforming to others\' expectations.',
+      practices: [
+        'Identify one way you act differently to please others and choose honesty instead.',
+        'Express an opinion you usually keep quiet about.',
+        'Make one choice today based purely on what feels true to you.',
+      ],
+    },
+    {
+      name: 'Freedom',
+      description: 'Embracing your radical freedom to choose and taking full ownership of your life direction.',
+      practices: [
+        'Identify one area where you say "I have to" and reframe it as "I choose to."',
+        'Make a decision you have been delegating to others.',
+        'Do something spontaneous that breaks your usual pattern.',
+      ],
+    },
+    {
+      name: 'Responsibility',
+      description: 'Accepting that you are the author of your life, without blaming circumstances or others.',
+      practices: [
+        'Own one outcome today without deflecting blame.',
+        'Ask "What is my role in this situation?" before looking outward.',
+        'Apologize for something without adding excuses.',
+      ],
+    },
+    {
+      name: 'Engagement',
+      description: 'Fully investing in life despite its absurdity, choosing meaning through action.',
+      practices: [
+        'Throw yourself completely into one task with full attention.',
+        'Start a project you care about without worrying about the outcome.',
+        'Have a deep conversation instead of small talk.',
+      ],
+    },
+    {
+      name: 'Commitment',
+      description: 'Making and honoring your choices even when uncertainty and doubt arise.',
+      practices: [
+        'Follow through on a promise that has become inconvenient.',
+        'Recommit to a value or goal you have been wavering on.',
+        'Stay with a difficult emotion instead of distracting yourself.',
+      ],
+    },
+  ],
+  cynic: [
+    {
+      name: 'Self-Sufficiency',
+      description: 'Reducing dependence on external things, people, and approval for your well-being.',
+      practices: [
+        'Go without one comfort you usually rely on today.',
+        'Complete a task entirely on your own that you would normally outsource.',
+        'Spend time alone without entertainment or distraction.',
+      ],
+    },
+    {
+      name: 'Honesty',
+      description: 'Speaking truth without sugar-coating, especially when it challenges social norms.',
+      practices: [
+        'Say "no" to something you would usually agree to out of politeness.',
+        'Give honest feedback to someone who asked for your opinion.',
+        'Admit one thing to yourself that you have been avoiding.',
+      ],
+    },
+    {
+      name: 'Simplicity',
+      description: 'Stripping life down to what is essential and finding freedom in having less.',
+      practices: [
+        'Remove or give away one possession you do not truly need.',
+        'Eat a simple meal and notice if your enjoyment decreases — or increases.',
+        'Simplify your schedule by removing one non-essential activity.',
+      ],
+    },
+    {
+      name: 'Shamelessness',
+      description: 'Freedom from concern about others\' judgments, living naturally without pretense.',
+      practices: [
+        'Do something you normally avoid because of "what others might think."',
+        'Wear something comfortable instead of something impressive.',
+        'Share an unpopular opinion openly and own it.',
+      ],
+    },
+    {
+      name: 'Virtue',
+      description: 'Living according to nature and reason, valuing character over convention.',
+      practices: [
+        'Question one social norm you follow without thinking.',
+        'Choose the virtuous action even when no one is watching.',
+        'Ask yourself: "Would I do this if no one could see me?"',
+      ],
+    },
+  ],
+  hedonist: [
+    {
+      name: 'Pleasure',
+      description: 'Cultivating the art of genuine enjoyment through presence and mindful appreciation.',
+      practices: [
+        'Fully savor one meal today — taste, texture, aroma.',
+        'Spend 10 minutes doing something purely for enjoyment.',
+        'Notice three sources of pleasure you usually overlook.',
+      ],
+    },
+    {
+      name: 'Moderation',
+      description: 'Finding the sweet spot between too much and too little to maximize lasting enjoyment.',
+      practices: [
+        'Stop eating or drinking before you feel completely full.',
+        'Set a time limit on a pleasurable activity to keep it special.',
+        'Choose quality over quantity in one area today.',
+      ],
+    },
+    {
+      name: 'Friendship',
+      description: 'Nurturing deep connections as the highest and most enduring source of pleasure.',
+      practices: [
+        'Reach out to a friend you haven\'t spoken to recently.',
+        'Give someone your full, undivided attention in conversation.',
+        'Share a genuine compliment with someone you care about.',
+      ],
+    },
+    {
+      name: 'Tranquility',
+      description: 'Cultivating inner peace by removing unnecessary anxieties and desires.',
+      practices: [
+        'Identify one worry that is outside your control and consciously release it.',
+        'Spend 5 minutes in quiet stillness without any inputs.',
+        'Simplify your to-do list to reduce mental noise.',
+      ],
+    },
+    {
+      name: 'Gratitude',
+      description: 'Appreciating what you have rather than fixating on what you lack.',
+      practices: [
+        'Write down three things you enjoyed today.',
+        'Thank someone for something specific they did.',
+        'Reflect on a pleasure you once wished for that is now part of your daily life.',
+      ],
+    },
+  ],
+  samurai: [
+    {
+      name: 'Honor',
+      description: 'Conducting yourself with integrity so your actions match your word and your values.',
+      practices: [
+        'Keep every promise you make today, no matter how small.',
+        'Admit a mistake before anyone else discovers it.',
+        'Do the right thing even when the easier path is available.',
+      ],
+    },
+    {
+      name: 'Loyalty',
+      description: 'Staying devoted to your commitments, your people, and your purpose.',
+      practices: [
+        'Follow through on a commitment that has become difficult.',
+        'Support someone in your circle who is struggling.',
+        'Reaffirm your dedication to a long-term goal.',
+      ],
+    },
+    {
+      name: 'Courage',
+      description: 'Facing challenges head-on with a calm spirit, neither reckless nor hesitant.',
+      practices: [
+        'Take action on something you have been avoiding out of fear.',
+        'Have a difficult conversation you have been postponing.',
+        'Train or practice something that challenges your current skill level.',
+      ],
+    },
+    {
+      name: 'Respect',
+      description: 'Treating others with dignity and treating yourself with the same standard.',
+      practices: [
+        'Bow — literally or figuratively — to someone who taught you something.',
+        'Listen more than you speak in your next conversation.',
+        'Treat a routine interaction with care and attention.',
+      ],
+    },
+    {
+      name: 'Self-Control',
+      description: 'Mastering your impulses, emotions, and reactions through daily discipline.',
+      practices: [
+        'Resist one impulse today and observe what happens.',
+        'Maintain composure in a frustrating situation.',
+        'Complete a physical or mental exercise to its full extent without quitting early.',
+      ],
+    },
+  ],
+}
