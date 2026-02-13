@@ -131,11 +131,17 @@ export function PathPage({ mindsetId }: PathPageProps) {
 
   return (
     <div className="min-h-screen text-white px-5 pt-10 pb-4">
-      {/* ── Hero ── */}
-      <div className="mb-5 animate-fade-in-down">
-        <h1 className="text-xl font-semibold text-white">{config.icon} {title}</h1>
-        <p className="text-white/80 text-[13px] mt-1">{subtitle}</p>
-        <p className="text-[12px] text-white/70 leading-relaxed mt-3">{details.overview}</p>
+      {/* ── Hero: scene background, no card ── */}
+      <div className="mb-5 animate-fade-in-down relative overflow-hidden rounded-2xl">
+        <div className="absolute inset-0">
+          <PathScene mindsetId={mindsetId} />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
+        <div className="relative z-10 px-5 pt-7 pb-6">
+          <h1 className="text-xl font-semibold text-white">{config.icon} {title}</h1>
+          <p className="text-white/80 text-[13px] mt-1">{subtitle}</p>
+          <p className="text-[12px] text-white/70 leading-relaxed mt-3">{details.overview}</p>
+        </div>
       </div>
 
       {/* ── Today's Journey ── */}
