@@ -131,20 +131,11 @@ export function PathPage({ mindsetId }: PathPageProps) {
 
   return (
     <div className="min-h-screen text-white px-5 pt-10 pb-4">
-      {/* ── Hero: Text over animated scene background ── */}
-      <div className="mb-4 animate-fade-in-down rounded-2xl overflow-hidden relative border border-white/[0.08]">
-        {/* Scene as background */}
-        <div className="absolute inset-0">
-          <PathScene mindsetId={mindsetId} />
-        </div>
-        {/* Smooth overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
-        {/* Text content */}
-        <div className="relative z-10 px-5 pt-7 pb-6">
-          <h1 className="text-xl font-semibold text-white">{config.icon} {title}</h1>
-          <p className="text-white/80 text-[13px] mt-1">{subtitle}</p>
-          <p className="text-[12px] text-white/70 leading-relaxed mt-3">{details.overview}</p>
-        </div>
+      {/* ── Hero ── */}
+      <div className="mb-5 animate-fade-in-down">
+        <h1 className="text-xl font-semibold text-white">{config.icon} {title}</h1>
+        <p className="text-white/80 text-[13px] mt-1">{subtitle}</p>
+        <p className="text-[12px] text-white/70 leading-relaxed mt-3">{details.overview}</p>
       </div>
 
       {/* ── Today's Journey ── */}
