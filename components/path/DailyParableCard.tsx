@@ -39,8 +39,8 @@ export function DailyParableCard({ mindsetId }: DailyParableCardProps) {
     <div className="card-path p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
-          <BookOpen className="w-4 h-4 text-white/50" />
-          <h3 className="text-sm font-medium text-white/90">Daily Parable</h3>
+          <BookOpen className="w-4 h-4 text-white/70" />
+          <h3 className="text-sm font-medium text-white">Daily Parable</h3>
         </div>
         <ShareButton
           title={parable.title}
@@ -49,9 +49,9 @@ export function DailyParableCard({ mindsetId }: DailyParableCardProps) {
         />
       </div>
 
-      <h4 className="text-[14px] font-medium text-white/90 mb-2">{parable.title}</h4>
+      <h4 className="text-[14px] font-medium text-white mb-2">{parable.title}</h4>
 
-      <p className="text-[13px] text-white/60 leading-relaxed mb-3">{displayStory}</p>
+      <p className="text-[13px] text-white/90 leading-relaxed mb-3">{displayStory}</p>
 
       {isLong && (
         <button
@@ -64,8 +64,8 @@ export function DailyParableCard({ mindsetId }: DailyParableCardProps) {
       )}
 
       <div className={`rounded-xl border p-3 ${accent}`}>
-        <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Moral</p>
-        <p className="text-[12px] text-white/65 leading-relaxed">{parable.moral}</p>
+        <p className="text-[10px] text-white/60 uppercase tracking-wider mb-1">Moral</p>
+        <p className="text-[12px] text-white/90 leading-relaxed">{parable.moral}</p>
       </div>
     </div>
   )

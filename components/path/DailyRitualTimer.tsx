@@ -265,14 +265,14 @@ export function DailyRitualTimer({ mindsetId }: DailyRitualTimerProps) {
       <div className="flex items-center gap-2.5 mb-3">
         <span className="text-base">🕯️</span>
         <div>
-          <h3 className="text-sm font-medium text-white/90">{RITUAL_NAMES[mindsetId]}</h3>
-          <span className="text-[10px] text-white/35">Ritual Timer</span>
+          <h3 className="text-sm font-medium text-white">{RITUAL_NAMES[mindsetId]}</h3>
+          <span className="text-[10px] text-white/60">Ritual Timer</span>
         </div>
       </div>
 
       {!isActive ? (
         <>
-          <p className="text-xs text-white/55 mb-4 leading-relaxed">{RITUAL_PROMPTS[mindsetId]}</p>
+          <p className="text-xs text-white/80 mb-4 leading-relaxed">{RITUAL_PROMPTS[mindsetId]}</p>
 
           {/* Duration selector */}
           <div className="flex gap-2 mb-4">
@@ -281,7 +281,7 @@ export function DailyRitualTimer({ mindsetId }: DailyRitualTimerProps) {
                 key={d.label}
                 onClick={() => setSelectedDuration(i)}
                 className={`flex-1 py-2 text-[11px] rounded-lg border transition-all press-scale ${
-                  i === selectedDuration ? accent : 'bg-white/[0.02] border-white/[0.08] text-white/40'
+                  i === selectedDuration ? accent : 'bg-white/[0.02] border-white/[0.08] text-white/70'
                 }`}
               >
                 {d.label}
@@ -310,10 +310,10 @@ export function DailyRitualTimer({ mindsetId }: DailyRitualTimerProps) {
 
           {complete ? (
             <div className="text-center animate-fade-in mt-2">
-              <p className="text-xs text-white/45 mb-3">Return to the world, changed.</p>
+              <p className="text-xs text-white/70 mb-3">Return to the world, changed.</p>
               <button
                 onClick={reset}
-                className="px-4 py-2 text-[11px] rounded-lg bg-white/[0.06] border border-white/[0.1] text-white/60 transition-all press-scale"
+                className="px-4 py-2 text-[11px] rounded-lg bg-white/[0.06] border border-white/[0.1] text-white/80 transition-all press-scale"
               >
                 New session
               </button>

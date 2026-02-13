@@ -49,8 +49,8 @@ export function PathSoundscapes({ mindsetId, onPathActivity }: PathSoundscapesPr
 
       <div className="card-path p-5">
         <div className="flex items-center gap-2.5 mb-4">
-          <Headphones className="w-4 h-4 text-white/50" />
-          <h3 className="text-sm font-medium text-white/90">Path Soundscapes</h3>
+          <Headphones className="w-4 h-4 text-white/70" />
+          <h3 className="text-sm font-medium text-white">Path Soundscapes</h3>
         </div>
 
         <div className="flex justify-evenly">

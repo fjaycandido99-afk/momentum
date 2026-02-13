@@ -166,8 +166,8 @@ export function MastersDesk({ mindsetId }: MastersDeskProps) {
   return (
     <div className="card-path p-5">
       <div className="mb-3">
-        <h3 className="text-sm font-medium text-white/90">{scene.title}</h3>
-        <p className="text-[11px] text-white/35 mt-0.5">{scene.subtitle}</p>
+        <h3 className="text-sm font-medium text-white">{scene.title}</h3>
+        <p className="text-[11px] text-white/60 mt-0.5">{scene.subtitle}</p>
       </div>
 
       {/* Scene */}
@@ -216,12 +216,12 @@ export function MastersDesk({ mindsetId }: MastersDeskProps) {
           >
             <X className="w-3 h-3 text-white/30" />
           </button>
-          <p className="text-[12px] text-white/55 leading-relaxed italic pr-4">
+          <p className="text-[12px] text-white/80 leading-relaxed italic pr-4">
             {scene.objects[selectedObject].insight}
           </p>
         </div>
       ) : (
-        <p className="text-center text-[11px] text-white/35">Tap an object to reveal its wisdom</p>
+        <p className="text-center text-[11px] text-white/60">Tap an object to reveal its wisdom</p>
       )}
     </div>
   )

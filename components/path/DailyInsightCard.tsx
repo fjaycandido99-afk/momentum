@@ -49,8 +49,8 @@ export function DailyInsightCard({ mindsetId }: DailyInsightCardProps) {
     return (
       <div className="card-path p-5">
         <div className="flex items-center gap-2.5 mb-4">
-          <Sparkles className="w-4 h-4 text-white/50" />
-          <h3 className="text-sm font-medium text-white/90">Daily Insight</h3>
+          <Sparkles className="w-4 h-4 text-white/70" />
+          <h3 className="text-sm font-medium text-white">Daily Insight</h3>
         </div>
         <div className="space-y-2.5">
           <div className="h-4 rounded bg-white/5 skeleton-shimmer w-full" />
@@ -67,18 +67,18 @@ export function DailyInsightCard({ mindsetId }: DailyInsightCardProps) {
     <div className="card-path p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
-          <Sparkles className="w-4 h-4 text-white/50" />
-          <h3 className="text-sm font-medium text-white/90">Daily Insight</h3>
+          <Sparkles className="w-4 h-4 text-white/70" />
+          <h3 className="text-sm font-medium text-white">Daily Insight</h3>
         </div>
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider bg-white/[0.06] text-white/45">
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider bg-white/[0.06] text-white/70">
           {insight.theme}
         </span>
       </div>
 
-      <p className="text-[14px] text-white/80 leading-relaxed">{insight.text}</p>
+      <p className="text-[14px] text-white leading-relaxed">{insight.text}</p>
 
       <div className="mt-3 pt-3 border-t border-white/[0.06]">
-        <p className="text-[13px] text-white/50 italic">&ldquo;{insight.affirmation}&rdquo;</p>
+        <p className="text-[13px] text-white/80 italic">&ldquo;{insight.affirmation}&rdquo;</p>
       </div>
     </div>
   )

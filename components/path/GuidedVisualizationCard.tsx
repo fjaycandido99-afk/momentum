@@ -45,16 +45,16 @@ export function GuidedVisualizationCard({ mindsetId }: GuidedVisualizationCardPr
   return (
     <div className="card-path p-5">
       <div className="flex items-center gap-2.5 mb-3">
-        <Eye className="w-4 h-4 text-white/50" />
-        <h3 className="text-sm font-medium text-white/90">Guided Visualization</h3>
-        <span className="ml-auto text-[10px] text-white/30">{viz.duration}</span>
+        <Eye className="w-4 h-4 text-white/70" />
+        <h3 className="text-sm font-medium text-white">Guided Visualization</h3>
+        <span className="ml-auto text-[10px] text-white/50">{viz.duration}</span>
       </div>
 
-      <h4 className="text-[14px] font-medium text-white/85 mb-2">{viz.title}</h4>
+      <h4 className="text-[14px] font-medium text-white mb-2">{viz.title}</h4>
 
       {!isStarted && (
         <div>
-          <p className="text-[12px] text-white/45 mb-4 leading-relaxed">
+          <p className="text-[12px] text-white/70 mb-4 leading-relaxed">
             A guided mental exercise with {viz.steps.length} steps. Find a quiet moment and tap begin.
           </p>
           <button
@@ -82,10 +82,10 @@ export function GuidedVisualizationCard({ mindsetId }: GuidedVisualizationCardPr
 
           {/* Current step */}
           <div className="animate-fade-in">
-            <span className="text-[10px] text-white/30 uppercase tracking-wider">
+            <span className="text-[10px] text-white/50 uppercase tracking-wider">
               Step {currentStep + 1} of {viz.steps.length}
             </span>
-            <p className="text-[13px] text-white/70 leading-relaxed mt-2 mb-4">
+            <p className="text-[13px] text-white leading-relaxed mt-2 mb-4">
               {viz.steps[currentStep]}
             </p>
           </div>
@@ -106,11 +106,11 @@ export function GuidedVisualizationCard({ mindsetId }: GuidedVisualizationCardPr
       {isComplete && (
         <div className="text-center animate-fade-in py-2">
           <div className="text-xl mb-2 opacity-60">✨</div>
-          <p className="text-[13px] text-white/70 mb-1">Visualization Complete</p>
-          <p className="text-[11px] text-white/40 mb-4">Carry this clarity with you today.</p>
+          <p className="text-[13px] text-white mb-1">Visualization Complete</p>
+          <p className="text-[11px] text-white/70 mb-4">Carry this clarity with you today.</p>
           <button
             onClick={handleReset}
-            className="flex items-center gap-1.5 mx-auto text-[11px] text-white/40 press-scale"
+            className="flex items-center gap-1.5 mx-auto text-[11px] text-white/60 press-scale"
           >
             <RotateCcw className="w-3 h-3" />
             Start Over

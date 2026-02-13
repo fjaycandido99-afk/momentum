@@ -81,7 +81,7 @@ export function PhilosophyCompass({ mindsetId }: PhilosophyCompassProps) {
     <div className="card-path p-5">
       <div className="flex items-center gap-2.5 mb-4">
         <span className="text-base">🧭</span>
-        <h3 className="text-sm font-medium text-white/90">Philosophy Compass</h3>
+        <h3 className="text-sm font-medium text-white">Philosophy Compass</h3>
       </div>
 
       <div className="flex justify-center mb-3">
@@ -152,12 +152,12 @@ export function PhilosophyCompass({ mindsetId }: PhilosophyCompassProps) {
       {selectedIndex !== null && (
         <div className="animate-fade-in p-3 rounded-xl bg-white/[0.03] border border-white/[0.08]">
           <p className={`text-[13px] font-medium mb-1 ${colors.text}`}>{data.values[selectedIndex].name}</p>
-          <p className="text-[12px] text-white/55 leading-relaxed">{data.values[selectedIndex].description}</p>
+          <p className="text-[12px] text-white/80 leading-relaxed">{data.values[selectedIndex].description}</p>
         </div>
       )}
 
       {selectedIndex === null && (
-        <p className="text-center text-[11px] text-white/35">Tap a value to explore</p>
+        <p className="text-center text-[11px] text-white/60">Tap a value to explore</p>
       )}
     </div>
   )

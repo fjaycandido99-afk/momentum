@@ -147,8 +147,8 @@ export function ProgressHub({ mindsetId, totalDays: totalDaysProp }: ProgressHub
             onClick={() => setTab(t.id)}
             className={`flex-1 py-1.5 text-[11px] rounded-lg transition-all press-scale ${
               tab === t.id
-                ? 'bg-white/12 text-white/90 font-medium'
-                : 'text-white/35 hover:text-white/55'
+                ? 'bg-white/12 text-white font-medium'
+                : 'text-white/60 hover:text-white/80'
             }`}
           >
             {t.label}
@@ -192,12 +192,12 @@ function EvolutionTab({ mindsetId, streak }: { mindsetId: M; streak: number }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium text-white">{stage.name}</p>
-            <span className="text-[10px] text-white/40">{streak}d streak</span>
+            <span className="text-[10px] text-white/60">{streak}d streak</span>
           </div>
-          <p className="text-xs text-white/50 mt-0.5">{stage.description}</p>
+          <p className="text-xs text-white/70 mt-0.5">{stage.description}</p>
           {nextStage && (
             <div className="mt-2">
-              <div className="flex items-center justify-between text-[9px] text-white/35 mb-1">
+              <div className="flex items-center justify-between text-[9px] text-white/60 mb-1">
                 <span>Next: {nextStage.name}</span>
                 <span>{nextStage.minDays - streak}d</span>
               </div>
@@ -216,7 +216,7 @@ function EvolutionTab({ mindsetId, streak }: { mindsetId: M; streak: number }) {
             <span className={`text-base transition-all ${i <= currentStage ? '' : 'grayscale opacity-20'} ${i === currentStage ? 'scale-110' : ''}`}>
               {s.emoji}
             </span>
-            <span className={`text-[8px] mt-0.5 ${i <= currentStage ? 'text-white/40' : 'text-white/15'}`}>{s.minDays}d</span>
+            <span className={`text-[8px] mt-0.5 ${i <= currentStage ? 'text-white/60' : 'text-white/25'}`}>{s.minDays}d</span>
           </div>
         ))}
       </div>
@@ -227,7 +227,7 @@ function EvolutionTab({ mindsetId, streak }: { mindsetId: M; streak: number }) {
 // ── Weekly Tab ──
 
 function WeeklyTab({ data, mindsetId }: { data: WeeklyData | null; mindsetId: M }) {
-  if (!data) return <p className="text-xs text-white/40 text-center py-4">No data yet</p>
+  if (!data) return <p className="text-xs text-white/60 text-center py-4">No data yet</p>
   const barColor = BAR_COLORS[mindsetId]
 
   return (
@@ -236,18 +236,18 @@ function WeeklyTab({ data, mindsetId }: { data: WeeklyData | null; mindsetId: M 
       <div className="grid grid-cols-3 gap-3 mb-3">
         <div className="text-center">
           <div className="text-lg font-semibold text-white">{data.activeDays}<span className="text-xs text-white/50">/7</span></div>
-          <div className="text-[9px] text-white/50 uppercase tracking-wider">Active</div>
+          <div className="text-[9px] text-white/60 uppercase tracking-wider">Active</div>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1">
             <Flame className="w-3 h-3 text-orange-400" />
             <span className="text-lg font-semibold text-white">{data.currentStreak}</span>
           </div>
-          <div className="text-[9px] text-white/50 uppercase tracking-wider">Streak</div>
+          <div className="text-[9px] text-white/60 uppercase tracking-wider">Streak</div>
         </div>
         <div className="text-center">
           <div className="text-lg font-semibold text-white">{data.totalActivities}</div>
-          <div className="text-[9px] text-white/50 uppercase tracking-wider">Done</div>
+          <div className="text-[9px] text-white/60 uppercase tracking-wider">Done</div>
         </div>
       </div>
 
@@ -265,7 +265,7 @@ function WeeklyTab({ data, mindsetId }: { data: WeeklyData | null; mindsetId: M 
       </div>
 
       {/* Bottom */}
-      <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-[10px] text-white/35">
+      <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-[10px] text-white/60">
         {data.topActivity && (
           <span className="flex items-center gap-1"><Star className="w-2.5 h-2.5 text-amber-400/60" />{ACTIVITY_LABELS[data.topActivity] || data.topActivity}</span>
         )}
@@ -307,8 +307,8 @@ function RanksTab({ mindsetId, totalDays }: { mindsetId: M; totalDays: number })
               )}
             </div>
             <div className="flex-1 flex items-center justify-between">
-              <span className={`text-xs font-medium ${isCurrent ? accentColor : isAchieved ? 'text-white/70' : 'text-white/30'}`}>{rank.title}</span>
-              <span className={`text-[9px] ${isAchieved ? 'text-white/50' : 'text-white/25'}`}>
+              <span className={`text-xs font-medium ${isCurrent ? accentColor : isAchieved ? 'text-white' : 'text-white/50'}`}>{rank.title}</span>
+              <span className={`text-[9px] ${isAchieved ? 'text-white/70' : 'text-white/40'}`}>
                 {rank.minDays === 0 ? 'Start' : `${rank.minDays}d`}
                 {isNext && daysNeeded > 0 && ` · ${daysNeeded} to go`}
               </span>
@@ -329,7 +329,7 @@ function BadgesTab({ unlockedIds }: { unlockedIds: Set<string> }) {
   return (
     <>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px] text-white/40 flex items-center gap-1">
+        <span className="text-[10px] text-white/60 flex items-center gap-1">
           <Award className="w-3 h-3" /> {count}/{pathAchievements.length} unlocked
         </span>
       </div>
@@ -346,7 +346,7 @@ function BadgesTab({ unlockedIds }: { unlockedIds: Set<string> }) {
               }`}
             >
               <span className={`text-lg ${unlocked ? '' : 'grayscale'}`}>{unlocked ? a.icon : '?'}</span>
-              <span className={`text-[9px] text-center leading-tight ${unlocked ? 'text-white/70' : 'text-white/25'}`}>
+              <span className={`text-[9px] text-center leading-tight ${unlocked ? 'text-white' : 'text-white/40'}`}>
                 {unlocked ? a.title : '???'}
               </span>
               {isExpanded && (

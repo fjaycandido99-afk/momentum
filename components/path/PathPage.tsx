@@ -46,7 +46,7 @@ function SectionHeader({ title }: { title: string }) {
   return (
     <div className="flex items-center gap-3 my-5">
       <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
-      <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-medium">{title}</span>
+      <span className="text-[10px] uppercase tracking-[0.3em] text-white/70 font-medium">{title}</span>
       <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
     </div>
   )
@@ -80,8 +80,8 @@ function TabbedSection({ tabs, children }: {
             onClick={() => setActive(t.id)}
             className={`flex-1 min-w-0 py-1.5 text-[11px] rounded-lg transition-all press-scale whitespace-nowrap px-1 ${
               active === t.id
-                ? 'bg-white/12 text-white/90 font-medium'
-                : 'text-white/35 hover:text-white/55'
+                ? 'bg-white/12 text-white font-medium'
+                : 'text-white/60 hover:text-white/80'
             }`}
           >
             {t.label}
@@ -141,9 +141,9 @@ export function PathPage({ mindsetId }: PathPageProps) {
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
         {/* Text content */}
         <div className="relative z-10 px-5 pt-7 pb-6">
-          <h1 className="text-xl font-semibold text-white/95">{config.icon} {title}</h1>
-          <p className="text-white/60 text-[13px] mt-1">{subtitle}</p>
-          <p className="text-[12px] text-white/50 leading-relaxed mt-3">{details.overview}</p>
+          <h1 className="text-xl font-semibold text-white">{config.icon} {title}</h1>
+          <p className="text-white/80 text-[13px] mt-1">{subtitle}</p>
+          <p className="text-[12px] text-white/70 leading-relaxed mt-3">{details.overview}</p>
         </div>
       </div>
 
