@@ -1,0 +1,135 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Etwas ist schiefgelaufen",
+    "retry": "Erneut versuchen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Loschen",
+    "close": "Schliessen",
+    "back": "Zuruck",
+    "next": "Weiter",
+    "done": "Fertig",
+    "skip": "Uberspringen",
+    "search": "Suchen",
+    "offline": "Sie sind offline",
+    "backOnline": "Wieder online — wird synchronisiert..."
+  },
+  "nav": {
+    "home": "Startseite",
+    "dailyGuide": "Tagesguide",
+    "discover": "Entdecken",
+    "journal": "Tagebuch",
+    "progress": "Fortschritt",
+    "settings": "Einstellungen"
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signUp": "Registrieren",
+    "signOut": "Abmelden",
+    "forgotPassword": "Passwort vergessen?",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestatigen",
+    "resetPassword": "Passwort zurucksetzen",
+    "authError": "Authentifizierungsfehler",
+    "authErrorDescription": "Bei der Anmeldung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "backToSignIn": "Zuruck zur Anmeldung"
+  },
+  "home": {
+    "title": "Voxu",
+    "goodMorning": "Guten Morgen",
+    "goodAfternoon": "Guten Nachmittag",
+    "goodEvening": "Guten Abend",
+    "soundscapes": "Klanglandschaften",
+    "guidedSessions": "Gefuhrte Sitzungen",
+    "motivation": "Motivation",
+    "music": "Musik",
+    "nowPlaying": "Wird abgespielt",
+    "pause": "Pause",
+    "play": "Abspielen",
+    "skipNext": "Nachstes",
+    "skipPrevious": "Vorheriges"
+  },
+  "dailyGuide": {
+    "title": "Tagesguide",
+    "startSession": "Sitzung starten",
+    "todaysGuide": "Heutiger Guide",
+    "completed": "Abgeschlossen",
+    "streak": "Serie",
+    "streakDays": "{count} Tage",
+    "module": "Modul {number}",
+    "completeModule": "Modul abschliessen"
+  },
+  "journal": {
+    "title": "Tagebuch",
+    "newEntry": "Neuer Eintrag",
+    "writeSomething": "Schreiben Sie etwas...",
+    "mood": "Wie fuhlen Sie sich?",
+    "savedOffline": "Offline gespeichert — wird bei Verbindung synchronisiert",
+    "share": "Teilen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "selectLanguage": "Sprache wahlen",
+    "voiceTone": "Stimmton",
+    "notifications": "Benachrichtigungen",
+    "subscription": "Abonnement",
+    "mindset": "Denkweise",
+    "theme": "Design",
+    "about": "Uber",
+    "privacy": "Datenschutzrichtlinie",
+    "terms": "Nutzungsbedingungen"
+  },
+  "mindset": {
+    "title": "Wahlen Sie Ihre Denkweise",
+    "subtitle": "Wahlen Sie den philosophischen Rahmen, der zu Ihnen passt",
+    "stoic": "Stoisch",
+    "existentialist": "Existentialist",
+    "cynic": "Zyniker",
+    "hedonist": "Hedonist",
+    "samurai": "Samurai-Kodex",
+    "scholar": "Gelehrter"
+  },
+  "onboarding": {
+    "welcome": "Willkommen bei Voxu",
+    "welcomeSubtitle": "Ihr KI-gestutzter Audio-Begleiter fur Wachstum und Klarheit",
+    "getStarted": "Loslegen",
+    "step": "Schritt {current} von {total}",
+    "chooseMindset": "Wahlen Sie Ihre Denkweise",
+    "chooseVoice": "Wahlen Sie Ihre Stimme",
+    "customize": "Passen Sie Ihr Erlebnis an"
+  },
+  "subscription": {
+    "free": "Kostenlos",
+    "premium": "Premium",
+    "upgrade": "Auf Premium upgraden",
+    "upgradeDescription": "Alle Funktionen, KI-Stimmen und unbegrenzten Zugang freischalten",
+    "trial": "Kostenlose Testversion",
+    "trialDaysLeft": "{count} Tage Testversion verbleibend",
+    "currentPlan": "Aktueller Plan",
+    "manageBilling": "Abrechnung verwalten"
+  },
+  "sharing": {
+    "shareEntry": "Eintrag teilen",
+    "shareQuote": "Zitat teilen",
+    "shareStreak": "Serie teilen",
+    "copiedToClipboard": "In die Zwischenablage kopiert"
+  },
+  "errors": {
+    "somethingWentWrong": "Etwas ist schiefgelaufen",
+    "tryAgain": "Erneut versuchen",
+    "goHome": "Zur Startseite",
+    "sectionFailed": "Dieser Bereich konnte nicht geladen werden.",
+    "dashboardError": "Dieser Bereich hat einen Fehler festgestellt. Sie konnen es erneut versuchen oder zur Startseite zuruckkehren."
+  },
+  "a11y": {
+    "skipToContent": "Zum Hauptinhalt springen",
+    "closeDialog": "Dialog schliessen",
+    "playAudio": "{label} abspielen",
+    "pauseAudio": "{label} pausieren",
+    "volumeControl": "Lautstarkeregler",
+    "progressBar": "Fortschritt: {percent}%"
+  }
+}

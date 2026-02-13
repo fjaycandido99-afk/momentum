@@ -1,0 +1,135 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "skip": "Skip",
+    "search": "Search",
+    "offline": "You are offline",
+    "backOnline": "Back online — syncing..."
+  },
+  "nav": {
+    "home": "Home",
+    "dailyGuide": "Daily Guide",
+    "discover": "Discover",
+    "journal": "Journal",
+    "progress": "Progress",
+    "settings": "Settings"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signOut": "Sign out",
+    "forgotPassword": "Forgot password?",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "resetPassword": "Reset password",
+    "authError": "Authentication error",
+    "authErrorDescription": "Something went wrong during sign in. Please try again.",
+    "backToSignIn": "Back to sign in"
+  },
+  "home": {
+    "title": "Voxu",
+    "goodMorning": "Good morning",
+    "goodAfternoon": "Good afternoon",
+    "goodEvening": "Good evening",
+    "soundscapes": "Soundscapes",
+    "guidedSessions": "Guided Sessions",
+    "motivation": "Motivation",
+    "music": "Music",
+    "nowPlaying": "Now Playing",
+    "pause": "Pause",
+    "play": "Play",
+    "skipNext": "Next",
+    "skipPrevious": "Previous"
+  },
+  "dailyGuide": {
+    "title": "Daily Guide",
+    "startSession": "Start Session",
+    "todaysGuide": "Today's Guide",
+    "completed": "Completed",
+    "streak": "Streak",
+    "streakDays": "{count} days",
+    "module": "Module {number}",
+    "completeModule": "Complete Module"
+  },
+  "journal": {
+    "title": "Journal",
+    "newEntry": "New Entry",
+    "writeSomething": "Write something...",
+    "mood": "How are you feeling?",
+    "savedOffline": "Saved offline — will sync when connected",
+    "share": "Share"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "selectLanguage": "Select language",
+    "voiceTone": "Voice Tone",
+    "notifications": "Notifications",
+    "subscription": "Subscription",
+    "mindset": "Mindset",
+    "theme": "Theme",
+    "about": "About",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "mindset": {
+    "title": "Choose Your Mindset",
+    "subtitle": "Select the philosophical framework that resonates with you",
+    "stoic": "Stoic",
+    "existentialist": "Existentialist",
+    "cynic": "Cynic",
+    "hedonist": "Hedonist",
+    "samurai": "Samurai Code",
+    "scholar": "Scholar"
+  },
+  "onboarding": {
+    "welcome": "Welcome to Voxu",
+    "welcomeSubtitle": "Your AI-powered audio companion for growth and clarity",
+    "getStarted": "Get Started",
+    "step": "Step {current} of {total}",
+    "chooseMindset": "Choose your mindset",
+    "chooseVoice": "Choose your voice",
+    "customize": "Customize your experience"
+  },
+  "subscription": {
+    "free": "Free",
+    "premium": "Premium",
+    "upgrade": "Upgrade to Premium",
+    "upgradeDescription": "Unlock all features, AI voices, and unlimited access",
+    "trial": "Free Trial",
+    "trialDaysLeft": "{count} days left in trial",
+    "currentPlan": "Current Plan",
+    "manageBilling": "Manage Billing"
+  },
+  "sharing": {
+    "shareEntry": "Share Entry",
+    "shareQuote": "Share Quote",
+    "shareStreak": "Share Streak",
+    "copiedToClipboard": "Copied to clipboard"
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong",
+    "tryAgain": "Try again",
+    "goHome": "Go home",
+    "sectionFailed": "This section failed to load.",
+    "dashboardError": "This section encountered an error. You can try again or go back home."
+  },
+  "a11y": {
+    "skipToContent": "Skip to main content",
+    "closeDialog": "Close dialog",
+    "playAudio": "Play {label}",
+    "pauseAudio": "Pause {label}",
+    "volumeControl": "Volume control",
+    "progressBar": "Progress: {percent}%"
+  }
+}

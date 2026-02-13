@@ -1,0 +1,135 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "retry": "再試行",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "delete": "削除",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "done": "完了",
+    "skip": "スキップ",
+    "search": "検索",
+    "offline": "オフラインです",
+    "backOnline": "オンラインに復帰 — 同期中..."
+  },
+  "nav": {
+    "home": "ホーム",
+    "dailyGuide": "デイリーガイド",
+    "discover": "探索",
+    "journal": "ジャーナル",
+    "progress": "進捗",
+    "settings": "設定"
+  },
+  "auth": {
+    "signIn": "ログイン",
+    "signUp": "登録",
+    "signOut": "ログアウト",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "confirmPassword": "パスワード確認",
+    "resetPassword": "パスワードリセット",
+    "authError": "認証エラー",
+    "authErrorDescription": "ログイン中にエラーが発生しました。もう一度お試しください。",
+    "backToSignIn": "ログインに戻る"
+  },
+  "home": {
+    "title": "Voxu",
+    "goodMorning": "おはようございます",
+    "goodAfternoon": "こんにちは",
+    "goodEvening": "こんばんは",
+    "soundscapes": "サウンドスケープ",
+    "guidedSessions": "ガイドセッション",
+    "motivation": "モチベーション",
+    "music": "音楽",
+    "nowPlaying": "再生中",
+    "pause": "一時停止",
+    "play": "再生",
+    "skipNext": "次へ",
+    "skipPrevious": "前へ"
+  },
+  "dailyGuide": {
+    "title": "デイリーガイド",
+    "startSession": "セッション開始",
+    "todaysGuide": "今日のガイド",
+    "completed": "完了",
+    "streak": "連続記録",
+    "streakDays": "{count}日",
+    "module": "モジュール{number}",
+    "completeModule": "モジュール完了"
+  },
+  "journal": {
+    "title": "ジャーナル",
+    "newEntry": "新しいエントリー",
+    "writeSomething": "何か書いてください...",
+    "mood": "気分はいかがですか？",
+    "savedOffline": "オフラインで保存 — 接続時に同期されます",
+    "share": "共有"
+  },
+  "settings": {
+    "title": "設定",
+    "language": "言語",
+    "selectLanguage": "言語を選択",
+    "voiceTone": "声のトーン",
+    "notifications": "通知",
+    "subscription": "サブスクリプション",
+    "mindset": "マインドセット",
+    "theme": "テーマ",
+    "about": "アプリについて",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約"
+  },
+  "mindset": {
+    "title": "マインドセットを選択",
+    "subtitle": "共感する哲学的フレームワークを選んでください",
+    "stoic": "ストア派",
+    "existentialist": "実存主義者",
+    "cynic": "キニク派",
+    "hedonist": "快楽主義者",
+    "samurai": "武士道",
+    "scholar": "学者"
+  },
+  "onboarding": {
+    "welcome": "Voxuへようこそ",
+    "welcomeSubtitle": "成長と明晰さのためのAI搭載オーディオコンパニオン",
+    "getStarted": "始める",
+    "step": "ステップ{current}/{total}",
+    "chooseMindset": "マインドセットを選択",
+    "chooseVoice": "声を選択",
+    "customize": "体験をカスタマイズ"
+  },
+  "subscription": {
+    "free": "無料",
+    "premium": "プレミアム",
+    "upgrade": "プレミアムにアップグレード",
+    "upgradeDescription": "すべての機能、AI音声、無制限アクセスをアンロック",
+    "trial": "無料トライアル",
+    "trialDaysLeft": "トライアル残り{count}日",
+    "currentPlan": "現在のプラン",
+    "manageBilling": "請求管理"
+  },
+  "sharing": {
+    "shareEntry": "エントリーを共有",
+    "shareQuote": "引用を共有",
+    "shareStreak": "連続記録を共有",
+    "copiedToClipboard": "クリップボードにコピーしました"
+  },
+  "errors": {
+    "somethingWentWrong": "エラーが発生しました",
+    "tryAgain": "再試行",
+    "goHome": "ホームに戻る",
+    "sectionFailed": "このセクションの読み込みに失敗しました。",
+    "dashboardError": "このセクションでエラーが発生しました。再試行するかホームに戻ってください。"
+  },
+  "a11y": {
+    "skipToContent": "メインコンテンツにスキップ",
+    "closeDialog": "ダイアログを閉じる",
+    "playAudio": "{label}を再生",
+    "pauseAudio": "{label}を一時停止",
+    "volumeControl": "音量コントロール",
+    "progressBar": "進捗: {percent}%"
+  }
+}

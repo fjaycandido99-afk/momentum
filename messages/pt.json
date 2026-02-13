@@ -1,0 +1,135 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "error": "Algo deu errado",
+    "retry": "Tentar novamente",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "close": "Fechar",
+    "back": "Voltar",
+    "next": "Proximo",
+    "done": "Concluido",
+    "skip": "Pular",
+    "search": "Buscar",
+    "offline": "Voce esta offline",
+    "backOnline": "De volta online — sincronizando..."
+  },
+  "nav": {
+    "home": "Inicio",
+    "dailyGuide": "Guia Diario",
+    "discover": "Descobrir",
+    "journal": "Diario",
+    "progress": "Progresso",
+    "settings": "Configuracoes"
+  },
+  "auth": {
+    "signIn": "Entrar",
+    "signUp": "Cadastrar",
+    "signOut": "Sair",
+    "forgotPassword": "Esqueceu a senha?",
+    "email": "Email",
+    "password": "Senha",
+    "confirmPassword": "Confirmar senha",
+    "resetPassword": "Redefinir senha",
+    "authError": "Erro de autenticacao",
+    "authErrorDescription": "Algo deu errado durante o login. Por favor, tente novamente.",
+    "backToSignIn": "Voltar ao login"
+  },
+  "home": {
+    "title": "Voxu",
+    "goodMorning": "Bom dia",
+    "goodAfternoon": "Boa tarde",
+    "goodEvening": "Boa noite",
+    "soundscapes": "Paisagens sonoras",
+    "guidedSessions": "Sessoes guiadas",
+    "motivation": "Motivacao",
+    "music": "Musica",
+    "nowPlaying": "Tocando agora",
+    "pause": "Pausar",
+    "play": "Reproduzir",
+    "skipNext": "Proximo",
+    "skipPrevious": "Anterior"
+  },
+  "dailyGuide": {
+    "title": "Guia Diario",
+    "startSession": "Iniciar Sessao",
+    "todaysGuide": "Guia de Hoje",
+    "completed": "Concluido",
+    "streak": "Sequencia",
+    "streakDays": "{count} dias",
+    "module": "Modulo {number}",
+    "completeModule": "Concluir Modulo"
+  },
+  "journal": {
+    "title": "Diario",
+    "newEntry": "Nova Entrada",
+    "writeSomething": "Escreva algo...",
+    "mood": "Como voce esta se sentindo?",
+    "savedOffline": "Salvo offline — sera sincronizado quando conectado",
+    "share": "Compartilhar"
+  },
+  "settings": {
+    "title": "Configuracoes",
+    "language": "Idioma",
+    "selectLanguage": "Selecionar idioma",
+    "voiceTone": "Tom de voz",
+    "notifications": "Notificacoes",
+    "subscription": "Assinatura",
+    "mindset": "Mentalidade",
+    "theme": "Tema",
+    "about": "Sobre",
+    "privacy": "Politica de Privacidade",
+    "terms": "Termos de Servico"
+  },
+  "mindset": {
+    "title": "Escolha Sua Mentalidade",
+    "subtitle": "Selecione o framework filosofico que ressoa com voce",
+    "stoic": "Estoico",
+    "existentialist": "Existencialista",
+    "cynic": "Cinico",
+    "hedonist": "Hedonista",
+    "samurai": "Codigo Samurai",
+    "scholar": "Erudito"
+  },
+  "onboarding": {
+    "welcome": "Bem-vindo ao Voxu",
+    "welcomeSubtitle": "Seu companheiro de audio com IA para crescimento e clareza",
+    "getStarted": "Comecar",
+    "step": "Passo {current} de {total}",
+    "chooseMindset": "Escolha sua mentalidade",
+    "chooseVoice": "Escolha sua voz",
+    "customize": "Personalize sua experiencia"
+  },
+  "subscription": {
+    "free": "Gratis",
+    "premium": "Premium",
+    "upgrade": "Atualizar para Premium",
+    "upgradeDescription": "Desbloqueie todos os recursos, vozes IA e acesso ilimitado",
+    "trial": "Teste Gratuito",
+    "trialDaysLeft": "{count} dias restantes de teste",
+    "currentPlan": "Plano Atual",
+    "manageBilling": "Gerenciar Cobranca"
+  },
+  "sharing": {
+    "shareEntry": "Compartilhar Entrada",
+    "shareQuote": "Compartilhar Citacao",
+    "shareStreak": "Compartilhar Sequencia",
+    "copiedToClipboard": "Copiado para a area de transferencia"
+  },
+  "errors": {
+    "somethingWentWrong": "Algo deu errado",
+    "tryAgain": "Tentar novamente",
+    "goHome": "Ir para o inicio",
+    "sectionFailed": "Esta secao nao pode ser carregada.",
+    "dashboardError": "Esta secao encontrou um erro. Voce pode tentar novamente ou voltar ao inicio."
+  },
+  "a11y": {
+    "skipToContent": "Pular para o conteudo principal",
+    "closeDialog": "Fechar dialogo",
+    "playAudio": "Reproduzir {label}",
+    "pauseAudio": "Pausar {label}",
+    "volumeControl": "Controle de volume",
+    "progressBar": "Progresso: {percent}%"
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Algo salio mal",
+    "retry": "Intentar de nuevo",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "close": "Cerrar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "done": "Listo",
+    "skip": "Omitir",
+    "search": "Buscar",
+    "offline": "Estas sin conexion",
+    "backOnline": "De vuelta en linea — sincronizando..."
+  },
+  "nav": {
+    "home": "Inicio",
+    "dailyGuide": "Guia Diaria",
+    "discover": "Descubrir",
+    "journal": "Diario",
+    "progress": "Progreso",
+    "settings": "Ajustes"
+  },
+  "auth": {
+    "signIn": "Iniciar sesion",
+    "signUp": "Registrarse",
+    "signOut": "Cerrar sesion",
+    "forgotPassword": "Olvidaste tu contrasena?",
+    "email": "Correo electronico",
+    "password": "Contrasena",
+    "confirmPassword": "Confirmar contrasena",
+    "resetPassword": "Restablecer contrasena",
+    "authError": "Error de autenticacion",
+    "authErrorDescription": "Algo salio mal durante el inicio de sesion. Por favor intenta de nuevo.",
+    "backToSignIn": "Volver a iniciar sesion"
+  },
+  "home": {
+    "title": "Voxu",
+    "goodMorning": "Buenos dias",
+    "goodAfternoon": "Buenas tardes",
+    "goodEvening": "Buenas noches",
+    "soundscapes": "Paisajes sonoros",
+    "guidedSessions": "Sesiones guiadas",
+    "motivation": "Motivacion",
+    "music": "Musica",
+    "nowPlaying": "Reproduciendo ahora",
+    "pause": "Pausar",
+    "play": "Reproducir",
+    "skipNext": "Siguiente",
+    "skipPrevious": "Anterior"
+  },
+  "dailyGuide": {
+    "title": "Guia Diaria",
+    "startSession": "Iniciar Sesion",
+    "todaysGuide": "Guia de Hoy",
+    "completed": "Completado",
+    "streak": "Racha",
+    "streakDays": "{count} dias",
+    "module": "Modulo {number}",
+    "completeModule": "Completar Modulo"
+  },
+  "journal": {
+    "title": "Diario",
+    "newEntry": "Nueva Entrada",
+    "writeSomething": "Escribe algo...",
+    "mood": "Como te sientes?",
+    "savedOffline": "Guardado sin conexion — se sincronizara al conectarse",
+    "share": "Compartir"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "selectLanguage": "Seleccionar idioma",
+    "voiceTone": "Tono de voz",
+    "notifications": "Notificaciones",
+    "subscription": "Suscripcion",
+    "mindset": "Mentalidad",
+    "theme": "Tema",
+    "about": "Acerca de",
+    "privacy": "Politica de privacidad",
+    "terms": "Terminos de servicio"
+  },
+  "mindset": {
+    "title": "Elige Tu Mentalidad",
+    "subtitle": "Selecciona el marco filosofico que resuena contigo",
+    "stoic": "Estoico",
+    "existentialist": "Existencialista",
+    "cynic": "Cinico",
+    "hedonist": "Hedonista",
+    "samurai": "Codigo Samurai",
+    "scholar": "Erudito"
+  },
+  "onboarding": {
+    "welcome": "Bienvenido a Voxu",
+    "welcomeSubtitle": "Tu companero de audio impulsado por IA para el crecimiento y la claridad",
+    "getStarted": "Comenzar",
+    "step": "Paso {current} de {total}",
+    "chooseMindset": "Elige tu mentalidad",
+    "chooseVoice": "Elige tu voz",
+    "customize": "Personaliza tu experiencia"
+  },
+  "subscription": {
+    "free": "Gratis",
+    "premium": "Premium",
+    "upgrade": "Actualizar a Premium",
+    "upgradeDescription": "Desbloquea todas las funciones, voces IA y acceso ilimitado",
+    "trial": "Prueba Gratuita",
+    "trialDaysLeft": "{count} dias restantes de prueba",
+    "currentPlan": "Plan Actual",
+    "manageBilling": "Gestionar Facturacion"
+  },
+  "sharing": {
+    "shareEntry": "Compartir Entrada",
+    "shareQuote": "Compartir Cita",
+    "shareStreak": "Compartir Racha",
+    "copiedToClipboard": "Copiado al portapapeles"
+  },
+  "errors": {
+    "somethingWentWrong": "Algo salio mal",
+    "tryAgain": "Intentar de nuevo",
+    "goHome": "Ir al inicio",
+    "sectionFailed": "Esta seccion no pudo cargarse.",
+    "dashboardError": "Esta seccion encontro un error. Puedes intentar de nuevo o volver al inicio."
+  },
+  "a11y": {
+    "skipToContent": "Saltar al contenido principal",
+    "closeDialog": "Cerrar dialogo",
+    "playAudio": "Reproducir {label}",
+    "pauseAudio": "Pausar {label}",
+    "volumeControl": "Control de volumen",
+    "progressBar": "Progreso: {percent}%"
+  }
+}

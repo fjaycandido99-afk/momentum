@@ -1,0 +1,135 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "retry": "Reessayer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "done": "Termine",
+    "skip": "Passer",
+    "search": "Rechercher",
+    "offline": "Vous etes hors ligne",
+    "backOnline": "De retour en ligne — synchronisation..."
+  },
+  "nav": {
+    "home": "Accueil",
+    "dailyGuide": "Guide Quotidien",
+    "discover": "Decouvrir",
+    "journal": "Journal",
+    "progress": "Progres",
+    "settings": "Parametres"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "signOut": "Se deconnecter",
+    "forgotPassword": "Mot de passe oublie ?",
+    "email": "Email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "resetPassword": "Reinitialiser le mot de passe",
+    "authError": "Erreur d'authentification",
+    "authErrorDescription": "Une erreur est survenue lors de la connexion. Veuillez reessayer.",
+    "backToSignIn": "Retour a la connexion"
+  },
+  "home": {
+    "title": "Voxu",
+    "goodMorning": "Bonjour",
+    "goodAfternoon": "Bon apres-midi",
+    "goodEvening": "Bonsoir",
+    "soundscapes": "Ambiances sonores",
+    "guidedSessions": "Sessions guidees",
+    "motivation": "Motivation",
+    "music": "Musique",
+    "nowPlaying": "En cours de lecture",
+    "pause": "Pause",
+    "play": "Lecture",
+    "skipNext": "Suivant",
+    "skipPrevious": "Precedent"
+  },
+  "dailyGuide": {
+    "title": "Guide Quotidien",
+    "startSession": "Demarrer la Session",
+    "todaysGuide": "Guide du Jour",
+    "completed": "Termine",
+    "streak": "Serie",
+    "streakDays": "{count} jours",
+    "module": "Module {number}",
+    "completeModule": "Terminer le Module"
+  },
+  "journal": {
+    "title": "Journal",
+    "newEntry": "Nouvelle Entree",
+    "writeSomething": "Ecrivez quelque chose...",
+    "mood": "Comment vous sentez-vous ?",
+    "savedOffline": "Enregistre hors ligne — sera synchronise a la reconnexion",
+    "share": "Partager"
+  },
+  "settings": {
+    "title": "Parametres",
+    "language": "Langue",
+    "selectLanguage": "Choisir la langue",
+    "voiceTone": "Ton de la voix",
+    "notifications": "Notifications",
+    "subscription": "Abonnement",
+    "mindset": "Etat d'esprit",
+    "theme": "Theme",
+    "about": "A propos",
+    "privacy": "Politique de confidentialite",
+    "terms": "Conditions d'utilisation"
+  },
+  "mindset": {
+    "title": "Choisissez Votre Etat d'Esprit",
+    "subtitle": "Selectionnez le cadre philosophique qui vous correspond",
+    "stoic": "Stoicien",
+    "existentialist": "Existentialiste",
+    "cynic": "Cynique",
+    "hedonist": "Hedoniste",
+    "samurai": "Code Samourai",
+    "scholar": "Erudit"
+  },
+  "onboarding": {
+    "welcome": "Bienvenue sur Voxu",
+    "welcomeSubtitle": "Votre compagnon audio alimente par l'IA pour la croissance et la clarte",
+    "getStarted": "Commencer",
+    "step": "Etape {current} sur {total}",
+    "chooseMindset": "Choisissez votre etat d'esprit",
+    "chooseVoice": "Choisissez votre voix",
+    "customize": "Personnalisez votre experience"
+  },
+  "subscription": {
+    "free": "Gratuit",
+    "premium": "Premium",
+    "upgrade": "Passer a Premium",
+    "upgradeDescription": "Debloquez toutes les fonctionnalites, les voix IA et l'acces illimite",
+    "trial": "Essai Gratuit",
+    "trialDaysLeft": "{count} jours d'essai restants",
+    "currentPlan": "Plan Actuel",
+    "manageBilling": "Gerer la Facturation"
+  },
+  "sharing": {
+    "shareEntry": "Partager l'Entree",
+    "shareQuote": "Partager la Citation",
+    "shareStreak": "Partager la Serie",
+    "copiedToClipboard": "Copie dans le presse-papiers"
+  },
+  "errors": {
+    "somethingWentWrong": "Une erreur est survenue",
+    "tryAgain": "Reessayer",
+    "goHome": "Retour a l'accueil",
+    "sectionFailed": "Cette section n'a pas pu se charger.",
+    "dashboardError": "Cette section a rencontre une erreur. Vous pouvez reessayer ou retourner a l'accueil."
+  },
+  "a11y": {
+    "skipToContent": "Aller au contenu principal",
+    "closeDialog": "Fermer le dialogue",
+    "playAudio": "Lire {label}",
+    "pauseAudio": "Mettre en pause {label}",
+    "volumeControl": "Controle du volume",
+    "progressBar": "Progression : {percent}%"
+  }
+}
