@@ -8,7 +8,7 @@
  *   npx ts-node scripts/upload-backgrounds.ts lofi ./my-lofi-images
  *   npx ts-node scripts/upload-backgrounds.ts piano "C:\Users\fjayc\Pictures\piano-backgrounds"
  *
- * Supported genres: lofi, piano, jazz, classical, ambient, study
+ * Supported genres: lofi, piano, jazz, classical, ambient, study, sleep
  * Supported formats: .jpg, .jpeg, .png, .webp, .avif
  */
 
@@ -26,7 +26,7 @@ const __dirname = path.dirname(__filename)
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
 const BUCKET_NAME = 'backgrounds'
-const VALID_GENRES = ['lofi', 'piano', 'jazz', 'classical', 'ambient', 'study']
+const VALID_GENRES = ['lofi', 'piano', 'jazz', 'classical', 'ambient', 'study', 'sleep']
 const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.avif']
 
 // Initialize Supabase client

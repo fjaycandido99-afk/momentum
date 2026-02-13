@@ -36,6 +36,7 @@ export const MUSIC_GENRES = [
   { id: 'jazz', word: 'Jazz', tagline: 'Smooth vibes' },
   { id: 'study', word: 'Study', tagline: 'Focus music' },
   { id: 'ambient', word: 'Ambient', tagline: 'Atmospheric' },
+  { id: 'sleep', word: 'Sleep', tagline: 'Drift into rest' },
 ]
 
 export const VOICE_GUIDES = [

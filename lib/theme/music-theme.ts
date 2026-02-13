@@ -54,6 +54,13 @@ export const GENRE_THEMES: Record<string, GenreTheme> = {
     vibe: 'Focused and productive',
     gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
   },
+  sleep: {
+    name: 'Sleep',
+    tagline: 'Drift into rest',
+    accentColor: 'indigo',
+    vibe: 'Calm and soothing',
+    gradient: 'linear-gradient(135deg, #4338ca 0%, #312e81 100%)',
+  },
 }
 
 // Default genre to use when none is selected

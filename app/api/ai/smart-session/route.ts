@@ -13,7 +13,7 @@ const DEEP_MODEL = 'llama-3.3-70b-versatile'
 // Valid content IDs the AI can reference
 const VALID_SOUNDSCAPES = [...VALID_SOUNDSCAPE_IDS]
 const VALID_GUIDES = ['breathing', 'affirmation', 'gratitude', 'sleep', 'anxiety']
-const VALID_MUSIC = ['lofi', 'classical', 'piano', 'jazz', 'study', 'ambient']
+const VALID_MUSIC = ['lofi', 'classical', 'piano', 'jazz', 'study', 'ambient', 'sleep']
 
 export async function POST(request: NextRequest) {
   try {

@@ -1358,14 +1358,16 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 .genre-tint-piano,
 .genre-tint-jazz,
 .genre-tint-study,
-.genre-tint-ambient { border-color: rgba(255, 255, 255, 0.15); }
+.genre-tint-ambient,
+.genre-tint-sleep { border-color: rgba(255, 255, 255, 0.15); }
 
 .genre-accent-lofi,
 .genre-accent-classical,
 .genre-accent-piano,
 .genre-accent-jazz,
 .genre-accent-study,
-.genre-accent-ambient { color: rgb(255, 255, 255); }
+.genre-accent-ambient,
+.genre-accent-sleep { color: rgb(255, 255, 255); }
 
 /* --- Shuffle toast --- */
 @keyframes toast-slide-in {

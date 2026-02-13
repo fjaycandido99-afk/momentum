@@ -45,6 +45,12 @@ export const MUSIC_SAMPLES: Record<string, MusicSample> = {
     channel: 'Greenred Productions',
     previewDuration: 20,
   },
+  sleep: {
+    youtubeId: '1ZYbU82GVz4',
+    title: 'Deep Sleep Music',
+    channel: 'Soothing Relaxation',
+    previewDuration: 20,
+  },
 }
 
 // Get all genre IDs
@@ -58,4 +64,5 @@ export const MUSIC_GENRE_INFO: Record<string, { name: string; tagline: string }>
   classical: { name: 'Classical', tagline: 'Timeless elegance' },
   ambient: { name: 'Ambient', tagline: 'Atmospheric soundscapes' },
   study: { name: 'Study', tagline: 'Focus music' },
+  sleep: { name: 'Sleep', tagline: 'Drift into rest' },
 }

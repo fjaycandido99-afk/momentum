@@ -234,6 +234,7 @@ const MUSIC_GENRES = [
   { id: 'classical', label: 'Classical' },
   { id: 'ambient', label: 'Ambient' },
   { id: 'jazz', label: 'Jazz' },
+  { id: 'sleep', label: 'Sleep' },
 ]
 
 interface DailyGuideHomeProps {
@@ -311,7 +312,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     const startOfYear = new Date(now.getFullYear(), 0, 0)
     const diff = now.getTime() - startOfYear.getTime()
     const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const genres = ['lofi', 'piano', 'jazz', 'classical', 'ambient', 'study']
+    const genres = ['lofi', 'piano', 'jazz', 'classical', 'ambient', 'study', 'sleep']
     return genres[dayOfYear % genres.length]
   }
 

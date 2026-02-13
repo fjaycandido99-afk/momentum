@@ -41,6 +41,12 @@ const FALLBACK_MUSIC: Record<string, Array<{
     { id: 'st1', youtubeId: 'sjkrrmBnpGE', title: 'Study Music Alpha Waves - Focus Music', channel: 'Greenred Productions', duration: 10800 },
     { id: 'st2', youtubeId: 'lTRiuFIWV54', title: 'Study Music - Deep Focus Music for Concentration', channel: 'Yellow Brick Cinema', duration: 10800 },
   ],
+  sleep: [
+    { id: 'sl1', youtubeId: '1ZYbU82GVz4', title: 'Deep Sleep Music - Relaxing Music for Sleeping', channel: 'Soothing Relaxation', duration: 10800 },
+    { id: 'sl2', youtubeId: 'aXItOY0sLRY', title: 'Sleep Music - Calming Sleep Sounds', channel: 'Yellow Brick Cinema', duration: 10800 },
+    { id: 'sl3', youtubeId: 'rvaqPPjtxng', title: 'Relaxing Sleep Music - Deep Sleeping Music', channel: 'Quiet Quest', duration: 7200 },
+    { id: 'sl4', youtubeId: 'hlWiI4xVXKY', title: 'Sleep Meditation Music - Peaceful Night', channel: 'Meditation Relax Music', duration: 7200 },
+  ],
 }
 
 // Search keywords for each music genre
@@ -51,10 +57,11 @@ const GENRE_SEARCHES: Record<string, string[]> = {
   classical: ['classical music relaxing', 'classical study music', 'peaceful classical', 'classical piano'],
   ambient: ['ambient music relaxing', 'ambient study music', 'ambient background music', 'ambient meditation'],
   study: ['study music concentration', 'focus music', 'deep focus music', 'study with me music'],
+  sleep: ['sleep music relaxing', 'deep sleep music', 'sleep meditation music', 'calming music for sleep'],
 }
 
 // Daily genre rotation order
-const GENRE_ORDER = ['lofi', 'piano', 'jazz', 'classical', 'ambient', 'study']
+const GENRE_ORDER = ['lofi', 'piano', 'jazz', 'classical', 'ambient', 'study', 'sleep']
 
 interface YouTubeVideo {
   id: string
