@@ -1,151 +1,150 @@
-import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
-
-interface VoxuDB extends DBSchema {
-  journal: {
-    key: string
-    value: {
-      id: string
-      content: string
-      mood?: string
-      createdAt: string
-      synced: boolean
-    }
-    indexes: { 'by-date': string }
-  }
-  dailyGuide: {
-    key: string
-    value: {
-      id: string
-      date: string
-      data: any
-      cachedAt: string
-    }
-  }
-  favorites: {
-    key: string
-    value: {
-      id: string
-      type: 'soundscape' | 'music' | 'motivation'
-      youtubeId: string
-      label: string
-      savedAt: string
-    }
-  }
-  pendingActions: {
-    key: number
-    value: {
-      id?: number
-      action: string
-      url: string
-      method: string
-      body?: any
-      createdAt: string
-    }
-    indexes: { 'by-date': string }
-  }
-}
-
 const DB_NAME = 'voxu-offline'
 const DB_VERSION = 1
 
-let dbPromise: Promise<IDBPDatabase<VoxuDB>> | null = null
+interface JournalEntry {
+  id: string
+  content: string
+  mood?: string
+  createdAt: string
+  synced: boolean
+}
 
-export function getDB(): Promise<IDBPDatabase<VoxuDB>> {
-  if (!dbPromise) {
-    dbPromise = openDB<VoxuDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        // Journal entries
-        if (!db.objectStoreNames.contains('journal')) {
-          const journalStore = db.createObjectStore('journal', { keyPath: 'id' })
-          journalStore.createIndex('by-date', 'createdAt')
-        }
+interface PendingAction {
+  id?: number
+  action: string
+  url: string
+  method: string
+  body?: any
+  createdAt: string
+}
 
-        // Daily guide cache
-        if (!db.objectStoreNames.contains('dailyGuide')) {
-          db.createObjectStore('dailyGuide', { keyPath: 'id' })
-        }
+function getDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      reject(new Error('IndexedDB not available'))
+      return
+    }
+    const req = indexedDB.open(DB_NAME, DB_VERSION)
+    req.onupgradeneeded = () => {
+      const db = req.result
+      if (!db.objectStoreNames.contains('journal')) {
+        const s = db.createObjectStore('journal', { keyPath: 'id' })
+        s.createIndex('by-date', 'createdAt')
+      }
+      if (!db.objectStoreNames.contains('dailyGuide')) {
+        db.createObjectStore('dailyGuide', { keyPath: 'id' })
+      }
+      if (!db.objectStoreNames.contains('favorites')) {
+        db.createObjectStore('favorites', { keyPath: 'id' })
+      }
+      if (!db.objectStoreNames.contains('pendingActions')) {
+        const s = db.createObjectStore('pendingActions', { keyPath: 'id', autoIncrement: true })
+        s.createIndex('by-date', 'createdAt')
+      }
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
 
-        // Favorites
-        if (!db.objectStoreNames.contains('favorites')) {
-          db.createObjectStore('favorites', { keyPath: 'id' })
-        }
+function txGet<T>(storeName: string, key: IDBValidKey): Promise<T | undefined> {
+  return getDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readonly')
+    const req = tx.objectStore(storeName).get(key)
+    req.onsuccess = () => resolve(req.result as T | undefined)
+    req.onerror = () => reject(req.error)
+  }))
+}
 
-        // Pending actions queue
-        if (!db.objectStoreNames.contains('pendingActions')) {
-          const actionsStore = db.createObjectStore('pendingActions', {
-            keyPath: 'id',
-            autoIncrement: true,
-          })
-          actionsStore.createIndex('by-date', 'createdAt')
-        }
-      },
-    })
-  }
-  return dbPromise
+function txGetAll<T>(storeName: string): Promise<T[]> {
+  return getDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readonly')
+    const req = tx.objectStore(storeName).getAll()
+    req.onsuccess = () => resolve(req.result as T[])
+    req.onerror = () => reject(req.error)
+  }))
+}
+
+function txPut(storeName: string, value: any): Promise<void> {
+  return getDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite')
+    const req = tx.objectStore(storeName).put(value)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  }))
+}
+
+function txAdd(storeName: string, value: any): Promise<void> {
+  return getDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite')
+    const req = tx.objectStore(storeName).add(value)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  }))
+}
+
+function txDelete(storeName: string, key: IDBValidKey): Promise<void> {
+  return getDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite')
+    const req = tx.objectStore(storeName).delete(key)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  }))
+}
+
+function txClear(storeName: string): Promise<void> {
+  return getDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite')
+    const req = tx.objectStore(storeName).clear()
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  }))
 }
 
 // --- Journal helpers ---
-export async function saveJournalOffline(entry: VoxuDB['journal']['value']) {
-  const db = await getDB()
-  await db.put('journal', entry)
+export async function saveJournalOffline(entry: JournalEntry) {
+  await txPut('journal', entry)
 }
 
-export async function getOfflineJournalEntries() {
-  const db = await getDB()
-  return db.getAllFromIndex('journal', 'by-date')
+export async function getOfflineJournalEntries(): Promise<JournalEntry[]> {
+  return txGetAll<JournalEntry>('journal')
 }
 
-export async function getUnsyncedJournalEntries() {
-  const db = await getDB()
-  const all = await db.getAll('journal')
+export async function getUnsyncedJournalEntries(): Promise<JournalEntry[]> {
+  const all = await txGetAll<JournalEntry>('journal')
   return all.filter(e => !e.synced)
 }
 
 export async function markJournalSynced(id: string) {
-  const db = await getDB()
-  const entry = await db.get('journal', id)
+  const entry = await txGet<JournalEntry>('journal', id)
   if (entry) {
     entry.synced = true
-    await db.put('journal', entry)
+    await txPut('journal', entry)
   }
 }
 
 // --- Daily guide cache ---
 export async function cacheDailyGuide(date: string, data: any) {
-  const db = await getDB()
-  await db.put('dailyGuide', {
-    id: date,
-    date,
-    data,
-    cachedAt: new Date().toISOString(),
-  })
+  await txPut('dailyGuide', { id: date, date, data, cachedAt: new Date().toISOString() })
 }
 
 export async function getCachedDailyGuide(date: string) {
-  const db = await getDB()
-  return db.get('dailyGuide', date)
+  return txGet('dailyGuide', date)
 }
 
 // --- Pending actions queue ---
-export async function queueAction(action: Omit<VoxuDB['pendingActions']['value'], 'id' | 'createdAt'>) {
-  const db = await getDB()
-  await db.add('pendingActions', {
-    ...action,
-    createdAt: new Date().toISOString(),
-  })
+export async function queueAction(action: Omit<PendingAction, 'id' | 'createdAt'>) {
+  await txAdd('pendingActions', { ...action, createdAt: new Date().toISOString() })
 }
 
-export async function getPendingActions() {
-  const db = await getDB()
-  return db.getAllFromIndex('pendingActions', 'by-date')
+export async function getPendingActions(): Promise<PendingAction[]> {
+  return txGetAll<PendingAction>('pendingActions')
 }
 
 export async function clearPendingAction(id: number) {
-  const db = await getDB()
-  await db.delete('pendingActions', id)
+  await txDelete('pendingActions', id)
 }
 
 export async function clearAllPendingActions() {
-  const db = await getDB()
-  await db.clear('pendingActions')
+  await txClear('pendingActions')
 }
