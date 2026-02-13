@@ -15,12 +15,18 @@ export interface RecentlyPlayedItem {
 
 const STORAGE_KEY = 'voxu_recently_played'
 const MAX_ITEMS = 10
+const TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 
 function loadFromStorage(): RecentlyPlayedItem[] {
   if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
+    if (!raw) return []
+    const all: RecentlyPlayedItem[] = JSON.parse(raw)
+    const cutoff = Date.now() - TTL_MS
+    const fresh = all.filter(item => item.playedAt > cutoff)
+    if (fresh.length !== all.length) saveToStorage(fresh)
+    return fresh
   } catch {
     return []
   }

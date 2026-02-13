@@ -1,10 +1,14 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
+import { Dumbbell, Compass } from 'lucide-react'
 import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MINDSET_DETAILS } from '@/lib/mindset/detail-content'
 import { PathScene } from './PathScene'
+import { ScrollReveal } from './ScrollReveal'
+import { StreakFlame } from './StreakFlame'
+import { PullToRefresh } from './PullToRefresh'
 import { PathJourneyCard } from './PathJourneyCard'
 import { DailyInsightCard } from './DailyInsightCard'
 import { DailyParableCard } from './DailyParableCard'
@@ -34,12 +38,22 @@ const PATH_TITLES: Record<M, string> = {
   samurai: 'Way of the Warrior',
 }
 
-const PATH_SUBTITLES: Record<M, string> = {
-  stoic: 'Walk with Marcus Aurelius',
-  existentialist: 'Create your own meaning',
-  cynic: 'Question everything',
-  hedonist: 'Savor what matters',
-  samurai: 'Train your spirit daily',
+const MINDSET_NOUNS: Record<M, string> = {
+  stoic: 'Stoic',
+  existentialist: 'Seeker',
+  cynic: 'Cynic',
+  hedonist: 'Epicurean',
+  samurai: 'Warrior',
+}
+
+function getTimeGreeting(mindsetId: M): string {
+  const hour = new Date().getHours()
+  const noun = MINDSET_NOUNS[mindsetId]
+  if (hour < 6) return `Still night, ${noun}. Rest or reflect.`
+  if (hour < 12) return `Good morning, ${noun}`
+  if (hour < 17) return `Good afternoon, ${noun}`
+  if (hour < 21) return `Good evening, ${noun}`
+  return `Late hours, ${noun}. Wind down.`
 }
 
 function SectionHeader({ title }: { title: string }) {
@@ -64,15 +78,21 @@ function MindsetExercise({ mindsetId, onPathActivity }: { mindsetId: M; onPathAc
 
 // ── Tabbed section wrapper ──
 
-function TabbedSection({ tabs, children }: {
+function TabbedSection({ tabs, children, title, icon }: {
   tabs: { id: string; label: string }[]
   children: (activeTab: string) => React.ReactNode
+  title: string
+  icon: React.ReactNode
 }) {
   const [active, setActive] = useState(tabs[0].id)
 
   return (
-    <div>
-      {/* Tab bar */}
+    <div className="card-path p-5">
+      <div className="flex items-center gap-2.5 mb-4">
+        {icon}
+        <h3 className="text-sm font-medium text-white">{title}</h3>
+      </div>
+
       <div className="flex gap-1 mb-3 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08]">
         {tabs.map(t => (
           <button
@@ -89,7 +109,7 @@ function TabbedSection({ tabs, children }: {
         ))}
       </div>
 
-      <div key={active} className="animate-fade-in">
+      <div key={active} className="animate-fade-in card-path-flat">
         {children(active)}
       </div>
     </div>
@@ -106,11 +126,29 @@ export function PathPage({ mindsetId }: PathPageProps) {
   const config = MINDSET_CONFIGS[mindsetId]
   const details = MINDSET_DETAILS[mindsetId]
   const title = PATH_TITLES[mindsetId]
-  const subtitle = PATH_SUBTITLES[mindsetId]
   const [pathRefreshKey, setPathRefreshKey] = useState(0)
+  const [streak, setStreak] = useState(0)
+
+  const greeting = useMemo(() => getTimeGreeting(mindsetId), [mindsetId])
+
+  // Fetch streak from path status
+  useEffect(() => {
+    fetch('/api/path/status')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.streak) setStreak(data.streak)
+      })
+      .catch(() => {})
+  }, [pathRefreshKey])
 
   const handlePathActivity = useCallback(() => {
     setTimeout(() => setPathRefreshKey(k => k + 1), 500)
+  }, [])
+
+  const handlePullRefresh = useCallback(async () => {
+    setPathRefreshKey(k => k + 1)
+    // Brief delay to let cards re-fetch
+    await new Promise(r => setTimeout(r, 800))
   }, [])
 
   const practiceTabs = [
@@ -130,78 +168,95 @@ export function PathPage({ mindsetId }: PathPageProps) {
   ]
 
   return (
-    <div className="min-h-screen text-white px-5 pt-10 pb-4">
-      {/* ── Hero: scene background, no card ── */}
-      <div className="mb-5 animate-fade-in-down relative overflow-hidden rounded-2xl">
-        <div className="absolute inset-0">
-          <PathScene mindsetId={mindsetId} />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
-        <div className="relative z-10 px-5 pt-7 pb-6">
-          <h1 className="text-xl font-semibold text-white">{config.icon} {title}</h1>
-          <p className="text-white/80 text-[13px] mt-1">{subtitle}</p>
-          <p className="text-[12px] text-white/70 leading-relaxed mt-3">{details.overview}</p>
-        </div>
-      </div>
-
-      {/* ── Today's Journey ── */}
-      <div className="mb-4 animate-fade-in" style={{ animationDelay: '0.05s' }}>
-        <PathJourneyCard mindsetId={mindsetId} refreshKey={pathRefreshKey} />
-      </div>
-
-      {/* ── Daily Wisdom ── */}
-      <SectionHeader title="Daily Wisdom" />
-
-      <div className="space-y-3 mb-1">
-        <div className="animate-fade-in" style={{ animationDelay: '0.08s' }}>
-          <DailyInsightCard mindsetId={mindsetId} />
+    <PullToRefresh mindsetId={mindsetId} onRefresh={handlePullRefresh}>
+      <div className="min-h-screen text-white px-5 pt-10 pb-4">
+        {/* ── Hero: scene background, no card ── */}
+        <div className="mb-5 animate-fade-in-down relative overflow-hidden rounded-2xl">
+          <div className="absolute inset-0">
+            <PathScene mindsetId={mindsetId} />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
+          <div className="relative z-10 px-5 pt-7 pb-6">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-semibold text-white">{config.icon} {title}</h1>
+              <StreakFlame streak={streak} />
+            </div>
+            <p className="text-white/80 text-[13px] mt-1">{greeting}</p>
+            <p className="text-[12px] text-white/70 leading-relaxed mt-3">{details.overview}</p>
+          </div>
         </div>
 
-        <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <DailyQuoteCard mindsetId={mindsetId} onPathActivity={handlePathActivity} />
+        {/* ── Today's Journey ── */}
+        <ScrollReveal variant="fade-up">
+          <div className="mb-4">
+            <PathJourneyCard mindsetId={mindsetId} refreshKey={pathRefreshKey} />
+          </div>
+        </ScrollReveal>
+
+        {/* ── Daily Wisdom ── */}
+        <ScrollReveal variant="fade-up">
+          <SectionHeader title="Daily Wisdom" />
+        </ScrollReveal>
+
+        <div className="space-y-3 mb-1">
+          <ScrollReveal variant="slide-left" delay={0.05}>
+            <DailyInsightCard mindsetId={mindsetId} />
+          </ScrollReveal>
+
+          <ScrollReveal variant="slide-right" delay={0.1}>
+            <DailyQuoteCard mindsetId={mindsetId} onPathActivity={handlePathActivity} />
+          </ScrollReveal>
+
+          <ScrollReveal variant="scale-up" delay={0.05}>
+            <DailyParableCard mindsetId={mindsetId} />
+          </ScrollReveal>
         </div>
 
-        <div className="animate-fade-in" style={{ animationDelay: '0.12s' }}>
-          <DailyParableCard mindsetId={mindsetId} />
-        </div>
+        {/* ── Practice (tabbed) ── */}
+        <ScrollReveal variant="slide-right">
+          <div className="mt-5 mb-3">
+            <TabbedSection
+              title="Practice"
+              icon={<Dumbbell className="w-4 h-4 text-white/70" />}
+              tabs={practiceTabs}
+            >
+              {(tab) => (
+                <>
+                  {tab === 'ritual' && <DailyRitualTimer mindsetId={mindsetId} />}
+                  {tab === 'reflect' && <DailyReflectionCard mindsetId={mindsetId} onPathActivity={handlePathActivity} />}
+                  {tab === 'exercise' && <MindsetExercise mindsetId={mindsetId} onPathActivity={handlePathActivity} />}
+                  {tab === 'visualize' && <GuidedVisualizationCard mindsetId={mindsetId} />}
+                  {tab === 'virtue' && <VirtueTrackerCard mindsetId={mindsetId} />}
+                  {tab === 'decide' && <DecisionFrameworkCard mindsetId={mindsetId} />}
+                </>
+              )}
+            </TabbedSection>
+          </div>
+        </ScrollReveal>
+
+        {/* ── Explore (tabbed) ── */}
+        <ScrollReveal variant="slide-left">
+          <div className="mb-3">
+            <TabbedSection
+              title="Explore"
+              icon={<Compass className="w-4 h-4 text-white/70" />}
+              tabs={exploreTabs}
+            >
+              {(tab) => (
+                <>
+                  {tab === 'compass' && <PhilosophyCompass mindsetId={mindsetId} />}
+                  {tab === 'desk' && <MastersDesk mindsetId={mindsetId} />}
+                  {tab === 'principles' && <CorePrinciplesCard mindsetId={mindsetId} />}
+                  {tab === 'sounds' && <PathSoundscapes mindsetId={mindsetId} onPathActivity={handlePathActivity} />}
+                </>
+              )}
+            </TabbedSection>
+          </div>
+        </ScrollReveal>
+
+        {/* Bottom spacing for nav */}
+        <div className="h-28" />
       </div>
-
-      {/* ── Practice (tabbed) ── */}
-      <SectionHeader title="Practice" />
-
-      <div className="mb-1 animate-fade-in" style={{ animationDelay: '0.14s' }}>
-        <TabbedSection tabs={practiceTabs}>
-          {(tab) => (
-            <>
-              {tab === 'ritual' && <DailyRitualTimer mindsetId={mindsetId} />}
-              {tab === 'reflect' && <DailyReflectionCard mindsetId={mindsetId} onPathActivity={handlePathActivity} />}
-              {tab === 'exercise' && <MindsetExercise mindsetId={mindsetId} onPathActivity={handlePathActivity} />}
-              {tab === 'visualize' && <GuidedVisualizationCard mindsetId={mindsetId} />}
-              {tab === 'virtue' && <VirtueTrackerCard mindsetId={mindsetId} />}
-              {tab === 'decide' && <DecisionFrameworkCard mindsetId={mindsetId} />}
-            </>
-          )}
-        </TabbedSection>
-      </div>
-
-      {/* ── Explore (tabbed) ── */}
-      <SectionHeader title="Explore" />
-
-      <div className="mb-1 animate-fade-in" style={{ animationDelay: '0.16s' }}>
-        <TabbedSection tabs={exploreTabs}>
-          {(tab) => (
-            <>
-              {tab === 'compass' && <PhilosophyCompass mindsetId={mindsetId} />}
-              {tab === 'desk' && <MastersDesk mindsetId={mindsetId} />}
-              {tab === 'principles' && <CorePrinciplesCard mindsetId={mindsetId} />}
-              {tab === 'sounds' && <PathSoundscapes mindsetId={mindsetId} onPathActivity={handlePathActivity} />}
-            </>
-          )}
-        </TabbedSection>
-      </div>
-
-      {/* Bottom spacing for nav */}
-      <div className="h-28" />
-    </div>
+    </PullToRefresh>
   )
 }

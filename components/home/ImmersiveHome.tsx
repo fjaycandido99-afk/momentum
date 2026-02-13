@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sparkles, Bot, Menu, X, BarChart3, Compass } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Sparkles, Bot, Menu, X, BarChart3, Compass } from 'lucide-react'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types'
@@ -20,6 +20,10 @@ import { SmartSessionCard } from './SmartSessionCard'
 import { PathChallengeBanner } from './PathChallengeBanner'
 import { AIMeditationPlayer } from './AIMeditationPlayer'
 import { ContinueListeningCard } from './ContinueListeningCard'
+import { WelcomeBackCard } from './WelcomeBackCard'
+import { HomeQuoteCard } from './HomeQuoteCard'
+import { HeroCarousel } from './HeroCarousel'
+import { WeeklyDigestCard } from './WeeklyDigestCard'
 import { SavedMotivationSection } from './SavedMotivationSection'
 import {
   Mode, VideoItem, MUSIC_GENRES,
@@ -39,6 +43,7 @@ import { useAudioSideEffects } from '@/hooks/useAudioSideEffects'
 import { useVisibilityResume } from '@/hooks/useVisibilityResume'
 import { useMediaSession } from '@/hooks/useMediaSession'
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed'
+import { useListeningMilestones } from '@/hooks/useListeningMilestones'
 import { RecentlyPlayedSection } from './RecentlyPlayedSection'
 import { LongPressPreview } from './LongPressPreview'
 
@@ -51,6 +56,14 @@ const SoundscapePlayerComponent = dynamic(
   () => import('@/components/player/SoundscapePlayer').then(mod => mod.SoundscapePlayer),
   { ssr: false }
 )
+
+function getDailyGuideCTA(): { subtitle: string; Icon: typeof Sun } {
+  const hour = new Date().getHours()
+  if (hour >= 5 && hour < 12) return { subtitle: 'Start your morning flow', Icon: Sunrise }
+  if (hour >= 12 && hour < 17) return { subtitle: 'Midday check-in ready', Icon: Sun }
+  if (hour >= 17 && hour < 22) return { subtitle: 'Wind down with Day Close', Icon: Moon }
+  return { subtitle: 'Evening reflection & sleep', Icon: Moon }
+}
 
 export function ImmersiveHome() {
   const [timeContext] = useState(getTimeContext)
@@ -67,6 +80,10 @@ export function ImmersiveHome() {
   // Recently played
   const { recentlyPlayed, addRecentlyPlayed } = useRecentlyPlayed()
 
+  // Welcome back card
+  const [welcomeBackData, setWelcomeBackData] = useState<{ daysAway: number; lastStreak: number } | null>(null)
+  const [showWelcomeBack, setShowWelcomeBack] = useState(false)
+
   // Shuffle toast
   const [shuffleToast, setShuffleToast] = useState<string | null>(null)
   const shuffleToastTimer = useRef<NodeJS.Timeout | null>(null)
@@ -75,6 +92,21 @@ export function ImmersiveHome() {
     if (shuffleToastTimer.current) clearTimeout(shuffleToastTimer.current)
     shuffleToastTimer.current = setTimeout(() => setShuffleToast(null), 2000)
   }, [])
+
+  // Listening milestones
+  const [milestoneToast, setMilestoneToast] = useState<string | null>(null)
+  const milestoneToastTimer = useRef<NodeJS.Timeout | null>(null)
+  useListeningMilestones(audioState.musicPlaying, useCallback((minutes: number) => {
+    const messages: Record<number, string> = {
+      15: '15 min of focus — keep going!',
+      30: '30 min deep — you\'re in the zone',
+      60: '1 hour of flow — incredible!',
+    }
+    setMilestoneToast(messages[minutes] || `${minutes} min milestone!`)
+    if (navigator.vibrate) navigator.vibrate(50)
+    if (milestoneToastTimer.current) clearTimeout(milestoneToastTimer.current)
+    milestoneToastTimer.current = setTimeout(() => setMilestoneToast(null), 3000)
+  }, []))
 
   // Long-press preview
   const [previewVideo, setPreviewVideo] = useState<VideoItem | null>(null)
@@ -230,6 +262,19 @@ export function ImmersiveHome() {
     first.parentNode?.insertBefore(tag, first)
     const prev = window.onYouTubeIframeAPIReady
     window.onYouTubeIframeAPIReady = () => { prev?.(); setYtReady(true) }
+  }, [])
+
+  // Welcome back check
+  useEffect(() => {
+    fetch('/api/user/welcome-status')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.shouldShow) {
+          setWelcomeBackData({ daysAway: data.daysAway, lastStreak: data.lastStreak })
+          setShowWelcomeBack(true)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   // Pre-create YT players
@@ -829,7 +874,7 @@ export function ImmersiveHome() {
         setFavoriteIds(prev => { const next = new Set(prev); next.delete(youtubeId); return next })
         setSavedMotivationVideos(prev => prev.filter(v => v.youtubeId !== youtubeId))
         setFavoriteRecordMap(prev => { const next = new Map(prev); next.delete(youtubeId); return next })
-        try { await fetch(`/api/favorites?id=${recordId}`, { method: 'DELETE' }) } catch {}
+        try { await fetch('/api/favorites', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: recordId }) }) } catch {}
       }
     } else {
       // Add favorite
@@ -1242,38 +1287,64 @@ export function ImmersiveHome() {
         </>
       )}
 
-      {/* Morning Flow Card */}
-      <div className="px-6 mt-4 mb-8 liquid-reveal section-fade-bg">
-        <button
-          onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
-          className="w-full text-left group"
-        >
-          <div className="relative p-6 card-gradient-border-lg press-scale magnetic-tilt" onPointerMove={magneticMove} onPointerLeave={magneticLeave}>
-            <div className="relative">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-xl bg-[#111113] border border-white/15">
-                  <Sun className="w-5 h-5 text-white/95" />
+      {/* Welcome Back Card */}
+      {showWelcomeBack && welcomeBackData && (
+        <WelcomeBackCard
+          daysAway={welcomeBackData.daysAway}
+          lastStreak={welcomeBackData.lastStreak}
+          onDismiss={() => setShowWelcomeBack(false)}
+        />
+      )}
+
+      {/* Hero Carousel: Daily Guide + Path + Quote */}
+      {(() => {
+        const guideCTA = getDailyGuideCTA()
+        const slides: React.ReactNode[] = [
+          // Slide 1: Daily Guide
+          <button
+            key="guide"
+            onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
+            className="w-full text-left group"
+          >
+            <div className="relative p-6 rounded-2xl border border-white/[0.15] press-scale bg-black">
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
+                    <guideCTA.Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-medium text-white">Your Daily Guide</h2>
+                    <p className="text-xs text-white/95">{guideCTA.subtitle}</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-medium text-white">Your Daily Guide</h2>
-                  <p className="text-xs text-white/95">Morning flow, checkpoints & more</p>
+                <div className="flex items-center justify-between mt-4">
+                  <p className="text-sm text-white/95">Tap to open your full guide</p>
+                  <ChevronRight className="w-5 h-5 text-white/95 group-hover:text-white/95 transition-colors" />
                 </div>
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                <p className="text-sm text-white/95">Tap to open your full guide</p>
-                <ChevronRight className="w-5 h-5 text-white/95 group-hover:text-white/95 transition-colors" />
               </div>
             </div>
-          </div>
-        </button>
-      </div>
+          </button>,
+        ]
 
-      {/* Path Challenge Banner (non-Scholar only) */}
-      {mindsetCtx && mindsetCtx.mindset !== 'scholar' && (
-        <div className="px-6 mb-4 liquid-reveal section-fade-bg">
-          <PathChallengeBanner mindsetId={mindsetCtx.mindset as Exclude<import('@/lib/mindset/types').MindsetId, 'scholar'>} />
-        </div>
-      )}
+        // Slide 2: Path Challenge (non-Scholar only)
+        if (mindsetCtx && mindsetCtx.mindset !== 'scholar') {
+          slides.push(
+            <PathChallengeBanner
+              key="path"
+              mindsetId={mindsetCtx.mindset as Exclude<import('@/lib/mindset/types').MindsetId, 'scholar'>}
+              embedded
+            />
+          )
+        }
+
+        // Slide 3: Quote of the Day
+        slides.push(<HomeQuoteCard key="quote" embedded />)
+
+        return <HeroCarousel>{slides}</HeroCarousel>
+      })()}
+
+      {/* Weekly Digest (Sun/Mon only) */}
+      <WeeklyDigestCard isPremium={isPremium} />
 
       {/* AI Smart Session */}
       <SmartSessionCard
@@ -1581,6 +1652,13 @@ export function ImmersiveHome() {
       {shuffleToast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-md toast-enter">
           <p className="text-sm text-white/90 font-medium whitespace-nowrap">{shuffleToast}</p>
+        </div>
+      )}
+
+      {/* Milestone Toast */}
+      {milestoneToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-amber-500/15 border border-amber-500/25 backdrop-blur-md toast-enter">
+          <p className="text-sm text-amber-200/90 font-medium whitespace-nowrap">{milestoneToast}</p>
         </div>
       )}
     </div>

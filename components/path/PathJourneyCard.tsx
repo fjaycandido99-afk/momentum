@@ -67,7 +67,7 @@ export function PathJourneyCard({ mindsetId, refreshKey }: PathJourneyCardProps)
 
   if (!status) {
     return (
-      <div className="card-gradient-border-lg rounded-2xl p-5">
+      <div className="card-path p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-full bg-white/5 animate-pulse" />
           <div className="flex-1 space-y-2">
@@ -108,7 +108,7 @@ export function PathJourneyCard({ mindsetId, refreshKey }: PathJourneyCardProps)
   }
 
   return (
-    <div className={`card-gradient-border-lg rounded-2xl overflow-hidden relative ${showConfetti ? 'confetti-burst' : ''}`}>
+    <div className={`card-path relative ${showConfetti ? 'confetti-burst' : ''}`}>
       <div className={`bg-gradient-to-br ${gradient} p-5`}>
 
         {/* Header: icon + title + rank badge */}

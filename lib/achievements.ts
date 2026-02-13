@@ -22,24 +22,31 @@ export type AchievementCondition =
   | { type: 'consecutive_days'; days: number; action: string }
 
 export const RARITY_COLORS: Record<AchievementRarity, string> = {
-  common: 'border-gray-400/40',
-  rare: 'border-blue-400/50',
-  epic: 'border-purple-400/60',
-  legendary: 'border-amber-400/70',
+  common: 'border-white/15',
+  rare: 'border-blue-400/30',
+  epic: 'border-purple-400/40',
+  legendary: 'border-amber-400/50',
 }
 
 export const RARITY_BG: Record<AchievementRarity, string> = {
-  common: 'bg-gray-400/10',
-  rare: 'bg-blue-400/10',
-  epic: 'bg-purple-400/10',
-  legendary: 'bg-amber-400/10',
+  common: 'bg-white/[0.03]',
+  rare: 'bg-blue-400/[0.06]',
+  epic: 'bg-purple-400/[0.06]',
+  legendary: 'bg-amber-400/[0.08]',
 }
 
 export const RARITY_TEXT: Record<AchievementRarity, string> = {
-  common: 'text-gray-400',
+  common: 'text-white/70',
   rare: 'text-blue-400',
   epic: 'text-purple-400',
   legendary: 'text-amber-400',
+}
+
+export const RARITY_GLOW: Record<AchievementRarity, string> = {
+  common: '',
+  rare: 'shadow-[0_0_12px_rgba(96,165,250,0.1)]',
+  epic: 'shadow-[0_0_12px_rgba(192,132,252,0.15)]',
+  legendary: 'shadow-[0_0_16px_rgba(251,191,36,0.2)]',
 }
 
 export const CATEGORY_LABELS: Record<AchievementCategory, string> = {
@@ -49,6 +56,15 @@ export const CATEGORY_LABELS: Record<AchievementCategory, string> = {
   mastery: 'Mastery',
   growth: 'Growth',
   secret: 'Secret',
+}
+
+export const CATEGORY_ICONS: Record<AchievementCategory, string> = {
+  consistency: '🔥',
+  explorer: '🧭',
+  dedication: '💎',
+  mastery: '⚡',
+  growth: '🌱',
+  secret: '🔮',
 }
 
 export const ACHIEVEMENTS: Achievement[] = [

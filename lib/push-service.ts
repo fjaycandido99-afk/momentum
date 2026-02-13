@@ -9,6 +9,7 @@ import { sendAPNsNotification, isAPNsConfigured } from './apns'
 import { sendFCMNotification, isFCMConfigured } from './fcm'
 import { getDayOfYearQuote } from './quotes'
 import { getGroq, GROQ_MODEL } from './groq'
+import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 
 // Notification types that can be sent
 export type NotificationType =
@@ -24,6 +25,7 @@ export type NotificationType =
   | 'motivational_nudge'
   | 'daily_motivation'
   | 'featured_music'
+  | 'path_challenge'
   | 'custom'
 
 // Notification payload structure
@@ -172,6 +174,17 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'dismiss', title: 'Later' },
     ],
   },
+  path_challenge: {
+    title: 'Your Path Awaits',
+    body: 'Complete today\'s path challenge',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'path-challenge',
+    actions: [
+      { action: 'open', title: 'Open Path' },
+      { action: 'dismiss', title: 'Later' },
+    ],
+  },
   custom: {
     title: 'Voxu',
     body: 'You have a new notification',
@@ -230,6 +243,7 @@ export async function sendPushToUser(
     motivational_nudge: 'motivational_nudge_alerts',
     daily_motivation: 'daily_motivation_alerts',
     featured_music: 'featured_music_alerts',
+    path_challenge: 'morning_reminder', // Uses morning_reminder preference
     custom: 'morning_reminder', // Custom always sends
   }
 
@@ -984,4 +998,126 @@ export async function sendFeaturedMusic(): Promise<void> {
   }
 
   console.log(`Featured music: ${totalSent} sent, ${totalFailed} failed`)
+}
+
+/**
+ * Send path challenge notifications to non-Scholar users
+ * Personalized with their mindset name and current streak
+ */
+export async function sendPathChallenge(): Promise<void> {
+  const MINDSET_NAMES: Record<string, string> = {
+    stoic: 'Stoic',
+    existentialist: 'Existentialist',
+    cynic: 'Cynic',
+    hedonist: 'Hedonist',
+    samurai: 'Samurai',
+  }
+
+  // Get non-Scholar users with push subscriptions
+  const users = await prisma.userPreferences.findMany({
+    where: {
+      mindset: { not: 'scholar' },
+    },
+    select: {
+      user_id: true,
+      mindset: true,
+    },
+  })
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const { user_id, mindset } of users) {
+    const mindsetName = MINDSET_NAMES[mindset] || 'Path'
+
+    // Check if they already completed today's path
+    const guide = await prisma.dailyGuide.findUnique({
+      where: { user_id_date: { user_id, date: today } },
+      select: {
+        path_reflection_done: true,
+        path_exercise_done: true,
+        path_quote_viewed: true,
+        path_soundscape_played: true,
+        path_streak: true,
+      },
+    })
+
+    const done = [
+      guide?.path_reflection_done,
+      guide?.path_exercise_done,
+      guide?.path_quote_viewed,
+      guide?.path_soundscape_played,
+    ].filter(Boolean).length
+
+    // Skip users who already completed all 4
+    if (done === 4) continue
+
+    let body = `Your ${mindsetName} challenge awaits. ${4 - done} activities remaining.`
+    if (guide?.path_streak && guide.path_streak > 1) {
+      body = `Keep your ${guide.path_streak}-day ${mindsetName} streak alive! ${4 - done} activities left.`
+    }
+
+    const result = await sendPushToUser(user_id, 'path_challenge', {
+      title: `Your ${mindsetName} Path`,
+      body,
+      data: { type: 'path_challenge', url: '/my-path' },
+    })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Path challenge: ${totalSent} sent, ${totalFailed} failed`)
+}
+
+/**
+ * Send evening reminder notifications with mindset-specific journal prompts
+ * Uses the evening_reminder preference (no new schema needed)
+ */
+export async function sendEveningReminders(): Promise<void> {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { evening_reminder: true },
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  const now = new Date()
+  const startOfYear = new Date(now.getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24))
+  const promptKeys = ['prompt1', 'prompt2', 'prompt3'] as const
+  const todayPromptKey = promptKeys[dayOfYear % promptKeys.length]
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const { user_id } of subscriptions) {
+    let body = 'Time to close out your day and reflect'
+
+    try {
+      const prefs = await prisma.userPreferences.findUnique({
+        where: { user_id },
+        select: { mindset: true },
+      })
+
+      const mindset = (prefs?.mindset || 'stoic') as keyof typeof MINDSET_JOURNAL_PROMPTS
+      const prompts = MINDSET_JOURNAL_PROMPTS[mindset]
+      if (prompts) {
+        const prompt = prompts[todayPromptKey]
+        body = `Tonight's reflection: ${prompt.label}`
+      }
+    } catch {
+      // Fall back to default
+    }
+
+    const result = await sendPushToUser(user_id, 'evening_reminder', {
+      body,
+      data: { type: 'evening_reminder', url: '/journal' },
+    })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Evening reminders: ${totalSent} sent, ${totalFailed} failed`)
 }

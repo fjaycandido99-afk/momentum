@@ -41,6 +41,7 @@ import { ZenGardenBackground } from './ZenGardenBackground'
 import { IncenseSmokeBackground } from './IncenseSmokeBackground'
 import { KatanaSwordBackground } from './KatanaSwordBackground'
 import { SamuraiHelmetBackground } from './SamuraiHelmetBackground'
+import { FourSeasonsBackground } from './FourSeasonsBackground'
 
 export const BACKGROUND_ANIMATIONS = [
   { id: 'constellation', name: 'Constellation', description: 'Connected star nodes', component: ConstellationBackground },
@@ -83,6 +84,7 @@ export const BACKGROUND_ANIMATIONS = [
   { id: 'incense-smoke', name: 'Incense Smoke', description: 'Rising wisps of smoke', component: IncenseSmokeBackground },
   { id: 'katana-sword', name: 'Katana Sword', description: 'Floating katana blade', component: KatanaSwordBackground },
   { id: 'samurai-helmet', name: 'Samurai Helmet', description: 'Floating kabuto helmet', component: SamuraiHelmetBackground },
+  { id: 'four-seasons', name: 'Storm Cycle', description: 'Rain, thunder & blizzard', component: FourSeasonsBackground },
 ] as const
 
 export type AnimationId = (typeof BACKGROUND_ANIMATIONS)[number]['id']

@@ -68,7 +68,7 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptTone:
       'Precise, disciplined, and deliberate. Every word is placed with intention. Like a master swordsman — calm before action, decisive in execution.',
     promptReferences: ['Miyamoto Musashi', 'Yamamoto Tsunetomo (Hagakure)', 'Takuan Soho', 'Dogen Zenji'],
-    backgroundPool: ['cherry-blossoms', 'ink-wash', 'fireflies', 'katana-slash', 'bamboo-forest', 'katana-sword', 'samurai-helmet'],
+    backgroundPool: ['cherry-blossoms', 'ink-wash', 'fireflies', 'katana-slash', 'bamboo-forest', 'katana-sword', 'samurai-helmet', 'four-seasons'],
     astrologyEnabled: false,
   },
   scholar: {

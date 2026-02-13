@@ -50,6 +50,7 @@ import { TrialBanner, TrialEndingBanner } from '@/components/premium/TrialBanner
 import { FeatureLock, LockIcon } from '@/components/premium/FeatureLock'
 import { PremiumBadge } from '@/components/premium/PremiumBadge'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import type { DayType, TimeMode, EnergyLevel, ModuleType, CheckpointConfig } from '@/lib/daily-guide/decision-tree'
@@ -244,6 +245,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const subscription = useSubscriptionOptional()
   const audioContext = useAudioOptional()
   const mindsetCtx = useMindsetOptional()
+  const achievementCtx = useAchievementOptional()
   const [guide, setGuide] = useState<DailyGuide | null>(null)
   const [checkpoints, setCheckpoints] = useState<CheckpointConfig[]>([])
   const [durations, setDurations] = useState<Record<ModuleType, number>>({} as Record<ModuleType, number>)
@@ -762,8 +764,12 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const handlePlayerComplete = () => {
     if (!activePlayer) return
 
-    // Award XP
-    logXPEventServer('moduleComplete')
+    // Award XP and check for new achievements
+    logXPEventServer('moduleComplete').then(result => {
+      if (result?.newAchievements?.length && achievementCtx) {
+        achievementCtx.triggerAchievements(result.newAchievements)
+      }
+    })
     awardXP(XP_REWARDS.moduleComplete)
 
     // Optimistic update

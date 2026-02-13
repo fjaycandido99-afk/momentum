@@ -10,6 +10,7 @@ import { CoachingPlans } from '@/components/coach/CoachingPlans'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { getActivePlan, COACHING_PLANS, getPlanProgress } from '@/lib/coaching-plans'
 import { logXPEventServer } from '@/lib/gamification'
+import { useAchievementOptional } from '@/contexts/AchievementContext'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -89,6 +90,7 @@ function renderMarkdown(text: string) {
 export default function CoachPage() {
   const subscription = useSubscriptionOptional()
   const mindsetCtx = useMindsetOptional()
+  const achievementCtx = useAchievementOptional()
   const [activeTab, setActiveTab] = useState<'chat' | 'plans'>('chat')
   const [chatMode, setChatMode] = useState<'coach' | 'accountability'>('coach')
   const [activePlanBanner, setActivePlanBanner] = useState<string | null>(null)
@@ -174,7 +176,11 @@ export default function CoachPage() {
 
         // Award XP on first accountability check-in per session
         if (chatMode === 'accountability' && !hasLoggedCheckInXP) {
-          logXPEventServer('accountabilityCheckIn')
+          logXPEventServer('accountabilityCheckIn').then(result => {
+            if (result?.newAchievements?.length && achievementCtx) {
+              achievementCtx.triggerAchievements(result.newAchievements)
+            }
+          })
           setHasLoggedCheckInXP(true)
         }
       } else if (response.status === 403) {
