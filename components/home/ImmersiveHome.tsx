@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Sparkles, Bot, Menu, X, BarChart3, Compass } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Sparkles, Bot, BarChart3, Compass } from 'lucide-react'
+import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types'
@@ -1236,9 +1237,9 @@ export function ImmersiveHome() {
           <button
             onClick={() => setShowMenu(!showMenu)}
             aria-label={showMenu ? 'Close menu' : 'Open menu'}
-            className="p-2 rounded-full bg-[#111113] border border-white/15 hover:border-white/30 transition-colors press-scale"
+            className="p-1 press-scale"
           >
-            {showMenu ? <X className="w-5 h-5 text-white/95" /> : <Menu className="w-5 h-5 text-white/95" />}
+            <SpiralLogo open={showMenu} size={64} />
           </button>
         </div>
       )}
