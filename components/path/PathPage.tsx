@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MINDSET_DETAILS } from '@/lib/mindset/detail-content'
 import { PathScene } from './PathScene'
 import { PathJourneyCard } from './PathJourneyCard'
-import { ProgressHub } from './ProgressHub'
 import { DailyInsightCard } from './DailyInsightCard'
 import { DailyParableCard } from './DailyParableCard'
 import { DailyQuoteCard } from './DailyQuoteCard'
@@ -109,18 +108,10 @@ export function PathPage({ mindsetId }: PathPageProps) {
   const title = PATH_TITLES[mindsetId]
   const subtitle = PATH_SUBTITLES[mindsetId]
   const [pathRefreshKey, setPathRefreshKey] = useState(0)
-  const [totalDays, setTotalDays] = useState(0)
 
   const handlePathActivity = useCallback(() => {
     setTimeout(() => setPathRefreshKey(k => k + 1), 500)
   }, [])
-
-  useEffect(() => {
-    fetch('/api/path/status')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.totalDays !== undefined) setTotalDays(d.totalDays) })
-      .catch(() => {})
-  }, [pathRefreshKey])
 
   const practiceTabs = [
     { id: 'ritual', label: 'Ritual' },
@@ -210,13 +201,6 @@ export function PathPage({ mindsetId }: PathPageProps) {
             </>
           )}
         </TabbedSection>
-      </div>
-
-      {/* ── Progress ── */}
-      <SectionHeader title="Progress" />
-
-      <div className="animate-fade-in" style={{ animationDelay: '0.18s' }}>
-        <ProgressHub mindsetId={mindsetId} totalDays={totalDays} />
       </div>
 
       {/* Bottom spacing for nav */}

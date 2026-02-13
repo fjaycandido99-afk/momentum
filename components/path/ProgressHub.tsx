@@ -92,12 +92,13 @@ type Tab = 'evolution' | 'weekly' | 'ranks' | 'badges'
 
 interface ProgressHubProps {
   mindsetId: M
-  totalDays: number
+  totalDays?: number
 }
 
-export function ProgressHub({ mindsetId, totalDays }: ProgressHubProps) {
+export function ProgressHub({ mindsetId, totalDays: totalDaysProp }: ProgressHubProps) {
   const [tab, setTab] = useState<Tab>('evolution')
   const [streak, setStreak] = useState(0)
+  const [totalDays, setTotalDays] = useState(totalDaysProp ?? 0)
   const [weekly, setWeekly] = useState<WeeklyData | null>(null)
   const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
@@ -109,6 +110,7 @@ export function ProgressHub({ mindsetId, totalDays }: ProgressHubProps) {
       fetch('/api/gamification/status').then(r => r.ok ? r.json() : { achievements: [] }),
     ]).then(([status, weeklyData, gamification]) => {
       if (status?.streak !== undefined) setStreak(status.streak)
+      if (status?.totalDays !== undefined) setTotalDays(status.totalDays)
       if (weeklyData) setWeekly(weeklyData)
       const ids = new Set<string>(
         (gamification?.achievements || [])
