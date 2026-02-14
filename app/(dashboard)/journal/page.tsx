@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import {
   PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target,
   Sparkles, BookOpen, Calendar, X, Crown, Lock, Shuffle, ChevronDown,
+  MessageCircle, Moon, Send, Save,
 } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
@@ -28,6 +29,21 @@ interface JournalEntry {
   journal_freetext?: string | null
   journal_mood?: string | null
   journal_prompt?: string | null
+  journal_tags?: string[]
+}
+
+type JournalMode = 'guided' | 'freewrite' | 'conversational' | 'dream'
+
+interface ConversationMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+interface DreamInterpretation {
+  symbols: { symbol: string; meaning: string }[]
+  emotionalTheme: string
+  connectionToLife: string
+  mindsetReflection: string
 }
 
 export default function JournalPage() {
@@ -59,7 +75,7 @@ function JournalContent() {
   const [reflection, setReflection] = useState<string | null>(null)
 
   // New state
-  const [mode, setMode] = useState<'guided' | 'freewrite'>('freewrite')
+  const [mode, setMode] = useState<JournalMode>('freewrite')
   const [freeText, setFreeText] = useState('')
   const [mood, setMood] = useState<MoodValue | null>(null)
   const [currentPromptIndex, setCurrentPromptIndex] = useState(0)
@@ -67,6 +83,19 @@ function JournalContent() {
   const [allEntries, setAllEntries] = useState<JournalEntry[]>([])
   const [journalStats, setJournalStats] = useState<JournalStatsData>({ currentStreak: 0, longestStreak: 0, totalEntries: 0, totalWords: 0 })
   const [showAllRecent, setShowAllRecent] = useState(false)
+  const [journalTags, setJournalTags] = useState<string[]>([])
+
+  // Conversational journal state
+  const [conversation, setConversation] = useState<ConversationMessage[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+
+  // Dream journal state
+  const [dreamText, setDreamText] = useState('')
+  const [dreamInterpretation, setDreamInterpretation] = useState<DreamInterpretation | null>(null)
+  const [dreamLoading, setDreamLoading] = useState(false)
+  const [dreamSaved, setDreamSaved] = useState(false)
 
   const activeFieldRef = useRef<'win' | 'gratitude' | 'intention' | 'freewrite'>('freewrite')
 
@@ -90,6 +119,11 @@ function JournalContent() {
       setIsLoading(true)
       setIsSaved(false)
       setReflection(null)
+      setDreamText('')
+      setDreamInterpretation(null)
+      setDreamSaved(false)
+      setConversation([])
+      setJournalTags([])
       try {
         const dateStr = selectedDate.toISOString().split('T')[0]
         const response = await fetch(`/api/daily-guide/journal?date=${dateStr}`)
@@ -102,17 +136,45 @@ function JournalContent() {
           setMood(data.journal_mood || null)
           if (data.journal_ai_reflection) setReflection(data.journal_ai_reflection)
 
+          // Restore dream data
+          if (data.journal_dream) {
+            setDreamText(data.journal_dream)
+            if (data.journal_dream_interpretation) {
+              try {
+                setDreamInterpretation(JSON.parse(data.journal_dream_interpretation))
+                setDreamSaved(true)
+              } catch {}
+            }
+          }
+
+          // Restore conversation data
+          if (data.journal_conversation) {
+            try {
+              const parsed = JSON.parse(data.journal_conversation)
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setConversation(parsed)
+              }
+            } catch {}
+          }
+
           // Auto-detect mode from existing data
           const hasGuided = data.journal_win || data.journal_gratitude || data.journal_intention
           const hasFreewrite = data.journal_freetext
-          if (hasGuided && !hasFreewrite) {
+          const hasDream = data.journal_dream
+          const hasConversation = data.journal_conversation
+
+          if (hasDream) {
+            setMode('dream')
+          } else if (hasConversation) {
+            setMode('conversational')
+          } else if (hasGuided && !hasFreewrite) {
             setMode('guided')
           } else if (hasFreewrite && !hasGuided) {
             setMode('freewrite')
           }
           // If both or neither, keep current mode
 
-          if (hasGuided || hasFreewrite) {
+          if (hasGuided || hasFreewrite || hasDream || hasConversation) {
             setIsSaved(true)
           }
         } else {
@@ -204,6 +266,9 @@ function JournalContent() {
         if (data.data?.journal_ai_reflection) {
           setReflection(data.data.journal_ai_reflection)
         }
+        if (data.data?.journal_tags?.length) {
+          setJournalTags(data.data.journal_tags)
+        }
         // Refresh stats
         const end = new Date()
         const start = new Date()
@@ -241,6 +306,120 @@ function JournalContent() {
     setCurrentPromptIndex(index)
   }
 
+  // Conversational journal handlers
+  const sendChatMessage = useCallback(async () => {
+    if (!chatInput.trim() || chatLoading) return
+    const userMessage = chatInput.trim()
+    setChatInput('')
+
+    const newConversation = [...conversation, { role: 'user' as const, content: userMessage }]
+    setConversation(newConversation)
+    setChatLoading(true)
+
+    try {
+      const res = await fetch('/api/ai/journal-conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage, conversation }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setConversation(prev => [...prev, { role: 'assistant', content: data.reply }])
+        if (data.suggestedTags?.length) {
+          setJournalTags(data.suggestedTags)
+        }
+      }
+    } catch {
+      setConversation(prev => [...prev, { role: 'assistant', content: 'Take a moment to sit with that thought. What comes to mind?' }])
+    } finally {
+      setChatLoading(false)
+    }
+  }, [chatInput, chatLoading, conversation])
+
+  const saveConversation = useCallback(async () => {
+    if (conversation.length < 2) return
+    setIsSaving(true)
+    try {
+      const dateStr = selectedDate.toISOString()
+      // Save the conversation as freetext summary + full conversation JSON
+      const summary = conversation
+        .filter(m => m.role === 'user')
+        .map(m => m.content)
+        .join('\n\n')
+
+      const res = await fetch('/api/daily-guide/journal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: dateStr,
+          journal_freetext: summary,
+          journal_mood: mood || undefined,
+          journal_conversation: JSON.stringify(conversation),
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setIsSaved(true)
+        if (data.data?.journal_ai_reflection) {
+          setReflection(data.data.journal_ai_reflection)
+        }
+        if (data.data?.journal_tags?.length) {
+          setJournalTags(data.data.journal_tags)
+        }
+      }
+    } catch (err) {
+      console.error('Save conversation error:', err)
+    } finally {
+      setIsSaving(false)
+    }
+  }, [conversation, selectedDate, mood])
+
+  // Dream journal handlers
+  const submitDream = useCallback(async () => {
+    if (!dreamText.trim() || dreamLoading) return
+    setDreamLoading(true)
+
+    try {
+      const res = await fetch('/api/ai/dream-interpretation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dreamText: dreamText.trim() }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setDreamInterpretation(data)
+        setDreamSaved(true)
+        // Persist dream data to journal DB
+        try {
+          await fetch('/api/daily-guide/journal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              date: selectedDate.toISOString(),
+              journal_dream: dreamText.trim(),
+              journal_dream_interpretation: JSON.stringify(data),
+              journal_freetext: `Dream: ${dreamText.trim()}`,
+            }),
+          })
+        } catch {}
+      }
+    } catch {
+      setDreamInterpretation({
+        symbols: [],
+        emotionalTheme: 'Your dream carries rich symbolism worth exploring.',
+        connectionToLife: 'Consider what feelings this dream evoked.',
+        mindsetReflection: 'Dreams often reveal what our waking mind overlooks.',
+      })
+    } finally {
+      setDreamLoading(false)
+    }
+  }, [dreamText, dreamLoading])
+
+  // Scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [conversation])
+
   const handleVoiceTranscript = useCallback((text: string) => {
     if (mode === 'freewrite') {
       setFreeText(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text)
@@ -259,7 +438,13 @@ function JournalContent() {
 
   const hasContent = mode === 'guided'
     ? (win.trim() || gratitude.trim() || intention.trim())
-    : freeText.trim()
+    : mode === 'freewrite'
+    ? freeText.trim()
+    : mode === 'conversational'
+    ? conversation.length >= 2
+    : mode === 'dream'
+    ? dreamText.trim()
+    : false
 
   const dateLabel = selectedDate.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -351,29 +536,28 @@ function JournalContent() {
         />
       </div>
 
-      {/* Mode Toggle */}
+      {/* Mode Toggle — 4 modes, horizontally scrollable on mobile */}
       <div className="px-6 mb-4">
-        <div className="flex p-1 rounded-xl bg-black border border-white/20">
-          <button
-            onClick={() => setMode('guided')}
-            className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
-              mode === 'guided'
-                ? 'bg-white/20 text-white shadow-sm'
-                : 'text-white/80 hover:text-white'
-            }`}
-          >
-            Guided
-          </button>
-          <button
-            onClick={() => setMode('freewrite')}
-            className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
-              mode === 'freewrite'
-                ? 'bg-white/20 text-white shadow-sm'
-                : 'text-white/80 hover:text-white'
-            }`}
-          >
-            Free Write
-          </button>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar p-1 rounded-xl bg-black border border-white/20">
+          {([
+            { id: 'guided' as JournalMode, label: 'Guided', icon: <BookOpen className="w-3.5 h-3.5" /> },
+            { id: 'freewrite' as JournalMode, label: 'Free Write', icon: <PenLine className="w-3.5 h-3.5" /> },
+            { id: 'conversational' as JournalMode, label: 'Chat', icon: <MessageCircle className="w-3.5 h-3.5" /> },
+            { id: 'dream' as JournalMode, label: 'Dream', icon: <Moon className="w-3.5 h-3.5" /> },
+          ]).map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setMode(tab.id)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-all ${
+                mode === tab.id
+                  ? 'bg-white/20 text-white shadow-sm'
+                  : 'text-white/80 hover:text-white'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -406,6 +590,174 @@ function JournalContent() {
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-5 h-5 text-white/90 animate-spin" />
+          </div>
+        ) : mode === 'conversational' ? (
+          /* Conversational Journal Mode */
+          <div className="space-y-3">
+            {/* Chat card — flex column with messages + pinned input */}
+            <div className="flex flex-col rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]" style={{ maxHeight: '60vh' }}>
+              {/* Messages area */}
+              <div className="flex-1 overflow-y-auto space-y-3 p-4">
+                {conversation.length === 0 && (
+                  <div className="text-center py-6">
+                    <MessageCircle className="w-8 h-8 text-violet-400/50 mx-auto mb-2" />
+                    <p className="text-sm text-white/70">Start a journaling conversation</p>
+                    <p className="text-xs text-white/50 mt-1">Share what&apos;s on your mind and I&apos;ll help you explore it</p>
+                  </div>
+                )}
+                {conversation.map((msg, i) => (
+                  <div
+                    key={i}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${
+                      msg.role === 'user'
+                        ? 'bg-violet-500/20 text-white rounded-br-md'
+                        : 'bg-white/10 text-white/90 rounded-bl-md'
+                    }`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+                {chatLoading && (
+                  <div className="flex justify-start">
+                    <div className="px-3 py-2 rounded-2xl rounded-bl-md bg-white/10">
+                      <Loader2 className="w-4 h-4 text-white/60 animate-spin" />
+                    </div>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Pinned input at bottom of card */}
+              <div className="flex gap-2 p-3 border-t border-white/10">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage() } }}
+                  placeholder="What's on your mind..."
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white text-sm placeholder-white/50 focus:outline-none focus:border-white/60"
+                />
+                <button
+                  onClick={sendChatMessage}
+                  disabled={!chatInput.trim() || chatLoading}
+                  className="p-3 rounded-xl bg-violet-500/20 text-violet-300 hover:bg-violet-500/30 transition-colors disabled:opacity-30"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Save conversation button */}
+            {conversation.length >= 2 && (
+              <button
+                onClick={saveConversation}
+                disabled={isSaving || isSaved}
+                className={`w-full py-3 rounded-2xl bg-black border border-white/20 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  isSaved ? 'text-emerald-400' : 'text-white'
+                }`}
+              >
+                {isSaving ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                ) : isSaved ? (
+                  <><BookOpen className="w-4 h-4" /> Saved</>
+                ) : (
+                  <><Save className="w-4 h-4" /> Save & Close</>
+                )}
+              </button>
+            )}
+
+            {/* Tags */}
+            {journalTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {journalTags.map((tag, i) => (
+                  <span key={i} className="px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/20 text-[10px] text-violet-300">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : mode === 'dream' ? (
+          /* Dream Journal Mode */
+          <div className="space-y-4">
+            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+              <label className="text-sm text-white flex items-center gap-2 mb-3">
+                <Moon className="w-4 h-4 text-indigo-400" />
+                Describe your dream
+              </label>
+              <textarea
+                value={dreamText}
+                onChange={e => { setDreamText(e.target.value); setDreamSaved(false); setDreamInterpretation(null) }}
+                placeholder="I dreamed that..."
+                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
+                rows={6}
+                maxLength={3000}
+              />
+              <p className="text-right text-[10px] text-white/70 mt-1">{dreamText.length}/3000</p>
+            </div>
+
+            {/* Submit dream */}
+            <button
+              onClick={submitDream}
+              disabled={!dreamText.trim() || dreamLoading || dreamSaved}
+              className={`w-full py-3 rounded-2xl bg-black border border-white/20 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                dreamSaved ? 'text-emerald-400' : dreamText.trim() ? 'text-white' : 'text-white/70 cursor-not-allowed'
+              }`}
+            >
+              {dreamLoading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Interpreting...</>
+              ) : dreamSaved ? (
+                <><BookOpen className="w-4 h-4" /> Interpreted</>
+              ) : (
+                <><Sparkles className="w-4 h-4" /> Interpret Dream</>
+              )}
+            </button>
+
+            {/* Dream interpretation — consolidated card */}
+            {dreamInterpretation && (
+              <div className="p-4 rounded-2xl bg-black border border-indigo-500/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] space-y-3">
+                {/* Symbols */}
+                {dreamInterpretation.symbols.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider mb-2">Key Symbols</p>
+                    <div className="space-y-1.5">
+                      {dreamInterpretation.symbols.map((s, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <span className="text-indigo-300 text-sm font-medium shrink-0">{s.symbol}</span>
+                          <span className="text-white/70 text-xs">{s.meaning}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Emotional theme */}
+                {dreamInterpretation.emotionalTheme && (
+                  <div className="border-t border-white/10 pt-3">
+                    <p className="text-[10px] font-semibold text-violet-400 uppercase tracking-wider mb-1">Emotional Theme</p>
+                    <p className="text-sm text-white/90 leading-relaxed">{dreamInterpretation.emotionalTheme}</p>
+                  </div>
+                )}
+
+                {/* Connection to life */}
+                {dreamInterpretation.connectionToLife && (
+                  <div className="border-t border-white/10 pt-3">
+                    <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider mb-1">Life Connection</p>
+                    <p className="text-sm text-white/90 leading-relaxed">{dreamInterpretation.connectionToLife}</p>
+                  </div>
+                )}
+
+                {/* Mindset reflection */}
+                {dreamInterpretation.mindsetReflection && (
+                  <div className="border-t border-white/10 pt-3">
+                    <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-1">Reflection</p>
+                    <p className="text-sm text-white/90 leading-relaxed italic">{dreamInterpretation.mindsetReflection}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : mode === 'guided' ? (
           /* Guided Mode — 3 structured textareas (mindset-aware) */
@@ -535,8 +887,8 @@ function JournalContent() {
           </div>
         )}
 
-        {/* Save Button */}
-        {!isLoading && (
+        {/* Save Button — only for guided and freewrite modes */}
+        {!isLoading && (mode === 'guided' || mode === 'freewrite') && (
           <div className="mt-4">
             <button
               onClick={handleSave}
@@ -570,6 +922,16 @@ function JournalContent() {
                 <p className="text-sm text-white leading-relaxed italic">{reflection}</p>
               </div>
             </div>
+            {/* Journal Tags */}
+            {journalTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3 pl-6">
+                {journalTags.map((tag, i) => (
+                  <span key={i} className="px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/20 text-[10px] text-indigo-300">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -681,6 +1043,15 @@ function JournalContent() {
                     {entry.journal_gratitude && <span className="text-[10px] text-pink-400">♥ Grateful</span>}
                     {entry.journal_intention && <span className="text-[10px] text-purple-400">◎ Intention</span>}
                   </div>
+                  {entry.journal_tags && entry.journal_tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {entry.journal_tags.map((tag, ti) => (
+                        <span key={ti} className="px-1.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/20 text-[9px] text-indigo-300">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </button>
               )
             })}

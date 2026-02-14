@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Heart, Share2, Quote } from 'lucide-react'
+import { Heart, Share2, Quote, ChevronDown, Lightbulb, Loader2 } from 'lucide-react'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
 import type { MindsetId } from '@/lib/mindset/types'
@@ -28,6 +28,10 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
   const { shareAsImage, isGenerating } = useShareCard()
   const [favoriteId, setFavoriteId] = useState<string | null>(null)
   const [isToggling, setIsToggling] = useState(false)
+
+  const [explanation, setExplanation] = useState<string | null>(null)
+  const [showExplanation, setShowExplanation] = useState(false)
+  const [loadingExplanation, setLoadingExplanation] = useState(false)
 
   const mindset = mindsetCtx?.mindset || 'stoic'
   const quotes = MINDSET_QUOTES[mindset]
@@ -73,6 +77,33 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
   const handleShare = useCallback(() => {
     shareAsImage(quote.text, 'quote', quote.author)
   }, [shareAsImage, quote.text, quote.author])
+
+  const fetchExplanation = useCallback(async () => {
+    if (explanation || loadingExplanation) return
+    setLoadingExplanation(true)
+    try {
+      const res = await fetch('/api/ai/quote-explanation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quoteText: quote.text, author: quote.author }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setExplanation(data.explanation)
+      }
+    } catch {
+      setExplanation('This quote reminds us to stay present and intentional.')
+    } finally {
+      setLoadingExplanation(false)
+    }
+  }, [explanation, loadingExplanation, quote.text, quote.author])
+
+  const toggleExplanation = useCallback(() => {
+    if (!showExplanation && !explanation) {
+      fetchExplanation()
+    }
+    setShowExplanation(prev => !prev)
+  }, [showExplanation, explanation, fetchExplanation])
 
   if (embedded) {
     return (
@@ -151,6 +182,30 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
             </button>
           </div>
         </div>
+
+        {/* Why this matters — AI explanation */}
+        <button
+          onClick={toggleExplanation}
+          className="mt-3 w-full flex items-center gap-1.5 text-xs text-white/50 hover:text-white/70 transition-colors"
+        >
+          <Lightbulb className="w-3 h-3" />
+          <span>Why this matters</span>
+          <ChevronDown className={`w-3 h-3 transition-transform ${showExplanation ? 'rotate-180' : ''}`} />
+        </button>
+        {showExplanation && (
+          <div className="mt-2">
+            {loadingExplanation ? (
+              <div className="flex items-center gap-2 text-xs text-white/40">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Thinking...</span>
+              </div>
+            ) : (
+              <p className="text-xs text-white/60 leading-relaxed">
+                {explanation}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -43,6 +43,10 @@
     {
       "path": "/api/cron/notifications?type=featured_music",
       "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=path_challenge",
+      "schedule": "0 10 * * *"
     }
   ]
 }

@@ -10,12 +10,12 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Fetch subscription for premium check
-    const sub = await prisma.subscription.findUnique({ where: { user_id: user.id } })
+    // Fetch subscription for premium check + preferences for streak in parallel
+    const [sub, prefs] = await Promise.all([
+      prisma.subscription.findUnique({ where: { user_id: user.id }, select: { tier: true, status: true } }),
+      prisma.userPreferences.findUnique({ where: { user_id: user.id }, select: { current_streak: true } }),
+    ])
     const isPremium = sub?.tier === 'premium' && (sub?.status === 'active' || sub?.status === 'trialing')
-
-    // Get preferences for streak
-    const prefs = await prisma.userPreferences.findUnique({ where: { user_id: user.id } })
     const streak = prefs?.current_streak || 0
 
     // Get sessions for listening time and active days
@@ -36,6 +36,10 @@ export async function GET() {
         date: true,
         mood_before: true,
         mood_after: true,
+        journal_mood: true,
+        journal_freetext: true,
+        journal_win: true,
+        journal_gratitude: true,
         morning_prime_done: true,
         movement_done: true,
         micro_lesson_done: true,
@@ -88,6 +92,60 @@ export async function GET() {
       heatmap[date] = count
     })
 
+    // --- Mood Insights (30-day analysis) ---
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    const moodGuides = guides.filter(g => g.date >= thirtyDaysAgo)
+
+    const moodToNumDetailed: Record<string, number> = { awful: 1, low: 2, okay: 3, good: 4, great: 5, medium: 3, high: 5 }
+    const moodScores = moodGuides
+      .map(g => moodToNumDetailed[g.journal_mood || g.mood_after || ''] || 0)
+      .filter(s => s > 0)
+
+    let moodInsights = null
+    if (moodScores.length >= 3) {
+      const avgMood = moodScores.reduce((a, b) => a + b, 0) / moodScores.length
+      const firstHalf = moodScores.slice(0, Math.ceil(moodScores.length / 2))
+      const secondHalf = moodScores.slice(Math.ceil(moodScores.length / 2))
+      const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length
+      const secondAvg = secondHalf.length > 0 ? secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length : firstAvg
+      const improvement = firstAvg > 0 ? Math.round(((secondAvg - firstAvg) / firstAvg) * 100) : 0
+
+      const dayScores: Record<number, number[]> = {}
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+      moodGuides.forEach(g => {
+        const score = moodToNumDetailed[g.journal_mood || g.mood_after || ''] || 0
+        if (score > 0) {
+          const day = g.date.getDay()
+          if (!dayScores[day]) dayScores[day] = []
+          dayScores[day].push(score)
+        }
+      })
+
+      let bestDay = ''
+      let bestDayAvg = 0
+      for (const [day, scores] of Object.entries(dayScores)) {
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length
+        if (avg > bestDayAvg) { bestDayAvg = avg; bestDay = dayNames[parseInt(day)] }
+      }
+
+      const daysWithJournal = moodGuides.filter(g => g.journal_freetext || g.journal_win || g.journal_gratitude)
+      const journalMoodScores = daysWithJournal.map(g => moodToNumDetailed[g.journal_mood || g.mood_after || ''] || 0).filter(s => s > 0)
+      const journalMoodAvg = journalMoodScores.length > 0 ? journalMoodScores.reduce((a, b) => a + b, 0) / journalMoodScores.length : 0
+
+      moodInsights = {
+        averageMood: Math.round(avgMood * 10) / 10,
+        improvementPercent: improvement,
+        bestDay,
+        journalCorrelation: journalMoodAvg > avgMood,
+        totalEntries: moodScores.length,
+        weeklyBreakdown: Object.entries(dayScores).map(([day, scores]) => ({
+          day: dayNames[parseInt(day)],
+          average: Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10,
+        })),
+      }
+    }
+
     return NextResponse.json({
       streak,
       activeDays: activeDateSet.size,
@@ -97,6 +155,7 @@ export async function GET() {
       moodData,
       heatmap,
       daysLimit,
+      moodInsights,
     })
   } catch (error) {
     console.error('Progress error:', error)

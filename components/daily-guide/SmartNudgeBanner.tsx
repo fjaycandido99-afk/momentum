@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Flame, PenLine, TrendingUp, Heart, Zap, X } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { logXPEventServer } from '@/lib/gamification'
 
 interface Nudge {
   type: string
   message: string
   icon: string
+  label?: string
 }
 
 const ICON_MAP: Record<string, typeof Flame> = {
@@ -19,11 +21,15 @@ const ICON_MAP: Record<string, typeof Flame> = {
 }
 
 const COLOR_MAP: Record<string, { bg: string; border: string; text: string }> = {
+  streak_recovery: { bg: 'from-amber-500/10 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
   streak_risk: { bg: 'from-amber-500/10 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
   journal_reminder: { bg: 'from-blue-500/10 to-indigo-500/10', border: 'border-blue-500/20', text: 'text-blue-400' },
   mood_trend: { bg: 'from-emerald-500/10 to-teal-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
   inactive: { bg: 'from-pink-500/10 to-rose-500/10', border: 'border-pink-500/20', text: 'text-pink-400' },
   energy_pattern: { bg: 'from-yellow-500/10 to-amber-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400' },
+  mood_dip: { bg: 'from-cyan-500/10 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
+  goal_reminder: { bg: 'from-violet-500/10 to-purple-500/10', border: 'border-violet-500/20', text: 'text-violet-400' },
+  completion_pattern: { bg: 'from-teal-500/10 to-emerald-500/10', border: 'border-teal-500/20', text: 'text-teal-400' },
 }
 
 function getTodayDismissKey() {
@@ -57,8 +63,12 @@ export function SmartNudgeBanner() {
       .then(data => {
         if (data?.nudge) {
           setNudge(data.nudge)
-          // Delay appearance so it slides in after page loads
           setTimeout(() => setIsVisible(true), 600)
+
+          // Award XP for streak recovery (first time only)
+          if (data.isRecovery && !data.cached) {
+            logXPEventServer('streakRecovery', 'streak-recovery')
+          }
         }
       })
       .catch(err => console.error('Smart nudge error:', err))
@@ -66,7 +76,6 @@ export function SmartNudgeBanner() {
 
   const handleDismiss = () => {
     setIsVisible(false)
-    // Wait for exit animation before fully removing
     setTimeout(() => {
       setIsDismissed(true)
       localStorage.setItem(getTodayDismissKey(), 'true')
@@ -77,6 +86,7 @@ export function SmartNudgeBanner() {
 
   const colors = COLOR_MAP[nudge.type] || COLOR_MAP.streak_risk
   const Icon = ICON_MAP[nudge.icon] || Flame
+  const label = nudge.label || 'Smart Nudge'
 
   return (
     <div
@@ -90,10 +100,12 @@ export function SmartNudgeBanner() {
         </div>
         <div className="flex-1 min-w-0">
           <p className={`text-[10px] font-medium tracking-widest uppercase mb-1 ${colors.text} opacity-70`}>
-            Smart Nudge
+            {label}
           </p>
           <p className="text-sm text-white/95 italic leading-relaxed">{nudge.message}</p>
-          <FeatureHint id="smart-nudge" text="Nudges adapt to your patterns — dismiss if not relevant" mode="once" />
+          {nudge.type !== 'streak_recovery' && (
+            <FeatureHint id="smart-nudge" text="Nudges adapt to your patterns — dismiss if not relevant" mode="once" />
+          )}
         </div>
         <button
           onClick={handleDismiss}

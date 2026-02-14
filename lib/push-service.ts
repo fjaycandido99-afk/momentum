@@ -10,6 +10,9 @@ import { sendFCMNotification, isFCMConfigured } from './fcm'
 import { getDayOfYearQuote } from './quotes'
 import { getGroq, GROQ_MODEL } from './groq'
 import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
+import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
+import { getDailyAffirmation } from '@/lib/mindset/affirmations'
 
 // Notification types that can be sent
 export type NotificationType =
@@ -757,6 +760,8 @@ export async function sendDailyAffirmations(): Promise<void> {
   let totalSent = 0
   let totalFailed = 0
 
+  const todayStr = today.toISOString().split('T')[0]
+
   for (const { user_id } of subscriptions) {
     try {
       // Check for cached affirmation
@@ -773,41 +778,43 @@ export async function sendDailyAffirmations(): Promise<void> {
       let affirmation = guide?.ai_affirmation
 
       if (!affirmation) {
-        // Generate new affirmation via Groq
-        const context = [
-          guide?.day_type ? `Day type: ${guide.day_type}` : null,
-          guide?.energy_level ? `Energy: ${guide.energy_level}` : null,
-          guide?.mood_before ? `Current mood: ${guide.mood_before}` : null,
-        ].filter(Boolean).join('. ')
+        const mindset = await getUserMindset(user_id)
 
-        const completion = await getGroq().chat.completions.create({
-          model: GROQ_MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: `You are a personal wellness coach. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. No quotes, no attribution. ${context ? `Context: ${context}` : ''}`,
-            },
-            {
-              role: 'user',
-              content: 'Generate my daily affirmation.',
-            },
-          ],
-          max_tokens: 60,
-          temperature: 0.8,
-        })
+        // Try AI generation with mindset injection
+        try {
+          const context = [
+            guide?.day_type ? `Day type: ${guide.day_type}` : null,
+            guide?.energy_level ? `Energy: ${guide.energy_level}` : null,
+            guide?.mood_before ? `Current mood: ${guide.mood_before}` : null,
+          ].filter(Boolean).join('. ')
 
-        affirmation = completion.choices[0]?.message?.content?.trim() || 'I am capable, I am growing, and today matters.'
+          const basePrompt = `You are a personal wellness coach. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. No quotes, no attribution. ${context ? `Context: ${context}` : ''}`
+
+          const completion = await getGroq().chat.completions.create({
+            model: GROQ_MODEL,
+            messages: [
+              { role: 'system', content: buildMindsetSystemPrompt(basePrompt, mindset) },
+              { role: 'user', content: 'Generate my daily affirmation.' },
+            ],
+            max_tokens: 60,
+            temperature: 0.8,
+          })
+
+          affirmation = completion.choices[0]?.message?.content?.trim()
+        } catch {
+          // AI failed, fall through to static pool
+        }
+
+        // Fallback: path-based static affirmation
+        if (!affirmation) {
+          affirmation = getDailyAffirmation(mindset, todayStr)
+        }
 
         // Cache on DailyGuide
         await prisma.dailyGuide.upsert({
           where: { user_id_date: { user_id, date: today } },
           update: { ai_affirmation: affirmation },
-          create: {
-            user_id,
-            date: today,
-            day_type: 'work',
-            ai_affirmation: affirmation,
-          },
+          create: { user_id, date: today, day_type: 'work', ai_affirmation: affirmation },
         })
       }
 

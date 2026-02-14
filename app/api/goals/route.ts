@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { isPremiumUser } from '@/lib/subscription-check'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,12 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check premium
-    const subscription = await prisma.subscription.findUnique({
-      where: { user_id: user.id },
-    })
-    const isPremium = subscription?.tier === 'premium' &&
-      (subscription?.status === 'active' || subscription?.status === 'trialing')
+    const isPremium = await isPremiumUser(user.id)
 
     if (!isPremium) {
       return NextResponse.json({ error: 'Premium required' }, { status: 403 })
@@ -53,12 +49,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check premium
-    const subscription = await prisma.subscription.findUnique({
-      where: { user_id: user.id },
-    })
-    const isPremium = subscription?.tier === 'premium' &&
-      (subscription?.status === 'active' || subscription?.status === 'trialing')
+    const isPremium = await isPremiumUser(user.id)
 
     if (!isPremium) {
       return NextResponse.json({ error: 'Premium required' }, { status: 403 })
@@ -102,12 +93,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check premium
-    const subscription = await prisma.subscription.findUnique({
-      where: { user_id: user.id },
-    })
-    const isPremium = subscription?.tier === 'premium' &&
-      (subscription?.status === 'active' || subscription?.status === 'trialing')
+    const isPremium = await isPremiumUser(user.id)
 
     if (!isPremium) {
       return NextResponse.json({ error: 'Premium required' }, { status: 403 })
@@ -166,12 +152,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check premium
-    const subscription = await prisma.subscription.findUnique({
-      where: { user_id: user.id },
-    })
-    const isPremium = subscription?.tier === 'premium' &&
-      (subscription?.status === 'active' || subscription?.status === 'trialing')
+    const isPremium = await isPremiumUser(user.id)
 
     if (!isPremium) {
       return NextResponse.json({ error: 'Premium required' }, { status: 403 })

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Loader2, Flame } from 'lucide-react'
+import { Loader2, Flame, Mail } from 'lucide-react'
 import { StreakHeatmap } from '@/components/progress/StreakHeatmap'
 import { ListeningStats } from '@/components/progress/ListeningStats'
 import { ModulesCompleted } from '@/components/progress/ModulesCompleted'
@@ -14,6 +14,10 @@ import { WeeklyMissions } from '@/components/progress/WeeklyMissions'
 import { SocialProofCard } from '@/components/progress/SocialProofCard'
 import { UnlockableRewards } from '@/components/progress/UnlockableRewards'
 import { MoodInsights } from '@/components/progress/MoodInsights'
+import { WellnessScore } from '@/components/progress/WellnessScore'
+import { MonthlyRetrospective } from '@/components/progress/MonthlyRetrospective'
+import { MindsetEvolution } from '@/components/progress/MindsetEvolution'
+import { LetterToSelf } from '@/components/progress/LetterToSelf'
 import { ProgressHub } from '@/components/path/ProgressHub'
 import { useMindset } from '@/contexts/MindsetContext'
 import { migrateLocalXP } from '@/lib/gamification'
@@ -27,6 +31,7 @@ interface ProgressData {
   moodData: { date: string; before: number | null; after: number | null }[]
   heatmap: Record<string, number>
   daysLimit: number
+  moodInsights: any
 }
 
 interface GamificationData {
@@ -38,7 +43,6 @@ interface GamificationData {
   weeklyMissions: any[]
   socialNudges: { message: string; icon: string }[]
   rewards: { unlocked: any[]; next: any | null }
-  moodInsights: any
 }
 
 export default function ProgressPage() {
@@ -105,11 +109,39 @@ export default function ProgressPage() {
             )}
           </div>
 
+          {/* Milestone Banner — shown at streak milestones */}
+          {(() => {
+            const streak = gamification?.streak ?? data.streak
+            const milestones = [7, 14, 21, 30, 50, 75, 100]
+            const hitMilestone = milestones.includes(streak)
+            if (!hitMilestone) return null
+            return (
+              <button
+                onClick={() => {
+                  document.getElementById('letter-to-self')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="w-full p-4 rounded-2xl bg-gradient-to-r from-pink-500/10 to-amber-500/10 border border-pink-500/20 flex items-center gap-3 hover:from-pink-500/15 hover:to-amber-500/15 transition-all"
+              >
+                <div className="p-2 rounded-xl bg-pink-500/20 shrink-0">
+                  <Mail className="w-5 h-5 text-pink-400" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="text-sm font-medium text-white">{streak}-day milestone!</p>
+                  <p className="text-[10px] text-white/60">Read a letter from your future self</p>
+                </div>
+                <span className="text-xs text-pink-400 font-medium shrink-0">View</span>
+              </button>
+            )
+          })()}
+
           {/* XP Level Progress */}
           <XPProgress
             totalXP={gamification?.xp.total}
             todaysXP={gamification?.xp.today}
           />
+
+          {/* Wellness Score — surfaced early for visibility */}
+          <WellnessScore />
 
           {/* Daily Challenges */}
           {gamification?.dailyChallenges && (
@@ -143,6 +175,15 @@ export default function ProgressPage() {
             />
           )}
 
+          {/* Monthly Retrospective */}
+          <MonthlyRetrospective />
+
+          {/* Mindset Evolution Advisor */}
+          <MindsetEvolution />
+
+          {/* Letter to Self */}
+          <LetterToSelf />
+
           {/* Heatmap */}
           <StreakHeatmap heatmap={data.heatmap} daysLimit={data.daysLimit} />
 
@@ -158,8 +199,8 @@ export default function ProgressPage() {
           )}
 
           {/* Mood Insights */}
-          {gamification?.moodInsights && (
-            <MoodInsights insights={gamification.moodInsights} />
+          {data?.moodInsights && (
+            <MoodInsights insights={data.moodInsights} />
           )}
 
           {/* Legacy Mood Trends */}

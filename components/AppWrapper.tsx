@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, createContext, useContext, ReactNode } fr
 import { usePathname } from 'next/navigation'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { useServiceWorker } from '@/hooks/useServiceWorker'
+import { useDeepLink } from '@/hooks/useDeepLink'
 
 interface AppContextType {
   isGuest: boolean
@@ -27,6 +28,7 @@ interface AppWrapperProps {
 
 export function AppWrapper({ children }: AppWrapperProps) {
   useServiceWorker()
+  useDeepLink()
   const pathname = usePathname()
   const [showSplash, setShowSplash] = useState(true)
   const [hasSeenSplash, setHasSeenSplash] = useState(false)

@@ -135,6 +135,13 @@ model UserPreferences {
   mindset             String    @default("stoic")
   mindset_selected_at DateTime?
 
+  // F7: Wellness Score
+  wellness_score_7day_avg Int?
+  last_wellness_alert     DateTime?
+
+  // F9: Mindset Evolution
+  mindset_suggestion_shown_at DateTime?
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
@@ -328,6 +335,41 @@ model DailyGuide {
   virtue_focus     String?
   virtue_rating    Int?
 
+  // === New AI Features ===
+
+  // F2: Morning Briefing
+  ai_morning_briefing_script String?
+  ai_morning_briefing_audio  String?
+
+  // F3: Letter to Self (JSON)
+  ai_letter_to_self String?
+
+  // F4: Monthly Retrospective (JSON)
+  ai_monthly_retrospective String?
+
+  // F5: Conversational Journal (JSON)
+  journal_conversation String?
+
+  // F6: Dream Journal
+  journal_dream              String?
+  journal_dream_interpretation String? // JSON
+
+  // F7: Wellness Score
+  ai_wellness_score   Int?
+  ai_wellness_factors String? // JSON
+
+  // F9: Mindset Evolution (JSON)
+  ai_mindset_suggestion String?
+
+  // F10: Auto-DJ (JSON)
+  ai_auto_dj_session String?
+
+  // F11: Journal Tags
+  journal_tags String[] @default([])
+
+  // F13: Streak Recovery
+  ai_streak_recovery_message String?
+
   created_at DateTime @default(now())
 
   @@unique([user_id, date])
@@ -379,6 +421,10 @@ model Goal {
   current_count Int      @default(0)
   period_start  DateTime @default(now())
   status        String   @default("active") // "active" | "completed" | "archived"
+
+  // F8: AI Goal Decomposition
+  ai_micro_actions          String? // JSON
+  ai_decomposition_generated DateTime?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

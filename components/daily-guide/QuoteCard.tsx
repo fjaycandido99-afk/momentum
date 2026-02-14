@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Quote, Check, Sparkles, Share2, Heart, Loader2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Quote, Check, Sparkles, Share2, Heart, Loader2, ChevronDown, Lightbulb } from 'lucide-react'
 import { getDayOfYearQuote } from '@/lib/quotes'
 import { useShareCard } from '@/hooks/useShareCard'
 
@@ -25,7 +25,37 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
   const [showCopied, setShowCopied] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const [favoriteId, setFavoriteId] = useState<string | null>(null)
+  const [explanation, setExplanation] = useState<string | null>(null)
+  const [showExplanation, setShowExplanation] = useState(false)
+  const [loadingExplanation, setLoadingExplanation] = useState(false)
   const { shareAsImage, isGenerating: isShareGenerating } = useShareCard()
+
+  const fetchExplanation = useCallback(async () => {
+    if (explanation || loadingExplanation || !quote) return
+    setLoadingExplanation(true)
+    try {
+      const res = await fetch('/api/ai/quote-explanation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quoteText: quote.text, author: quote.author }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setExplanation(data.explanation)
+      }
+    } catch {
+      setExplanation('This quote reminds us to stay present and intentional.')
+    } finally {
+      setLoadingExplanation(false)
+    }
+  }, [explanation, loadingExplanation, quote])
+
+  const toggleExplanation = useCallback(() => {
+    if (!showExplanation && !explanation) {
+      fetchExplanation()
+    }
+    setShowExplanation(prev => !prev)
+  }, [showExplanation, explanation, fetchExplanation])
 
   // Load quote: try smart API first, fall back to local
   useEffect(() => {
@@ -228,6 +258,30 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                     </button>
                   </div>
                 </div>
+                {/* Why this matters — expandable AI explanation */}
+                <button
+                  onClick={toggleExplanation}
+                  className="mt-3 w-full flex items-center gap-1.5 text-xs text-white/60 hover:text-white/80 transition-colors pl-4"
+                >
+                  <Lightbulb className="w-3 h-3" />
+                  <span>Why this matters</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform ${showExplanation ? 'rotate-180' : ''}`} />
+                </button>
+                {showExplanation && (
+                  <div className="mt-2 pl-4 pr-2">
+                    {loadingExplanation ? (
+                      <div className="flex items-center gap-2 text-xs text-white/50">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Thinking...</span>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-white/70 leading-relaxed">
+                        {explanation}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Explicit Done button — only show after reveal, before completion */}
                 {!isCompleted && (
                   <button

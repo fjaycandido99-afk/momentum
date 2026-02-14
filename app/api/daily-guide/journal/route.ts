@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
@@ -45,10 +46,14 @@ export async function GET(request: NextRequest) {
           journal_mood: true,
           journal_prompt: true,
           journal_ai_reflection: true,
+          journal_tags: true,
+          journal_dream: true,
+          journal_dream_interpretation: true,
+          journal_conversation: true,
         },
       })
 
-      return NextResponse.json(guide || { date: targetDate, journal_win: null, journal_gratitude: null, journal_learned: null, journal_intention: null, journal_freetext: null, journal_mood: null, journal_prompt: null, journal_ai_reflection: null })
+      return NextResponse.json(guide || { date: targetDate, journal_win: null, journal_gratitude: null, journal_learned: null, journal_intention: null, journal_freetext: null, journal_mood: null, journal_prompt: null, journal_ai_reflection: null, journal_tags: [], journal_dream: null, journal_dream_interpretation: null, journal_conversation: null })
     }
 
     // Date range query (for calendar/history)
@@ -75,6 +80,10 @@ export async function GET(request: NextRequest) {
           journal_freetext: true,
           journal_mood: true,
           journal_prompt: true,
+          journal_tags: true,
+          journal_dream: true,
+          journal_dream_interpretation: true,
+          journal_conversation: true,
           day_close_done: true,
           morning_prime_done: true,
           movement_done: true,
@@ -142,7 +151,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { date, journal_win, journal_gratitude, journal_learned, journal_intention, journal_freetext, journal_mood, journal_prompt } = body
+    const { date, journal_win, journal_gratitude, journal_learned, journal_intention, journal_freetext, journal_mood, journal_prompt, journal_conversation, journal_dream, journal_dream_interpretation } = body
 
     const targetDate = date ? new Date(date) : new Date()
     targetDate.setHours(0, 0, 0, 0)
@@ -163,6 +172,9 @@ export async function POST(request: NextRequest) {
         ...(journal_freetext !== undefined && { journal_freetext }),
         ...(journal_mood !== undefined && { journal_mood }),
         ...(journal_prompt !== undefined && { journal_prompt }),
+        ...(journal_conversation !== undefined && { journal_conversation }),
+        ...(journal_dream !== undefined && { journal_dream }),
+        ...(journal_dream_interpretation !== undefined && { journal_dream_interpretation }),
       },
       create: {
         user_id: user.id,
@@ -175,17 +187,17 @@ export async function POST(request: NextRequest) {
         journal_freetext,
         journal_mood,
         journal_prompt,
+        journal_conversation,
+        journal_dream,
+        journal_dream_interpretation,
       },
     })
 
     // AI Reflection: generate for premium users
     let reflection: string | null = null
+    let journalTags: string[] = []
     try {
-      const subscription = await prisma.subscription.findUnique({
-        where: { user_id: user.id },
-      })
-      const isPremium = subscription?.tier === 'premium' &&
-        (subscription?.status === 'active' || subscription?.status === 'trialing')
+      const isPremium = await isPremiumUser(user.id)
 
       if (isPremium && (journal_win || journal_gratitude || journal_learned || journal_freetext)) {
         // Fetch last 7 days of journals for pattern detection
@@ -274,6 +286,47 @@ export async function POST(request: NextRequest) {
             data: { journal_ai_reflection: reflection },
           })
         }
+
+        // F11: Extract journal tags
+        try {
+          const tagContent = [journal_win, journal_gratitude, journal_learned, journal_freetext]
+            .filter(Boolean)
+            .join('. ')
+
+          if (tagContent.length > 10) {
+            const tagCompletion = await getGroq().chat.completions.create({
+              model: GROQ_MODEL,
+              messages: [
+                {
+                  role: 'system',
+                  content: 'Extract 3-5 one or two-word theme tags from this journal entry. Return a JSON array of strings only. Examples: ["gratitude", "career growth", "family", "self-care", "creativity"]. Return valid JSON only.',
+                },
+                {
+                  role: 'user',
+                  content: tagContent,
+                },
+              ],
+              max_tokens: 60,
+              temperature: 0.3,
+            })
+
+            const tagRaw = tagCompletion.choices[0]?.message?.content?.trim() || '[]'
+            try {
+              const parsedTags = JSON.parse(tagRaw)
+              if (Array.isArray(parsedTags) && parsedTags.length > 0) {
+                journalTags = parsedTags.slice(0, 5).map((t: unknown) => String(t).toLowerCase())
+                await prisma.dailyGuide.update({
+                  where: { user_id_date: { user_id: user.id, date: targetDate } },
+                  data: { journal_tags: journalTags },
+                })
+              }
+            } catch {
+              // Tag parsing failed, non-fatal
+            }
+          }
+        } catch (tagError) {
+          console.error('Journal tag extraction error (non-fatal):', tagError)
+        }
       }
     } catch (reflectionError) {
       console.error('AI reflection error (non-fatal):', reflectionError)
@@ -291,6 +344,7 @@ export async function POST(request: NextRequest) {
         journal_mood: guide.journal_mood,
         journal_prompt: guide.journal_prompt,
         journal_ai_reflection: reflection,
+        journal_tags: journalTags,
       },
     })
   } catch (error) {

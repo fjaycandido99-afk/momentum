@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { QUOTES, getRandomQuotes, getHeuristicQuote, getDayOfYearQuote } from '@/lib/quotes'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
@@ -25,14 +26,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ quote, source: 'fallback' })
     }
 
-    // Check premium status
     let isPremium = false
     if (user) {
-      const subscription = await prisma.subscription.findUnique({
-        where: { user_id: user.id },
-      })
-      isPremium = subscription?.tier === 'premium' &&
-        (subscription?.status === 'active' || subscription?.status === 'trialing')
+      isPremium = await isPremiumUser(user.id)
     }
 
     // Premium: Groq picks the best quote with mood trend + journal context

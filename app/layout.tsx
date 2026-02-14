@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
 import { AppWrapper } from '@/components/AppWrapper'
+import { Analytics } from '@/components/analytics/Analytics'
+import { SkipToContent } from '@/components/a11y/SkipToContent'
 
 const inter = Inter({ subsets: ['latin'] })
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], weight: ['300'], variable: '--font-cormorant' })
@@ -44,9 +46,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={`${inter.className} ${cormorant.variable} antialiased`}>
+        <SkipToContent />
         <AppWrapper>
           {children}
         </AppWrapper>
+        <Analytics />
       </body>
     </html>
   )

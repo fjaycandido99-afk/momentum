@@ -21,11 +21,10 @@ const config: CapacitorConfig = {
       sound: 'notification.wav',
     },
     NativeAudio: {
-      // Preload audio files for faster playback
       preload: true,
-      // Focus audio - pause other apps when playing
       focus: true,
     },
+    App: {},
   },
   ios: {
     contentInset: 'automatic',

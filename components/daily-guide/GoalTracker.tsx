@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Target, Plus, Check, Loader2, Trash2, ChevronDown, ChevronUp, Crown, Lock } from 'lucide-react'
+import { Target, Plus, Check, Loader2, Trash2, ChevronDown, ChevronUp, Crown, Lock, Sparkles, Clock } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface Goal {
@@ -28,6 +28,9 @@ export function GoalTracker() {
   const [newTarget, setNewTarget] = useState('1')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [incrementingId, setIncrementingId] = useState<string | null>(null)
+  const [decomposingId, setDecomposingId] = useState<string | null>(null)
+  const [microActions, setMicroActions] = useState<Record<string, { action: string; when: string; durationMinutes: number }[]>>({})
+  const [expandedGoalId, setExpandedGoalId] = useState<string | null>(null)
 
   useEffect(() => {
     if (hasGoalAccess) {
@@ -109,6 +112,34 @@ export function GoalTracker() {
       }
     } catch (error) {
       console.error('Failed to archive goal:', error)
+    }
+  }
+
+  const handleDecompose = async (goalId: string) => {
+    if (decomposingId) return
+    // Toggle if already expanded with data
+    if (expandedGoalId === goalId && microActions[goalId]) {
+      setExpandedGoalId(null)
+      return
+    }
+    setExpandedGoalId(goalId)
+    if (microActions[goalId]) return // Already loaded
+
+    setDecomposingId(goalId)
+    try {
+      const res = await fetch('/api/ai/goal-decompose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goalId }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setMicroActions(prev => ({ ...prev, [goalId]: data.microActions }))
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setDecomposingId(null)
     }
   }
 
@@ -238,6 +269,39 @@ export function GoalTracker() {
                     )}
                   </button>
                 </div>
+
+                {/* AI Breakdown button */}
+                <button
+                  onClick={() => handleDecompose(goal.id)}
+                  disabled={decomposingId === goal.id}
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-[10px] font-medium transition-colors disabled:opacity-40"
+                >
+                  {decomposingId === goal.id ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3 h-3" />
+                  )}
+                  AI Breakdown
+                </button>
+
+                {/* Micro-actions */}
+                {expandedGoalId === goal.id && microActions[goal.id] && (
+                  <div className="mt-2 space-y-1.5">
+                    {microActions[goal.id].map((ma, i) => (
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-white/5">
+                        <div className="w-4 h-4 rounded border border-white/20 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] text-white/90 leading-snug">{ma.action}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[9px] text-white/40 capitalize">{ma.when}</span>
+                            <Clock className="w-2.5 h-2.5 text-white/30" />
+                            <span className="text-[9px] text-white/40">{ma.durationMinutes}m</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )
           })}

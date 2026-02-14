@@ -209,13 +209,25 @@ self.addEventListener('notificationclick', (event) => {
   )
 })
 
-// Background sync (optional - for offline support)
+// Background sync — replay queued offline actions
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-checkins') {
-    console.log('Background sync: syncing checkins')
-    // Could sync offline data here
+  if (event.tag === 'sync-checkins' || event.tag === 'sync-offline') {
+    console.log('Background sync: syncing offline data')
+    event.waitUntil(syncOfflineActions())
   }
 })
+
+async function syncOfflineActions() {
+  try {
+    // Notify the client to trigger sync via OfflineContext
+    const clients = await self.clients.matchAll({ type: 'window' })
+    for (const client of clients) {
+      client.postMessage({ type: 'SYNC_OFFLINE' })
+    }
+  } catch (err) {
+    console.error('Background sync failed:', err)
+  }
+}
 
 // ==========================================
 // Widget support (preserved from original)

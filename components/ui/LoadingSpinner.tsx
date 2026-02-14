@@ -83,6 +83,30 @@ export function LoadingScreen() {
   const [words, setWords] = useState(pool.slice(0, 4))
   const [wordIndex, setWordIndex] = useState(0)
   const [visible, setVisible] = useState(false)
+  const [rotation, setRotation] = useState(0)
+
+  // On first session load (right after splash), show rings instead of words
+  const [showRings] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return !sessionStorage.getItem('voxu_home_loaded')
+  })
+
+  useEffect(() => {
+    sessionStorage.setItem('voxu_home_loaded', 'true')
+  }, [])
+
+  // Ring rotation (only when showing rings)
+  useEffect(() => {
+    if (!showRings) return
+    let frame: number
+    const start = performance.now()
+    const animate = (time: number) => {
+      setRotation((time - start) / 1000 * 60)
+      frame = requestAnimationFrame(animate)
+    }
+    frame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frame)
+  }, [showRings])
 
   // Shuffle words on client mount to avoid hydration mismatch
   useEffect(() => {
@@ -115,8 +139,35 @@ export function LoadingScreen() {
     return () => clearTimeout(nextTimer)
   }, [visible, words.length])
 
+  if (showRings) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-40">
+        <div className="w-28 h-28 relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full bg-white/10 blur-xl" />
+          <div
+            className="absolute inset-0 rounded-full border-2 border-dashed border-white/35"
+            style={{ transform: `rotate(${rotation}deg)` }}
+          />
+          <div
+            className="absolute inset-3 rounded-full border-2 border-dotted border-white/50"
+            style={{ transform: `rotate(${-rotation * 1.2}deg)` }}
+          />
+          <div
+            className="absolute inset-6 rounded-full border-2 border-dashed border-white/60"
+            style={{ transform: `rotate(${rotation * 1.5}deg)` }}
+          />
+          <div
+            className="absolute inset-9 rounded-full border-2 border-dotted border-white/70"
+            style={{ transform: `rotate(${-rotation * 2}deg)` }}
+          />
+          <div className="w-4 h-4 rounded-full bg-white shadow-[0_0_25px_rgba(255,255,255,0.9)]" />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 bg-black flex items-center justify-center z-40">
       <span
         className="text-[44px] font-medium tracking-[0.35em] lowercase text-white select-none"
         style={{

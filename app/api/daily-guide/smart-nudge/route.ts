@@ -1,24 +1,28 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
+import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 
 export const dynamic = 'force-dynamic'
 
-type NudgeType = 'streak_risk' | 'journal_reminder' | 'mood_trend' | 'inactive' | 'energy_pattern' | 'completion_pattern' | 'mood_dip' | 'goal_reminder' | 'none'
+type NudgeType = 'streak_recovery' | 'streak_risk' | 'journal_reminder' | 'mood_trend' | 'inactive' | 'energy_pattern' | 'completion_pattern' | 'mood_dip' | 'goal_reminder' | 'none'
 
 interface NudgeResult {
   type: NudgeType
   message: string
   icon: string
+  label: string
   suggested_action?: {
     label: string
-    action: string // deep-link action identifier
+    action: string
   }
 }
 
-// Template messages for free users
 const NUDGE_TEMPLATES: Record<NudgeType, string> = {
+  streak_recovery: 'Every great journey has rest stops. Your growth is permanent. Let\'s pick back up today.',
   streak_risk: "You haven't logged in today yet. Keep your streak going!",
   journal_reminder: "You've been journaling consistently. Don't forget to reflect today!",
   mood_trend: "Your mood has been trending upward this week. Keep it up!",
@@ -31,6 +35,7 @@ const NUDGE_TEMPLATES: Record<NudgeType, string> = {
 }
 
 const NUDGE_ICONS: Record<NudgeType, string> = {
+  streak_recovery: 'flame',
   streak_risk: 'flame',
   journal_reminder: 'pen',
   mood_trend: 'trending-up',
@@ -42,7 +47,21 @@ const NUDGE_ICONS: Record<NudgeType, string> = {
   none: '',
 }
 
+const NUDGE_LABELS: Record<NudgeType, string> = {
+  streak_recovery: 'Welcome Back',
+  streak_risk: 'Smart Nudge',
+  journal_reminder: 'Smart Nudge',
+  mood_trend: 'Smart Nudge',
+  inactive: 'Smart Nudge',
+  energy_pattern: 'Smart Nudge',
+  completion_pattern: 'Smart Nudge',
+  mood_dip: 'Smart Nudge',
+  goal_reminder: 'Smart Nudge',
+  none: '',
+}
+
 const SUGGESTED_ACTIONS: Record<NudgeType, { label: string; action: string } | undefined> = {
+  streak_recovery: { label: 'Start fresh', action: 'open_daily_guide' },
   streak_risk: { label: 'Start your day', action: 'open_daily_guide' },
   journal_reminder: { label: 'Write in journal', action: 'open_journal' },
   mood_trend: { label: 'Keep the momentum', action: 'open_daily_guide' },
@@ -62,6 +81,12 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Fetch preferences for streak info
+    const prefs = await prisma.userPreferences.findUnique({
+      where: { user_id: user.id },
+      select: { current_streak: true, last_active_date: true },
+    })
 
     // Fetch last 14 days of data
     const twoWeeksAgo = new Date()
@@ -85,6 +110,7 @@ export async function GET() {
         micro_lesson_done: true,
         breath_done: true,
         day_close_done: true,
+        ai_streak_recovery_message: true,
       },
       orderBy: { date: 'desc' },
     })
@@ -100,6 +126,18 @@ export async function GET() {
     const activeDays = recentDays.filter(g => g.morning_prime_done || g.movement_done || g.day_close_done).length
     const inactiveDays = 7 - activeDays
 
+    // Check if streak is broken (recovery scenario)
+    let streakBroken = false
+    let daysSinceActive = 0
+    if (prefs && prefs.current_streak === 0 && prefs.last_active_date) {
+      const lastActive = new Date(prefs.last_active_date)
+      lastActive.setHours(0, 0, 0, 0)
+      daysSinceActive = Math.floor((today.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24))
+      if (daysSinceActive >= 1) {
+        streakBroken = true
+      }
+    }
+
     // Mood trend analysis
     const moodValues: Record<string, number> = { low: 0, medium: 1, high: 2 }
     const recentMoods = recentDays
@@ -109,12 +147,11 @@ export async function GET() {
       recentMoods.slice(0, 3).reduce((a, b) => a + b, 0) / 3 >
       recentMoods.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, recentMoods.length)
 
-    // Mood dip detection (3+ consecutive declining or low mood days)
     const moodDipping = recentMoods.length >= 3 &&
       recentMoods.slice(0, 3).every(m => m <= 1) &&
       recentMoods.slice(0, 3).reduce((a, b) => a + b, 0) / 3 < 1
 
-    // Completion pattern: user consistently skips certain modules
+    // Completion pattern
     const moduleCompletion = {
       morning_prime: recentDays.filter(g => g.morning_prime_done).length,
       movement: recentDays.filter(g => g.movement_done).length,
@@ -130,7 +167,7 @@ export async function GET() {
       .filter(([, count]) => count < totalActive * 0.3 && totalActive >= 3)
       .map(([mod]) => mod.replace('_', ' '))
 
-    // Goal stalling detection
+    // Goal stalling
     let goalStalling = false
     let stalledGoalTitle = ''
     try {
@@ -159,9 +196,11 @@ export async function GET() {
       }
     })
 
-    // Determine nudge type (priority order)
+    // Determine nudge type (priority order — streak recovery is highest)
     let nudgeType: NudgeType = 'none'
-    if (moodDipping) {
+    if (streakBroken) {
+      nudgeType = 'streak_recovery'
+    } else if (moodDipping) {
       nudgeType = 'mood_dip'
     } else if (!hasToday && activeDays >= 3) {
       nudgeType = 'streak_risk'
@@ -184,45 +223,98 @@ export async function GET() {
     }
 
     // Check premium for personalized message
-    const subscription = await prisma.subscription.findUnique({
-      where: { user_id: user.id },
-    })
-    const isPremium = subscription?.tier === 'premium' &&
-      (subscription?.status === 'active' || subscription?.status === 'trialing')
+    const isPremium = await isPremiumUser(user.id)
 
     let message = NUDGE_TEMPLATES[nudgeType]
 
     if (isPremium) {
+      // For streak recovery, check for cached message first
+      if (nudgeType === 'streak_recovery') {
+        const todayGuide = guides.find(g => new Date(g.date).toISOString().split('T')[0] === todayStr)
+        if (todayGuide?.ai_streak_recovery_message) {
+          const nudge: NudgeResult = {
+            type: nudgeType,
+            message: todayGuide.ai_streak_recovery_message,
+            icon: NUDGE_ICONS[nudgeType],
+            label: NUDGE_LABELS[nudgeType],
+            suggested_action: SUGGESTED_ACTIONS[nudgeType],
+          }
+          return NextResponse.json({ nudge, cached: true, isRecovery: true })
+        }
+      }
+
       try {
-        const context = [
-          `Nudge type: ${nudgeType}`,
-          `Active days this week: ${activeDays}/7`,
-          `Journal entries this week: ${journalCount}`,
-          moodTrending ? 'Mood has been improving' : null,
-          moodDipping ? 'Mood has been declining for 3+ days' : null,
-          energyCounts.low >= 3 ? 'Frequently low energy' : null,
-          energyCounts.high >= 3 ? 'Frequently high energy' : null,
-          skippedModules.length > 0 ? `Often skips: ${skippedModules.join(', ')}` : null,
-          goalStalling ? `Goal "${stalledGoalTitle}" hasn't been updated in 3+ days` : null,
-        ].filter(Boolean).join('. ')
+        let aiMessage: string | undefined
 
-        const completion = await getGroq().chat.completions.create({
-          model: GROQ_MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: `You are a warm wellness coach. Write a single, short encouraging nudge message (1 sentence, max 25 words). Be personal and reference specific patterns. Don't use emojis. Context: ${context}`,
-            },
-            {
-              role: 'user',
-              content: `Write a ${nudgeType} nudge message.`,
-            },
-          ],
-          max_tokens: 50,
-          temperature: 0.7,
-        })
+        if (nudgeType === 'streak_recovery') {
+          // Recovery-specific prompt with mindset injection
+          const mindset = await getUserMindset(user.id)
+          const activeDaysInPeriod = guides.filter(g =>
+            g.journal_win || g.morning_prime_done || g.breath_done
+          ).length
+          const wins = guides.filter(g => g.journal_win).map(g => g.journal_win!).slice(0, 3)
 
-        const aiMessage = completion.choices[0]?.message?.content?.trim()
+          const basePrompt = `You write comeback messages for users returning after a streak break. Write 2-3 sentences. Be warm, not guilt-inducing. Reference their past wins if available. End with forward momentum.`
+          const userContent = [
+            `The user had a streak that broke ${daysSinceActive} day(s) ago.`,
+            `They were active ${activeDaysInPeriod} of the last 14 days.`,
+            wins.length > 0 ? `Recent wins: ${wins.join('; ')}` : 'No recent wins recorded.',
+          ].join('\n')
+
+          const completion = await getGroq().chat.completions.create({
+            model: GROQ_MODEL,
+            messages: [
+              { role: 'system', content: buildMindsetSystemPrompt(basePrompt, mindset) },
+              { role: 'user', content: userContent },
+            ],
+            max_tokens: 120,
+            temperature: 0.7,
+          })
+
+          aiMessage = completion.choices[0]?.message?.content?.trim()
+
+          // Cache recovery message
+          if (aiMessage) {
+            try {
+              await prisma.dailyGuide.upsert({
+                where: { user_id_date: { user_id: user.id, date: today } },
+                update: { ai_streak_recovery_message: aiMessage },
+                create: { user_id: user.id, date: today, day_type: 'work', ai_streak_recovery_message: aiMessage },
+              })
+            } catch {
+              // Non-fatal
+            }
+          }
+        } else {
+          // Generic nudge AI generation
+          const context = [
+            `Nudge type: ${nudgeType}`,
+            `Active days this week: ${activeDays}/7`,
+            `Journal entries this week: ${journalCount}`,
+            moodTrending ? 'Mood has been improving' : null,
+            moodDipping ? 'Mood has been declining for 3+ days' : null,
+            energyCounts.low >= 3 ? 'Frequently low energy' : null,
+            energyCounts.high >= 3 ? 'Frequently high energy' : null,
+            skippedModules.length > 0 ? `Often skips: ${skippedModules.join(', ')}` : null,
+            goalStalling ? `Goal "${stalledGoalTitle}" hasn't been updated in 3+ days` : null,
+          ].filter(Boolean).join('. ')
+
+          const completion = await getGroq().chat.completions.create({
+            model: GROQ_MODEL,
+            messages: [
+              {
+                role: 'system',
+                content: `You are a warm wellness coach. Write a single, short encouraging nudge message (1 sentence, max 25 words). Be personal and reference specific patterns. Don't use emojis. Context: ${context}`,
+              },
+              { role: 'user', content: `Write a ${nudgeType} nudge message.` },
+            ],
+            max_tokens: 50,
+            temperature: 0.7,
+          })
+
+          aiMessage = completion.choices[0]?.message?.content?.trim()
+        }
+
         if (aiMessage) message = aiMessage
       } catch (error) {
         console.error('Smart nudge AI error:', error)
@@ -234,10 +326,11 @@ export async function GET() {
       type: nudgeType,
       message,
       icon: NUDGE_ICONS[nudgeType],
+      label: NUDGE_LABELS[nudgeType],
       suggested_action: SUGGESTED_ACTIONS[nudgeType],
     }
 
-    return NextResponse.json({ nudge })
+    return NextResponse.json({ nudge, isRecovery: nudgeType === 'streak_recovery' })
   } catch (error) {
     console.error('Smart nudge API error:', error)
     return NextResponse.json({ error: 'Failed to get nudge' }, { status: 500 })

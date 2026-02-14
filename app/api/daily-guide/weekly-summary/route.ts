@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq } from '@/lib/groq'
 
 export const dynamic = 'force-dynamic'
@@ -16,13 +17,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check premium status
-    const subscription = await prisma.subscription.findUnique({
-      where: { user_id: user.id },
-    })
-
-    const isPremium = subscription?.tier === 'premium' &&
-      (subscription?.status === 'active' || subscription?.status === 'trialing')
+    const isPremium = await isPremiumUser(user.id)
 
     if (!isPremium) {
       return NextResponse.json({ error: 'Premium required' }, { status: 403 })

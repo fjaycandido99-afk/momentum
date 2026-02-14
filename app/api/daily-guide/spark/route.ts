@@ -3,15 +3,16 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { DAILY_QUESTIONS } from '@/lib/daily-sparks'
-import { QUOTES } from '@/lib/quotes'
+import { QUOTES, getHeuristicQuote } from '@/lib/quotes'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 import { getWeightedQuestions } from '@/lib/daily-sparks'
 import { getWeightedQuotePool } from '@/lib/mindset/quotes'
+import { getRandomAffirmation } from '@/lib/mindset/affirmations'
 
 export const dynamic = 'force-dynamic'
 
-const SPARK_TYPES = ['question', 'quote', 'motivation'] as const
+const SPARK_TYPES = ['question', 'quote', 'motivation', 'affirmation'] as const
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,87 +38,28 @@ export async function GET(request: NextRequest) {
         day_type: true,
         energy_level: true,
         mood_before: true,
+        ai_affirmation: true,
       },
     })
-
-    // Check premium status for affirmation access
-    const subscription = await prisma.subscription.findUnique({
-      where: { user_id: user.id },
-      select: { tier: true, status: true },
-    })
-
-    const isPremium = subscription?.tier === 'premium' &&
-      (subscription?.status === 'active' || subscription?.status === 'trialing')
 
     const hour = new Date().getHours()
     const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'
 
-    // Build available types — affirmation only for premium
-    const availableTypes = isPremium
-      ? ['question', 'quote', 'motivation', 'affirmation'] as const
-      : SPARK_TYPES
-
     // Decide: ~35% AI-generated, ~65% smart pick from static pool
     const useAI = Math.random() < 0.35
-    const sparkType = availableTypes[Math.floor(Math.random() * availableTypes.length)]
+    const sparkType = SPARK_TYPES[Math.floor(Math.random() * SPARK_TYPES.length)]
 
-    // For affirmation type, fetch from the affirmation endpoint logic
+    // Affirmation type — path-based from user's mindset
     if (sparkType === 'affirmation') {
-      try {
-        // Check for cached affirmation today
-        const cachedGuide = await prisma.dailyGuide.findUnique({
-          where: {
-            user_id_date: { user_id: user.id, date: today },
-          },
-          select: { ai_affirmation: true },
-        })
+      const mindset = await getUserMindset(user.id)
 
-        if (cachedGuide?.ai_affirmation) {
-          return NextResponse.json({
-            type: 'affirmation',
-            text: cachedGuide.ai_affirmation,
-            ai: true,
-          })
-        }
-
-        // Generate new affirmation
-        const context = [
-          guide?.day_type ? `Day type: ${guide.day_type}` : null,
-          guide?.energy_level ? `Energy: ${guide.energy_level}` : null,
-          guide?.mood_before ? `Current mood: ${guide.mood_before}` : null,
-        ].filter(Boolean).join('. ')
-
-        const mindset = await getUserMindset(user.id)
-        const affirmationPrompt = `You are a personal wellness coach. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. No quotes, no attribution. ${context ? `Context: ${context}` : ''}`
-
-        const completion = await getGroq().chat.completions.create({
-          model: GROQ_MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: buildMindsetSystemPrompt(affirmationPrompt, mindset),
-            },
-            { role: 'user', content: 'Generate my daily affirmation.' },
-          ],
-          max_tokens: 60,
-          temperature: 0.8,
-        })
-
-        const affirmation = completion.choices[0]?.message?.content?.trim() || 'I am capable, I am growing, and today matters.'
-
-        // Cache it
-        await prisma.dailyGuide.upsert({
-          where: {
-            user_id_date: { user_id: user.id, date: today },
-          },
-          update: { ai_affirmation: affirmation },
-          create: { user_id: user.id, date: today, day_type: 'work', ai_affirmation: affirmation },
-        })
-
-        return NextResponse.json({ type: 'affirmation', text: affirmation, ai: true })
-      } catch {
-        // Fall through to a random question instead
+      // If there's a cached AI affirmation for today, use it
+      if (guide?.ai_affirmation) {
+        return NextResponse.json({ type: 'affirmation', text: guide.ai_affirmation, ai: true })
       }
+
+      // Otherwise pick from the mindset-specific static pool
+      return NextResponse.json({ type: 'affirmation', text: getRandomAffirmation(mindset), ai: false })
     }
 
     if (useAI) {
@@ -236,34 +178,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ type: 'question', text: q, ai: false })
     }
 
-    // Smart quote pick based on mood/energy
-    const quoteCategories: Record<string, string[]> = {
-      low: ['strength', 'resilience', 'gratitude'],
-      okay: ['motivation', 'growth', 'wisdom'],
-      good: ['motivation', 'growth', 'mindset'],
-      great: ['action', 'purpose', 'focus'],
-    }
-
-    const energyCategories: Record<string, string[]> = {
-      low: ['gratitude', 'wisdom', 'resilience'],
-      normal: ['motivation', 'growth', 'mindset'],
-      high: ['action', 'focus', 'purpose'],
-    }
-
-    const moodCats = guide?.mood_before ? (quoteCategories[guide.mood_before] || []) : []
-    const energyCats = guide?.energy_level ? (energyCategories[guide.energy_level] || []) : []
-    const preferredCats = [...new Set([...moodCats, ...energyCats])]
-
-    if (preferredCats.length > 0) {
-      const matching = weightedQuotePool.filter(q => q.category && preferredCats.includes(q.category))
-      if (matching.length > 0) {
-        const pick = matching[Math.floor(Math.random() * matching.length)]
-        return NextResponse.json({ type: 'quote', text: pick.text, author: pick.author, ai: false })
-      }
-    }
-
-    // Fallback: random quote (mindset-weighted)
-    const pick = weightedQuotePool[Math.floor(Math.random() * weightedQuotePool.length)]
+    // Smart quote pick based on mood/energy (uses shared heuristic from quotes.ts)
+    const pick = getHeuristicQuote(guide?.mood_before ?? undefined, guide?.energy_level ?? undefined, weightedQuotePool)
     return NextResponse.json({ type: 'quote', text: pick.text, author: pick.author, ai: false })
   } catch (error) {
     console.error('Spark API error:', error)

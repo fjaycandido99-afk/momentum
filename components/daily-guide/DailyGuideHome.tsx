@@ -31,6 +31,7 @@ import { MicroLessonVideo } from './MicroLessonVideo'
 import { QuoteCard } from './QuoteCard'
 import { GoalTracker } from './GoalTracker'
 import { SmartNudgeBanner } from './SmartNudgeBanner'
+import { MorningBriefing } from './MorningBriefing'
 import { StreakDisplay } from './StreakDisplay'
 import { JournalEntry } from './JournalEntry'
 import { MorningFlowComplete } from './MorningFlowComplete'
@@ -1241,6 +1242,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
             />
             </>
           )}
+
+          {/* Morning Briefing */}
+          <MorningBriefing />
 
           {/* Smart Nudge */}
           <SmartNudgeBanner />

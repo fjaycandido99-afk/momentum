@@ -147,34 +147,37 @@ export function getRandomQuotes(count: number): Quote[] {
   return shuffled.slice(0, count)
 }
 
-// Map mood/energy to preferred quote categories (for free tier heuristic)
-export function getHeuristicQuote(mood?: string, energy?: string): Quote {
-  const categoryMap: Record<string, string[]> = {
-    // Low mood → strength, resilience, gratitude
-    'low': ['strength', 'resilience', 'gratitude'],
-    // Medium mood → motivation, growth, wisdom
-    'medium': ['motivation', 'growth', 'wisdom'],
-    // High mood → action, purpose, focus
-    'high': ['action', 'purpose', 'focus'],
-  }
+// Mood/energy → preferred quote category mapping (shared by quote + spark routes)
+export const MOOD_CATEGORY_MAP: Record<string, string[]> = {
+  low: ['strength', 'resilience', 'gratitude'],
+  okay: ['motivation', 'growth', 'wisdom'],
+  medium: ['motivation', 'growth', 'wisdom'],
+  good: ['motivation', 'growth', 'mindset'],
+  great: ['action', 'purpose', 'focus'],
+  high: ['action', 'purpose', 'focus'],
+}
 
-  const energyMap: Record<string, string[]> = {
-    'low': ['gratitude', 'wisdom', 'resilience'],
-    'normal': ['motivation', 'growth', 'mindset'],
-    'high': ['action', 'focus', 'purpose'],
-  }
+export const ENERGY_CATEGORY_MAP: Record<string, string[]> = {
+  low: ['gratitude', 'wisdom', 'resilience'],
+  normal: ['motivation', 'growth', 'mindset'],
+  high: ['action', 'focus', 'purpose'],
+}
 
-  const moodCategories = mood ? categoryMap[mood] || [] : []
-  const energyCategories = energy ? energyMap[energy] || [] : []
+/** Pick a quote matching mood/energy from a given pool (defaults to QUOTES) */
+export function getHeuristicQuote(mood?: string, energy?: string, pool?: Quote[]): Quote {
+  const quotePool = pool || QUOTES
+  const moodCategories = mood ? MOOD_CATEGORY_MAP[mood] || [] : []
+  const energyCategories = energy ? ENERGY_CATEGORY_MAP[energy] || [] : []
   const preferred = [...new Set([...moodCategories, ...energyCategories])]
 
-  if (preferred.length === 0) return getDayOfYearQuote()
+  if (preferred.length === 0) {
+    return pool ? pool[Math.floor(Math.random() * pool.length)] : getDayOfYearQuote()
+  }
 
-  const matching = QUOTES.filter(q => q.category && preferred.includes(q.category))
-  if (matching.length === 0) return getDayOfYearQuote()
+  const matching = quotePool.filter(q => q.category && preferred.includes(q.category))
+  if (matching.length === 0) {
+    return pool ? pool[Math.floor(Math.random() * pool.length)] : getDayOfYearQuote()
+  }
 
-  // Use day-seeded random for consistency within a day
-  const now = new Date()
-  const daySeed = now.getFullYear() * 1000 + (now.getMonth() * 31 + now.getDate())
-  return matching[daySeed % matching.length]
+  return matching[Math.floor(Math.random() * matching.length)]
 }
