@@ -52,6 +52,7 @@ import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { useScrollHeader } from '@/hooks/useScrollHeader'
 import type { DayType, TimeMode, EnergyLevel, ModuleType, CheckpointConfig } from '@/lib/daily-guide/decision-tree'
 
 type UserType = 'professional' | 'student' | 'hybrid'
@@ -236,6 +237,8 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   // Store fetched audio data for inline playback
   const [moduleAudioData, setModuleAudioData] = useState<Record<string, AudioData>>({})
   const isMountedRef = useRef(true)
+  const guideScrollRef = useRef<HTMLDivElement>(null)
+  const { scrolled: headerScrolled } = useScrollHeader(guideScrollRef)
   // Auto-advance state
   const [justCompletedModule, setJustCompletedModule] = useState<string | null>(null)
   const moduleRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -992,7 +995,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const timeGradient = getTimeGradient()
 
   return (
-    <div className={embedded ? `${timeGradient} pb-8` : `min-h-screen ${timeGradient} pb-32`}>
+    <div ref={guideScrollRef} className={embedded ? `bg-black pb-8` : `min-h-screen bg-black pb-32`}>
       {/* Trial Banner (hidden in embedded/drawer mode) */}
       {!embedded && <TrialBanner variant="compact" />}
       {!embedded && <TrialEndingBanner />}
@@ -1009,11 +1012,11 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 <>
                   <div className="flex items-center gap-2 mb-1">
                     <div className="p-1.5 rounded-lg bg-white/10 animate-pulse-glow">
-                      <GreetingIcon className="w-4 h-4 text-white animate-icon-bounce" />
+                      <GreetingIcon className={`w-4 h-4 text-white animate-icon-bounce transition-all duration-300 ${headerScrolled ? 'w-3.5 h-3.5' : ''}`} />
                     </div>
-                    <span className="text-sm text-white/95">{greeting.text}</span>
+                    <span className={`transition-all duration-300 text-white/95 ${headerScrolled ? 'text-xs' : 'text-sm'}`}>{greeting.text}</span>
                   </div>
-                  <p className="text-sm text-white/95 mt-1">
+                  <p className={`text-sm text-white/95 mt-1 transition-all duration-300 overflow-hidden ${headerScrolled ? 'opacity-0 max-h-0 mt-0' : 'opacity-100 max-h-8'}`}>
                     {getFormattedDate(today)}
                   </p>
                 </>
@@ -1159,7 +1162,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           {morningModules.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-label">
+                <h2 className="text-label section-heading-reveal">
                   Morning Flow
                 </h2>
                 {!morningAvailability.isAvailable && (
@@ -1206,7 +1209,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                   </button>
 
                   {showMorningFlow && (
-                    <div className="p-4 pt-0 space-y-3">
+                    <div className="p-4 pt-0 space-y-3 accordion-spring-enter">
                       {/* Quick mode toggle - only show when 0 modules completed */}
                       {completedModules.filter(m => displayModules.includes(m)).length === 0 && (
                         <button
@@ -1559,7 +1562,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           {guide.modules?.includes('day_close') && (
             <div className="space-y-3 animate-scale-in">
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-label">
+                <h2 className="text-label section-heading-reveal">
                   Evening
                 </h2>
                 {!eveningAvailability.isAvailable && (

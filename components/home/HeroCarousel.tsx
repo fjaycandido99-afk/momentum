@@ -71,8 +71,8 @@ export function HeroCarousel({ children, autoPlayMs = 5000 }: HeroCarouselProps)
         {children.map((child, i) => (
           <div
             key={i}
-            className="w-full flex-shrink-0 px-6"
-            style={{ scrollSnapAlign: 'center' }}
+            className="w-full flex-shrink-0 px-6 card-enter"
+            style={{ scrollSnapAlign: 'center', animationDelay: `${i * 0.1}s` }}
           >
             {child}
           </div>
@@ -87,7 +87,7 @@ export function HeroCarousel({ children, autoPlayMs = 5000 }: HeroCarouselProps)
             onClick={() => { pauseAutoPlay(10000); scrollTo(i) }}
             className={`rounded-full transition-all duration-300 ${
               i === activeIndex
-                ? 'w-5 h-1.5 bg-white/60'
+                ? 'w-5 h-1.5 bg-white/60 carousel-dot-active'
                 : 'w-1.5 h-1.5 bg-white/20'
             }`}
           />

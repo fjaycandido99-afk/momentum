@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Sparkles, Bot, BarChart3, Compass } from 'lucide-react'
@@ -44,6 +44,7 @@ import { useAudioSideEffects } from '@/hooks/useAudioSideEffects'
 import { useVisibilityResume } from '@/hooks/useVisibilityResume'
 import { useMediaSession } from '@/hooks/useMediaSession'
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed'
+import { useScrollHeader } from '@/hooks/useScrollHeader'
 import { useListeningMilestones } from '@/hooks/useListeningMilestones'
 import { RecentlyPlayedSection } from './RecentlyPlayedSection'
 import { LongPressPreview } from './LongPressPreview'
@@ -479,6 +480,7 @@ export function ImmersiveHome() {
   useParallax(scrollRef)
   const { handlePointerMove: magneticMove, handlePointerLeave: magneticLeave } = useMagneticHover()
   const spawnRipple = useRippleBurst()
+  const { scrolled: headerScrolled, scrollY: headerScrollY } = useScrollHeader(scrollRef)
 
   const touchStartY = useRef(0)
   const [pullDistance, setPullDistance] = useState(0)
@@ -1219,11 +1221,12 @@ export function ImmersiveHome() {
       >
         <div className="flex flex-col items-center gap-1 pb-2">
           <ChevronDown
-            className={`w-5 h-5 transition-transform duration-200 ${
-              pullDistance >= PULL_THRESHOLD ? 'text-white rotate-180' : 'text-white/95'
+            className={`w-5 h-5 transition-transform duration-300 ${
+              pullDistance >= PULL_THRESHOLD ? 'text-white rotate-180 scale-110' : 'text-white/95'
             }`}
+            style={{ transform: pullDistance > 0 && pullDistance < PULL_THRESHOLD ? `rotate(${(pullDistance / PULL_THRESHOLD) * 180}deg)` : undefined }}
           />
-          <span className="text-xs text-white/95">
+          <span className={`text-xs transition-all duration-200 ${pullDistance >= PULL_THRESHOLD ? 'text-white font-medium' : 'text-white/95'}`}>
             {pullDistance >= PULL_THRESHOLD ? 'Release for Daily Guide' : 'Pull down for Daily Guide'}
           </span>
         </div>
@@ -1231,9 +1234,9 @@ export function ImmersiveHome() {
 
       {/* Header — hidden when any fullscreen overlay is active */}
       {!showMorningFlow && !audioState.playingSound && !audioState.showSoundscapePlayer && (
-        <div className="relative z-50 flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down header-fade-bg">
+        <div className="relative z-50 flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down header-fade-bg transition-all duration-300">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold shimmer-text">Explore</h1>
+            <h1 className={`font-semibold shimmer-text transition-all duration-300 ${headerScrolled ? 'text-lg' : 'text-2xl'}`}>Explore</h1>
             <StreakBadge streak={streak} />
             <XPBadge />
             {mindsetCtx && (
@@ -1366,6 +1369,7 @@ export function ImmersiveHome() {
       />
 
       {/* Soundscapes */}
+      <div className="stagger-item" style={{ '--i': 0 } as React.CSSProperties}>
       <SoundscapesSection
         activeSoundscape={audioState.activeSoundscape}
         soundscapeIsPlaying={audioState.soundscapeIsPlaying}
@@ -1373,8 +1377,10 @@ export function ImmersiveHome() {
         onPlay={handleSoundscapePlay}
         onReopen={handleSoundscapeReopen}
       />
+      </div>
 
       {/* Guided */}
+      <div className="stagger-item" style={{ '--i': 1 } as React.CSSProperties}>
       <GuidedSection
         guideLabel={audioState.guideLabel}
         guideIsPlaying={audioState.guideIsPlaying}
@@ -1384,6 +1390,7 @@ export function ImmersiveHome() {
         onPlayAIMeditation={(themeId) => isPremium ? setAiMeditationTheme(themeId) : openUpgradeModal()}
         isPremium={isPremium}
       />
+      </div>
 
       {/* Continue Listening (when paused mid-motivation) */}
       {audioState.backgroundMusic && !audioState.musicPlaying && audioState.userPausedMusic
@@ -1428,6 +1435,7 @@ export function ImmersiveHome() {
       />
 
       {/* Featured Motivation Row — mood-based "For You" or today's topic */}
+      <div className="stagger-item" style={{ '--i': 2 } as React.CSSProperties}>
       <MotivationSection
         videos={motivationByTopic[featuredTopic] || []}
         loading={loadingMotivation}
@@ -1453,7 +1461,7 @@ export function ImmersiveHome() {
         onLongPressStart={handleLongPressStart}
         onLongPressEnd={handleLongPressEnd}
       />
-
+      </div>
 
       {/* Your Saves */}
       {savedMotivationVideos.length > 0 && (
@@ -1473,8 +1481,8 @@ export function ImmersiveHome() {
 
       {/* Music Genres */}
       {MUSIC_GENRES.map((g, gi) => (
+        <div key={g.id} className="stagger-item" style={{ '--i': 3 + gi } as React.CSSProperties}>
         <MusicGenreSection
-          key={g.id}
           genre={g}
           videos={genreVideos[g.id] || []}
           genreBackgrounds={genreBackgrounds[g.id] || []}
@@ -1500,6 +1508,7 @@ export function ImmersiveHome() {
           onLongPressStart={handleLongPressStart}
           onLongPressEnd={handleLongPressEnd}
         />
+        </div>
       ))}
 
       {/* Saved Music */}

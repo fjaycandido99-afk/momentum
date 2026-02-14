@@ -116,7 +116,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
         <button
           onClick={() => generateSession(false)}
           disabled={loading}
-          className="flex-1 glass-refined rounded-2xl p-3 flex items-center gap-3 active:scale-[0.98] transition-transform"
+          className={`flex-1 glass-refined rounded-2xl p-3 flex items-center gap-3 active:scale-[0.98] transition-transform ${loading ? 'shimmer-skeleton' : ''}`}
         >
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/30 to-cyan-500/30 flex items-center justify-center shrink-0">
             {loading ? (
@@ -148,7 +148,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
   // Custom form
   if (view === 'form') {
     return (
-      <div className="glass-refined rounded-2xl p-4 space-y-3">
+      <div className={`glass-refined rounded-2xl p-4 space-y-3 ${loading ? 'shimmer-skeleton' : ''}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-400" />
@@ -225,7 +225,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
           value={intention}
           onChange={e => setIntention(e.target.value)}
           placeholder="Optional: What do you want to feel after?"
-          className="w-full px-3 py-2 rounded-xl bg-white/5 text-white text-xs placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-white/10"
+          className="w-full px-3 py-2 rounded-xl bg-white/5 text-white text-xs placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-white/10 input-focus-glow"
         />
 
         {/* Generate */}

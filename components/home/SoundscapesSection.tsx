@@ -15,7 +15,16 @@ interface SoundscapesSectionProps {
 export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isContentFree, onPlay, onReopen }: SoundscapesSectionProps) {
   return (
     <div className="mb-8 liquid-reveal section-fade-bg">
-      <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header">Soundscapes</h2>
+      <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header section-heading-reveal flex items-center gap-2">
+        Soundscapes
+        {activeSoundscape && soundscapeIsPlaying && (
+          <span className="inline-flex items-end gap-[2px] h-[12px] text-white/60">
+            <span className="soundscape-eq-bar" />
+            <span className="soundscape-eq-bar" />
+            <span className="soundscape-eq-bar" />
+          </span>
+        )}
+      </h2>
       <div className="flex gap-4 overflow-x-auto px-6 pt-2 pb-4 scrollbar-hide snap-row">
         {SOUNDSCAPE_ITEMS.map((item) => {
           const Icon = item.icon
