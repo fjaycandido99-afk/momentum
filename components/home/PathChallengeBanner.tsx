@@ -37,7 +37,7 @@ export function PathChallengeBanner({ mindsetId, embedded = false }: PathChallen
   if (embedded) {
     return (
       <Link href="/my-path" className="block group">
-        <div className="rounded-2xl border border-white/[0.15] p-6 press-scale bg-black">
+        <div className="rounded-2xl border border-white/[0.15] p-6 press-scale bg-black min-h-[10rem] flex flex-col justify-between">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
               <MindsetIcon mindsetId={mindsetId} className="w-5 h-5 text-white" />
@@ -47,28 +47,29 @@ export function PathChallengeBanner({ mindsetId, embedded = false }: PathChallen
               <p className="text-xs text-white/95">{config.subtitle}</p>
             </div>
           </div>
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                {activities.map((act) => (
-                  <div
-                    key={act.key}
-                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                      act.done ? 'bg-emerald-400' : 'bg-white/15'
-                    }`}
-                  />
-                ))}
-              </div>
-              {status && (
-                <span className="text-sm text-white/95">{status.completedCount}/4 today</span>
-              )}
-              {status && status.streak > 0 && (
-                <div className="flex items-center gap-1">
-                  <Flame className="w-3.5 h-3.5 text-orange-400" />
-                  <span className="text-sm text-white/95 font-medium">{status.streak}d</span>
-                </div>
-              )}
+          <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-1.5">
+              {activities.map((act) => (
+                <div
+                  key={act.key}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    act.done ? 'bg-emerald-400' : 'bg-white/15'
+                  }`}
+                />
+              ))}
             </div>
+            {status && (
+              <span className="text-sm text-white/95">{status.completedCount}/4 today</span>
+            )}
+            {status && status.streak > 0 && (
+              <div className="flex items-center gap-1">
+                <Flame className="w-3.5 h-3.5 text-orange-400" />
+                <span className="text-sm text-white/95 font-medium">{status.streak}d</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-between mt-4">
+            <p className="text-sm text-white/95">Tap to open your path</p>
             <ChevronRight className="w-5 h-5 text-white/95 group-hover:text-white/95 transition-colors" />
           </div>
         </div>

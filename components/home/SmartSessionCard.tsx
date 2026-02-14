@@ -139,7 +139,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
           className="glass-refined rounded-2xl p-3 flex items-center justify-center active:scale-[0.98] transition-transform"
           title="Customize session"
         >
-          <SlidersHorizontal className="w-4.5 h-4.5 text-purple-300" />
+          <SlidersHorizontal className="w-4.5 h-4.5 text-white" />
         </button>
       </div>
     )

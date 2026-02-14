@@ -70,6 +70,8 @@ export function ImmersiveHome() {
   const [timeContext] = useState(getTimeContext)
   const [activeMode, setActiveMode] = useState<Mode>(timeContext.suggested)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [guideCTA, setGuideCTA] = useState<{ subtitle: string; Icon: typeof Sun }>({ subtitle: '', Icon: Sun })
+  const [mounted, setMounted] = useState(false)
   const audioContext = useAudioOptional()
   const mindsetCtx = useMindsetOptional()
   const hasRestoredRef = useRef(false)
@@ -263,6 +265,12 @@ export function ImmersiveHome() {
     first.parentNode?.insertBefore(tag, first)
     const prev = window.onYouTubeIframeAPIReady
     window.onYouTubeIframeAPIReady = () => { prev?.(); setYtReady(true) }
+  }, [])
+
+  // Client-only: set time-dependent values to avoid hydration mismatch
+  useEffect(() => {
+    setGuideCTA(getDailyGuideCTA())
+    setMounted(true)
   }, [])
 
   // Welcome back check
@@ -1249,24 +1257,17 @@ export function ImmersiveHome() {
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
           <div className="absolute right-6 top-[72px] z-40 w-48 py-2 rounded-2xl bg-[#111113] border border-white/15 shadow-xl animate-fade-in-up">
-            {astrologyEnabled ? (
-              <Link href="/astrology" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-                <Sparkles className="w-4 h-4 text-white/70" />
-                <span className="text-sm text-white/90">Cosmic Guide</span>
-              </Link>
-            ) : (
-              <Link href="/my-path" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-                <Compass className="w-4 h-4 text-white/70" />
-                <span className="text-sm text-white/90">
-                  {mindsetCtx?.mindset === 'stoic' ? 'Stoic Path'
-                    : mindsetCtx?.mindset === 'existentialist' ? 'The Existentialist'
-                    : mindsetCtx?.mindset === 'cynic' ? "Cynic's Way"
-                    : mindsetCtx?.mindset === 'hedonist' ? 'Garden of Epicurus'
-                    : mindsetCtx?.mindset === 'samurai' ? 'Way of the Warrior'
-                    : 'My Path'}
-                </span>
-              </Link>
-            )}
+            <Link href="/my-path" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+              <Compass className="w-4 h-4 text-white/70" />
+              <span className="text-sm text-white/90">
+                {mindsetCtx?.mindset === 'stoic' ? 'Stoic Path'
+                  : mindsetCtx?.mindset === 'existentialist' ? 'The Existentialist'
+                  : mindsetCtx?.mindset === 'cynic' ? "Cynic's Way"
+                  : mindsetCtx?.mindset === 'hedonist' ? 'Garden of Epicurus'
+                  : mindsetCtx?.mindset === 'samurai' ? 'Way of the Warrior'
+                  : 'My Path'}
+              </span>
+            </Link>
             <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
               <PenLine className="w-4 h-4 text-white/70" />
               <span className="text-sm text-white/90">Journal</span>
@@ -1299,7 +1300,6 @@ export function ImmersiveHome() {
 
       {/* Hero Carousel: Daily Guide + Path + Quote */}
       {(() => {
-        const guideCTA = getDailyGuideCTA()
         const slides: React.ReactNode[] = [
           // Slide 1: Daily Guide
           <button
@@ -1307,21 +1307,19 @@ export function ImmersiveHome() {
             onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
             className="w-full text-left group"
           >
-            <div className="relative p-6 rounded-2xl border border-white/[0.15] press-scale bg-black">
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
-                    <guideCTA.Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-medium text-white">Your Daily Guide</h2>
-                    <p className="text-xs text-white/95">{guideCTA.subtitle}</p>
-                  </div>
+            <div className="relative p-6 rounded-2xl border border-white/[0.15] press-scale bg-black min-h-[10rem] flex flex-col justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
+                  <guideCTA.Icon className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-white/95">Tap to open your full guide</p>
-                  <ChevronRight className="w-5 h-5 text-white/95 group-hover:text-white/95 transition-colors" />
+                <div>
+                  <h2 className="text-lg font-medium text-white">Your Daily Guide</h2>
+                  <p className="text-xs text-white/95">{guideCTA.subtitle}</p>
                 </div>
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-white/95">Tap to open your full guide</p>
+                <ChevronRight className="w-5 h-5 text-white/95 group-hover:text-white/95 transition-colors" />
               </div>
             </div>
           </button>,

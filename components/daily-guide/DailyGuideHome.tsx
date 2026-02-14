@@ -10,8 +10,6 @@ import {
   Zap,
   Music,
   GraduationCap,
-  Briefcase,
-  BookOpen,
   Volume2,
   VolumeX,
   SkipForward,
@@ -77,12 +75,6 @@ function getTimeGreeting(mindsetId?: string): { text: string; icon: typeof Sunri
   return { text: `Good evening${suffix}`, icon: Moon, period: 'evening' }
 }
 
-// Get day name
-function getDayName(): string {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  return days[new Date().getDay()]
-}
-
 // Get time-of-day gradient for theming
 function getTimeGradient(): string {
   const hour = new Date().getHours()
@@ -91,43 +83,6 @@ function getTimeGradient(): string {
   if (hour >= 12 && hour < 17) return 'bg-gradient-to-b from-sky-950/10 to-black'
   if (hour >= 17 && hour < 20) return 'bg-gradient-to-b from-indigo-950/20 to-black'
   return 'bg-gradient-to-b from-violet-950/15 to-black'
-}
-
-// Get motivational message based on time and day type
-function getMotivationalMessage(dayType: string, period: 'morning' | 'afternoon' | 'evening'): string {
-  const messages: Record<string, Record<string, string>> = {
-    work: {
-      morning: 'Make today count',
-      afternoon: 'Stay focused, you\'re doing great',
-      evening: 'Time to wind down',
-    },
-    off: {
-      morning: 'A day to recharge',
-      afternoon: 'Enjoy your time off',
-      evening: 'Rest well tonight',
-    },
-    recovery: {
-      morning: 'Be gentle with yourself today',
-      afternoon: 'Take it easy',
-      evening: 'Rest and restore',
-    },
-    class: {
-      morning: 'Ready to learn',
-      afternoon: 'Keep absorbing',
-      evening: 'Review and rest',
-    },
-    study: {
-      morning: 'Deep focus mode',
-      afternoon: 'Stay in the zone',
-      evening: 'Consolidate what you learned',
-    },
-    exam: {
-      morning: 'Trust your preparation',
-      afternoon: 'You\'ve got this',
-      evening: 'Well done, rest now',
-    },
-  }
-  return messages[dayType]?.[period] || 'Make today meaningful'
 }
 
 interface DailyGuide {
@@ -259,6 +214,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const [completedModules, setCompletedModules] = useState<string[]>([])
   const [showEnergyPrompt, setShowEnergyPrompt] = useState(false)
   const [selectedEnergy, setSelectedEnergy] = useState<EnergyLevel | null>(null)
+  const [showDayTypePicker, setShowDayTypePicker] = useState(false)
   const [showMorningFlow, setShowMorningFlow] = useState(true)
   const [showStudentSection, setShowStudentSection] = useState(false)
   const [currentMusicGenre, setCurrentMusicGenre] = useState<string | null>(null)
@@ -904,6 +860,12 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
   const displayModules = quickModeActive ? quickModeModules : adaptedMorningModules.modules
 
+  // For premium users, MorningBriefing replaces morning_prime inside the flow
+  const isPremium = subscription?.isPremium ?? false
+  const displayModulesFiltered = isPremium
+    ? displayModules.filter(m => m !== 'morning_prime')
+    : displayModules
+
   // Improvement #3: Estimated time remaining
   const timeRemaining = useMemo(() => {
     const incompleteModules = displayModules.filter(m => !completedModules.includes(m))
@@ -944,11 +906,6 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     }, 800)
     return () => clearTimeout(timer)
   }, [justCompletedModule, completedModules])
-
-  // User type icon
-  const UserTypeIcon = preferences?.user_type === 'student' ? GraduationCap
-    : preferences?.user_type === 'hybrid' ? BookOpen
-    : Briefcase
 
   // Time-based availability for Evening section
   const getEveningAvailability = useCallback(() => {
@@ -1048,7 +1005,6 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
             {(() => {
               const greeting = getTimeGreeting(mindsetCtx?.mindset)
               const GreetingIcon = greeting.icon
-              const dayName = getDayName()
               return (
                 <>
                   <div className="flex items-center gap-2 mb-1">
@@ -1057,9 +1013,6 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                     </div>
                     <span className="text-sm text-white/95">{greeting.text}</span>
                   </div>
-                  <h1 className="text-2xl font-semibold shimmer-text">
-                    Happy {dayName}
-                  </h1>
                   <p className="text-sm text-white/95 mt-1">
                     {getFormattedDate(today)}
                   </p>
@@ -1080,36 +1033,37 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           </div>
         </div>
 
-        {/* Day Type and Motivation */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            {guide && (
-              <>
-                <DayTypeIndicator dayType={guide.day_type as DayType} />
-                <div>
-                  <p className="text-sm font-medium text-white">
-                    {DAY_TYPE_LABELS[guide.day_type]?.label || guide.day_type}
-                  </p>
-                  <p className="text-xs text-white/95">
-                    {getMotivationalMessage(guide.day_type, getTimeGreeting().period)}
-                  </p>
-                </div>
-              </>
+        {/* Day Type pill + Energy row */}
+        {guide && (
+          <div className="flex items-center justify-between mb-2">
+            {/* Day type pill (tappable) */}
+            <button
+              onClick={() => setShowDayTypePicker(!showDayTypePicker)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 text-xs text-white press-scale transition-all"
+            >
+              <DayTypeIndicator dayType={guide.day_type as DayType} size="sm" />
+              <span className="font-medium">{DAY_TYPE_LABELS[guide.day_type]?.label || guide.day_type}</span>
+              <ChevronDown className={`w-3 h-3 text-white/60 transition-transform ${showDayTypePicker ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Energy pills (right) */}
+            {selectedEnergy && (
+              <EnergySelector
+                value={selectedEnergy}
+                onChange={(e) => generateGuide(e)}
+                disabled={isGenerating}
+              />
             )}
           </div>
-          <div className="p-2 rounded-xl bg-white/5">
-            <UserTypeIcon className="w-4 h-4 text-white/95" />
-          </div>
-        </div>
+        )}
 
-        {/* Day type selector */}
-        {guide && (
-          <>
-          <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 -mx-6 px-6">
+        {/* Day type dropdown (shown on tap) */}
+        {guide && showDayTypePicker && (
+          <div className="flex items-center gap-2 mb-2 overflow-x-auto pb-1 -mx-6 px-6 animate-slide-up-enter">
             {getAvailableDayTypes().map(type => (
               <button
                 key={type}
-                onClick={() => toggleDayType(type)}
+                onClick={() => { toggleDayType(type); setShowDayTypePicker(false) }}
                 className={`
                   flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all press-scale
                   ${guide.day_type === type
@@ -1124,29 +1078,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               </button>
             ))}
           </div>
-          <FeatureHint id="day-type" text="Day type customizes your entire module flow" mode="once" />
-          </>
-        )}
-
-        {/* Energy selector (inline after initial selection) */}
-        {guide && selectedEnergy && (
-          <>
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-white/95">Energy level</span>
-            <EnergySelector
-              value={selectedEnergy}
-              onChange={(e) => generateGuide(e)}
-              disabled={isGenerating}
-            />
-          </div>
-          <FeatureHint id="energy-level" text="Your energy level adjusts how intense today's session feels" mode="once" />
-          </>
         )}
 
       </div>
-
-      {/* Gradient divider */}
-      <div className="mx-6 divider" />
 
       {/* Session Limit Banner */}
       <div className="px-6 mb-4">
@@ -1221,34 +1155,6 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
             onTakeRecoveryDay={() => toggleDayType('recovery')}
           />
 
-          {/* Morning Mood Check-In */}
-          {!moodBefore && getTimeGreeting().period === 'morning' && (
-            <>
-            <FeatureHint id="mood-checkin" text="Mood tracking helps personalize your future sessions" mode="once" />
-            <MoodCheckIn
-              type="before"
-              onSelect={async (mood) => {
-                setMoodBefore(mood)
-                try {
-                  await fetch('/api/daily-guide/checkin', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mood_before: mood, date: guide?.date }),
-                  })
-                } catch (error) {
-                  console.error('Error saving mood:', error)
-                }
-              }}
-            />
-            </>
-          )}
-
-          {/* Morning Briefing */}
-          <MorningBriefing />
-
-          {/* Smart Nudge */}
-          <SmartNudgeBanner />
-
           {/* Morning Flow Section */}
           {morningModules.length > 0 && (
             <div className="space-y-3">
@@ -1280,14 +1186,14 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                           {quickModeActive ? '5-Min Flow' : 'Morning Flow'}
                         </h2>
                         <p className="text-xs text-white/95">
-                          {completedModules.filter(m => displayModules.includes(m)).length}/{displayModules.length} complete
+                          {completedModules.filter(m => displayModulesFiltered.includes(m)).length}/{displayModulesFiltered.length} complete
                           {timeRemaining && <span className="ml-2 text-white/60">{timeRemaining}</span>}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <MorningFlowProgress
-                        modules={displayModules as ModuleType[]}
+                        modules={displayModulesFiltered as ModuleType[]}
                         completedModules={completedModules}
                         currentModule={getCurrentMorningModule() as ModuleType}
                       />
@@ -1328,7 +1234,45 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                         </div>
                       )}
 
-                      {displayModules.map((module, index) => {
+                      {/* Mood Check-In (inside flow) */}
+                      {!moodBefore && getTimeGreeting().period === 'morning' && (
+                        <>
+                        <FeatureHint id="mood-checkin" text="Mood tracking helps personalize your future sessions" mode="once" />
+                        <MoodCheckIn
+                          type="before"
+                          onSelect={async (mood) => {
+                            setMoodBefore(mood)
+                            try {
+                              await fetch('/api/daily-guide/checkin', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ mood_before: mood, date: guide?.date }),
+                              })
+                            } catch (error) {
+                              console.error('Error saving mood:', error)
+                            }
+                          }}
+                        />
+                        </>
+                      )}
+
+                      {/* Morning Briefing (premium replaces morning_prime) */}
+                      {isPremium && (
+                        <MorningBriefing
+                          onComplete={() => {
+                            setCompletedModules(prev =>
+                              prev.includes('morning_prime') ? prev : [...prev, 'morning_prime']
+                            )
+                            fetch('/api/daily-guide/checkin', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ segment: 'morning_prime', date: guide?.date }),
+                            }).catch(err => console.error('[MorningBriefing checkin] error:', err))
+                          }}
+                        />
+                      )}
+
+                      {displayModulesFiltered.map((module, index) => {
                         // Use QuoteCard for movement/workout (Quote of the Day)
                         if (module === 'movement' || module === 'workout') {
                           return (
@@ -1466,6 +1410,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               )}
             </div>
           )}
+
+          {/* Smart Nudge (after Morning Flow) */}
+          <SmartNudgeBanner />
 
           {/* Cosmic Insight Card - only shown when astrology is enabled */}
           {preferences?.astrology_enabled && morningAvailability.isAvailable && (

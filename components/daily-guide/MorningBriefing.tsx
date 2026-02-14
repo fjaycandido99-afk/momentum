@@ -4,7 +4,11 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Sun, Play, Pause, ChevronDown, Loader2, RefreshCw } from 'lucide-react'
 import { logXPEventServer } from '@/lib/gamification'
 
-export function MorningBriefing() {
+interface MorningBriefingProps {
+  onComplete?: () => void
+}
+
+export function MorningBriefing({ onComplete }: MorningBriefingProps) {
   const [script, setScript] = useState<string | null>(null)
   const [audioSrc, setAudioSrc] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -95,7 +99,7 @@ export function MorningBriefing() {
         <audio
           ref={audioRef}
           src={audioSrc}
-          onEnded={() => setPlaying(false)}
+          onEnded={() => { setPlaying(false); onComplete?.() }}
           preload="auto"
         />
       )}
@@ -154,9 +158,19 @@ export function MorningBriefing() {
         </button>
 
         {showScript && (
-          <p className="mt-2 text-xs text-white/70 leading-relaxed whitespace-pre-line">
-            {script}
-          </p>
+          <div className="mt-2">
+            <p className="text-xs text-white/70 leading-relaxed whitespace-pre-line">
+              {script}
+            </p>
+            {onComplete && (
+              <button
+                onClick={onComplete}
+                className="mt-3 px-4 py-1.5 rounded-full bg-amber-500/20 text-xs text-amber-400 hover:bg-amber-500/30 transition-colors"
+              >
+                Mark done
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>
