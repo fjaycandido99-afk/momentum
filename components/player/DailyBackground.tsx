@@ -243,7 +243,7 @@ export function DailyBackground({ animate = true, className = '', mindsetFilter 
     pointerRef.current.active = false
   }, [])
 
-  if (!enabled) return null
+  if (!enabled || !mounted) return null
 
   return (
     <div
