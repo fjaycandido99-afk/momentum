@@ -16,6 +16,9 @@
   /* Premium accent - soft warm white */
   --accent: 255 253 250;
   --accent-muted: 200 200 205;
+
+  /* Keyboard awareness */
+  --keyboard-height: 0px;
 }
 
 .dark {
@@ -1383,6 +1386,21 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 }
 .toast-exit {
   animation: toast-slide-out 0.2s ease-in forwards;
+}
+
+/* --- Page transition --- */
+@keyframes page-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.page-enter {
+  animation: page-fade 0.25s ease-out both;
+}
+
+/* --- Keyboard-aware utility --- */
+.keyboard-aware-pb {
+  padding-bottom: calc(1rem + var(--keyboard-height));
+  transition: padding-bottom 0.15s ease-out;
 }
 
 /* --- Category pill on fullscreen player --- */

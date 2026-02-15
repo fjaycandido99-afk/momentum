@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { locales, localeNames, type Locale } from '@/i18n'
 import { ChevronDown } from 'lucide-react'
 
@@ -12,20 +13,46 @@ interface LanguageSelectorProps {
 export function LanguageSelector({ currentLocale = 'en', onLocaleChange }: LanguageSelectorProps) {
   const [selected, setSelected] = useState<Locale>(currentLocale)
   const [isOpen, setIsOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
 
   const handleSelect = useCallback((locale: Locale) => {
     setSelected(locale)
     setIsOpen(false)
     onLocaleChange?.(locale)
-    // Persist preference
     try {
       localStorage.setItem('voxu_locale', locale)
     } catch {}
   }, [onLocaleChange])
 
+  // Position the portal dropdown relative to the button
+  useEffect(() => {
+    if (!isOpen || !buttonRef.current) return
+    const rect = buttonRef.current.getBoundingClientRect()
+    setDropdownStyle({
+      position: 'fixed',
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      zIndex: 9999,
+    })
+  }, [isOpen])
+
+  // Close on outside click
+  useEffect(() => {
+    if (!isOpen) return
+    const handler = (e: MouseEvent) => {
+      if (buttonRef.current?.contains(e.target as Node)) return
+      setIsOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [isOpen])
+
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm"
         aria-haspopup="listbox"
@@ -36,10 +63,11 @@ export function LanguageSelector({ currentLocale = 'en', onLocaleChange }: Langu
         <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {isOpen && (
+      {isOpen && typeof document !== 'undefined' && createPortal(
         <ul
           role="listbox"
-          className="absolute top-full left-0 right-0 mt-1 bg-[#1c1c20] border border-white/10 rounded-xl overflow-hidden z-50 animate-fade-in"
+          style={dropdownStyle}
+          className="bg-[#1c1c20] border border-white/10 rounded-xl overflow-hidden animate-fade-in shadow-xl shadow-black/50"
         >
           {locales.map((locale) => (
             <li key={locale}>
@@ -57,7 +85,8 @@ export function LanguageSelector({ currentLocale = 'en', onLocaleChange }: Langu
               </button>
             </li>
           ))}
-        </ul>
+        </ul>,
+        document.body
       )}
     </div>
   )

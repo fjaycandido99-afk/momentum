@@ -5,6 +5,8 @@ import { Play, Pause, Music, RefreshCw, Heart } from 'lucide-react'
 import { VideoItem, formatDuration } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
+import { SkeletonCardRow } from '@/components/ui/Skeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 interface MusicGenreSectionProps {
   genre: { id: string; word: string; tagline: string }
@@ -58,26 +60,20 @@ export function MusicGenreSection({
           </button>
         )}
       </div>
+      {loading ? (
+        <div className="px-2"><SkeletonCardRow heroCard={heroCard} /></div>
+      ) : videos.length === 0 ? (
+        <div className="px-8">
+          <EmptyState
+            icon={Music}
+            title="No tracks yet"
+            subtitle="Check back soon for new music"
+            action={onShuffle ? { label: 'Refresh', onClick: onShuffle } : undefined}
+          />
+        </div>
+      ) : (
       <div className="flex gap-4 overflow-x-auto px-8 pb-2 scrollbar-hide snap-row">
-        {loading ? (
-          Array.from({ length: 4 }).map((_, i) => {
-            const isHeroSkel = i === 0 && heroCard
-            const skelSize = isHeroSkel ? 'w-56 h-56' : 'w-40 h-40'
-            const skelWidth = isHeroSkel ? 'w-56' : 'w-40'
-            return (
-              <div key={i} className={`shrink-0 ${skelWidth}`}>
-                <div className={`${skelSize} rounded-2xl card-gradient-border skeleton-shimmer`} />
-                <div className="h-3 bg-[#111113] rounded mt-2 w-3/4" />
-                <div className="h-2 bg-[#111113] rounded mt-1.5 w-1/2" />
-              </div>
-            )
-          })
-        ) : videos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center w-full py-10 gap-2">
-            <Music className="w-6 h-6 text-white/30" />
-            <p className="text-sm text-white/40">No tracks yet</p>
-          </div>
-        ) : (
+        {(
           videos.slice(0, 8).map((video, index) => {
             const isLocked = !isContentFree('music', index)
             const isCardActive = activeCardId === video.id
@@ -172,6 +168,7 @@ export function MusicGenreSection({
           })
         )}
       </div>
+      )}
     </div>
   )
 }

@@ -1,10 +1,12 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Play, Pause, RefreshCw, Heart } from 'lucide-react'
+import { Play, Pause, RefreshCw, Heart, Sparkles } from 'lucide-react'
 import { VideoItem, TOPIC_TAGLINES, formatDuration } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
+import { SkeletonCardRow } from '@/components/ui/Skeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 interface MotivationSectionProps {
   videos: VideoItem[]
@@ -60,21 +62,20 @@ export function MotivationSection({
           </button>
         )}
       </div>
+      {loading ? (
+        <SkeletonCardRow heroCard={heroCard} />
+      ) : videos.length === 0 ? (
+        <div className="px-6">
+          <EmptyState
+            icon={Sparkles}
+            title="No videos yet"
+            subtitle="Try refreshing to discover new content"
+            action={onShuffle ? { label: 'Refresh', onClick: onShuffle } : undefined}
+          />
+        </div>
+      ) : (
       <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide snap-row">
-        {loading ? (
-          Array.from({ length: 4 }).map((_, i) => {
-            const isHeroSkel = i === 0 && heroCard
-            const skelSize = isHeroSkel ? 'w-56 h-56' : 'w-40 h-40'
-            const skelWidth = isHeroSkel ? 'w-56' : 'w-40'
-            return (
-              <div key={i} className={`shrink-0 ${skelWidth}`}>
-                <div className={`${skelSize} rounded-2xl card-gradient-border skeleton-shimmer`} />
-                <div className="h-3 bg-[#111113] rounded mt-2 w-3/4" />
-                <div className="h-2 bg-[#111113] rounded mt-1.5 w-1/2" />
-              </div>
-            )
-          })
-        ) : (
+        {(
           videos.slice(0, 8).map((video, index) => {
             const isLocked = !isContentFree('motivation', index)
             const isCardActive = activeCardId === video.id
@@ -165,6 +166,7 @@ export function MotivationSection({
           })
         )}
       </div>
+      )}
     </div>
   )
 }

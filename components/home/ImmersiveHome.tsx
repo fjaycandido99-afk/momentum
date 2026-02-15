@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Sparkles, Bot, BarChart3, Compass } from 'lucide-react'
@@ -17,6 +17,7 @@ import { GuidedSection } from './GuidedSection'
 import { XPBadge } from './XPBadge'
 import { MotivationSection } from './MotivationSection'
 import { MusicGenreSection } from './MusicGenreSection'
+import { LazyGenreSection } from './LazyGenreSection'
 import { SmartSessionCard } from './SmartSessionCard'
 import { PathChallengeBanner } from './PathChallengeBanner'
 import { AIMeditationPlayer } from './AIMeditationPlayer'
@@ -28,7 +29,7 @@ import { WeeklyDigestCard } from './WeeklyDigestCard'
 import { SavedMotivationSection } from './SavedMotivationSection'
 import {
   Mode, VideoItem, MUSIC_GENRES,
-  getTimeContext, getSuggestedMode, getTodaysTopicName, getTodaysBackgrounds, shuffleWithSeed,
+  getTimeContext, getSuggestedMode, getTodaysTopicName, getTodaysBackgrounds,
   getMoodTopicName,
 } from './home-types'
 import { useAudioOptional } from '@/contexts/AudioContext'
@@ -48,6 +49,8 @@ import { useScrollHeader } from '@/hooks/useScrollHeader'
 import { useListeningMilestones } from '@/hooks/useListeningMilestones'
 import { RecentlyPlayedSection } from './RecentlyPlayedSection'
 import { LongPressPreview } from './LongPressPreview'
+import { useToast } from '@/contexts/ToastContext'
+import { usePreferences, useJournalMood, useMotivationVideos, useFavorites, useWelcomeStatus } from '@/hooks/useHomeSWR'
 
 const WordAnimationPlayer = dynamic(
   () => import('@/components/player/WordAnimationPlayer').then(mod => mod.WordAnimationPlayer),
@@ -85,32 +88,24 @@ export function ImmersiveHome() {
   const { recentlyPlayed, addRecentlyPlayed } = useRecentlyPlayed()
 
   // Welcome back card
-  const [welcomeBackData, setWelcomeBackData] = useState<{ daysAway: number; lastStreak: number } | null>(null)
   const [showWelcomeBack, setShowWelcomeBack] = useState(false)
 
-  // Shuffle toast
-  const [shuffleToast, setShuffleToast] = useState<string | null>(null)
-  const shuffleToastTimer = useRef<NodeJS.Timeout | null>(null)
+  // Toast system
+  const { showToast } = useToast()
   const showShuffleToast = useCallback((message: string) => {
-    setShuffleToast(message)
-    if (shuffleToastTimer.current) clearTimeout(shuffleToastTimer.current)
-    shuffleToastTimer.current = setTimeout(() => setShuffleToast(null), 2000)
-  }, [])
+    showToast({ message, type: 'info', duration: 2000 })
+  }, [showToast])
 
   // Listening milestones
-  const [milestoneToast, setMilestoneToast] = useState<string | null>(null)
-  const milestoneToastTimer = useRef<NodeJS.Timeout | null>(null)
   useListeningMilestones(audioState.musicPlaying, useCallback((minutes: number) => {
     const messages: Record<number, string> = {
       15: '15 min of focus — keep going!',
       30: '30 min deep — you\'re in the zone',
       60: '1 hour of flow — incredible!',
     }
-    setMilestoneToast(messages[minutes] || `${minutes} min milestone!`)
+    showToast({ message: messages[minutes] || `${minutes} min milestone!`, type: 'milestone' })
     if (navigator.vibrate) navigator.vibrate(50)
-    if (milestoneToastTimer.current) clearTimeout(milestoneToastTimer.current)
-    milestoneToastTimer.current = setTimeout(() => setMilestoneToast(null), 3000)
-  }, []))
+  }, [showToast]))
 
   // Long-press preview
   const [previewVideo, setPreviewVideo] = useState<VideoItem | null>(null)
@@ -272,19 +267,6 @@ export function ImmersiveHome() {
   useEffect(() => {
     setGuideCTA(getDailyGuideCTA())
     setMounted(true)
-  }, [])
-
-  // Welcome back check
-  useEffect(() => {
-    fetch('/api/user/welcome-status')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.shouldShow) {
-          setWelcomeBackData({ daysAway: data.daysAway, lastStreak: data.lastStreak })
-          setShowWelcomeBack(true)
-        }
-      })
-      .catch(() => {})
   }, [])
 
   // Pre-create YT players
@@ -512,159 +494,70 @@ export function ImmersiveHome() {
     setIsPulling(false)
   }, [pullDistance, showMorningFlow, stopBackgroundMusic])
 
-  // --- Data fetching ---
-  const [streak, setStreak] = useState(0)
-  const [astrologyEnabled, setAstrologyEnabled] = useState(false)
-  const [motivationByTopic, setMotivationByTopic] = useState<Record<string, VideoItem[]>>({})
-  const [journalMood, setJournalMood] = useState<string | null>(null)
-  const [savedMotivationVideos, setSavedMotivationVideos] = useState<VideoItem[]>([])
-  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set())
-  const [favoriteRecordMap, setFavoriteRecordMap] = useState<Map<string, string>>(new Map())
-  const [shufflingTopic, setShufflingTopic] = useState<string | null>(null)
-  const [savedMusicVideos, setSavedMusicVideos] = useState<VideoItem[]>([])
-  const [musicFavoriteIds, setMusicFavoriteIds] = useState<Set<string>>(new Set())
-  const [musicFavoriteRecordMap, setMusicFavoriteRecordMap] = useState<Map<string, string>>(new Map())
-  const [shufflingGenre, setShufflingGenre] = useState<string | null>(null)
-  const [genreVideos, setGenreVideos] = useState<Record<string, VideoItem[]>>({})
-  const [genreBackgrounds, setGenreBackgrounds] = useState<Record<string, string[]>>({})
-  const [loadingMotivation, setLoadingMotivation] = useState(true)
-  const [loadingGenres, setLoadingGenres] = useState<Record<string, boolean>>(
-    () => Object.fromEntries(MUSIC_GENRES.map(g => [g.id, true]))
-  )
-
+  // --- Data fetching (SWR) ---
   const topicName = getTodaysTopicName()
   const [backgrounds] = useState(getTodaysBackgrounds)
+  const today = useMemo(() => new Date().toISOString().split('T')[0], [])
+
+  // SWR: Preferences
+  const { streak, mutatePreferences } = usePreferences()
+
+  // SWR: Journal mood
+  const { journalMood, moodBefore, energyLevel } = useJournalMood(today)
+
+  // Adjust mode based on journal mood
+  useEffect(() => {
+    if (moodBefore || energyLevel) {
+      const suggested = getSuggestedMode(moodBefore, energyLevel, timeContext.suggested)
+      setActiveMode(suggested)
+    }
+  }, [moodBefore, energyLevel, timeContext.suggested])
 
   const moodTopic = getMoodTopicName(journalMood)
   const featuredTopic = moodTopic || topicName
 
-  // Backward compat: derive motivationVideos from motivationByTopic for restore logic
-  const motivationVideos = motivationByTopic[topicName] || []
+  // SWR: Motivation videos (featured topic)
+  const { motivationVideos: featuredMotivationVideos, motivationLoading: loadingMotivation, mutateMotivation: mutateFeaturedMotivation } = useMotivationVideos(featuredTopic)
+  // SWR: Motivation for default topic (if mood overrides)
+  const { motivationVideos: defaultMotivationVideos } = useMotivationVideos(moodTopic && moodTopic !== topicName ? topicName : '')
 
-  // Fetch preferences on mount and when page regains focus (e.g. back from settings)
+  // Combined motivation: quick lookup for restore + shuffle
+  const motivationByTopic = useMemo(() => {
+    const map: Record<string, VideoItem[]> = {}
+    if (featuredMotivationVideos.length > 0) map[featuredTopic] = featuredMotivationVideos
+    if (defaultMotivationVideos.length > 0 && moodTopic && moodTopic !== topicName) map[topicName] = defaultMotivationVideos
+    return map
+  }, [featuredMotivationVideos, defaultMotivationVideos, featuredTopic, topicName, moodTopic])
+  const motivationVideos = motivationByTopic[topicName] || featuredMotivationVideos
+
+  // SWR: Favorites
+  const { savedVideos: savedMotivationVideos, favoriteIds, favoriteRecordMap, mutateFavorites: mutateMotivationFavorites } = useFavorites('motivation')
+  const { savedVideos: savedMusicVideos, favoriteIds: musicFavoriteIds, favoriteRecordMap: musicFavoriteRecordMap, mutateFavorites: mutateMusicFavorites } = useFavorites('music')
+
+  // SWR: Welcome back
+  const { shouldShow: shouldShowWelcome, daysAway: welcomeDaysAway, lastStreak: welcomeLastStreak } = useWelcomeStatus()
+
+  // Welcome back (SWR-driven)
   useEffect(() => {
-    const fetchPrefs = () => {
-      fetch('/api/daily-guide/preferences')
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data?.current_streak) setStreak(data.current_streak)
-          setAstrologyEnabled(data?.mindset === 'scholar')
-        })
-        .catch(() => {})
-    }
-    fetchPrefs()
-    window.addEventListener('focus', fetchPrefs)
+    if (shouldShowWelcome) setShowWelcomeBack(true)
+  }, [shouldShowWelcome])
 
-    const today = new Date().toISOString().split('T')[0]
-    fetch(`/api/daily-guide/journal?date=${today}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.mood_before || data?.energy_level) {
-          const suggested = getSuggestedMode(data.mood_before, data.energy_level, timeContext.suggested)
-          setActiveMode(suggested)
-        }
-        if (data?.journal_mood) {
-          setJournalMood(data.journal_mood)
-        }
-      })
-      .catch(() => {})
+  // Genre data is now lazy-loaded (Phase 4) — kept as state for sections that load eagerly
+  const [genreVideos, setGenreVideos] = useState<Record<string, VideoItem[]>>({})
+  const [genreBackgrounds, setGenreBackgrounds] = useState<Record<string, string[]>>({})
+  const [loadingGenres, setLoadingGenres] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(MUSIC_GENRES.map(g => [g.id, true]))
+  )
 
-    // Fetch today's motivation topic
-    fetch(`/api/motivation-videos?topic=${topicName}`)
-      .then(r => r.ok ? r.json() : { videos: [] })
-      .then(data => {
-        setMotivationByTopic(prev => ({ ...prev, [topicName]: data.videos || [] }))
-      })
-      .catch(() => {})
-      .finally(() => setLoadingMotivation(false))
+  const [shufflingTopic, setShufflingTopic] = useState<string | null>(null)
+  const [shufflingGenre, setShufflingGenre] = useState<string | null>(null)
 
-    // Fetch favorites (motivation type)
-    fetch('/api/favorites?type=motivation')
-      .then(r => r.ok ? r.json() : { favorites: [] })
-      .then((data: { favorites?: Array<{ id: string; content_id?: string; content_title?: string; content_text: string; thumbnail?: string }> }) => {
-        const favorites = data.favorites || []
-        const vids: VideoItem[] = []
-        const ids = new Set<string>()
-        const recordMap = new Map<string, string>()
-        for (const f of favorites) {
-          const youtubeId = f.content_id || ''
-          if (!youtubeId) continue
-          ids.add(youtubeId)
-          recordMap.set(youtubeId, f.id)
-          vids.push({
-            id: `fav-${f.id}`,
-            youtubeId,
-            title: f.content_title || f.content_text,
-            channel: '',
-            thumbnail: f.thumbnail,
-          })
-        }
-        setSavedMotivationVideos(vids)
-        setFavoriteIds(ids)
-        setFavoriteRecordMap(recordMap)
-      })
-      .catch(() => {})
-
-    // Fetch favorites (music type)
-    fetch('/api/favorites?type=music')
-      .then(r => r.ok ? r.json() : { favorites: [] })
-      .then((data: { favorites?: Array<{ id: string; content_id?: string; content_title?: string; content_text: string; thumbnail?: string }> }) => {
-        const favorites = data.favorites || []
-        const vids: VideoItem[] = []
-        const ids = new Set<string>()
-        const recordMap = new Map<string, string>()
-        for (const f of favorites) {
-          const youtubeId = f.content_id || ''
-          if (!youtubeId) continue
-          ids.add(youtubeId)
-          recordMap.set(youtubeId, f.id)
-          vids.push({
-            id: `mfav-${f.id}`,
-            youtubeId,
-            title: f.content_title || f.content_text,
-            channel: '',
-            thumbnail: f.thumbnail,
-          })
-        }
-        setSavedMusicVideos(vids)
-        setMusicFavoriteIds(ids)
-        setMusicFavoriteRecordMap(recordMap)
-      })
-      .catch(() => {})
-
-    MUSIC_GENRES.forEach(g => {
-      fetch(`/api/music-videos?genre=${g.id}`)
-        .then(r => r.ok ? r.json() : { videos: [] })
-        .then(data => setGenreVideos(prev => ({ ...prev, [g.id]: data.videos || [] })))
-        .catch(() => {})
-        .finally(() => setLoadingGenres(prev => ({ ...prev, [g.id]: false })))
-
-      fetch(`/api/backgrounds?genre=${g.id}`)
-        .then(r => r.ok ? r.json() : { images: [] })
-        .then(data => {
-          const urls: string[] = (data.images || []).map((img: { url: string }) => img.url)
-          const now = new Date()
-          const dateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
-          const genreSeed = g.id.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
-          const shuffled = shuffleWithSeed(urls, genreSeed + dateSeed)
-          setGenreBackgrounds(prev => ({ ...prev, [g.id]: shuffled }))
-        })
-        .catch(() => {})
-    })
-    return () => window.removeEventListener('focus', fetchPrefs)
-  }, [topicName, timeContext.suggested])
-
-  // Fetch mood-based topic if it differs from already-fetched topics
+  // Revalidate preferences on focus (e.g. back from settings)
   useEffect(() => {
-    if (!moodTopic) return
-    if (motivationByTopic[moodTopic]) return // already fetched
-    fetch(`/api/motivation-videos?topic=${moodTopic}`)
-      .then(r => r.ok ? r.json() : { videos: [] })
-      .then(data => {
-        setMotivationByTopic(prev => ({ ...prev, [moodTopic]: data.videos || [] }))
-      })
-      .catch(() => {})
-  }, [moodTopic, motivationByTopic])
+    const handler = () => mutatePreferences()
+    window.addEventListener('focus', handler)
+    return () => window.removeEventListener('focus', handler)
+  }, [mutatePreferences])
 
   // --- Restore last played ---
   // Phase 1: Immediately set backgroundMusic/activeSoundscape so the BottomPlayerBar
@@ -869,30 +762,25 @@ export function ImmersiveHome() {
       const res = await fetch(`/api/motivation-videos?topic=${topic}&shuffle=true&seed=${seed}`)
       const data = res.ok ? await res.json() : { videos: [] }
       const vids = data.videos || []
-      setMotivationByTopic(prev => ({ ...prev, [topic]: vids }))
+      // Update SWR cache with shuffled data
+      mutateFeaturedMotivation({ videos: vids }, false)
       if (vids.length > 0) showShuffleToast(`Shuffled ${vids.length} videos`)
     } catch {}
     setShufflingTopic(null)
-  }, [showShuffleToast])
+  }, [showShuffleToast, mutateFeaturedMotivation])
 
   const handleToggleFavorite = useCallback(async (video: VideoItem) => {
     if (navigator.vibrate) navigator.vibrate(50)
     const youtubeId = video.youtubeId
     if (favoriteIds.has(youtubeId)) {
-      // Remove favorite
       const recordId = favoriteRecordMap.get(youtubeId)
       if (recordId) {
-        setFavoriteIds(prev => { const next = new Set(prev); next.delete(youtubeId); return next })
-        setSavedMotivationVideos(prev => prev.filter(v => v.youtubeId !== youtubeId))
-        setFavoriteRecordMap(prev => { const next = new Map(prev); next.delete(youtubeId); return next })
         try { await fetch('/api/favorites', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: recordId }) }) } catch {}
+        mutateMotivationFavorites()
       }
     } else {
-      // Add favorite
-      setFavoriteIds(prev => new Set(prev).add(youtubeId))
-      setSavedMotivationVideos(prev => [...prev, video])
       try {
-        const res = await fetch('/api/favorites', {
+        await fetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -903,15 +791,17 @@ export function ImmersiveHome() {
             thumbnail: video.thumbnail || `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`,
           }),
         })
-        if (res.ok) {
-          const data = await res.json()
-          if (data.id) {
-            setFavoriteRecordMap(prev => new Map(prev).set(youtubeId, data.id))
-          }
-        }
+        mutateMotivationFavorites()
       } catch {}
     }
-  }, [favoriteIds, favoriteRecordMap])
+  }, [favoriteIds, favoriteRecordMap, mutateMotivationFavorites])
+
+  // When lazy genre sections load, store data for restore + play handlers
+  const handleGenreDataLoaded = useCallback((genreId: string, videos: VideoItem[], bgs: string[]) => {
+    setGenreVideos(prev => ({ ...prev, [genreId]: videos }))
+    setGenreBackgrounds(prev => ({ ...prev, [genreId]: bgs }))
+    setLoadingGenres(prev => ({ ...prev, [genreId]: false }))
+  }, [])
 
   const handleShuffleGenre = useCallback(async (genreId: string) => {
     setShufflingGenre(genreId)
@@ -932,16 +822,12 @@ export function ImmersiveHome() {
     if (musicFavoriteIds.has(youtubeId)) {
       const recordId = musicFavoriteRecordMap.get(youtubeId)
       if (recordId) {
-        setMusicFavoriteIds(prev => { const next = new Set(prev); next.delete(youtubeId); return next })
-        setSavedMusicVideos(prev => prev.filter(v => v.youtubeId !== youtubeId))
-        setMusicFavoriteRecordMap(prev => { const next = new Map(prev); next.delete(youtubeId); return next })
         try { await fetch('/api/favorites', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: recordId }) }) } catch {}
+        mutateMusicFavorites()
       }
     } else {
-      setMusicFavoriteIds(prev => new Set(prev).add(youtubeId))
-      setSavedMusicVideos(prev => [...prev, video])
       try {
-        const res = await fetch('/api/favorites', {
+        await fetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -952,15 +838,10 @@ export function ImmersiveHome() {
             thumbnail: video.thumbnail || `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`,
           }),
         })
-        if (res.ok) {
-          const data = await res.json()
-          if (data.favorite?.id) {
-            setMusicFavoriteRecordMap(prev => new Map(prev).set(youtubeId, data.favorite.id))
-          }
-        }
+        mutateMusicFavorites()
       } catch {}
     }
-  }, [musicFavoriteIds, musicFavoriteRecordMap])
+  }, [musicFavoriteIds, musicFavoriteRecordMap, mutateMusicFavorites])
 
   const handleMusicSeek = useCallback((seconds: number) => {
     if (bgPlayerRef.current) {
@@ -1293,10 +1174,10 @@ export function ImmersiveHome() {
       )}
 
       {/* Welcome Back Card */}
-      {showWelcomeBack && welcomeBackData && (
+      {showWelcomeBack && shouldShowWelcome && (
         <WelcomeBackCard
-          daysAway={welcomeBackData.daysAway}
-          lastStreak={welcomeBackData.lastStreak}
+          daysAway={welcomeDaysAway}
+          lastStreak={welcomeLastStreak}
           onDismiss={() => setShowWelcomeBack(false)}
         />
       )}
@@ -1437,7 +1318,7 @@ export function ImmersiveHome() {
       {/* Featured Motivation Row — mood-based "For You" or today's topic */}
       <div className="stagger-item" style={{ '--i': 2 } as React.CSSProperties}>
       <MotivationSection
-        videos={motivationByTopic[featuredTopic] || []}
+        videos={featuredMotivationVideos}
         loading={loadingMotivation}
         topicName={moodTopic ? 'For You' : featuredTopic}
         tagline={moodTopic ? `Based on your mood \u00b7 ${featuredTopic}` : undefined}
@@ -1482,13 +1363,10 @@ export function ImmersiveHome() {
       {/* Music Genres */}
       {MUSIC_GENRES.map((g, gi) => (
         <div key={g.id} className="stagger-item" style={{ '--i': 3 + gi } as React.CSSProperties}>
-        <MusicGenreSection
+        <LazyGenreSection
           genre={g}
-          videos={genreVideos[g.id] || []}
-          genreBackgrounds={genreBackgrounds[g.id] || []}
-          fallbackBackgrounds={backgrounds}
           genreIndex={gi}
-          loading={loadingGenres[g.id]}
+          fallbackBackgrounds={backgrounds}
           activeCardId={audioState.activeCardId}
           tappedCardId={audioState.tappedCardId}
           musicPlaying={audioState.musicPlaying}
@@ -1498,8 +1376,6 @@ export function ImmersiveHome() {
           onMagneticLeave={magneticLeave}
           onRipple={spawnRipple}
           heroCard={true}
-          onShuffle={() => handleShuffleGenre(g.id)}
-          shuffling={shufflingGenre === g.id}
           favoriteIds={musicFavoriteIds}
           onToggleFavorite={handleToggleMusicFavorite}
           progressPercent={audioState.currentPlaylist?.type === 'music' && audioState.currentPlaylist?.genreId === g.id && audioState.musicDuration > 0
@@ -1507,6 +1383,8 @@ export function ImmersiveHome() {
             : undefined}
           onLongPressStart={handleLongPressStart}
           onLongPressEnd={handleLongPressEnd}
+          showShuffleToast={showShuffleToast}
+          onDataLoaded={handleGenreDataLoaded}
         />
         </div>
       ))}
@@ -1657,19 +1535,6 @@ export function ImmersiveHome() {
       {/* Long-press Preview */}
       <LongPressPreview video={previewVideo} onClose={() => setPreviewVideo(null)} />
 
-      {/* Shuffle Toast */}
-      {shuffleToast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-md toast-enter">
-          <p className="text-sm text-white/90 font-medium whitespace-nowrap">{shuffleToast}</p>
-        </div>
-      )}
-
-      {/* Milestone Toast */}
-      {milestoneToast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-amber-500/15 border border-amber-500/25 backdrop-blur-md toast-enter">
-          <p className="text-sm text-amber-200/90 font-medium whitespace-nowrap">{milestoneToast}</p>
-        </div>
-      )}
     </div>
     </div>
   )

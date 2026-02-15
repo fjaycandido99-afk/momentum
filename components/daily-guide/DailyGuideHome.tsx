@@ -20,7 +20,7 @@ import {
   Moon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { LoadingScreen } from '@/components/ui/LoadingSpinner'
+import { GenerationProgress } from './GenerationProgress'
 import { DayTypeIndicator } from './DayTypeIndicator'
 import { GuidancePlayer } from './GuidancePlayer'
 import { EnergyPrompt, EnergySelector } from './EnergyPrompt'
@@ -989,7 +989,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   }
 
   if (isLoading) {
-    return <LoadingScreen />
+    return <GenerationProgress />
   }
 
   const timeGradient = getTimeGradient()

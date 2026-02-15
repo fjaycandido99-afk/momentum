@@ -19,6 +19,8 @@ import { VoiceInput } from '@/components/journal/VoiceInput'
 import { JournalStats, calculateJournalStats, type JournalStatsData } from '@/components/journal/JournalStats'
 import { HeatMapStrip } from '@/components/journal/HeatMapStrip'
 import { getPromptForDate, getShuffledPrompt } from '@/components/journal/JournalPrompts'
+import { useKeyboardAware } from '@/hooks/useKeyboardAware'
+import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
 
 interface JournalEntry {
   date: string
@@ -98,6 +100,19 @@ function JournalContent() {
   const [dreamSaved, setDreamSaved] = useState(false)
 
   const activeFieldRef = useRef<'win' | 'gratitude' | 'intention' | 'freewrite'>('freewrite')
+
+  // Mobile keyboard UX
+  useKeyboardAware()
+  const freeTextRef = useRef<HTMLTextAreaElement>(null)
+  const winRef = useRef<HTMLTextAreaElement>(null)
+  const gratitudeRef = useRef<HTMLTextAreaElement>(null)
+  const intentionRef = useRef<HTMLTextAreaElement>(null)
+  const dreamRef = useRef<HTMLTextAreaElement>(null)
+  useAutoResizeTextarea(freeTextRef, freeText)
+  useAutoResizeTextarea(winRef, win)
+  useAutoResizeTextarea(gratitudeRef, gratitude)
+  useAutoResizeTextarea(intentionRef, intention)
+  useAutoResizeTextarea(dreamRef, dreamText)
 
   // Read spark prompt from URL
   useEffect(() => {
@@ -688,6 +703,7 @@ function JournalContent() {
                 Describe your dream
               </label>
               <textarea
+                ref={dreamRef}
                 value={dreamText}
                 onChange={e => { setDreamText(e.target.value); setDreamSaved(false); setDreamInterpretation(null) }}
                 placeholder="I dreamed that..."
@@ -772,6 +788,7 @@ function JournalContent() {
                     {mp?.prompt1.label || 'What did you learn today?'}
                   </label>
                   <textarea
+                    ref={winRef}
                     value={win}
                     onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
                     onFocus={() => { activeFieldRef.current = 'win' }}
@@ -789,6 +806,7 @@ function JournalContent() {
                     {mp?.prompt2.label || 'What are you grateful for?'}
                   </label>
                   <textarea
+                    ref={gratitudeRef}
                     value={gratitude}
                     onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
                     onFocus={() => { activeFieldRef.current = 'gratitude' }}
@@ -806,6 +824,7 @@ function JournalContent() {
                     {mp?.prompt3.label || "Tomorrow\u0027s intention"}
                   </label>
                   <textarea
+                    ref={intentionRef}
                     value={intention}
                     onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
                     onFocus={() => { activeFieldRef.current = 'intention' }}
@@ -871,6 +890,7 @@ function JournalContent() {
                 />
               </div>
               <textarea
+                ref={freeTextRef}
                 value={freeText}
                 onChange={(e) => { setFreeText(e.target.value); setIsSaved(false) }}
                 onFocus={() => { activeFieldRef.current = 'freewrite' }}

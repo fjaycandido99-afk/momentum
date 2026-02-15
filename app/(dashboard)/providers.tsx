@@ -9,6 +9,10 @@ import { AchievementProvider } from '@/contexts/AchievementContext'
 import { OfflineProvider } from '@/contexts/OfflineContext'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { UpgradeModalWithContext } from '@/components/premium/UpgradeModal'
+import { ToastProvider } from '@/contexts/ToastContext'
+import { ToastContainer } from '@/components/ui/ToastContainer'
+import { SWRConfig } from 'swr'
+import { swrDefaults } from '@/lib/swr-config'
 
 interface ProvidersProps {
   children: ReactNode
@@ -16,20 +20,25 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <SubscriptionProvider>
-      <MindsetProvider>
-        <ThemeProvider>
-          <OfflineProvider>
-            <AudioProvider>
-              <AchievementProvider>
-                <OfflineBanner />
-                {children}
-                <UpgradeModalWithContext />
-              </AchievementProvider>
-            </AudioProvider>
-          </OfflineProvider>
-        </ThemeProvider>
-      </MindsetProvider>
-    </SubscriptionProvider>
+    <SWRConfig value={swrDefaults}>
+      <SubscriptionProvider>
+        <MindsetProvider>
+          <ThemeProvider>
+            <OfflineProvider>
+              <AudioProvider>
+                <AchievementProvider>
+                  <ToastProvider>
+                    <OfflineBanner />
+                    {children}
+                    <UpgradeModalWithContext />
+                    <ToastContainer />
+                  </ToastProvider>
+                </AchievementProvider>
+              </AudioProvider>
+            </OfflineProvider>
+          </ThemeProvider>
+        </MindsetProvider>
+      </SubscriptionProvider>
+    </SWRConfig>
   )
 }
