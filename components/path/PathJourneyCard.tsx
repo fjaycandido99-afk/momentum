@@ -13,32 +13,35 @@ import {
 } from '@/lib/path-journey'
 
 interface PathJourneyCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
   refreshKey?: number
 }
 
-const ACCENT_BORDERS: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const ACCENT_BORDERS: Record<MindsetId, string> = {
   stoic: 'border-slate-400/20',
   existentialist: 'border-violet-400/20',
   cynic: 'border-orange-400/20',
   hedonist: 'border-emerald-400/20',
   samurai: 'border-red-400/20',
+  scholar: 'border-blue-400/20',
 }
 
-const DONE_COLORS: Record<Exclude<MindsetId, 'scholar'>, { bg: string; border: string; text: string }> = {
+const DONE_COLORS: Record<MindsetId, { bg: string; border: string; text: string }> = {
   stoic: { bg: 'bg-slate-400/10', border: 'border-slate-400/25', text: 'text-slate-300' },
   existentialist: { bg: 'bg-violet-400/10', border: 'border-violet-400/25', text: 'text-violet-300' },
   cynic: { bg: 'bg-orange-400/10', border: 'border-orange-400/25', text: 'text-orange-300' },
   hedonist: { bg: 'bg-emerald-400/10', border: 'border-emerald-400/25', text: 'text-emerald-300' },
   samurai: { bg: 'bg-red-400/10', border: 'border-red-400/25', text: 'text-red-300' },
+  scholar: { bg: 'bg-blue-400/10', border: 'border-blue-400/25', text: 'text-blue-300' },
 }
 
-const CHECK_COLORS: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const CHECK_COLORS: Record<MindsetId, string> = {
   stoic: 'text-slate-400',
   existentialist: 'text-violet-400',
   cynic: 'text-orange-400',
   hedonist: 'text-emerald-400',
   samurai: 'text-red-400',
+  scholar: 'text-blue-400',
 }
 
 export function PathJourneyCard({ mindsetId, refreshKey }: PathJourneyCardProps) {

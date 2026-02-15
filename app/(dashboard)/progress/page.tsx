@@ -21,6 +21,7 @@ import { LetterToSelf } from '@/components/progress/LetterToSelf'
 import { ProgressHub } from '@/components/path/ProgressHub'
 import { useMindset } from '@/contexts/MindsetContext'
 import { migrateLocalXP } from '@/lib/gamification'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 
 interface ProgressData {
   streak: number
@@ -79,6 +80,7 @@ export default function ProgressPage() {
     <div className="min-h-screen text-white pb-24">
       <div className="px-6 pt-12 pb-4 header-fade-bg">
         <h1 className="text-2xl font-semibold shimmer-text">Progress</h1>
+        <FeatureHint id="progress-intro" text="Your streaks, listening time & journal stats at a glance" mode="once" />
       </div>
 
       {loading ? (
@@ -194,7 +196,7 @@ export default function ProgressPage() {
           </div>
 
           {/* Path Progress */}
-          {mindset && mindset !== 'scholar' && (
+          {mindset && (
             <ProgressHub mindsetId={mindset} />
           )}
 

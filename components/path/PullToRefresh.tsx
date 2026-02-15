@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, type ReactNode } from 'react'
 import type { MindsetId } from '@/lib/mindset/types'
 
-type M = Exclude<MindsetId, 'scholar'>
+type M = MindsetId
 
 const THEMED_PARTICLES: Record<M, { emoji: string; count: number }> = {
   stoic: { emoji: '⚡', count: 5 },
@@ -11,6 +11,7 @@ const THEMED_PARTICLES: Record<M, { emoji: string; count: number }> = {
   cynic: { emoji: '🔥', count: 5 },
   hedonist: { emoji: '🌸', count: 6 },
   samurai: { emoji: '🌸', count: 7 },
+  scholar: { emoji: '✦', count: 6 },
 }
 
 interface PullToRefreshProps {

@@ -7,6 +7,7 @@ import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { CoachingPlans } from '@/components/coach/CoachingPlans'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { getActivePlan, COACHING_PLANS, getPlanProgress } from '@/lib/coaching-plans'
 import { logXPEventServer } from '@/lib/gamification'
@@ -421,6 +422,7 @@ export default function CoachPage() {
 
       {/* Input */}
       <div className="px-6 pb-8 pt-4 border-t border-white/10 bg-black/80 backdrop-blur-xl">
+        <FeatureHint id="coach-intro" text="Ask anything — your AI coach adapts to your mindset" mode="once" />
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}

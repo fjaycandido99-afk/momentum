@@ -11,20 +11,22 @@ const DURATIONS = [
   { label: '10m', seconds: 600 },
 ]
 
-const RITUAL_NAMES: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const RITUAL_NAMES: Record<MindsetId, string> = {
   stoic: 'Premeditatio',
   existentialist: 'Contemplation',
   cynic: 'Vigil',
   hedonist: 'Savor',
   samurai: 'Zazen',
+  scholar: 'Individuation',
 }
 
-const RITUAL_PROMPTS: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const RITUAL_PROMPTS: Record<MindsetId, string> = {
   stoic: 'Close your eyes. Imagine the day ahead — what could go wrong, and how will you respond with virtue?',
   existentialist: 'Sit with the silence. No distractions, no purpose — just existence. Notice what surfaces.',
   cynic: 'Watch the flame of your attention. Let everything unnecessary burn away. What remains?',
   hedonist: 'Breathe deeply. Notice one sensation — warmth, air, sound. Savor this present moment.',
   samurai: 'Still your mind. Each breath is a sword stroke — precise, deliberate, complete.',
+  scholar: 'Descend into stillness. Let images rise from the unconscious — observe them without judgment, as symbols from the deep.',
 }
 
 // ── Unique visual per mindset ──
@@ -178,26 +180,56 @@ function SamuraiTimerVisual({ progress }: { progress: number }) {
   )
 }
 
-const TIMER_VISUALS: Record<Exclude<MindsetId, 'scholar'>, React.FC<{ progress: number }>> = {
+function ScholarTimerVisual({ progress }: { progress: number }) {
+  // Mandala forming — rings expand as time passes
+  const rings = 4
+  return (
+    <div className="relative w-28 h-28 flex items-center justify-center">
+      <svg width="112" height="112" viewBox="0 0 112 112" className="absolute">
+        {Array.from({ length: rings }).map((_, i) => {
+          const r = 15 + i * 10
+          const visible = progress >= i / rings
+          return (
+            <circle
+              key={i}
+              cx="56" cy="56" r={r} fill="none"
+              stroke={`rgba(147,197,253,${visible ? 0.15 + i * 0.08 : 0.04})`}
+              strokeWidth="1.5"
+              className="transition-all duration-1000"
+              strokeDasharray={visible ? 'none' : '4 4'}
+            />
+          )
+        })}
+        {/* Center dot */}
+        <circle cx="56" cy="56" r="3" fill={`rgba(147,197,253,${0.3 + progress * 0.4})`} className="transition-all duration-1000" />
+      </svg>
+      <span className="text-lg opacity-20 animate-[breathe_5s_ease-in-out_infinite]">🔮</span>
+    </div>
+  )
+}
+
+const TIMER_VISUALS: Record<MindsetId, React.FC<{ progress: number }>> = {
   stoic: StoicTimerVisual,
   existentialist: ExistentialistTimerVisual,
   cynic: CynicTimerVisual,
   hedonist: HedonistTimerVisual,
   samurai: SamuraiTimerVisual,
+  scholar: ScholarTimerVisual,
 }
 
-const ACCENT: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const ACCENT: Record<MindsetId, string> = {
   stoic: 'bg-white/10 border-white/20 text-white',
   existentialist: 'bg-violet-500/10 border-violet-500/20 text-violet-300',
   cynic: 'bg-orange-500/10 border-orange-500/20 text-orange-300',
   hedonist: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300',
   samurai: 'bg-red-500/10 border-red-500/20 text-red-300',
+  scholar: 'bg-blue-500/10 border-blue-500/20 text-blue-300',
 }
 
 // ── Main ──
 
 interface DailyRitualTimerProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 export function DailyRitualTimer({ mindsetId }: DailyRitualTimerProps) {

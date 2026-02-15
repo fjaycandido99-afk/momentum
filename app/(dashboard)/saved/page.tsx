@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Bookmark, Loader2, Trash2 } from 'lucide-react'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 
 type SavedFilter = 'all' | 'quote' | 'journal' | 'affirmation' | 'reflection'
 
@@ -78,6 +79,7 @@ export default function SavedPage() {
     <div className="min-h-screen text-white pb-24">
       <div className="px-8 pt-12 pb-4 header-fade-bg">
         <h1 className="text-2xl font-semibold shimmer-text">Saved</h1>
+        <FeatureHint id="saved-intro" text="Heart any video to save it here for quick access" mode="once" />
       </div>
 
       <div className="px-8 space-y-4">

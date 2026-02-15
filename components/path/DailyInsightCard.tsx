@@ -11,7 +11,7 @@ interface PathInsight {
 }
 
 interface DailyInsightCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 const THEME_COLORS: Record<string, string> = {
@@ -20,6 +20,7 @@ const THEME_COLORS: Record<string, string> = {
   cynic: 'from-orange-500/20 to-amber-500/20 text-orange-300',
   hedonist: 'from-emerald-500/20 to-teal-500/20 text-emerald-300',
   samurai: 'from-red-500/20 to-rose-500/20 text-red-300',
+  scholar: 'from-blue-500/20 to-indigo-500/20 text-blue-300',
 }
 
 export function DailyInsightCard({ mindsetId }: DailyInsightCardProps) {

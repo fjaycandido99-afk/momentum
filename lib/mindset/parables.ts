@@ -6,7 +6,7 @@ export interface Parable {
   moral: string
 }
 
-export const MINDSET_PARABLES: Record<Exclude<MindsetId, 'scholar'>, Parable[]> = {
+export const MINDSET_PARABLES: Record<MindsetId, Parable[]> = {
   stoic: [
     {
       title: 'The Emperor\'s Cloak',
@@ -265,6 +265,33 @@ export const MINDSET_PARABLES: Record<Exclude<MindsetId, 'scholar'>, Parable[]> 
       title: 'The Loyal Retainer',
       story: 'A samurai\'s lord made a terrible decision that would harm innocent people. The samurai faced a choice: obey blindly or speak truth at the risk of his life. He chose to speak. His lord punished him, but years later admitted that the retainer\'s honesty saved the clan. True loyalty serves the principle, not just the person.',
       moral: 'Honor demands truth, even when truth demands courage. Loyalty without integrity is mere obedience.',
+    },
+  ],
+  scholar: [
+    {
+      title: 'The Man and His Shadow',
+      story: 'A scholar spent his life running from his shadow — literally and figuratively. Every flaw, every dark impulse, he denied and projected onto others. One day, exhausted, he stopped running and turned to face it. The shadow did not attack. It simply said, "I have been carrying everything you refused to hold." As he accepted it, he felt not weaker but strangely whole.',
+      moral: 'What you deny in yourself does not disappear — it grows in the dark. Integration, not rejection, is the path to wholeness.',
+    },
+    {
+      title: 'The Four Masks',
+      story: 'A woman wore a different mask for every role in her life — the dutiful daughter, the ambitious professional, the carefree friend, the wise mentor. One evening, alone, she removed them all and found she could not recognize herself. Terrified, she sat in silence until a quiet voice said, "I am the one who chooses which mask to wear." She had found the Self beneath the personas.',
+      moral: 'The roles you play are not who you are. Beneath every mask is the one who decides to wear them.',
+    },
+    {
+      title: 'The Alchemist\'s Gold',
+      story: 'An alchemist spent decades trying to turn lead into gold. He failed every time. On his deathbed, his apprentice asked if it was all for nothing. The old man smiled: "I never made gold from lead. But in the trying, I transformed myself from a foolish young man into someone who understands that the real transformation was always internal."',
+      moral: 'The outer quest is always a mirror of the inner one. What you seek to change outside is what needs changing within.',
+    },
+    {
+      title: 'The Dream That Would Not End',
+      story: 'A king dreamed he was a butterfly, fluttering through gardens with no memory of being a king. When he woke, he was troubled: "Am I a king who dreamed of being a butterfly, or a butterfly dreaming of being a king?" He consulted Jung, who replied: "You are the dreamer who can be both. That is the miracle."',
+      moral: 'Reality and imagination are not opposites — they are two sides of the same coin. The psyche contains multitudes.',
+    },
+    {
+      title: 'The Tower and the Well',
+      story: 'Two seekers of wisdom took different paths. One climbed a great tower to see far and wide. The other descended into a deep well. The tower-climber saw the whole landscape but felt disconnected. The well-diver found underground rivers connecting everything. When they met again, each envied the other — until they realized both perspectives were needed.',
+      moral: 'Height gives perspective; depth gives understanding. True wisdom requires both the view from above and the dive within.',
     },
   ],
 }

@@ -6,7 +6,7 @@ export interface Visualization {
   steps: string[]
 }
 
-export const MINDSET_VISUALIZATIONS: Record<Exclude<MindsetId, 'scholar'>, Visualization[]> = {
+export const MINDSET_VISUALIZATIONS: Record<MindsetId, Visualization[]> = {
   stoic: [
     {
       title: 'The Inner Citadel',
@@ -304,6 +304,67 @@ export const MINDSET_VISUALIZATIONS: Record<Exclude<MindsetId, 'scholar'>, Visua
         'In this stillness, find your center — the quiet place beneath all the noise. This is where true strength lives.',
         'A master once said: "The warrior who can sit in stillness for an hour can face anything for a lifetime."',
         'Rise slowly. Bow to the empty dojo. Open your eyes. Carry this stillness into the noise of your day.',
+      ],
+    },
+  ],
+  scholar: [
+    {
+      title: 'Meeting the Shadow',
+      duration: '3 min',
+      steps: [
+        'Close your eyes. Take three deep breaths. Let your body settle into stillness.',
+        'Imagine yourself walking into a dimly lit room. At the far end, a figure sits in shadow — a mirror image of you, but darker, wilder, unfiltered.',
+        'This is your Shadow — the parts of yourself you have hidden, denied, or rejected. Approach without fear. They have been waiting.',
+        'Sit across from your Shadow. Ask: "What are you trying to show me?" Listen. The answer may surprise you.',
+        'Notice what qualities this shadow holds — anger, desire, creativity, power. These are not flaws. They are unintegrated strengths.',
+        'Thank your Shadow. As you stand to leave, feel yourself becoming more whole. Open your eyes. You carry all of yourself now.',
+      ],
+    },
+    {
+      title: 'The Archetypal Temple',
+      duration: '3 min',
+      steps: [
+        'Close your eyes. Imagine a vast, ancient temple with many chambers — each one home to an archetype within you.',
+        'Walk through the entrance hall. You pass the Warrior, standing guard with fierce loyalty. You pass the Caregiver, offering warmth.',
+        'Go deeper. Find the Sage, surrounded by books and starlight. Find the Trickster, grinning in the corner with playful mischief.',
+        'Which chamber calls to you today? Enter it. Sit with this archetype. Ask: "What do I need from you right now?"',
+        'Listen to the response. This part of you has wisdom your conscious mind may have overlooked.',
+        'Leave the temple carrying the archetype\'s gift. Open your eyes. Let this energy guide your day.',
+      ],
+    },
+    {
+      title: 'The Collective Unconscious',
+      duration: '3 min',
+      steps: [
+        'Close your eyes. Imagine descending a long staircase, each step taking you deeper beneath the surface of your personal mind.',
+        'You pass through layers — memories, emotions, habits — and then you break through into something vast. A shared ocean of human experience.',
+        'Here you feel connected to every person who has ever lived. The myths, the symbols, the universal stories flow around you like currents.',
+        'Reach into this ocean. What image surfaces? A symbol, a face, a word? Hold it gently. It carries a message from the deep.',
+        'Feel the comfort of knowing you are not alone. Your struggles, your joys — they are echoed across all of human history.',
+        'Slowly ascend the staircase. Open your eyes. You bring with you a thread connecting the personal to the universal.',
+      ],
+    },
+    {
+      title: 'The Dream Interpreter',
+      duration: '2 min',
+      steps: [
+        'Recall a recent dream — or if none comes, imagine a symbolic scene: a forest, a door, a body of water.',
+        'See the scene clearly. Notice every detail: colors, textures, sounds, the feeling in your body.',
+        'Now ask: "If every element in this scene were a part of me, what would each represent?" The dark forest is your unknown. The door is a choice. The water is your emotions.',
+        'Let the dream speak. What is it telling you about your current life? What message has your unconscious been trying to deliver?',
+        'Open your eyes. Write down the first insight that surfaces. Dreams are letters from the psyche — read them.',
+      ],
+    },
+    {
+      title: 'The Mandala Meditation',
+      duration: '3 min',
+      steps: [
+        'Close your eyes. Imagine a point of light at the center of your mind — small, bright, perfectly still.',
+        'From this center, patterns begin to emerge. Circles within circles, colors radiating outward in perfect symmetry. A mandala is forming.',
+        'This mandala is the map of your psyche — complete, balanced, whole. Every color represents a part of you. Every pattern is a relationship between your inner forces.',
+        'Notice which areas glow brightly and which are dim. The bright areas are the parts of yourself you live through daily. The dim areas are inviting your attention.',
+        'Breathe into the dim areas. Watch them gradually brighten. The mandala becomes more complete, more vibrant, more balanced.',
+        'Open your eyes. Jung drew mandalas as acts of self-discovery. Carry this image of wholeness with you today.',
       ],
     },
   ],

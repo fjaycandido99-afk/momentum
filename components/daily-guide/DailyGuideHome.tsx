@@ -1436,10 +1436,10 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 }}
               />
               <Link
-                href="/astrology"
+                href="/my-path"
                 className="mt-2 flex items-center justify-center gap-1.5 py-2 rounded-xl hover:bg-white/5 transition-colors text-xs text-indigo-400/80"
               >
-                Explore your Cosmic Guide →
+                Explore your Depth Path →
               </Link>
             </div>
           )}

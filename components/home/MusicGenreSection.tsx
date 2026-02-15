@@ -6,6 +6,7 @@ import { VideoItem, formatDuration } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
 import { SkeletonCardRow } from '@/components/ui/Skeleton'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 import { EmptyState } from '@/components/ui/EmptyState'
 
 interface MusicGenreSectionProps {
@@ -48,6 +49,7 @@ export function MusicGenreSection({
         <div>
           <h2 className={`text-lg font-semibold text-white parallax-header genre-accent-${genre.id}`}>{genre.word}</h2>
           <p className="text-xs text-white/95 mt-0.5">{genre.tagline}</p>
+          {genreIndex === 0 && <FeatureHint id="home-music-genre" text="Music plays in the background — shuffle for fresh picks" mode="once" />}
         </div>
         {onShuffle && (
           <button

@@ -17,9 +17,7 @@ export const PATH_FIELD_MAP: Record<PathActivity, string> = {
   soundscape: 'path_soundscape_played',
 }
 
-type NonScholarMindset = Exclude<MindsetId, 'scholar'>
-
-export const RANK_TABLES: Record<NonScholarMindset, { title: string; minDays: number }[]> = {
+export const RANK_TABLES: Record<MindsetId, { title: string; minDays: number }[]> = {
   stoic: [
     { title: 'Apprentice', minDays: 0 },
     { title: 'Student', minDays: 7 },
@@ -50,9 +48,15 @@ export const RANK_TABLES: Record<NonScholarMindset, { title: string; minDays: nu
     { title: 'Warrior', minDays: 21 },
     { title: 'Ronin', minDays: 60 },
   ],
+  scholar: [
+    { title: 'Initiate', minDays: 0 },
+    { title: 'Adept', minDays: 7 },
+    { title: 'Sage', minDays: 21 },
+    { title: 'Oracle', minDays: 60 },
+  ],
 }
 
-export function getPathRank(mindsetId: NonScholarMindset, totalPathDays: number): string {
+export function getPathRank(mindsetId: MindsetId, totalPathDays: number): string {
   const ranks = RANK_TABLES[mindsetId]
   let current = ranks[0].title
   for (const rank of ranks) {
@@ -65,28 +69,31 @@ export function getPathRank(mindsetId: NonScholarMindset, totalPathDays: number)
   return current
 }
 
-export const PATH_GRADIENTS: Record<NonScholarMindset, string> = {
+export const PATH_GRADIENTS: Record<MindsetId, string> = {
   stoic: 'from-slate-800/60 to-slate-900/40',
   existentialist: 'from-violet-900/50 to-slate-900/40',
   cynic: 'from-orange-900/40 to-slate-900/40',
   hedonist: 'from-emerald-900/40 to-slate-900/40',
   samurai: 'from-red-900/40 to-slate-900/40',
+  scholar: 'from-blue-900/50 to-slate-900/40',
 }
 
-export const PATH_ACCENT_COLORS: Record<NonScholarMindset, string> = {
+export const PATH_ACCENT_COLORS: Record<MindsetId, string> = {
   stoic: 'text-slate-300',
   existentialist: 'text-violet-300',
   cynic: 'text-orange-300',
   hedonist: 'text-emerald-300',
   samurai: 'text-red-300',
+  scholar: 'text-blue-300',
 }
 
-export const PATH_RING_COLORS: Record<NonScholarMindset, string> = {
+export const PATH_RING_COLORS: Record<MindsetId, string> = {
   stoic: 'rgba(148,163,184,0.85)',
   existentialist: 'rgba(167,139,250,0.85)',
   cynic: 'rgba(251,146,60,0.85)',
   hedonist: 'rgba(52,211,153,0.85)',
   samurai: 'rgba(252,165,165,0.85)',
+  scholar: 'rgba(147,197,253,0.85)',
 }
 
 export interface PathStatus {

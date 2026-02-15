@@ -1209,12 +1209,12 @@ export function ImmersiveHome() {
           </button>,
         ]
 
-        // Slide 2: Path Challenge (non-Scholar only)
-        if (mindsetCtx && mindsetCtx.mindset !== 'scholar') {
+        // Slide 2: Path Challenge
+        if (mindsetCtx) {
           slides.push(
             <PathChallengeBanner
               key="path"
-              mindsetId={mindsetCtx.mindset as Exclude<import('@/lib/mindset/types').MindsetId, 'scholar'>}
+              mindsetId={mindsetCtx.mindset}
               embedded
             />
           )

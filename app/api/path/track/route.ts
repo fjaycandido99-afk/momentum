@@ -110,7 +110,7 @@ export async function POST(req: Request) {
       where: { user_id: user.id },
       select: { mindset: true },
     })
-    const mindsetId = (prefs?.mindset || 'stoic') as Exclude<MindsetId, 'scholar'>
+    const mindsetId = (prefs?.mindset || 'stoic') as MindsetId
 
     // Re-read the guide for current state
     const updatedGuide = await prisma.dailyGuide.findUnique({

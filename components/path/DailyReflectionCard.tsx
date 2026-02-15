@@ -7,7 +7,7 @@ import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
 
 interface DailyReflectionCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
   onPathActivity?: () => void
 }
 

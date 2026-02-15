@@ -283,9 +283,78 @@ function SamuraiScene() {
   )
 }
 
+// ── Scholar: Constellations and cosmic depth ──
+function ScholarScene() {
+  return (
+    <div className="relative w-full h-full min-h-[180px] overflow-hidden bg-gradient-to-b from-blue-950/30 to-black/60">
+      {/* Deep sky gradient */}
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(30,58,138,0.15), transparent 70%)' }}
+      />
+
+      {/* Stars / constellation dots */}
+      {[
+        { x: 15, y: 20 }, { x: 28, y: 35 }, { x: 42, y: 18 }, { x: 55, y: 40 },
+        { x: 68, y: 22 }, { x: 80, y: 38 }, { x: 35, y: 55 }, { x: 62, y: 60 },
+        { x: 20, y: 65 }, { x: 75, y: 70 }, { x: 48, y: 75 }, { x: 88, y: 55 },
+      ].map((star, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full bg-blue-200"
+          style={{
+            width: `${1.5 + (i % 3)}px`,
+            height: `${1.5 + (i % 3)}px`,
+            left: `${star.x}%`,
+            top: `${star.y}%`,
+            opacity: 0.2 + (i % 4) * 0.1,
+            animation: `star-pulse ${3 + (i % 4)}s ease-in-out infinite`,
+            animationDelay: `${i * 0.5}s`,
+          }}
+        />
+      ))}
+
+      {/* Constellation lines */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.08]" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <line x1="15" y1="20" x2="28" y2="35" stroke="white" strokeWidth="0.3" />
+        <line x1="28" y1="35" x2="42" y2="18" stroke="white" strokeWidth="0.3" />
+        <line x1="42" y1="18" x2="55" y2="40" stroke="white" strokeWidth="0.3" />
+        <line x1="55" y1="40" x2="68" y2="22" stroke="white" strokeWidth="0.3" />
+        <line x1="68" y1="22" x2="80" y2="38" stroke="white" strokeWidth="0.3" />
+        <line x1="35" y1="55" x2="62" y2="60" stroke="white" strokeWidth="0.3" />
+        <line x1="48" y1="75" x2="62" y2="60" stroke="white" strokeWidth="0.3" />
+      </svg>
+
+      {/* Central mandala glow */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full animate-[spin-slow_30s_linear_infinite]"
+        style={{ background: 'radial-gradient(circle, rgba(147,197,253,0.06), transparent 70%)' }}
+      />
+
+      {/* Floating symbols */}
+      {['☽', '☉', '♃'].map((sym, i) => (
+        <span
+          key={i}
+          className="absolute text-white/[0.07] text-xs"
+          style={{
+            left: `${22 + i * 25}%`,
+            top: `${25 + (i * 20) % 45}%`,
+            animation: `float ${5 + i}s ease-in-out infinite`,
+            animationDelay: `${i * 1.5}s`,
+          }}
+        >
+          {sym}
+        </span>
+      ))}
+
+      <div className="absolute bottom-0 w-full h-16 bg-gradient-to-t from-black/40 to-transparent" />
+    </div>
+  )
+}
+
 // ── Main ──
 interface PathSceneProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 export function PathScene({ mindsetId }: PathSceneProps) {
@@ -295,5 +364,6 @@ export function PathScene({ mindsetId }: PathSceneProps) {
     case 'cynic': return <CynicScene />
     case 'hedonist': return <HedonistScene />
     case 'samurai': return <SamuraiScene />
+    case 'scholar': return <ScholarScene />
   }
 }

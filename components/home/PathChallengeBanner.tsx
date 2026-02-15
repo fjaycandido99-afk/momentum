@@ -9,7 +9,7 @@ import type { MindsetId } from '@/lib/mindset/types'
 import type { PathStatus } from '@/lib/path-journey'
 
 interface PathChallengeBannerProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
   /** When true, renders taller card for carousel use */
   embedded?: boolean
 }

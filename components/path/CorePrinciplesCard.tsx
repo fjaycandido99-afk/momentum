@@ -6,15 +6,16 @@ import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_DETAILS } from '@/lib/mindset/detail-content'
 
 interface CorePrinciplesCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
-const ACCENT_COLORS: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const ACCENT_COLORS: Record<MindsetId, string> = {
   stoic: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
   existentialist: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
   cynic: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
   hedonist: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   samurai: 'bg-red-500/20 text-red-300 border-red-500/30',
+  scholar: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
 }
 
 export function CorePrinciplesCard({ mindsetId }: CorePrinciplesCardProps) {

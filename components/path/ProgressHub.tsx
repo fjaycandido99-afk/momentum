@@ -6,7 +6,7 @@ import { RANK_TABLES, PATH_ACCENT_COLORS } from '@/lib/path-journey'
 import { ACHIEVEMENTS, RARITY_COLORS, RARITY_BG } from '@/lib/achievements'
 import type { MindsetId } from '@/lib/mindset/types'
 
-type M = Exclude<MindsetId, 'scholar'>
+type M = MindsetId
 
 // ── Data types ──
 
@@ -64,6 +64,13 @@ const EVOLUTION_STAGES: Record<M, EvolutionStage[]> = {
     { emoji: '⚔️', name: 'Polished Katana', description: 'Mirror-bright and sharp.', minDays: 14 },
     { emoji: '🏆', name: 'Legendary Blade', description: 'Spoken of in stories.', minDays: 30 },
   ],
+  scholar: [
+    { emoji: '🔮', name: 'Dreamer', description: 'The unconscious stirs.', minDays: 0 },
+    { emoji: '🌙', name: 'Shadow Walker', description: 'Integration begins.', minDays: 3 },
+    { emoji: '🪞', name: 'Mirror Gazer', description: 'Self-knowledge deepens.', minDays: 7 },
+    { emoji: '🌌', name: 'Depth Diver', description: 'The deep opens to you.', minDays: 14 },
+    { emoji: '☀️', name: 'Individuated Soul', description: 'Wholeness achieved.', minDays: 30 },
+  ],
 }
 
 const BAR_COLORS: Record<M, string> = {
@@ -72,6 +79,7 @@ const BAR_COLORS: Record<M, string> = {
   cynic: 'bg-orange-400/40',
   hedonist: 'bg-emerald-400/40',
   samurai: 'bg-red-400/40',
+  scholar: 'bg-blue-400/40',
 }
 
 const ACTIVITY_LABELS: Record<string, string> = {

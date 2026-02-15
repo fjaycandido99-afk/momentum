@@ -7,7 +7,7 @@ export interface DecisionFramework {
   conclusion: string
 }
 
-export const MINDSET_FRAMEWORKS: Record<Exclude<MindsetId, 'scholar'>, DecisionFramework[]> = {
+export const MINDSET_FRAMEWORKS: Record<MindsetId, DecisionFramework[]> = {
   stoic: [
     {
       title: 'Premeditatio Malorum',
@@ -171,6 +171,40 @@ export const MINDSET_FRAMEWORKS: Record<Exclude<MindsetId, 'scholar'>, DecisionF
         { prompt: 'What would a warrior who never breaks their word do right now?', placeholder: 'What is the next honorable step...' },
       ],
       conclusion: 'Musashi said: "The way is in training." Not in feeling motivated, not in waiting for inspiration — in training. Recommit now. The way forward is always one more step.',
+    },
+  ],
+  scholar: [
+    {
+      title: 'The Shadow Integration',
+      description: 'Identify and integrate a shadow quality — something you deny or project onto others — to make a more conscious decision.',
+      questions: [
+        { prompt: 'What decision or conflict are you struggling with?', placeholder: 'Describe the situation...' },
+        { prompt: 'What quality in others frustrates you most in this situation? Could this quality also exist in you?', placeholder: 'Explore what you might be projecting...' },
+        { prompt: 'If you fully owned this shadow quality, how would it change your perspective on the decision?', placeholder: 'Imagine integrating rather than rejecting...' },
+        { prompt: 'What is the most whole, integrated action you can take — honoring both light and shadow?', placeholder: 'A decision that embraces complexity...' },
+      ],
+      conclusion: 'Jung taught that what we resist persists, and what we integrate transforms. By acknowledging your shadow, you make decisions from wholeness rather than blind spots.',
+    },
+    {
+      title: 'The Archetype Council',
+      description: 'Consult the archetypes within you — the Warrior, the Sage, the Caregiver, the Trickster — to find a balanced path forward.',
+      questions: [
+        { prompt: 'What challenge are you facing right now?', placeholder: 'Describe what needs your attention...' },
+        { prompt: 'What would the Warrior say? (courage, action, boundaries)', placeholder: 'The Warrior speaks...' },
+        { prompt: 'What would the Sage say? (wisdom, patience, perspective)', placeholder: 'The Sage speaks...' },
+        { prompt: 'What would the Trickster say? (creativity, disruption, humor)', placeholder: 'The Trickster speaks...' },
+      ],
+      conclusion: 'No single archetype has the full answer. Wisdom comes from hearing all inner voices and choosing the path that honors the whole council — not just the loudest voice.',
+    },
+    {
+      title: 'The Synchronicity Map',
+      description: 'Look for meaningful patterns and coincidences around your decision — signs from the unconscious that point toward alignment.',
+      questions: [
+        { prompt: 'What decision or direction are you contemplating?', placeholder: 'Describe what you are considering...' },
+        { prompt: 'Have you noticed any recurring themes, symbols, or coincidences related to this recently?', placeholder: 'Dreams, repeated words, unexpected encounters...' },
+        { prompt: 'What does your intuition say, beneath all the rational analysis?', placeholder: 'Listen to the quiet voice beneath thought...' },
+      ],
+      conclusion: 'Synchronicity is the universe whispering through pattern. It does not replace rational thought — it complements it. When logic and intuition align, you are on the right path.',
     },
   ],
 }

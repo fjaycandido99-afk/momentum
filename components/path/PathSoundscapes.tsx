@@ -23,10 +23,11 @@ const SOUND_ICONS: Record<string, LucideIcon> = {
   forest: TreePine,
   rain: CloudRain,
   piano: Music,
+  cosmos: Target,
 }
 
 interface PathSoundscapesProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
   onPathActivity?: () => void
 }
 

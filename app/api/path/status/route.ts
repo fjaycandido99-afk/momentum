@@ -43,7 +43,7 @@ export async function GET() {
       }),
     ])
 
-    const mindsetId = (prefs?.mindset || 'stoic') as Exclude<MindsetId, 'scholar'>
+    const mindsetId = (prefs?.mindset || 'stoic') as MindsetId
     const reflection = guide?.path_reflection_done ?? false
     const exercise = guide?.path_exercise_done ?? false
     const quote = guide?.path_quote_viewed ?? false

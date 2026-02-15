@@ -6,7 +6,7 @@ export interface Virtue {
   practices: string[]
 }
 
-export const MINDSET_VIRTUES: Record<Exclude<MindsetId, 'scholar'>, Virtue[]> = {
+export const MINDSET_VIRTUES: Record<MindsetId, Virtue[]> = {
   stoic: [
     {
       name: 'Wisdom',
@@ -239,6 +239,53 @@ export const MINDSET_VIRTUES: Record<Exclude<MindsetId, 'scholar'>, Virtue[]> = 
         'Resist one impulse today and observe what happens.',
         'Maintain composure in a frustrating situation.',
         'Complete a physical or mental exercise to its full extent without quitting early.',
+      ],
+    },
+  ],
+  scholar: [
+    {
+      name: 'Self-Knowledge',
+      description: 'Exploring the depths of your own psyche — conscious and unconscious — to understand who you truly are.',
+      practices: [
+        'Write down a dream you had recently and reflect on its possible meaning.',
+        'Identify a strong emotional reaction you had today and ask what deeper need it reveals.',
+        'Notice one pattern in your behavior that repeats and consider its origin.',
+      ],
+    },
+    {
+      name: 'Integration',
+      description: 'Bringing together the light and shadow aspects of your personality into a more complete whole.',
+      practices: [
+        'Acknowledge one quality in yourself that you usually try to hide or deny.',
+        'Find something valuable in a trait you normally criticize in yourself.',
+        'Practice holding two contradictory feelings at once without choosing sides.',
+      ],
+    },
+    {
+      name: 'Curiosity',
+      description: 'Approaching the unknown with wonder rather than fear, seeking to understand rather than judge.',
+      practices: [
+        'Read or listen to something from a perspective completely different from your own.',
+        'Ask a question today that you are genuinely uncertain about the answer to.',
+        'Observe something familiar as if seeing it for the very first time.',
+      ],
+    },
+    {
+      name: 'Imagination',
+      description: 'Engaging with symbols, myths, and creative vision as pathways to deeper understanding.',
+      practices: [
+        'Spend five minutes with a piece of art and notice what feelings or memories it evokes.',
+        'Write a brief myth or story about a challenge you are currently facing.',
+        'Imagine your life as a hero\'s journey — what stage are you in right now?',
+      ],
+    },
+    {
+      name: 'Synchronicity',
+      description: 'Cultivating awareness of meaningful coincidences and the hidden connections in life.',
+      practices: [
+        'Notice one unexpected connection between two unrelated events today.',
+        'Pay attention to a recurring symbol, number, or theme that keeps appearing in your life.',
+        'Before making a decision, pause and ask your intuition what it senses.',
       ],
     },
   ],

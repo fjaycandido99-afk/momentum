@@ -8,7 +8,7 @@ interface CompassValue {
   description: string
 }
 
-const COMPASS_DATA: Record<Exclude<MindsetId, 'scholar'>, { icon: string; values: CompassValue[] }> = {
+const COMPASS_DATA: Record<MindsetId, { icon: string; values: CompassValue[] }> = {
   stoic: {
     icon: '🛡️',
     values: [
@@ -55,18 +55,28 @@ const COMPASS_DATA: Record<Exclude<MindsetId, 'scholar'>, { icon: string; values
       { name: 'Loyalty', description: 'Commit fully. Half-hearted devotion dishonors both you and your cause.' },
     ],
   },
+  scholar: {
+    icon: '🔮',
+    values: [
+      { name: 'Self-Knowledge', description: 'Know thyself — not the persona you present, but the depths you carry unseen.' },
+      { name: 'Integration', description: 'The shadow is not your enemy. What you deny controls you; what you integrate empowers you.' },
+      { name: 'Imagination', description: 'Myths, dreams, and symbols are the language of the unconscious — learn to read them.' },
+      { name: 'Individuation', description: 'Become who you truly are, not who the world expects you to be. The Self transcends the ego.' },
+    ],
+  },
 }
 
-const ACCENT_COLORS: Record<Exclude<MindsetId, 'scholar'>, { ring: string; node: string; text: string; glow: string }> = {
+const ACCENT_COLORS: Record<MindsetId, { ring: string; node: string; text: string; glow: string }> = {
   stoic: { ring: 'rgba(148,163,184,0.3)', node: 'rgba(148,163,184,0.15)', text: 'text-slate-300', glow: 'rgba(148,163,184,0.1)' },
   existentialist: { ring: 'rgba(167,139,250,0.3)', node: 'rgba(167,139,250,0.15)', text: 'text-violet-300', glow: 'rgba(167,139,250,0.1)' },
   cynic: { ring: 'rgba(251,146,60,0.3)', node: 'rgba(251,146,60,0.15)', text: 'text-orange-300', glow: 'rgba(251,146,60,0.1)' },
   hedonist: { ring: 'rgba(52,211,153,0.3)', node: 'rgba(52,211,153,0.15)', text: 'text-emerald-300', glow: 'rgba(52,211,153,0.1)' },
   samurai: { ring: 'rgba(248,113,113,0.3)', node: 'rgba(248,113,113,0.15)', text: 'text-red-300', glow: 'rgba(248,113,113,0.1)' },
+  scholar: { ring: 'rgba(147,197,253,0.3)', node: 'rgba(147,197,253,0.15)', text: 'text-blue-300', glow: 'rgba(147,197,253,0.1)' },
 }
 
 interface PhilosophyCompassProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 export function PhilosophyCompass({ mindsetId }: PhilosophyCompassProps) {

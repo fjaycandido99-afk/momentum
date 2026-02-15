@@ -7,15 +7,16 @@ import { MINDSET_DETAILS } from '@/lib/mindset/detail-content'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 
 interface PathIdentityCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
-const PATH_BADGES: Record<Exclude<MindsetId, 'scholar'>, { label: string; gradient: string; text: string }> = {
+const PATH_BADGES: Record<MindsetId, { label: string; gradient: string; text: string }> = {
   stoic: { label: 'Virtue & Reason', gradient: 'from-slate-500/30 to-zinc-500/30', text: 'text-slate-300' },
   existentialist: { label: 'Freedom & Meaning', gradient: 'from-violet-500/30 to-indigo-500/30', text: 'text-violet-300' },
   cynic: { label: 'Truth & Simplicity', gradient: 'from-orange-500/30 to-amber-500/30', text: 'text-orange-300' },
   hedonist: { label: 'Pleasure & Peace', gradient: 'from-emerald-500/30 to-teal-500/30', text: 'text-emerald-300' },
   samurai: { label: 'Honor & Mastery', gradient: 'from-red-500/30 to-rose-500/30', text: 'text-red-300' },
+  scholar: { label: 'Depth & Wholeness', gradient: 'from-blue-500/30 to-indigo-500/30', text: 'text-blue-300' },
 }
 
 export function PathIdentityCard({ mindsetId }: PathIdentityCardProps) {

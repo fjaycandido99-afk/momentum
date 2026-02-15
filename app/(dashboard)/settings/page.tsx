@@ -738,11 +738,11 @@ function SettingsContent() {
                         </p>
                       </div>
                       <Link
-                        href="/astrology"
+                        href="/my-path"
                         className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500/15 to-purple-500/15 hover:from-indigo-500/25 hover:to-purple-500/25 border border-indigo-500/20 transition-all text-sm text-indigo-300 press-scale"
                       >
                         <Sparkles className="w-4 h-4" />
-                        Explore Cosmic Guide
+                        Open Cosmic Guide
                       </Link>
                     </div>
                   )}

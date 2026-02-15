@@ -6,7 +6,7 @@ import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 
 interface JournalPromptsCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 const ICONS = {

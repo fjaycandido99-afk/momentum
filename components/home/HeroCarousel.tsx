@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect, type ReactNode } from 'react'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 
 interface HeroCarouselProps {
   children: ReactNode[]
@@ -93,6 +94,7 @@ export function HeroCarousel({ children, autoPlayMs = 5000 }: HeroCarouselProps)
           />
         ))}
       </div>
+      <div className="px-6"><FeatureHint id="home-hero-swipe" text="Swipe for your Daily Guide, Path & Quote" mode="once" /></div>
     </div>
   )
 }

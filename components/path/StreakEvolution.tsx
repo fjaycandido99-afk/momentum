@@ -11,7 +11,7 @@ interface EvolutionStage {
   minDays: number
 }
 
-const EVOLUTION_STAGES: Record<Exclude<MindsetId, 'scholar'>, EvolutionStage[]> = {
+const EVOLUTION_STAGES: Record<MindsetId, EvolutionStage[]> = {
   stoic: [
     { emoji: '🪨', name: 'Rough Stone', description: 'Raw material. The sculptor has not yet begun.', minDays: 0 },
     { emoji: '🗿', name: 'Carved Form', description: 'A shape emerges from the stone. Intention takes hold.', minDays: 3 },
@@ -47,14 +47,22 @@ const EVOLUTION_STAGES: Record<Exclude<MindsetId, 'scholar'>, EvolutionStage[]> 
     { emoji: '⚔️', name: 'Polished Katana', description: 'Mirror-bright and deadly sharp. The warrior is nearly complete.', minDays: 14 },
     { emoji: '🏆', name: 'Legendary Blade', description: 'A weapon spoken of in stories — your name echoes through dojos.', minDays: 30 },
   ],
+  scholar: [
+    { emoji: '🔮', name: 'Dreamer', description: 'The unconscious stirs. You have begun to listen.', minDays: 0 },
+    { emoji: '🌙', name: 'Shadow Walker', description: 'You face what others deny. Integration begins.', minDays: 3 },
+    { emoji: '🪞', name: 'Mirror Gazer', description: 'You see the archetypes at work. Self-knowledge deepens.', minDays: 7 },
+    { emoji: '🌌', name: 'Depth Diver', description: 'The collective unconscious opens its library to you.', minDays: 14 },
+    { emoji: '☀️', name: 'Individuated Soul', description: 'Jung would recognize a fellow traveler of the deep.', minDays: 30 },
+  ],
 }
 
-const ACCENT_STYLES: Record<Exclude<MindsetId, 'scholar'>, { active: string; bar: string; glow: string }> = {
+const ACCENT_STYLES: Record<MindsetId, { active: string; bar: string; glow: string }> = {
   stoic: { active: 'bg-slate-400/15 border-slate-400/25', bar: 'bg-slate-400/40', glow: 'rgba(148,163,184,0.1)' },
   existentialist: { active: 'bg-violet-400/15 border-violet-400/25', bar: 'bg-violet-400/40', glow: 'rgba(167,139,250,0.1)' },
   cynic: { active: 'bg-orange-400/15 border-orange-400/25', bar: 'bg-orange-400/40', glow: 'rgba(251,146,60,0.1)' },
   hedonist: { active: 'bg-emerald-400/15 border-emerald-400/25', bar: 'bg-emerald-400/40', glow: 'rgba(52,211,153,0.1)' },
   samurai: { active: 'bg-red-400/15 border-red-400/25', bar: 'bg-red-400/40', glow: 'rgba(248,113,113,0.1)' },
+  scholar: { active: 'bg-blue-400/15 border-blue-400/25', bar: 'bg-blue-400/40', glow: 'rgba(147,197,253,0.1)' },
 }
 
 function getCurrentStage(stages: EvolutionStage[], streak: number): number {
@@ -66,7 +74,7 @@ function getCurrentStage(stages: EvolutionStage[], streak: number): number {
 }
 
 interface StreakEvolutionProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 export function StreakEvolution({ mindsetId }: StreakEvolutionProps) {

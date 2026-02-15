@@ -6,7 +6,7 @@ import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_VIRTUES } from '@/lib/mindset/virtues'
 
 interface VirtueTrackerCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 interface VirtueDay {

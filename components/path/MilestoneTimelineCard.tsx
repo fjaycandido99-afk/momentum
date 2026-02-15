@@ -4,10 +4,8 @@ import { Milestone } from 'lucide-react'
 import { RANK_TABLES, PATH_ACCENT_COLORS } from '@/lib/path-journey'
 import type { MindsetId } from '@/lib/mindset/types'
 
-type NonScholarMindset = Exclude<MindsetId, 'scholar'>
-
 interface MilestoneTimelineCardProps {
-  mindsetId: NonScholarMindset
+  mindsetId: MindsetId
   totalDays: number
 }
 

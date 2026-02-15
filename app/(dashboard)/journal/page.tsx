@@ -21,6 +21,7 @@ import { HeatMapStrip } from '@/components/journal/HeatMapStrip'
 import { getPromptForDate, getShuffledPrompt } from '@/components/journal/JournalPrompts'
 import { useKeyboardAware } from '@/hooks/useKeyboardAware'
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 
 interface JournalEntry {
   date: string
@@ -574,6 +575,7 @@ function JournalContent() {
             </button>
           ))}
         </div>
+        <FeatureHint id="journal-modes" text="Switch modes above — try freewrite, guided, or voice input" mode="once" />
       </div>
 
       {/* Spark Prompt */}

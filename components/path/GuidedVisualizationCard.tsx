@@ -6,7 +6,7 @@ import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_VISUALIZATIONS } from '@/lib/mindset/visualizations'
 
 interface GuidedVisualizationCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 function getDailyIndex(total: number): number {
@@ -16,12 +16,13 @@ function getDailyIndex(total: number): number {
   return dayOfYear % total
 }
 
-const ACCENT_BG: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const ACCENT_BG: Record<MindsetId, string> = {
   stoic: 'bg-slate-500/15',
   existentialist: 'bg-violet-500/15',
   cynic: 'bg-orange-500/15',
   hedonist: 'bg-emerald-500/15',
   samurai: 'bg-red-500/15',
+  scholar: 'bg-blue-500/15',
 }
 
 export function GuidedVisualizationCard({ mindsetId }: GuidedVisualizationCardProps) {

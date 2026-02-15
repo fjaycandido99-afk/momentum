@@ -1,6 +1,7 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 import { VOICE_GUIDES, AI_MEDITATION_THEMES } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
@@ -381,6 +382,7 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
         }
       `}</style>
       <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header">Guided</h2>
+      <div className="px-6"><FeatureHint id="home-guided" text="Voice-guided sessions for breathing, gratitude & sleep" mode="once" /></div>
       <div className="flex gap-3 overflow-x-auto px-6 pb-4 scrollbar-hide snap-row">
         {VOICE_GUIDES.map((guide) => {
           const Icon = guide.icon

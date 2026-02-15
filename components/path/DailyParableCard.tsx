@@ -7,7 +7,7 @@ import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_PARABLES } from '@/lib/mindset/parables'
 
 interface DailyParableCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 function getDailyIndex(total: number): number {
@@ -17,12 +17,13 @@ function getDailyIndex(total: number): number {
   return dayOfYear % total
 }
 
-const MORAL_ACCENTS: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const MORAL_ACCENTS: Record<MindsetId, string> = {
   stoic: 'bg-slate-500/10 border-slate-400/20',
   existentialist: 'bg-violet-500/10 border-violet-400/20',
   cynic: 'bg-orange-500/10 border-orange-400/20',
   hedonist: 'bg-emerald-500/10 border-emerald-400/20',
   samurai: 'bg-red-500/10 border-red-400/20',
+  scholar: 'bg-blue-500/10 border-blue-400/20',
 }
 
 export function DailyParableCard({ mindsetId }: DailyParableCardProps) {

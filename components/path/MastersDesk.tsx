@@ -17,7 +17,7 @@ interface DeskScene {
   objects: DeskObject[]
 }
 
-const DESK_SCENES: Record<Exclude<MindsetId, 'scholar'>, DeskScene> = {
+const DESK_SCENES: Record<MindsetId, DeskScene> = {
   stoic: {
     title: "Marcus's Study",
     subtitle: 'Rome, 170 AD — by lamplight',
@@ -153,10 +153,37 @@ const DESK_SCENES: Record<Exclude<MindsetId, 'scholar'>, DeskScene> = {
       },
     ],
   },
+  scholar: {
+    title: "Jung's Study",
+    subtitle: 'Küsnacht, 1930 — the Red Book lies open',
+    bg: 'from-blue-950/20 to-stone-950/50',
+    objects: [
+      {
+        emoji: '📕',
+        name: 'Red Book',
+        insight: '"The images of the unconscious place great responsibility upon a man. To understand them is a task not for the faint-hearted."',
+      },
+      {
+        emoji: '🪞',
+        name: 'Mirror',
+        insight: '"Everything that irritates us about others can lead us to an understanding of ourselves."',
+      },
+      {
+        emoji: '🔮',
+        name: 'Crystal',
+        insight: '"Who looks outside, dreams; who looks inside, awakes."',
+      },
+      {
+        emoji: '🖋️',
+        name: 'Pen',
+        insight: '"Until you make the unconscious conscious, it will direct your life and you will call it fate."',
+      },
+    ],
+  },
 }
 
 interface MastersDeskProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 export function MastersDesk({ mindsetId }: MastersDeskProps) {

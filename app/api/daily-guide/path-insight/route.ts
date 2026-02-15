@@ -10,7 +10,7 @@ import { MINDSET_DETAILS } from '@/lib/mindset/detail-content'
 export const dynamic = 'force-dynamic'
 
 // Fallback insights per mindset when AI is unavailable
-const FALLBACK_INSIGHTS: Record<Exclude<MindsetId, 'scholar'>, Array<{ text: string; theme: string; affirmation: string }>> = {
+const FALLBACK_INSIGHTS: Record<MindsetId, Array<{ text: string; theme: string; affirmation: string }>> = {
   stoic: [
     { text: 'Focus on what lies within your power today. External events are beyond your control, but your response to them defines your character.', theme: 'Inner Strength', affirmation: 'I control my responses, not my circumstances.' },
     { text: 'Every obstacle you face today is training for your character. Embrace difficulty as the raw material for growth.', theme: 'Resilience', affirmation: 'What stands in the way becomes the way.' },
@@ -36,6 +36,11 @@ const FALLBACK_INSIGHTS: Record<Exclude<MindsetId, 'scholar'>, Array<{ text: str
     { text: 'Small improvements compound into mastery. What one skill will you sharpen today? The way is in training.', theme: 'Kaizen', affirmation: 'I grow stronger with each day of practice.' },
     { text: 'Let discipline be your freedom today. Structure does not confine — it creates the foundation for limitless potential.', theme: 'Discipline', affirmation: 'My discipline creates my freedom.' },
   ],
+  scholar: [
+    { text: 'The unconscious mind speaks in symbols and dreams. Pay attention to the images that arise unbidden today — they carry wisdom your rational mind may have missed.', theme: 'The Unconscious', affirmation: 'I listen to the wisdom beneath the surface.' },
+    { text: 'Your shadow is not your enemy — it is the unlived life waiting to be integrated. What quality have you been denying? It holds a gift for you.', theme: 'Shadow Work', affirmation: 'I embrace all parts of myself.' },
+    { text: 'Synchronicity is the universe arranging meaningful coincidences. Stay alert today — the patterns you notice are invitations from the deeper self.', theme: 'Synchronicity', affirmation: 'I trust the meaningful connections I discover.' },
+  ],
 }
 
 interface PathInsight {
@@ -59,14 +64,6 @@ export async function GET(request: NextRequest) {
     }
     if (mindsetParam && mindsetParam in FALLBACK_INSIGHTS) {
       mindsetId = mindsetParam
-    }
-
-    // Scholar users should use cosmic-insight instead
-    if (mindsetId === 'scholar' || mindsetParam === 'scholar') {
-      return NextResponse.json(
-        { error: 'Scholar users should use the cosmic-insight endpoint' },
-        { status: 400 }
-      )
     }
 
     // Get today's date key

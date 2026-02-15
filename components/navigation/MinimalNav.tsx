@@ -9,7 +9,6 @@ const PAGE_LABELS: Record<string, string> = {
   '/journal': 'Journal',
   '/saved': 'Saved',
   '/coach': 'Coach',
-  '/astrology': 'Cosmic Guide',
   '/my-path': 'My Path',
   '/progress': 'Progress',
 }

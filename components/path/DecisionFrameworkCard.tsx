@@ -6,7 +6,7 @@ import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_FRAMEWORKS } from '@/lib/mindset/decision-frameworks'
 
 interface DecisionFrameworkCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
 }
 
 function getDailyIndex(total: number): number {
@@ -16,20 +16,22 @@ function getDailyIndex(total: number): number {
   return dayOfYear % total
 }
 
-const ACCENT_BG: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const ACCENT_BG: Record<MindsetId, string> = {
   stoic: 'bg-slate-500/15',
   existentialist: 'bg-violet-500/15',
   cynic: 'bg-orange-500/15',
   hedonist: 'bg-emerald-500/15',
   samurai: 'bg-red-500/15',
+  scholar: 'bg-blue-500/15',
 }
 
-const ACCENT_BORDER: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const ACCENT_BORDER: Record<MindsetId, string> = {
   stoic: 'border-slate-400/20',
   existentialist: 'border-violet-400/20',
   cynic: 'border-orange-400/20',
   hedonist: 'border-emerald-400/20',
   samurai: 'border-red-400/20',
+  scholar: 'border-blue-400/20',
 }
 
 export function DecisionFrameworkCard({ mindsetId }: DecisionFrameworkCardProps) {

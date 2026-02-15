@@ -6,6 +6,7 @@ import { VideoItem, TOPIC_TAGLINES, formatDuration } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
 import { SkeletonCardRow } from '@/components/ui/Skeleton'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 import { EmptyState } from '@/components/ui/EmptyState'
 
 interface MotivationSectionProps {
@@ -50,6 +51,7 @@ export function MotivationSection({
           <p className="text-xs text-white/95 mt-0.5">
             {tagline || (TOPIC_TAGLINES[topicName] || 'Motivation')}
           </p>
+          <FeatureHint id="home-motivation" text="Swipe to browse — long-press to preview" mode="once" />
         </div>
         {onShuffle && (
           <button

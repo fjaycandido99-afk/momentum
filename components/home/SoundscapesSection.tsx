@@ -1,6 +1,7 @@
 'use client'
 
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
+import { FeatureHint } from '@/components/ui/FeatureHint'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
 
@@ -25,6 +26,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
           </span>
         )}
       </h2>
+      <div className="px-6"><FeatureHint id="home-soundscapes" text="Tap to play ambient sounds — they continue in the background" mode="once" /></div>
       <div className="flex gap-4 overflow-x-auto px-6 pt-2 pb-4 scrollbar-hide snap-row">
         {SOUNDSCAPE_ITEMS.map((item) => {
           const Icon = item.icon

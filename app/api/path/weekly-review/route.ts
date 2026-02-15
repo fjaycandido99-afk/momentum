@@ -110,7 +110,7 @@ export async function GET() {
     // Longest streak: max of all path_streak values
     const longestStreak = Math.max(0, ...weekGuides.map(g => g.path_streak))
 
-    const mindsetId = (prefs?.mindset || 'stoic') as Exclude<MindsetId, 'scholar'>
+    const mindsetId = (prefs?.mindset || 'stoic') as MindsetId
 
     return NextResponse.json({
       activeDays,

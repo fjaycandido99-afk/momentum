@@ -7,7 +7,7 @@ import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
 
 interface DailyQuoteCardProps {
-  mindsetId: Exclude<MindsetId, 'scholar'>
+  mindsetId: MindsetId
   onPathActivity?: () => void
 }
 
@@ -18,12 +18,13 @@ function getDailyQuoteIndex(totalQuotes: number): number {
   return dayOfYear % totalQuotes
 }
 
-const QUOTE_ACCENTS: Record<Exclude<MindsetId, 'scholar'>, string> = {
+const QUOTE_ACCENTS: Record<MindsetId, string> = {
   stoic: 'border-slate-400/30',
   existentialist: 'border-violet-400/30',
   cynic: 'border-orange-400/30',
   hedonist: 'border-emerald-400/30',
   samurai: 'border-red-400/30',
+  scholar: 'border-blue-400/30',
 }
 
 export function DailyQuoteCard({ mindsetId, onPathActivity }: DailyQuoteCardProps) {
