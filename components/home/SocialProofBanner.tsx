@@ -29,7 +29,6 @@ export function SocialProofBanner() {
   const mindsetCtx = useMindsetOptional()
   const [messageIndex, setMessageIndex] = useState(0)
   const [visible, setVisible] = useState(false)
-  const [show, setShow] = useState(false)
 
   const now = new Date()
   const dateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
@@ -38,34 +37,52 @@ export function SocialProofBanner() {
   const mindsetName = mindsetCtx?.config ? MINDSET_CONFIGS[mindsetCtx.mindset]?.name || null : null
   const messages = useMemo(() => getMessages(count, mindsetName), [count, mindsetName])
 
-  // Show after a short delay, then cycle: show 6s, hide 4s
+  // Show briefly, then hide. Reappear with new message after a long pause.
+  // Pattern: 3s delay → show 4s → hide → 30s pause → show 4s → hide → done
   useEffect(() => {
-    const showDelay = setTimeout(() => {
-      setShow(true)
+    const timers: ReturnType<typeof setTimeout>[] = []
+
+    // First appearance after 3s
+    timers.push(setTimeout(() => {
       setVisible(true)
-    }, 2000)
+    }, 3000))
 
-    return () => clearTimeout(showDelay)
-  }, [])
-
-  useEffect(() => {
-    if (!show) return
-    const interval = setInterval(() => {
+    // Hide after 7s (3s delay + 4s visible)
+    timers.push(setTimeout(() => {
       setVisible(false)
-      setTimeout(() => {
-        setMessageIndex(prev => (prev + 1) % messages.length)
-        setVisible(true)
-      }, 400)
-    }, 8000)
-    return () => clearInterval(interval)
-  }, [show, messages.length])
+    }, 7000))
 
-  if (!show) return null
+    // Second appearance at 37s with new message
+    timers.push(setTimeout(() => {
+      setMessageIndex(1)
+      setVisible(true)
+    }, 37000))
+
+    // Hide second at 41s
+    timers.push(setTimeout(() => {
+      setVisible(false)
+    }, 41000))
+
+    // Third appearance at 90s
+    timers.push(setTimeout(() => {
+      setMessageIndex(prev => (prev + 1) % messages.length)
+      setVisible(true)
+    }, 90000))
+
+    // Hide third at 94s
+    timers.push(setTimeout(() => {
+      setVisible(false)
+    }, 94000))
+
+    return () => timers.forEach(clearTimeout)
+  }, [messages.length])
 
   return (
     <div
-      className={`fixed left-3 bottom-28 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-sm border border-white/10 transition-all duration-500 ${
-        visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
+      className={`fixed left-3 bottom-28 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-sm border border-white/10 transition-all duration-500 pointer-events-none ${
+        visible
+          ? 'opacity-100 translate-x-0'
+          : 'opacity-0 -translate-x-4'
       }`}
     >
       <span className="relative flex h-1.5 w-1.5 shrink-0">
