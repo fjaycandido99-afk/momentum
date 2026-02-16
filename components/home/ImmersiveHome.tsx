@@ -950,8 +950,6 @@ export function ImmersiveHome() {
       {!showMorningFlow && !audioState.playingSound && !audioState.showSoundscapePlayer && (
         <div className="sticky top-0 z-50 flex items-center justify-between px-5 pt-12 pb-2 animate-fade-in-down bg-black before:absolute before:content-[''] before:-top-20 before:left-0 before:right-0 before:h-20 before:bg-black"
         >
-          {/* Faded bottom border */}
-          <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.1) 0%, transparent 70%)' }} />
           {/* Bottom blur fade */}
           <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
           <div className="flex items-center gap-2 min-w-0">
@@ -1512,8 +1510,6 @@ export function ImmersiveHome() {
         }
       />
 
-      {/* Long-press Preview */}
-      <LongPressPreview video={previewVideo} onClose={() => setPreviewVideo(null)} />
 
     </div>
     </div>
