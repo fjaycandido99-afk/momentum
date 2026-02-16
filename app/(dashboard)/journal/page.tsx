@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import {
   PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target,
   Sparkles, BookOpen, Calendar, X, Crown, Lock, Shuffle, ChevronDown,
-  MessageCircle, Moon, Send, Save,
+  MessageCircle, Moon, Send, Save, Search, Download,
 } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
@@ -87,6 +87,7 @@ function JournalContent() {
   const [journalStats, setJournalStats] = useState<JournalStatsData>({ currentStreak: 0, longestStreak: 0, totalEntries: 0, totalWords: 0 })
   const [showAllRecent, setShowAllRecent] = useState(false)
   const [journalTags, setJournalTags] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Conversational journal state
   const [conversation, setConversation] = useState<ConversationMessage[]>([])
@@ -452,6 +453,37 @@ function JournalContent() {
     setInterimText(text)
   }, [])
 
+  const MOOD_EMOJI: Record<string, string> = {
+    awful: '😞', low: '😔', okay: '😐', good: '😊', great: '😄',
+  }
+
+  const exportEntries = useCallback(() => {
+    const sorted = allEntries
+      .filter(e => e.journal_win || e.journal_gratitude || e.journal_intention || e.journal_freetext)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+    const lines = ['# Voxu Journal Export\n']
+    for (const entry of sorted) {
+      const d = new Date(entry.date)
+      const label = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      const moodEmoji = entry.journal_mood ? (MOOD_EMOJI[entry.journal_mood] || '') : ''
+      lines.push(`## ${label}${moodEmoji ? ` ${moodEmoji}` : ''}\n`)
+      if (entry.journal_freetext) lines.push(`### Free Write\n${entry.journal_freetext}\n`)
+      if (entry.journal_win) lines.push(`### Learned\n${entry.journal_win}\n`)
+      if (entry.journal_gratitude) lines.push(`### Grateful\n${entry.journal_gratitude}\n`)
+      if (entry.journal_intention) lines.push(`### Intention\n${entry.journal_intention}\n`)
+      if (entry.journal_tags?.length) lines.push(`**Tags:** ${entry.journal_tags.join(', ')}\n`)
+      lines.push('---\n')
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `voxu-journal-${new Date().toISOString().split('T')[0]}.md`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [allEntries])
+
   const hasContent = mode === 'guided'
     ? (win.trim() || gratitude.trim() || intention.trim())
     : mode === 'freewrite'
@@ -478,16 +510,24 @@ function JournalContent() {
     .filter(e => e.journal_win || e.journal_gratitude || e.journal_intention || e.journal_freetext)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-  const visibleEntries = showAllRecent ? recentEntries : recentEntries.slice(0, 7)
+  const filteredEntries = searchQuery.trim()
+    ? recentEntries.filter(e => {
+        const q = searchQuery.toLowerCase()
+        return (e.journal_win || '').toLowerCase().includes(q)
+          || (e.journal_gratitude || '').toLowerCase().includes(q)
+          || (e.journal_freetext || '').toLowerCase().includes(q)
+          || (e.journal_intention || '').toLowerCase().includes(q)
+          || (e.journal_tags || []).some(t => t.toLowerCase().includes(q))
+      })
+    : recentEntries
 
-  const MOOD_EMOJI: Record<string, string> = {
-    awful: '😞', low: '😔', okay: '😐', good: '😊', great: '😄',
-  }
+  const visibleEntries = showAllRecent ? filteredEntries : filteredEntries.slice(0, 7)
 
   return (
     <div className="min-h-screen text-white pb-24">
       {/* Header */}
-      <div className="px-6 pt-12 pb-4 header-fade-bg">
+      <div className="sticky top-0 z-50 px-6 pt-12 pb-4 bg-black">
+        <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 mb-1">
             <div className="p-2 rounded-xl bg-amber-500/20">
@@ -496,6 +536,15 @@ function JournalContent() {
             <h1 className="text-2xl font-light shimmer-text">Journal</h1>
           </div>
           <div className="flex items-center gap-1.5">
+            {hasJournalHistory && recentEntries.length > 0 && (
+              <button
+                onClick={exportEntries}
+                aria-label="Export journal"
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <Download className="w-4 h-4 text-white/60" />
+              </button>
+            )}
             {mindsetCtx && (
               <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/5">
                 <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
@@ -575,7 +624,13 @@ function JournalContent() {
             </button>
           ))}
         </div>
-        <FeatureHint id="journal-modes" text="Switch modes above — try freewrite, guided, or voice input" mode="once" />
+        <FeatureHint id="journal-modes-v2" text="Try Chat for a guided AI conversation, or Dream to decode your dreams" mode="once" />
+        {mode === 'conversational' && (
+          <p className="text-[10px] text-white/30 mt-1.5 italic">Chat with an AI journal companion — it asks follow-up questions to deepen your reflection</p>
+        )}
+        {mode === 'dream' && (
+          <p className="text-[10px] text-white/30 mt-1.5 italic">Describe your dream and get symbol interpretations + life connections</p>
+        )}
       </div>
 
       {/* Spark Prompt */}
@@ -1025,70 +1080,99 @@ function JournalContent() {
             <p className="text-white/60 text-xs mt-1">Start journaling to see your history here</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {visibleEntries.map((entry, i) => {
-              const entryDate = new Date(entry.date)
-              const label = entryDate.toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-              })
-              const isSelected = entryDate.toDateString() === selectedDate.toDateString()
-              const moodEmoji = entry.journal_mood ? MOOD_EMOJI[entry.journal_mood] : null
-
-              return (
+          <>
+            {/* Search bar */}
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+              <input
+                type="text"
+                placeholder="Search entries..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2.5 text-sm text-white placeholder-white/30 bg-black border border-white/20 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/40"
+              />
+              {searchQuery && (
                 <button
-                  key={i}
-                  onClick={() => setSelectedDate(entryDate)}
-                  className={`w-full text-left p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all ${
-                    isSelected
-                      ? 'ring-1 ring-amber-500/40'
-                      : 'hover:bg-white/5'
-                  }`}
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-white/10"
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className={`text-xs ${isSelected ? 'text-amber-400' : 'text-white/90'}`}>
-                      {label}
-                    </p>
-                    {moodEmoji && <span className="text-sm">{moodEmoji}</span>}
-                  </div>
-                  {entry.journal_freetext ? (
-                    <p className="text-sm text-white line-clamp-2">{entry.journal_freetext}</p>
-                  ) : entry.journal_win ? (
-                    <p className="text-sm text-white line-clamp-2">{entry.journal_win}</p>
-                  ) : entry.journal_gratitude ? (
-                    <p className="text-sm text-white line-clamp-2 italic">{entry.journal_gratitude}</p>
-                  ) : null}
-                  <div className="flex items-center gap-2 mt-2">
-                    {entry.journal_freetext && <span className="text-[10px] text-cyan-400">✎ Free Write</span>}
-                    {entry.journal_win && <span className="text-[10px] text-amber-400">✦ Learned</span>}
-                    {entry.journal_gratitude && <span className="text-[10px] text-pink-400">♥ Grateful</span>}
-                    {entry.journal_intention && <span className="text-[10px] text-purple-400">◎ Intention</span>}
-                  </div>
-                  {entry.journal_tags && entry.journal_tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {entry.journal_tags.map((tag, ti) => (
-                        <span key={ti} className="px-1.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/20 text-[9px] text-indigo-300">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <X className="w-3 h-3 text-white/40" />
                 </button>
-              )
-            })}
+              )}
+            </div>
 
-            {/* Show more / less */}
-            {recentEntries.length > 7 && (
-              <button
-                onClick={() => setShowAllRecent(!showAllRecent)}
-                className="w-full flex items-center justify-center gap-1 py-2 text-xs text-white/70 hover:text-white/90 transition-colors"
-              >
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllRecent ? 'rotate-180' : ''}`} />
-                {showAllRecent ? 'Show less' : `Show all ${recentEntries.length} entries`}
-              </button>
+            {filteredEntries.length === 0 && searchQuery ? (
+              <div className="text-center py-8">
+                <Search className="w-6 h-6 text-white/30 mx-auto mb-2" />
+                <p className="text-white/50 text-sm">No entries match &ldquo;{searchQuery}&rdquo;</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {visibleEntries.map((entry, i) => {
+                  const entryDate = new Date(entry.date)
+                  const label = entryDate.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                  })
+                  const isSelected = entryDate.toDateString() === selectedDate.toDateString()
+                  const moodEmoji = entry.journal_mood ? MOOD_EMOJI[entry.journal_mood] : null
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedDate(entryDate)}
+                      className={`w-full text-left p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all ${
+                        isSelected
+                          ? 'ring-1 ring-amber-500/40'
+                          : 'hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className={`text-xs ${isSelected ? 'text-amber-400' : 'text-white/90'}`}>
+                          {label}
+                        </p>
+                        {moodEmoji && <span className="text-sm">{moodEmoji}</span>}
+                      </div>
+                      {entry.journal_freetext ? (
+                        <p className="text-sm text-white line-clamp-2">{entry.journal_freetext}</p>
+                      ) : entry.journal_win ? (
+                        <p className="text-sm text-white line-clamp-2">{entry.journal_win}</p>
+                      ) : entry.journal_gratitude ? (
+                        <p className="text-sm text-white line-clamp-2 italic">{entry.journal_gratitude}</p>
+                      ) : null}
+                      <div className="flex items-center gap-2 mt-2">
+                        {entry.journal_freetext && <span className="text-[10px] text-cyan-400">✎ Free Write</span>}
+                        {entry.journal_win && <span className="text-[10px] text-amber-400">✦ Learned</span>}
+                        {entry.journal_gratitude && <span className="text-[10px] text-pink-400">♥ Grateful</span>}
+                        {entry.journal_intention && <span className="text-[10px] text-purple-400">◎ Intention</span>}
+                      </div>
+                      {entry.journal_tags && entry.journal_tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {entry.journal_tags.map((tag, ti) => (
+                            <span key={ti} className="px-1.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/20 text-[9px] text-indigo-300">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+
+                {/* Show more / less */}
+                {filteredEntries.length > 7 && (
+                  <button
+                    onClick={() => setShowAllRecent(!showAllRecent)}
+                    className="w-full flex items-center justify-center gap-1 py-2 text-xs text-white/70 hover:text-white/90 transition-colors"
+                  >
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllRecent ? 'rotate-180' : ''}`} />
+                    {showAllRecent ? 'Show less' : `Show all ${filteredEntries.length} entries`}
+                  </button>
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
 

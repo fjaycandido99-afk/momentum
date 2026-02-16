@@ -77,7 +77,8 @@ export default function SavedPage() {
 
   return (
     <div className="min-h-screen text-white pb-24">
-      <div className="px-8 pt-12 pb-4 header-fade-bg">
+      <div className="sticky top-0 z-50 px-8 pt-12 pb-4 bg-black">
+        <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <h1 className="text-2xl font-semibold shimmer-text">Saved</h1>
         <FeatureHint id="saved-intro" text="Heart any video to save it here for quick access" mode="once" />
       </div>

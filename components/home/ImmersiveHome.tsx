@@ -987,7 +987,7 @@ export function ImmersiveHome() {
       {showMenu && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
-          <div className="fixed right-6 top-[85px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
+          <div className="fixed right-6 top-[100px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
             <Link href="/my-path" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
               <Compass className="w-4 h-4 text-white/70" />
               <span className="text-sm text-white/90">

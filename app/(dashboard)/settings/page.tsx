@@ -280,7 +280,8 @@ function SettingsContent() {
   return (
     <div className="min-h-screen text-white pb-24">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6 header-fade-bg">
+      <div className="sticky top-0 z-50 px-6 pt-12 pb-6 bg-black">
+        <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <Link href="/" aria-label="Back to home" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">

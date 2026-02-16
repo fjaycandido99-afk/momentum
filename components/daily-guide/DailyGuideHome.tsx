@@ -30,7 +30,7 @@ import { QuoteCard } from './QuoteCard'
 import { GoalTracker } from './GoalTracker'
 import { SmartNudgeBanner } from './SmartNudgeBanner'
 import { MorningBriefing } from './MorningBriefing'
-import { StreakDisplay } from './StreakDisplay'
+import { StreakBadge } from './StreakDisplay'
 import { JournalEntry } from './JournalEntry'
 import { MorningFlowComplete } from './MorningFlowComplete'
 import { XPReward } from './XPReward'
@@ -47,7 +47,6 @@ import { useAudioOptional } from '@/contexts/AudioContext'
 import { SessionLimitBanner } from '@/components/premium/SessionLimitBanner'
 import { TrialBanner, TrialEndingBanner } from '@/components/premium/TrialBanner'
 import { FeatureLock, LockIcon } from '@/components/premium/FeatureLock'
-import { PremiumBadge } from '@/components/premium/PremiumBadge'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
@@ -1001,7 +1000,8 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {!embedded && <TrialEndingBanner />}
 
       {/* Header */}
-      <div className="p-6 animate-fade-in-down">
+      <div className="sticky top-0 z-50 p-6 pt-12 bg-black animate-fade-in-down">
+        <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         {/* Greeting Section */}
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -1010,26 +1010,23 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               const GreetingIcon = greeting.icon
               return (
                 <>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="p-1.5 rounded-lg bg-white/10 animate-pulse-glow">
-                      <GreetingIcon className={`w-4 h-4 text-white animate-icon-bounce transition-all duration-300 ${headerScrolled ? 'w-3.5 h-3.5' : ''}`} />
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-white/10">
+                      <GreetingIcon className="w-4 h-4 text-white" />
                     </div>
-                    <span className={`transition-all duration-300 text-white/95 ${headerScrolled ? 'text-xs' : 'text-sm'}`}>{greeting.text}</span>
+                    <div>
+                      <span className="text-sm text-white">{greeting.text}</span>
+                      <p className="text-[11px] text-white/50">{getFormattedDate(today)}</p>
+                    </div>
                   </div>
-                  <p className={`text-sm text-white/95 mt-1 transition-all duration-300 overflow-hidden ${headerScrolled ? 'opacity-0 max-h-0 mt-0' : 'opacity-100 max-h-8'}`}>
-                    {getFormattedDate(today)}
-                  </p>
                 </>
               )
             })()}
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Premium badge */}
-            <PremiumBadge size="sm" />
-            {/* Streak indicator */}
-            <StreakDisplay streak={streak} />
+          <div className="flex items-center gap-2 shrink-0">
+            <StreakBadge streak={streak} />
             {mindsetCtx && (
-              <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/5">
+              <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
                 <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
               </div>
             )}

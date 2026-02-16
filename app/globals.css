@@ -540,6 +540,31 @@ input:focus, select:focus, textarea:focus, button:focus {
   animation: slide-down-exit 0.25s ease-in both;
 }
 
+@keyframes sheet-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: sheet-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fab-pulse {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.4); }
+}
+.animate-fab-pulse {
+  background: rgba(255, 255, 255, 0.15);
+  animation: fab-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes nudge-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-nudge-in {
+  animation: nudge-in 0.4s ease-out both;
+}
+
 .animate-tab-fade {
   animation: tab-fade 0.25s ease-out both;
 }
@@ -668,27 +693,31 @@ input:focus, select:focus, textarea:focus, button:focus {
   display: none;
 }
 
-/* Sound bar animation for bottom player */
+/* Sound bar animation for bottom player — transform-based for mobile GPU */
 @keyframes sound-bar-1 {
-  0%, 100% { height: 4px; }
-  50% { height: 16px; }
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
 }
 @keyframes sound-bar-2 {
-  0%, 100% { height: 12px; }
-  50% { height: 6px; }
+  0%, 100% { transform: scaleY(0.8); }
+  50% { transform: scaleY(0.35); }
 }
 @keyframes sound-bar-3 {
-  0%, 100% { height: 6px; }
-  50% { height: 18px; }
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
 }
 @keyframes sound-bar-4 {
-  0%, 100% { height: 10px; }
-  50% { height: 4px; }
+  0%, 100% { transform: scaleY(0.65); }
+  50% { transform: scaleY(0.25); }
 }
-.animate-sound-bar-1 { animation: sound-bar-1 1.2s ease-in-out infinite; }
-.animate-sound-bar-2 { animation: sound-bar-2 1.0s ease-in-out infinite 0.1s; }
-.animate-sound-bar-3 { animation: sound-bar-3 1.4s ease-in-out infinite 0.2s; }
-.animate-sound-bar-4 { animation: sound-bar-4 1.1s ease-in-out infinite 0.15s; }
+.animate-sound-bar-1, .animate-sound-bar-2, .animate-sound-bar-3, .animate-sound-bar-4 {
+  transform-origin: bottom;
+  will-change: transform;
+}
+.animate-sound-bar-1 { height: 100%; animation: sound-bar-1 1.2s ease-in-out infinite; }
+.animate-sound-bar-2 { height: 100%; animation: sound-bar-2 1.0s ease-in-out infinite 0.1s; }
+.animate-sound-bar-3 { height: 100%; animation: sound-bar-3 1.4s ease-in-out infinite 0.2s; }
+.animate-sound-bar-4 { height: 100%; animation: sound-bar-4 1.1s ease-in-out infinite 0.15s; }
 
 @keyframes wave {
   0%, 100% { transform: scaleY(0.5); }
@@ -1226,8 +1255,8 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 /* ========== Glassmorphism Refined ========== */
 .glass-refined {
   background: #000;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 20px rgba(255, 255, 255, 0.08);
+  border: none;
+  box-shadow: none;
   position: relative;
 }
 
@@ -1241,8 +1270,8 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 
 .glass-refined.glass-elevated {
   background: #000;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 2px 20px rgba(255, 255, 255, 0.1);
+  border: none;
+  box-shadow: none;
 }
 
 .glass-refined.glass-elevated::after {
