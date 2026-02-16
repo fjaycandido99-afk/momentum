@@ -136,6 +136,19 @@ export async function GET() {
     const unlockedRewards = getUnlockedRewards(levelInfo.current.level)
     const nextReward = getNextReward(levelInfo.current.level)
 
+    // --- Daily Bonus ---
+    const dailyBonusClaimed = todayGuide?.daily_bonus_claimed || false
+    const dailyBonusAmount = todayGuide?.daily_bonus_amount || null
+
+    // --- Streak Freeze ---
+    const streakFreezeAvailable = prefs?.streak_freezes ?? 1
+    const streakFreezeLastUsed = prefs?.streak_freeze_used_at || null
+    const lastStreakValue = prefs?.last_streak_value || 0
+    const streakLostAt = prefs?.streak_lost_at || null
+
+    // All challenges done?
+    const allChallengesDone = challengeStatus.length > 0 && challengeStatus.every((c: any) => c.completed)
+
     return NextResponse.json({
       xp: { total: totalXP, today: todaysXP, week: weekXP },
       level: levelInfo,
@@ -145,6 +158,10 @@ export async function GET() {
       weeklyMissions: missionStatus,
       socialNudges,
       rewards: { unlocked: unlockedRewards, next: nextReward },
+      dailyBonus: { claimed: dailyBonusClaimed, amount: dailyBonusAmount },
+      streakFreeze: { available: streakFreezeAvailable, lastUsed: streakFreezeLastUsed },
+      lastStreakLost: lastStreakValue > 0 && streakLostAt ? { value: lastStreakValue, at: streakLostAt } : null,
+      allChallengesDone,
     })
   } catch (error) {
     console.error('Gamification status error:', error)

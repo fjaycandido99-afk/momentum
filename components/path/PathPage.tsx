@@ -6,6 +6,7 @@ import { Dumbbell, Compass, Sparkles, Music, Star, Orbit } from 'lucide-react'
 import Link from 'next/link'
 import type { MindsetId } from '@/lib/mindset/types'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
+import { AnimatedPathLogo } from '@/components/home/AnimatedPathLogo'
 import { MINDSET_DETAILS } from '@/lib/mindset/detail-content'
 import { ZodiacIdentityCard } from '@/components/astrology/ZodiacIdentityCard'
 import { MoonPhaseWidget } from '@/components/astrology/MoonPhaseWidget'
@@ -238,9 +239,14 @@ export function PathPage({ mindsetId }: PathPageProps) {
           </div>
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/65" />
           <div className="relative z-10 px-5 pt-7 pb-6">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold text-white">{config.icon} {title}</h1>
-              <StreakFlame streak={streak} />
+            <div className="flex items-center gap-3">
+              <AnimatedPathLogo mindsetId={mindsetId} size={40} />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-semibold text-white">{title}</h1>
+                  <StreakFlame streak={streak} />
+                </div>
+              </div>
             </div>
             <p className="text-white/80 text-[13px] mt-1">{greeting}</p>
             <p className="text-[12px] text-white/70 leading-relaxed mt-3">{details.overview}</p>

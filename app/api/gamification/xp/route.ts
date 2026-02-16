@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { XP_REWARDS, type XPEventType, getLevelFromXP } from '@/lib/gamification'
 import { ACHIEVEMENTS, checkNewAchievements } from '@/lib/achievements'
+import { getDailyBonusAmount } from '@/lib/daily-bonus'
 
 export const dynamic = 'force-dynamic'
 
@@ -194,11 +195,47 @@ export async function POST(req: Request) {
     const finalTotalXP = totalXP + bonusXP
     const finalLevel = getLevelFromXP(finalTotalXP)
 
+    // --- Daily Bonus XP (variable reward on first meaningful action) ---
+    let dailyBonusResult: { amount: number; claimed: boolean } | null = null
+    const BONUS_ELIGIBLE_EVENTS = ['moduleComplete', 'journalEntry', 'dailyGuideComplete', 'breathingSession', 'focusSession']
+    if (BONUS_ELIGIBLE_EVENTS.includes(eventType)) {
+      try {
+        const todayStr = new Date().toISOString().split('T')[0]
+        const todayDate = new Date(todayStr)
+        const todayGuide = await prisma.dailyGuide.findUnique({
+          where: { user_id_date: { user_id: user.id, date: todayDate } },
+          select: { daily_bonus_claimed: true },
+        })
+
+        if (!todayGuide?.daily_bonus_claimed) {
+          const bonusAmount = getDailyBonusAmount(todayStr)
+          await prisma.$transaction([
+            prisma.dailyGuide.upsert({
+              where: { user_id_date: { user_id: user.id, date: todayDate } },
+              update: { daily_bonus_claimed: true, daily_bonus_amount: bonusAmount },
+              create: { user_id: user.id, date: todayDate, day_type: 'work', daily_bonus_claimed: true, daily_bonus_amount: bonusAmount },
+            }),
+            prisma.xPEvent.create({
+              data: { user_id: user.id, event_type: 'dailyBonus', xp_amount: bonusAmount, source: 'daily_bonus' },
+            }),
+            prisma.userPreferences.update({
+              where: { user_id: user.id },
+              data: { total_xp: { increment: bonusAmount } },
+            }),
+          ])
+          dailyBonusResult = { amount: bonusAmount, claimed: true }
+        }
+      } catch (bonusErr) {
+        console.error('Daily bonus error (non-fatal):', bonusErr)
+      }
+    }
+
     return NextResponse.json({
-      totalXP: finalTotalXP,
-      todaysXP: todaysXP + bonusXP,
+      totalXP: finalTotalXP + (dailyBonusResult?.amount || 0),
+      todaysXP: todaysXP + bonusXP + (dailyBonusResult?.amount || 0),
       level: finalLevel.current.level,
       newAchievements: achievementResults,
+      ...(dailyBonusResult && { dailyBonus: dailyBonusResult }),
     })
   } catch (error) {
     console.error('XP logging error:', error)

@@ -13,6 +13,8 @@ export const XP_REWARDS = {
   morningBriefing: 15,
   monthlyReview: 30,
   letterToSelf: 20,
+  dailyIntention: 5,
+  dailyBonus: 25,
 } as const
 
 export type XPEventType = keyof typeof XP_REWARDS

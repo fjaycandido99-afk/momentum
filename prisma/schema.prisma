@@ -142,6 +142,13 @@ model UserPreferences {
   // F9: Mindset Evolution
   mindset_suggestion_shown_at DateTime?
 
+  // Streak freeze (engagement)
+  streak_freezes             Int       @default(1)
+  streak_freeze_used_at      DateTime?
+  streak_freeze_weekly_reset DateTime?
+  last_streak_value          Int       @default(0)
+  streak_lost_at             DateTime?
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
@@ -369,6 +376,11 @@ model DailyGuide {
 
   // F13: Streak Recovery
   ai_streak_recovery_message String?
+
+  // Engagement features
+  daily_intention     String?
+  daily_bonus_claimed Boolean @default(false)
+  daily_bonus_amount  Int?
 
   created_at DateTime @default(now())
 

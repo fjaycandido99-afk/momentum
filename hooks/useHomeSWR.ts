@@ -19,11 +19,23 @@ export function useJournalMood(date: string) {
   const { data, error, isLoading } = useSWR<any>(
     date ? `/api/daily-guide/journal?date=${date}` : null
   )
+
+  const hasJournaledToday = !!(data?.journal_mood || data?.journal_win || data?.journal_gratitude || data?.journal_freetext || data?.journal_dream)
+  const modulesCompletedToday = [
+    data?.morning_prime_done,
+    data?.day_close_done,
+    data?.movement_done,
+    data?.micro_lesson_done,
+  ].filter(Boolean).length
+
   return {
     journalData: data,
     journalMood: data?.journal_mood || null,
     moodBefore: data?.mood_before || null,
     energyLevel: data?.energy_level || null,
+    hasJournaledToday,
+    modulesCompletedToday,
+    dailyIntention: data?.daily_intention || null,
     journalError: error,
     journalLoading: isLoading,
   }
@@ -120,6 +132,29 @@ export function useWelcomeStatus() {
     lastStreak: data?.lastStreak || 0,
     welcomeError: error,
     welcomeLoading: isLoading,
+  }
+}
+
+// --- Gamification Status ---
+export function useGamificationStatus() {
+  const { data, error, isLoading, mutate } = useSWR<any>('/api/gamification/status')
+  const dailyChallenges = data?.dailyChallenges || []
+  const allChallengesDone = dailyChallenges.length > 0 && dailyChallenges.every((c: any) => c.completed)
+
+  // Check if freeze was used today
+  const freezeLastUsed = data?.streakFreeze?.lastUsed
+  const freezeUsedToday = !!freezeLastUsed && new Date(freezeLastUsed).toDateString() === new Date().toDateString()
+
+  return {
+    gamificationData: data,
+    dailyBonusClaimed: data?.dailyBonus?.claimed || false,
+    streakFreezes: data?.streakFreeze?.available ?? 1,
+    freezeUsedToday,
+    lastStreakLost: data?.lastStreakLost || null,
+    allChallengesDone,
+    gamificationError: error,
+    gamificationLoading: isLoading,
+    mutateGamification: mutate,
   }
 }
 

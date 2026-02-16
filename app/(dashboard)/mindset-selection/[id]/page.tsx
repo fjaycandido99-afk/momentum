@@ -8,7 +8,7 @@ import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MINDSET_DETAILS } from '@/lib/mindset/detail-content'
 import { MINDSET_IDS, type MindsetId } from '@/lib/mindset/types'
 import { MindsetPortrait } from '@/components/mindset/MindsetPortrait'
-import { MindsetIcon } from '@/components/mindset/MindsetIcon'
+import { AnimatedPathLogo } from '@/components/home/AnimatedPathLogo'
 
 export default function MindsetDetailPage() {
   const params = useParams()
@@ -69,8 +69,8 @@ export default function MindsetDetailPage() {
       </div>
 
       {/* Mindset header */}
-      <div className="text-center px-6 mt-6">
-        <MindsetIcon mindsetId={mindsetId} className="w-10 h-10 text-white" />
+      <div className="text-center px-6 mt-6 flex flex-col items-center">
+        <AnimatedPathLogo mindsetId={mindsetId} size={64} />
         <h1 className="text-2xl font-light mt-3 tracking-wide">
           {config.name}
         </h1>

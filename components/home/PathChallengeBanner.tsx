@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Flame } from 'lucide-react'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
+import { AnimatedPathLogo } from './AnimatedPathLogo'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import type { MindsetId } from '@/lib/mindset/types'
 import type { PathStatus } from '@/lib/path-journey'
@@ -36,12 +37,10 @@ export function PathChallengeBanner({ mindsetId, embedded = false }: PathChallen
 
   if (embedded) {
     return (
-      <Link href="/my-path" className="block group">
-        <div className="rounded-2xl border border-white/[0.15] p-6 press-scale bg-black min-h-[10rem] flex flex-col justify-between">
+      <Link href="/my-path" className="block group h-full">
+        <div className="rounded-2xl border border-white/[0.15] p-6 press-scale bg-black h-full flex flex-col justify-between">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
-              <MindsetIcon mindsetId={mindsetId} className="w-5 h-5 text-white" />
-            </div>
+            <AnimatedPathLogo mindsetId={mindsetId} size={48} />
             <div>
               <h2 className="text-lg font-medium text-white">Your {config.name} Path</h2>
               <p className="text-xs text-white/95">{config.subtitle}</p>
@@ -82,9 +81,7 @@ export function PathChallengeBanner({ mindsetId, embedded = false }: PathChallen
       <div className="card-gradient-border-lg rounded-2xl p-4 press-scale">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center">
-              <MindsetIcon mindsetId={mindsetId} className="w-4 h-4 text-white" />
-            </div>
+            <AnimatedPathLogo mindsetId={mindsetId} size={36} />
             <div>
               <p className="text-[13px] font-semibold text-white">Your {config.name} Path</p>
               <div className="flex items-center gap-2 mt-1">

@@ -246,7 +246,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
 }
 
 // Compact version for header
-export function StreakBadge({ streak }: { streak: number }) {
+export function StreakBadge({ streak, freezeCount }: { streak: number; freezeCount?: number }) {
   const currentMilestone = getCurrentMilestone(streak)
 
   if (streak === 0) {
@@ -266,6 +266,11 @@ export function StreakBadge({ streak }: { streak: number }) {
       <span className={`text-xs font-bold ${currentMilestone?.color || 'text-amber-400'}`}>
         {streak}
       </span>
+      {typeof freezeCount === 'number' && freezeCount > 0 && (
+        <span className="text-[10px] text-cyan-400/70" title={`${freezeCount} streak freeze${freezeCount !== 1 ? 's' : ''}`}>
+          ❄{freezeCount}
+        </span>
+      )}
     </div>
   )
 }

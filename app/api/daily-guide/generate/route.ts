@@ -294,10 +294,21 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Update streak
+    // Update streak (with freeze support)
     const today = new Date()
     const lastActive = preferences.last_active_date
     let newStreak = preferences.current_streak || 0
+    let freezeUsed = false
+    const streakUpdateData: Record<string, any> = {}
+
+    // Weekly freeze reset: ensure at least 1 freeze every 7 days
+    const lastReset = preferences.streak_freeze_weekly_reset
+    if (!lastReset || (today.getTime() - new Date(lastReset).getTime()) > 7 * 24 * 60 * 60 * 1000) {
+      if ((preferences.streak_freezes || 0) < 1) {
+        streakUpdateData.streak_freezes = 1
+      }
+      streakUpdateData.streak_freeze_weekly_reset = today
+    }
 
     if (!lastActive) {
       newStreak = 1
@@ -306,8 +317,17 @@ export async function POST(request: NextRequest) {
       const daysDiff = Math.floor((today.getTime() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24))
       if (daysDiff === 1) {
         newStreak += 1
+      } else if (daysDiff === 2 && (preferences.streak_freezes || 0) > 0) {
+        // Use a streak freeze
+        newStreak += 1
+        freezeUsed = true
+        streakUpdateData.streak_freezes = { decrement: 1 }
+        streakUpdateData.streak_freeze_used_at = today
       } else if (daysDiff > 1) {
-        newStreak = 1 // Reset streak
+        // Streak lost
+        streakUpdateData.last_streak_value = preferences.current_streak || 0
+        streakUpdateData.streak_lost_at = today
+        newStreak = 1
       }
       // If same day, keep streak as is
     }
@@ -317,6 +337,7 @@ export async function POST(request: NextRequest) {
       data: {
         current_streak: newStreak,
         last_active_date: today,
+        ...streakUpdateData,
       },
     })
 

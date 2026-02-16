@@ -3,11 +3,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Sparkles, Bot, BarChart3, Compass } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Sparkles, Bot, BarChart3, Compass, Play, Music } from 'lucide-react'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
-import type { YTPlayer } from '@/lib/youtube-types'
-import '@/lib/youtube-types'
+import { useHomeAudio } from '@/contexts/HomeAudioContext'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
 import { BottomPlayerBar } from './BottomPlayerBar'
@@ -16,16 +15,13 @@ import { SoundscapesSection } from './SoundscapesSection'
 import { GuidedSection } from './GuidedSection'
 import { XPBadge } from './XPBadge'
 import { MotivationSection } from './MotivationSection'
-import { MusicGenreSection } from './MusicGenreSection'
 import { LazyGenreSection } from './LazyGenreSection'
-import { SmartSessionCard } from './SmartSessionCard'
+import { JournalNudgeCard } from './JournalNudgeCard'
 import { PathChallengeBanner } from './PathChallengeBanner'
 import { AIMeditationPlayer } from './AIMeditationPlayer'
 import { ContinueListeningCard } from './ContinueListeningCard'
 import { WelcomeBackCard } from './WelcomeBackCard'
-import { HomeQuoteCard } from './HomeQuoteCard'
 import { HeroCarousel } from './HeroCarousel'
-import { WeeklyDigestCard } from './WeeklyDigestCard'
 import { SavedMotivationSection } from './SavedMotivationSection'
 import {
   Mode, VideoItem, MUSIC_GENRES,
@@ -40,17 +36,24 @@ import { FREEMIUM_LIMITS } from '@/lib/subscription-constants'
 import { PreviewPaywall, PreviewTimer, usePreview, AICoachNudge, useCoachNudge } from '@/components/premium/SoftLock'
 import { useScrollReveal, useParallax, useMagneticHover, useRippleBurst } from '@/hooks/useHomeAnimations'
 import { useSectionTransitions } from '@/hooks/useSectionTransitions'
-import { useAudioStateMachine, type AudioState } from '@/hooks/useAudioStateMachine'
-import { useAudioSideEffects } from '@/hooks/useAudioSideEffects'
-import { useVisibilityResume } from '@/hooks/useVisibilityResume'
-import { useMediaSession } from '@/hooks/useMediaSession'
-import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed'
 import { useScrollHeader } from '@/hooks/useScrollHeader'
 import { useListeningMilestones } from '@/hooks/useListeningMilestones'
-import { RecentlyPlayedSection } from './RecentlyPlayedSection'
 import { LongPressPreview } from './LongPressPreview'
+import { WellnessWidget } from './WellnessWidget'
+import { ResumeGuideCard } from './ResumeGuideCard'
+import { SmartHomeNudge } from './SmartHomeNudge'
+import { PathContentSection } from './PathContentSection'
+import { DailyIntentionCard } from './DailyIntentionCard'
+import { DailyProgressRing } from './DailyProgressRing'
+import { SocialProofBanner } from './SocialProofBanner'
+import { TomorrowPreview } from './TomorrowPreview'
+import { StreakFreezeIndicator } from './StreakFreezeIndicator'
 import { useToast } from '@/contexts/ToastContext'
-import { usePreferences, useJournalMood, useMotivationVideos, useFavorites, useWelcomeStatus } from '@/hooks/useHomeSWR'
+import { usePreferences, useJournalMood, useMotivationVideos, useFavorites, useWelcomeStatus, useGamificationStatus } from '@/hooks/useHomeSWR'
+import { useListeningStats, checkAudioAchievements } from '@/hooks/useListeningStats'
+import { getAdaptiveSectionOrder, type FeedSection } from '@/lib/smart-home-feed'
+import { useAchievementOptional } from '@/contexts/AchievementContext'
+import { ACHIEVEMENTS } from '@/lib/achievements'
 
 const WordAnimationPlayer = dynamic(
   () => import('@/components/player/WordAnimationPlayer').then(mod => mod.WordAnimationPlayer),
@@ -81,11 +84,9 @@ export function ImmersiveHome() {
   const hasRestoredRef = useRef(false)
   const isRestorePendingRef = useRef(!!audioContext?.lastPlayed)
 
-  // Audio state machine
-  const [audioState, dispatch] = useAudioStateMachine()
-
-  // Recently played
-  const { recentlyPlayed, addRecentlyPlayed } = useRecentlyPlayed()
+  // Audio state machine (from persistent context)
+  const { audioState, dispatch, refs: homeAudioRefs, createBgMusicPlayer, createSoundscapePlayer, stopBackgroundMusic, stopAllHomeAudio } = useHomeAudio()
+  const { bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef, bgProgressIntervalRef, currentBgVideoIdRef, currentScVideoIdRef, keepaliveRef, wakeLockRef, guideAudioRef, autoSkipNextRef } = homeAudioRefs
 
   // Welcome back card
   const [showWelcomeBack, setShowWelcomeBack] = useState(false)
@@ -95,6 +96,42 @@ export function ImmersiveHome() {
   const showShuffleToast = useCallback((message: string) => {
     showToast({ message, type: 'info', duration: 2000 })
   }, [showToast])
+
+  // Achievement context
+  const achievementCtx = useAchievementOptional()
+
+  // Listening stats (#6 — persistent tracking)
+  const listeningCategory = audioState.backgroundMusic ? (audioState.currentPlaylist?.type || 'music') : audioState.activeSoundscape ? 'soundscape' : null
+  const listeningGenre = audioState.currentPlaylist?.genreId || null
+  const { getStats } = useListeningStats(
+    audioState.musicPlaying || audioState.soundscapeIsPlaying,
+    listeningCategory,
+    listeningGenre,
+  )
+
+  // Audio achievement check — runs every 60s while playing
+  const audioAchievementsCheckedRef = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    if (!audioState.musicPlaying && !audioState.soundscapeIsPlaying) return
+    if (!achievementCtx) return
+
+    const check = () => {
+      const stats = getStats()
+      const earned = checkAudioAchievements(stats)
+      const newOnes = earned.filter(id => !audioAchievementsCheckedRef.current.has(id))
+      if (newOnes.length > 0) {
+        newOnes.forEach(id => audioAchievementsCheckedRef.current.add(id))
+        const minimal = newOnes.map(id => {
+          const def = ACHIEVEMENTS.find(a => a.id === id)
+          return { id, title: def?.title || id, xpReward: def?.xpReward || 25 }
+        })
+        achievementCtx.triggerAchievements(minimal)
+      }
+    }
+    check() // check immediately
+    const interval = setInterval(check, 60000)
+    return () => clearInterval(interval)
+  }, [audioState.musicPlaying, audioState.soundscapeIsPlaying, achievementCtx, getStats])
 
   // Listening milestones
   useListeningMilestones(audioState.musicPlaying, useCallback((minutes: number) => {
@@ -163,21 +200,6 @@ export function ImmersiveHome() {
   const [showMorningFlow, setShowMorningFlow] = useState(false)
   const [aiMeditationTheme, setAiMeditationTheme] = useState<string | null>(null)
 
-  // Player refs (kept imperative — not in reducer)
-  const soundscapePlayerRef = useRef<YTPlayer | null>(null)
-  const soundscapeContainerRef = useRef<HTMLDivElement>(null)
-  const soundscapeReadyRef = useRef(false)
-  const bgPlayerRef = useRef<YTPlayer | null>(null)
-  const bgPlayerContainerRef = useRef<HTMLDivElement>(null)
-  const bgProgressIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const bgPlayerReadyRef = useRef(false)
-  const keepaliveRef = useRef<HTMLAudioElement | null>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const wakeLockRef = useRef<any>(null)
-  const currentBgVideoIdRef = useRef<string | null>(null)
-  const currentScVideoIdRef = useRef<string | null>(null)
-  const autoSkipNextRef = useRef<(() => void) | null>(null)
-  const guideAudioRef = useRef<HTMLAudioElement | null>(null)
   const guideRequestId = useRef(0)
 
   // Debounce ref
@@ -191,77 +213,9 @@ export function ImmersiveHome() {
     setTimeout(() => { toggleDebounceRef.current = false }, TOGGLE_DEBOUNCE_MS)
   }, [])
 
-  // --- Side-effect hooks ---
-  useAudioSideEffects({
-    state: audioState,
-    refs: { bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef: soundscapeReadyRef, bgProgressIntervalRef, keepaliveRef, wakeLockRef, currentBgVideoIdRef: currentBgVideoIdRef, currentScVideoIdRef: currentScVideoIdRef },
-    audioContext,
-    dispatch,
-  })
+  // Side-effect hooks are now in HomeAudioProvider
 
-  useVisibilityResume({
-    state: audioState,
-    bgPlayerRef, bgPlayerReadyRef,
-    soundscapePlayerRef, soundscapeReadyRef: soundscapeReadyRef,
-    currentBgVideoIdRef: currentBgVideoIdRef, currentScVideoIdRef: currentScVideoIdRef,
-    guideAudioRef, wakeLockRef,
-  })
-
-  // Stop all audio — used by media session and other handlers
-  const stopAllHomeAudio = useCallback(() => {
-    // Imperative cleanup
-    if (guideAudioRef.current) {
-      guideAudioRef.current.pause()
-      guideAudioRef.current.src = ''
-      guideAudioRef.current = null
-    }
-    if (isPlaying) setIsPlaying(false)
-    if (bgPlayerRef.current && bgPlayerReadyRef.current) {
-      try { bgPlayerRef.current.stopVideo() } catch {}
-    }
-    if (bgProgressIntervalRef.current) {
-      clearInterval(bgProgressIntervalRef.current)
-      bgProgressIntervalRef.current = null
-    }
-    if (soundscapePlayerRef.current && soundscapeReadyRef.current) {
-      try { soundscapePlayerRef.current.stopVideo() } catch {}
-    }
-    currentBgVideoIdRef.current = null
-    currentScVideoIdRef.current = null
-    if (keepaliveRef.current) {
-      keepaliveRef.current.pause()
-      keepaliveRef.current.src = ''
-      keepaliveRef.current = null
-    }
-    if (wakeLockRef.current) {
-      try { wakeLockRef.current.release() } catch {}
-      wakeLockRef.current = null
-    }
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = 'none'
-      navigator.mediaSession.metadata = null
-    }
-    dispatch({ type: 'STOP_ALL' })
-  }, [isPlaying, dispatch])
-
-  useMediaSession({
-    state: audioState,
-    dispatch,
-    guideAudioRef,
-    onStopAll: stopAllHomeAudio,
-  })
-
-  // Load YouTube IFrame API
-  const [ytReady, setYtReady] = useState(false)
-  useEffect(() => {
-    if (window.YT && window.YT.Player) { setYtReady(true); return }
-    const tag = document.createElement('script')
-    tag.src = 'https://www.youtube.com/iframe_api'
-    const first = document.getElementsByTagName('script')[0]
-    first.parentNode?.insertBefore(tag, first)
-    const prev = window.onYouTubeIframeAPIReady
-    window.onYouTubeIframeAPIReady = () => { prev?.(); setYtReady(true) }
-  }, [])
+  // stopAllHomeAudio and useMediaSession are now in HomeAudioProvider
 
   // Client-only: set time-dependent values to avoid hydration mismatch
   useEffect(() => {
@@ -269,114 +223,8 @@ export function ImmersiveHome() {
     setMounted(true)
   }, [])
 
-  // Pre-create YT players
-  useEffect(() => {
-    if (!ytReady) return
-
-    const observe = (container: HTMLDivElement | null) => {
-      if (!container) return null
-      const obs = new MutationObserver(mutations => {
-        for (const m of mutations)
-          for (const n of m.addedNodes)
-            if (n instanceof HTMLIFrameElement) n.allow = 'autoplay; encrypted-media'
-      })
-      obs.observe(container, { childList: true, subtree: true })
-      return obs
-    }
-    const obs1 = observe(bgPlayerContainerRef.current)
-    const obs2 = observe(soundscapeContainerRef.current)
-
-    // Background music player
-    if (!bgPlayerRef.current && bgPlayerContainerRef.current) {
-      bgPlayerContainerRef.current.innerHTML = ''
-      const div = document.createElement('div')
-      div.id = 'bg-yt-pre'
-      bgPlayerContainerRef.current.appendChild(div)
-      bgPlayerRef.current = new window.YT.Player('bg-yt-pre', {
-        height: '1', width: '1',
-        playerVars: { controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0, showinfo: 0, playsinline: 1 },
-        events: {
-          onReady: () => { bgPlayerReadyRef.current = true },
-          onStateChange: (event) => {
-            if (event.data === 1) {
-              dispatch({ type: 'MUSIC_YT_PLAYING' })
-              if (bgProgressIntervalRef.current) clearInterval(bgProgressIntervalRef.current)
-              bgProgressIntervalRef.current = setInterval(() => {
-                if (bgPlayerRef.current) {
-                  try {
-                    const ct = bgPlayerRef.current.getCurrentTime()
-                    const d = bgPlayerRef.current.getDuration()
-                    dispatch({ type: 'MUSIC_TIME_UPDATE', currentTime: ct, duration: d })
-                  } catch {}
-                }
-              }, 1000)
-            } else if (event.data === 2) {
-              dispatch({ type: 'MUSIC_YT_PAUSED' })
-            } else if (event.data === 0) {
-              if (autoSkipNextRef.current) {
-                autoSkipNextRef.current()
-              } else {
-                try { event.target.seekTo(0, true); event.target.playVideo() } catch {}
-              }
-            }
-          },
-        },
-      })
-    }
-
-    // Soundscape player
-    if (!soundscapePlayerRef.current && soundscapeContainerRef.current) {
-      soundscapeContainerRef.current.innerHTML = ''
-      const div = document.createElement('div')
-      div.id = 'sc-yt-pre'
-      soundscapeContainerRef.current.appendChild(div)
-      soundscapePlayerRef.current = new window.YT.Player('sc-yt-pre', {
-        height: '1', width: '1',
-        playerVars: { controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0, showinfo: 0, playsinline: 1 },
-        events: {
-          onReady: () => { soundscapeReadyRef.current = true },
-          onStateChange: (event) => {
-            if (event.data === 1) dispatch({ type: 'SOUNDSCAPE_YT_PLAYING' })
-            else if (event.data === 2) dispatch({ type: 'SOUNDSCAPE_YT_PAUSED' })
-            else if (event.data === 0) {
-              try { event.target.seekTo(0, true); event.target.playVideo() } catch {}
-            }
-          },
-        },
-      })
-    }
-
-    return () => { obs1?.disconnect(); obs2?.disconnect() }
-  }, [ytReady, dispatch])
-
-  // Imperative player helpers
-  const createSoundscapePlayer = useCallback((youtubeId: string) => {
-    if (soundscapePlayerRef.current && soundscapeReadyRef.current) {
-      currentScVideoIdRef.current = youtubeId
-      soundscapePlayerRef.current.loadVideoById(youtubeId)
-      soundscapePlayerRef.current.setVolume(100)
-    }
-  }, [])
-
-  const createBgMusicPlayer = useCallback((youtubeId: string) => {
-    if (bgPlayerRef.current && bgPlayerReadyRef.current) {
-      currentBgVideoIdRef.current = youtubeId
-      bgPlayerRef.current.loadVideoById(youtubeId)
-      bgPlayerRef.current.setVolume(80)
-    }
-  }, [])
-
-  const stopBackgroundMusic = useCallback(() => {
-    if (bgPlayerRef.current && bgPlayerReadyRef.current) {
-      try { bgPlayerRef.current.stopVideo() } catch {}
-    }
-    if (bgProgressIntervalRef.current) {
-      clearInterval(bgProgressIntervalRef.current)
-      bgProgressIntervalRef.current = null
-    }
-    currentBgVideoIdRef.current = null
-    dispatch({ type: 'STOP_MUSIC' })
-  }, [dispatch])
+  // YT players, createSoundscapePlayer, createBgMusicPlayer, stopBackgroundMusic
+  // are now provided by HomeAudioProvider via useHomeAudio()
 
   // When daily guide starts, stop home audio
   useEffect(() => {
@@ -503,7 +351,10 @@ export function ImmersiveHome() {
   const { streak, mutatePreferences } = usePreferences()
 
   // SWR: Journal mood
-  const { journalMood, moodBefore, energyLevel } = useJournalMood(today)
+  const { journalData, journalMood, journalLoading, moodBefore, energyLevel, hasJournaledToday, modulesCompletedToday, dailyIntention } = useJournalMood(today)
+
+  // SWR: Gamification status (for bonus, freezes)
+  const { dailyBonusClaimed, streakFreezes, freezeUsedToday, lastStreakLost } = useGamificationStatus()
 
   // Adjust mode based on journal mood
   useEffect(() => {
@@ -515,6 +366,16 @@ export function ImmersiveHome() {
 
   const moodTopic = getMoodTopicName(journalMood)
   const featuredTopic = moodTopic || topicName
+
+  // Adaptive section ordering (#2)
+  const sectionOrder = useMemo(() => getAdaptiveSectionOrder({
+    journalMood,
+    energyLevel,
+    timeOfDay: timeContext.suggested,
+    streak,
+    lastPlayedType: audioContext?.lastPlayed?.type || null,
+    mindsetId: mindsetCtx?.mindset || null,
+  }), [journalMood, energyLevel, timeContext.suggested, streak, audioContext?.lastPlayed?.type, mindsetCtx?.mindset])
 
   // SWR: Motivation videos (featured topic)
   const { motivationVideos: featuredMotivationVideos, motivationLoading: loadingMotivation, mutateMotivation: mutateFeaturedMotivation } = useMotivationVideos(featuredTopic)
@@ -709,11 +570,6 @@ export function ImmersiveHome() {
     audioContext?.setLastPlayed({
       type: 'motivation', videoId: video.youtubeId, label: playTopic, playlistIndex: index,
     })
-
-    addRecentlyPlayed({
-      youtubeId: video.youtubeId, title: video.title, type: 'motivation',
-      label: playTopic, background: bg,
-    })
   }
 
   const handlePlayMusic = (video: VideoItem, index: number, genreId: string, genreWord: string) => {
@@ -745,11 +601,6 @@ export function ImmersiveHome() {
 
     audioContext?.setLastPlayed({
       type: 'music', genreId, genreWord, videoId: video.youtubeId, label: genreWord, playlistIndex: index,
-    })
-
-    addRecentlyPlayed({
-      youtubeId: video.youtubeId, title: video.title, type: 'music',
-      genreId, genreWord, label: genreWord, background: bg,
     })
   }
 
@@ -930,22 +781,13 @@ export function ImmersiveHome() {
       })
     }
 
-    // Stop guide audio imperatively
+    // Stop guide audio imperatively (but keep music for layering)
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''
       guideAudioRef.current = null
     }
     if (isPlaying) setIsPlaying(false)
-    // Stop bg music imperatively
-    if (bgPlayerRef.current && bgPlayerReadyRef.current) {
-      try { bgPlayerRef.current.stopVideo() } catch {}
-    }
-    if (bgProgressIntervalRef.current) {
-      clearInterval(bgProgressIntervalRef.current)
-      bgProgressIntervalRef.current = null
-    }
-    currentBgVideoIdRef.current = null
 
     dispatch({
       type: 'PLAY_SOUNDSCAPE',
@@ -1039,9 +881,6 @@ export function ImmersiveHome() {
         />
       )}
 
-      {/* Persistent soundscape YouTube player container */}
-      <div ref={soundscapeContainerRef} className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden" />
-
       {/* Soundscape Player (fullscreen orb) */}
       {audioState.activeSoundscape && audioState.showSoundscapePlayer && (
         <SoundscapePlayerComponent
@@ -1089,12 +928,6 @@ export function ImmersiveHome() {
         </div>
       )}
 
-      {/* Hidden YouTube API player for background music */}
-      <div
-        ref={bgPlayerContainerRef}
-        className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden pointer-events-none"
-      />
-
       {/* Pull-down indicator */}
       <div
         className="flex flex-col items-center justify-end overflow-hidden transition-all duration-200"
@@ -1115,24 +948,35 @@ export function ImmersiveHome() {
 
       {/* Header — hidden when any fullscreen overlay is active */}
       {!showMorningFlow && !audioState.playingSound && !audioState.showSoundscapePlayer && (
-        <div className="relative z-50 flex items-center justify-between px-6 pt-12 pb-2 animate-fade-in-down header-fade-bg transition-all duration-300">
-          <div className="flex items-center gap-3">
-            <h1 className={`font-semibold shimmer-text transition-all duration-300 ${headerScrolled ? 'text-lg' : 'text-2xl'}`}>Explore</h1>
-            <StreakBadge streak={streak} />
+        <div className="relative z-50 flex items-center justify-between px-5 pt-12 pb-2 animate-fade-in-down header-fade-bg transition-all duration-300">
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className={`font-semibold shimmer-text transition-all duration-300 shrink-0 ${headerScrolled ? 'text-lg' : 'text-xl'}`}>Explore</h1>
+            <StreakBadge streak={streak} freezeCount={streakFreezes} />
             <XPBadge />
+            <DailyProgressRing
+              morningDone={!!journalData?.morning_prime_done}
+              movementDone={!!journalData?.movement_done}
+              lessonDone={!!journalData?.micro_lesson_done}
+              closeDone={!!journalData?.day_close_done}
+              hasJournaledToday={hasJournaledToday}
+              dailyIntention={!!dailyIntention}
+              dailyBonusClaimed={dailyBonusClaimed}
+            />
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             {mindsetCtx && (
               <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
                 <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
               </div>
             )}
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              aria-label={showMenu ? 'Close menu' : 'Open menu'}
+              className="p-1 press-scale"
+            >
+              <SpiralLogo open={showMenu} size={48} />
+            </button>
           </div>
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            aria-label={showMenu ? 'Close menu' : 'Open menu'}
-            className="p-1 press-scale"
-          >
-            <SpiralLogo open={showMenu} size={64} />
-          </button>
         </div>
       )}
 
@@ -1140,7 +984,7 @@ export function ImmersiveHome() {
       {showMenu && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-6 top-[72px] z-40 w-48 py-2 rounded-2xl bg-[#111113] border border-white/15 shadow-xl animate-fade-in-up">
+          <div className="absolute right-6 top-[85px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
             <Link href="/my-path" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
               <Compass className="w-4 h-4 text-white/70" />
               <span className="text-sm text-white/90">
@@ -1182,28 +1026,55 @@ export function ImmersiveHome() {
         />
       )}
 
-      {/* Hero Carousel: Daily Guide + Path + Quote */}
+      {/* Streak Freeze Indicator */}
+      <StreakFreezeIndicator
+        freezeCount={streakFreezes}
+        freezeUsedToday={freezeUsedToday}
+        streakLost={lastStreakLost}
+      />
+
+      {/* Daily Intention Card */}
+      <DailyIntentionCard dailyIntention={dailyIntention} today={today} />
+
+      {/* Hero Carousel: Daily Guide + Path + Featured */}
       {(() => {
         const slides: React.ReactNode[] = [
           // Slide 1: Daily Guide
           <button
             key="guide"
             onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
-            className="w-full text-left group"
+            className="w-full h-full text-left group"
           >
-            <div className="relative p-6 rounded-2xl border border-white/[0.15] press-scale bg-black min-h-[10rem] flex flex-col justify-between">
+            <div className="relative p-5 rounded-2xl border border-white/[0.15] press-scale bg-black h-full flex flex-col justify-between overflow-hidden">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
                   <guideCTA.Icon className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg font-medium text-white">Your Daily Guide</h2>
-                  <p className="text-xs text-white/95">{guideCTA.subtitle}</p>
+                  <p className="text-xs text-white/90">{guideCTA.subtitle}</p>
                 </div>
               </div>
-              <div className="flex items-center justify-between mt-4">
-                <p className="text-sm text-white/95">Tap to open your full guide</p>
-                <ChevronRight className="w-5 h-5 text-white/95 group-hover:text-white/95 transition-colors" />
+
+              {/* Module progress */}
+              <div className="flex items-center gap-4 mt-3">
+                <div className="flex items-center gap-2.5">
+                  {['Morning', 'Close', 'Move', 'Learn'].map((mod, i) => {
+                    const done = [journalData?.morning_prime_done, journalData?.day_close_done, journalData?.movement_done, journalData?.micro_lesson_done][i]
+                    return (
+                      <div key={mod} className="flex items-center gap-1">
+                        <div className={`w-2.5 h-2.5 rounded-full ${done ? 'bg-white' : 'bg-white/30'}`} />
+                        <span className={`text-[11px] ${done ? 'text-white' : 'text-white/70'}`}>{mod}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <span className="text-xs text-white/90 font-medium">{modulesCompletedToday}/4</span>
+              </div>
+
+              <div className="flex items-center justify-between mt-auto pt-2">
+                <p className="text-sm text-white/90">Tap to open your guide</p>
+                <ChevronRight className="w-5 h-5 text-white/90" />
               </div>
             </div>
           </button>,
@@ -1220,195 +1091,299 @@ export function ImmersiveHome() {
           )
         }
 
-        // Slide 3: Quote of the Day
-        slides.push(<HomeQuoteCard key="quote" embedded />)
+        // Slide 3: Daily Wellness
+        slides.push(
+          <WellnessWidget
+            key="wellness"
+            journalMood={journalMood}
+            streak={streak}
+            modulesCompletedToday={modulesCompletedToday}
+            hasJournaledToday={hasJournaledToday}
+          />
+        )
+
+        // Slide 4: Featured Motivation
+        {
+          const video = motivationVideos[0]
+          if (video) {
+            const bg = backgrounds[0]
+            slides.push(
+              <button
+                key="feat-motiv"
+                onClick={() => handlePlayMotivation(video, 0)}
+                className="relative w-full text-left rounded-2xl overflow-hidden border border-white/[0.08] group press-scale h-full"
+              >
+                {bg && <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
+                <div className="relative z-10 p-5 flex flex-col justify-between h-full">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-orange-500/20 backdrop-blur-sm">
+                      <Sparkles className="w-5 h-5 text-orange-400" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-orange-400 uppercase tracking-wider">Featured Motivation</p>
+                      <p className="text-xs text-white/60">{featuredTopic}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-sm font-medium text-white line-clamp-2 mb-2">{video.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-white/70">
+                      <Play className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
+                      <span>Tap to play</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            )
+          }
+        }
+
+        // Slide 4: Featured Music
+        {
+          const firstGenre = MUSIC_GENRES[0]
+          const musicVids = genreVideos[firstGenre.id]
+          const musicVideo = musicVids?.[0]
+          if (musicVideo) {
+            const gBgs = genreBackgrounds[firstGenre.id] || []
+            const bg = gBgs[0] || backgrounds[2]
+            slides.push(
+              <button
+                key="feat-music"
+                onClick={() => handlePlayMusic(musicVideo, 0, firstGenre.id, firstGenre.word)}
+                className="relative w-full text-left rounded-2xl overflow-hidden border border-white/[0.08] group press-scale h-full"
+              >
+                {bg && <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
+                <div className="relative z-10 p-5 flex flex-col justify-between h-full">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-cyan-500/20 backdrop-blur-sm">
+                      <Music className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider">Featured Music</p>
+                      <p className="text-xs text-white/60">{firstGenre.word}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-sm font-medium text-white line-clamp-2 mb-2">{musicVideo.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-white/70">
+                      <Play className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400" />
+                      <span>Tap to play</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            )
+          }
+        }
 
         return <HeroCarousel>{slides}</HeroCarousel>
       })()}
 
-      {/* Weekly Digest (Sun/Mon only) */}
-      <WeeklyDigestCard isPremium={isPremium} />
 
-      {/* AI Smart Session */}
-      <SmartSessionCard
-        isPremium={isPremium}
-        onPlaySoundscape={(soundscapeId) => {
-          const item = SOUNDSCAPE_ITEMS.find(i => i.id === soundscapeId)
-          if (item) handleSoundscapePlay(item, false)
-        }}
-        onPlayGuide={(guideId) => {
-          handlePlayGuide(guideId, guideId)
-        }}
-        onPlayGenre={(genreId) => {
-          const videos = genreVideos[genreId]
-          const genre = MUSIC_GENRES.find(g => g.id === genreId)
-          if (videos?.length && genre) {
-            handlePlayMusic(videos[0], 0, genreId, genre.word)
-          }
-        }}
-        onOpenUpgrade={openUpgradeModal}
+      {/* Social Proof Banner */}
+      <SocialProofBanner />
+
+      {/* Resume Daily Guide (#9 — Session Continuity) */}
+      <ResumeGuideCard
+        modulesCompleted={modulesCompletedToday}
+        totalModules={4}
+        onResume={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
       />
 
-      {/* Soundscapes */}
-      <div className="stagger-item" style={{ '--i': 0 } as React.CSSProperties}>
-      <SoundscapesSection
-        activeSoundscape={audioState.activeSoundscape}
-        soundscapeIsPlaying={audioState.soundscapeIsPlaying}
-        isContentFree={(type, id) => isContentFree(type, id)}
-        onPlay={handleSoundscapePlay}
-        onReopen={handleSoundscapeReopen}
-      />
-      </div>
-
-      {/* Guided */}
-      <div className="stagger-item" style={{ '--i': 1 } as React.CSSProperties}>
-      <GuidedSection
-        guideLabel={audioState.guideLabel}
-        guideIsPlaying={audioState.guideIsPlaying}
-        loadingGuide={audioState.loadingGuide}
-        isContentFree={(type, id) => isContentFree(type, id)}
-        onPlay={handleGuidePlay}
-        onPlayAIMeditation={(themeId) => isPremium ? setAiMeditationTheme(themeId) : openUpgradeModal()}
-        isPremium={isPremium}
-      />
-      </div>
-
-      {/* Continue Listening (when paused mid-motivation) */}
-      {audioState.backgroundMusic && !audioState.musicPlaying && audioState.userPausedMusic
-        && audioState.currentPlaylist?.type === 'motivation' && audioState.musicCurrentTime > 0 && (
-        <ContinueListeningCard
-          video={audioState.currentPlaylist.videos[audioState.currentPlaylist.index] || { id: '', title: audioState.backgroundMusic.label, youtubeId: audioState.backgroundMusic.youtubeId, channel: '' }}
-          currentTime={audioState.musicCurrentTime}
-          duration={audioState.musicDuration}
-          background={backgrounds[audioState.currentPlaylist.index % backgrounds.length]}
-          onResume={() => dispatch({ type: 'RESUME_MUSIC' })}
-          onOpenPlayer={() => {
-            const pl = audioState.currentPlaylist!
-            const currentVideo = pl.videos[pl.index]
-            if (currentVideo) {
-              const bgs = getTodaysBackgrounds()
-              dispatch({
-                type: 'OPEN_FULLSCREEN_PLAYER',
-                playingSound: { word: audioState.backgroundMusic!.label, color: 'from-white/[0.06] to-white/[0.02]', youtubeId: currentVideo.youtubeId, backgroundImage: bgs[pl.index % bgs.length] },
-              })
-            }
-          }}
-        />
-      )}
-
-      {/* Recently Played */}
-      <RecentlyPlayedSection
-        items={recentlyPlayed}
-        activeCardId={audioState.activeCardId}
-        musicPlaying={audioState.musicPlaying}
-        onPlay={(item, index) => {
-          if (item.type === 'motivation') {
-            const video: VideoItem = { id: item.youtubeId, youtubeId: item.youtubeId, title: item.title, channel: '' }
-            handlePlayMotivation(video, 0, item.label)
-          } else {
-            const video: VideoItem = { id: item.youtubeId, youtubeId: item.youtubeId, title: item.title, channel: '' }
-            handlePlayMusic(video, 0, item.genreId || '', item.genreWord || item.label)
-          }
-        }}
-        onMagneticMove={magneticMove}
-        onMagneticLeave={magneticLeave}
-        onRipple={spawnRipple}
-      />
-
-      {/* Featured Motivation Row — mood-based "For You" or today's topic */}
-      <div className="stagger-item" style={{ '--i': 2 } as React.CSSProperties}>
-      <MotivationSection
-        videos={featuredMotivationVideos}
-        loading={loadingMotivation}
-        topicName={moodTopic ? 'For You' : featuredTopic}
-        tagline={moodTopic ? `Based on your mood \u00b7 ${featuredTopic}` : undefined}
-        heroCard={true}
-        backgrounds={backgrounds}
-        activeCardId={audioState.activeCardId}
-        tappedCardId={audioState.tappedCardId}
-        musicPlaying={audioState.musicPlaying}
-        isContentFree={(type, index) => isContentFree(type, index)}
-        onPlay={(video, index, isLocked) => handleMotivationPlay(video, index, isLocked, featuredTopic)}
-        onMagneticMove={magneticMove}
-        onMagneticLeave={magneticLeave}
-        onRipple={spawnRipple}
-        onShuffle={() => handleShuffleTopic(featuredTopic)}
-        shuffling={shufflingTopic === featuredTopic}
-        favoriteIds={favoriteIds}
-        onToggleFavorite={handleToggleFavorite}
-        progressPercent={audioState.currentPlaylist?.type === 'motivation' && audioState.musicDuration > 0
-          ? (audioState.musicCurrentTime / audioState.musicDuration) * 100
-          : undefined}
-        onLongPressStart={handleLongPressStart}
-        onLongPressEnd={handleLongPressEnd}
-      />
-      </div>
-
-      {/* Your Saves */}
-      {savedMotivationVideos.length > 0 && (
-        <SavedMotivationSection
-          videos={savedMotivationVideos}
-          backgrounds={backgrounds}
-          activeCardId={audioState.activeCardId}
-          tappedCardId={audioState.tappedCardId}
-          musicPlaying={audioState.musicPlaying}
-          onPlay={(video, index) => handlePlayMotivation(video, index)}
-          onRemoveFavorite={handleToggleFavorite}
-          onMagneticMove={magneticMove}
-          onMagneticLeave={magneticLeave}
-          onRipple={spawnRipple}
-        />
-      )}
-
-      {/* Music Genres */}
-      {MUSIC_GENRES.map((g, gi) => (
-        <div key={g.id} className="stagger-item" style={{ '--i': 3 + gi } as React.CSSProperties}>
-        <LazyGenreSection
-          genre={g}
-          genreIndex={gi}
-          fallbackBackgrounds={backgrounds}
-          activeCardId={audioState.activeCardId}
-          tappedCardId={audioState.tappedCardId}
-          musicPlaying={audioState.musicPlaying}
-          isContentFree={(type, index) => isContentFree(type, index)}
-          onPlay={handleMusicGenrePlay}
-          onMagneticMove={magneticMove}
-          onMagneticLeave={magneticLeave}
-          onRipple={spawnRipple}
-          heroCard={true}
-          favoriteIds={musicFavoriteIds}
-          onToggleFavorite={handleToggleMusicFavorite}
-          progressPercent={audioState.currentPlaylist?.type === 'music' && audioState.currentPlaylist?.genreId === g.id && audioState.musicDuration > 0
-            ? (audioState.musicCurrentTime / audioState.musicDuration) * 100
-            : undefined}
-          onLongPressStart={handleLongPressStart}
-          onLongPressEnd={handleLongPressEnd}
-          showShuffleToast={showShuffleToast}
-          onDataLoaded={handleGenreDataLoaded}
-        />
+      {/* Journal Nudge — hidden when intention is set (intention card already links to journal) */}
+      {!dailyIntention && (
+        <div className="px-6 mb-6">
+          <JournalNudgeCard journalData={journalData} journalLoading={journalLoading} />
         </div>
-      ))}
-
-      {/* Saved Music */}
-      {savedMusicVideos.length > 0 && (
-        <SavedMotivationSection
-          label="Saved Music"
-          subtitle="Tracks you loved"
-          videos={savedMusicVideos}
-          backgrounds={backgrounds}
-          activeCardId={audioState.activeCardId}
-          tappedCardId={audioState.tappedCardId}
-          musicPlaying={audioState.musicPlaying}
-          onPlay={(video, index) => handlePlayMusic(video, index, '', 'Saved Music')}
-          onRemoveFavorite={handleToggleMusicFavorite}
-          onMagneticMove={magneticMove}
-          onMagneticLeave={magneticLeave}
-          onRipple={spawnRipple}
-        />
       )}
+
+      {/* Smart Nudge — shows after 30s idle when not playing audio */}
+      <SmartHomeNudge
+        isAudioActive={audioState.homeAudioActive}
+        journalMood={journalMood}
+        hasJournaledToday={hasJournaledToday}
+        streak={streak}
+        modulesCompletedToday={modulesCompletedToday}
+        hasDailyIntention={!!dailyIntention}
+      />
+
+      {/* Adaptive-ordered sections (#2) */}
+      {sectionOrder.map((section, orderIdx) => {
+        switch (section) {
+          case 'soundscapes':
+            return (
+              <div key="soundscapes" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
+                <SoundscapesSection
+                  activeSoundscape={audioState.activeSoundscape}
+                  soundscapeIsPlaying={audioState.soundscapeIsPlaying}
+                  isContentFree={(type, id) => isContentFree(type, id)}
+                  onPlay={handleSoundscapePlay}
+                  onReopen={handleSoundscapeReopen}
+                />
+              </div>
+            )
+          case 'guided':
+            return (
+              <div key="guided" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
+                <GuidedSection
+                  guideLabel={audioState.guideLabel}
+                  guideIsPlaying={audioState.guideIsPlaying}
+                  loadingGuide={audioState.loadingGuide}
+                  isContentFree={(type, id) => isContentFree(type, id)}
+                  onPlay={handleGuidePlay}
+                  onPlayAIMeditation={(themeId) => isPremium ? setAiMeditationTheme(themeId) : openUpgradeModal()}
+                  isPremium={isPremium}
+                />
+              </div>
+            )
+          case 'motivation':
+            return (
+              <React.Fragment key="motivation">
+                {/* Continue Listening (when paused mid-motivation) */}
+                {audioState.backgroundMusic && !audioState.musicPlaying && audioState.userPausedMusic
+                  && audioState.currentPlaylist?.type === 'motivation' && audioState.musicCurrentTime > 0 && (
+                  <ContinueListeningCard
+                    video={audioState.currentPlaylist.videos[audioState.currentPlaylist.index] || { id: '', title: audioState.backgroundMusic.label, youtubeId: audioState.backgroundMusic.youtubeId, channel: '' }}
+                    currentTime={audioState.musicCurrentTime}
+                    duration={audioState.musicDuration}
+                    background={backgrounds[audioState.currentPlaylist.index % backgrounds.length]}
+                    onResume={() => dispatch({ type: 'RESUME_MUSIC' })}
+                    onOpenPlayer={() => {
+                      const pl = audioState.currentPlaylist!
+                      const currentVideo = pl.videos[pl.index]
+                      if (currentVideo) {
+                        const bgs = getTodaysBackgrounds()
+                        dispatch({
+                          type: 'OPEN_FULLSCREEN_PLAYER',
+                          playingSound: { word: audioState.backgroundMusic!.label, color: 'from-white/[0.06] to-white/[0.02]', youtubeId: currentVideo.youtubeId, backgroundImage: bgs[pl.index % bgs.length] },
+                        })
+                      }
+                    }}
+                  />
+                )}
+
+                <div className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
+                  <MotivationSection
+                    videos={featuredMotivationVideos}
+                    loading={loadingMotivation}
+                    topicName={moodTopic ? 'For You' : featuredTopic}
+                    tagline={moodTopic ? `Based on your mood \u00b7 ${featuredTopic}` : undefined}
+                    heroCard={true}
+                    backgrounds={backgrounds}
+                    activeCardId={audioState.activeCardId}
+                    tappedCardId={audioState.tappedCardId}
+                    musicPlaying={audioState.musicPlaying}
+                    isContentFree={(type, index) => isContentFree(type, index)}
+                    onPlay={(video, index, isLocked) => handleMotivationPlay(video, index, isLocked, featuredTopic)}
+                    onMagneticMove={magneticMove}
+                    onMagneticLeave={magneticLeave}
+                    onRipple={spawnRipple}
+                    onShuffle={() => handleShuffleTopic(featuredTopic)}
+                    shuffling={shufflingTopic === featuredTopic}
+                    favoriteIds={favoriteIds}
+                    onToggleFavorite={handleToggleFavorite}
+                    progressPercent={audioState.currentPlaylist?.type === 'motivation' && audioState.musicDuration > 0
+                      ? (audioState.musicCurrentTime / audioState.musicDuration) * 100
+                      : undefined}
+                    onLongPressStart={handleLongPressStart}
+                    onLongPressEnd={handleLongPressEnd}
+                  />
+                </div>
+
+                {/* Your Saves */}
+                {savedMotivationVideos.length > 0 && (
+                  <SavedMotivationSection
+                    videos={savedMotivationVideos}
+                    backgrounds={backgrounds}
+                    activeCardId={audioState.activeCardId}
+                    tappedCardId={audioState.tappedCardId}
+                    musicPlaying={audioState.musicPlaying}
+                    onPlay={(video, index) => handlePlayMotivation(video, index)}
+                    onRemoveFavorite={handleToggleFavorite}
+                    onMagneticMove={magneticMove}
+                    onMagneticLeave={magneticLeave}
+                    onRipple={spawnRipple}
+                  />
+                )}
+              </React.Fragment>
+            )
+          case 'path':
+            return mindsetCtx ? (
+              <PathContentSection
+                key="path"
+                mindsetId={mindsetCtx.mindset}
+                motivationByTopic={motivationByTopic}
+                backgrounds={backgrounds}
+                activeCardId={audioState.activeCardId}
+                tappedCardId={audioState.tappedCardId}
+                musicPlaying={audioState.musicPlaying}
+                onPlay={(video, index, topic) => handleMotivationPlay(video, index, false, topic)}
+                onMagneticMove={magneticMove}
+                onMagneticLeave={magneticLeave}
+                onRipple={spawnRipple}
+              />
+            ) : null
+          case 'music':
+            return (
+              <React.Fragment key="music">
+                {MUSIC_GENRES.map((g, gi) => (
+                  <div key={g.id} className="stagger-item" style={{ '--i': orderIdx + gi } as React.CSSProperties}>
+                    <LazyGenreSection
+                      genre={g}
+                      genreIndex={gi}
+                      fallbackBackgrounds={backgrounds}
+                      activeCardId={audioState.activeCardId}
+                      tappedCardId={audioState.tappedCardId}
+                      musicPlaying={audioState.musicPlaying}
+                      isContentFree={(type, index) => isContentFree(type, index)}
+                      onPlay={handleMusicGenrePlay}
+                      onMagneticMove={magneticMove}
+                      onMagneticLeave={magneticLeave}
+                      onRipple={spawnRipple}
+                      heroCard={true}
+                      favoriteIds={musicFavoriteIds}
+                      onToggleFavorite={handleToggleMusicFavorite}
+                      progressPercent={audioState.currentPlaylist?.type === 'music' && audioState.currentPlaylist?.genreId === g.id && audioState.musicDuration > 0
+                        ? (audioState.musicCurrentTime / audioState.musicDuration) * 100
+                        : undefined}
+                      onLongPressStart={handleLongPressStart}
+                      onLongPressEnd={handleLongPressEnd}
+                      showShuffleToast={showShuffleToast}
+                      onDataLoaded={handleGenreDataLoaded}
+                    />
+                  </div>
+                ))}
+
+                {/* Saved Music */}
+                {savedMusicVideos.length > 0 && (
+                  <SavedMotivationSection
+                    label="Saved Music"
+                    subtitle="Tracks you loved"
+                    videos={savedMusicVideos}
+                    backgrounds={backgrounds}
+                    activeCardId={audioState.activeCardId}
+                    tappedCardId={audioState.tappedCardId}
+                    musicPlaying={audioState.musicPlaying}
+                    onPlay={(video, index) => handlePlayMusic(video, index, '', 'Saved Music')}
+                    onRemoveFavorite={handleToggleMusicFavorite}
+                    onMagneticMove={magneticMove}
+                    onMagneticLeave={magneticLeave}
+                    onRipple={spawnRipple}
+                  />
+                )}
+              </React.Fragment>
+            )
+          default:
+            return null
+        }
+      })}
 
       {/* Daily Spark */}
       {!showMorningFlow && <DailySpark />}
+
+      {/* Tomorrow Preview */}
+      {!showMorningFlow && <TomorrowPreview />}
 
       {/* Floating AI Coach Button */}
       <Link

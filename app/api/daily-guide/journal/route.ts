@@ -50,10 +50,17 @@ export async function GET(request: NextRequest) {
           journal_dream: true,
           journal_dream_interpretation: true,
           journal_conversation: true,
+          morning_prime_done: true,
+          day_close_done: true,
+          movement_done: true,
+          micro_lesson_done: true,
+          mood_before: true,
+          energy_level: true,
+          daily_intention: true,
         },
       })
 
-      return NextResponse.json(guide || { date: targetDate, journal_win: null, journal_gratitude: null, journal_learned: null, journal_intention: null, journal_freetext: null, journal_mood: null, journal_prompt: null, journal_ai_reflection: null, journal_tags: [], journal_dream: null, journal_dream_interpretation: null, journal_conversation: null })
+      return NextResponse.json(guide || { date: targetDate, journal_win: null, journal_gratitude: null, journal_learned: null, journal_intention: null, journal_freetext: null, journal_mood: null, journal_prompt: null, journal_ai_reflection: null, journal_tags: [], journal_dream: null, journal_dream_interpretation: null, journal_conversation: null, morning_prime_done: false, day_close_done: false, movement_done: false, micro_lesson_done: false, mood_before: null, energy_level: null, daily_intention: null })
     }
 
     // Date range query (for calendar/history)
