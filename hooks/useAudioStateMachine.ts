@@ -108,7 +108,7 @@ export type AudioAction =
 export function audioReducer(state: AudioState, action: AudioAction): AudioState {
   switch (action.type) {
     case 'PLAY_MUSIC':
-      // Auto-stop soundscape + guide when music starts
+      // Keep soundscape layered — only stop guide
       return {
         ...state,
         backgroundMusic: { youtubeId: action.youtubeId, label: action.label },
@@ -120,12 +120,7 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         currentPlaylist: action.playlist,
         playingSound: action.playingSound,
         homeAudioActive: true,
-        // Stop soundscape
-        activeSoundscape: null,
-        showSoundscapePlayer: false,
-        soundscapeIsPlaying: false,
-        userPausedSoundscape: false,
-        // Stop guide
+        // Stop guide (but keep soundscape layered)
         guideLabel: null,
         guideIsPlaying: false,
         loadingGuide: null,
@@ -148,11 +143,12 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         activeCardId: null,
         currentPlaylist: null,
         playingSound: null,
-        homeAudioActive: false,
+        // Stay active if soundscape is still playing
+        homeAudioActive: !!(state.activeSoundscape && state.soundscapeIsPlaying),
       }
 
     case 'PLAY_SOUNDSCAPE':
-      // Auto-stop music + guide when soundscape starts
+      // Keep music layered — only stop guide
       return {
         ...state,
         activeSoundscape: action.soundscape,
@@ -160,16 +156,7 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         userPausedSoundscape: false,
         showSoundscapePlayer: true,
         homeAudioActive: true,
-        // Stop music
-        backgroundMusic: null,
-        musicPlaying: false,
-        userPausedMusic: false,
-        musicDuration: 0,
-        musicCurrentTime: 0,
-        activeCardId: null,
-        currentPlaylist: null,
-        playingSound: null,
-        // Stop guide
+        // Stop guide (but keep music layered)
         guideLabel: null,
         guideIsPlaying: false,
         loadingGuide: null,

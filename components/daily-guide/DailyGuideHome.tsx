@@ -1000,7 +1000,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {!embedded && <TrialEndingBanner />}
 
       {/* Header */}
-      <div className="sticky top-0 z-50 p-6 pt-12 bg-black animate-fade-in-down">
+      <div className="sticky top-0 z-50 p-6 pt-12 mb-4 bg-black animate-fade-in-down">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         {/* Greeting Section */}
         <div className="flex items-center justify-between mb-4">

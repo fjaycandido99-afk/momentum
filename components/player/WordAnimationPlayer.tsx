@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Volume2, VolumeX, ExternalLink, Play, Pause, SkipForward, SkipBack } from 'lucide-react'
+import { X, Volume2, VolumeX, ExternalLink, Play, Pause, SkipForward, SkipBack, PenLine } from 'lucide-react'
 import { RainEffect } from '@/components/effects/RainEffect'
 import { ConstellationBackground } from '@/components/player/ConstellationBackground'
+import { PlayerJournalSheet } from './PlayerJournalSheet'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
 
@@ -55,6 +56,12 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
   const playerRef = useRef<YTPlayer | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Journal FAB state (motivation-only)
+  const [showJournalFAB, setShowJournalFAB] = useState(false)
+  const [showNudge, setShowNudge] = useState(false)
+  const [showJournal, setShowJournal] = useState(false)
+  const journalTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Unified playing state: external mode uses parent state, local mode uses own state
   const isPlaying = externalAudio ? (externalPlaying ?? false) : isPlayingLocal
@@ -165,6 +172,18 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
     }
   }, [youtubeId, externalAudio])
 
+  // Show journal FAB after 30s of playback, nudge fades after 5s
+  useEffect(() => {
+    journalTimerRef.current = setTimeout(() => {
+      setShowJournalFAB(true)
+      setShowNudge(true)
+      setTimeout(() => setShowNudge(false), 5000)
+    }, 30000)
+    return () => {
+      if (journalTimerRef.current) clearTimeout(journalTimerRef.current)
+    }
+  }, [])
+
   // Toggle mute (only for local audio mode)
   const toggleMute = useCallback(() => {
     if (playerRef.current) {
@@ -272,6 +291,29 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
         </button>
       </div>
 
+      {/* Journal FAB + nudge (motivation only, after 30s) */}
+      {!showJournal && showJournalFAB && (
+        <div className="absolute bottom-24 right-6 z-20 flex items-center gap-3 animate-fade-in">
+          {/* Nudge toast */}
+          {showNudge && (
+            <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-4 py-2 animate-nudge-in">
+              <span className="text-white/90 text-xs font-medium whitespace-nowrap">
+                Feeling inspired? Capture it.
+              </span>
+            </div>
+          )}
+          {/* FAB with pulse */}
+          <button
+            aria-label="Open journal"
+            onClick={() => setShowJournal(true)}
+            className="relative w-12 h-12 rounded-full bg-white/30 backdrop-blur-md border border-white/40 flex items-center justify-center hover:bg-white/40 transition-colors flex-shrink-0 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+          >
+            <span className="absolute inset-0 rounded-full animate-fab-pulse" />
+            <PenLine className="w-5 h-5 text-white relative z-10" />
+          </button>
+        </div>
+      )}
+
       {/* Main content */}
       <div className="relative z-10 h-full flex flex-col items-center justify-center px-8">
         {/* Category pill */}
@@ -373,6 +415,9 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, s
           </div>
         )}
       </div>
+
+      {/* Journal sheet overlay */}
+      <PlayerJournalSheet open={showJournal} onClose={() => setShowJournal(false)} />
     </div>
   )
 }

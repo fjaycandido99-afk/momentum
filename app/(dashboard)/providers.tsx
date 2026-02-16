@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext'
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext'
 import { MindsetProvider } from '@/contexts/MindsetContext'
 import { AudioProvider } from '@/contexts/AudioContext'
+import { HomeAudioProvider } from '@/contexts/HomeAudioContext'
 import { AchievementProvider } from '@/contexts/AchievementContext'
 import { OfflineProvider } from '@/contexts/OfflineContext'
 import { OfflineBanner } from '@/components/OfflineBanner'
@@ -26,14 +27,16 @@ export function Providers({ children }: ProvidersProps) {
           <ThemeProvider>
             <OfflineProvider>
               <AudioProvider>
-                <AchievementProvider>
-                  <ToastProvider>
-                    <OfflineBanner />
-                    {children}
-                    <UpgradeModalWithContext />
-                    <ToastContainer />
-                  </ToastProvider>
-                </AchievementProvider>
+                <HomeAudioProvider>
+                  <AchievementProvider>
+                    <ToastProvider>
+                      <OfflineBanner />
+                      {children}
+                      <UpgradeModalWithContext />
+                      <ToastContainer />
+                    </ToastProvider>
+                  </AchievementProvider>
+                </HomeAudioProvider>
               </AudioProvider>
             </OfflineProvider>
           </ThemeProvider>

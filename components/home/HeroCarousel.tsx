@@ -72,7 +72,7 @@ export function HeroCarousel({ children, autoPlayMs = 5000 }: HeroCarouselProps)
         {children.map((child, i) => (
           <div
             key={i}
-            className="w-full flex-shrink-0 px-6 card-enter"
+            className="w-full flex-shrink-0 px-6 card-enter h-[11rem]"
             style={{ scrollSnapAlign: 'center', animationDelay: `${i * 0.1}s` }}
           >
             {child}
@@ -94,7 +94,7 @@ export function HeroCarousel({ children, autoPlayMs = 5000 }: HeroCarouselProps)
           />
         ))}
       </div>
-      <div className="px-6"><FeatureHint id="home-hero-swipe" text="Swipe for your Daily Guide, Path & Quote" mode="once" /></div>
+      <div className="px-6"><FeatureHint id="home-hero-swipe" text="Swipe for your Daily Guide, Path, Week & Quote" mode="once" /></div>
     </div>
   )
 }

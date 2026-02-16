@@ -46,7 +46,7 @@ export function WeeklyDigestCard({ isPremium }: WeeklyDigestCardProps) {
 
   return (
     <div className="px-6 mb-4 liquid-reveal section-fade-bg">
-      <div className="p-5 card-gradient-border-lg">
+      <div className="p-5 rounded-3xl bg-black border border-white/10">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
             <BarChart3 className="w-4 h-4 text-white/70" />
@@ -97,7 +97,7 @@ export function WeeklyDigestCard({ isPremium }: WeeklyDigestCardProps) {
                 {data.moodChart.map((m, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
                     <div
-                      className="w-full rounded-sm bg-white/20"
+                      className="w-full rounded-sm bg-white"
                       style={{ height: `${((m.after ?? 0) + 1) * 8}px` }}
                     />
                   </div>

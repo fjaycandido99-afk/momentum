@@ -526,7 +526,7 @@ function JournalContent() {
   return (
     <div className="min-h-screen text-white pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-50 px-6 pt-12 pb-4 bg-black">
+      <div className="sticky top-0 z-50 px-6 pt-12 pb-4 mb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 mb-1">

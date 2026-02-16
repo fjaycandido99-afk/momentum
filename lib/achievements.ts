@@ -115,6 +115,19 @@ export const ACHIEVEMENTS: Achievement[] = [
   // --- Secret (2) ---
   { id: 'midnight_owl', title: 'Midnight Owl', description: 'Use the app at exactly midnight', icon: '🌑', category: 'secret', rarity: 'epic', xpReward: 100, condition: { type: 'time_range', start: 0, end: 1, action: 'any' } },
   { id: 'perfect_week', title: 'Perfect Week', description: 'Complete all modules every day for a week', icon: '✨', category: 'secret', rarity: 'legendary', xpReward: 500, condition: { type: 'consecutive_days', days: 7, action: 'full_day_complete' } },
+
+  // --- Listening (11) — tracked client-side via useListeningStats ---
+  { id: 'listener_1hr', title: 'First Hour', description: '1 hour of total listening', icon: '🎵', category: 'dedication', rarity: 'common', xpReward: 30, condition: { type: 'count', action: 'listening_minutes', count: 60 } },
+  { id: 'listener_5hr', title: 'Dedicated Listener', description: '5 hours of total listening', icon: '🎧', category: 'dedication', rarity: 'rare', xpReward: 100, condition: { type: 'count', action: 'listening_minutes', count: 300 } },
+  { id: 'listener_10hr', title: 'Sound Devotee', description: '10 hours of total listening', icon: '🎶', category: 'dedication', rarity: 'rare', xpReward: 150, condition: { type: 'count', action: 'listening_minutes', count: 600 } },
+  { id: 'listener_100hr', title: 'Audio Legend', description: '100 hours of total listening', icon: '👑', category: 'dedication', rarity: 'legendary', xpReward: 500, condition: { type: 'count', action: 'listening_minutes', count: 6000 } },
+  { id: 'flow_master', title: 'Flow Master', description: '60+ minute listening session', icon: '🌊', category: 'mastery', rarity: 'rare', xpReward: 75, condition: { type: 'count', action: 'longest_session', count: 60 } },
+  { id: 'deep_flow', title: 'Deep Flow', description: '2+ hour listening session', icon: '🧘', category: 'mastery', rarity: 'epic', xpReward: 200, condition: { type: 'count', action: 'longest_session', count: 120 } },
+  { id: 'genre_explorer_audio', title: 'Sound Explorer', description: 'Played 5 different genres', icon: '🧭', category: 'explorer', rarity: 'rare', xpReward: 75, condition: { type: 'count', action: 'unique_genres', count: 5 } },
+  { id: 'all_genres', title: 'Genre Master', description: 'Played all 7 music genres', icon: '🎹', category: 'explorer', rarity: 'epic', xpReward: 200, condition: { type: 'count', action: 'unique_genres', count: 7 } },
+  { id: 'listening_streak_7', title: 'Weekly Listener', description: '7-day listening streak', icon: '🔥', category: 'consistency', rarity: 'common', xpReward: 50, condition: { type: 'consecutive_days', days: 7, action: 'listening' } },
+  { id: 'listening_streak_30', title: 'Monthly Listener', description: '30-day listening streak', icon: '💎', category: 'consistency', rarity: 'epic', xpReward: 300, condition: { type: 'consecutive_days', days: 30, action: 'listening' } },
+  { id: 'midnight_listener', title: 'Midnight Listener', description: 'Listened between midnight and 5 AM', icon: '🌙', category: 'secret', rarity: 'common', xpReward: 25, condition: { type: 'time_range', start: 0, end: 5, action: 'listening' } },
 ]
 
 export function getAchievementById(id: string): Achievement | undefined {
