@@ -981,10 +981,6 @@ export function ImmersiveHome() {
               </button>
             </div>
           </div>
-          {/* Live active users */}
-          <div className="flex justify-center mt-1.5">
-            <SocialProofBanner compact />
-          </div>
         </div>
       )}
 
@@ -1189,7 +1185,8 @@ export function ImmersiveHome() {
       })()}
 
 
-      {/* Social Proof Banner moved to header as compact pill */}
+      {/* Social Proof — floating pill on left side */}
+      <SocialProofBanner />
 
       {/* Resume Daily Guide (#9 — Session Continuity) */}
       <ResumeGuideCard
