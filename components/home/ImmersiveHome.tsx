@@ -16,7 +16,6 @@ import { GuidedSection } from './GuidedSection'
 import { XPBadge } from './XPBadge'
 import { MotivationSection } from './MotivationSection'
 import { LazyGenreSection } from './LazyGenreSection'
-import { JournalNudgeCard } from './JournalNudgeCard'
 import { PathChallengeBanner } from './PathChallengeBanner'
 import { AIMeditationPlayer } from './AIMeditationPlayer'
 import { ContinueListeningCard } from './ContinueListeningCard'
@@ -1194,12 +1193,6 @@ export function ImmersiveHome() {
         onResume={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
       />
 
-      {/* Journal Nudge — hidden when intention is set (intention card already links to journal) */}
-      {!dailyIntention && (
-        <div className="px-6 mb-6">
-          <JournalNudgeCard journalData={journalData} journalLoading={journalLoading} />
-        </div>
-      )}
 
       {/* Smart Nudge — shows after 30s idle when not playing audio */}
       <SmartHomeNudge
