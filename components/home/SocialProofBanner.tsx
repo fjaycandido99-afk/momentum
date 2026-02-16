@@ -25,7 +25,7 @@ function getMessages(count: number, mindsetName: string | null): string[] {
   return base
 }
 
-export function SocialProofBanner() {
+export function SocialProofBanner({ compact = false }: { compact?: boolean }) {
   const mindsetCtx = useMindsetOptional()
   const [messageIndex, setMessageIndex] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -48,6 +48,24 @@ export function SocialProofBanner() {
     }, 10000)
     return () => clearInterval(interval)
   }, [messages.length])
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+        <span className="relative flex h-1.5 w-1.5 shrink-0">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+        </span>
+        <p
+          className={`text-[10px] text-emerald-400/90 font-medium transition-opacity duration-300 whitespace-nowrap ${
+            visible ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          {count.toLocaleString()} active
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-6 mb-4 flex items-center justify-center gap-2 py-2">

@@ -955,6 +955,7 @@ export function ImmersiveHome() {
             <h1 className={`font-semibold shimmer-text transition-all duration-300 shrink-0 ${headerScrolled ? 'text-lg' : 'text-xl'}`}>Explore</h1>
             <StreakBadge streak={streak} freezeCount={streakFreezes} />
             <XPBadge />
+            <SocialProofBanner compact />
             <DailyProgressRing
               morningDone={!!journalData?.morning_prime_done}
               movementDone={!!journalData?.movement_done}
@@ -1183,8 +1184,7 @@ export function ImmersiveHome() {
       })()}
 
 
-      {/* Social Proof Banner */}
-      <SocialProofBanner />
+      {/* Social Proof Banner moved to header as compact pill */}
 
       {/* Resume Daily Guide (#9 — Session Continuity) */}
       <ResumeGuideCard
