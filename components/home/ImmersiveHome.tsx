@@ -948,7 +948,10 @@ export function ImmersiveHome() {
 
       {/* Header — hidden when any fullscreen overlay is active */}
       {!showMorningFlow && !audioState.playingSound && !audioState.showSoundscapePlayer && (
-        <div className="relative z-50 flex items-center justify-between px-5 pt-12 pb-2 animate-fade-in-down header-fade-bg transition-all duration-300">
+        <div className="sticky top-0 z-50 flex items-center justify-between px-5 pt-12 pb-2 animate-fade-in-down bg-black before:absolute before:content-[''] before:-top-20 before:left-0 before:right-0 before:h-20 before:bg-black"
+        >
+          {/* Faded bottom border */}
+          <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.1) 0%, transparent 70%)' }} />
           <div className="flex items-center gap-2 min-w-0">
             <h1 className={`font-semibold shimmer-text transition-all duration-300 shrink-0 ${headerScrolled ? 'text-lg' : 'text-xl'}`}>Explore</h1>
             <StreakBadge streak={streak} freezeCount={streakFreezes} />
@@ -984,7 +987,7 @@ export function ImmersiveHome() {
       {showMenu && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-6 top-[85px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
+          <div className="fixed right-6 top-[85px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
             <Link href="/my-path" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
               <Compass className="w-4 h-4 text-white/70" />
               <span className="text-sm text-white/90">
