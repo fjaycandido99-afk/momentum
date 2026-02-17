@@ -112,6 +112,10 @@ async function generatePersonalizedText(
       gratitude: 'Write a 2-minute gratitude meditation script. Guide the listener to notice and appreciate various aspects of their life. About 200-250 words.',
       sleep: 'Write a 2-minute sleep meditation script. Use progressive relaxation and soothing imagery to help the listener drift into sleep. About 200-250 words.',
       grounding: 'Write a 2-minute grounding exercise. Include sensory awareness techniques and reassuring messages to bring the listener to the present. About 200-250 words.',
+      stress_relief: 'Write a 2-minute stress relief meditation script. Guide the listener through releasing tension and finding calm. About 200-250 words.',
+      focus_meditation: 'Write a 2-minute focus meditation script. Help the listener sharpen concentration and mental clarity. About 200-250 words.',
+      self_compassion: 'Write a 2-minute self-compassion meditation script. Encourage self-kindness, warmth, and inner acceptance. About 200-250 words.',
+      confidence: 'Write a 2-minute confidence meditation script. Build inner strength, self-belief, and courage. About 200-250 words.',
     }
 
     const DAY_TYPE_PROMPTS: Record<DayTypeVoiceType, string> = {
