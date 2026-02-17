@@ -209,9 +209,9 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
   }
 
   return (
-    <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+    <div className="rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
       {/* Header */}
-      <div className="p-4 border-b border-white/10">
+      <div className="p-4 border-b border-white/15">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-semibold text-white">Your Progress</h2>
           {currentStreak > 0 && (
@@ -323,11 +323,11 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
           onClick={() => setShowJournalPopup(false)}
         >
           <div
-            className="w-full max-w-sm bg-black rounded-2xl border border-white/20 overflow-hidden"
+            className="w-full max-w-sm bg-black rounded-2xl border border-white/25 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Popup Header */}
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <div className="p-4 border-b border-white/15 flex items-center justify-between">
               <div>
                 <p className="text-white font-medium">
                   {selectedDayData.date.toLocaleDateString('en-US', {

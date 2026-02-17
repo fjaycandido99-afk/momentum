@@ -167,7 +167,7 @@ export default function PricingPage() {
         <div className="max-w-4xl mx-auto">
           {/* Billing toggle */}
           <div className="flex justify-center mb-10">
-            <div className="flex gap-2 p-1.5 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex gap-2 p-1.5 bg-white/5 rounded-xl border border-white/15">
               <button
                 onClick={() => setBillingPeriod('monthly')}
                 className={`py-2.5 px-6 rounded-lg text-sm font-medium transition-all ${
@@ -195,7 +195,7 @@ export default function PricingPage() {
           {/* Cards */}
           <div className="grid md:grid-cols-2 gap-6">
             {/* Free Plan */}
-            <div className="relative p-6 rounded-2xl bg-white/[0.02] border border-white/10">
+            <div className="relative p-6 rounded-2xl bg-white/[0.02] border border-white/15">
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-white mb-2">Free</h3>
                 <p className="text-white/95 text-sm">Perfect for trying out Voxu</p>
@@ -235,7 +235,7 @@ export default function PricingPage() {
 
               <button
                 onClick={() => router.push('/signup')}
-                className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-colors"
+                className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/15 text-white font-medium hover:bg-white/10 transition-colors"
               >
                 Get Started
               </button>
@@ -350,7 +350,7 @@ export default function PricingPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10">
+                <tr className="border-b border-white/15">
                   <th className="text-left py-4 px-4 text-white/95 font-medium">Feature</th>
                   <th className="text-center py-4 px-4 text-white/95 font-medium w-32">Free</th>
                   <th className="text-center py-4 px-4 text-amber-400 font-medium w-32">
@@ -411,7 +411,7 @@ export default function PricingPage() {
             {FAQ_ITEMS.map((item, index) => (
               <div
                 key={index}
-                className="rounded-xl bg-white/[0.02] border border-white/10 overflow-hidden"
+                className="rounded-xl bg-white/[0.02] border border-white/15 overflow-hidden"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}

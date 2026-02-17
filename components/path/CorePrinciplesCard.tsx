@@ -30,7 +30,7 @@ export function CorePrinciplesCard({ mindsetId }: CorePrinciplesCardProps) {
   return (
     <div className="card-path p-5">
       <div className="flex items-center gap-2.5 mb-4">
-        <BookOpen className="w-4 h-4 text-white/70" />
+        <BookOpen className="w-4 h-4 text-white/85" />
         <h3 className="text-sm font-medium text-white">Core Principles</h3>
       </div>
 
@@ -54,13 +54,13 @@ export function CorePrinciplesCard({ mindsetId }: CorePrinciplesCardProps) {
                 </span>
                 <span className="text-[13px] font-medium text-white flex-1">{principle.title}</span>
                 {isExpanded ? (
-                  <ChevronUp className="w-4 h-4 text-white/50 flex-shrink-0" />
+                  <ChevronUp className="w-4 h-4 text-white/70 flex-shrink-0" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-white/50 flex-shrink-0" />
+                  <ChevronDown className="w-4 h-4 text-white/70 flex-shrink-0" />
                 )}
               </div>
               {isExpanded && (
-                <p className="text-[13px] text-white/70 leading-relaxed mt-2.5 ml-9 animate-fade-in">
+                <p className="text-[13px] text-white/85 leading-relaxed mt-2.5 ml-9 animate-fade-in">
                   {principle.description}
                 </p>
               )}

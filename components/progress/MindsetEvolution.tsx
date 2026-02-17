@@ -47,16 +47,16 @@ export function MindsetEvolution() {
           className="p-1 rounded-lg hover:bg-white/10 transition-colors"
           aria-label="Dismiss suggestion"
         >
-          <X className="w-3.5 h-3.5 text-white/50" />
+          <X className="w-3.5 h-3.5 text-white/70" />
         </button>
       </div>
 
-      <p className="text-xs text-white/70 leading-relaxed mb-3">
+      <p className="text-xs text-white/85 leading-relaxed mb-3">
         {data.reasoning}
       </p>
 
       {data.journalEvidence && (
-        <p className="text-[10px] text-white/50 italic mb-3">
+        <p className="text-[10px] text-white/70 italic mb-3">
           &ldquo;{data.journalEvidence}&rdquo;
         </p>
       )}

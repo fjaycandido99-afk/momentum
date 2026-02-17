@@ -21,7 +21,7 @@ export function WelcomeBackCard({ daysAway, lastStreak, onDismiss }: WelcomeBack
           </div>
           <div>
             <h3 className="text-base font-medium text-white">Welcome back!</h3>
-            <p className="text-xs text-white/70">
+            <p className="text-xs text-white/85">
               It&apos;s been {daysAway} {daysAway === 1 ? 'day' : 'days'}.
               {lastStreak > 0 && ` You had a ${lastStreak}-day streak going.`}
             </p>

@@ -301,9 +301,9 @@ export function CheckpointCard({
       className={`
         relative rounded-2xl border overflow-hidden transition-all
         ${isCompleted
-          ? 'bg-white/[0.03] border-white/10'
+          ? 'bg-white/[0.03] border-white/15'
           : isAvailable
-            ? 'bg-gradient-to-br from-white/[0.06] to-white/[0.02] border-white/10 hover:border-white/20'
+            ? 'bg-gradient-to-br from-white/[0.06] to-white/[0.02] border-white/15 hover:border-white/25'
             : 'bg-white/[0.02] border-white/5 opacity-50'
         }
       `}

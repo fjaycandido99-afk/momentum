@@ -51,7 +51,7 @@ export function AudioPreview({
       className={`w-full p-4 rounded-xl text-left transition-all press-scale ${
         isSelected
           ? 'bg-white/15 border border-white/30'
-          : 'bg-white/5 border border-white/10 hover:bg-white/10'
+          : 'bg-white/5 border border-white/15 hover:bg-white/10'
       }`}
       aria-pressed={isSelected}
     >
@@ -72,7 +72,7 @@ export function AudioPreview({
         <div>
           <p className="text-sm font-medium text-white">{label}</p>
           {description && (
-            <p className="text-xs text-white/60 mt-0.5">{description}</p>
+            <p className="text-xs text-white/75 mt-0.5">{description}</p>
           )}
         </div>
       </div>

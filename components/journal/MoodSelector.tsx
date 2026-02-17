@@ -21,6 +21,7 @@ interface MoodSelectorProps {
   mood: string | null
   onSelect: (mood: MoodValue) => void
   moodHistory: MoodEntry[]
+  compact?: boolean
 }
 
 const MOOD_TO_Y: Record<string, number> = {
@@ -31,7 +32,7 @@ const MOOD_TO_Y: Record<string, number> = {
   great: 0,
 }
 
-export function MoodSelector({ mood, onSelect, moodHistory }: MoodSelectorProps) {
+export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: MoodSelectorProps) {
   const sparklinePoints = useMemo(() => {
     const withMood = moodHistory
       .filter(e => e.journal_mood)
@@ -49,8 +50,28 @@ export function MoodSelector({ mood, onSelect, moodHistory }: MoodSelectorProps)
     }))
   }, [moodHistory])
 
+  if (compact) {
+    return (
+      <div className="flex items-center gap-0.5">
+        {MOODS.map((m) => (
+          <button
+            key={m.value}
+            onClick={() => onSelect(m.value)}
+            className={`p-1.5 rounded-lg transition-all ${
+              mood === m.value
+                ? `ring-1.5 ${m.color} bg-white/15 scale-110`
+                : 'hover:bg-white/5 opacity-90'
+            }`}
+          >
+            <span className="text-lg">{m.emoji}</span>
+          </button>
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+    <div className="p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
       <p className="text-xs text-white uppercase tracking-wider mb-3 font-medium">How are you feeling?</p>
       <div className="flex items-center justify-between gap-1">
         {MOODS.map((m) => (
@@ -64,7 +85,7 @@ export function MoodSelector({ mood, onSelect, moodHistory }: MoodSelectorProps)
             }`}
           >
             <span className="text-2xl">{m.emoji}</span>
-            <span className={`text-[10px] ${mood === m.value ? 'text-white' : 'text-white/70'}`}>{m.label}</span>
+            <span className={`text-[10px] ${mood === m.value ? 'text-white' : 'text-white/85'}`}>{m.label}</span>
           </button>
         ))}
       </div>

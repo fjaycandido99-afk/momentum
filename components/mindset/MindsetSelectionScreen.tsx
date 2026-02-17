@@ -90,10 +90,10 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
         <p className="font-semibold text-[15px] text-white mb-1">
           {config.name}
         </p>
-        <p className="text-[11px] text-white/70 leading-relaxed mb-2">
+        <p className="text-[11px] text-white/85 leading-relaxed mb-2">
           {config.subtitle}
         </p>
-        <p className="text-[10px] text-white/40 leading-snug italic">
+        <p className="text-[10px] text-white/60 leading-snug italic">
           {config.promptReferences.slice(0, 2).join(' · ')}
         </p>
       </div>
@@ -124,13 +124,13 @@ export function MindsetSelectionScreen({ isReset }: MindsetSelectionScreenProps)
     <div className="min-h-screen bg-black flex flex-col items-center justify-center px-5 py-12 relative overflow-hidden">
       {/* Header */}
       <div className={`text-center mb-10 transition-all duration-700 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
-        <p className="text-white/50 text-[10px] font-medium tracking-[0.2em] uppercase mb-3">
+        <p className="text-white/70 text-[10px] font-medium tracking-[0.2em] uppercase mb-3">
           {isReset ? 'Change philosophy' : 'Select your philosophy'}
         </p>
         <h1 className="text-3xl font-light text-white tracking-wide mb-3">
           {isReset ? 'Reset Your Path' : 'Choose Your Path'}
         </h1>
-        <p className="text-white/70 text-sm max-w-[280px] mx-auto leading-relaxed">
+        <p className="text-white/85 text-sm max-w-[280px] mx-auto leading-relaxed">
           {isReset
             ? 'Your AI coach, quotes, and journal will adapt to your new mindset.'
             : 'Your philosophy shapes everything — AI coaching, quotes, journal prompts, and visuals.'}
@@ -145,7 +145,7 @@ export function MindsetSelectionScreen({ isReset }: MindsetSelectionScreenProps)
       </div>
 
       {/* Bottom hint */}
-      <p className={`text-white/40 text-[11px] mt-8 transition-all duration-700 delay-700 ${headerVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <p className={`text-white/60 text-[11px] mt-8 transition-all duration-700 delay-700 ${headerVisible ? 'opacity-100' : 'opacity-0'}`}>
         Tap a path to learn more
       </p>
     </div>

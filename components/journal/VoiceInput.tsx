@@ -103,7 +103,7 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
 
   if (!isSupported) {
     return (
-      <p className="text-[10px] text-white/30 italic">Voice not supported in this browser</p>
+      <p className="text-[10px] text-white/50 italic">Voice not supported in this browser</p>
     )
   }
 
@@ -114,7 +114,7 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
       className={`relative p-3 rounded-xl transition-all ${
         isRecording
           ? 'bg-red-500/20 text-red-400'
-          : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'
+          : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white/85'
       } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
       aria-label={isRecording ? 'Stop recording' : 'Start voice input'}
     >

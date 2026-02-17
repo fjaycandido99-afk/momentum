@@ -181,7 +181,7 @@ export function DailyGuideOnboarding() {
             <h2 className="text-xl font-semibold text-white mb-1 text-center">
               {ONBOARDING_COPY.step0.title}
             </h2>
-            <p className="text-white/60 text-sm mb-8 text-center">
+            <p className="text-white/75 text-sm mb-8 text-center">
               {ONBOARDING_COPY.step0.subtitle}
             </p>
 
@@ -216,7 +216,7 @@ export function DailyGuideOnboarding() {
                 })}
               </div>
               {/* Why this matters micro-copy */}
-              <p className="text-xs text-white/40 text-center italic px-4">
+              <p className="text-xs text-white/60 text-center italic px-4">
                 {ONBOARDING_COPY.step0.whyMatters[data.userType]}
               </p>
             </div>
@@ -252,7 +252,7 @@ export function DailyGuideOnboarding() {
             {/* Wake Time */}
             <div>
               <p className="text-label px-1 mb-3">Wake time</p>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/15">
                 <Clock className="w-5 h-5 text-white/95" />
                 <input
                   type="time"
@@ -276,7 +276,7 @@ export function DailyGuideOnboarding() {
               <h2 className="text-xl font-semibold text-white mb-1">
                 {ONBOARDING_COPY.step1.title}
               </h2>
-              <p className="text-white/60 text-sm">
+              <p className="text-white/75 text-sm">
                 {ONBOARDING_COPY.step1.subtitle}
               </p>
             </div>
@@ -296,7 +296,7 @@ export function DailyGuideOnboarding() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-medium text-white">{tone.label}</h3>
-                      <p className="text-sm text-white/60 mt-1">{tone.description}</p>
+                      <p className="text-sm text-white/75 mt-1">{tone.description}</p>
                     </div>
                     {data.guideTone === tone.value && (
                       <Check className="w-5 h-5 text-white" />
@@ -319,7 +319,7 @@ export function DailyGuideOnboarding() {
               <h2 className="text-xl font-semibold text-white mb-1">
                 {ONBOARDING_COPY.step2.title}
               </h2>
-              <p className="text-white/60 text-sm">
+              <p className="text-white/75 text-sm">
                 {ONBOARDING_COPY.step2.subtitle}
               </p>
             </div>
@@ -335,8 +335,8 @@ export function DailyGuideOnboarding() {
               >
                 <div className="aspect-[3/2] rounded-lg overflow-hidden bg-black/50 mb-2 relative flex items-center justify-center">
                   <div className="text-center">
-                    <Sparkles className="w-5 h-5 text-white/60 mx-auto mb-1" />
-                    <span className="text-[10px] text-white/50">Auto</span>
+                    <Sparkles className="w-5 h-5 text-white/75 mx-auto mb-1" />
+                    <span className="text-[10px] text-white/70">Auto</span>
                   </div>
                 </div>
                 <p className="text-xs font-medium text-white text-center">Daily Rotation</p>
@@ -381,7 +381,7 @@ export function DailyGuideOnboarding() {
               {ONBOARDING_COPY.step3.title}
             </h2>
 
-            <p className="text-white/60 text-sm leading-relaxed max-w-sm mx-auto mb-4">
+            <p className="text-white/75 text-sm leading-relaxed max-w-sm mx-auto mb-4">
               {ONBOARDING_COPY.step3.affirmation}
             </p>
 
@@ -411,7 +411,7 @@ export function DailyGuideOnboarding() {
                   <span>Background: {selectedAnimation ? filteredAnimations.find(a => a.id === selectedAnimation)?.name : 'Daily Rotation'}</span>
                 </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-white/10 text-xs text-white/95">
+              <div className="mt-3 pt-3 border-t border-white/15 text-xs text-white/95">
                 Wake: {data.wakeTime} &middot; All modules on
               </div>
             </div>

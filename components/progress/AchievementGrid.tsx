@@ -55,7 +55,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
           <Trophy className="w-4 h-4 text-amber-400" />
           <div>
             <h3 className="text-sm font-semibold text-white">Achievements</h3>
-            <p className="text-[10px] text-white/50">{unlockedCount} of {totalCount} unlocked</p>
+            <p className="text-[10px] text-white/70">{unlockedCount} of {totalCount} unlocked</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
               <div className="flex items-center gap-2 mb-2.5">
                 <span className="text-xs">{group.icon}</span>
                 <span className="text-[11px] font-medium text-white/80 uppercase tracking-wider">{group.label}</span>
-                <span className="text-[10px] text-white/30 ml-auto">{groupUnlocked}/{group.achievements.length}</span>
+                <span className="text-[10px] text-white/50 ml-auto">{groupUnlocked}/{group.achievements.length}</span>
               </div>
 
               {/* Achievement cards */}
@@ -122,7 +122,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
 
                     {/* Unlock date */}
                     {a.unlocked && a.unlockedAt && (
-                      <span className="text-[7px] text-white/30">{formatDate(a.unlockedAt)}</span>
+                      <span className="text-[7px] text-white/50">{formatDate(a.unlockedAt)}</span>
                     )}
                   </button>
                 ))}
@@ -136,7 +136,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
       {grouped.length > 3 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-center gap-1.5 py-2.5 mt-3 text-[11px] text-white/50 hover:text-white/70 transition-colors"
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 mt-3 text-[11px] text-white/70 hover:text-white/85 transition-colors"
         >
           {expanded ? 'Show less' : `Show ${hiddenCount} more`}
           <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />

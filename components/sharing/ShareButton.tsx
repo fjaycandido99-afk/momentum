@@ -54,12 +54,12 @@ export function ShareButton({ title, text, url, className = '', size = 'md' }: S
     <button
       onClick={handleShare}
       aria-label={copied ? 'Copied to clipboard' : `Share ${title}`}
-      className={`${padding} rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all press-scale ${className}`}
+      className={`${padding} rounded-full bg-white/5 border border-white/15 hover:bg-white/10 transition-all press-scale ${className}`}
     >
       {copied ? (
         <Check className={`${iconSize} text-green-400`} />
       ) : (
-        <Share2 className={`${iconSize} text-white/70`} />
+        <Share2 className={`${iconSize} text-white/85`} />
       )}
     </button>
   )

@@ -69,7 +69,7 @@ export function SamuraiTrainingExercise({ onPathActivity }: SamuraiTrainingExerc
         <h3 className="text-sm font-medium text-white">Today&apos;s Training</h3>
       </div>
 
-      <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 mb-4">
+      <div className="p-3 rounded-xl bg-white/[0.03] border border-white/15 mb-4">
         <p className="text-[10px] text-red-300/60 uppercase tracking-wider font-medium mb-1.5">{training.skill}</p>
         <p className="text-[15px] text-white leading-relaxed">{training.practice}</p>
       </div>
@@ -79,7 +79,7 @@ export function SamuraiTrainingExercise({ onPathActivity }: SamuraiTrainingExerc
           <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
           <div>
             <p className="text-sm text-white/80">Training complete. The way is in practice.</p>
-            <Link href="/journal" className="text-xs text-white/60 hover:text-white/80 flex items-center gap-1 mt-1 transition-colors">
+            <Link href="/journal" className="text-xs text-white/75 hover:text-white/80 flex items-center gap-1 mt-1 transition-colors">
               View journal <ArrowRight className="w-3 h-3" />
             </Link>
           </div>

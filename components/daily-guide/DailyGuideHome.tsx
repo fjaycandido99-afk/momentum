@@ -1016,7 +1016,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                     </div>
                     <div>
                       <span className="text-sm text-white">{greeting.text}</span>
-                      <p className="text-[11px] text-white/50">{getFormattedDate(today)}</p>
+                      <p className="text-[11px] text-white/70">{getFormattedDate(today)}</p>
                     </div>
                   </div>
                 </>
@@ -1027,7 +1027,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
             <StreakBadge streak={streak} />
             {mindsetCtx && (
               <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
-                <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
+                <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/75" />
               </div>
             )}
           </div>
@@ -1039,11 +1039,11 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
             {/* Day type pill (tappable) */}
             <button
               onClick={() => setShowDayTypePicker(!showDayTypePicker)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 text-xs text-white press-scale transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs text-white press-scale transition-all"
             >
               <DayTypeIndicator dayType={guide.day_type as DayType} size="sm" />
               <span className="font-medium">{DAY_TYPE_LABELS[guide.day_type]?.label || guide.day_type}</span>
-              <ChevronDown className={`w-3 h-3 text-white/60 transition-transform ${showDayTypePicker ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3 h-3 text-white/75 transition-transform ${showDayTypePicker ? 'rotate-180' : ''}`} />
             </button>
 
             {/* Energy pills (right) */}
@@ -1067,7 +1067,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 className={`
                   flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all press-scale
                   ${guide.day_type === type
-                    ? 'bg-white/15 text-white border border-white/20'
+                    ? 'bg-white/15 text-white border border-white/25'
                     : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
                   }
                 `}
@@ -1095,7 +1095,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               <p className="text-sm text-red-400 mb-3">{generationError}</p>
               <button
                 onClick={resetGuide}
-                className="text-sm text-white/70 hover:text-white underline"
+                className="text-sm text-white/85 hover:text-white underline"
               >
                 Reset & Try Again
               </button>
@@ -1139,11 +1139,11 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         <div className="px-6 space-y-6 animate-slide-up-enter">
           {/* Demo guide banner for guests */}
           {guide.id === 'demo' && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/15">
               <Lock className="w-5 h-5 text-white shrink-0" />
               <div className="flex-1">
                 <p className="text-sm text-white font-medium">Preview Mode</p>
-                <p className="text-xs text-white/70">Sign in to save your progress and unlock all features</p>
+                <p className="text-xs text-white/85">Sign in to save your progress and unlock all features</p>
               </div>
             </div>
           )}
@@ -1187,7 +1187,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                         </h2>
                         <p className="text-xs text-white/95">
                           {completedModules.filter(m => displayModulesFiltered.includes(m)).length}/{displayModulesFiltered.length} complete
-                          {timeRemaining && <span className="ml-2 text-white/60">{timeRemaining}</span>}
+                          {timeRemaining && <span className="ml-2 text-white/75">{timeRemaining}</span>}
                         </p>
                       </div>
                     </div>
@@ -1214,7 +1214,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                             e.stopPropagation()
                             setQuickModeActive(!quickModeActive)
                           }}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xs text-white/80 press-scale"
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/15 hover:bg-white/10 transition-all text-xs text-white/80 press-scale"
                         >
                           <Clock className="w-3 h-3" />
                           {quickModeActive ? 'Full flow' : '5-min flow'}
@@ -1223,11 +1223,11 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
                       {/* Adaptive order banner */}
                       {showAdaptiveBanner && !quickModeActive && (
-                        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-                          <p className="text-xs text-white/60">Order adjusted based on your habits</p>
+                        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 border border-white/15">
+                          <p className="text-xs text-white/75">Order adjusted based on your habits</p>
                           <button
                             onClick={() => setShowAdaptiveBanner(false)}
-                            className="text-xs text-white/40 hover:text-white/60 ml-2"
+                            className="text-xs text-white/60 hover:text-white/75 ml-2"
                           >
                             Dismiss
                           </button>

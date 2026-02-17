@@ -46,10 +46,10 @@ export function WeeklyDigestCard({ isPremium }: WeeklyDigestCardProps) {
 
   return (
     <div className="px-6 mb-4 liquid-reveal section-fade-bg">
-      <div className="p-5 rounded-3xl bg-black border border-white/10">
+      <div className="p-5 rounded-3xl bg-black border border-white/15">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
-            <BarChart3 className="w-4 h-4 text-white/70" />
+            <BarChart3 className="w-4 h-4 text-white/85" />
             <h3 className="text-sm font-medium text-white">Your Week</h3>
           </div>
           {isPremium && data && (
@@ -58,8 +58,8 @@ export function WeeklyDigestCard({ isPremium }: WeeklyDigestCardProps) {
               className="p-1 rounded-lg hover:bg-white/5 transition-colors"
             >
               {isExpanded
-                ? <ChevronUp className="w-4 h-4 text-white/50" />
-                : <ChevronDown className="w-4 h-4 text-white/50" />
+                ? <ChevronUp className="w-4 h-4 text-white/70" />
+                : <ChevronDown className="w-4 h-4 text-white/70" />
               }
             </button>
           )}
@@ -72,7 +72,7 @@ export function WeeklyDigestCard({ isPremium }: WeeklyDigestCardProps) {
           </div>
         ) : !isPremium ? (
           <div>
-            <p className="text-xs text-white/60 mb-3">
+            <p className="text-xs text-white/75 mb-3">
               See your weekly stats, AI insights, and mood trends.
             </p>
             <Link
@@ -106,8 +106,8 @@ export function WeeklyDigestCard({ isPremium }: WeeklyDigestCardProps) {
             )}
 
             {isExpanded && (
-              <div className="mt-4 pt-3 border-t border-white/10">
-                <p className="text-xs text-white/70 leading-relaxed">{data.summary}</p>
+              <div className="mt-4 pt-3 border-t border-white/15">
+                <p className="text-xs text-white/85 leading-relaxed">{data.summary}</p>
               </div>
             )}
           </>

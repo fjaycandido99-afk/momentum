@@ -110,7 +110,7 @@ export function PremiumOnly({
   return (
     <div
       onClick={openUpgradeModal}
-      className="p-4 rounded-xl border border-dashed border-white/20 bg-white/[0.02] cursor-pointer hover:bg-white/[0.04] hover:border-amber-500/30 transition-all"
+      className="p-4 rounded-xl border border-dashed border-white/25 bg-white/[0.02] cursor-pointer hover:bg-white/[0.04] hover:border-amber-500/30 transition-all"
     >
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-amber-500/20">

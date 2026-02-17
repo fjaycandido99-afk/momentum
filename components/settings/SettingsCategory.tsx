@@ -63,7 +63,7 @@ export function SettingsCategory({
   }
 
   return (
-    <div className="bg-black rounded-2xl overflow-hidden border border-white/10">
+    <div className="bg-black rounded-2xl overflow-hidden border border-white/15">
       <button
         onClick={toggle}
         aria-expanded={isOpen}
@@ -74,10 +74,10 @@ export function SettingsCategory({
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="font-medium text-white">{title}</h2>
-          <p className="text-white/60 text-xs">{description}</p>
+          <p className="text-white/75 text-xs">{description}</p>
         </div>
         <ChevronDown
-          className={`w-4 h-4 text-white/40 transition-transform duration-300 ${
+          className={`w-4 h-4 text-white/60 transition-transform duration-300 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />

@@ -65,19 +65,19 @@ export function WeeklyReviewCard() {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="text-center">
-          <div className="text-lg font-semibold text-white">{data.activeDays}<span className="text-xs text-white/60">/7</span></div>
-          <div className="text-[10px] text-white/60 uppercase tracking-wider">Active Days</div>
+          <div className="text-lg font-semibold text-white">{data.activeDays}<span className="text-xs text-white/75">/7</span></div>
+          <div className="text-[10px] text-white/75 uppercase tracking-wider">Active Days</div>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1">
             <Flame className="w-3.5 h-3.5 text-orange-400" />
             <span className="text-lg font-semibold text-white">{data.currentStreak}</span>
           </div>
-          <div className="text-[10px] text-white/60 uppercase tracking-wider">Streak</div>
+          <div className="text-[10px] text-white/75 uppercase tracking-wider">Streak</div>
         </div>
         <div className="text-center">
           <div className="text-lg font-semibold text-white">{data.totalActivities}</div>
-          <div className="text-[10px] text-white/60 uppercase tracking-wider">Activities</div>
+          <div className="text-[10px] text-white/75 uppercase tracking-wider">Activities</div>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ export function WeeklyReviewCard() {
                 }`}
                 style={{ height: `${height}%` }}
               />
-              <span className="text-[9px] text-white/40">{DAY_LABELS[i]}</span>
+              <span className="text-[9px] text-white/60">{DAY_LABELS[i]}</span>
             </div>
           )
         })}
@@ -105,14 +105,14 @@ export function WeeklyReviewCard() {
         {data.topActivity && (
           <div className="flex items-center gap-1.5">
             <Star className="w-3 h-3 text-amber-400/70" />
-            <span className="text-[11px] text-white/60">
+            <span className="text-[11px] text-white/75">
               Top: {ACTIVITY_LABELS[data.topActivity] || data.topActivity}
             </span>
           </div>
         )}
         <div className="flex items-center gap-1.5">
-          <Trophy className="w-3 h-3 text-white/40" />
-          <span className="text-[11px] text-white/60">
+          <Trophy className="w-3 h-3 text-white/60" />
+          <span className="text-[11px] text-white/75">
             Best: {data.longestStreak} days
           </span>
         </div>

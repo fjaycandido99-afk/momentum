@@ -97,7 +97,7 @@ export function AIMeditationPlayer({ onClose, preselectedTheme }: AIMeditationPl
           <h2 className="text-sm font-medium text-white">AI Meditation</h2>
         </div>
         <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10">
-          <X className="w-5 h-5 text-white/60" />
+          <X className="w-5 h-5 text-white/75" />
         </button>
       </div>
 
@@ -107,7 +107,7 @@ export function AIMeditationPlayer({ onClose, preselectedTheme }: AIMeditationPl
             {/* Theme picker (only when no preselected theme) */}
             {showThemePicker && (
               <div>
-                <p className="text-xs text-white/50 mb-3">Choose a theme</p>
+                <p className="text-xs text-white/70 mb-3">Choose a theme</p>
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                   {THEMES.map(theme => (
                     <button
@@ -115,8 +115,8 @@ export function AIMeditationPlayer({ onClose, preselectedTheme }: AIMeditationPl
                       onClick={() => setSelectedTheme(theme.id)}
                       className={`shrink-0 px-4 py-2.5 rounded-xl text-xs font-medium transition-all ${
                         selectedTheme === theme.id
-                          ? `bg-gradient-to-r ${theme.color} border border-white/20 text-white`
-                          : 'bg-white/5 border border-white/5 text-white/50 hover:bg-white/10'
+                          ? `bg-gradient-to-r ${theme.color} border border-white/25 text-white`
+                          : 'bg-white/5 border border-white/5 text-white/70 hover:bg-white/10'
                       }`}
                     >
                       {theme.label}
@@ -130,7 +130,7 @@ export function AIMeditationPlayer({ onClose, preselectedTheme }: AIMeditationPl
             {preselectedTheme && (
               <div className="text-center pt-4">
                 <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${themeObj.color} flex items-center justify-center mx-auto mb-3`}>
-                  <Sparkles className="w-8 h-8 text-white/70" />
+                  <Sparkles className="w-8 h-8 text-white/85" />
                 </div>
                 <p className="text-lg font-medium text-white">{themeObj.label}</p>
               </div>
@@ -138,7 +138,7 @@ export function AIMeditationPlayer({ onClose, preselectedTheme }: AIMeditationPl
 
             {/* Duration selector */}
             <div>
-              <p className="text-xs text-white/50 mb-3">Duration</p>
+              <p className="text-xs text-white/70 mb-3">Duration</p>
               <div className="flex gap-3">
                 {DURATIONS.map(d => (
                   <button
@@ -147,7 +147,7 @@ export function AIMeditationPlayer({ onClose, preselectedTheme }: AIMeditationPl
                     className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-1.5 text-sm transition-all ${
                       selectedDuration === d
                         ? 'bg-purple-500/20 border border-purple-500/30 text-purple-300'
-                        : 'bg-white/5 border border-white/5 text-white/50'
+                        : 'bg-white/5 border border-white/5 text-white/70'
                     }`}
                   >
                     <Clock className="w-3.5 h-3.5" />
@@ -191,32 +191,32 @@ export function AIMeditationPlayer({ onClose, preselectedTheme }: AIMeditationPl
                     )}
                   </button>
                 ) : (
-                  <Sparkles className="w-10 h-10 text-white/60" />
+                  <Sparkles className="w-10 h-10 text-white/75" />
                 )}
               </div>
 
               <div className="text-center">
                 <p className="text-lg font-medium text-white">{themeObj.label}</p>
-                <p className="text-xs text-white/40">{selectedDuration} minute meditation</p>
+                <p className="text-xs text-white/60">{selectedDuration} minute meditation</p>
               </div>
             </div>
 
             {/* Script display */}
             {script && (
               <div className="bg-white/5 rounded-2xl p-4 max-h-60 overflow-y-auto">
-                <p className="text-xs text-white/50 mb-2">Script</p>
-                <p className="text-xs text-white/70 leading-relaxed whitespace-pre-line">{script}</p>
+                <p className="text-xs text-white/70 mb-2">Script</p>
+                <p className="text-xs text-white/85 leading-relaxed whitespace-pre-line">{script}</p>
               </div>
             )}
 
             {!audioBase64 && script && (
-              <p className="text-[10px] text-white/30 text-center">Audio generation unavailable. Read the script above for guidance.</p>
+              <p className="text-[10px] text-white/50 text-center">Audio generation unavailable. Read the script above for guidance.</p>
             )}
 
             {/* New meditation button */}
             <button
               onClick={() => { setGenerated(false); setScript(''); setAudioBase64(null); setIsPlaying(false) }}
-              className="w-full text-xs text-white/30 py-2"
+              className="w-full text-xs text-white/50 py-2"
             >
               Generate another
             </button>

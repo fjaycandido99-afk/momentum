@@ -23,7 +23,7 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-sm font-semibold text-white">Daily Challenges</h3>
-          <p className="text-[10px] text-white/40">Resets at midnight</p>
+          <p className="text-[10px] text-white/60">Resets at midnight</p>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="flex gap-0.5">
@@ -36,7 +36,7 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
               />
             ))}
           </div>
-          <span className="text-[10px] text-white/40">{completedCount}/3</span>
+          <span className="text-[10px] text-white/60">{completedCount}/3</span>
         </div>
       </div>
 
@@ -56,7 +56,7 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
               <p className={`text-xs font-medium ${c.completed ? 'text-emerald-400' : 'text-white'}`}>
                 {c.title}
               </p>
-              <p className="text-[10px] text-white/40 truncate">{c.description}</p>
+              <p className="text-[10px] text-white/60 truncate">{c.description}</p>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -66,7 +66,7 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
                   <Check className="w-3 h-3 text-emerald-400" />
                 </div>
               ) : (
-                <div className="w-5 h-5 rounded-full bg-white/5 border border-white/10" />
+                <div className="w-5 h-5 rounded-full bg-white/5 border border-white/15" />
               )}
             </div>
           </div>

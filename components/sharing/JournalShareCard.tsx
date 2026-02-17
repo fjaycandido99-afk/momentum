@@ -13,12 +13,12 @@ export const JournalShareCard = forwardRef<HTMLDivElement, JournalShareCardProps
     return (
       <div
         ref={ref}
-        className="w-[360px] p-6 bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] rounded-2xl border border-white/10"
+        className="w-[360px] p-6 bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] rounded-2xl border border-white/15"
         style={{ fontFamily: 'Inter, sans-serif' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <span className="text-white/40 text-xs">{date}</span>
+          <span className="text-white/60 text-xs">{date}</span>
           {mood && (
             <span className="text-sm">{mood}</span>
           )}
@@ -30,8 +30,8 @@ export const JournalShareCard = forwardRef<HTMLDivElement, JournalShareCardProps
         </p>
 
         {/* Footer */}
-        <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
-          <span className="text-white/30 text-xs">voxu.app</span>
+        <div className="mt-6 pt-4 border-t border-white/15 flex items-center justify-between">
+          <span className="text-white/50 text-xs">voxu.app</span>
           <span className="text-white/20 text-[10px]">Journal Entry</span>
         </div>
       </div>

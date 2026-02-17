@@ -92,7 +92,7 @@ export default function SavedPage() {
               onClick={() => setFilter(f.id)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all press-scale ${
                 filter === f.id
-                  ? 'bg-white/15 text-white border border-white/20'
+                  ? 'bg-white/15 text-white border border-white/25'
                   : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
               }`}
             >

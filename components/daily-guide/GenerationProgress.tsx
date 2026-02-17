@@ -36,7 +36,7 @@ export function GenerationProgress() {
 
         {/* Step text */}
         <div className="text-center min-h-[2rem]">
-          <p key={stepIndex} className="text-sm text-white/70 animate-fade-in-up">
+          <p key={stepIndex} className="text-sm text-white/85 animate-fade-in-up">
             {STEPS[stepIndex]}
           </p>
         </div>

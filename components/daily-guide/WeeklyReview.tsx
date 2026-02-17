@@ -238,9 +238,9 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
   const weekLabel = `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
 
   const content = (
-    <div className={isModal ? '' : 'rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]'}>
+    <div className={isModal ? '' : 'rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]'}>
       {/* Header */}
-      <div className="p-4 border-b border-white/10 flex items-center justify-between">
+      <div className="p-4 border-b border-white/15 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
             <CalendarDays className="w-5 h-5 text-purple-400" />
@@ -415,14 +415,14 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
               </div>
               <div className="space-y-2">
                 {stats.wins.slice(0, 3).map((win, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10">
+                  <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/15">
                     <p className="text-sm text-white/95 italic line-clamp-2">"{win}"</p>
                   </div>
                 ))}
                 {stats.wins.length > 3 && (
                   <button
                     onClick={() => setShowFullJournal(true)}
-                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white/95 text-sm hover:bg-white/10 transition-colors"
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/15 text-white/95 text-sm hover:bg-white/10 transition-colors"
                   >
                     +{stats.wins.length - 3} more entries
                   </button>
@@ -432,7 +432,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           )}
 
           {/* Weekly Intention */}
-          <div className="p-4 border-t border-white/10">
+          <div className="p-4 border-t border-white/15">
             <div className="flex items-center gap-2 mb-3">
               <Target className="w-4 h-4 text-purple-400" />
               <h3 className="text-sm font-medium text-white/95">This Week's Intention</h3>
@@ -464,7 +464,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                   }}
                   placeholder="What do you want to focus on this week?"
                   aria-label="Weekly intention"
-                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
+                  className="w-full p-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                   rows={2}
                   maxLength={200}
                 />
@@ -508,11 +508,11 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
       onClick={() => setShowFullJournal(false)}
     >
       <div
-        className="w-full max-w-md my-8 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] overflow-hidden"
+        className="w-full max-w-md my-8 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-black">
+        <div className="p-4 border-b border-white/15 flex items-center justify-between sticky top-0 bg-black">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-blue-500/20">
               <PenLine className="w-5 h-5 text-blue-400" />
@@ -538,7 +538,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
               key={index}
               className={`rounded-xl border transition-all ${
                 (day.journal_win || day.journal_gratitude || day.journal_intention)
-                  ? 'bg-white/5 border-white/10 cursor-pointer hover:bg-white/10'
+                  ? 'bg-white/5 border-white/15 cursor-pointer hover:bg-white/10'
                   : 'bg-white/[0.02] border-white/5'
               }`}
               onClick={() => (day.journal_win || day.journal_gratitude || day.journal_intention) && setExpandedDay(expandedDay === index ? null : index)}
@@ -607,7 +607,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         </div>
 
         {/* Summary */}
-        <div className="p-4 border-t border-white/10 bg-white/[0.02]">
+        <div className="p-4 border-t border-white/15 bg-white/[0.02]">
           <div className="flex items-center justify-between text-sm">
             <span className="text-white/95">Total journal entries</span>
             <span className="text-blue-400 font-medium">{stats.journalEntries} / 7 days</span>
@@ -621,7 +621,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
     return (
       <>
         <div role="dialog" aria-modal="true" aria-label="Weekly review" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-md my-8 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] overflow-hidden">
+          <div className="w-full max-w-md my-8 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] overflow-hidden">
             {content}
           </div>
         </div>
@@ -649,7 +649,7 @@ export function WeeklyReviewPrompt({ onOpen }: { onOpen: () => void }) {
     <button
       onClick={onOpen}
       aria-label="Open weekly review"
-      className="w-full p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all group focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+      className="w-full p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all group focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

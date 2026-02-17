@@ -373,7 +373,7 @@ export function NotificationSettings() {
 
   if (!isSupported) {
     return (
-      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+      <div className="p-4 rounded-xl bg-white/5 border border-white/15">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-white/10">
             <BellOff className="w-5 h-5 text-white/95" />
@@ -413,7 +413,7 @@ export function NotificationSettings() {
   return (
     <div className="space-y-4">
       {/* Main toggle */}
-      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+      <div className="p-4 rounded-xl bg-white/5 border border-white/15">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${isSubscribed ? 'bg-emerald-500/20' : 'bg-white/10'}`}>
@@ -576,7 +576,7 @@ function NotificationToggle({ icon: Icon, label, description, enabled, onToggle 
       role="switch"
       aria-checked={enabled}
       aria-label={label}
-      className="w-full p-3 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+      className="w-full p-3 rounded-xl bg-white/[0.03] border border-white/15 hover:bg-white/[0.06] transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

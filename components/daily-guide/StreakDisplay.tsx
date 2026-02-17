@@ -70,7 +70,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
 
   if (streak === 0) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/15">
         <Flame className="w-4 h-4 text-white/95" />
         <span className="text-sm text-white/95">Start your streak!</span>
       </div>
@@ -129,7 +129,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
           )}
         </div>
         {nextMilestone && (
-          <div className="ml-2 pl-2 border-l border-white/10">
+          <div className="ml-2 pl-2 border-l border-white/15">
             <div className="text-[10px] text-white/95">
               {nextMilestone.days - streak} to {nextMilestone.label}
             </div>
@@ -212,7 +212,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
                     </svg>
                     <div className="text-sm text-white/95">
                       Next: <span className="text-white font-medium">{nextMilestone.label}</span>
-                      <span className="text-white/60 ml-1">({nextMilestone.days - streak} days)</span>
+                      <span className="text-white/75 ml-1">({nextMilestone.days - streak} days)</span>
                     </div>
                   </div>
                 )

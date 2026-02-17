@@ -30,7 +30,7 @@ export function MoodCheckIn({ type, onSelect, selected }: MoodCheckInProps) {
     if (!option) return null
     const Icon = option.icon
     return (
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10">
+      <div className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/15">
         <Icon className={`w-4 h-4 ${option.color}`} />
         <span className="text-sm text-white/95">
           {type === 'before' ? 'Morning mood' : 'Evening mood'}: <span className="text-white">{option.label}</span>
@@ -40,7 +40,7 @@ export function MoodCheckIn({ type, onSelect, selected }: MoodCheckInProps) {
   }
 
   return (
-    <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4">
+    <div className="rounded-2xl bg-white/[0.03] border border-white/15 p-4">
       <p className="text-sm text-white/95 mb-3">
         {type === 'before' ? 'How are you feeling this morning?' : 'How are you feeling now?'}
       </p>

@@ -78,7 +78,7 @@ function SectionHeader({ title }: { title: string }) {
   return (
     <div className="flex items-center gap-3 my-5">
       <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
-      <span className="text-[10px] uppercase tracking-[0.3em] text-white/70 font-medium">{title}</span>
+      <span className="text-[10px] uppercase tracking-[0.3em] text-white/85 font-medium">{title}</span>
       <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
     </div>
   )
@@ -120,7 +120,7 @@ function TabbedSection({ tabs, children, title, icon }: {
             className={`flex-1 min-w-0 py-1.5 text-[11px] rounded-lg transition-all press-scale whitespace-nowrap px-1 ${
               active === t.id
                 ? 'bg-white/12 text-white font-medium'
-                : 'text-white/60 hover:text-white/80'
+                : 'text-white/75 hover:text-white/80'
             }`}
           >
             {t.label}
@@ -249,7 +249,7 @@ export function PathPage({ mindsetId }: PathPageProps) {
               </div>
             </div>
             <p className="text-white/80 text-[13px] mt-1">{greeting}</p>
-            <p className="text-[12px] text-white/70 leading-relaxed mt-3">{details.overview}</p>
+            <p className="text-[12px] text-white/85 leading-relaxed mt-3">{details.overview}</p>
           </div>
         </div>
 
@@ -287,7 +287,7 @@ export function PathPage({ mindsetId }: PathPageProps) {
                         />
                       ) : (
                         <div className="text-center py-6">
-                          <p className="text-sm text-white/60 mb-2">Set your zodiac sign for cosmic insights</p>
+                          <p className="text-sm text-white/75 mb-2">Set your zodiac sign for cosmic insights</p>
                           <Link href="/settings" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
                             Go to Settings →
                           </Link>
@@ -299,7 +299,7 @@ export function PathPage({ mindsetId }: PathPageProps) {
                         <TarotCardOfDay zodiacSign={zodiacSign} />
                       ) : (
                         <div className="text-center py-6">
-                          <p className="text-sm text-white/60 mb-2">Set your zodiac sign for tarot readings</p>
+                          <p className="text-sm text-white/75 mb-2">Set your zodiac sign for tarot readings</p>
                           <Link href="/settings" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
                             Go to Settings →
                           </Link>
@@ -317,7 +317,7 @@ export function PathPage({ mindsetId }: PathPageProps) {
                         <div className="space-y-3">
                           <ZodiacAffirmations zodiacSign={null} />
                           <div className="text-center py-3">
-                            <p className="text-sm text-white/60 mb-2">Set your zodiac sign for planetary transits</p>
+                            <p className="text-sm text-white/75 mb-2">Set your zodiac sign for planetary transits</p>
                             <Link href="/settings" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
                               Go to Settings →
                             </Link>
@@ -378,7 +378,7 @@ export function PathPage({ mindsetId }: PathPageProps) {
           <div className="mt-5 mb-3">
             <TabbedSection
               title="Practice"
-              icon={<Dumbbell className="w-4 h-4 text-white/70" />}
+              icon={<Dumbbell className="w-4 h-4 text-white/85" />}
               tabs={practiceTabs}
             >
               {(tab) => (
@@ -400,7 +400,7 @@ export function PathPage({ mindsetId }: PathPageProps) {
           <div className="mb-3">
             <TabbedSection
               title="Explore"
-              icon={<Compass className="w-4 h-4 text-white/70" />}
+              icon={<Compass className="w-4 h-4 text-white/85" />}
               tabs={exploreTabs}
             >
               {(tab) => (

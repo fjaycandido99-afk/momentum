@@ -51,10 +51,10 @@ export function PathIdentityCard({ mindsetId }: PathIdentityCardProps) {
         </span>
       </div>
 
-      <p className="text-sm text-white/70 mb-4">{details.figureTitle}</p>
+      <p className="text-sm text-white/85 mb-4">{details.figureTitle}</p>
 
       {/* Hero quote */}
-      <blockquote className="pl-3 border-l-2 border-white/20">
+      <blockquote className="pl-3 border-l-2 border-white/25">
         <p className="text-sm text-white/90 italic leading-relaxed">&ldquo;{details.quote}&rdquo;</p>
       </blockquote>
     </div>

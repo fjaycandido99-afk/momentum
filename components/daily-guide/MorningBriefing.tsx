@@ -58,10 +58,10 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
 
   if (loading) {
     return (
-      <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-4">
+      <div className="rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-4">
         <div className="flex items-center gap-3">
           <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
-          <span className="text-sm text-white/70">Preparing your morning briefing...</span>
+          <span className="text-sm text-white/85">Preparing your morning briefing...</span>
         </div>
       </div>
     )
@@ -69,14 +69,14 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
 
   if (!script && error) {
     return (
-      <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-4">
+      <div className="rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-amber-500/20">
               <Sun className="w-5 h-5 text-amber-400" />
             </div>
             <div>
-              <p className="text-sm text-white/70">Couldn&apos;t load your briefing</p>
+              <p className="text-sm text-white/85">Couldn&apos;t load your briefing</p>
             </div>
           </div>
           <button
@@ -84,7 +84,7 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
             className="p-2 rounded-lg bg-white/10 hover:bg-white/15 transition-colors"
             aria-label="Retry"
           >
-            <RefreshCw className="w-4 h-4 text-white/60" />
+            <RefreshCw className="w-4 h-4 text-white/75" />
           </button>
         </div>
       </div>
@@ -112,7 +112,7 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
             </div>
             <div>
               <h3 className="text-sm font-medium text-white">Morning Briefing</h3>
-              <p className="text-[10px] text-white/50">Your personal daily update</p>
+              <p className="text-[10px] text-white/70">Your personal daily update</p>
             </div>
           </div>
 
@@ -151,7 +151,7 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
         {/* Expandable script */}
         <button
           onClick={() => setShowScript(!showScript)}
-          className="mt-3 flex items-center gap-1 text-xs text-white/50 hover:text-white/70 transition-colors"
+          className="mt-3 flex items-center gap-1 text-xs text-white/70 hover:text-white/85 transition-colors"
         >
           <span>{showScript ? 'Hide' : 'Show'} script</span>
           <ChevronDown className={`w-3 h-3 transition-transform ${showScript ? 'rotate-180' : ''}`} />
@@ -159,7 +159,7 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
 
         {showScript && (
           <div className="mt-2">
-            <p className="text-xs text-white/70 leading-relaxed whitespace-pre-line">
+            <p className="text-xs text-white/85 leading-relaxed whitespace-pre-line">
               {script}
             </p>
             {onComplete && (

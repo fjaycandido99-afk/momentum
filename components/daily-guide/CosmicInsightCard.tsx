@@ -185,7 +185,7 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
         isCosmic
           ? 'card-cosmic rounded-2xl'
           : isCompleted
-            ? 'rounded-2xl bg-white/[0.03] border border-white/10'
+            ? 'rounded-2xl bg-white/[0.03] border border-white/15'
             : 'rounded-2xl bg-gradient-to-br from-indigo-500/[0.08] to-purple-500/[0.08] border border-indigo-500/20 shadow-[0_0_15px_rgba(139,92,246,0.08)] card-hover'
       }`}
     >
@@ -217,11 +217,11 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
               ? 'bg-white/5'
               : 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20'
           }`}>
-            <Sparkles className={`w-5 h-5 ${isCompleted ? 'text-white/70' : 'text-indigo-400'}`} />
+            <Sparkles className={`w-5 h-5 ${isCompleted ? 'text-white/85' : 'text-indigo-400'}`} />
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className={`font-medium mb-1 ${isCompleted ? 'text-white/70' : 'text-white'}`}>
+            <h3 className={`font-medium mb-1 ${isCompleted ? 'text-white/85' : 'text-white'}`}>
               {zodiacSign
                 ? `${zodiacSign.charAt(0).toUpperCase() + zodiacSign.slice(1)} Insight`
                 : 'Daily Cosmic Insight'}
@@ -232,14 +232,14 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
                 {/* Planetary influence */}
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                  <span className={`text-xs ${isCompleted ? 'text-white/50' : 'text-indigo-300/80'}`}>
+                  <span className={`text-xs ${isCompleted ? 'text-white/70' : 'text-indigo-300/80'}`}>
                     {insight.influence}
                   </span>
                 </div>
 
                 {/* Main insight text */}
                 <p className={`text-sm leading-relaxed ${
-                  isCompleted ? 'text-white/60' : 'text-white/90'
+                  isCompleted ? 'text-white/75' : 'text-white/90'
                 }`}>
                   {insight.text}
                 </p>
@@ -251,12 +251,12 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
                     : 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20'
                 }`}>
                   <p className={`text-xs uppercase tracking-wider mb-1 ${
-                    isCompleted ? 'text-white/40' : 'text-indigo-400/70'
+                    isCompleted ? 'text-white/60' : 'text-indigo-400/70'
                   }`}>
                     Today&apos;s Affirmation
                   </p>
                   <p className={`text-sm italic ${
-                    isCompleted ? 'text-white/60' : 'text-white/90'
+                    isCompleted ? 'text-white/75' : 'text-white/90'
                   }`}>
                     &ldquo;{insight.affirmation}&rdquo;
                   </p>
@@ -272,7 +272,7 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
                       className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       <Heart className={`w-3.5 h-3.5 transition-colors ${
-                        isFavorited ? 'text-pink-400 fill-pink-400' : isCompleted ? 'text-white/50' : 'text-white/70 hover:text-pink-400'
+                        isFavorited ? 'text-pink-400 fill-pink-400' : isCompleted ? 'text-white/70' : 'text-white/85 hover:text-pink-400'
                       }`} />
                     </button>
                     <button
@@ -280,7 +280,7 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
                       aria-label="Share cosmic insight"
                       className="p-1.5 rounded-lg hover:bg-white/10 transition-colors group/share focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
-                      <Share2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-white/50' : 'text-white/70'} group-hover/share:text-white/90 transition-colors`} />
+                      <Share2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-white/70' : 'text-white/85'} group-hover/share:text-white/90 transition-colors`} />
                     </button>
                   </div>
 

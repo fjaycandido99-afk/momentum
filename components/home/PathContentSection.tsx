@@ -51,10 +51,10 @@ export function PathContentSection({
   return (
     <div className="px-6 mb-8">
       <div className="flex items-center gap-2 mb-3">
-        <Compass className="w-4 h-4 text-white/50" />
+        <Compass className="w-4 h-4 text-white/70" />
         <h3 className="text-base font-medium text-white">For Your {config.name} Path</h3>
       </div>
-      <p className="text-xs text-white/40 mb-4">
+      <p className="text-xs text-white/60 mb-4">
         {pathTopics.join(' · ')} — curated for your mindset
       </p>
 

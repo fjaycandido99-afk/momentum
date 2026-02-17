@@ -19,7 +19,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
       <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header section-heading-reveal flex items-center gap-2">
         Soundscapes
         {activeSoundscape && soundscapeIsPlaying && (
-          <span className="inline-flex items-end gap-[2px] h-[12px] text-white/60">
+          <span className="inline-flex items-end gap-[2px] h-[12px] text-white/75">
             <span className="soundscape-eq-bar" />
             <span className="soundscape-eq-bar" />
             <span className="soundscape-eq-bar" />

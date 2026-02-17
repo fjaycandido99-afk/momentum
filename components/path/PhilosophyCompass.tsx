@@ -167,7 +167,7 @@ export function PhilosophyCompass({ mindsetId }: PhilosophyCompassProps) {
       )}
 
       {selectedIndex === null && (
-        <p className="text-center text-[11px] text-white/60">Tap a value to explore</p>
+        <p className="text-center text-[11px] text-white/75">Tap a value to explore</p>
       )}
     </div>
   )

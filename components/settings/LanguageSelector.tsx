@@ -54,20 +54,20 @@ export function LanguageSelector({ currentLocale = 'en', onLocaleChange }: Langu
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm"
+        className="w-full flex items-center justify-between px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white text-sm"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-label="Select language"
       >
         <span>{localeNames[selected]}</span>
-        <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-white/70 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && typeof document !== 'undefined' && createPortal(
         <ul
           role="listbox"
           style={dropdownStyle}
-          className="bg-[#1c1c20] border border-white/10 rounded-xl overflow-hidden animate-fade-in shadow-xl shadow-black/50"
+          className="bg-[#1c1c20] border border-white/15 rounded-xl overflow-hidden animate-fade-in shadow-xl shadow-black/50"
         >
           {locales.map((locale) => (
             <li key={locale}>
@@ -78,7 +78,7 @@ export function LanguageSelector({ currentLocale = 'en', onLocaleChange }: Langu
                 className={`w-full text-left px-4 py-3 text-sm transition-colors ${
                   locale === selected
                     ? 'bg-white/10 text-white'
-                    : 'text-white/70 hover:bg-white/5 hover:text-white'
+                    : 'text-white/85 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {localeNames[locale]}

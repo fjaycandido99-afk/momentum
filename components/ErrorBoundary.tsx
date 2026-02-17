@@ -39,12 +39,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       return (
         <div className="flex items-center justify-center p-8">
           <div className="text-center max-w-sm">
-            <p className="text-white/60 text-sm mb-4">
+            <p className="text-white/75 text-sm mb-4">
               This section failed to load.
             </p>
             <button
               onClick={this.handleReset}
-              className="px-4 py-2 bg-white/5 border border-white/10 text-white text-sm rounded-full hover:bg-white/10 transition-colors"
+              className="px-4 py-2 bg-white/5 border border-white/15 text-white text-sm rounded-full hover:bg-white/10 transition-colors"
             >
               Retry
             </button>

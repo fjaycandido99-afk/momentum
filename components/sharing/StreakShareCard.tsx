@@ -12,20 +12,20 @@ export const StreakShareCard = forwardRef<HTMLDivElement, StreakShareCardProps>(
     return (
       <div
         ref={ref}
-        className="w-[360px] p-8 bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] rounded-2xl border border-white/10 text-center"
+        className="w-[360px] p-8 bg-gradient-to-br from-[#0a0a0f] to-[#1a1a2e] rounded-2xl border border-white/15 text-center"
         style={{ fontFamily: 'Inter, sans-serif' }}
       >
         {/* Streak number */}
         <div className="text-5xl font-light text-white mb-2">
           {days}
         </div>
-        <p className="text-white/50 text-sm uppercase tracking-widest mb-4">
+        <p className="text-white/70 text-sm uppercase tracking-widest mb-4">
           day streak
         </p>
 
         {/* Message */}
         {message && (
-          <p className="text-white/70 text-sm">
+          <p className="text-white/85 text-sm">
             {message}
           </p>
         )}
@@ -42,8 +42,8 @@ export const StreakShareCard = forwardRef<HTMLDivElement, StreakShareCardProps>(
         </div>
 
         {/* Footer */}
-        <div className="mt-6 pt-4 border-t border-white/10">
-          <span className="text-white/30 text-xs">voxu.app</span>
+        <div className="mt-6 pt-4 border-t border-white/15">
+          <span className="text-white/50 text-xs">voxu.app</span>
         </div>
       </div>
     )

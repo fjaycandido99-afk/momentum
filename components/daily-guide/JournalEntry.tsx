@@ -174,7 +174,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
                 onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
                 placeholder={prompts.prompt1.placeholder}
                 aria-label={prompts.prompt1.label}
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                 rows={2}
                 maxLength={500}
               />
@@ -191,7 +191,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
                 onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
                 placeholder={prompts.prompt2.placeholder}
                 aria-label={prompts.prompt2.label}
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                 rows={2}
                 maxLength={500}
               />
@@ -208,7 +208,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
                 onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
                 placeholder={prompts.prompt3.placeholder}
                 aria-label={prompts.prompt3.label}
-                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
+                className="w-full p-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-white/30 resize-none focus-visible:ring-2 focus-visible:ring-white/40"
                 rows={2}
                 maxLength={300}
               />
@@ -227,7 +227,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
               </div>
             )}
             {reflection && !canSeeReflections && (
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+              <div className="p-3 rounded-xl bg-white/5 border border-white/15">
                 <div className="flex items-center gap-2">
                   <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                   <p className="text-xs text-white/95">Upgrade for AI reflections on your journal entries</p>
@@ -243,7 +243,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
   if (showAsModal) {
     return (
       <div role="dialog" aria-modal="true" aria-label="Daily reflection" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-        <div className="w-full max-w-md my-8 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10 overflow-hidden">
+        <div className="w-full max-w-md my-8 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/15 overflow-hidden">
           {content}
         </div>
       </div>

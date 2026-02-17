@@ -217,11 +217,11 @@ export default function CoachPage() {
           <h1 className="text-2xl font-light shimmer-text">AI Coach</h1>
         </div>
         {/* Tab bar */}
-        <div className="flex px-6 gap-2 pb-4 border-b border-white/10">
-          <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-white/15 text-white border border-white/20' : 'bg-white/5 text-white/60'}`}>
+        <div className="flex px-6 gap-2 pb-4 border-b border-white/15">
+          <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-white/15 text-white border border-white/25' : 'bg-white/5 text-white/75'}`}>
             <MessageSquare className="w-3.5 h-3.5" /> Chat
           </button>
-          <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-white/15 text-white border border-white/20' : 'bg-white/5 text-white/60'}`}>
+          <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-white/15 text-white border border-white/25' : 'bg-white/5 text-white/75'}`}>
             <ClipboardList className="w-3.5 h-3.5" /> Plans
           </button>
         </div>
@@ -277,18 +277,18 @@ export default function CoachPage() {
           </div>
           {mindsetCtx && (
             <div className="ml-auto flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
-              <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
+              <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/75" />
             </div>
           )}
         </div>
       </div>
 
       {/* Tab bar */}
-      <div className="flex px-6 gap-2 py-2 border-b border-white/10">
-        <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-white/15 text-white border border-white/20' : 'bg-white/5 text-white/60'}`}>
+      <div className="flex px-6 gap-2 py-2 border-b border-white/15">
+        <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-white/15 text-white border border-white/25' : 'bg-white/5 text-white/75'}`}>
           <MessageSquare className="w-3.5 h-3.5" /> Chat
         </button>
-        <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-white/15 text-white border border-white/20' : 'bg-white/5 text-white/60'}`}>
+        <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-white/15 text-white border border-white/25' : 'bg-white/5 text-white/75'}`}>
           <ClipboardList className="w-3.5 h-3.5" /> Plans
         </button>
       </div>
@@ -316,7 +316,7 @@ export default function CoachPage() {
           className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
             chatMode === 'coach'
               ? 'bg-amber-500/20 border border-amber-500/30 text-amber-400'
-              : 'bg-white/5 border border-white/10 text-white/50 hover:bg-white/10'
+              : 'bg-white/5 border border-white/15 text-white/70 hover:bg-white/10'
           }`}
         >
           Coach
@@ -326,7 +326,7 @@ export default function CoachPage() {
           className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
             chatMode === 'accountability'
               ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
-              : 'bg-white/5 border border-white/10 text-white/50 hover:bg-white/10'
+              : 'bg-white/5 border border-white/15 text-white/70 hover:bg-white/10'
           }`}
         >
           Check-in
@@ -336,7 +336,7 @@ export default function CoachPage() {
       {/* Check-in quick actions (only when accountability mode + at start) */}
       {chatMode === 'accountability' && showQuickReplies && messages.length === 1 && (
         <div className="px-6 py-3">
-          <p className="text-xs text-white/40 mb-2">Quick check-in</p>
+          <p className="text-xs text-white/60 mb-2">Quick check-in</p>
           <div className="grid grid-cols-2 gap-2">
             {CHECK_IN_TYPES.map(type => {
               const Icon = type.icon
@@ -347,7 +347,7 @@ export default function CoachPage() {
                   className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all"
                 >
                   <Icon className={`w-4 h-4 ${type.color}`} />
-                  <span className="text-xs text-white/70">{type.label}</span>
+                  <span className="text-xs text-white/85">{type.label}</span>
                 </button>
               )
             })}
@@ -423,7 +423,7 @@ export default function CoachPage() {
       </div>
 
       {/* Input */}
-      <div className="px-6 pb-8 pt-4 border-t border-white/10 bg-black/80 backdrop-blur-xl">
+      <div className="px-6 pb-8 pt-4 border-t border-white/15 bg-black/80 backdrop-blur-xl">
         <FeatureHint id="coach-intro" text="Ask anything — your AI coach adapts to your mindset" mode="once" />
         <div className="flex items-end gap-2">
           <textarea
@@ -433,7 +433,7 @@ export default function CoachPage() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={chatMode === 'accountability' ? 'Share your progress...' : 'Ask your coach...'}
-            className="flex-1 p-3 rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-amber-500/20 resize-none max-h-32 transition-all"
+            className="flex-1 p-3 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-amber-500/20 resize-none max-h-32 transition-all"
             rows={1}
           />
           <button

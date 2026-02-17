@@ -56,11 +56,11 @@ export function DailyIntentionCard({ dailyIntention, today }: DailyIntentionCard
             <Check className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-white/70 mb-1">Today's intention</p>
+            <p className="text-xs text-white/85 mb-1">Today's intention</p>
             <p className="text-sm text-white leading-relaxed">{dailyIntention}</p>
             <Link
               href="/journal"
-              className="inline-flex items-center gap-1.5 mt-2 text-xs text-white/70 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 mt-2 text-xs text-white/85 hover:text-white transition-colors"
             >
               <PenLine className="w-3 h-3" />
               Reflect in journal
@@ -104,7 +104,7 @@ export function DailyIntentionCard({ dailyIntention, today }: DailyIntentionCard
           }}
           placeholder="Or type your own..."
           maxLength={100}
-          className="flex-1 px-3 py-2 text-xs text-white bg-white/5 border border-white/15 rounded-xl placeholder:text-white/40 focus:outline-none focus:border-white/30"
+          className="flex-1 px-3 py-2 text-xs text-white bg-white/5 border border-white/15 rounded-xl placeholder:text-white/60 focus:outline-none focus:border-white/30"
         />
         {customText.trim() && (
           <button

@@ -126,7 +126,7 @@ export function PathJourneyCard({ mindsetId, refreshKey }: PathJourneyCardProps)
                   <span className="text-xs font-semibold shimmer-text">{status.streak}-day streak</span>
                 </div>
               ) : (
-                <p className="text-[11px] text-white/60 mt-0.5">Start your streak today</p>
+                <p className="text-[11px] text-white/75 mt-0.5">Start your streak today</p>
               )}
             </div>
           </div>
@@ -159,12 +159,12 @@ export function PathJourneyCard({ mindsetId, refreshKey }: PathJourneyCardProps)
               {isComplete ? (
                 <>
                   <Check className={`w-6 h-6 ${checkColor} mb-0.5`} />
-                  <span className="text-[10px] text-white/70 font-medium">Complete!</span>
+                  <span className="text-[10px] text-white/85 font-medium">Complete!</span>
                 </>
               ) : (
                 <>
-                  <span className="text-2xl font-bold text-white tracking-tight">{status.completedCount}<span className="text-white/50 font-normal">/4</span></span>
-                  <span className="text-[10px] text-white/50 -mt-0.5">today</span>
+                  <span className="text-2xl font-bold text-white tracking-tight">{status.completedCount}<span className="text-white/70 font-normal">/4</span></span>
+                  <span className="text-[10px] text-white/70 -mt-0.5">today</span>
                 </>
               )}
             </div>
@@ -181,7 +181,7 @@ export function PathJourneyCard({ mindsetId, refreshKey }: PathJourneyCardProps)
                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all duration-300 ${
                   done
                     ? `${doneStyle.bg} ${doneStyle.border} animate-scale-in`
-                    : 'bg-white/[0.04] border-white/10'
+                    : 'bg-white/[0.04] border-white/15'
                 }`}
               >
                 {done ? (
@@ -191,7 +191,7 @@ export function PathJourneyCard({ mindsetId, refreshKey }: PathJourneyCardProps)
                 ) : (
                   <span className="text-sm leading-none">{act.icon}</span>
                 )}
-                <span className={`text-xs font-medium ${done ? doneStyle.text : 'text-white/70'}`}>
+                <span className={`text-xs font-medium ${done ? doneStyle.text : 'text-white/85'}`}>
                   {act.label}
                 </span>
               </div>
@@ -202,7 +202,7 @@ export function PathJourneyCard({ mindsetId, refreshKey }: PathJourneyCardProps)
         {/* 4/4 celebration message */}
         {isComplete && (
           <div className="mt-3 text-center animate-fade-in">
-            <p className="text-[11px] text-white/60">All activities complete — see you tomorrow</p>
+            <p className="text-[11px] text-white/75">All activities complete — see you tomorrow</p>
           </div>
         )}
       </div>

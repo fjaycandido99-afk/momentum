@@ -63,12 +63,12 @@ export function LetterToSelf() {
           </div>
           <div className="text-left">
             <h3 className="text-sm font-medium text-white">Letter to Self</h3>
-            <p className="text-[10px] text-white/50">AI-written from your journey</p>
+            <p className="text-[10px] text-white/70">AI-written from your journey</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {loading && <Loader2 className="w-4 h-4 text-white/50 animate-spin" />}
-          <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          {loading && <Loader2 className="w-4 h-4 text-white/70 animate-spin" />}
+          <ChevronDown className={`w-4 h-4 text-white/70 transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </div>
       </button>
 
@@ -82,7 +82,7 @@ export function LetterToSelf() {
               className={`flex-1 py-3 text-xs font-medium rounded-lg transition-all ${
                 letterType === 'future'
                   ? 'bg-pink-500/20 text-pink-300'
-                  : 'bg-white/5 text-white/60 hover:text-white/80'
+                  : 'bg-white/5 text-white/75 hover:text-white/80'
               }`}
             >
               From Future Self
@@ -93,7 +93,7 @@ export function LetterToSelf() {
               className={`flex-1 py-3 text-xs font-medium rounded-lg transition-all ${
                 letterType === 'past'
                   ? 'bg-pink-500/20 text-pink-300'
-                  : 'bg-white/5 text-white/60 hover:text-white/80'
+                  : 'bg-white/5 text-white/75 hover:text-white/80'
               }`}
             >
               To Past Self
@@ -103,7 +103,7 @@ export function LetterToSelf() {
           {loading ? (
             <div className="flex items-center justify-center py-8 gap-2">
               <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />
-              <span className="text-xs text-white/50">Writing your letter...</span>
+              <span className="text-xs text-white/70">Writing your letter...</span>
             </div>
           ) : letter ? (
             <>
@@ -117,7 +117,7 @@ export function LetterToSelf() {
                 <button
                   onClick={handleShare}
                   disabled={isShareGenerating}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 text-xs transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 text-xs transition-colors"
                 >
                   <Share2 className="w-3.5 h-3.5" />
                   Share

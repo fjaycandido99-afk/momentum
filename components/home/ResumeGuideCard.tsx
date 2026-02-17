@@ -34,7 +34,7 @@ export function ResumeGuideCard({ modulesCompleted, totalModules, onResume }: Re
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <CheckCircle2 className="w-3 h-3 text-cyan-400/60" />
-                <span className="text-[10px] text-white/40">{modulesCompleted}/{totalModules}</span>
+                <span className="text-[10px] text-white/60">{modulesCompleted}/{totalModules}</span>
               </div>
             </div>
           </div>

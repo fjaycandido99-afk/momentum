@@ -161,7 +161,7 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
           </div>
 
           {/* Encouragement message */}
-          <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div className="p-4 rounded-xl bg-white/5 border border-white/15">
             <p className="text-sm text-white/95">
               You're building momentum! Keep this energy going throughout your day.
             </p>

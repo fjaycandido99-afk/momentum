@@ -62,7 +62,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-gradient-to-b from-[#1a1a24] to-[#0f0f15] rounded-3xl border border-white/10 overflow-hidden">
+      <div className="relative w-full max-w-md bg-gradient-to-b from-[#1a1a24] to-[#0f0f15] rounded-3xl border border-white/15 overflow-hidden">
         {/* Close button */}
         <button
           onClick={onClose}

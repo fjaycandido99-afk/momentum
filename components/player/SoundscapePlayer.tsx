@@ -103,7 +103,7 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
               <div className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
                 isActive
                   ? 'bg-white/15 border-2 border-white/40'
-                  : 'bg-white/5 border border-white/10'
+                  : 'bg-white/5 border border-white/15'
               }`}>
                 <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-white' : 'text-white/95'}`} strokeWidth={1.5} />
                 {isLocked && !isActive && (
@@ -121,7 +121,7 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
         <button
           aria-label={isPlaying ? 'Pause' : 'Play'}
           onClick={onTogglePlay}
-          className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/15 transition-colors press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+          className="w-16 h-16 rounded-full bg-white/10 border border-white/25 flex items-center justify-center hover:bg-white/15 transition-colors press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           {isPlaying ? (
             <Pause className="w-7 h-7 text-white" fill="white" />

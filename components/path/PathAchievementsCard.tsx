@@ -47,7 +47,7 @@ export function PathAchievementsCard() {
           <Trophy className="w-4 h-4 text-amber-400" />
           <div>
             <h3 className="text-sm font-semibold text-white">Path Achievements</h3>
-            <p className="text-[10px] text-white/50">{unlockedCount} of {pathAchievements.length} unlocked</p>
+            <p className="text-[10px] text-white/70">{unlockedCount} of {pathAchievements.length} unlocked</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -106,13 +106,13 @@ export function PathAchievementsCard() {
 
               {/* Unlock date */}
               {unlocked && unlockedAt && (
-                <span className="text-[7px] text-white/30">{formatDate(unlockedAt)}</span>
+                <span className="text-[7px] text-white/50">{formatDate(unlockedAt)}</span>
               )}
 
               {/* Expanded description */}
               {isExpanded && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 translate-y-full z-10 w-[140%] rounded-xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-2.5 text-center">
-                  <p className="text-[10px] text-white/70 leading-relaxed">{a.description}</p>
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 translate-y-full z-10 w-[140%] rounded-xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-2.5 text-center">
+                  <p className="text-[10px] text-white/85 leading-relaxed">{a.description}</p>
                   <div className="flex items-center justify-center gap-1 mt-1.5">
                     <Zap className="w-2.5 h-2.5 text-amber-400" />
                     <span className="text-[9px] font-semibold text-amber-400">+{a.xpReward} XP</span>

@@ -16,11 +16,13 @@ import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 import { MoodSelector, type MoodValue } from '@/components/journal/MoodSelector'
 import { VoiceInput } from '@/components/journal/VoiceInput'
-import { JournalStats, calculateJournalStats, type JournalStatsData } from '@/components/journal/JournalStats'
+import { calculateJournalStats, type JournalStatsData } from '@/components/journal/JournalStats'
 import { HeatMapStrip } from '@/components/journal/HeatMapStrip'
 import { getPromptForDate, getShuffledPrompt } from '@/components/journal/JournalPrompts'
 import { useKeyboardAware } from '@/hooks/useKeyboardAware'
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
+import { useJournalAutosave } from '@/hooks/useJournalAutosave'
+import { FocusModeToolbar } from '@/components/journal/FocusModeToolbar'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 
 interface JournalEntry {
@@ -88,6 +90,7 @@ function JournalContent() {
   const [showAllRecent, setShowAllRecent] = useState(false)
   const [journalTags, setJournalTags] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [showMore, setShowMore] = useState(false)
 
   // Conversational journal state
   const [conversation, setConversation] = useState<ConversationMessage[]>([])
@@ -101,20 +104,27 @@ function JournalContent() {
   const [dreamLoading, setDreamLoading] = useState(false)
   const [dreamSaved, setDreamSaved] = useState(false)
 
-  const activeFieldRef = useRef<'win' | 'gratitude' | 'intention' | 'freewrite'>('freewrite')
+  const activeFieldRef = useRef<'win' | 'gratitude' | 'intention' | 'freewrite' | 'dream'>('freewrite')
+  const handleSaveRef = useRef<() => Promise<void>>()
+
+  // Focus mode state
+  const [focusMode, setFocusMode] = useState(false)
+  const [focusField, setFocusField] = useState<'win' | 'gratitude' | 'intention' | 'freewrite' | 'dream' | null>(null)
+  const focusTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const focusExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Mobile keyboard UX
-  useKeyboardAware()
+  const { keyboardOpen, keyboardHeight, viewportHeight } = useKeyboardAware()
   const freeTextRef = useRef<HTMLTextAreaElement>(null)
   const winRef = useRef<HTMLTextAreaElement>(null)
   const gratitudeRef = useRef<HTMLTextAreaElement>(null)
   const intentionRef = useRef<HTMLTextAreaElement>(null)
   const dreamRef = useRef<HTMLTextAreaElement>(null)
-  useAutoResizeTextarea(freeTextRef, freeText)
-  useAutoResizeTextarea(winRef, win)
-  useAutoResizeTextarea(gratitudeRef, gratitude)
-  useAutoResizeTextarea(intentionRef, intention)
-  useAutoResizeTextarea(dreamRef, dreamText)
+  useAutoResizeTextarea(freeTextRef, freeText, { focusMode: focusMode && focusField === 'freewrite' })
+  useAutoResizeTextarea(winRef, win, { focusMode: focusMode && focusField === 'win' })
+  useAutoResizeTextarea(gratitudeRef, gratitude, { focusMode: focusMode && focusField === 'gratitude' })
+  useAutoResizeTextarea(intentionRef, intention, { focusMode: focusMode && focusField === 'intention' })
+  useAutoResizeTextarea(dreamRef, dreamText, { focusMode: focusMode && focusField === 'dream' })
 
   // Read spark prompt from URL
   useEffect(() => {
@@ -123,6 +133,58 @@ function JournalContent() {
   }, [searchParams])
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
+
+  // Focus mode helpers
+  const enterFocusMode = useCallback((field: typeof focusField) => {
+    if (mode === 'conversational') return // Chat mode has its own layout
+    setFocusField(field)
+    setFocusMode(true)
+    document.body.style.overflow = 'hidden'
+    // Focus the textarea inside the overlay after render
+    requestAnimationFrame(() => {
+      focusTextareaRef.current?.focus()
+    })
+  }, [mode])
+
+  const exitFocusMode = useCallback(() => {
+    setFocusMode(false)
+    setFocusField(null)
+    document.body.style.overflow = ''
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+  }, [])
+
+  // Auto-exit focus mode when keyboard closes (300ms delay to avoid glitches)
+  useEffect(() => {
+    if (!focusMode) return
+    if (!keyboardOpen) {
+      focusExitTimer.current = setTimeout(() => {
+        exitFocusMode()
+      }, 300)
+    } else {
+      if (focusExitTimer.current) {
+        clearTimeout(focusExitTimer.current)
+        focusExitTimer.current = null
+      }
+    }
+    return () => {
+      if (focusExitTimer.current) clearTimeout(focusExitTimer.current)
+    }
+  }, [keyboardOpen, focusMode, exitFocusMode])
+
+  // Autosave integration (uses ref for stable callback)
+  const autosaveOnSave = useCallback(async () => {
+    if (handleSaveRef.current) await handleSaveRef.current()
+  }, [])
+
+  const { status: autosaveStatus, saveNow: autosaveSaveNow } = useJournalAutosave(
+    [win, gratitude, intention, freeText, dreamText, mood],
+    {
+      onSave: autosaveOnSave,
+      enabled: isToday && (mode === 'guided' || mode === 'freewrite' || mode === 'dream'),
+    },
+  )
 
   // Set initial prompt for date
   useEffect(() => {
@@ -250,10 +312,12 @@ function JournalContent() {
     loadStreak()
   }, [])
 
-  const handleSave = async () => {
+  // Internal save function used by both manual save and autosave
+  const handleSaveInternal = useCallback(async () => {
     const guidedContent = win.trim() || gratitude.trim() || intention.trim()
     const freeContent = freeText.trim()
-    if (!guidedContent && !freeContent && !mood) return
+    const dreamContent = dreamText.trim()
+    if (!guidedContent && !freeContent && !dreamContent && !mood) return
 
     setIsSaving(true)
     try {
@@ -267,6 +331,9 @@ function JournalContent() {
         payload.journal_win = win.trim() || undefined
         payload.journal_gratitude = gratitude.trim() || undefined
         payload.journal_intention = intention.trim() || undefined
+      } else if (mode === 'dream') {
+        payload.journal_dream = dreamContent || undefined
+        payload.journal_freetext = dreamContent ? `Dream: ${dreamContent}` : undefined
       } else {
         payload.journal_freetext = freeText.trim() || undefined
         payload.journal_prompt = prompt.text
@@ -308,7 +375,10 @@ function JournalContent() {
     } finally {
       setIsSaving(false)
     }
-  }
+  }, [win, gratitude, intention, freeText, dreamText, mood, mode, selectedDate])
+  handleSaveRef.current = handleSaveInternal
+
+  const handleSave = handleSaveInternal
 
   const goDay = (offset: number) => {
     const next = new Date(selectedDate)
@@ -525,133 +595,112 @@ function JournalContent() {
 
   return (
     <div className="min-h-screen text-white pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-50 px-6 pt-12 pb-4 mb-4 bg-black">
+      {/* ── Header: title + inline date nav ── */}
+      <div className="sticky top-0 z-50 px-6 pt-12 pb-3 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 mb-1">
+        {/* Row 1: Title + actions */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-amber-500/20">
               <PenLine className="w-5 h-5 text-amber-400" />
             </div>
             <h1 className="text-2xl font-light shimmer-text">Journal</h1>
           </div>
           <div className="flex items-center gap-1.5">
-            {hasJournalHistory && recentEntries.length > 0 && (
-              <button
-                onClick={exportEntries}
-                aria-label="Export journal"
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
-              >
-                <Download className="w-4 h-4 text-white/60" />
-              </button>
-            )}
             {mindsetCtx && (
               <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/5">
-                <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
+                <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/75" />
               </div>
             )}
-            {/* Streak badge */}
             {journalStats.currentStreak > 0 && (
               <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/20">
                 <span className="text-sm">🔥</span>
                 <span className="text-xs font-semibold text-orange-400">{journalStats.currentStreak}</span>
               </div>
             )}
+            {hasJournalHistory && recentEntries.length > 0 && (
+              <button
+                onClick={exportEntries}
+                aria-label="Export journal"
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <Download className="w-4 h-4 text-white/75" />
+              </button>
+            )}
           </div>
         </div>
-        <p className="text-white text-sm ml-12">Reflect, grow, remember</p>
-      </div>
-
-      {/* Stats Bar */}
-      <div className="px-6 mb-4">
-        <JournalStats stats={journalStats} />
-      </div>
-
-      {/* Date Picker */}
-      <div className="px-6 mb-4">
-        <div className="flex items-center justify-between p-3 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+        {/* Row 2: Inline date picker */}
+        <div className="flex items-center gap-2">
           <button
             aria-label="Previous day"
             onClick={() => goDay(-1)}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            className="p-1 rounded-lg hover:bg-white/10 transition-colors"
           >
-            <ChevronLeft className="w-5 h-5 text-white" />
+            <ChevronLeft className="w-4 h-4 text-white/75" />
           </button>
-          <div className="text-center">
-            <p className="text-sm font-medium text-white">{dateLabel}</p>
-            {isToday && <p className="text-[10px] text-amber-400">Today</p>}
-          </div>
+          <span className="text-sm font-medium text-white">{dateLabel}</span>
+          {isToday && <span className="text-[10px] text-amber-400 font-medium">Today</span>}
           <button
             aria-label="Next day"
             onClick={() => goDay(1)}
             disabled={isToday}
-            className={`p-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${isToday ? 'opacity-30' : 'hover:bg-white/10'}`}
+            className={`p-1 rounded-lg transition-colors ${isToday ? 'opacity-30' : 'hover:bg-white/10'}`}
           >
-            <ChevronRight className="w-5 h-5 text-white" />
+            <ChevronRight className="w-4 h-4 text-white/75" />
           </button>
         </div>
       </div>
 
-      {/* Mood Selector */}
-      <div className="px-6 mb-4">
-        <MoodSelector
-          mood={mood}
-          onSelect={(m) => { setMood(m); setIsSaved(false) }}
-          moodHistory={allEntries}
-        />
-      </div>
-
-      {/* Mode Toggle — 4 modes, horizontally scrollable on mobile */}
-      <div className="px-6 mb-4">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar p-1 rounded-xl bg-black border border-white/20">
-          {([
-            { id: 'guided' as JournalMode, label: 'Guided', icon: <BookOpen className="w-3.5 h-3.5" /> },
-            { id: 'freewrite' as JournalMode, label: 'Free Write', icon: <PenLine className="w-3.5 h-3.5" /> },
-            { id: 'conversational' as JournalMode, label: 'Chat', icon: <MessageCircle className="w-3.5 h-3.5" /> },
-            { id: 'dream' as JournalMode, label: 'Dream', icon: <Moon className="w-3.5 h-3.5" /> },
-          ]).map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setMode(tab.id)}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-all ${
-                mode === tab.id
-                  ? 'bg-white/20 text-white shadow-sm'
-                  : 'text-white/80 hover:text-white'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+      {/* ── Mode tabs + mood (compact, one section) ── */}
+      <div className="px-6 pt-2 pb-3 mb-2 border-b border-white/15">
+        <div className="flex items-center justify-between gap-3">
+          {/* Mode tabs */}
+          <div className="flex gap-1 overflow-x-auto no-scrollbar p-0.5 rounded-lg bg-white/10">
+            {([
+              { id: 'guided' as JournalMode, label: 'Guided', icon: <BookOpen className="w-3 h-3" /> },
+              { id: 'freewrite' as JournalMode, label: 'Free', icon: <PenLine className="w-3 h-3" /> },
+              { id: 'conversational' as JournalMode, label: 'Chat', icon: <MessageCircle className="w-3 h-3" /> },
+              { id: 'dream' as JournalMode, label: 'Dream', icon: <Moon className="w-3 h-3" /> },
+            ]).map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setMode(tab.id)}
+                className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-all ${
+                  mode === tab.id
+                    ? 'bg-white/25 text-white shadow-sm'
+                    : 'text-white/85 hover:text-white'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {/* Compact mood */}
+          <MoodSelector
+            mood={mood}
+            onSelect={(m) => { setMood(m); setIsSaved(false) }}
+            moodHistory={allEntries}
+            compact
+          />
         </div>
         <FeatureHint id="journal-modes-v2" text="Try Chat for a guided AI conversation, or Dream to decode your dreams" mode="once" />
-        {mode === 'conversational' && (
-          <p className="text-[10px] text-white/30 mt-1.5 italic">Chat with an AI journal companion — it asks follow-up questions to deepen your reflection</p>
-        )}
-        {mode === 'dream' && (
-          <p className="text-[10px] text-white/30 mt-1.5 italic">Describe your dream and get symbol interpretations + life connections</p>
-        )}
       </div>
 
       {/* Spark Prompt */}
       {sparkPrompt && (
-        <div className="px-6 mb-4 animate-fade-in">
-          <div className="relative p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+        <div className="px-6 mb-3 animate-fade-in">
+          <div className="relative p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
             <button
               aria-label="Dismiss prompt"
               onClick={() => setSparkPrompt(null)}
-              className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+              className="absolute top-2 right-2 p-1 rounded-full hover:bg-white/10 transition-colors"
             >
-              <X className="w-3.5 h-3.5 text-white/80" />
+              <X className="w-3 h-3 text-white/75" />
             </button>
-            <div className="flex items-start gap-3 pr-6">
-              <div className="p-1.5 rounded-lg bg-violet-500/20 mt-0.5 shrink-0">
-                <Sparkles className="w-3.5 h-3.5 text-violet-300" />
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold text-violet-300 uppercase tracking-wider mb-1">Reflect on this</p>
-                <p className="text-sm text-white leading-relaxed italic">&ldquo;{sparkPrompt}&rdquo;</p>
-              </div>
+            <div className="flex items-start gap-2 pr-6">
+              <Sparkles className="w-3.5 h-3.5 text-violet-300 mt-0.5 shrink-0" />
+              <p className="text-sm text-white/90 leading-relaxed italic">&ldquo;{sparkPrompt}&rdquo;</p>
             </div>
           </div>
         </div>
@@ -667,14 +716,14 @@ function JournalContent() {
           /* Conversational Journal Mode */
           <div className="space-y-3">
             {/* Chat card — flex column with messages + pinned input */}
-            <div className="flex flex-col rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]" style={{ maxHeight: '60vh' }}>
+            <div className="flex flex-col rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]" style={{ maxHeight: '60vh' }}>
               {/* Messages area */}
               <div className="flex-1 overflow-y-auto space-y-3 p-4">
                 {conversation.length === 0 && (
                   <div className="text-center py-6">
                     <MessageCircle className="w-8 h-8 text-violet-400/50 mx-auto mb-2" />
-                    <p className="text-sm text-white/70">Start a journaling conversation</p>
-                    <p className="text-xs text-white/50 mt-1">Share what&apos;s on your mind and I&apos;ll help you explore it</p>
+                    <p className="text-sm text-white/85">Start a journaling conversation</p>
+                    <p className="text-xs text-white/70 mt-1">Share what&apos;s on your mind and I&apos;ll help you explore it</p>
                   </div>
                 )}
                 {conversation.map((msg, i) => (
@@ -694,7 +743,7 @@ function JournalContent() {
                 {chatLoading && (
                   <div className="flex justify-start">
                     <div className="px-3 py-2 rounded-2xl rounded-bl-md bg-white/10">
-                      <Loader2 className="w-4 h-4 text-white/60 animate-spin" />
+                      <Loader2 className="w-4 h-4 text-white/75 animate-spin" />
                     </div>
                   </div>
                 )}
@@ -702,14 +751,16 @@ function JournalContent() {
               </div>
 
               {/* Pinned input at bottom of card */}
-              <div className="flex gap-2 p-3 border-t border-white/10">
+              <div className="flex gap-2 p-3 border-t border-white/15">
                 <input
                   type="text"
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage() } }}
                   placeholder="What's on your mind..."
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white text-sm placeholder-white/50 focus:outline-none focus:border-white/60"
+                  autoCapitalize="sentences"
+                  enterKeyHint="send"
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white text-sm placeholder-white/60 focus:outline-none focus:border-white/60"
                 />
                 <button
                   onClick={sendChatMessage}
@@ -726,7 +777,7 @@ function JournalContent() {
               <button
                 onClick={saveConversation}
                 disabled={isSaving || isSaved}
-                className={`w-full py-3 rounded-2xl bg-black border border-white/20 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                className={`w-full py-3 rounded-2xl bg-black border border-white/25 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                   isSaved ? 'text-emerald-400' : 'text-white'
                 }`}
               >
@@ -754,7 +805,7 @@ function JournalContent() {
         ) : mode === 'dream' ? (
           /* Dream Journal Mode */
           <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+            <div className="p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
               <label className="text-sm text-white flex items-center gap-2 mb-3">
                 <Moon className="w-4 h-4 text-indigo-400" />
                 Describe your dream
@@ -763,20 +814,25 @@ function JournalContent() {
                 ref={dreamRef}
                 value={dreamText}
                 onChange={e => { setDreamText(e.target.value); setDreamSaved(false); setDreamInterpretation(null) }}
+                onFocus={() => { activeFieldRef.current = 'dream'; enterFocusMode('dream') }}
                 placeholder="I dreamed that..."
-                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
+                autoCapitalize="sentences"
+                autoComplete="off"
+                spellCheck
+                enterKeyHint="enter"
+                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
                 rows={6}
                 maxLength={3000}
               />
-              <p className="text-right text-[10px] text-white/70 mt-1">{dreamText.length}/3000</p>
+              <p className="text-right text-[10px] text-white/85 mt-1">{dreamText.length}/3000</p>
             </div>
 
             {/* Submit dream */}
             <button
               onClick={submitDream}
               disabled={!dreamText.trim() || dreamLoading || dreamSaved}
-              className={`w-full py-3 rounded-2xl bg-black border border-white/20 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                dreamSaved ? 'text-emerald-400' : dreamText.trim() ? 'text-white' : 'text-white/70 cursor-not-allowed'
+              className={`w-full py-3 rounded-2xl bg-black border border-white/25 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                dreamSaved ? 'text-emerald-400' : dreamText.trim() ? 'text-white' : 'text-white/85 cursor-not-allowed'
               }`}
             >
               {dreamLoading ? (
@@ -799,7 +855,7 @@ function JournalContent() {
                       {dreamInterpretation.symbols.map((s, i) => (
                         <div key={i} className="flex items-start gap-2">
                           <span className="text-indigo-300 text-sm font-medium shrink-0">{s.symbol}</span>
-                          <span className="text-white/70 text-xs">{s.meaning}</span>
+                          <span className="text-white/85 text-xs">{s.meaning}</span>
                         </div>
                       ))}
                     </div>
@@ -808,7 +864,7 @@ function JournalContent() {
 
                 {/* Emotional theme */}
                 {dreamInterpretation.emotionalTheme && (
-                  <div className="border-t border-white/10 pt-3">
+                  <div className="border-t border-white/15 pt-3">
                     <p className="text-[10px] font-semibold text-violet-400 uppercase tracking-wider mb-1">Emotional Theme</p>
                     <p className="text-sm text-white/90 leading-relaxed">{dreamInterpretation.emotionalTheme}</p>
                   </div>
@@ -816,7 +872,7 @@ function JournalContent() {
 
                 {/* Connection to life */}
                 {dreamInterpretation.connectionToLife && (
-                  <div className="border-t border-white/10 pt-3">
+                  <div className="border-t border-white/15 pt-3">
                     <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider mb-1">Life Connection</p>
                     <p className="text-sm text-white/90 leading-relaxed">{dreamInterpretation.connectionToLife}</p>
                   </div>
@@ -824,7 +880,7 @@ function JournalContent() {
 
                 {/* Mindset reflection */}
                 {dreamInterpretation.mindsetReflection && (
-                  <div className="border-t border-white/10 pt-3">
+                  <div className="border-t border-white/15 pt-3">
                     <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-1">Reflection</p>
                     <p className="text-sm text-white/90 leading-relaxed italic">{dreamInterpretation.mindsetReflection}</p>
                   </div>
@@ -839,7 +895,7 @@ function JournalContent() {
               const mp = mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset] : null
               return (
                 <>
-                <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+                <div className="p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
                   <label className="text-sm text-white flex items-center gap-2 mb-3">
                     <Sparkles className="w-4 h-4 text-amber-400" />
                     {mp?.prompt1.label || 'What did you learn today?'}
@@ -848,16 +904,20 @@ function JournalContent() {
                     ref={winRef}
                     value={win}
                     onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
-                    onFocus={() => { activeFieldRef.current = 'win' }}
+                    onFocus={() => { activeFieldRef.current = 'win'; enterFocusMode('win') }}
                     placeholder={mp?.prompt1.placeholder || 'Today I learned...'}
-                    className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
+                    autoCapitalize="sentences"
+                    autoComplete="off"
+                    spellCheck
+                    enterKeyHint="enter"
+                    className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
                     rows={3}
                     maxLength={500}
                   />
-                  <p className="text-right text-[10px] text-white/70 mt-1">{win.length}/500</p>
+                  <p className="text-right text-[10px] text-white/85 mt-1">{win.length}/500</p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+                <div className="p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
                   <label className="text-sm text-white flex items-center gap-2 mb-3">
                     <Heart className="w-4 h-4 text-pink-400" />
                     {mp?.prompt2.label || 'What are you grateful for?'}
@@ -866,16 +926,20 @@ function JournalContent() {
                     ref={gratitudeRef}
                     value={gratitude}
                     onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
-                    onFocus={() => { activeFieldRef.current = 'gratitude' }}
+                    onFocus={() => { activeFieldRef.current = 'gratitude'; enterFocusMode('gratitude') }}
                     placeholder={mp?.prompt2.placeholder || "I'm grateful for..."}
-                    className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
+                    autoCapitalize="sentences"
+                    autoComplete="off"
+                    spellCheck
+                    enterKeyHint="enter"
+                    className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
                     rows={3}
                     maxLength={500}
                   />
-                  <p className="text-right text-[10px] text-white/70 mt-1">{gratitude.length}/500</p>
+                  <p className="text-right text-[10px] text-white/85 mt-1">{gratitude.length}/500</p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+                <div className="p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
                   <label className="text-sm text-white flex items-center gap-2 mb-3">
                     <Target className="w-4 h-4 text-purple-400" />
                     {mp?.prompt3.label || "Tomorrow\u0027s intention"}
@@ -884,13 +948,17 @@ function JournalContent() {
                     ref={intentionRef}
                     value={intention}
                     onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
-                    onFocus={() => { activeFieldRef.current = 'intention' }}
+                    onFocus={() => { activeFieldRef.current = 'intention'; enterFocusMode('intention') }}
                     placeholder={mp?.prompt3.placeholder || 'Tomorrow I will...'}
-                    className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
+                    autoCapitalize="sentences"
+                    autoComplete="off"
+                    spellCheck
+                    enterKeyHint="enter"
+                    className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
                     rows={2}
                     maxLength={300}
                   />
-                  <p className="text-right text-[10px] text-white/70 mt-1">{intention.length}/300</p>
+                  <p className="text-right text-[10px] text-white/85 mt-1">{intention.length}/300</p>
                 </div>
                 </>
               )
@@ -904,14 +972,14 @@ function JournalContent() {
               />
             </div>
             {interimText && (
-              <p className="text-xs text-white/60 italic px-1">{interimText}</p>
+              <p className="text-xs text-white/75 italic px-1">{interimText}</p>
             )}
           </div>
         ) : (
           /* Free Write Mode */
           <div className="space-y-4">
             {/* Rotating prompt card */}
-            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+            <div className="p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 flex-1">
                   <div className="p-1.5 rounded-lg bg-amber-500/20 mt-0.5 shrink-0">
@@ -924,7 +992,7 @@ function JournalContent() {
                     <p className="text-sm text-white leading-relaxed">
                       {displayPrompt.prompt.text}
                     </p>
-                    <p className="text-[10px] text-white/60 mt-1.5 capitalize">{displayPrompt.prompt.category}</p>
+                    <p className="text-[10px] text-white/75 mt-1.5 capitalize">{displayPrompt.prompt.category}</p>
                   </div>
                 </div>
                 <button
@@ -938,7 +1006,7 @@ function JournalContent() {
             </div>
 
             {/* Large textarea with voice */}
-            <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+            <div className="p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm text-white">Write freely...</label>
                 <VoiceInput
@@ -950,16 +1018,20 @@ function JournalContent() {
                 ref={freeTextRef}
                 value={freeText}
                 onChange={(e) => { setFreeText(e.target.value); setIsSaved(false) }}
-                onFocus={() => { activeFieldRef.current = 'freewrite' }}
+                onFocus={() => { activeFieldRef.current = 'freewrite'; enterFocusMode('freewrite') }}
                 placeholder="Let your thoughts flow..."
-                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
+                autoCapitalize="sentences"
+                autoComplete="off"
+                spellCheck
+                enterKeyHint="enter"
+                className="w-full p-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/40 resize-none"
                 rows={8}
                 maxLength={5000}
               />
               {interimText && (
-                <p className="text-xs text-white/60 italic mt-1 px-1">{interimText}</p>
+                <p className="text-xs text-white/75 italic mt-1 px-1">{interimText}</p>
               )}
-              <p className="text-right text-[10px] text-white/70 mt-1">{freeText.length}/5000</p>
+              <p className="text-right text-[10px] text-white/85 mt-1">{freeText.length}/5000</p>
             </div>
           </div>
         )}
@@ -970,12 +1042,12 @@ function JournalContent() {
             <button
               onClick={handleSave}
               disabled={!hasContent && !mood || isSaving || isSaved}
-              className={`w-full py-3 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              className={`w-full py-3 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                 isSaved
                   ? 'text-emerald-400'
                   : hasContent || mood
                   ? 'text-white'
-                  : 'text-white/70 cursor-not-allowed'
+                  : 'text-white/85 cursor-not-allowed'
               }`}
             >
               {isSaving ? (
@@ -991,7 +1063,7 @@ function JournalContent() {
 
         {/* AI Insight */}
         {reflection && (
-          <div className="mt-4 p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+          <div className="mt-4 p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
             <div className="flex items-start gap-2">
               <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
               <div>
@@ -1013,28 +1085,15 @@ function JournalContent() {
         )}
       </div>
 
+      {/* ── Below the fold: activity + history ── */}
+
       {/* 30-Day HeatMap */}
       <div className="px-6 mt-8">
         <HeatMapStrip entries={allEntries} />
       </div>
 
-      {/* Goals */}
-      <div className="px-6 mt-8">
-        <GoalTracker />
-      </div>
-
-      {/* Weekly Review */}
-      <div className="px-6 mt-8">
-        <WeeklyReviewPrompt onOpen={() => setShowWeeklyReview(true)} />
-      </div>
-
-      {/* Calendar */}
-      <div className="px-6 mt-6">
-        <CalendarView currentStreak={streak} />
-      </div>
-
       {/* Recent Entries */}
-      <div className="px-6 mt-8">
+      <div className="px-6 mt-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-white/90" />
@@ -1048,7 +1107,7 @@ function JournalContent() {
         {!hasJournalHistory ? (
           <button
             onClick={openUpgradeModal}
-            className="w-full p-6 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] hover:bg-white/5 transition-all group"
+            className="w-full p-6 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] hover:bg-white/5 transition-all group"
           >
             <div className="flex flex-col items-center gap-3">
               <div className="relative">
@@ -1075,36 +1134,36 @@ function JournalContent() {
           </div>
         ) : recentEntries.length === 0 ? (
           <div className="text-center py-8">
-            <PenLine className="w-6 h-6 text-white/60 mx-auto mb-2" />
+            <PenLine className="w-6 h-6 text-white/75 mx-auto mb-2" />
             <p className="text-white/80 text-sm">No entries yet</p>
-            <p className="text-white/60 text-xs mt-1">Start journaling to see your history here</p>
+            <p className="text-white/75 text-xs mt-1">Start journaling to see your history here</p>
           </div>
         ) : (
           <>
             {/* Search bar */}
             <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
               <input
                 type="text"
                 placeholder="Search entries..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 text-sm text-white placeholder-white/30 bg-black border border-white/20 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/40"
+                className="w-full pl-9 pr-3 py-2.5 text-sm text-white placeholder-white/50 bg-black border border-white/25 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/40"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-white/10"
                 >
-                  <X className="w-3 h-3 text-white/40" />
+                  <X className="w-3 h-3 text-white/60" />
                 </button>
               )}
             </div>
 
             {filteredEntries.length === 0 && searchQuery ? (
               <div className="text-center py-8">
-                <Search className="w-6 h-6 text-white/30 mx-auto mb-2" />
-                <p className="text-white/50 text-sm">No entries match &ldquo;{searchQuery}&rdquo;</p>
+                <Search className="w-6 h-6 text-white/50 mx-auto mb-2" />
+                <p className="text-white/70 text-sm">No entries match &ldquo;{searchQuery}&rdquo;</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -1122,7 +1181,7 @@ function JournalContent() {
                     <button
                       key={i}
                       onClick={() => setSelectedDate(entryDate)}
-                      className={`w-full text-left p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all ${
+                      className={`w-full text-left p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all ${
                         isSelected
                           ? 'ring-1 ring-amber-500/40'
                           : 'hover:bg-white/5'
@@ -1164,7 +1223,7 @@ function JournalContent() {
                 {filteredEntries.length > 7 && (
                   <button
                     onClick={() => setShowAllRecent(!showAllRecent)}
-                    className="w-full flex items-center justify-center gap-1 py-2 text-xs text-white/70 hover:text-white/90 transition-colors"
+                    className="w-full flex items-center justify-center gap-1 py-2 text-xs text-white/85 hover:text-white/90 transition-colors"
                   >
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllRecent ? 'rotate-180' : ''}`} />
                     {showAllRecent ? 'Show less' : `Show all ${filteredEntries.length} entries`}
@@ -1175,6 +1234,98 @@ function JournalContent() {
           </>
         )}
       </div>
+
+      {/* ── Collapsible More section ── */}
+      <div className="px-6 mt-6 mb-4">
+        <button
+          onClick={() => setShowMore(!showMore)}
+          className="flex items-center gap-2 w-full py-2 text-xs text-white/60 hover:text-white/75 transition-colors"
+        >
+          <div className="flex-1 h-px bg-white/10" />
+          <span className="flex items-center gap-1 shrink-0">
+            <ChevronDown className={`w-3 h-3 transition-transform ${showMore ? 'rotate-180' : ''}`} />
+            {showMore ? 'Less' : 'More'}
+          </span>
+          <div className="flex-1 h-px bg-white/10" />
+        </button>
+        {showMore && (
+          <div className="space-y-6 mt-4 animate-fade-in-up">
+            <GoalTracker />
+            <WeeklyReviewPrompt onOpen={() => setShowWeeklyReview(true)} />
+            <CalendarView currentStreak={streak} />
+          </div>
+        )}
+      </div>
+
+      {/* Focus Mode Overlay */}
+      {focusMode && focusField && (
+        <div
+          className="fixed inset-0 z-[60] flex flex-col bg-black animate-focus-enter"
+          style={{ height: 'var(--visual-viewport-height, 100vh)' }}
+        >
+          {/* Textarea fills available space */}
+          <div className="flex-1 flex flex-col min-h-0 px-4 pt-3">
+            <textarea
+              ref={focusTextareaRef}
+              value={
+                focusField === 'win' ? win
+                  : focusField === 'gratitude' ? gratitude
+                  : focusField === 'intention' ? intention
+                  : focusField === 'dream' ? dreamText
+                  : freeText
+              }
+              onChange={(e) => {
+                const v = e.target.value
+                if (focusField === 'win') { setWin(v); setIsSaved(false) }
+                else if (focusField === 'gratitude') { setGratitude(v); setIsSaved(false) }
+                else if (focusField === 'intention') { setIntention(v); setIsSaved(false) }
+                else if (focusField === 'dream') { setDreamText(v); setDreamSaved(false); setDreamInterpretation(null) }
+                else { setFreeText(v); setIsSaved(false) }
+              }}
+              placeholder={
+                focusField === 'win' ? 'Today I learned...'
+                  : focusField === 'gratitude' ? "I'm grateful for..."
+                  : focusField === 'intention' ? 'Tomorrow I will...'
+                  : focusField === 'dream' ? 'I dreamed that...'
+                  : 'Let your thoughts flow...'
+              }
+              autoCapitalize="sentences"
+              autoComplete="off"
+              spellCheck
+              enterKeyHint="enter"
+              className="flex-1 w-full bg-transparent text-white text-base leading-relaxed placeholder-white/50 focus:outline-none resize-none"
+            />
+          </div>
+
+          {/* Toolbar pinned at bottom */}
+          <FocusModeToolbar
+            label={
+              focusField === 'win' ? 'Learned'
+                : focusField === 'gratitude' ? 'Grateful'
+                : focusField === 'intention' ? 'Intention'
+                : focusField === 'dream' ? 'Dream'
+                : 'Free Write'
+            }
+            text={
+              focusField === 'win' ? win
+                : focusField === 'gratitude' ? gratitude
+                : focusField === 'intention' ? intention
+                : focusField === 'dream' ? dreamText
+                : freeText
+            }
+            autosaveStatus={autosaveStatus}
+            onClose={exitFocusMode}
+            onSave={() => {
+              if (focusField === 'dream') {
+                submitDream()
+              } else {
+                handleSave()
+              }
+            }}
+            isSaving={isSaving || dreamLoading}
+          />
+        </div>
+      )}
 
       {/* Weekly Review Modal */}
       {showWeeklyReview && (

@@ -73,9 +73,9 @@ export function VirtueTrackerCard({ mindsetId }: VirtueTrackerCardProps) {
   return (
     <div className="card-path p-5">
       <div className="flex items-center gap-2.5 mb-4">
-        <Leaf className="w-4 h-4 text-white/70" />
+        <Leaf className="w-4 h-4 text-white/85" />
         <h3 className="text-sm font-medium text-white">Virtue Tracker</h3>
-        {saving && <span className="ml-auto text-[10px] text-white/50">Saving...</span>}
+        {saving && <span className="ml-auto text-[10px] text-white/70">Saving...</span>}
       </div>
 
       {/* Virtue selector */}
@@ -86,8 +86,8 @@ export function VirtueTrackerCard({ mindsetId }: VirtueTrackerCardProps) {
             onClick={() => handleSelectVirtue(v.name)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] border transition-all press-scale
               ${selectedVirtue === v.name
-                ? 'bg-white/10 border-white/20 text-white'
-                : 'bg-white/[0.03] border-white/[0.08] text-white/70'
+                ? 'bg-white/10 border-white/25 text-white'
+                : 'bg-white/[0.03] border-white/[0.08] text-white/85'
               }`}
           >
             {v.name}
@@ -97,14 +97,14 @@ export function VirtueTrackerCard({ mindsetId }: VirtueTrackerCardProps) {
 
       {/* Selected virtue description */}
       {selectedVirtue && (
-        <p className="text-[11px] text-white/70 leading-relaxed mb-3">
+        <p className="text-[11px] text-white/85 leading-relaxed mb-3">
           {virtues.find(v => v.name === selectedVirtue)?.description}
         </p>
       )}
 
       {/* Star rating */}
       <div className="mb-4">
-        <p className="text-[10px] text-white/60 mb-2">How well did you practice this today?</p>
+        <p className="text-[10px] text-white/75 mb-2">How well did you practice this today?</p>
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -127,7 +127,7 @@ export function VirtueTrackerCard({ mindsetId }: VirtueTrackerCardProps) {
 
       {/* Weekly chart */}
       <div className="pt-3 border-t border-white/[0.06]">
-        <p className="text-[10px] text-white/50 uppercase tracking-wider mb-2">This Week</p>
+        <p className="text-[10px] text-white/70 uppercase tracking-wider mb-2">This Week</p>
         <div className="flex items-end justify-between gap-1.5 h-12">
           {weekData.map((day, i) => {
             const hasRating = day.virtue_rating !== null && day.virtue_rating > 0
@@ -140,7 +140,7 @@ export function VirtueTrackerCard({ mindsetId }: VirtueTrackerCardProps) {
                   }`}
                   style={{ height: `${height}%` }}
                 />
-                <span className="text-[9px] text-white/40">{DAY_LABELS[i]}</span>
+                <span className="text-[9px] text-white/60">{DAY_LABELS[i]}</span>
               </div>
             )
           })}
@@ -148,7 +148,7 @@ export function VirtueTrackerCard({ mindsetId }: VirtueTrackerCardProps) {
           {Array.from({ length: Math.max(0, 7 - weekData.length) }).map((_, i) => (
             <div key={`empty-${i}`} className="flex-1 flex flex-col items-center gap-1">
               <div className="w-full rounded-sm bg-white/[0.07]" style={{ height: '8%' }} />
-              <span className="text-[9px] text-white/40">{DAY_LABELS[weekData.length + i]}</span>
+              <span className="text-[9px] text-white/60">{DAY_LABELS[weekData.length + i]}</span>
             </div>
           ))}
         </div>

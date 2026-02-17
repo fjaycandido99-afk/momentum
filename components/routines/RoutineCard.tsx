@@ -46,11 +46,11 @@ export function RoutineCard({ id, name, icon, steps, timesCompleted, onPlay, onO
       <div className="flex items-center gap-1 mb-2">
         {steps.slice(0, 4).map(step => {
           const StepIcon = STEP_ICONS[step.activity_type] || Music
-          return <StepIcon key={step.id} className="w-3 h-3 text-white/40" />
+          return <StepIcon key={step.id} className="w-3 h-3 text-white/60" />
         })}
-        {steps.length > 4 && <span className="text-[10px] text-white/40">+{steps.length - 4}</span>}
+        {steps.length > 4 && <span className="text-[10px] text-white/60">+{steps.length - 4}</span>}
       </div>
-      <p className="text-[10px] text-white/40">{timesCompleted}x completed</p>
+      <p className="text-[10px] text-white/60">{timesCompleted}x completed</p>
     </button>
   )
 }

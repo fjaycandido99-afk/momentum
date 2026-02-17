@@ -243,7 +243,7 @@ export function DailySpark() {
         <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl animate-breathe" style={{ animationDelay: '2s' }} />
 
         {/* Shimmer border */}
-        <div className="absolute inset-0 rounded-2xl border border-white/10" />
+        <div className="absolute inset-0 rounded-2xl border border-white/15" />
         <div className="absolute top-0 left-0 right-0 h-[1px] spark-shimmer-border" />
 
         <div className="relative p-6">
@@ -309,7 +309,7 @@ export function DailySpark() {
                   placeholder="Type your reflection..."
                   rows={2}
                   aria-label="Type your reflection"
-                  className="w-full px-4 py-3 pr-12 rounded-xl bg-white/5 border border-white/10 focus:border-violet-400/40 focus:bg-white/[0.07] text-sm text-white/95 placeholder:text-white/95 outline-none resize-none transition-colors focus-visible:ring-1 focus-visible:ring-violet-400/30"
+                  className="w-full px-4 py-3 pr-12 rounded-xl bg-white/5 border border-white/15 focus:border-violet-400/40 focus:bg-white/[0.07] text-sm text-white/95 placeholder:text-white/95 outline-none resize-none transition-colors focus-visible:ring-1 focus-visible:ring-violet-400/30"
                 />
                 <button
                   onClick={handleSubmitAnswer}

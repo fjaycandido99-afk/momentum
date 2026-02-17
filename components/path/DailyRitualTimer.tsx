@@ -100,7 +100,7 @@ function CynicTimerVisual({ progress }: { progress: number }) {
           className="absolute bottom-0 w-full bg-gradient-to-t from-amber-100/20 to-amber-50/10 transition-all duration-1000 rounded-b-sm"
           style={{ height: `${candleHeight}%` }}
         />
-        <div className="absolute inset-0 border border-white/10 rounded-sm" />
+        <div className="absolute inset-0 border border-white/15 rounded-sm" />
       </div>
       {/* Holder */}
       <div className="w-12 h-1.5 bg-white/10 rounded-full mt-0.5" />
@@ -139,7 +139,7 @@ function HedonistTimerVisual({ progress }: { progress: number }) {
         />
       </div>
       {/* Handle */}
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-6 border border-white/10 rounded-r-full border-l-0" style={{ display: 'none' }} />
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-6 border border-white/15 rounded-r-full border-l-0" style={{ display: 'none' }} />
       {/* Saucer */}
       <div className="w-24 h-1 bg-white/10 rounded-full mt-0.5" />
     </div>
@@ -218,7 +218,7 @@ const TIMER_VISUALS: Record<MindsetId, React.FC<{ progress: number }>> = {
 }
 
 const ACCENT: Record<MindsetId, string> = {
-  stoic: 'bg-white/10 border-white/20 text-white',
+  stoic: 'bg-white/10 border-white/25 text-white',
   existentialist: 'bg-violet-500/10 border-violet-500/20 text-violet-300',
   cynic: 'bg-orange-500/10 border-orange-500/20 text-orange-300',
   hedonist: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300',
@@ -298,7 +298,7 @@ export function DailyRitualTimer({ mindsetId }: DailyRitualTimerProps) {
         <span className="text-base">🕯️</span>
         <div>
           <h3 className="text-sm font-medium text-white">{RITUAL_NAMES[mindsetId]}</h3>
-          <span className="text-[10px] text-white/60">Ritual Timer</span>
+          <span className="text-[10px] text-white/75">Ritual Timer</span>
         </div>
       </div>
 
@@ -313,7 +313,7 @@ export function DailyRitualTimer({ mindsetId }: DailyRitualTimerProps) {
                 key={d.label}
                 onClick={() => setSelectedDuration(i)}
                 className={`flex-1 py-2 text-[11px] rounded-lg border transition-all press-scale ${
-                  i === selectedDuration ? accent : 'bg-white/[0.02] border-white/[0.08] text-white/70'
+                  i === selectedDuration ? accent : 'bg-white/[0.02] border-white/[0.08] text-white/85'
                 }`}
               >
                 {d.label}
@@ -336,13 +336,13 @@ export function DailyRitualTimer({ mindsetId }: DailyRitualTimerProps) {
           </div>
 
           {/* Time display */}
-          <p className={`text-2xl font-light tabular-nums mb-1 ${complete ? 'text-white/60' : 'text-white'}`}>
+          <p className={`text-2xl font-light tabular-nums mb-1 ${complete ? 'text-white/75' : 'text-white'}`}>
             {complete ? 'Complete' : formatTime(secondsLeft)}
           </p>
 
           {complete ? (
             <div className="text-center animate-fade-in mt-2">
-              <p className="text-xs text-white/70 mb-3">Return to the world, changed.</p>
+              <p className="text-xs text-white/85 mb-3">Return to the world, changed.</p>
               <button
                 onClick={reset}
                 className="px-4 py-2 text-[11px] rounded-lg bg-white/[0.06] border border-white/[0.1] text-white/80 transition-all press-scale"
@@ -356,13 +356,13 @@ export function DailyRitualTimer({ mindsetId }: DailyRitualTimerProps) {
                 onClick={togglePause}
                 className="p-2.5 rounded-full bg-white/[0.06] border border-white/[0.1] transition-all press-scale"
               >
-                {running ? <Pause className="w-4 h-4 text-white/60" /> : <Play className="w-4 h-4 text-white/60" />}
+                {running ? <Pause className="w-4 h-4 text-white/75" /> : <Play className="w-4 h-4 text-white/75" />}
               </button>
               <button
                 onClick={reset}
                 className="p-2.5 rounded-full bg-white/[0.06] border border-white/[0.1] transition-all press-scale"
               >
-                <RotateCcw className="w-4 h-4 text-white/40" />
+                <RotateCcw className="w-4 h-4 text-white/60" />
               </button>
             </div>
           )}

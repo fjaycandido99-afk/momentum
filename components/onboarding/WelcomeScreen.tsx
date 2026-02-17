@@ -19,7 +19,7 @@ export function WelcomeScreen({ onContinue }: WelcomeScreenProps) {
     <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6">
       <div className={`text-center transition-all duration-700 ${show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         {/* Logo/icon */}
-        <div className="w-20 h-20 mx-auto mb-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+        <div className="w-20 h-20 mx-auto mb-8 rounded-full bg-white/5 border border-white/15 flex items-center justify-center">
           <Sparkles className="w-8 h-8 text-white" />
         </div>
 
@@ -29,7 +29,7 @@ export function WelcomeScreen({ onContinue }: WelcomeScreenProps) {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-white/60 text-sm max-w-xs mx-auto leading-relaxed mb-2">
+        <p className="text-white/75 text-sm max-w-xs mx-auto leading-relaxed mb-2">
           Your AI-powered audio companion for growth, focus, and clarity.
         </p>
 
@@ -42,7 +42,7 @@ export function WelcomeScreen({ onContinue }: WelcomeScreenProps) {
           ].map((item, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 text-white/70 text-sm"
+              className="flex items-center gap-3 text-white/85 text-sm"
               style={{ animationDelay: `${0.3 + i * 0.15}s` }}
             >
               <div className="w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
@@ -59,7 +59,7 @@ export function WelcomeScreen({ onContinue }: WelcomeScreenProps) {
           Get Started
         </button>
 
-        <p className="text-white/30 text-xs mt-4">
+        <p className="text-white/50 text-xs mt-4">
           Takes about 2 minutes
         </p>
       </div>

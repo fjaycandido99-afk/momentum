@@ -47,7 +47,7 @@ export default function MindsetDetailPage() {
         className="fixed top-4 left-4 z-10 p-2 rounded-full bg-white/[0.06] hover:bg-white/10 transition-colors"
         aria-label="Go back"
       >
-        <ArrowLeft className="w-5 h-5 text-white/70" />
+        <ArrowLeft className="w-5 h-5 text-white/85" />
       </button>
 
       {/* Portrait — fades into background */}
@@ -74,7 +74,7 @@ export default function MindsetDetailPage() {
         <h1 className="text-2xl font-light mt-3 tracking-wide">
           {config.name}
         </h1>
-        <p className="text-white/50 text-sm mt-3 italic leading-relaxed max-w-xs mx-auto">
+        <p className="text-white/70 text-sm mt-3 italic leading-relaxed max-w-xs mx-auto">
           &ldquo;{detail.quote}&rdquo;
         </p>
       </div>
@@ -99,7 +99,7 @@ export default function MindsetDetailPage() {
         </h3>
         <div className="space-y-4">
           {detail.principles.map((p) => (
-            <div key={p.title} className="pl-3 border-l border-white/10">
+            <div key={p.title} className="pl-3 border-l border-white/15">
               <h4 className="text-sm font-medium text-white/90">{p.title}</h4>
               <p className="text-white/45 text-xs mt-1 leading-relaxed">
                 {p.description}

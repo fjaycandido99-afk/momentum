@@ -46,14 +46,14 @@ export function ShareWithCardButton({
         onClick={handleShare}
         disabled={isGenerating}
         aria-label={`Share ${title} as image`}
-        className={`flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all press-scale disabled:opacity-50 ${className}`}
+        className={`flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 border border-white/15 hover:bg-white/10 transition-all press-scale disabled:opacity-50 ${className}`}
       >
         {isGenerating ? (
-          <Loader2 className="w-3.5 h-3.5 text-white/70 animate-spin" />
+          <Loader2 className="w-3.5 h-3.5 text-white/85 animate-spin" />
         ) : (
-          <Share2 className="w-3.5 h-3.5 text-white/70" />
+          <Share2 className="w-3.5 h-3.5 text-white/85" />
         )}
-        <span className="text-xs text-white/70">Share</span>
+        <span className="text-xs text-white/85">Share</span>
       </button>
     </>
   )

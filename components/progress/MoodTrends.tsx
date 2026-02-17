@@ -15,7 +15,7 @@ export function MoodTrends({ moodData }: MoodTrendsProps) {
     return (
       <div className="glass-refined rounded-2xl p-4">
         <h3 className="text-sm font-medium text-white mb-3">Mood Trends</h3>
-        <p className="text-xs text-white/40 py-6 text-center">No mood data yet. Log your mood in the Daily Guide.</p>
+        <p className="text-xs text-white/60 py-6 text-center">No mood data yet. Log your mood in the Daily Guide.</p>
       </div>
     )
   }
@@ -66,11 +66,11 @@ export function MoodTrends({ moodData }: MoodTrendsProps) {
       <div className="flex items-center gap-4 mt-2">
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-0.5 rounded-full bg-blue-400" />
-          <span className="text-[10px] text-white/40">Before</span>
+          <span className="text-[10px] text-white/60">Before</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-0.5 rounded-full bg-green-400" />
-          <span className="text-[10px] text-white/40">After</span>
+          <span className="text-[10px] text-white/60">After</span>
         </div>
       </div>
     </div>

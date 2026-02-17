@@ -49,7 +49,7 @@ export function WellnessScore() {
   if (loading) {
     return (
       <div className="glass-refined rounded-2xl p-6 flex items-center justify-center">
-        <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
+        <Loader2 className="w-5 h-5 text-white/70 animate-spin" />
       </div>
     )
   }
@@ -72,7 +72,7 @@ export function WellnessScore() {
   return (
     <div className="glass-refined rounded-2xl p-5">
       <div className="flex items-center gap-2 mb-4">
-        <Activity className="w-4 h-4 text-white/70" />
+        <Activity className="w-4 h-4 text-white/85" />
         <h3 className="text-sm font-medium text-white/90 uppercase tracking-wider">Wellness Score</h3>
       </div>
 
@@ -100,7 +100,7 @@ export function WellnessScore() {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className={`text-2xl font-bold ${getScoreColor(score)}`}>{score}</span>
-            <span className="text-[9px] text-white/50">{getScoreLabel(score)}</span>
+            <span className="text-[9px] text-white/70">{getScoreLabel(score)}</span>
           </div>
         </div>
 
@@ -109,8 +109,8 @@ export function WellnessScore() {
           {factors.map(f => (
             <div key={f.label}>
               <div className="flex justify-between text-[10px] mb-0.5">
-                <span className="text-white/60">{f.label}</span>
-                <span className="text-white/40">{f.value}/{f.max}</span>
+                <span className="text-white/75">{f.label}</span>
+                <span className="text-white/60">{f.value}/{f.max}</span>
               </div>
               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                 <div
@@ -123,7 +123,7 @@ export function WellnessScore() {
             </div>
           ))}
           {data.daysTracked && (
-            <p className="text-[9px] text-white/40 mt-1">{data.daysTracked} day avg</p>
+            <p className="text-[9px] text-white/60 mt-1">{data.daysTracked} day avg</p>
           )}
         </div>
       </div>

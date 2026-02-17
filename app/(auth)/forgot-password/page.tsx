@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
           </p>
           <Link
             href="/login"
-            className="inline-block mt-8 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white/95 hover:bg-white/10 transition-all"
+            className="inline-block mt-8 px-6 py-3 rounded-xl bg-white/5 border border-white/15 text-white/95 hover:bg-white/10 transition-all"
           >
             Back to login
           </Link>
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
           <div className="w-20 h-20 mx-auto mb-6 relative flex items-center justify-center">
             {/* Outer ring - dashed, rotates clockwise slow */}
             <div
-              className="absolute inset-0 rounded-full border-2 border-dashed border-white/20"
+              className="absolute inset-0 rounded-full border-2 border-dashed border-white/25"
               style={{ transform: `rotate(${rotation}deg)` }}
             />
             {/* Middle ring - dotted, rotates counter-clockwise */}
@@ -120,7 +120,7 @@ export default function ForgotPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+              className="w-full p-4 rounded-xl bg-white/5 border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-white/30 transition-colors"
             />
           </div>
 

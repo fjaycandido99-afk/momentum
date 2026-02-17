@@ -70,7 +70,7 @@ export function RoutinePlayer({ routineId, routineName, steps, onClose }: Routin
       <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center overlay-enter">
         <CheckCircle className="w-16 h-16 text-emerald-400 mb-4 animate-bounce" />
         <h2 className="text-2xl font-bold text-white mb-2">Routine Complete!</h2>
-        <p className="text-white/60 mb-6">{routineName} - {steps.length} steps</p>
+        <p className="text-white/75 mb-6">{routineName} - {steps.length} steps</p>
         <p className="text-emerald-400 text-sm mb-8">+30 XP earned</p>
         <button
           onClick={onClose}
@@ -90,11 +90,11 @@ export function RoutinePlayer({ routineId, routineName, steps, onClose }: Routin
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-12 pb-4">
         <div>
-          <p className="text-xs text-white/50">{routineName}</p>
-          <p className="text-sm text-white/70">Step {currentStep + 1} of {steps.length}</p>
+          <p className="text-xs text-white/70">{routineName}</p>
+          <p className="text-sm text-white/85">Step {currentStep + 1} of {steps.length}</p>
         </div>
         <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors press-scale">
-          <X className="w-5 h-5 text-white/70" />
+          <X className="w-5 h-5 text-white/85" />
         </button>
       </div>
 
@@ -118,7 +118,7 @@ export function RoutinePlayer({ routineId, routineName, steps, onClose }: Routin
           <StepIcon className="w-12 h-12 text-white" />
         </div>
         <h3 className="text-xl font-semibold text-white mb-2">{step?.title}</h3>
-        {step?.subtitle && <p className="text-white/50 text-sm mb-4">{step.subtitle}</p>}
+        {step?.subtitle && <p className="text-white/70 text-sm mb-4">{step.subtitle}</p>}
         <p className="text-3xl font-mono text-white/80">{formatTime(Math.max(0, duration - elapsed))}</p>
       </div>
 

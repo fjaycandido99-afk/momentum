@@ -44,12 +44,12 @@ export function TomorrowPreview() {
     <div className="mx-6 mb-6 p-4 rounded-2xl bg-black border border-white/15">
       <div className="flex items-center gap-2 mb-3">
         <Eye className="w-4 h-4 text-white" />
-        <p className="text-xs font-medium text-white/70 uppercase tracking-wider">Tomorrow's Preview</p>
+        <p className="text-xs font-medium text-white/85 uppercase tracking-wider">Tomorrow's Preview</p>
       </div>
 
       {/* Topic */}
       <div className="flex items-center gap-2 mb-3">
-        <ChevronRight className="w-3.5 h-3.5 text-white/50" />
+        <ChevronRight className="w-3.5 h-3.5 text-white/70" />
         <p className="text-sm text-white">
           Topic: <span className="text-white font-medium">{tomorrowTopic}</span>
         </p>
@@ -57,7 +57,7 @@ export function TomorrowPreview() {
 
       {/* Blurred journal prompt preview */}
       <div className="relative mb-3 p-3 rounded-xl bg-white/5 overflow-hidden">
-        <p className="text-xs text-white/70 mb-1">Journal prompt</p>
+        <p className="text-xs text-white/85 mb-1">Journal prompt</p>
         <p className="text-sm text-white blur-[4px] select-none">{tomorrowPrompt.text}</p>
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-[10px] text-white bg-black/60 px-2 py-0.5 rounded-full">Come back tomorrow</span>

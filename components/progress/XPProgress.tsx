@@ -39,7 +39,7 @@ export function XPProgress({ totalXP = 0, todaysXP }: XPProgressProps) {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-lg font-bold text-white">{xp}</span>
-          <span className="text-[9px] text-white/40">XP</span>
+          <span className="text-[9px] text-white/60">XP</span>
         </div>
       </div>
 
@@ -48,7 +48,7 @@ export function XPProgress({ totalXP = 0, todaysXP }: XPProgressProps) {
         <p className={`text-sm font-semibold ${current.color}`}>Level {current.level}</p>
         <p className="text-white text-xs">{current.title}</p>
         {next && (
-          <p className="text-[10px] text-white/40 mt-1">
+          <p className="text-[10px] text-white/60 mt-1">
             {next.minXP - xp} XP to {next.title}
           </p>
         )}

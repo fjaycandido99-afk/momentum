@@ -65,7 +65,7 @@ export function HedonistPleasureExercise({ onPathActivity }: HedonistPleasureExe
         </div>
         <h3 className="text-sm font-medium text-white">Pleasure Garden</h3>
       </div>
-      <p className="text-xs text-white/60 mb-4">Log 3 simple pleasures you enjoyed today.</p>
+      <p className="text-xs text-white/75 mb-4">Log 3 simple pleasures you enjoyed today.</p>
 
       {/* Garden visualization */}
       <div className="flex justify-center gap-6 mb-4">
@@ -75,7 +75,7 @@ export function HedonistPleasureExercise({ onPathActivity }: HedonistPleasureExe
               {gardenEmojis[i]}
             </span>
             {pleasures[i] && (
-              <span className="text-[10px] text-white/60 max-w-[60px] text-center truncate animate-fade-in">
+              <span className="text-[10px] text-white/75 max-w-[60px] text-center truncate animate-fade-in">
                 {pleasures[i]}
               </span>
             )}
@@ -88,7 +88,7 @@ export function HedonistPleasureExercise({ onPathActivity }: HedonistPleasureExe
           <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
           <div>
             <p className="text-sm text-white/80">Your garden is saved. Epicurus smiles.</p>
-            <Link href="/journal" className="text-xs text-white/60 hover:text-white/80 flex items-center gap-1 mt-1 transition-colors">
+            <Link href="/journal" className="text-xs text-white/75 hover:text-white/80 flex items-center gap-1 mt-1 transition-colors">
               View journal <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -101,7 +101,7 @@ export function HedonistPleasureExercise({ onPathActivity }: HedonistPleasureExe
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`Pleasure ${pleasures.length + 1} of 3...`}
-            className="flex-1 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/10 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all"
+            className="flex-1 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/15 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-white/25 focus:bg-white/[0.05] transition-all"
           />
           <button
             onClick={addPleasure}

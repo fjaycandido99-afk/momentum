@@ -86,17 +86,17 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 p-1 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+          className="absolute top-3 right-3 p-1 rounded-lg text-white/50 hover:text-white/75 hover:bg-white/5 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
-        <p className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-medium mb-4">Achievement Unlocked</p>
+        <p className="text-[10px] text-white/60 uppercase tracking-[0.2em] font-medium mb-4">Achievement Unlocked</p>
 
         <div className="text-5xl mb-3 animate-achievement-icon">{achievement.icon}</div>
 
         <h3 className="text-lg font-bold text-white mb-1">{achievement.title}</h3>
-        <p className="text-[12px] text-white/50 leading-relaxed mb-4">{achievement.description}</p>
+        <p className="text-[12px] text-white/70 leading-relaxed mb-4">{achievement.description}</p>
 
         <div className="flex items-center justify-center gap-3">
           <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${RARITY_COLORS[achievement.rarity]} ${RARITY_TEXT[achievement.rarity]}`}>

@@ -20,7 +20,7 @@ export function XPBadge() {
     <div className="relative z-50">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/10 hover:bg-white/10 transition-colors press-scale"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/15 hover:bg-white/10 transition-colors press-scale"
         aria-label={`Level ${current.level}: ${current.title}. ${xp} XP total`}
       >
         <span className={`text-xs font-bold ${current.color}`}>Lv{current.level}</span>
@@ -38,7 +38,7 @@ export function XPBadge() {
         <div className="absolute top-full right-0 mt-2 w-48 p-3 rounded-xl bg-[#111113] border border-white/15 shadow-lg z-[60] animate-fade-in-up">
           <div className="flex items-center justify-between mb-2">
             <span className={`text-sm font-semibold ${current.color}`}>{current.title}</span>
-            <span className="text-xs text-white/60">{xp} XP</span>
+            <span className="text-xs text-white/75">{xp} XP</span>
           </div>
           {next && (
             <>
@@ -48,7 +48,7 @@ export function XPBadge() {
                   style={{ width: `${Math.round(progress * 100)}%` }}
                 />
               </div>
-              <p className="text-[10px] text-white/50">
+              <p className="text-[10px] text-white/70">
                 {next.minXP - xp} XP to {next.title}
               </p>
             </>

@@ -28,18 +28,18 @@ export function ListeningStats({ totalMinutes, categoryMinutes }: ListeningStats
   return (
     <div className="glass-refined rounded-2xl p-4">
       <h3 className="text-sm font-medium text-white mb-1">Listening Time</h3>
-      <p className="text-2xl font-bold text-white mb-4">{totalMinutes} <span className="text-sm font-normal text-white/50">min</span></p>
+      <p className="text-2xl font-bold text-white mb-4">{totalMinutes} <span className="text-sm font-normal text-white/70">min</span></p>
       <div className="space-y-2">
         {entries.map(([type, minutes]) => (
           <div key={type} className="flex items-center gap-2">
-            <span className="text-xs text-white/60 w-16 shrink-0">{CATEGORY_LABELS[type] || type}</span>
+            <span className="text-xs text-white/75 w-16 shrink-0">{CATEGORY_LABELS[type] || type}</span>
             <div className="flex-1 h-2 rounded-full bg-white/5">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${CATEGORY_COLORS[type] || 'bg-white/50'}`}
                 style={{ width: `${(minutes / max) * 100}%` }}
               />
             </div>
-            <span className="text-xs text-white/40 w-8 text-right">{minutes}</span>
+            <span className="text-xs text-white/60 w-8 text-right">{minutes}</span>
           </div>
         ))}
       </div>

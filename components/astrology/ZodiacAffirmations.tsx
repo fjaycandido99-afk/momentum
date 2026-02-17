@@ -165,7 +165,7 @@ export function ZodiacAffirmations({ zodiacSign }: ZodiacAffirmationsProps) {
         {affirmations.map((text, index) => (
           <div
             key={index}
-            className="p-3 rounded-xl bg-white/5 border border-white/10"
+            className="p-3 rounded-xl bg-white/5 border border-white/15"
           >
             <p className="text-sm text-white/95 italic leading-relaxed mb-2">
               &ldquo;{text}&rdquo;

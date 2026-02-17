@@ -65,21 +65,21 @@ export function MilestoneTimelineCard({ mindsetId, totalDays }: MilestoneTimelin
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className={`text-sm font-medium ${
-                    isCurrent ? accentColor : isAchieved ? 'text-white/80' : 'text-white/40'
+                    isCurrent ? accentColor : isAchieved ? 'text-white/80' : 'text-white/60'
                   }`}>
                     {rank.title}
                   </span>
                   <span className={`text-[10px] ${
-                    isAchieved ? 'text-white/60' : 'text-white/30'
+                    isAchieved ? 'text-white/75' : 'text-white/50'
                   }`}>
                     {rank.minDays === 0 ? 'Start' : `${rank.minDays} days`}
                   </span>
                 </div>
                 {isCurrent && (
-                  <span className="text-[10px] text-white/60">Current rank</span>
+                  <span className="text-[10px] text-white/75">Current rank</span>
                 )}
                 {isNext && daysNeeded > 0 && (
-                  <span className="text-[10px] text-white/40">{daysNeeded} days to go</span>
+                  <span className="text-[10px] text-white/60">{daysNeeded} days to go</span>
                 )}
               </div>
             </div>

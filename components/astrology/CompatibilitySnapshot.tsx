@@ -64,7 +64,7 @@ export function CompatibilitySnapshot({ zodiacSign }: CompatibilitySnapshotProps
           return (
             <div
               key={signId}
-              className="p-3 rounded-xl bg-white/5 border border-white/10 text-center"
+              className="p-3 rounded-xl bg-white/5 border border-white/15 text-center"
             >
               <span className="text-2xl block mb-1">{ZODIAC_SYMBOLS[signId]}</span>
               <p className="text-xs font-medium text-white">{signData.label}</p>

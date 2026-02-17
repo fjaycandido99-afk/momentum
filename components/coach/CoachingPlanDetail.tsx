@@ -37,13 +37,13 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
       <div className="px-6 py-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-1 text-sm text-white/60 hover:text-white/80 transition-colors mb-3 press-scale"
+          className="flex items-center gap-1 text-sm text-white/75 hover:text-white/80 transition-colors mb-3 press-scale"
         >
           <ChevronLeft className="w-4 h-4" />
           All Plans
         </button>
         <h2 className="text-xl font-semibold text-white mb-1">{plan.title}</h2>
-        <p className="text-sm text-white/60 mb-4">{plan.description}</p>
+        <p className="text-sm text-white/75 mb-4">{plan.description}</p>
 
         {/* Progress bar */}
         <div className="flex items-center gap-3">
@@ -53,7 +53,7 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <span className="text-xs text-white/60 tabular-nums">{completedDays.length}/7</span>
+          <span className="text-xs text-white/75 tabular-nums">{completedDays.length}/7</span>
         </div>
       </div>
 
@@ -78,20 +78,20 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
                   {isDone ? (
                     <Check className="w-4 h-4 text-emerald-400" />
                   ) : (
-                    <span className="text-xs font-medium text-white/60">{day.day}</span>
+                    <span className="text-xs font-medium text-white/75">{day.day}</span>
                   )}
                 </div>
 
                 <div className="flex-1 text-left">
-                  <p className={`text-sm font-medium ${isDone ? 'text-white/60' : 'text-white'}`}>
+                  <p className={`text-sm font-medium ${isDone ? 'text-white/75' : 'text-white'}`}>
                     {day.title}
                   </p>
                 </div>
 
                 {isExpanded ? (
-                  <ChevronUp className="w-4 h-4 text-white/40" />
+                  <ChevronUp className="w-4 h-4 text-white/60" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-white/40" />
+                  <ChevronDown className="w-4 h-4 text-white/60" />
                 )}
               </button>
 
@@ -110,7 +110,7 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
                       <p className="text-[10px] uppercase tracking-wider text-purple-400/70 mb-1">Evening</p>
                       <p className="text-sm text-white/80 leading-relaxed">{day.evening}</p>
                     </div>
-                    <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
+                    <div className="p-3 rounded-xl bg-white/[0.04] border border-white/15">
                       <p className="text-[10px] uppercase tracking-wider text-emerald-400/70 mb-1">Reflection</p>
                       <p className="text-sm text-white/80 leading-relaxed italic">{day.reflection}</p>
                     </div>

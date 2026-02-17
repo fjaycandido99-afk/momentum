@@ -1060,7 +1060,7 @@ export function GuidancePlayer({
 
               {/* Volume slider popup */}
               {showVolumeSlider && (
-                <div className="absolute top-full right-0 mt-2 p-3 rounded-xl bg-black/90 border border-white/20 backdrop-blur-sm z-30 min-w-[160px]">
+                <div className="absolute top-full right-0 mt-2 p-3 rounded-xl bg-black/90 border border-white/25 backdrop-blur-sm z-30 min-w-[160px]">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-white/95">Music Volume</span>
                     <button
@@ -1207,7 +1207,7 @@ export function GuidancePlayer({
       {/* Time limit reached overlay for free users */}
       {showTimeLimitReached && (
         <div role="dialog" aria-modal="true" aria-label="Session limit reached" className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
-          <div className="max-w-sm mx-4 p-6 rounded-2xl bg-gradient-to-b from-[#1a1a24] to-[#0f0f15] border border-white/10">
+          <div className="max-w-sm mx-4 p-6 rounded-2xl bg-gradient-to-b from-[#1a1a24] to-[#0f0f15] border border-white/15">
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/20 mb-4">
                 <Clock className="w-7 h-7 text-amber-400" />

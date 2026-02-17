@@ -50,7 +50,7 @@ export function StreakHeatmap({ heatmap, daysLimit }: StreakHeatmapProps) {
           ))}
         </div>
       </div>
-      <div className="flex items-center gap-2 mt-2 text-[10px] text-white/40">
+      <div className="flex items-center gap-2 mt-2 text-[10px] text-white/60">
         <span>Less</span>
         {[0.05, 0.25, 0.5, 0.8].map((op, i) => (
           <div key={i} className="w-2.5 h-2.5 rounded-[2px]" style={{ backgroundColor: `rgba(255, 255, 255, ${op})` }} />

@@ -106,7 +106,7 @@ export function StreakEvolution({ mindsetId }: StreakEvolutionProps) {
     return (
       <div className="card-path p-5">
         <div className="h-40 flex items-center justify-center">
-          <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white/60 animate-spin" />
+          <div className="w-5 h-5 rounded-full border-2 border-white/25 border-t-white/60 animate-spin" />
         </div>
       </div>
     )
@@ -116,10 +116,10 @@ export function StreakEvolution({ mindsetId }: StreakEvolutionProps) {
     <div className="card-path p-5">
       <div className="flex items-center gap-2 mb-4">
         <div className="p-1.5 rounded-lg bg-white/5">
-          <Flame className="w-4 h-4 text-white/70" />
+          <Flame className="w-4 h-4 text-white/85" />
         </div>
         <h3 className="text-sm font-medium text-white">Evolution</h3>
-        <span className="text-[10px] text-white/40 ml-auto">{streak} day streak</span>
+        <span className="text-[10px] text-white/60 ml-auto">{streak} day streak</span>
       </div>
 
       {/* Current stage hero */}
@@ -154,7 +154,7 @@ export function StreakEvolution({ mindsetId }: StreakEvolutionProps) {
           )}
         </div>
         <p className="text-sm font-medium text-white">{stage.name}</p>
-        <p className="text-xs text-white/50 text-center mt-1 max-w-[240px] leading-relaxed">
+        <p className="text-xs text-white/70 text-center mt-1 max-w-[240px] leading-relaxed">
           {stage.description}
         </p>
       </div>
@@ -162,7 +162,7 @@ export function StreakEvolution({ mindsetId }: StreakEvolutionProps) {
       {/* Progress to next */}
       {nextStage && (
         <div className="mb-4">
-          <div className="flex items-center justify-between text-[10px] text-white/40 mb-1.5">
+          <div className="flex items-center justify-between text-[10px] text-white/60 mb-1.5">
             <span>Next: {nextStage.name}</span>
             <span>{nextStage.minDays - streak} days to go</span>
           </div>
@@ -188,7 +188,7 @@ export function StreakEvolution({ mindsetId }: StreakEvolutionProps) {
               >
                 {s.emoji}
               </span>
-              <span className={`text-[8px] mt-0.5 ${unlocked ? 'text-white/50' : 'text-white/20'}`}>
+              <span className={`text-[8px] mt-0.5 ${unlocked ? 'text-white/70' : 'text-white/20'}`}>
                 {s.minDays}d
               </span>
             </div>

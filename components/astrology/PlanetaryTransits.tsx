@@ -34,7 +34,7 @@ export function PlanetaryTransits({ zodiacSign }: PlanetaryTransitsProps) {
               className={`flex-shrink-0 w-36 p-3 rounded-xl border transition-all ${
                 isInUserSign
                   ? 'bg-gradient-to-b from-indigo-500/20 to-purple-500/15 border-indigo-400/30 shadow-[0_0_12px_rgba(99,102,241,0.15)]'
-                  : 'bg-white/5 border-white/10'
+                  : 'bg-white/5 border-white/15'
               }`}
             >
               {/* Planet Symbol + Name */}

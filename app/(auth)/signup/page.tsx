@@ -97,7 +97,7 @@ export default function SignupPage() {
           <div className="w-20 h-20 mx-auto mb-6 relative flex items-center justify-center">
             {/* Outer ring - dashed, rotates clockwise slow */}
             <div
-              className="absolute inset-0 rounded-full border-2 border-dashed border-white/20"
+              className="absolute inset-0 rounded-full border-2 border-dashed border-white/25"
               style={{ transform: `rotate(${rotation}deg)` }}
             />
             {/* Middle ring - dotted, rotates counter-clockwise */}
@@ -130,7 +130,7 @@ export default function SignupPage() {
               onChange={(e) => setName(e.target.value)}
               required
               autoComplete="name"
-              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+              className="w-full p-4 rounded-xl bg-white/5 border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-white/30 transition-colors"
             />
           </div>
 
@@ -143,7 +143,7 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+              className="w-full p-4 rounded-xl bg-white/5 border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-white/30 transition-colors"
             />
           </div>
 
@@ -157,7 +157,7 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full p-4 pr-12 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors"
+                className="w-full p-4 pr-12 rounded-xl bg-white/5 border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-white/30 transition-colors"
               />
               <button
                 type="button"

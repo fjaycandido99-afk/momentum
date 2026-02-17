@@ -193,7 +193,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
       <div className="glass-refined rounded-2xl p-4 space-y-3">
         <div className="flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-red-400" />
-          <p className="text-sm text-white/70">Couldn&apos;t generate your session</p>
+          <p className="text-sm text-white/85">Couldn&apos;t generate your session</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -204,7 +204,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
           </button>
           <button
             onClick={resetSession}
-            className="px-3 py-2 rounded-xl bg-white/5 text-white/40 text-xs active:scale-[0.98] transition-transform"
+            className="px-3 py-2 rounded-xl bg-white/5 text-white/60 text-xs active:scale-[0.98] transition-transform"
           >
             Dismiss
           </button>
@@ -232,12 +232,12 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
             </div>
             <div className="flex-1 text-left">
               <p className="text-sm font-medium text-white">AI Session</p>
-              <p className="text-[10px] text-white/40">Personalized wellness plan</p>
+              <p className="text-[10px] text-white/60">Personalized wellness plan</p>
             </div>
             {!isPremium && (
               <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full">PRO</span>
             )}
-            <ChevronRight className="w-4 h-4 text-white/30" />
+            <ChevronRight className="w-4 h-4 text-white/50" />
           </button>
           <button
             onClick={() => isPremium ? setView('form') : onOpenUpgrade()}
@@ -260,8 +260,8 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
                   disabled={loading}
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.96] transition-all shrink-0 disabled:opacity-30"
                 >
-                  <Icon className="w-3 h-3 text-white/50" />
-                  <span className="text-[10px] text-white/50 whitespace-nowrap">{preset.label}</span>
+                  <Icon className="w-3 h-3 text-white/70" />
+                  <span className="text-[10px] text-white/70 whitespace-nowrap">{preset.label}</span>
                 </button>
               )
             })}
@@ -282,7 +282,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
             <h3 className="text-sm font-medium text-white">Custom AI Session</h3>
           </div>
           <button onClick={resetSession} className="p-1 rounded-full hover:bg-white/10">
-            <X className="w-4 h-4 text-white/40" />
+            <X className="w-4 h-4 text-white/60" />
           </button>
         </div>
 
@@ -296,7 +296,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
 
         {/* Mood */}
         <div>
-          <label className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5 block">How are you feeling?</label>
+          <label className="text-[10px] text-white/60 uppercase tracking-wider mb-1.5 block">How are you feeling?</label>
           <div className="flex flex-wrap gap-1.5">
             {MOOD_OPTIONS.map(m => (
               <button
@@ -305,7 +305,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
                 className={`px-2.5 py-1 rounded-full text-xs transition-all capitalize ${
                   mood === m
                     ? 'bg-purple-500/20 text-purple-300 ring-1 ring-purple-500/30'
-                    : 'bg-white/5 text-white/50 hover:text-white/70'
+                    : 'bg-white/5 text-white/70 hover:text-white/85'
                 }`}
               >
                 {m}
@@ -316,7 +316,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
 
         {/* Energy */}
         <div>
-          <label className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5 block">Energy level</label>
+          <label className="text-[10px] text-white/60 uppercase tracking-wider mb-1.5 block">Energy level</label>
           <div className="flex gap-2">
             {ENERGY_OPTIONS.map(e => (
               <button
@@ -325,7 +325,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
                 className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all capitalize ${
                   energy === e
                     ? 'bg-purple-500/20 text-purple-300 ring-1 ring-purple-500/30'
-                    : 'bg-white/5 text-white/50 hover:text-white/70'
+                    : 'bg-white/5 text-white/70 hover:text-white/85'
                 }`}
               >
                 {e}
@@ -336,7 +336,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
 
         {/* Time */}
         <div>
-          <label className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5 block">Available time</label>
+          <label className="text-[10px] text-white/60 uppercase tracking-wider mb-1.5 block">Available time</label>
           <div className="flex gap-1.5">
             {TIME_OPTIONS.map(t => (
               <button
@@ -345,7 +345,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
                 className={`px-2.5 py-1.5 rounded-xl text-xs transition-all ${
                   minutes === t
                     ? 'bg-purple-500/20 text-purple-300 ring-1 ring-purple-500/30'
-                    : 'bg-white/5 text-white/50 hover:text-white/70'
+                    : 'bg-white/5 text-white/70 hover:text-white/85'
                 }`}
               >
                 {t}m
@@ -360,7 +360,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
           value={intention}
           onChange={e => setIntention(e.target.value)}
           placeholder="Optional: What do you want to feel after?"
-          className="w-full px-3 py-2 rounded-xl bg-white/5 text-white text-xs placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-white/10 input-focus-glow"
+          className="w-full px-3 py-2 rounded-xl bg-white/5 text-white text-xs placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-white/10 input-focus-glow"
         />
 
         {/* Generate */}
@@ -391,7 +391,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
           <h3 className="text-sm font-medium text-white">Your AI Session</h3>
         </div>
         <button onClick={resetSession} className="p-1 rounded-full hover:bg-white/10">
-          <X className="w-4 h-4 text-white/40" />
+          <X className="w-4 h-4 text-white/60" />
         </button>
       </div>
 
@@ -408,14 +408,14 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
       {/* Steps */}
       {steps && steps.map((step, i) => {
         const Icon = TYPE_ICONS[step.type as keyof typeof TYPE_ICONS] || CloudRain
-        const color = TYPE_COLORS[step.type as keyof typeof TYPE_COLORS] || 'text-white/60'
+        const color = TYPE_COLORS[step.type as keyof typeof TYPE_COLORS] || 'text-white/75'
         const isActive = i === currentStep
         const isComplete = completedSteps.has(i)
 
         return (
           <div key={i}>
             {i > 0 && step.transitionNote && (
-              <p className="text-[10px] text-white/30 italic px-2 py-1">{step.transitionNote}</p>
+              <p className="text-[10px] text-white/50 italic px-2 py-1">{step.transitionNote}</p>
             )}
             <div className="flex items-center gap-1.5">
               {/* Checkmark button */}
@@ -444,11 +444,11 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
                 </div>
                 <div className="flex-1 text-left">
                   <p className={`text-xs font-medium text-white ${isComplete ? 'line-through opacity-70' : ''}`}>{step.title}</p>
-                  <p className="text-[10px] text-white/40">{step.reason}</p>
+                  <p className="text-[10px] text-white/60">{step.reason}</p>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Clock className="w-3 h-3 text-white/30" />
-                  <span className="text-[10px] text-white/40">{step.durationMinutes}m</span>
+                  <Clock className="w-3 h-3 text-white/50" />
+                  <span className="text-[10px] text-white/60">{step.durationMinutes}m</span>
                 </div>
                 {isActive && !isComplete && (
                   <Play className="w-4 h-4 text-purple-400 fill-purple-400" />
@@ -473,36 +473,36 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
       {/* Session rating */}
       {allComplete && !rated && (
         <div className="flex items-center justify-center gap-3 pt-1">
-          <span className="text-[10px] text-white/40">How was this session?</span>
+          <span className="text-[10px] text-white/60">How was this session?</span>
           <button
             onClick={() => rateSession('good')}
             className="p-1.5 rounded-lg bg-white/5 hover:bg-green-500/15 active:scale-[0.95] transition-all"
           >
-            <ThumbsUp className="w-3.5 h-3.5 text-white/50 hover:text-green-400" />
+            <ThumbsUp className="w-3.5 h-3.5 text-white/70 hover:text-green-400" />
           </button>
           <button
             onClick={() => rateSession('bad')}
             className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500/15 active:scale-[0.95] transition-all"
           >
-            <ThumbsDown className="w-3.5 h-3.5 text-white/50 hover:text-red-400" />
+            <ThumbsDown className="w-3.5 h-3.5 text-white/70 hover:text-red-400" />
           </button>
         </div>
       )}
 
       {rated && (
-        <p className="text-[10px] text-white/30 text-center">Thanks for the feedback!</p>
+        <p className="text-[10px] text-white/50 text-center">Thanks for the feedback!</p>
       )}
 
       {/* Total + actions */}
       {steps && (
         <>
-          <p className="text-[10px] text-white/30 text-center">
+          <p className="text-[10px] text-white/50 text-center">
             {completedSteps.size > 0 && `${completedSteps.size}/${steps.length} complete · `}
             Total: {steps.reduce((sum, s) => sum + s.durationMinutes, 0)} minutes
           </p>
           <button
             onClick={() => { setSteps(null); setView('form'); setError(false) }}
-            className="w-full py-1.5 text-[10px] text-white/30 hover:text-white/50 transition-colors"
+            className="w-full py-1.5 text-[10px] text-white/50 hover:text-white/70 transition-colors"
           >
             Customize & regenerate
           </button>

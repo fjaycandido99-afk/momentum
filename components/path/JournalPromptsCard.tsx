@@ -23,7 +23,7 @@ export function JournalPromptsCard({ mindsetId }: JournalPromptsCardProps) {
     <div className="card-cosmic p-5">
       <div className="flex items-center gap-2 mb-4">
         <div className="p-1.5 rounded-lg bg-white/5">
-          <PenLine className="w-4 h-4 text-white/70" />
+          <PenLine className="w-4 h-4 text-white/85" />
         </div>
         <h3 className="text-sm font-medium text-white/90">Journal Prompts</h3>
       </div>
@@ -35,14 +35,14 @@ export function JournalPromptsCard({ mindsetId }: JournalPromptsCardProps) {
             <Link
               key={index}
               href={`/journal?prompt=${encodeURIComponent(prompt.label)}`}
-              className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors press-scale"
+              className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/15 hover:bg-white/[0.07] transition-colors press-scale"
             >
               <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                <Icon className="w-4 h-4 text-white/60" />
+                <Icon className="w-4 h-4 text-white/75" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-white/90">{prompt.label}</p>
-                <p className="text-xs text-white/40 truncate">{prompt.placeholder}</p>
+                <p className="text-xs text-white/60 truncate">{prompt.placeholder}</p>
               </div>
             </Link>
           )

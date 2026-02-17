@@ -62,7 +62,7 @@ export function StoicControlExercise({ onPathActivity }: StoicControlExercisePro
         </div>
         <h3 className="text-sm font-medium text-white">Dichotomy of Control</h3>
       </div>
-      <p className="text-xs text-white/60 mb-4">Sort today&apos;s concerns into what you can and cannot control.</p>
+      <p className="text-xs text-white/75 mb-4">Sort today&apos;s concerns into what you can and cannot control.</p>
 
       {/* Column selector */}
       <div className="flex gap-2 mb-3">
@@ -71,7 +71,7 @@ export function StoicControlExercise({ onPathActivity }: StoicControlExercisePro
           className={`flex-1 py-2 text-xs rounded-lg border transition-all press-scale ${
             activeColumn === 'within'
               ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
-              : 'bg-white/[0.03] border-white/10 text-white/60'
+              : 'bg-white/[0.03] border-white/15 text-white/75'
           }`}
         >
           Within my control
@@ -81,7 +81,7 @@ export function StoicControlExercise({ onPathActivity }: StoicControlExercisePro
           className={`flex-1 py-2 text-xs rounded-lg border transition-all press-scale ${
             activeColumn === 'beyond'
               ? 'bg-red-500/10 border-red-500/20 text-red-300'
-              : 'bg-white/[0.03] border-white/10 text-white/60'
+              : 'bg-white/[0.03] border-white/15 text-white/75'
           }`}
         >
           Beyond my control
@@ -96,7 +96,7 @@ export function StoicControlExercise({ onPathActivity }: StoicControlExercisePro
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Add a concern..."
-          className="flex-1 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/10 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all"
+          className="flex-1 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/15 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-white/25 focus:bg-white/[0.05] transition-all"
         />
         <button
           onClick={addItem}
@@ -110,26 +110,26 @@ export function StoicControlExercise({ onPathActivity }: StoicControlExercisePro
       {/* Two columns */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="text-[11px] text-white/50 uppercase tracking-wider mb-2">Within control</p>
+          <p className="text-[11px] text-white/70 uppercase tracking-wider mb-2">Within control</p>
           <div className="space-y-1.5 min-h-[40px]">
             {withinControl.map(item => (
               <div key={item.id} className="flex items-center gap-1.5 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 animate-fade-in">
                 <span className="text-xs text-white/80 flex-1">{item.text}</span>
                 <button onClick={() => removeItem(item.id, 'within')} className="flex-shrink-0 press-scale">
-                  <X className="w-3 h-3 text-white/50" />
+                  <X className="w-3 h-3 text-white/70" />
                 </button>
               </div>
             ))}
           </div>
         </div>
         <div>
-          <p className="text-[11px] text-white/50 uppercase tracking-wider mb-2">Beyond control</p>
+          <p className="text-[11px] text-white/70 uppercase tracking-wider mb-2">Beyond control</p>
           <div className="space-y-1.5 min-h-[40px]">
             {beyondControl.map(item => (
               <div key={item.id} className="flex items-center gap-1.5 p-2 rounded-lg bg-red-500/10 border border-red-500/20 animate-fade-in">
                 <span className="text-xs text-white/80 flex-1">{item.text}</span>
                 <button onClick={() => removeItem(item.id, 'beyond')} className="flex-shrink-0 press-scale">
-                  <X className="w-3 h-3 text-white/50" />
+                  <X className="w-3 h-3 text-white/70" />
                 </button>
               </div>
             ))}

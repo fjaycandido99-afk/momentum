@@ -298,7 +298,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
 
   return (
     <div className={`rounded-2xl overflow-hidden transition-all ${
-      isCompleted && !isPlaying ? 'bg-white/[0.03] border border-white/10' : 'border border-white/15 shadow-[0_0_15px_rgba(255,255,255,0.06)]'
+      isCompleted && !isPlaying ? 'bg-white/[0.03] border border-white/15' : 'border border-white/15 shadow-[0_0_15px_rgba(255,255,255,0.06)]'
     }`}>
       {/* Audio playing with motivational background */}
       {isPlaying && (
@@ -325,7 +325,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
               <h2 className="text-3xl font-bold text-white tracking-wide uppercase mb-1">
                 {displayTitle}
               </h2>
-              <p className="text-xs text-white/60">{displayTagline}</p>
+              <p className="text-xs text-white/75">{displayTagline}</p>
             </div>
 
             {/* Pause/Play button */}
@@ -351,8 +351,8 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
                 />
               </div>
               <div className="flex justify-between mt-1.5">
-                <span className="text-[10px] text-white/40">{formatTime(elapsed)}</span>
-                <span className="text-[10px] text-white/40">
+                <span className="text-[10px] text-white/60">{formatTime(elapsed)}</span>
+                <span className="text-[10px] text-white/60">
                   {totalDuration > 0 ? formatTime(totalDuration) : '--:--'}
                 </span>
               </div>
@@ -401,11 +401,11 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
             <div className="relative p-8 py-12">
               <div className="text-center mb-6 mt-4">
                 <h2 className={`text-4xl font-bold tracking-wide uppercase ${
-                  isCompleted ? 'text-white/70' : 'text-white'
+                  isCompleted ? 'text-white/85' : 'text-white'
                 }`}>
                   {displayTitle}
                 </h2>
-                <p className={`text-sm mt-2 ${isCompleted ? 'text-white/50' : 'text-white/70'}`}>
+                <p className={`text-sm mt-2 ${isCompleted ? 'text-white/70' : 'text-white/85'}`}>
                   {displayTagline}
                 </p>
               </div>
@@ -413,7 +413,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
               <div className="flex justify-center mb-6">
                 <div className={`flex items-center justify-center w-16 h-16 rounded-full transition-all ${
                   isCompleted
-                    ? 'bg-white/10 text-white/60 group-hover:bg-white/20 group-hover:scale-105'
+                    ? 'bg-white/10 text-white/75 group-hover:bg-white/20 group-hover:scale-105'
                     : 'bg-white/20 backdrop-blur-sm text-white group-hover:bg-white/30 group-hover:scale-105'
                 }`}>
                   {isCompleted ? (
@@ -425,7 +425,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
               </div>
 
               <div className="text-center">
-                <p className={`text-sm ${isCompleted ? 'text-white/40' : 'text-white/50'}`}>
+                <p className={`text-sm ${isCompleted ? 'text-white/60' : 'text-white/70'}`}>
                   {isCompleted ? 'Tap to rewatch' : video.duration ? formatTime(video.duration) : ''}
                 </p>
               </div>
@@ -448,7 +448,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
           {!isCompleted && onSkip && (
             <button
               onClick={onSkip}
-              className="w-full py-2.5 bg-white/5 text-xs text-white/50 hover:text-white/70 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
+              className="w-full py-2.5 bg-white/5 text-xs text-white/70 hover:text-white/85 hover:bg-white/10 transition-colors flex items-center justify-center gap-1"
             >
               <SkipForward className="w-3 h-3" />
               Skip for today

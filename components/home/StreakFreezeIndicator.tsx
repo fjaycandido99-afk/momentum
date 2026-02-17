@@ -22,11 +22,11 @@ export function StreakFreezeIndicator({ freezeCount, freezeUsedToday, streakLost
           <Snowflake className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
           <div className="flex-1">
             <p className="text-sm text-white font-medium">Streak saved!</p>
-            <p className="text-xs text-white/70 mt-0.5">
+            <p className="text-xs text-white/85 mt-0.5">
               1 freeze used ({freezeCount} remaining)
             </p>
           </div>
-          <button onClick={() => setDismissed(true)} className="p-1 text-white/50 hover:text-white">
+          <button onClick={() => setDismissed(true)} className="p-1 text-white/70 hover:text-white">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -48,11 +48,11 @@ export function StreakFreezeIndicator({ freezeCount, freezeUsedToday, streakLost
             <p className="text-sm text-white font-medium">
               Your {streakLost.value}-day streak ended
             </p>
-            <p className="text-xs text-white/70 mt-0.5">
+            <p className="text-xs text-white/85 mt-0.5">
               Complete all daily challenges to earn extra freezes
             </p>
           </div>
-          <button onClick={() => setDismissed(true)} className="p-1 text-white/50 hover:text-white">
+          <button onClick={() => setDismissed(true)} className="p-1 text-white/70 hover:text-white">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>

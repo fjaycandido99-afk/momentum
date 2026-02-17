@@ -36,9 +36,9 @@ export function TarotCardOfDay({ zodiacSign }: TarotCardOfDayProps) {
           className="p-2 rounded-xl hover:bg-white/10 transition-colors"
         >
           {isShareGenerating ? (
-            <Loader2 className="w-4 h-4 text-white/50 animate-spin" />
+            <Loader2 className="w-4 h-4 text-white/70 animate-spin" />
           ) : (
-            <Share2 className="w-4 h-4 text-white/50 hover:text-white/80 transition-colors" />
+            <Share2 className="w-4 h-4 text-white/70 hover:text-white/80 transition-colors" />
           )}
         </button>
       </div>

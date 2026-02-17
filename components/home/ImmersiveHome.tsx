@@ -969,7 +969,7 @@ export function ImmersiveHome() {
             <div className="flex items-center gap-2 shrink-0">
               {mindsetCtx && (
                 <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
-                  <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/60" />
+                  <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/75" />
                 </div>
               )}
               <button
@@ -990,7 +990,7 @@ export function ImmersiveHome() {
           <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
           <div className="fixed right-6 top-[100px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
             <Link href="/my-path" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-              <Compass className="w-4 h-4 text-white/70" />
+              <Compass className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">
                 {mindsetCtx?.mindset === 'stoic' ? 'Stoic Path'
                   : mindsetCtx?.mindset === 'existentialist' ? 'The Existentialist'
@@ -1001,20 +1001,20 @@ export function ImmersiveHome() {
               </span>
             </Link>
             <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-              <PenLine className="w-4 h-4 text-white/70" />
+              <PenLine className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Journal</span>
             </Link>
             <Link href="/saved" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-              <Save className="w-4 h-4 text-white/70" />
+              <Save className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Saved</span>
             </Link>
             <Link href="/progress" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-              <BarChart3 className="w-4 h-4 text-white/70" />
+              <BarChart3 className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Progress</span>
             </Link>
-            <div className="mx-3 my-1 border-t border-white/10" />
+            <div className="mx-3 my-1 border-t border-white/15" />
             <Link href="/settings" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-              <Settings className="w-4 h-4 text-white/70" />
+              <Settings className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Settings</span>
             </Link>
           </div>
@@ -1068,7 +1068,7 @@ export function ImmersiveHome() {
                     return (
                       <div key={mod} className="flex items-center gap-1">
                         <div className={`w-2.5 h-2.5 rounded-full ${done ? 'bg-white' : 'bg-white/30'}`} />
-                        <span className={`text-[11px] ${done ? 'text-white' : 'text-white/70'}`}>{mod}</span>
+                        <span className={`text-[11px] ${done ? 'text-white' : 'text-white/85'}`}>{mod}</span>
                       </div>
                     )
                   })}
@@ -1126,12 +1126,12 @@ export function ImmersiveHome() {
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold text-orange-400 uppercase tracking-wider">Featured Motivation</p>
-                      <p className="text-xs text-white/60">{featuredTopic}</p>
+                      <p className="text-xs text-white/75">{featuredTopic}</p>
                     </div>
                   </div>
                   <div className="mt-3">
                     <p className="text-sm font-medium text-white line-clamp-2 mb-2">{video.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-white/70">
+                    <div className="flex items-center gap-2 text-xs text-white/85">
                       <Play className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
                       <span>Tap to play</span>
                     </div>
@@ -1165,12 +1165,12 @@ export function ImmersiveHome() {
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider">Featured Music</p>
-                      <p className="text-xs text-white/60">{firstGenre.word}</p>
+                      <p className="text-xs text-white/75">{firstGenre.word}</p>
                     </div>
                   </div>
                   <div className="mt-3">
                     <p className="text-sm font-medium text-white line-clamp-2 mb-2">{musicVideo.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-white/70">
+                    <div className="flex items-center gap-2 text-xs text-white/85">
                       <Play className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400" />
                       <span>Tap to play</span>
                     </div>

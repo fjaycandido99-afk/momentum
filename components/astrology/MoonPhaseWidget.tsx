@@ -103,7 +103,7 @@ export function MoonPhaseWidget() {
 
       {/* Energy & upcoming phases */}
       {phaseMeaning && (
-        <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/10">
+        <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/15">
           <p className="text-[10px] uppercase tracking-wider text-indigo-400/70 mb-1">Cosmic Energy</p>
           <p className="text-xs text-white/95 leading-relaxed">{phaseMeaning.energy}</p>
         </div>

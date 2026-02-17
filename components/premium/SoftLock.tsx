@@ -86,14 +86,14 @@ export function PreviewPaywall({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-sm bg-gradient-to-b from-[#1a1a24] to-[#0f0f15] rounded-3xl border border-white/10 overflow-hidden animate-scale-in">
+      <div className="relative w-full max-w-sm bg-gradient-to-b from-[#1a1a24] to-[#0f0f15] rounded-3xl border border-white/15 overflow-hidden animate-scale-in">
         {/* Close button */}
         <button
           onClick={onClose}
           aria-label="Close"
           className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10"
         >
-          <X className="w-5 h-5 text-white/70" />
+          <X className="w-5 h-5 text-white/85" />
         </button>
 
         {/* Header */}
@@ -102,7 +102,7 @@ export function PreviewPaywall({
           <h2 className="text-xl font-semibold text-white mb-2">
             Preview Ended
           </h2>
-          <p className="text-white/70 text-sm">
+          <p className="text-white/85 text-sm">
             Unlock <span className="text-white">{contentName}</span> to continue listening
           </p>
         </div>
@@ -113,7 +113,7 @@ export function PreviewPaywall({
           {showDailyUnlock && (
             <button
               onClick={handleDailyUnlock}
-              className="w-full py-3.5 px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 group"
+              className="w-full py-3.5 px-4 rounded-xl bg-white/5 border border-white/15 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 group"
             >
               <Gift className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
               <span className="text-white font-medium">Use Daily Free Unlock</span>
@@ -132,7 +132,7 @@ export function PreviewPaywall({
           {/* Skip/cancel */}
           <button
             onClick={onClose}
-            className="w-full py-2 text-white/50 text-sm hover:text-white/70 transition-colors"
+            className="w-full py-2 text-white/70 text-sm hover:text-white/85 transition-colors"
           >
             Not now
           </button>
@@ -140,8 +140,8 @@ export function PreviewPaywall({
 
         {/* Benefits hint */}
         <div className="px-6 pb-6">
-          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-            <p className="text-white/60 text-xs text-center">
+          <div className="p-3 rounded-xl bg-white/5 border border-white/15">
+            <p className="text-white/75 text-xs text-center">
               <Sparkles className="w-3 h-3 inline-block mr-1 text-amber-400" />
               Premium unlocks all content, AI features & more
             </p>
@@ -225,9 +225,9 @@ export function AICoachNudge({ isVisible, onDismiss }: AICoachNudgeProps) {
         <button
           onClick={onDismiss}
           aria-label="Dismiss"
-          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/80 border border-white/20 flex items-center justify-center hover:bg-black transition-colors"
+          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/80 border border-white/25 flex items-center justify-center hover:bg-black transition-colors"
         >
-          <X className="w-3 h-3 text-white/70" />
+          <X className="w-3 h-3 text-white/85" />
         </button>
 
         {/* Content */}

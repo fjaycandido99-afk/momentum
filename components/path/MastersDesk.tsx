@@ -194,7 +194,7 @@ export function MastersDesk({ mindsetId }: MastersDeskProps) {
     <div className="card-path p-5">
       <div className="mb-3">
         <h3 className="text-sm font-medium text-white">{scene.title}</h3>
-        <p className="text-[11px] text-white/60 mt-0.5">{scene.subtitle}</p>
+        <p className="text-[11px] text-white/75 mt-0.5">{scene.subtitle}</p>
       </div>
 
       {/* Scene */}
@@ -222,7 +222,7 @@ export function MastersDesk({ mindsetId }: MastersDeskProps) {
                 {obj.emoji}
               </span>
               <span className={`text-[10px] transition-all duration-300 ${
-                selectedObject === i ? 'text-white' : 'text-white/50'
+                selectedObject === i ? 'text-white' : 'text-white/70'
               }`}>
                 {obj.name}
               </span>
@@ -241,14 +241,14 @@ export function MastersDesk({ mindsetId }: MastersDeskProps) {
             onClick={() => setSelectedObject(null)}
             className="absolute top-2 right-2 press-scale"
           >
-            <X className="w-3 h-3 text-white/30" />
+            <X className="w-3 h-3 text-white/50" />
           </button>
           <p className="text-[12px] text-white/80 leading-relaxed italic pr-4">
             {scene.objects[selectedObject].insight}
           </p>
         </div>
       ) : (
-        <p className="text-center text-[11px] text-white/60">Tap an object to reveal its wisdom</p>
+        <p className="text-center text-[11px] text-white/75">Tap an object to reveal its wisdom</p>
       )}
     </div>
   )

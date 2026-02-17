@@ -53,7 +53,7 @@ export function DailyReflectionCard({ mindsetId, onPathActivity }: DailyReflecti
   return (
     <div className="card-path p-5">
       <div className="flex items-center gap-2.5 mb-3">
-        <MessageCircle className="w-4 h-4 text-white/70" />
+        <MessageCircle className="w-4 h-4 text-white/85" />
         <h3 className="text-sm font-medium text-white">Daily Reflection</h3>
       </div>
 
@@ -64,7 +64,7 @@ export function DailyReflectionCard({ mindsetId, onPathActivity }: DailyReflecti
           <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
           <div>
             <p className="text-sm text-white/80">Saved to your journal</p>
-            <Link href="/journal" className="text-xs text-white/60 hover:text-white/80 flex items-center gap-1 mt-1 transition-colors">
+            <Link href="/journal" className="text-xs text-white/75 hover:text-white/80 flex items-center gap-1 mt-1 transition-colors">
               View journal <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -76,10 +76,10 @@ export function DailyReflectionCard({ mindsetId, onPathActivity }: DailyReflecti
             onChange={(e) => setReflection(e.target.value)}
             placeholder="Write your reflection..."
             rows={3}
-            className="w-full px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-sm text-white placeholder:text-white/35 resize-none focus:outline-none focus:border-white/20 focus:bg-white/[0.05] transition-all"
+            className="w-full px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/15 text-sm text-white placeholder:text-white/35 resize-none focus:outline-none focus:border-white/25 focus:bg-white/[0.05] transition-all"
           />
           <div className="flex items-center justify-between mt-3">
-            <Link href="/journal" className="text-xs text-white/50 hover:text-white/70 flex items-center gap-1 transition-colors">
+            <Link href="/journal" className="text-xs text-white/70 hover:text-white/85 flex items-center gap-1 transition-colors">
               Full journal <ArrowRight className="w-3 h-3" />
             </Link>
             <button

@@ -48,7 +48,7 @@ export function JournalLookback() {
   const dateLabel = lastWeekDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
 
   return (
-    <div className="rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden">
+    <div className="rounded-2xl bg-white/[0.03] border border-white/15 overflow-hidden">
       <div className="px-4 pt-4 pb-2 flex items-center gap-2">
         <div className="p-2 rounded-xl bg-white/10">
           <Clock className="w-4 h-4 text-blue-400" />

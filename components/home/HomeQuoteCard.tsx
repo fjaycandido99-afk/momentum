@@ -118,11 +118,11 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
           </div>
         </div>
         <div className="flex items-center justify-between mt-4">
-          <blockquote className="pl-3 border-l-2 border-white/20 flex-1 mr-3">
+          <blockquote className="pl-3 border-l-2 border-white/25 flex-1 mr-3">
             <p className="text-[13px] text-white italic leading-relaxed line-clamp-2">
               &ldquo;{quote.text}&rdquo;
             </p>
-            <footer className="mt-1 text-xs text-white/70">— {quote.author}</footer>
+            <footer className="mt-1 text-xs text-white/85">— {quote.author}</footer>
           </blockquote>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
@@ -131,7 +131,7 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
               className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
             >
               <Heart
-                className={`w-4 h-4 transition-colors ${favoriteId ? 'fill-red-400 text-red-400' : 'text-white/50'}`}
+                className={`w-4 h-4 transition-colors ${favoriteId ? 'fill-red-400 text-red-400' : 'text-white/70'}`}
               />
             </button>
             <button
@@ -139,7 +139,7 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
               disabled={isGenerating}
               className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
             >
-              <Share2 className="w-4 h-4 text-white/50" />
+              <Share2 className="w-4 h-4 text-white/70" />
             </button>
           </div>
         </div>
@@ -154,12 +154,12 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
           <p className="text-[14px] text-white italic leading-relaxed">
             &ldquo;{quote.text}&rdquo;
           </p>
-          <footer className="mt-2 text-xs text-white/70">— {quote.author}</footer>
+          <footer className="mt-2 text-xs text-white/85">— {quote.author}</footer>
         </blockquote>
 
         <div className="flex items-center justify-between">
           {quote.category && (
-            <span className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-[10px] text-white/60 uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-[10px] text-white/75 uppercase tracking-wider">
               {quote.category}
             </span>
           )}
@@ -170,7 +170,7 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
               className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
             >
               <Heart
-                className={`w-4 h-4 transition-colors ${favoriteId ? 'fill-red-400 text-red-400' : 'text-white/50'}`}
+                className={`w-4 h-4 transition-colors ${favoriteId ? 'fill-red-400 text-red-400' : 'text-white/70'}`}
               />
             </button>
             <button
@@ -178,7 +178,7 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
               disabled={isGenerating}
               className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
             >
-              <Share2 className="w-4 h-4 text-white/50" />
+              <Share2 className="w-4 h-4 text-white/70" />
             </button>
           </div>
         </div>
@@ -186,7 +186,7 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
         {/* Why this matters — AI explanation */}
         <button
           onClick={toggleExplanation}
-          className="mt-3 w-full flex items-center gap-1.5 text-xs text-white/50 hover:text-white/70 transition-colors"
+          className="mt-3 w-full flex items-center gap-1.5 text-xs text-white/70 hover:text-white/85 transition-colors"
         >
           <Lightbulb className="w-3 h-3" />
           <span>Why this matters</span>
@@ -195,12 +195,12 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
         {showExplanation && (
           <div className="mt-2">
             {loadingExplanation ? (
-              <div className="flex items-center gap-2 text-xs text-white/40">
+              <div className="flex items-center gap-2 text-xs text-white/60">
                 <Loader2 className="w-3 h-3 animate-spin" />
                 <span>Thinking...</span>
               </div>
             ) : (
-              <p className="text-xs text-white/60 leading-relaxed">
+              <p className="text-xs text-white/75 leading-relaxed">
                 {explanation}
               </p>
             )}

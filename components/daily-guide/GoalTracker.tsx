@@ -148,7 +148,7 @@ export function GoalTracker() {
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-4">
+      <div className="rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-4">
         <div className="flex items-center gap-3">
           <Loader2 className="w-4 h-4 text-white/95 animate-spin" />
           <span className="text-sm text-white/95">Loading goals...</span>
@@ -160,7 +160,7 @@ export function GoalTracker() {
   // Show locked state for free users
   if (!hasGoalAccess) {
     return (
-      <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+      <div className="rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
         <button
           onClick={openUpgradeModal}
           className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors group"
@@ -187,7 +187,7 @@ export function GoalTracker() {
   }
 
   return (
-    <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+    <div className="rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -228,7 +228,7 @@ export function GoalTracker() {
           {activeGoals.map(goal => {
             const progress = Math.min((goal.current_count / goal.target_count) * 100, 100)
             return (
-              <div key={goal.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
+              <div key={goal.id} className="p-3 rounded-xl bg-white/5 border border-white/15">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-sm font-medium text-white">{goal.title}</h4>
                   <div className="flex items-center gap-1">
@@ -289,13 +289,13 @@ export function GoalTracker() {
                   <div className="mt-2 space-y-1.5">
                     {microActions[goal.id].map((ma, i) => (
                       <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-white/5">
-                        <div className="w-4 h-4 rounded border border-white/20 shrink-0 mt-0.5" />
+                        <div className="w-4 h-4 rounded border border-white/25 shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
                           <p className="text-[11px] text-white/90 leading-snug">{ma.action}</p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[9px] text-white/40 capitalize">{ma.when}</span>
-                            <Clock className="w-2.5 h-2.5 text-white/30" />
-                            <span className="text-[9px] text-white/40">{ma.durationMinutes}m</span>
+                            <span className="text-[9px] text-white/60 capitalize">{ma.when}</span>
+                            <Clock className="w-2.5 h-2.5 text-white/50" />
+                            <span className="text-[9px] text-white/60">{ma.durationMinutes}m</span>
                           </div>
                         </div>
                       </div>
@@ -318,14 +318,14 @@ export function GoalTracker() {
 
           {/* Add Goal Form */}
           {showAddForm ? (
-            <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-3">
+            <div className="p-3 rounded-xl bg-white/5 border border-white/15 space-y-3">
               <input
                 type="text"
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
                 placeholder="Goal title..."
                 aria-label="Goal title"
-                className="w-full p-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder-white/30 focus:outline-none focus:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20"
+                className="w-full p-2 rounded-lg bg-white/5 border border-white/15 text-white text-sm placeholder-white/50 focus:outline-none focus:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20"
                 maxLength={100}
                 autoFocus
               />
@@ -334,7 +334,7 @@ export function GoalTracker() {
                   value={newFrequency}
                   onChange={e => setNewFrequency(e.target.value)}
                   aria-label="Goal frequency"
-                  className="p-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none appearance-none focus-visible:ring-1 focus-visible:ring-white/20"
+                  className="p-2 rounded-lg bg-white/5 border border-white/15 text-white text-xs focus:outline-none appearance-none focus-visible:ring-1 focus-visible:ring-white/20"
                 >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
@@ -347,7 +347,7 @@ export function GoalTracker() {
                   min="1"
                   max="100"
                   aria-label="Target count"
-                  className="w-16 p-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none text-center focus-visible:ring-1 focus-visible:ring-white/20"
+                  className="w-16 p-2 rounded-lg bg-white/5 border border-white/15 text-white text-xs focus:outline-none text-center focus-visible:ring-1 focus-visible:ring-white/20"
                   placeholder="Target"
                 />
                 <span className="text-xs text-white/95">times</span>
@@ -379,7 +379,7 @@ export function GoalTracker() {
           ) : (
             <button
               onClick={() => setShowAddForm(true)}
-              className="w-full p-3 rounded-xl border border-dashed border-white/10 hover:border-white/20 text-white/95 hover:text-white/95 text-sm transition-colors flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+              className="w-full p-3 rounded-xl border border-dashed border-white/15 hover:border-white/25 text-white/95 hover:text-white/95 text-sm transition-colors flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               <Plus className="w-4 h-4" />
               Add Goal

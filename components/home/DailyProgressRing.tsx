@@ -108,7 +108,7 @@ export function DailyProgressRing({
       {open && (
         <div className="absolute right-0 top-full mt-2 w-52 py-2 rounded-2xl bg-black border border-white/15 shadow-xl z-[60] animate-fade-in-up">
           <div className="px-3 py-1.5 mb-1">
-            <p className="text-xs font-medium text-white/70 uppercase tracking-wider">Today's Progress</p>
+            <p className="text-xs font-medium text-white/85 uppercase tracking-wider">Today's Progress</p>
           </div>
           {TASKS.map((task) => {
             const done = statuses[task.key]
@@ -120,9 +120,9 @@ export function DailyProgressRing({
                 {done ? (
                   <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 ) : (
-                  <Circle className="w-3.5 h-3.5 text-white/30 shrink-0" />
+                  <Circle className="w-3.5 h-3.5 text-white/50 shrink-0" />
                 )}
-                <span className={`text-sm ${done ? 'text-white' : 'text-white/50'}`}>
+                <span className={`text-sm ${done ? 'text-white' : 'text-white/70'}`}>
                   {task.label}
                 </span>
               </div>

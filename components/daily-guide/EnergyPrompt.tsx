@@ -87,7 +87,7 @@ export function EnergyPrompt({ onSelect, isLoading }: EnergyPromptProps) {
   }
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10 overflow-hidden animate-scale-in">
+    <div className="rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/15 overflow-hidden animate-scale-in">
       {/* Theme Header */}
       <div className="px-6 pt-6 pb-4">
         <div className="flex items-center justify-between mb-2">
@@ -135,7 +135,7 @@ export function EnergyPrompt({ onSelect, isLoading }: EnergyPromptProps) {
                 w-full flex items-center gap-4 p-4 rounded-xl transition-all
                 ${isSelected
                   ? 'bg-white/20 border border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.15)]'
-                  : 'bg-white/5 border border-transparent hover:bg-white/10 hover:border-white/10'
+                  : 'bg-white/5 border border-transparent hover:bg-white/10 hover:border-white/15'
                 }
                 disabled:opacity-40 disabled:cursor-not-allowed
                 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none

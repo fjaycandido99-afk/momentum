@@ -62,7 +62,7 @@ export function HeatMapStrip({ entries }: HeatMapStripProps) {
   const endLabel = days[days.length - 1]?.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   return (
-    <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
+    <div className="p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
       <p className="text-xs text-white uppercase tracking-wider mb-3 font-medium">30-Day Activity</p>
       <div className="flex gap-[3px]">
         {days.map((day) => (
@@ -74,8 +74,8 @@ export function HeatMapStrip({ entries }: HeatMapStripProps) {
         ))}
       </div>
       <div className="flex justify-between mt-1.5">
-        <span className="text-[9px] text-white/60">{startLabel}</span>
-        <span className="text-[9px] text-white/60">{endLabel}</span>
+        <span className="text-[9px] text-white/75">{startLabel}</span>
+        <span className="text-[9px] text-white/75">{endLabel}</span>
       </div>
     </div>
   )

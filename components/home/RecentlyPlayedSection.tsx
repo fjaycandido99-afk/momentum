@@ -32,7 +32,7 @@ export function RecentlyPlayedSection({
   return (
     <div className="mb-8 liquid-reveal section-fade-bg">
       <div className="flex items-center gap-2 px-6 mb-4">
-        <Clock className="w-4 h-4 text-white/50" />
+        <Clock className="w-4 h-4 text-white/70" />
         <div>
           <h2 className="text-lg font-semibold text-white parallax-header">Recently Played</h2>
           <p className="text-xs text-white/95 mt-0.5">Pick up where you left off</p>
@@ -68,12 +68,12 @@ export function RecentlyPlayedSection({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
 
                 {/* Type badge */}
-                <span className="absolute top-2 left-2 z-10 px-1.5 py-0.5 rounded-md bg-black/60 text-[9px] text-white/60 font-medium uppercase tracking-wider">
+                <span className="absolute top-2 left-2 z-10 px-1.5 py-0.5 rounded-md bg-black/60 text-[9px] text-white/75 font-medium uppercase tracking-wider">
                   {item.type === 'music' ? item.genreWord || 'Music' : 'Motivation'}
                 </span>
 
                 {/* Time ago */}
-                <span className="absolute bottom-2 right-2 z-10 px-1.5 py-0.5 rounded-md bg-black/60 text-[9px] text-white/50 font-medium">
+                <span className="absolute bottom-2 right-2 z-10 px-1.5 py-0.5 rounded-md bg-black/60 text-[9px] text-white/70 font-medium">
                   {timeAgo(item.playedAt)}
                 </span>
 

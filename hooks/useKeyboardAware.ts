@@ -1,34 +1,70 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export function useKeyboardAware() {
   const [keyboardOpen, setKeyboardOpen] = useState(false)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
+  const [viewportHeight, setViewportHeight] = useState(
+    typeof window !== 'undefined' ? window.innerHeight : 0,
+  )
+
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
 
+    // Initialize
+    setViewportHeight(vv.height)
+    document.documentElement.style.setProperty(
+      '--visual-viewport-height',
+      `${vv.height}px`,
+    )
+
     const onResize = () => {
-      const fullHeight = window.innerHeight
-      const viewportHeight = vv.height
-      const diff = fullHeight - viewportHeight
+      // Debounce rapid keyboard open/close (150ms settle)
+      if (settleTimer.current) clearTimeout(settleTimer.current)
 
-      const isOpen = diff > 100
-      setKeyboardOpen(isOpen)
-      setKeyboardHeight(isOpen ? diff : 0)
-      document.documentElement.style.setProperty('--keyboard-height', `${isOpen ? diff : 0}px`)
+      settleTimer.current = setTimeout(() => {
+        const fullHeight = window.innerHeight
+        const vpHeight = vv.height
+        const diff = fullHeight - vpHeight
 
-      // Scroll focused element into view
-      if (isOpen && document.activeElement instanceof HTMLElement) {
-        setTimeout(() => {
-          document.activeElement?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }, 100)
-      }
+        const isOpen = diff > 100
+        setKeyboardOpen(isOpen)
+        setKeyboardHeight(isOpen ? diff : 0)
+        setViewportHeight(vpHeight)
+
+        document.documentElement.style.setProperty(
+          '--keyboard-height',
+          `${isOpen ? diff : 0}px`,
+        )
+        document.documentElement.style.setProperty(
+          '--visual-viewport-height',
+          `${vpHeight}px`,
+        )
+
+        // Scroll focused element into view using calculated offset (not scrollIntoView)
+        if (isOpen && document.activeElement instanceof HTMLElement) {
+          const el = document.activeElement
+          const rect = el.getBoundingClientRect()
+          // Target: place focused element 40% from top of visual viewport
+          const targetY = vpHeight * 0.4
+          const currentY = rect.top
+          const scrollDelta = currentY - targetY
+
+          if (Math.abs(scrollDelta) > 20) {
+            window.scrollBy({ top: scrollDelta, behavior: 'smooth' })
+          }
+        }
+      }, 150)
     }
 
     vv.addEventListener('resize', onResize)
-    return () => vv.removeEventListener('resize', onResize)
+    return () => {
+      vv.removeEventListener('resize', onResize)
+      if (settleTimer.current) clearTimeout(settleTimer.current)
+    }
   }, [])
 
-  return { keyboardOpen, keyboardHeight }
+  return { keyboardOpen, keyboardHeight, viewportHeight }
 }

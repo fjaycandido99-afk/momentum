@@ -186,7 +186,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
     <div
       className={`rounded-2xl overflow-hidden transition-all duration-500 ${
         isCompleted
-          ? 'bg-white/[0.03] border border-white/10'
+          ? 'bg-white/[0.03] border border-white/15'
           : 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/15 shadow-[0_0_15px_rgba(255,255,255,0.06)] card-hover'
       }`}
     >
@@ -251,7 +251,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                       className="p-1.5 rounded-lg hover:bg-white/10 transition-colors group/share focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       {isShareGenerating ? (
-                        <Loader2 className="w-3.5 h-3.5 text-white/60 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 text-white/75 animate-spin" />
                       ) : (
                         <Share2 className={`w-3.5 h-3.5 ${isCompleted ? 'text-white/95' : 'text-white/95'} group-hover/share:text-white/95 transition-colors`} />
                       )}
@@ -261,7 +261,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                 {/* Why this matters — expandable AI explanation */}
                 <button
                   onClick={toggleExplanation}
-                  className="mt-3 w-full flex items-center gap-1.5 text-xs text-white/60 hover:text-white/80 transition-colors pl-4"
+                  className="mt-3 w-full flex items-center gap-1.5 text-xs text-white/75 hover:text-white/80 transition-colors pl-4"
                 >
                   <Lightbulb className="w-3 h-3" />
                   <span>Why this matters</span>
@@ -270,12 +270,12 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                 {showExplanation && (
                   <div className="mt-2 pl-4 pr-2">
                     {loadingExplanation ? (
-                      <div className="flex items-center gap-2 text-xs text-white/50">
+                      <div className="flex items-center gap-2 text-xs text-white/70">
                         <Loader2 className="w-3 h-3 animate-spin" />
                         <span>Thinking...</span>
                       </div>
                     ) : (
-                      <p className="text-xs text-white/70 leading-relaxed">
+                      <p className="text-xs text-white/85 leading-relaxed">
                         {explanation}
                       </p>
                     )}

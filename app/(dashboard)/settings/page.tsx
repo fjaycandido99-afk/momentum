@@ -319,7 +319,7 @@ function SettingsContent() {
         >
           {/* User Type */}
           <div>
-            <p className="text-sm text-white/70 mb-3">I am a</p>
+            <p className="text-sm text-white/85 mb-3">I am a</p>
             <div className="grid grid-cols-3 gap-2">
               {USER_TYPES.map((type) => {
                 const Icon = type.icon
@@ -345,7 +345,7 @@ function SettingsContent() {
           {/* Work Days (for professional/hybrid) */}
           {(userType === 'professional' || userType === 'hybrid') && (
             <div>
-              <p className="text-sm text-white/70 mb-3">Work Days</p>
+              <p className="text-sm text-white/85 mb-3">Work Days</p>
               <div className="grid grid-cols-7 gap-1.5">
                 {DAYS.map((day) => (
                   <button
@@ -369,7 +369,7 @@ function SettingsContent() {
           {/* Class Days (for student/hybrid) */}
           {(userType === 'student' || userType === 'hybrid') && (
             <div>
-              <p className="text-sm text-white/70 mb-3">Class Days</p>
+              <p className="text-sm text-white/85 mb-3">Class Days</p>
               <div className="grid grid-cols-7 gap-1.5">
                 {DAYS.map((day) => (
                   <button
@@ -394,7 +394,7 @@ function SettingsContent() {
           <div className="space-y-3">
             <div>
               <label className="block text-sm text-white/95 mb-1.5">Wake time</label>
-              <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+              <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                 <input
                   type="time"
                   value={wakeTime}
@@ -408,7 +408,7 @@ function SettingsContent() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="min-w-0">
                   <label className="block text-sm text-white/95 mb-1.5">Work starts</label>
-                  <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                  <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                     <input
                       type="time"
                       value={workStartTime}
@@ -420,7 +420,7 @@ function SettingsContent() {
                 </div>
                 <div className="min-w-0">
                   <label className="block text-sm text-white/95 mb-1.5">Work ends</label>
-                  <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                  <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                     <input
                       type="time"
                       value={workEndTime}
@@ -437,7 +437,7 @@ function SettingsContent() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
                     <label className="block text-sm text-white/95 mb-1.5">Classes start</label>
-                    <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                    <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
                         type="time"
                         value={classStartTime}
@@ -449,7 +449,7 @@ function SettingsContent() {
                   </div>
                   <div className="min-w-0">
                     <label className="block text-sm text-white/95 mb-1.5">Classes end</label>
-                    <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                    <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
                         type="time"
                         value={classEndTime}
@@ -463,7 +463,7 @@ function SettingsContent() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
                     <label className="block text-sm text-white/95 mb-1.5">Study starts</label>
-                    <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                    <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
                         type="time"
                         value={studyStartTime}
@@ -475,7 +475,7 @@ function SettingsContent() {
                   </div>
                   <div className="min-w-0">
                     <label className="block text-sm text-white/95 mb-1.5">Study ends</label>
-                    <div className="h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                    <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
                         type="time"
                         value={studyEndTime}
@@ -501,7 +501,7 @@ function SettingsContent() {
         >
           {/* Segments */}
           <div>
-            <p className="text-sm text-white/70 mb-3">Daily Flow</p>
+            <p className="text-sm text-white/85 mb-3">Daily Flow</p>
             <div className="space-y-2">
               {SEGMENT_OPTIONS.map((segment) => {
                 const Icon = segment.icon
@@ -516,7 +516,7 @@ function SettingsContent() {
                     aria-label={`${segment.label}${segment.required ? ' (required)' : ''}`}
                     className={`w-full p-3 rounded-xl flex items-center justify-between transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                       isEnabled
-                        ? 'bg-white/10 border border-white/20'
+                        ? 'bg-white/10 border border-white/25'
                         : 'bg-white/5 border border-transparent'
                     } ${segment.required ? 'cursor-default' : 'cursor-pointer hover:bg-white/10 press-scale'}`}
                   >
@@ -540,7 +540,7 @@ function SettingsContent() {
 
           {/* Voice Tone */}
           <div>
-            <p className="text-sm text-white/70 mb-3">Voice Tone</p>
+            <p className="text-sm text-white/85 mb-3">Voice Tone</p>
             <div className="grid grid-cols-3 gap-2">
               {TONES.map((tone) => (
                 <button
@@ -574,7 +574,7 @@ function SettingsContent() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-white text-sm">Daily Reminder</p>
-                <p className="text-white/60 text-xs">Get notified each morning</p>
+                <p className="text-white/75 text-xs">Get notified each morning</p>
               </div>
               <button
                 onClick={() => setDailyReminder(!dailyReminder)}
@@ -593,7 +593,7 @@ function SettingsContent() {
               </button>
             </div>
             {dailyReminder && (
-              <div className="mt-3 h-11 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+              <div className="mt-3 h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                 <input
                   type="time"
                   value={reminderTime}
@@ -611,7 +611,7 @@ function SettingsContent() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-white text-sm">Bedtime Reminder</p>
-                <p className="text-white/60 text-xs">8 hours before wake time</p>
+                <p className="text-white/75 text-xs">8 hours before wake time</p>
               </div>
               <button
                 onClick={() => setBedtimeReminderEnabled(!bedtimeReminderEnabled)}
@@ -630,7 +630,7 @@ function SettingsContent() {
               </button>
             </div>
             {bedtimeReminderEnabled && wakeTime && (
-              <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10">
+              <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/15">
                 <p className="text-sm text-white/95">
                   You&apos;ll be reminded at{' '}
                   <span className="text-white font-medium">
@@ -663,13 +663,13 @@ function SettingsContent() {
                 <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-7 h-7 text-white" />
                 <div>
                   <p className="font-medium text-white text-sm">{MINDSET_CONFIGS[mindsetCtx.mindset].name}</p>
-                  <p className="text-white/60 text-xs">{MINDSET_CONFIGS[mindsetCtx.mindset].subtitle}</p>
+                  <p className="text-white/75 text-xs">{MINDSET_CONFIGS[mindsetCtx.mindset].subtitle}</p>
                 </div>
               </div>
             )}
             <Link
               href="/mindset-selection"
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 text-white/90 text-sm hover:bg-white/10 transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/15 text-white/90 text-sm hover:bg-white/10 transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               Reset My Path
             </Link>
@@ -690,7 +690,7 @@ function SettingsContent() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="font-medium text-white text-sm">Astrology Mode</p>
-                  <p className="text-white/60 text-xs">Cosmic insights & zodiac wisdom</p>
+                  <p className="text-white/75 text-xs">Cosmic insights & zodiac wisdom</p>
                 </div>
                 <button
                   onClick={() => setAstrologyEnabled(!astrologyEnabled)}
@@ -711,7 +711,7 @@ function SettingsContent() {
 
               {astrologyEnabled && (
                 <div className="space-y-4">
-                  <p className="text-sm text-white/70">Select your zodiac sign for personalized cosmic insights</p>
+                  <p className="text-sm text-white/85">Select your zodiac sign for personalized cosmic insights</p>
                   <div className="grid grid-cols-3 gap-2">
                     {ZODIAC_SIGNS.map((sign) => (
                       <button
@@ -726,7 +726,7 @@ function SettingsContent() {
                       >
                         <span className="text-xl block mb-0.5">{sign.symbol}</span>
                         <p className={`text-xs font-medium ${zodiacSign === sign.id ? 'text-white' : 'text-white/95'}`}>{sign.label}</p>
-                        <p className="text-[9px] text-white/60 mt-0.5">{sign.dates}</p>
+                        <p className="text-[9px] text-white/75 mt-0.5">{sign.dates}</p>
                       </button>
                     ))}
                   </div>
@@ -764,7 +764,7 @@ function SettingsContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium text-white text-sm">Background Animation</p>
-              <p className="text-white/60 text-xs">Ambient visual pattern</p>
+              <p className="text-white/75 text-xs">Ambient visual pattern</p>
             </div>
             <button
               onClick={() => {
@@ -817,7 +817,7 @@ function SettingsContent() {
                   <label className="text-sm text-white/95">Color</label>
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-4 h-4 rounded-full border border-white/20"
+                      className="w-4 h-4 rounded-full border border-white/25"
                       style={{ backgroundColor: bgColorHue < 0 ? '#fff' : `hsl(${bgColorHue}, 70%, 60%)` }}
                     />
                     <span className="text-sm text-white/95">{bgColorHue < 0 ? 'White' : `${Math.round(bgColorHue)}°`}</span>
@@ -832,7 +832,7 @@ function SettingsContent() {
                     className={`px-3 py-1.5 rounded-lg text-xs transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                       bgColorHue < 0
                         ? 'bg-white/20 text-white border border-white/30'
-                        : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
+                        : 'bg-white/5 text-white/85 border border-transparent hover:bg-white/10'
                     }`}
                   >
                     White
@@ -935,7 +935,7 @@ function SettingsContent() {
           description="App display language"
         >
           <div>
-            <p className="text-sm text-white/70 mb-3">Display Language</p>
+            <p className="text-sm text-white/85 mb-3">Display Language</p>
             <LanguageSelector />
           </div>
         </SettingsCategory>
@@ -1025,7 +1025,7 @@ function SettingsContent() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <div className="p-4 rounded-xl bg-white/5 border border-white/15">
                   <p className="text-white font-medium mb-1">Free Plan</p>
                   <p className="text-sm text-white/95 mb-3">
                     1 session/day · 10-min limit · Limited features
@@ -1072,7 +1072,7 @@ function SettingsContent() {
             {isAuthenticated ? (
               <button
                 onClick={handleSignOut}
-                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 text-red-400 hover:bg-red-500/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/15 text-red-400 hover:bg-red-500/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <LogOut className="w-5 h-5" />
                 Sign Out
@@ -1080,7 +1080,7 @@ function SettingsContent() {
             ) : (
               <Link
                 href="/login"
-                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/15 text-white hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 Sign In to Save Progress
               </Link>

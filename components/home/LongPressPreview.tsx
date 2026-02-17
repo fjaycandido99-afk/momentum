@@ -30,14 +30,14 @@ export function LongPressPreview({ video, onClose }: LongPressPreviewProps) {
           </div>
           {video.channel && (
             <div className="flex items-center gap-1.5 mb-2">
-              <User className="w-3 h-3 text-white/60" />
-              <span className="text-xs text-white/70">{video.channel}</span>
+              <User className="w-3 h-3 text-white/75" />
+              <span className="text-xs text-white/85">{video.channel}</span>
             </div>
           )}
           {video.duration && video.duration > 0 && (
             <div className="flex items-center gap-1.5">
-              <Clock className="w-3 h-3 text-white/60" />
-              <span className="text-xs text-white/70">{formatDuration(video.duration)}</span>
+              <Clock className="w-3 h-3 text-white/75" />
+              <span className="text-xs text-white/85">{formatDuration(video.duration)}</span>
             </div>
           )}
         </div>

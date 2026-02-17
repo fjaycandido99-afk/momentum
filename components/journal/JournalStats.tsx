@@ -93,15 +93,15 @@ interface JournalStatsProps {
 export function JournalStats({ stats }: JournalStatsProps) {
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black border border-white/20 shadow-[0_1px_12px_rgba(255,255,255,0.08)]">
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black border border-white/25 shadow-[0_1px_12px_rgba(255,255,255,0.08)]">
         <Flame className="w-3.5 h-3.5 text-orange-400" />
         <span className="text-xs font-medium text-white">{stats.currentStreak}</span>
       </div>
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black border border-white/20 shadow-[0_1px_12px_rgba(255,255,255,0.08)]">
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black border border-white/25 shadow-[0_1px_12px_rgba(255,255,255,0.08)]">
         <PenLine className="w-3.5 h-3.5 text-amber-400" />
         <span className="text-xs font-medium text-white">{stats.totalEntries}</span>
       </div>
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black border border-white/20 shadow-[0_1px_12px_rgba(255,255,255,0.08)]">
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black border border-white/25 shadow-[0_1px_12px_rgba(255,255,255,0.08)]">
         <Type className="w-3.5 h-3.5 text-blue-400" />
         <span className="text-xs font-medium text-white">{stats.totalWords.toLocaleString()}</span>
       </div>

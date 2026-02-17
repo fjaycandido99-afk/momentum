@@ -49,7 +49,7 @@ export function DailyQuoteCard({ mindsetId, onPathActivity }: DailyQuoteCardProp
     <div className="card-path p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
-          <Quote className="w-4 h-4 text-white/70" />
+          <Quote className="w-4 h-4 text-white/85" />
           <h3 className="text-sm font-medium text-white">Daily Quote</h3>
         </div>
         <ShareButton
@@ -61,12 +61,12 @@ export function DailyQuoteCard({ mindsetId, onPathActivity }: DailyQuoteCardProp
 
       <blockquote className={`pl-3 border-l-2 ${accent}`}>
         <p className="text-[14px] text-white italic leading-relaxed">&ldquo;{quote.text}&rdquo;</p>
-        <footer className="mt-2 text-xs text-white/70">— {quote.author}</footer>
+        <footer className="mt-2 text-xs text-white/85">— {quote.author}</footer>
       </blockquote>
 
       {quote.category && (
         <div className="mt-3 flex">
-          <span className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-[10px] text-white/60 uppercase tracking-wider">
+          <span className="px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-[10px] text-white/75 uppercase tracking-wider">
             {quote.category}
           </span>
         </div>

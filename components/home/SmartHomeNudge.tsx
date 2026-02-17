@@ -109,13 +109,13 @@ export function SmartHomeNudge(props: SmartHomeNudgeProps) {
 
   return (
     <div className="px-6 mb-6 animate-fade-in-up">
-      <div className="relative p-4 rounded-2xl border border-white/20 bg-black">
+      <div className="relative p-4 rounded-2xl border border-white/25 bg-black">
         <button
           onClick={() => setDismissed(true)}
           className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors"
           aria-label="Dismiss"
         >
-          <X className="w-3.5 h-3.5 text-white/40" />
+          <X className="w-3.5 h-3.5 text-white/60" />
         </button>
         <div className="flex items-start gap-3">
           <div className={`p-2 rounded-xl bg-white/[0.06] shrink-0`}>

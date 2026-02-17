@@ -79,7 +79,7 @@ export function SocialProofBanner() {
 
   return (
     <div
-      className={`fixed left-3 bottom-28 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-sm border border-white/10 transition-all duration-500 pointer-events-none ${
+      className={`fixed left-3 bottom-28 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-sm border border-white/15 transition-all duration-500 pointer-events-none ${
         visible
           ? 'opacity-100 translate-x-0'
           : 'opacity-0 -translate-x-4'
@@ -89,7 +89,7 @@ export function SocialProofBanner() {
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
       </span>
-      <p className="text-[10px] text-white/70 font-medium whitespace-nowrap">
+      <p className="text-[10px] text-white/85 font-medium whitespace-nowrap">
         {messages[messageIndex]}
       </p>
     </div>

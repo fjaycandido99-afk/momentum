@@ -17,11 +17,11 @@ export default function DashboardError({
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center">
       <div className="text-center px-6 max-w-md">
-        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-white/5 border border-white/15 flex items-center justify-center">
           <span className="text-2xl">!</span>
         </div>
         <h1 className="text-xl font-medium mb-2">Something went wrong</h1>
-        <p className="text-white/60 text-sm mb-6">
+        <p className="text-white/75 text-sm mb-6">
           This section encountered an error. You can try again or go back home.
         </p>
         <div className="flex flex-col gap-3">
@@ -33,7 +33,7 @@ export default function DashboardError({
           </button>
           <Link
             href="/"
-            className="px-6 py-3 bg-white/5 border border-white/10 text-white rounded-full text-sm font-medium hover:bg-white/10 transition-colors"
+            className="px-6 py-3 bg-white/5 border border-white/15 text-white rounded-full text-sm font-medium hover:bg-white/10 transition-colors"
           >
             Go home
           </Link>

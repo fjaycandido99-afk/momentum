@@ -58,9 +58,9 @@ export function MotivationSection({
             onClick={onShuffle}
             disabled={shuffling}
             aria-label="Shuffle videos"
-            className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors press-scale"
+            className="p-2 rounded-full bg-white/5 border border-white/15 hover:bg-white/10 transition-colors press-scale"
           >
-            <RefreshCw className={`w-4 h-4 text-white/70 ${shuffling ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 text-white/85 ${shuffling ? 'animate-spin' : ''}`} />
           </button>
         )}
       </div>
@@ -141,7 +141,7 @@ export function MotivationSection({
                       className="absolute top-2 right-2 z-10 p-1 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
                     >
                       <Heart
-                        className={`w-3.5 h-3.5 ${isFavorited ? 'text-red-500' : 'text-white/60'} ${heartPopId === video.youtubeId ? 'heart-pop' : ''}`}
+                        className={`w-3.5 h-3.5 ${isFavorited ? 'text-red-500' : 'text-white/75'} ${heartPopId === video.youtubeId ? 'heart-pop' : ''}`}
                         fill={isFavorited ? 'currentColor' : 'none'}
                       />
                     </button>

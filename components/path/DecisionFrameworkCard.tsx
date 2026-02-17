@@ -59,12 +59,12 @@ export function DecisionFrameworkCard({ mindsetId }: DecisionFrameworkCardProps)
   return (
     <div className="card-path p-5">
       <div className="flex items-center gap-2.5 mb-3">
-        <Scale className="w-4 h-4 text-white/70" />
+        <Scale className="w-4 h-4 text-white/85" />
         <h3 className="text-sm font-medium text-white">Decision Framework</h3>
       </div>
 
       <h4 className="text-[14px] font-medium text-white mb-1">{framework.title}</h4>
-      <p className="text-[12px] text-white/70 leading-relaxed mb-4">{framework.description}</p>
+      <p className="text-[12px] text-white/85 leading-relaxed mb-4">{framework.description}</p>
 
       {!started && (
         <button
@@ -101,7 +101,7 @@ export function DecisionFrameworkCard({ mindsetId }: DecisionFrameworkCardProps)
             }}
             placeholder={framework.questions[currentQ].placeholder}
             rows={3}
-            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl p-3 text-[13px] text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/15 transition-colors"
+            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl p-3 text-[13px] text-white placeholder-white/50 resize-none focus:outline-none focus:border-white/15 transition-colors"
           />
 
           <button
@@ -110,7 +110,7 @@ export function DecisionFrameworkCard({ mindsetId }: DecisionFrameworkCardProps)
             className={`w-full mt-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5
               ${answers[currentQ].trim()
                 ? `text-white ${accentBg} press-scale`
-                : 'text-white/30 bg-white/[0.07] cursor-not-allowed'
+                : 'text-white/50 bg-white/[0.07] cursor-not-allowed'
               }`}
           >
             {isLastQuestion ? 'See Conclusion' : <>Next <ChevronRight className="w-4 h-4" /></>}
@@ -120,7 +120,7 @@ export function DecisionFrameworkCard({ mindsetId }: DecisionFrameworkCardProps)
 
       {showConclusion && (
         <div className={`animate-fade-in rounded-lg border p-4 ${accentBg} ${accentBorder}`}>
-          <p className="text-[10px] text-white/60 uppercase tracking-wider mb-2">Conclusion</p>
+          <p className="text-[10px] text-white/75 uppercase tracking-wider mb-2">Conclusion</p>
           <p className="text-[14px] text-white/80 leading-relaxed">{framework.conclusion}</p>
         </div>
       )}

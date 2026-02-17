@@ -86,10 +86,10 @@ export default function ProgressPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
+          <Loader2 className="w-5 h-5 text-white/70 animate-spin" />
         </div>
       ) : !data ? (
-        <div className="text-center py-20 text-white/50 text-sm">Unable to load progress data</div>
+        <div className="text-center py-20 text-white/70 text-sm">Unable to load progress data</div>
       ) : (
         <div className="px-6 space-y-4">
           {/* Streak + XP Row */}
@@ -98,7 +98,7 @@ export default function ProgressPage() {
               <Flame className="w-6 h-6 text-amber-400" />
               <div>
                 <p className="text-2xl font-bold text-amber-400">{gamification?.streak ?? data.streak}</p>
-                <p className="text-xs text-white/50">day streak</p>
+                <p className="text-xs text-white/70">day streak</p>
               </div>
             </div>
             {gamification && (
@@ -106,7 +106,7 @@ export default function ProgressPage() {
                 <div className="text-lg">⚡</div>
                 <div>
                   <p className="text-2xl font-bold text-cyan-400">{gamification.xp.today}</p>
-                  <p className="text-xs text-white/50">XP today</p>
+                  <p className="text-xs text-white/70">XP today</p>
                 </div>
               </div>
             )}
@@ -130,7 +130,7 @@ export default function ProgressPage() {
                 </div>
                 <div className="text-left flex-1">
                   <p className="text-sm font-medium text-white">{streak}-day milestone!</p>
-                  <p className="text-[10px] text-white/60">Read a letter from your future self</p>
+                  <p className="text-[10px] text-white/75">Read a letter from your future self</p>
                 </div>
                 <span className="text-xs text-pink-400 font-medium shrink-0">View</span>
               </button>

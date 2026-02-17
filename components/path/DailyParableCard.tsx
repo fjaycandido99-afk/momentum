@@ -40,7 +40,7 @@ export function DailyParableCard({ mindsetId }: DailyParableCardProps) {
     <div className="card-path p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
-          <BookOpen className="w-4 h-4 text-white/70" />
+          <BookOpen className="w-4 h-4 text-white/85" />
           <h3 className="text-sm font-medium text-white">Daily Parable</h3>
         </div>
         <ShareButton
@@ -57,7 +57,7 @@ export function DailyParableCard({ mindsetId }: DailyParableCardProps) {
       {isLong && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-1 text-[11px] text-white/60 mb-3 press-scale"
+          className="flex items-center gap-1 text-[11px] text-white/75 mb-3 press-scale"
         >
           {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           {expanded ? 'Show less' : 'Read more'}
@@ -65,7 +65,7 @@ export function DailyParableCard({ mindsetId }: DailyParableCardProps) {
       )}
 
       <div className={`rounded-xl border p-3 ${accent}`}>
-        <p className="text-[10px] text-white/60 uppercase tracking-wider mb-1">Moral</p>
+        <p className="text-[10px] text-white/75 uppercase tracking-wider mb-1">Moral</p>
         <p className="text-[12px] text-white/90 leading-relaxed">{parable.moral}</p>
       </div>
     </div>

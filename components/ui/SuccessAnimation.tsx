@@ -15,8 +15,8 @@ export function SuccessAnimation() {
       {/* Expanding rings */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="absolute w-20 h-20 rounded-full border-2 border-white/30 success-ring" />
-        <div className="absolute w-20 h-20 rounded-full border-2 border-white/20 success-ring" style={{ animationDelay: '0.5s' }} />
-        <div className="absolute w-20 h-20 rounded-full border border-white/10 success-ring" style={{ animationDelay: '1s' }} />
+        <div className="absolute w-20 h-20 rounded-full border-2 border-white/25 success-ring" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute w-20 h-20 rounded-full border border-white/15 success-ring" style={{ animationDelay: '1s' }} />
       </div>
 
       {/* Confetti particles */}

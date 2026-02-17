@@ -37,7 +37,7 @@ export function ProgressIndicator({ currentStep, totalSteps, labels }: ProgressI
             />
             {labels?.[i] && (
               <span className={`text-[10px] mt-1 ${
-                i <= currentStep ? 'text-white/70' : 'text-white/30'
+                i <= currentStep ? 'text-white/85' : 'text-white/50'
               }`}>
                 {labels[i]}
               </span>
@@ -47,7 +47,7 @@ export function ProgressIndicator({ currentStep, totalSteps, labels }: ProgressI
       </div>
 
       {/* Step count */}
-      <p className="text-center text-white/40 text-xs mt-2">
+      <p className="text-center text-white/60 text-xs mt-2">
         Step {currentStep + 1} of {totalSteps}
       </p>
     </div>

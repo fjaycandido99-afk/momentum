@@ -452,9 +452,9 @@ export function ModuleCard({
       className={`
         relative rounded-2xl border overflow-hidden transition-all duration-300
         ${isCompleted
-          ? 'bg-white/[0.03] border-white/10 transition-opacity duration-500'
+          ? 'bg-white/[0.03] border-white/15 transition-opacity duration-500'
           : isActive
-            ? 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border-white/20 ring-1 ring-white/10 shadow-[0_0_25px_rgba(255,255,255,0.1)] animate-card-appear'
+            ? 'bg-gradient-to-br from-white/[0.08] to-white/[0.03] border-white/25 ring-1 ring-white/10 shadow-[0_0_25px_rgba(255,255,255,0.1)] animate-card-appear'
             : 'bg-gradient-to-br from-white/[0.06] to-white/[0.02] border-white/15 shadow-[0_0_15px_rgba(255,255,255,0.06)] card-hover'
         }
       `}
@@ -510,7 +510,7 @@ export function ModuleCard({
       {/* Text-only reading mode — shown for free users without AI voice */}
       {isReadingMode && readingScript && !isCompleted && (
         <div className="px-4 pb-4">
-          <div className="rounded-xl bg-amber-950/20 border border-white/10 border-l-2 border-l-amber-400/60 p-4 max-h-60 overflow-y-auto">
+          <div className="rounded-xl bg-amber-950/20 border border-white/15 border-l-2 border-l-amber-400/60 p-4 max-h-60 overflow-y-auto">
             <p className="text-sm text-white/95 leading-relaxed whitespace-pre-line">
               {readingScript}
             </p>

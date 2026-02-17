@@ -75,7 +75,7 @@ export function RoutineBuilder({ onClose, onCreated }: RoutineBuilderProps) {
     <div className="fixed inset-0 z-50 bg-black flex flex-col overlay-enter">
       <div className="flex items-center gap-3 px-6 pt-12 pb-4">
         <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors press-scale">
-          <ArrowLeft className="w-5 h-5 text-white/70" />
+          <ArrowLeft className="w-5 h-5 text-white/85" />
         </button>
         <h2 className="text-lg font-semibold text-white flex-1">New Routine</h2>
         <button
@@ -93,7 +93,7 @@ export function RoutineBuilder({ onClose, onCreated }: RoutineBuilderProps) {
           onChange={e => setName(e.target.value)}
           placeholder="Routine name (e.g. Morning Focus)"
           autoFocus
-          className="w-full px-4 py-3 rounded-xl bg-[#1a1a1a] border border-white/10 focus:border-white/25 text-sm text-white placeholder:text-white/30 outline-none transition-colors"
+          className="w-full px-4 py-3 rounded-xl bg-[#1a1a1a] border border-white/15 focus:border-white/25 text-sm text-white placeholder:text-white/50 outline-none transition-colors"
         />
 
         {error && <p className="text-xs text-red-400">{error}</p>}
@@ -102,16 +102,16 @@ export function RoutineBuilder({ onClose, onCreated }: RoutineBuilderProps) {
           {steps.map((step, i) => (
             <div key={i} className="flex items-center gap-3 p-3 rounded-xl glass-refined">
               <GripVertical className="w-4 h-4 text-white/20 shrink-0" />
-              <span className="text-xs text-white/40 w-5">{i + 1}</span>
+              <span className="text-xs text-white/60 w-5">{i + 1}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-white truncate">{step.title}</p>
-                {step.subtitle && <p className="text-xs text-white/50">{step.subtitle}</p>}
+                {step.subtitle && <p className="text-xs text-white/70">{step.subtitle}</p>}
               </div>
               <button
                 onClick={() => removeStep(i)}
                 className="p-1.5 rounded-lg hover:bg-red-500/20 transition-colors"
               >
-                <X className="w-3.5 h-3.5 text-white/40" />
+                <X className="w-3.5 h-3.5 text-white/60" />
               </button>
             </div>
           ))}
@@ -119,7 +119,7 @@ export function RoutineBuilder({ onClose, onCreated }: RoutineBuilderProps) {
 
         <button
           onClick={() => setShowPicker(true)}
-          className="w-full py-3 rounded-xl border border-dashed border-white/15 hover:bg-white/5 text-sm text-white/60 transition-colors press-scale flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-xl border border-dashed border-white/15 hover:bg-white/5 text-sm text-white/75 transition-colors press-scale flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" /> Add Step
         </button>
@@ -127,9 +127,9 @@ export function RoutineBuilder({ onClose, onCreated }: RoutineBuilderProps) {
         {showPicker && (
           <div className="space-y-1 p-3 rounded-xl glass-refined">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-white/50 uppercase tracking-wider">Choose Activity</span>
+              <span className="text-xs text-white/70 uppercase tracking-wider">Choose Activity</span>
               <button onClick={() => setShowPicker(false)} className="p-1 hover:bg-white/10 rounded-lg">
-                <X className="w-3.5 h-3.5 text-white/40" />
+                <X className="w-3.5 h-3.5 text-white/60" />
               </button>
             </div>
             {ACTIVITY_OPTIONS.map((opt, i) => (
@@ -139,7 +139,7 @@ export function RoutineBuilder({ onClose, onCreated }: RoutineBuilderProps) {
                 className="w-full text-left p-2.5 rounded-lg hover:bg-white/5 transition-colors"
               >
                 <p className="text-sm text-white">{opt.title}</p>
-                <p className="text-xs text-white/40">{opt.subtitle}</p>
+                <p className="text-xs text-white/60">{opt.subtitle}</p>
               </button>
             ))}
           </div>

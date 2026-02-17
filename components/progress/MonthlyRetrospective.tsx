@@ -70,12 +70,12 @@ export function MonthlyRetrospective() {
           </div>
           <div className="text-left">
             <h3 className="text-sm font-medium text-white">Monthly Review</h3>
-            <p className="text-[10px] text-white/50">AI-powered monthly insights</p>
+            <p className="text-[10px] text-white/70">AI-powered monthly insights</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {loading && <Loader2 className="w-4 h-4 text-white/50 animate-spin" />}
-          <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          {loading && <Loader2 className="w-4 h-4 text-white/70 animate-spin" />}
+          <ChevronDown className={`w-4 h-4 text-white/70 transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </div>
       </button>
 
@@ -86,15 +86,15 @@ export function MonthlyRetrospective() {
             <div className="grid grid-cols-3 gap-2">
               <div className="p-3 rounded-xl bg-white/5 text-center">
                 <p className="text-lg font-bold text-white">{data.stats.totalDays}</p>
-                <p className="text-[9px] text-white/50">Days Tracked</p>
+                <p className="text-[9px] text-white/70">Days Tracked</p>
               </div>
               <div className="p-3 rounded-xl bg-white/5 text-center">
                 <p className="text-lg font-bold text-white">{data.stats.journalDays}</p>
-                <p className="text-[9px] text-white/50">Journal Days</p>
+                <p className="text-[9px] text-white/70">Journal Days</p>
               </div>
               <div className="p-3 rounded-xl bg-white/5 text-center">
                 <p className="text-lg">{MOOD_EMOJI[data.stats.dominantMood] || '😐'}</p>
-                <p className="text-[9px] text-white/50 capitalize">{data.stats.dominantMood}</p>
+                <p className="text-[9px] text-white/70 capitalize">{data.stats.dominantMood}</p>
               </div>
             </div>
           )}
@@ -126,7 +126,7 @@ export function MonthlyRetrospective() {
               </p>
               <ul className="space-y-1.5">
                 {data.growthInsights.map((insight, i) => (
-                  <li key={i} className="text-xs text-white/70 flex items-start gap-2">
+                  <li key={i} className="text-xs text-white/85 flex items-start gap-2">
                     <span className="text-emerald-400 mt-0.5">•</span>
                     {insight}
                   </li>
@@ -141,7 +141,7 @@ export function MonthlyRetrospective() {
               <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-2">Standout Days</p>
               <ul className="space-y-1.5">
                 {data.bestDays.map((day, i) => (
-                  <li key={i} className="text-xs text-white/70 flex items-start gap-2">
+                  <li key={i} className="text-xs text-white/85 flex items-start gap-2">
                     <span className="text-amber-400">⭐</span>
                     {day}
                   </li>
@@ -164,7 +164,7 @@ export function MonthlyRetrospective() {
 
       {expanded && data?.insufficient && (
         <div className="px-5 pb-5">
-          <p className="text-xs text-white/50">{data.message}</p>
+          <p className="text-xs text-white/70">{data.message}</p>
         </div>
       )}
     </div>
