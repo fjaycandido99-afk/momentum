@@ -70,7 +70,7 @@ export function MonthlyRetrospective() {
           </div>
           <div className="text-left">
             <h3 className="text-sm font-medium text-white">Monthly Review</h3>
-            <p className="text-[10px] text-white/70">AI-powered monthly insights</p>
+            <p className="text-[10px] text-white/70">Personalized monthly insights</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

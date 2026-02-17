@@ -453,7 +453,7 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
               key={theme.id}
               onClick={() => onPlayAIMeditation(theme.id)}
               className="shrink-0 press-scale snap-card"
-              aria-label={`${theme.name} AI meditation${!isPremium ? ' (premium)' : ''}`}
+              aria-label={`${theme.name} meditation${!isPremium ? ' (premium)' : ''}`}
             >
               <div className="relative w-40 h-52 rounded-2xl overflow-hidden flex flex-col bg-black border-2 border-white/[0.15]">
                 <div className="absolute inset-0" style={AI_PATTERNS[theme.id] || {}} />

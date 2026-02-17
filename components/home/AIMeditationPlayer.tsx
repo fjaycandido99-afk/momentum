@@ -94,7 +94,7 @@ export function AIMeditationPlayer({ onClose, preselectedTheme }: AIMeditationPl
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-400" />
-          <h2 className="text-sm font-medium text-white">AI Meditation</h2>
+          <h2 className="text-sm font-medium text-white">Guided Meditation</h2>
         </div>
         <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10">
           <X className="w-5 h-5 text-white/75" />

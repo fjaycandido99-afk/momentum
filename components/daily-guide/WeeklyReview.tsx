@@ -341,7 +341,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
               <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20">
                 <div className="flex items-center gap-2 mb-3">
                   <Brain className="w-4 h-4 text-purple-400" />
-                  <h3 className="text-sm font-medium text-purple-300">AI Summary</h3>
+                  <h3 className="text-sm font-medium text-purple-300">Weekly Reflection</h3>
                 </div>
                 {aiSummaryLoading ? (
                   <div className="space-y-2">

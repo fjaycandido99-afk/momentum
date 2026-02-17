@@ -8,7 +8,7 @@ import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { CoachingPlans } from '@/components/coach/CoachingPlans'
 import { FeatureHint } from '@/components/ui/FeatureHint'
-import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
+import { MINDSET_CONFIGS, getCoachName } from '@/lib/mindset/configs'
 import { getActivePlan, COACHING_PLANS, getPlanProgress } from '@/lib/coaching-plans'
 import { logXPEventServer } from '@/lib/gamification'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
@@ -41,12 +41,12 @@ const CHECK_IN_PROMPTS: Record<string, string> = {
 }
 
 const COACH_GREETINGS: Record<string, string> = {
-  stoic: "Hey! I'm your **Voxu Coach**, grounded in **Stoic** wisdom. I'll help you focus on what you can control, build resilience, and find clarity. How are you feeling today?",
-  existentialist: "Hey! I'm your **Voxu Coach**, guided by **Existentialist** philosophy. I'm here to help you embrace freedom, find meaning, and make bold choices. What's on your mind?",
-  cynic: "Hey! I'm your **Voxu Coach**, channeling the **Cynic** spirit. Let's cut through the noise, question assumptions, and find what truly matters. What do you need today?",
-  hedonist: "Hey! I'm your **Voxu Coach**, inspired by **Epicurean** wisdom. I'll help you find genuine joy, cultivate gratitude, and savor what matters. How can I support you today?",
-  samurai: "Hey! I'm your **Voxu Coach**, walking the **Samurai** path with you. I'll help you train with discipline, act with honor, and sharpen your focus. What shall we work on?",
-  scholar: "Hey! I'm your **Voxu Coach**, exploring the mysteries of mind and cosmos alongside you. I'll draw from **psychology, mythology, and the stars**. What are you seeking today?",
+  stoic: "Hey! I'm **The Sage**, your Voxu mentor grounded in **Stoic** wisdom. I'll help you focus on what you can control, build resilience, and find clarity. How are you feeling today?",
+  existentialist: "Hey! I'm **The Guide**, your Voxu mentor guided by **Existentialist** philosophy. I'm here to help you embrace freedom, find meaning, and make bold choices. What's on your mind?",
+  cynic: "Hey! I'm **The Challenger**, your Voxu mentor channeling the **Cynic** spirit. Let's cut through the noise, question assumptions, and find what truly matters. What do you need today?",
+  hedonist: "Hey! I'm **The Muse**, your Voxu mentor inspired by **Epicurean** wisdom. I'll help you find genuine joy, cultivate gratitude, and savor what matters. How can I support you today?",
+  samurai: "Hey! I'm **The Sensei**, your Voxu mentor walking the **Samurai** path with you. I'll help you train with discipline, act with honor, and sharpen your focus. What shall we work on?",
+  scholar: "Hey! I'm **The Oracle**, your Voxu mentor exploring the mysteries of mind and cosmos alongside you. I'll draw from **psychology, mythology, and the stars**. What are you seeking today?",
 }
 
 function formatTime(ts: number): string {
@@ -111,7 +111,8 @@ export default function CoachPage() {
     }
   }, [activeTab])
 
-  const defaultGreeting = "Hey! I'm your **Voxu Coach**. How are you feeling today? I can help with motivation, goal-setting, stress, or just be here to listen."
+  const coachName = getCoachName(mindsetCtx?.mindset)
+  const defaultGreeting = `Hey! I'm **${coachName}**, your Voxu mentor. How are you feeling today? I can help with motivation, goal-setting, stress, or just be here to listen.`
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -185,7 +186,7 @@ export default function CoachPage() {
           setHasLoggedCheckInXP(true)
         }
       } else if (response.status === 403) {
-        setMessages(prev => [...prev, { role: 'assistant', content: 'This feature requires a **Premium** subscription. Upgrade to chat with your AI Coach!', timestamp: Date.now() }])
+        setMessages(prev => [...prev, { role: 'assistant', content: `This feature requires a **Premium** subscription. Upgrade to chat with **${coachName}**!`, timestamp: Date.now() }])
       } else {
         const errData = await response.json().catch(() => null)
         const detail = errData?.detail ? ` (${errData.detail})` : ''
@@ -214,14 +215,14 @@ export default function CoachPage() {
           <Link href="/" aria-label="Back to home" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
             <ChevronLeft className="w-5 h-5 text-white/95" />
           </Link>
-          <h1 className="text-2xl font-light shimmer-text">AI Coach</h1>
+          <h1 className="text-2xl font-light shimmer-text">{coachName}</h1>
         </div>
         {/* Tab bar */}
-        <div className="flex px-6 gap-2 pb-4 border-b border-white/15">
-          <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-white/15 text-white border border-white/25' : 'bg-white/5 text-white/75'}`}>
+        <div className="flex px-6 gap-2 pb-4 border-b border-white/10">
+          <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/8'}`}>
             <MessageSquare className="w-3.5 h-3.5" /> Chat
           </button>
-          <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-white/15 text-white border border-white/25' : 'bg-white/5 text-white/75'}`}>
+          <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/8'}`}>
             <ClipboardList className="w-3.5 h-3.5" /> Plans
           </button>
         </div>
@@ -231,7 +232,7 @@ export default function CoachPage() {
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-6">
-            <div className="card-gradient-border p-8 text-center">
+            <div className="bg-black rounded-2xl border border-white/10 p-8 text-center">
               <div className="p-4 rounded-full bg-amber-500/20 mb-4 mx-auto w-fit">
                 <Crown className="w-8 h-8 text-amber-400" />
               </div>
@@ -272,7 +273,7 @@ export default function CoachPage() {
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#08080c]" />
           </div>
           <div>
-            <h1 className="text-lg font-medium shimmer-text">AI Coach</h1>
+            <h1 className="text-lg font-medium shimmer-text">{coachName}</h1>
             <p className="text-xs text-emerald-400/80">Online</p>
           </div>
           {mindsetCtx && (
@@ -284,11 +285,11 @@ export default function CoachPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex px-6 gap-2 py-2 border-b border-white/15">
-        <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-white/15 text-white border border-white/25' : 'bg-white/5 text-white/75'}`}>
+      <div className="flex px-6 gap-2 py-2 border-b border-white/10">
+        <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/8'}`}>
           <MessageSquare className="w-3.5 h-3.5" /> Chat
         </button>
-        <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-white/15 text-white border border-white/25' : 'bg-white/5 text-white/75'}`}>
+        <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/8'}`}>
           <ClipboardList className="w-3.5 h-3.5" /> Plans
         </button>
       </div>
@@ -315,8 +316,8 @@ export default function CoachPage() {
           onClick={() => setChatMode('coach')}
           className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
             chatMode === 'coach'
-              ? 'bg-amber-500/20 border border-amber-500/30 text-amber-400'
-              : 'bg-white/5 border border-white/15 text-white/70 hover:bg-white/10'
+              ? 'bg-black border border-amber-500/30 text-amber-400'
+              : 'bg-black border border-white/8 text-white/60'
           }`}
         >
           Coach
@@ -325,8 +326,8 @@ export default function CoachPage() {
           onClick={() => setChatMode('accountability')}
           className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
             chatMode === 'accountability'
-              ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
-              : 'bg-white/5 border border-white/15 text-white/70 hover:bg-white/10'
+              ? 'bg-black border border-emerald-500/30 text-emerald-400'
+              : 'bg-black border border-white/8 text-white/60'
           }`}
         >
           Check-in
@@ -344,7 +345,7 @@ export default function CoachPage() {
                 <button
                   key={type.id}
                   onClick={() => sendMessage(CHECK_IN_PROMPTS[type.id], type.id)}
-                  className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all"
+                  className="flex items-center gap-2 p-3 rounded-xl bg-black border border-white/10 hover:border-white/20 transition-all"
                 >
                   <Icon className={`w-4 h-4 ${type.color}`} />
                   <span className="text-xs text-white/85">{type.label}</span>
@@ -371,10 +372,10 @@ export default function CoachPage() {
             )}
             <div className="flex flex-col">
               <div
-                className={`max-w-[80%] p-3.5 text-sm leading-relaxed card-gradient-border ${
+                className={`max-w-[80%] p-3.5 text-sm leading-relaxed rounded-2xl border border-white/10 ${
                   msg.role === 'user'
-                    ? 'text-white rounded-2xl rounded-br-md'
-                    : 'text-white/95 rounded-2xl rounded-bl-md'
+                    ? 'bg-black text-white rounded-br-md'
+                    : 'bg-black text-white/95 rounded-bl-md'
                 }`}
               >
                 {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
@@ -392,7 +393,7 @@ export default function CoachPage() {
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500/25 to-orange-500/25 border border-amber-500/15 flex items-center justify-center mr-2 mt-1 shrink-0">
               <Bot className="w-3.5 h-3.5 text-amber-400" />
             </div>
-            <div className="p-3.5 card-gradient-border rounded-2xl rounded-bl-md">
+            <div className="p-3.5 bg-black rounded-2xl rounded-bl-md border border-white/10">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
                 <span className="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
@@ -410,7 +411,7 @@ export default function CoachPage() {
                 key={qr.label}
                 aria-label={`Quick reply: ${qr.label}`}
                 onClick={() => sendMessage(qr.label)}
-                className="flex items-center gap-1.5 px-3.5 py-2 card-gradient-border text-sm text-white/95 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-black rounded-2xl border border-white/10 text-sm text-white/95 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <span>{qr.icon}</span>
                 <span>{qr.label}</span>
@@ -424,7 +425,7 @@ export default function CoachPage() {
 
       {/* Input */}
       <div className="px-6 pb-8 pt-4 border-t border-white/15 bg-black/80 backdrop-blur-xl">
-        <FeatureHint id="coach-intro" text="Ask anything — your AI coach adapts to your mindset" mode="once" />
+        <FeatureHint id="coach-intro" text={`Ask anything — ${coachName} adapts to your mindset`} mode="once" />
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}

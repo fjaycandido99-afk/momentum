@@ -52,20 +52,33 @@ export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: M
 
   if (compact) {
     return (
-      <div className="flex items-center gap-0.5">
-        {MOODS.map((m) => (
-          <button
-            key={m.value}
-            onClick={() => onSelect(m.value)}
-            className={`p-1.5 rounded-lg transition-all ${
-              mood === m.value
-                ? `ring-1.5 ${m.color} bg-white/15 scale-110`
-                : 'hover:bg-white/5 opacity-90'
-            }`}
-          >
-            <span className="text-lg">{m.emoji}</span>
-          </button>
-        ))}
+      <div className="flex items-center gap-1.5">
+        {MOODS.map((m) => {
+          const isSelected = mood === m.value
+          return (
+            <button
+              key={m.value}
+              onClick={() => onSelect(m.value)}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all ${
+                isSelected
+                  ? 'bg-white/15 scale-105'
+                  : 'hover:bg-white/5'
+              }`}
+            >
+              <span
+                className={`text-xl transition-all ${isSelected ? '' : 'grayscale opacity-60'}`}
+                style={isSelected ? undefined : { filter: 'grayscale(1)' }}
+              >
+                {m.emoji}
+              </span>
+              <span className={`text-[9px] font-medium transition-colors ${
+                isSelected ? 'text-white' : 'text-white/40'
+              }`}>
+                {m.label}
+              </span>
+            </button>
+          )
+        })}
       </div>
     )
   }
@@ -74,20 +87,28 @@ export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: M
     <div className="p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
       <p className="text-xs text-white uppercase tracking-wider mb-3 font-medium">How are you feeling?</p>
       <div className="flex items-center justify-between gap-1">
-        {MOODS.map((m) => (
-          <button
-            key={m.value}
-            onClick={() => onSelect(m.value)}
-            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all flex-1 ${
-              mood === m.value
-                ? `ring-2 ${m.color} bg-white/10 scale-105`
-                : 'hover:bg-white/5'
-            }`}
-          >
-            <span className="text-2xl">{m.emoji}</span>
-            <span className={`text-[10px] ${mood === m.value ? 'text-white' : 'text-white/85'}`}>{m.label}</span>
-          </button>
-        ))}
+        {MOODS.map((m) => {
+          const isSelected = mood === m.value
+          return (
+            <button
+              key={m.value}
+              onClick={() => onSelect(m.value)}
+              className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-all flex-1 ${
+                isSelected
+                  ? `ring-2 ${m.color} bg-white/10 scale-105`
+                  : 'hover:bg-white/5'
+              }`}
+            >
+              <span
+                className={`text-2xl transition-all ${isSelected ? '' : ''}`}
+                style={isSelected ? undefined : { filter: 'grayscale(1)', opacity: 0.5 }}
+              >
+                {m.emoji}
+              </span>
+              <span className={`text-[10px] font-medium ${isSelected ? 'text-white' : 'text-white/50'}`}>{m.label}</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Mini sparkline */}

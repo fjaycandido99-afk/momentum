@@ -132,8 +132,8 @@ export function MindsetSelectionScreen({ isReset }: MindsetSelectionScreenProps)
         </h1>
         <p className="text-white/85 text-sm max-w-[280px] mx-auto leading-relaxed">
           {isReset
-            ? 'Your AI coach, quotes, and journal will adapt to your new mindset.'
-            : 'Your philosophy shapes everything — AI coaching, quotes, journal prompts, and visuals.'}
+            ? 'Your mentor, quotes, and journal will adapt to your new mindset.'
+            : 'Your philosophy shapes everything — coaching, quotes, journal prompts, and visuals.'}
         </p>
       </div>
 

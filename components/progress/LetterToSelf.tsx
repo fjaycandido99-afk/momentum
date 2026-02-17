@@ -63,7 +63,7 @@ export function LetterToSelf() {
           </div>
           <div className="text-left">
             <h3 className="text-sm font-medium text-white">Letter to Self</h3>
-            <p className="text-[10px] text-white/70">AI-written from your journey</p>
+            <p className="text-[10px] text-white/70">Written from your journey</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

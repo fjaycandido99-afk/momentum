@@ -362,3 +362,50 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// DELETE - Clear journal fields for a date (keeps the DailyGuide row for other data)
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { date } = await request.json()
+    const targetDate = date ? new Date(date) : new Date()
+    targetDate.setHours(0, 0, 0, 0)
+
+    await prisma.dailyGuide.update({
+      where: {
+        user_id_date: {
+          user_id: user.id,
+          date: targetDate,
+        },
+      },
+      data: {
+        journal_win: null,
+        journal_gratitude: null,
+        journal_learned: null,
+        journal_intention: null,
+        journal_freetext: null,
+        journal_mood: null,
+        journal_prompt: null,
+        journal_ai_reflection: null,
+        journal_tags: [],
+        journal_dream: null,
+        journal_dream_interpretation: null,
+        journal_conversation: null,
+      },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Delete journal error:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete journal entry' },
+      { status: 500 }
+    )
+  }
+}

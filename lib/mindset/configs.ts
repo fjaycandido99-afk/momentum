@@ -14,6 +14,9 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptReferences: ['Marcus Aurelius', 'Epictetus', 'Seneca', 'Zeno of Citium'],
     backgroundPool: ['falling-sand', 'stone-ripples', 'hex', 'hourglass', 'columns', 'marble-veins', 'falling-leaves', 'pendulum', 'newtons-cradle'],
     astrologyEnabled: false,
+    coachName: 'The Sage',
+    insightName: 'Stoic Reflection',
+    meditationName: 'Inner Stillness',
   },
   existentialist: {
     id: 'existentialist',
@@ -28,6 +31,9 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptReferences: ['Albert Camus', 'Jean-Paul Sartre', 'Simone de Beauvoir', 'Soren Kierkegaard'],
     backgroundPool: ['nebula', 'neural', 'grid', 'void', 'dissolution'],
     astrologyEnabled: false,
+    coachName: 'The Guide',
+    insightName: 'Existential Mirror',
+    meditationName: 'The Void',
   },
   cynic: {
     id: 'cynic',
@@ -42,6 +48,9 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptReferences: ['Diogenes of Sinope', 'Antisthenes', 'Crates of Thebes'],
     backgroundPool: ['embers', 'cracks', 'circuit', 'lightning', 'erosion', 'cigar-smoke', 'sparks'],
     astrologyEnabled: false,
+    coachName: 'The Challenger',
+    insightName: 'Raw Truth',
+    meditationName: 'Stripped Silence',
   },
   hedonist: {
     id: 'hedonist',
@@ -56,6 +65,9 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptReferences: ['Epicurus', 'Lucretius', 'Metrodorus'],
     backgroundPool: ['petals', 'water-drops', 'neural', 'bubbles', 'candle-flames', 'dandelion-seeds'],
     astrologyEnabled: false,
+    coachName: 'The Muse',
+    insightName: 'Garden Thought',
+    meditationName: 'Ataraxia',
   },
   samurai: {
     id: 'samurai',
@@ -70,6 +82,9 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptReferences: ['Miyamoto Musashi', 'Yamamoto Tsunetomo (Hagakure)', 'Takuan Soho', 'Dogen Zenji'],
     backgroundPool: ['cherry-blossoms', 'ink-wash', 'fireflies', 'katana-slash', 'bamboo-forest', 'katana-sword', 'samurai-helmet', 'four-seasons'],
     astrologyEnabled: false,
+    coachName: 'The Sensei',
+    insightName: 'Warrior\'s Mirror',
+    meditationName: 'Zen Stillness',
   },
   scholar: {
     id: 'scholar',
@@ -84,9 +99,28 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     promptReferences: ['Carl Jung', 'Carl Sagan', 'Joseph Campbell', 'Alan Watts'],
     backgroundPool: ['constellation', 'wave', 'geometric', 'fireflies', 'grid', 'neural', 'hex', 'circuit', 'nebula', 'vortex', 'shooting-stars'],
     astrologyEnabled: true,
+    coachName: 'The Oracle',
+    insightName: 'Cosmic Insight',
+    meditationName: 'Astral Journey',
   },
 }
 
 export function getMindsetConfig(mindsetId: MindsetId): MindsetConfig {
   return MINDSET_CONFIGS[mindsetId]
+}
+
+/** Get the mindset-themed coach name, with fallback for unknown mindsets */
+export function getCoachName(mindsetId?: MindsetId | null): string {
+  if (mindsetId && MINDSET_CONFIGS[mindsetId]) return MINDSET_CONFIGS[mindsetId].coachName
+  return 'Your Mentor'
+}
+
+export function getInsightName(mindsetId?: MindsetId | null): string {
+  if (mindsetId && MINDSET_CONFIGS[mindsetId]) return MINDSET_CONFIGS[mindsetId].insightName
+  return 'Reflection'
+}
+
+export function getMeditationName(mindsetId?: MindsetId | null): string {
+  if (mindsetId && MINDSET_CONFIGS[mindsetId]) return MINDSET_CONFIGS[mindsetId].meditationName
+  return 'Guided Meditation'
 }

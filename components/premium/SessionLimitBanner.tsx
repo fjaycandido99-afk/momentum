@@ -22,7 +22,7 @@ export function SessionLimitBanner({ variant = 'full' }: SessionLimitBannerProps
         className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 cursor-pointer hover:bg-amber-500/15 transition-colors"
       >
         <Mic2 className="w-4 h-4 text-amber-400" />
-        <span className="text-sm text-white/95">Upgrade for AI voices</span>
+        <span className="text-sm text-white/95">Upgrade for guided voices</span>
         <Crown className="w-4 h-4 text-amber-400 ml-auto" />
       </div>
     )
@@ -37,10 +37,10 @@ export function SessionLimitBanner({ variant = 'full' }: SessionLimitBannerProps
           </div>
           <div className="flex-1">
             <h3 className="text-base font-semibold text-white mb-1">
-              Upgrade for AI Voices &amp; Coaching
+              Upgrade for Guided Voices &amp; Coaching
             </h3>
             <p className="text-white/95 text-sm mb-3">
-              You have full access to all modules as text. Upgrade for AI-generated voices, personalized coaching, and deeper insights.
+              You have full access to all modules as text. Upgrade for guided voices, personalized coaching, and deeper insights.
             </p>
             <button
               onClick={openUpgradeModal}
@@ -72,7 +72,7 @@ export function SessionLimitMessage() {
       >
         Upgrade to Premium
       </button>
-      {' '}for AI voices and coaching
+      {' '}for guided voices and coaching
     </p>
   )
 }

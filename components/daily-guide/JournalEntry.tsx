@@ -214,13 +214,13 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
               />
             </div>
 
-            {/* AI Insight — gated behind ai_reflections */}
+            {/* Mindset Insight — gated behind ai_reflections */}
             {reflection && canSeeReflections && (
               <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
                 <div className="flex items-start gap-2">
                   <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-[10px] font-medium tracking-wider text-indigo-400/70 uppercase mb-1">AI Insight</p>
+                    <p className="text-[10px] font-medium tracking-wider text-indigo-400/70 uppercase mb-1">Reflection</p>
                     <p className="text-sm text-white/95 leading-relaxed italic">{reflection}</p>
                   </div>
                 </div>
@@ -230,7 +230,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
               <div className="p-3 rounded-xl bg-white/5 border border-white/15">
                 <div className="flex items-center gap-2">
                   <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <p className="text-xs text-white/95">Upgrade for AI reflections on your journal entries</p>
+                  <p className="text-xs text-white/95">Upgrade for personalized reflections on your journal entries</p>
                 </div>
               </div>
             )}

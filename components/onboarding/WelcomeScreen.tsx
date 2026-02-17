@@ -30,7 +30,7 @@ export function WelcomeScreen({ onContinue }: WelcomeScreenProps) {
 
         {/* Subtitle */}
         <p className="text-white/75 text-sm max-w-xs mx-auto leading-relaxed mb-2">
-          Your AI-powered audio companion for growth, focus, and clarity.
+          Your audio companion for growth, focus, and clarity.
         </p>
 
         {/* Feature highlights */}
@@ -38,7 +38,7 @@ export function WelcomeScreen({ onContinue }: WelcomeScreenProps) {
           {[
             { text: 'Personalized daily guided sessions' },
             { text: 'Ambient soundscapes and focus music' },
-            { text: 'AI coaching adapted to your philosophy' },
+            { text: 'Coaching adapted to your philosophy' },
           ].map((item, i) => (
             <div
               key={i}

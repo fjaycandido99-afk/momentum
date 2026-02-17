@@ -231,7 +231,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
               )}
             </div>
             <div className="flex-1 text-left">
-              <p className="text-sm font-medium text-white">AI Session</p>
+              <p className="text-sm font-medium text-white">Guided Session</p>
               <p className="text-[10px] text-white/60">Personalized wellness plan</p>
             </div>
             {!isPremium && (
@@ -279,7 +279,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-400" />
-            <h3 className="text-sm font-medium text-white">Custom AI Session</h3>
+            <h3 className="text-sm font-medium text-white">Custom Session</h3>
           </div>
           <button onClick={resetSession} className="p-1 rounded-full hover:bg-white/10">
             <X className="w-4 h-4 text-white/60" />
@@ -388,7 +388,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-400" />
-          <h3 className="text-sm font-medium text-white">Your AI Session</h3>
+          <h3 className="text-sm font-medium text-white">Your Session</h3>
         </div>
         <button onClick={resetSession} className="p-1 rounded-full hover:bg-white/10">
           <X className="w-4 h-4 text-white/60" />

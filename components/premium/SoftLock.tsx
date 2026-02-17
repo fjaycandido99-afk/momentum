@@ -232,7 +232,7 @@ export function AICoachNudge({ isVisible, onDismiss }: AICoachNudgeProps) {
 
         {/* Content */}
         <p className="text-sm text-white/90 leading-relaxed">
-          Need guidance? Your <span className="text-amber-400 font-medium">AI Coach</span> can help...
+          Need guidance? Your <span className="text-amber-400 font-medium">Mentor</span> can help...
         </p>
 
         {/* Arrow pointing to coach button */}

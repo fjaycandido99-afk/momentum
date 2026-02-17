@@ -16,6 +16,12 @@ export interface MindsetConfig {
   backgroundPool: string[]
   /** Only Scholar mindset enables astrology features */
   astrologyEnabled: boolean
+  /** Mindset-themed name for the coach feature */
+  coachName: string
+  /** Mindset-themed name for AI-generated reflections */
+  insightName: string
+  /** Mindset-themed name for guided meditation */
+  meditationName: string
 }
 
 export const MINDSET_IDS: MindsetId[] = [

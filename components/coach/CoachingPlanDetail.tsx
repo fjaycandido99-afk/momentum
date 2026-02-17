@@ -64,7 +64,7 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
           const isExpanded = expandedDay === day.day
 
           return (
-            <div key={day.day} className="rounded-2xl card-gradient-border overflow-hidden">
+            <div key={day.day} className="rounded-2xl bg-black border border-white/10 overflow-hidden">
               <button
                 onClick={() => setExpandedDay(isExpanded ? null : day.day)}
                 className="w-full flex items-center gap-3 p-4 press-scale"

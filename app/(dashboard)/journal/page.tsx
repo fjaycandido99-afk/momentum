@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import {
   PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target,
   Sparkles, BookOpen, Calendar, X, Crown, Lock, Shuffle, ChevronDown,
-  MessageCircle, Moon, Send, Save, Search, Download,
+  MessageCircle, Moon, Send, Save, Search, Download, Trash2,
 } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
@@ -420,6 +420,64 @@ function JournalContent() {
 
   const handleSave = handleSaveInternal
 
+  // Delete entry
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteConfirmDate, setDeleteConfirmDate] = useState<string | null>(null)
+
+  const handleDeleteEntry = useCallback(async (targetDate: Date) => {
+    setIsDeleting(true)
+    try {
+      const res = await fetch('/api/daily-guide/journal', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: targetDate.toISOString() }),
+      })
+      if (res.ok) {
+        // If deleting the currently viewed entry, clear form state
+        if (targetDate.toDateString() === selectedDate.toDateString()) {
+          setWin('')
+          setGratitude('')
+          setIntention('')
+          setFreeText('')
+          setMood(null)
+          setReflection(null)
+          setDreamText('')
+          setDreamInterpretation(null)
+          setDreamSaved(false)
+          setConversation([])
+          setJournalTags([])
+          setIsSaved(false)
+          setWritingActive(false)
+        }
+        setShowDeleteConfirm(false)
+        setDeleteConfirmDate(null)
+        // Refresh stats
+        const end = new Date()
+        const start = new Date()
+        start.setDate(start.getDate() - 30)
+        const refreshRes = await fetch(
+          `/api/daily-guide/journal?startDate=${start.toISOString()}&endDate=${end.toISOString()}`
+        )
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json()
+          const entries: JournalEntry[] = refreshData.entries || []
+          setAllEntries(entries)
+          const withContent = entries.filter(
+            (e) => e.journal_win || e.journal_gratitude || e.journal_intention || e.journal_freetext
+          )
+          setJournalStats(calculateJournalStats(withContent))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to delete journal:', error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [selectedDate])
+
+  const handleDelete = useCallback(() => handleDeleteEntry(selectedDate), [handleDeleteEntry, selectedDate])
+
   const goDay = (offset: number) => {
     const next = new Date(selectedDate)
     next.setDate(next.getDate() + offset)
@@ -691,32 +749,33 @@ function JournalContent() {
         </div>
       </div>
 
-      {/* ── Mode tabs + mood (compact, one section) ── */}
-      <div className="px-6 pt-2 pb-3 mb-2 border-b border-white/15">
-        <div className="flex items-center justify-between gap-3">
-          {/* Mode tabs */}
-          <div className="flex gap-1 overflow-x-auto no-scrollbar p-0.5 rounded-lg bg-white/10">
-            {([
-              { id: 'guided' as JournalMode, label: 'Guided', icon: <BookOpen className="w-3 h-3" /> },
-              { id: 'freewrite' as JournalMode, label: 'Free', icon: <PenLine className="w-3 h-3" /> },
-              { id: 'conversational' as JournalMode, label: 'Chat', icon: <MessageCircle className="w-3 h-3" /> },
-              { id: 'dream' as JournalMode, label: 'Dream', icon: <Moon className="w-3 h-3" /> },
-            ]).map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setMode(tab.id)}
-                className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-all ${
-                  mode === tab.id
-                    ? 'bg-white/25 text-white shadow-sm'
-                    : 'text-white/85 hover:text-white'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          {/* Compact mood */}
+      {/* ── Mode tabs + mood (stacked for mobile) ── */}
+      <div className="px-6 pt-2 pb-3 mb-2 border-b border-white/15 space-y-2.5">
+        {/* Mode tabs — full width */}
+        <div className="flex gap-1 p-0.5 rounded-lg bg-white/10">
+          {([
+            { id: 'guided' as JournalMode, label: 'Guided', icon: <BookOpen className="w-3.5 h-3.5" /> },
+            { id: 'freewrite' as JournalMode, label: 'Free', icon: <PenLine className="w-3.5 h-3.5" /> },
+            { id: 'conversational' as JournalMode, label: 'Chat', icon: <MessageCircle className="w-3.5 h-3.5" /> },
+            { id: 'dream' as JournalMode, label: 'Dream', icon: <Moon className="w-3.5 h-3.5" /> },
+          ]).map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setMode(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-md transition-all ${
+                mode === tab.id
+                  ? 'bg-white/25 text-white shadow-sm'
+                  : 'text-white/85 hover:text-white'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {/* Mood selector — full width */}
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] text-white/50 uppercase tracking-wider font-medium">Mood</span>
           <MoodSelector
             mood={mood}
             onSelect={(m) => { setMood(m); setIsSaved(false) }}
@@ -1076,31 +1135,42 @@ function JournalContent() {
           </div>
         )}
 
-        {/* Save Button — only for guided and freewrite modes */}
+        {/* Save + Delete — only for guided and freewrite modes */}
         {!isLoading && (mode === 'guided' || mode === 'freewrite') && (
-          <div className="mt-4">
-            <button
-              onClick={handleSave}
-              disabled={!hasContent && !mood || isSaving || isSaved}
-              className={`w-full py-3 rounded-xl bg-white/8 hover:bg-white/12 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                isSaved
-                  ? 'text-emerald-400'
-                  : hasContent || mood
-                  ? 'text-white'
-                  : 'text-white/85 cursor-not-allowed'
-              }`}
-            >
-              {isSaving ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
-              ) : isSaved ? (
-                <><BookOpen className="w-4 h-4" /> Saved</>
-              ) : (
-                'Save Entry'
+          <div className="mt-4 space-y-2">
+            <div className="flex gap-2">
+              <button
+                onClick={handleSave}
+                disabled={!hasContent && !mood || isSaving || isSaved}
+                className={`flex-1 py-3 rounded-xl bg-white/8 hover:bg-white/12 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  isSaved
+                    ? 'text-emerald-400'
+                    : hasContent || mood
+                    ? 'text-white'
+                    : 'text-white/85 cursor-not-allowed'
+                }`}
+              >
+                {isSaving ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                ) : isSaved ? (
+                  <><BookOpen className="w-4 h-4" /> Saved</>
+                ) : (
+                  'Save Entry'
+                )}
+              </button>
+              {isSaved && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="px-3 py-3 rounded-xl bg-white/5 hover:bg-red-500/15 text-white/40 hover:text-red-400 transition-all"
+                  aria-label="Delete entry"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               )}
-            </button>
+            </div>
             {/* Post-save stats */}
             {isSaved && (wordCount > 0 || streak > 0) && (
-              <p className="text-center text-xs text-white/40 mt-2">
+              <p className="text-center text-xs text-white/40">
                 {wordCount > 0 && <>{wordCount} words today</>}
                 {wordCount > 0 && streak > 0 && ' | '}
                 {streak > 0 && <>{streak}-day streak</>}
@@ -1109,13 +1179,39 @@ function JournalContent() {
           </div>
         )}
 
-        {/* AI Insight */}
+        {/* Delete Confirmation */}
+        {showDeleteConfirm && (
+          <div className="mt-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 animate-fade-in">
+            <p className="text-sm text-white/90 mb-3">Delete this journal entry? This can't be undone.</p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Deleting...</>
+                ) : (
+                  <><Trash2 className="w-3.5 h-3.5" /> Delete</>
+                )}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2.5 rounded-lg bg-white/8 hover:bg-white/12 text-white/70 text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Mindset Insight */}
         {reflection && (
           <div className="mt-4 p-4 rounded-2xl bg-black border border-white/8">
             <div className="flex items-start gap-2">
               <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] font-medium tracking-wider text-indigo-400 uppercase mb-1">AI Insight</p>
+                <p className="text-[10px] font-medium tracking-wider text-indigo-400 uppercase mb-1">{mindsetCtx?.config?.insightName || 'Reflection'}</p>
                 <p className="text-sm text-white leading-relaxed italic">{reflection}</p>
               </div>
             </div>
@@ -1217,6 +1313,7 @@ function JournalContent() {
               <div className="space-y-3">
                 {visibleEntries.map((entry, i) => {
                   const entryDate = new Date(entry.date)
+                  const entryDateStr = entryDate.toISOString().split('T')[0]
                   const label = entryDate.toLocaleDateString('en-US', {
                     weekday: 'short',
                     month: 'short',
@@ -1224,46 +1321,77 @@ function JournalContent() {
                   })
                   const isSelected = entryDate.toDateString() === selectedDate.toDateString()
                   const moodEmoji = entry.journal_mood ? MOOD_EMOJI[entry.journal_mood] : null
+                  const isConfirmingDelete = deleteConfirmDate === entryDateStr
 
                   return (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedDate(entryDate)}
-                      className={`w-full text-left p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all ${
-                        isSelected
-                          ? 'ring-1 ring-amber-500/40'
-                          : 'hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <p className={`text-xs ${isSelected ? 'text-amber-400' : 'text-white/90'}`}>
-                          {label}
-                        </p>
-                        {moodEmoji && <span className="text-sm">{moodEmoji}</span>}
-                      </div>
-                      {entry.journal_freetext ? (
-                        <p className="text-sm text-white line-clamp-2">{entry.journal_freetext}</p>
-                      ) : entry.journal_win ? (
-                        <p className="text-sm text-white line-clamp-2">{entry.journal_win}</p>
-                      ) : entry.journal_gratitude ? (
-                        <p className="text-sm text-white line-clamp-2 italic">{entry.journal_gratitude}</p>
-                      ) : null}
-                      <div className="flex items-center gap-2 mt-2">
-                        {entry.journal_freetext && <span className="text-[10px] text-cyan-400">✎ Free Write</span>}
-                        {entry.journal_win && <span className="text-[10px] text-amber-400">✦ Learned</span>}
-                        {entry.journal_gratitude && <span className="text-[10px] text-pink-400">♥ Grateful</span>}
-                        {entry.journal_intention && <span className="text-[10px] text-purple-400">◎ Intention</span>}
-                      </div>
-                      {entry.journal_tags && entry.journal_tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {entry.journal_tags.map((tag, ti) => (
-                            <span key={ti} className="px-1.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/20 text-[9px] text-indigo-300">
-                              {tag}
+                    <div key={i} className="relative">
+                      <button
+                        onClick={() => setSelectedDate(entryDate)}
+                        className={`w-full text-left p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all ${
+                          isSelected
+                            ? 'ring-1 ring-amber-500/40'
+                            : 'hover:bg-white/5'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className={`text-xs ${isSelected ? 'text-amber-400' : 'text-white/90'}`}>
+                            {label}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            {moodEmoji && <span className="text-sm" style={!entry.journal_mood || entry.journal_mood === selectedDate.toDateString() ? undefined : { filter: 'grayscale(1)', opacity: 0.5 }}>{moodEmoji}</span>}
+                            <span
+                              role="button"
+                              onClick={(e) => { e.stopPropagation(); setDeleteConfirmDate(isConfirmingDelete ? null : entryDateStr) }}
+                              className="p-1 -mr-1 rounded-lg hover:bg-red-500/15 text-white/25 hover:text-red-400 transition-colors"
+                              aria-label="Delete entry"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
                             </span>
-                          ))}
+                          </div>
+                        </div>
+                        {entry.journal_freetext ? (
+                          <p className="text-sm text-white line-clamp-2">{entry.journal_freetext}</p>
+                        ) : entry.journal_win ? (
+                          <p className="text-sm text-white line-clamp-2">{entry.journal_win}</p>
+                        ) : entry.journal_gratitude ? (
+                          <p className="text-sm text-white line-clamp-2 italic">{entry.journal_gratitude}</p>
+                        ) : null}
+                        <div className="flex items-center gap-2 mt-2">
+                          {entry.journal_freetext && <span className="text-[10px] text-cyan-400">✎ Free Write</span>}
+                          {entry.journal_win && <span className="text-[10px] text-amber-400">✦ Learned</span>}
+                          {entry.journal_gratitude && <span className="text-[10px] text-pink-400">♥ Grateful</span>}
+                          {entry.journal_intention && <span className="text-[10px] text-purple-400">◎ Intention</span>}
+                        </div>
+                        {entry.journal_tags && entry.journal_tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {entry.journal_tags.map((tag, ti) => (
+                              <span key={ti} className="px-1.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/20 text-[9px] text-indigo-300">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </button>
+                      {/* Inline delete confirmation */}
+                      {isConfirmingDelete && (
+                        <div className="mt-1.5 flex gap-2 animate-fade-in">
+                          <button
+                            onClick={() => handleDeleteEntry(entryDate)}
+                            disabled={isDeleting}
+                            className="flex-1 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            {isDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirmDate(null)}
+                            className="flex-1 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-white/60 text-xs font-medium transition-colors"
+                          >
+                            Cancel
+                          </button>
                         </div>
                       )}
-                    </button>
+                    </div>
                   )
                 })}
 
