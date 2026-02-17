@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Sparkles, Bot, BarChart3, Compass, Play, Music } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Bot, BarChart3, Compass } from 'lucide-react'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { useHomeAudio } from '@/contexts/HomeAudioContext'
@@ -18,7 +18,6 @@ import { MotivationSection } from './MotivationSection'
 import { LazyGenreSection } from './LazyGenreSection'
 import { PathChallengeBanner } from './PathChallengeBanner'
 import { AIMeditationPlayer } from './AIMeditationPlayer'
-import { ContinueListeningCard } from './ContinueListeningCard'
 import { WelcomeBackCard } from './WelcomeBackCard'
 import { HeroCarousel } from './HeroCarousel'
 import { SavedMotivationSection } from './SavedMotivationSection'
@@ -32,21 +31,17 @@ import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { FREEMIUM_LIMITS } from '@/lib/subscription-constants'
-import { PreviewPaywall, PreviewTimer, usePreview, AICoachNudge, useCoachNudge } from '@/components/premium/SoftLock'
+import { PreviewPaywall, PreviewTimer, usePreview } from '@/components/premium/SoftLock'
 import { useScrollReveal, useParallax, useMagneticHover, useRippleBurst } from '@/hooks/useHomeAnimations'
 import { useSectionTransitions } from '@/hooks/useSectionTransitions'
 import { useScrollHeader } from '@/hooks/useScrollHeader'
 import { useListeningMilestones } from '@/hooks/useListeningMilestones'
 import { LongPressPreview } from './LongPressPreview'
 import { WellnessWidget } from './WellnessWidget'
-import { ResumeGuideCard } from './ResumeGuideCard'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { PathContentSection } from './PathContentSection'
 import { DailyIntentionCard } from './DailyIntentionCard'
 import { DailyProgressRing } from './DailyProgressRing'
-import { SocialProofBanner } from './SocialProofBanner'
-import { TomorrowPreview } from './TomorrowPreview'
-import { StreakFreezeIndicator } from './StreakFreezeIndicator'
 import { useToast } from '@/contexts/ToastContext'
 import { usePreferences, useJournalMood, useMotivationVideos, useFavorites, useWelcomeStatus, useGamificationStatus } from '@/hooks/useHomeSWR'
 import { useListeningStats, checkAudioAchievements } from '@/hooks/useListeningStats'
@@ -185,12 +180,6 @@ export function ImmersiveHome() {
     onPreviewEnd: handlePreviewEnd,
     previewDuration: FREEMIUM_LIMITS.previewSeconds,
   })
-
-  // AI Coach nudge
-  const { showNudge, dismissNudge } = useCoachNudge(
-    isPremium ? Infinity : FREEMIUM_LIMITS.coachNudgeDelayMs
-  )
-
 
   // Hamburger menu
   const [showMenu, setShowMenu] = useState(false)
@@ -353,7 +342,7 @@ export function ImmersiveHome() {
   const { journalData, journalMood, journalLoading, moodBefore, energyLevel, hasJournaledToday, modulesCompletedToday, dailyIntention } = useJournalMood(today)
 
   // SWR: Gamification status (for bonus, freezes)
-  const { dailyBonusClaimed, streakFreezes, freezeUsedToday, lastStreakLost } = useGamificationStatus()
+  const { dailyBonusClaimed, streakFreezes } = useGamificationStatus()
 
   // Adjust mode based on journal mood
   useEffect(() => {
@@ -1030,13 +1019,6 @@ export function ImmersiveHome() {
         />
       )}
 
-      {/* Streak Freeze Indicator */}
-      <StreakFreezeIndicator
-        freezeCount={streakFreezes}
-        freezeUsedToday={freezeUsedToday}
-        streakLost={lastStreakLost}
-      />
-
       {/* Daily Intention Card */}
       <DailyIntentionCard dailyIntention={dailyIntention} today={today} />
 
@@ -1106,94 +1088,8 @@ export function ImmersiveHome() {
           />
         )
 
-        // Slide 4: Featured Motivation
-        {
-          const video = motivationVideos[0]
-          if (video) {
-            const bg = backgrounds[0]
-            slides.push(
-              <button
-                key="feat-motiv"
-                onClick={() => handlePlayMotivation(video, 0)}
-                className="relative w-full text-left rounded-2xl overflow-hidden border border-white/[0.08] group press-scale h-full"
-              >
-                {bg && <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
-                <div className="relative z-10 p-5 flex flex-col justify-between h-full">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-orange-500/20 backdrop-blur-sm">
-                      <Sparkles className="w-5 h-5 text-orange-400" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold text-orange-400 uppercase tracking-wider">Featured Motivation</p>
-                      <p className="text-xs text-white/75">{featuredTopic}</p>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <p className="text-sm font-medium text-white line-clamp-2 mb-2">{video.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-white/85">
-                      <Play className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
-                      <span>Tap to play</span>
-                    </div>
-                  </div>
-                </div>
-              </button>
-            )
-          }
-        }
-
-        // Slide 4: Featured Music
-        {
-          const firstGenre = MUSIC_GENRES[0]
-          const musicVids = genreVideos[firstGenre.id]
-          const musicVideo = musicVids?.[0]
-          if (musicVideo) {
-            const gBgs = genreBackgrounds[firstGenre.id] || []
-            const bg = gBgs[0] || backgrounds[2]
-            slides.push(
-              <button
-                key="feat-music"
-                onClick={() => handlePlayMusic(musicVideo, 0, firstGenre.id, firstGenre.word)}
-                className="relative w-full text-left rounded-2xl overflow-hidden border border-white/[0.08] group press-scale h-full"
-              >
-                {bg && <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
-                <div className="relative z-10 p-5 flex flex-col justify-between h-full">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-cyan-500/20 backdrop-blur-sm">
-                      <Music className="w-5 h-5 text-cyan-400" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider">Featured Music</p>
-                      <p className="text-xs text-white/75">{firstGenre.word}</p>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <p className="text-sm font-medium text-white line-clamp-2 mb-2">{musicVideo.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-white/85">
-                      <Play className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400" />
-                      <span>Tap to play</span>
-                    </div>
-                  </div>
-                </div>
-              </button>
-            )
-          }
-        }
-
         return <HeroCarousel>{slides}</HeroCarousel>
       })()}
-
-
-      {/* Social Proof — floating pill on left side */}
-      <SocialProofBanner />
-
-      {/* Resume Daily Guide (#9 — Session Continuity) */}
-      <ResumeGuideCard
-        modulesCompleted={modulesCompletedToday}
-        totalModules={4}
-        onResume={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
-      />
 
 
       {/* Smart Nudge — shows after 30s idle when not playing audio */}
@@ -1238,29 +1134,6 @@ export function ImmersiveHome() {
           case 'motivation':
             return (
               <React.Fragment key="motivation">
-                {/* Continue Listening (when paused mid-motivation) */}
-                {audioState.backgroundMusic && !audioState.musicPlaying && audioState.userPausedMusic
-                  && audioState.currentPlaylist?.type === 'motivation' && audioState.musicCurrentTime > 0 && (
-                  <ContinueListeningCard
-                    video={audioState.currentPlaylist.videos[audioState.currentPlaylist.index] || { id: '', title: audioState.backgroundMusic.label, youtubeId: audioState.backgroundMusic.youtubeId, channel: '' }}
-                    currentTime={audioState.musicCurrentTime}
-                    duration={audioState.musicDuration}
-                    background={backgrounds[audioState.currentPlaylist.index % backgrounds.length]}
-                    onResume={() => dispatch({ type: 'RESUME_MUSIC' })}
-                    onOpenPlayer={() => {
-                      const pl = audioState.currentPlaylist!
-                      const currentVideo = pl.videos[pl.index]
-                      if (currentVideo) {
-                        const bgs = getTodaysBackgrounds()
-                        dispatch({
-                          type: 'OPEN_FULLSCREEN_PLAYER',
-                          playingSound: { word: audioState.backgroundMusic!.label, color: 'from-white/[0.06] to-white/[0.02]', youtubeId: currentVideo.youtubeId, backgroundImage: bgs[pl.index % bgs.length] },
-                        })
-                      }
-                    }}
-                  />
-                )}
-
                 <div className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
                   <MotivationSection
                     videos={featuredMotivationVideos}
@@ -1380,9 +1253,6 @@ export function ImmersiveHome() {
       {/* Daily Spark */}
       {!showMorningFlow && <DailySpark />}
 
-      {/* Tomorrow Preview */}
-      {!showMorningFlow && <TomorrowPreview />}
-
       {/* Floating AI Coach Button */}
       <Link
         href="/coach"
@@ -1390,11 +1260,6 @@ export function ImmersiveHome() {
       >
         <Bot className="w-6 h-6 text-amber-400" />
       </Link>
-
-      {/* AI Coach Nudge */}
-      {!isPremium && (
-        <AICoachNudge isVisible={showNudge} onDismiss={dismissNudge} />
-      )}
 
       {/* Preview Timer */}
       {isPreviewActive && <PreviewTimer secondsLeft={secondsLeft} />}

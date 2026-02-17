@@ -23,7 +23,7 @@ export function FocusModeToolbar({
   const chars = text.length
 
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 bg-black/95 backdrop-blur-sm border-t border-white/15 safe-area-pb">
+    <div className="flex items-center justify-between px-4 py-2.5 bg-black/95 backdrop-blur-sm border-t border-white/8 safe-area-pb">
       {/* Left: close + label */}
       <div className="flex items-center gap-3">
         <button
@@ -40,7 +40,7 @@ export function FocusModeToolbar({
 
       {/* Center: word count + autosave */}
       <div className="flex items-center gap-2 text-[11px] text-white/60">
-        <span>{words} {words === 1 ? 'word' : 'words'}</span>
+        <span><span className="font-medium text-white/70">{words}</span> {words === 1 ? 'word' : 'words'}</span>
         <span className="text-white/20">|</span>
         <span>{chars}</span>
         {autosaveStatus === 'saving' && (

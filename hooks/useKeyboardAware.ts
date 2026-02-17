@@ -8,6 +8,7 @@ export function useKeyboardAware() {
   )
 
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wasOpenRef = useRef(false)
 
   useEffect(() => {
     const vv = window.visualViewport
@@ -30,6 +31,9 @@ export function useKeyboardAware() {
         const diff = fullHeight - vpHeight
 
         const isOpen = diff > 100
+        const justOpened = isOpen && !wasOpenRef.current
+        wasOpenRef.current = isOpen
+
         setKeyboardOpen(isOpen)
         setKeyboardHeight(isOpen ? diff : 0)
         setViewportHeight(vpHeight)
@@ -43,8 +47,8 @@ export function useKeyboardAware() {
           `${vpHeight}px`,
         )
 
-        // Scroll focused element into view using calculated offset (not scrollIntoView)
-        if (isOpen && document.activeElement instanceof HTMLElement) {
+        // Only scroll into view when keyboard first opens, not on every resize
+        if (justOpened && document.activeElement instanceof HTMLElement) {
           const el = document.activeElement
           const rect = el.getBoundingClientRect()
           // Target: place focused element 40% from top of visual viewport
