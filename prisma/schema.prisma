@@ -274,6 +274,22 @@ model DailyGuide {
   grounding_audio    String? // Base64 audio
   grounding_duration Int?
 
+  stress_relief_script      String?
+  stress_relief_audio       String?
+  stress_relief_duration    Int?
+
+  focus_meditation_script   String?
+  focus_meditation_audio    String?
+  focus_meditation_duration Int?
+
+  self_compassion_script    String?
+  self_compassion_audio     String?
+  self_compassion_duration  Int?
+
+  confidence_script         String?
+  confidence_audio          String?
+  confidence_duration       Int?
+
   // Day-type specific Morning Prime voices (generated for all types daily)
   work_prime_script   String? // Work day morning intention
   work_prime_audio    String? // Base64 audio

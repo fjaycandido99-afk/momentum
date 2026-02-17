@@ -45,18 +45,15 @@ export const VOICE_GUIDES = [
   { id: 'gratitude', name: 'Gratitude', tagline: 'Appreciate the moment', icon: Heart, color: 'from-rose-500/40 to-pink-500/40' },
   { id: 'sleep', name: 'Sleep', tagline: 'Peaceful sleep', icon: Moon, color: 'from-slate-500/40 to-indigo-500/40' },
   { id: 'anxiety', name: 'Grounding', tagline: 'Find your center', icon: Anchor, color: 'from-emerald-500/40 to-teal-500/40' },
+  { id: 'stress_relief', name: 'Stress Relief', tagline: 'Let go of tension', icon: Leaf, color: 'from-teal-500/40 to-emerald-500/40' },
+  { id: 'focus_meditation', name: 'Focus', tagline: 'Sharpen your mind', icon: Target, color: 'from-blue-500/40 to-cyan-500/40' },
+  { id: 'self_compassion', name: 'Self-Love', tagline: 'Be kind to yourself', icon: HeartHandshake, color: 'from-rose-500/40 to-pink-500/40' },
+  { id: 'confidence', name: 'Confidence', tagline: 'Stand in your power', icon: Shield, color: 'from-yellow-500/40 to-amber-500/40' },
 ]
 
 // Centralized valid soundscape IDs — used by smart-session API validation and anywhere else
 export const VALID_SOUNDSCAPE_IDS = ['focus', 'relax', 'sleep', 'energy', 'rain', 'ocean', 'forest', 'fire', 'thunder', 'night', 'wind', 'stream', 'cafe', 'piano', 'cosmic', 'astral', 'starlight'] as const
 
-// AI meditation themes (unique to AI — not overlapping with voice guides)
-export const AI_MEDITATION_THEMES = [
-  { id: 'stress-relief', name: 'Stress Relief', icon: Leaf, color: 'from-teal-500/30 to-emerald-500/30' },
-  { id: 'focus', name: 'Focus', icon: Target, color: 'from-blue-500/30 to-cyan-500/30' },
-  { id: 'self-compassion', name: 'Self-Love', icon: HeartHandshake, color: 'from-rose-500/30 to-pink-500/30' },
-  { id: 'confidence', name: 'Confidence', icon: Shield, color: 'from-yellow-500/30 to-amber-500/30' },
-] as const
 
 export const BACKGROUND_IMAGES = [4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29,30,31].map(i => `/backgrounds/bg${i}.jpg`)
 

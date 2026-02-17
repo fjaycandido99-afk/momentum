@@ -18,7 +18,7 @@ function getGroq() {
 }
 
 // Voice guide types
-type VoiceGuideType = 'breathing' | 'affirmation' | 'gratitude' | 'sleep' | 'grounding'
+type VoiceGuideType = 'breathing' | 'affirmation' | 'gratitude' | 'sleep' | 'grounding' | 'stress_relief' | 'focus_meditation' | 'self_compassion' | 'confidence'
 
 // Day-type specific voice types
 type DayTypeVoiceType = 'work_prime' | 'off_prime' | 'recovery_prime' | 'work_close' | 'off_close' | 'recovery_close'
@@ -160,7 +160,7 @@ async function getUserTone(userId: string): Promise<string> {
 }
 
 // All valid voice types
-const VALID_VOICE_TYPES = ['breathing', 'affirmation', 'gratitude', 'sleep', 'grounding']
+const VALID_VOICE_TYPES = ['breathing', 'affirmation', 'gratitude', 'sleep', 'grounding', 'stress_relief', 'focus_meditation', 'self_compassion', 'confidence']
 const VALID_DAY_TYPE_VOICES = ['work_prime', 'off_prime', 'recovery_prime', 'work_close', 'off_close', 'recovery_close']
 
 // GET - Fetch today's voices (library-first, no on-demand ElevenLabs)
@@ -254,7 +254,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Return all voice data status
-    const voiceTypes: VoiceGuideType[] = ['breathing', 'affirmation', 'gratitude', 'sleep', 'grounding']
+    const voiceTypes: VoiceGuideType[] = ['breathing', 'affirmation', 'gratitude', 'sleep', 'grounding', 'stress_relief', 'focus_meditation', 'self_compassion', 'confidence']
     const voices = voiceTypes.map(t => ({
       type: t,
       hasScript: !!guide?.[`${t}_script` as keyof typeof guide],

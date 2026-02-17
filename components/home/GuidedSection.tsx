@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
-import { VOICE_GUIDES, AI_MEDITATION_THEMES } from './home-types'
+import { VOICE_GUIDES } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
 
@@ -147,10 +147,7 @@ const GUIDE_PATTERNS: Record<string, React.CSSProperties> = {
     </svg>`),
     backgroundSize: 'cover', backgroundPosition: 'center',
   },
-}
-
-const AI_PATTERNS: Record<string, React.CSSProperties> = {
-  'stress-relief': {
+  stress_relief: {
     backgroundImage: svgBg(`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="208" fill="none">
       <g stroke="${S}0.65)" stroke-width="0.8">
         <path d="M0,30 Q40,10 80,30 T160,30"/><path d="M0,55 Q40,35 80,55 T160,55"/>
@@ -175,7 +172,7 @@ const AI_PATTERNS: Record<string, React.CSSProperties> = {
     </svg>`),
     backgroundSize: 'cover', backgroundPosition: 'center',
   },
-  focus: {
+  focus_meditation: {
     backgroundImage: svgBg(`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="208" fill="none">
       <g stroke="${S}0.4)" stroke-width="0.5">
         <line x1="0" y1="20" x2="160" y2="20"/><line x1="0" y1="40" x2="160" y2="40"/>
@@ -207,7 +204,7 @@ const AI_PATTERNS: Record<string, React.CSSProperties> = {
     </svg>`),
     backgroundSize: 'cover', backgroundPosition: 'center',
   },
-  'self-compassion': {
+  self_compassion: {
     backgroundImage: svgBg(`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="208" fill="none">
       <g stroke="${S}0.6)" stroke-width="0.8">
         <circle cx="50" cy="55" r="40"/><circle cx="110" cy="65" r="35"/>
@@ -294,6 +291,34 @@ const GUIDE_ANIM_CONFIG: Record<string, { pattern: string; patternTiming: string
     overlayTiming: '4s ease-in-out infinite',
     overlayStyle: { background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.08) 48%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 52%, transparent 100%)' },
   },
+  stress_relief: {
+    pattern: 'guide-stress-pattern',
+    patternTiming: '7s ease-in-out infinite',
+    overlay: 'guide-stress-wave',
+    overlayTiming: '5s ease-in-out infinite',
+    overlayStyle: { background: 'radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)' },
+  },
+  focus_meditation: {
+    pattern: 'guide-focus-pattern',
+    patternTiming: '12s linear infinite',
+    overlay: 'guide-focus-ring',
+    overlayTiming: '3s ease-in-out infinite',
+    overlayStyle: { background: 'radial-gradient(circle at 50% 43%, rgba(255,255,255,0.12) 0%, transparent 35%)' },
+  },
+  self_compassion: {
+    pattern: 'guide-selfcomp-pattern',
+    patternTiming: '9s ease-in-out infinite',
+    overlay: 'guide-selfcomp-glow',
+    overlayTiming: '4s ease-in-out infinite',
+    overlayStyle: { background: 'radial-gradient(circle at 50% 45%, rgba(255,255,255,0.14) 0%, transparent 40%)' },
+  },
+  confidence: {
+    pattern: 'guide-conf-pattern',
+    patternTiming: '6s ease-in-out infinite',
+    overlay: 'guide-conf-rise',
+    overlayTiming: '3.5s ease-in-out infinite',
+    overlayStyle: { background: 'linear-gradient(0deg, transparent 0%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.15) 50%, transparent 70%)' },
+  },
 }
 
 interface GuidedSectionProps {
@@ -302,11 +327,9 @@ interface GuidedSectionProps {
   loadingGuide: string | null
   isContentFree: (type: FreemiumContentType, id: number | string) => boolean
   onPlay: (guideId: string, name: string, isLocked: boolean) => void
-  onPlayAIMeditation: (themeId: string) => void
-  isPremium?: boolean
 }
 
-export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isContentFree, onPlay, onPlayAIMeditation, isPremium }: GuidedSectionProps) {
+export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isContentFree, onPlay }: GuidedSectionProps) {
   return (
     <div className="mb-8 liquid-reveal section-fade-bg">
       {/* Complex layered pattern animations per guide */}
@@ -380,6 +403,51 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
           90% { opacity: 1; }
           100% { transform: translateY(100%); opacity: 0; }
         }
+
+        /* Stress Relief: gentle wave sway + radial pulse */
+        @keyframes guide-stress-pattern {
+          0%, 100% { transform: translateX(0) scale(1); opacity: 0.9; }
+          25% { transform: translateX(4px) scale(1.03); opacity: 1; }
+          50% { transform: translateX(0) scale(1.06); opacity: 0.8; }
+          75% { transform: translateX(-4px) scale(1.03); opacity: 1; }
+        }
+        @keyframes guide-stress-wave {
+          0%, 100% { transform: scale(1); opacity: 0.3; }
+          50% { transform: scale(1.4); opacity: 0; }
+        }
+
+        /* Focus Meditation: slow rotate + zoom, center ring pulses */
+        @keyframes guide-focus-pattern {
+          0% { transform: rotate(0deg) scale(1); }
+          50% { transform: rotate(180deg) scale(1.04); }
+          100% { transform: rotate(360deg) scale(1); }
+        }
+        @keyframes guide-focus-ring {
+          0%, 100% { transform: scale(0.5); opacity: 0.5; }
+          50% { transform: scale(1.6); opacity: 0; }
+        }
+
+        /* Self-Compassion: gentle bloom + orbit, glow breathes */
+        @keyframes guide-selfcomp-pattern {
+          0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; }
+          33% { transform: scale(1.1) rotate(3deg); opacity: 1; }
+          66% { transform: scale(1.05) rotate(-3deg); opacity: 0.9; }
+        }
+        @keyframes guide-selfcomp-glow {
+          0%, 100% { transform: scale(1); opacity: 0; }
+          50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        /* Confidence: rise upward + grow, light lifts */
+        @keyframes guide-conf-pattern {
+          0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
+          50% { transform: translateY(-8px) scale(1.06); opacity: 0.85; }
+        }
+        @keyframes guide-conf-rise {
+          0% { transform: translateY(20%); opacity: 0; }
+          50% { opacity: 1; }
+          100% { transform: translateY(-20%); opacity: 0; }
+        }
       `}</style>
       <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header">Guided</h2>
       <div className="px-6"><FeatureHint id="home-guided" text="Voice-guided sessions for breathing, gratitude & sleep" mode="once" /></div>
@@ -446,35 +514,6 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
           )
         })}
 
-        {AI_MEDITATION_THEMES.map((theme) => {
-          const ThemeIcon = theme.icon
-          return (
-            <button
-              key={theme.id}
-              onClick={() => onPlayAIMeditation(theme.id)}
-              className="shrink-0 press-scale snap-card"
-              aria-label={`${theme.name} meditation${!isPremium ? ' (premium)' : ''}`}
-            >
-              <div className="relative w-40 h-52 rounded-2xl overflow-hidden flex flex-col bg-black border-2 border-white/[0.15]">
-                <div className="absolute inset-0" style={AI_PATTERNS[theme.id] || {}} />
-
-                {!isPremium && (
-                  <SoftLockBadge isLocked={true} size="sm" className="top-2 right-2" />
-                )}
-
-                <div className="relative z-10 flex-1 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full border-2 border-white/40 bg-black flex items-center justify-center">
-                    <ThemeIcon className="w-7 h-7 text-white/90" strokeWidth={1.5} />
-                  </div>
-                </div>
-
-                <div className="relative z-10 bg-black backdrop-blur-xl px-3 py-3 border-t border-white/[0.08]">
-                  <span className="text-sm font-medium text-white block text-center">{theme.name}</span>
-                </div>
-              </div>
-            </button>
-          )
-        })}
       </div>
     </div>
   )

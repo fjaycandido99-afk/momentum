@@ -15,9 +15,8 @@ import { SoundscapesSection } from './SoundscapesSection'
 import { GuidedSection } from './GuidedSection'
 import { XPBadge } from './XPBadge'
 import { MotivationSection } from './MotivationSection'
-import { LazyGenreSection } from './LazyGenreSection'
+import { MusicTabsSection } from './MusicTabsSection'
 import { PathChallengeBanner } from './PathChallengeBanner'
-import { AIMeditationPlayer } from './AIMeditationPlayer'
 import { WelcomeBackCard } from './WelcomeBackCard'
 import { HeroCarousel } from './HeroCarousel'
 import { SavedMotivationSection } from './SavedMotivationSection'
@@ -186,7 +185,6 @@ export function ImmersiveHome() {
 
   // Overlays
   const [showMorningFlow, setShowMorningFlow] = useState(false)
-  const [aiMeditationTheme, setAiMeditationTheme] = useState<string | null>(null)
 
   const guideRequestId = useRef(0)
 
@@ -1126,8 +1124,6 @@ export function ImmersiveHome() {
                   loadingGuide={audioState.loadingGuide}
                   isContentFree={(type, id) => isContentFree(type, id)}
                   onPlay={handleGuidePlay}
-                  onPlayAIMeditation={(themeId) => isPremium ? setAiMeditationTheme(themeId) : openUpgradeModal()}
-                  isPremium={isPremium}
                 />
               </div>
             )
@@ -1198,33 +1194,25 @@ export function ImmersiveHome() {
           case 'music':
             return (
               <React.Fragment key="music">
-                {MUSIC_GENRES.map((g, gi) => (
-                  <div key={g.id} className="stagger-item" style={{ '--i': orderIdx + gi } as React.CSSProperties}>
-                    <LazyGenreSection
-                      genre={g}
-                      genreIndex={gi}
-                      fallbackBackgrounds={backgrounds}
-                      activeCardId={audioState.activeCardId}
-                      tappedCardId={audioState.tappedCardId}
-                      musicPlaying={audioState.musicPlaying}
-                      isContentFree={(type, index) => isContentFree(type, index)}
-                      onPlay={handleMusicGenrePlay}
-                      onMagneticMove={magneticMove}
-                      onMagneticLeave={magneticLeave}
-                      onRipple={spawnRipple}
-                      heroCard={true}
-                      favoriteIds={musicFavoriteIds}
-                      onToggleFavorite={handleToggleMusicFavorite}
-                      progressPercent={audioState.currentPlaylist?.type === 'music' && audioState.currentPlaylist?.genreId === g.id && audioState.musicDuration > 0
-                        ? (audioState.musicCurrentTime / audioState.musicDuration) * 100
-                        : undefined}
-                      onLongPressStart={handleLongPressStart}
-                      onLongPressEnd={handleLongPressEnd}
-                      showShuffleToast={showShuffleToast}
-                      onDataLoaded={handleGenreDataLoaded}
-                    />
-                  </div>
-                ))}
+                <div className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
+                  <MusicTabsSection
+                    genres={MUSIC_GENRES}
+                    currentPlayingGenreId={audioState.currentPlaylist?.type === 'music' ? audioState.currentPlaylist.genreId : undefined}
+                    fallbackBackgrounds={backgrounds}
+                    audioState={audioState}
+                    isContentFree={(type, index) => isContentFree(type, index)}
+                    onPlay={handleMusicGenrePlay}
+                    onMagneticMove={magneticMove}
+                    onMagneticLeave={magneticLeave}
+                    onRipple={spawnRipple}
+                    favoriteIds={musicFavoriteIds}
+                    onToggleFavorite={handleToggleMusicFavorite}
+                    onLongPressStart={handleLongPressStart}
+                    onLongPressEnd={handleLongPressEnd}
+                    showShuffleToast={showShuffleToast}
+                    onDataLoaded={handleGenreDataLoaded}
+                  />
+                </div>
 
                 {/* Saved Music */}
                 {savedMusicVideos.length > 0 && (
@@ -1263,14 +1251,6 @@ export function ImmersiveHome() {
 
       {/* Preview Timer */}
       {isPreviewActive && <PreviewTimer secondsLeft={secondsLeft} />}
-
-      {/* AI Meditation Player */}
-      {aiMeditationTheme && (
-        <AIMeditationPlayer
-          onClose={() => setAiMeditationTheme(null)}
-          preselectedTheme={aiMeditationTheme}
-        />
-      )}
 
       {/* Preview Paywall Modal */}
       <PreviewPaywall
