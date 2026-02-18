@@ -2,9 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { Play, Pause, ChevronDown, Focus, Sparkles, Moon, Zap, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Wind, Droplets, Coffee, Music, Lock } from 'lucide-react'
-import { DailyBackground } from './DailyBackground'
 import { useSubscription } from '@/contexts/SubscriptionContext'
-import { useMindsetOptional } from '@/contexts/MindsetContext'
 
 interface SoundscapePlayerProps {
   soundId: string
@@ -49,7 +47,6 @@ export const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
 export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlaying, onTogglePlay, onClose, onSwitchSound }: SoundscapePlayerProps) {
   const selectorRef = useRef<HTMLDivElement>(null)
   const { isContentFree } = useSubscription()
-  const mindsetCtx = useMindsetOptional()
 
   // Scroll active item into view when sound changes
   useEffect(() => {
@@ -62,73 +59,95 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
   }, [soundId])
 
   return (
-    <div className="fixed inset-0 z-[55] flex flex-col bg-black overflow-hidden overscroll-none">
-      {/* Header */}
-      <div className="flex items-center px-6 pt-12 pb-4 animate-fade-in-down">
+    <div className="fixed inset-0 z-[55] flex flex-col overflow-hidden overscroll-none" style={{ backgroundColor: '#000000' }}>
+      {/* === Top bar (overlaid on artwork) === */}
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-[env(safe-area-inset-top)] h-14 z-20">
         <button
           aria-label="Close player"
           onClick={onClose}
-          className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+          className="p-2 -ml-2 focus-visible:outline-none"
         >
-          <ChevronDown className="w-6 h-6 text-white/95" />
+          <ChevronDown className="w-7 h-7 text-white" />
         </button>
-        <div className="flex-1 text-center pr-10">
-          <h1 className="text-xl font-semibold text-white">{label}</h1>
-          <p className="text-sm text-white/95 mt-0.5">{subtitle}</p>
+
+        <span className="absolute left-1/2 -translate-x-1/2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/70">
+          Soundscape
+        </span>
+
+        <div className="w-7" />
+      </div>
+
+      {/* === Fullscreen artwork === */}
+      <div className="flex-1 min-h-0 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.06] to-transparent" />
+        {/* Centered label on artwork */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span
+            className="text-3xl md:text-4xl font-bold text-white uppercase tracking-[0.15em]"
+            style={{ textShadow: '0 4px 30px rgba(0,0,0,0.8)' }}
+          >
+            {label}
+          </span>
         </div>
       </div>
 
-      {/* Animated center — constellation */}
-      <div className="flex-1 relative overflow-hidden">
-        <DailyBackground animate={isPlaying} className="absolute inset-0" mindsetFilter={mindsetCtx?.backgroundPool} />
-      </div>
+      {/* === Bottom controls === */}
+      <div className="flex-shrink-0 px-6 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-4" style={{ backgroundColor: '#000000' }}>
+        {/* Title + subtitle */}
+        <div className="mb-4">
+          <h1 className="text-xl font-bold text-white" style={{ letterSpacing: '-0.01em' }}>
+            {label}
+          </h1>
+          <p className="text-sm text-white/50 mt-0.5">{subtitle}</p>
+        </div>
 
-      {/* Sound selector row */}
-      <div ref={selectorRef} className="flex gap-5 overflow-x-auto px-6 pb-4 scrollbar-hide animate-fade-in" style={{ animationDelay: '0.15s' }}>
-        {SOUNDSCAPE_ITEMS.map((item) => {
-          const Icon = item.icon
-          const isActive = item.id === soundId
-          const isLocked = !isContentFree('soundscape', item.id)
-          return (
-            <button
-              key={item.id}
-              data-sound-id={item.id}
-              onClick={() => {
-                if (item.id !== soundId) {
-                  onSwitchSound(item.id, item.label, item.subtitle, item.youtubeId)
-                }
-              }}
-              className="flex flex-col items-center gap-1.5 shrink-0"
-            >
-              <div className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
-                isActive
-                  ? 'bg-white/15 border-2 border-white/40'
-                  : 'bg-white/5 border border-white/15'
-              }`}>
-                <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-white' : 'text-white/95'}`} strokeWidth={1.5} />
-                {isLocked && !isActive && (
-                  <Lock className="absolute -top-0.5 -right-0.5 w-3 h-3 text-white" />
-                )}
-              </div>
-              <span className={`text-[10px] transition-colors ${isActive ? 'text-white' : 'text-white/95'}`}>{item.label}</span>
-            </button>
-          )
-        })}
-      </div>
+        {/* Sound selector row */}
+        <div ref={selectorRef} className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6">
+          {SOUNDSCAPE_ITEMS.map((item) => {
+            const Icon = item.icon
+            const isActive = item.id === soundId
+            const isLocked = !isContentFree('soundscape', item.id)
+            return (
+              <button
+                key={item.id}
+                data-sound-id={item.id}
+                onClick={() => {
+                  if (item.id !== soundId) {
+                    onSwitchSound(item.id, item.label, item.subtitle, item.youtubeId)
+                  }
+                }}
+                className="flex flex-col items-center gap-1.5 shrink-0"
+              >
+                <div className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${
+                  isActive
+                    ? 'bg-white text-black'
+                    : 'bg-white/8 border border-white/15 text-white/70'
+                }`}>
+                  <Icon className="w-4.5 h-4.5" strokeWidth={1.5} />
+                  {isLocked && !isActive && (
+                    <Lock className="absolute -top-0.5 -right-0.5 w-3 h-3 text-white" />
+                  )}
+                </div>
+                <span className={`text-[10px] transition-colors ${isActive ? 'text-white' : 'text-white/50'}`}>{item.label}</span>
+              </button>
+            )
+          })}
+        </div>
 
-      {/* Play controls */}
-      <div className="flex justify-center pb-10 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-        <button
-          aria-label={isPlaying ? 'Pause' : 'Play'}
-          onClick={onTogglePlay}
-          className="w-16 h-16 rounded-full bg-white/10 border border-white/25 flex items-center justify-center hover:bg-white/15 transition-colors press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-        >
-          {isPlaying ? (
-            <Pause className="w-7 h-7 text-white" fill="white" />
-          ) : (
-            <Play className="w-7 h-7 text-white ml-0.5" fill="white" />
-          )}
-        </button>
+        {/* Play/Pause — Spotify-style white circle */}
+        <div className="flex justify-center py-2">
+          <button
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+            onClick={onTogglePlay}
+            className="w-16 h-16 rounded-full bg-white flex items-center justify-center transition-transform active:scale-95 focus-visible:outline-none"
+          >
+            {isPlaying ? (
+              <Pause className="w-7 h-7 text-black" fill="black" />
+            ) : (
+              <Play className="w-7 h-7 text-black ml-0.5" fill="black" />
+            )}
+          </button>
+        </div>
       </div>
     </div>
   )

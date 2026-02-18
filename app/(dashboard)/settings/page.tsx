@@ -30,7 +30,6 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useThemeOptional } from '@/contexts/ThemeContext'
-import { BACKGROUND_ANIMATIONS, getPreferredAnimation, setPreferredAnimation, getBackgroundBrightness, setBackgroundBrightness, getBackgroundEnabled, setBackgroundEnabled, getBackgroundColor, setBackgroundColor, type BgColorHue } from '@/components/player/DailyBackground'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
@@ -126,10 +125,6 @@ function SettingsContent() {
   const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(true)
   const [preferredMusicGenre, setPreferredMusicGenre] = useState<string | null>(null)
   const [bedtimeReminderEnabled, setBedtimeReminderEnabled] = useState(false)
-  const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null)
-  const [backgroundBrightness, setBackgroundBrightnessState] = useState(1)
-  const [backgroundEnabled, setBackgroundEnabledState] = useState(true)
-  const [bgColorHue, setBgColorHue] = useState<BgColorHue>(-1)
   const [astrologyEnabled, setAstrologyEnabled] = useState(false)
   const [zodiacSign, setZodiacSign] = useState<string | null>(null)
 
@@ -168,11 +163,6 @@ function SettingsContent() {
           if (data.astrology_enabled !== undefined) setAstrologyEnabled(data.astrology_enabled)
           if (data.zodiac_sign !== undefined) setZodiacSign(data.zodiac_sign)
         }
-        // Load animation preference from localStorage
-        setSelectedAnimation(getPreferredAnimation())
-        setBackgroundBrightnessState(getBackgroundBrightness())
-        setBackgroundEnabledState(getBackgroundEnabled())
-        setBgColorHue(getBackgroundColor())
       } catch (error) {
         console.error('Failed to load preferences:', error)
       } finally {
@@ -760,173 +750,7 @@ function SettingsContent() {
           </SettingsCategory>
         )}
 
-        {/* ═══════════════ 5. Appearance ═══════════════ */}
-        <SettingsCategory
-          id="appearance"
-          icon={Sparkles}
-          title="Appearance"
-          description="Background animation, brightness, color"
-        >
-          {/* Background Enable Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-white text-sm">Background Animation</p>
-              <p className="text-white/75 text-xs">Ambient visual pattern</p>
-            </div>
-            <button
-              onClick={() => {
-                const next = !backgroundEnabled
-                setBackgroundEnabledState(next)
-                setBackgroundEnabled(next)
-              }}
-              role="switch"
-              aria-checked={backgroundEnabled}
-              aria-label="Background animation"
-              className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                backgroundEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
-              }`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                  backgroundEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-
-          {backgroundEnabled && (
-            <>
-              {/* Brightness slider */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="bg-brightness" className="text-sm text-white/95">Brightness</label>
-                  <span className="text-sm text-white/95">{Math.round(backgroundBrightness * 100)}%</span>
-                </div>
-                <input
-                  id="bg-brightness"
-                  type="range"
-                  min="0.2"
-                  max="3"
-                  step="0.1"
-                  value={backgroundBrightness}
-                  onChange={(e) => {
-                    const val = parseFloat(e.target.value)
-                    setBackgroundBrightnessState(val)
-                    setBackgroundBrightness(val)
-                  }}
-                  aria-label="Background brightness"
-                  className="w-full h-2 rounded-full appearance-none cursor-pointer bg-white/10 accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,0.3)]"
-                />
-              </div>
-
-              {/* Color hue slider */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="bg-color-hue" className="text-sm text-white/95">Color</label>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full border border-white/25"
-                      style={{ backgroundColor: bgColorHue < 0 ? '#fff' : `hsl(${bgColorHue}, 70%, 60%)` }}
-                    />
-                    <span className="text-sm text-white/95">{bgColorHue < 0 ? 'White' : `${Math.round(bgColorHue)}°`}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      setBgColorHue(-1)
-                      setBackgroundColor(-1)
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-xs transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                      bgColorHue < 0
-                        ? 'bg-white/20 text-white border border-white/30'
-                        : 'bg-white/5 text-white/85 border border-transparent hover:bg-white/10'
-                    }`}
-                  >
-                    White
-                  </button>
-                  <input
-                    id="bg-color-hue"
-                    type="range"
-                    min="0"
-                    max="360"
-                    step="1"
-                    value={bgColorHue < 0 ? 220 : bgColorHue}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value)
-                      setBgColorHue(val)
-                      setBackgroundColor(val)
-                    }}
-                    aria-label="Background color hue"
-                    className="flex-1 h-2 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,0.3)]"
-                    style={{
-                      background: 'linear-gradient(to right, hsl(0,70%,50%), hsl(60,70%,50%), hsl(120,70%,50%), hsl(180,70%,50%), hsl(240,70%,50%), hsl(300,70%,50%), hsl(360,70%,50%))',
-                    }}
-                  />
-                </div>
-              </div>
-
-              <FeatureHint id="bg-animation" text="Animations create subtle visual interest without distraction" mode="persistent" />
-
-              <div className="grid grid-cols-2 gap-3">
-                {/* Daily Rotation option */}
-                <button
-                  onClick={() => {
-                    setSelectedAnimation(null)
-                    setPreferredAnimation(null)
-                  }}
-                  aria-pressed={selectedAnimation === null}
-                  className={`p-2 rounded-xl transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    selectedAnimation === null
-                      ? 'bg-white/15 border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                      : 'bg-white/5 border border-transparent hover:bg-white/10'
-                  }`}
-                >
-                  <div className="aspect-[3/2] rounded-lg overflow-hidden bg-black/50 mb-2 relative flex items-center justify-center">
-                    <div className="text-center">
-                      <Sparkles className="w-5 h-5 text-white/95 mx-auto mb-1" />
-                      <span className="text-[10px] text-white/95">Auto</span>
-                    </div>
-                  </div>
-                  <p className="text-xs font-medium text-white">Daily Rotation</p>
-                  <p className="text-[10px] text-white/95">Changes each day</p>
-                </button>
-
-                {/* Individual animation options with live preview — filtered by mindset */}
-                {BACKGROUND_ANIMATIONS.filter(anim => {
-                  const pool = mindsetCtx?.config?.backgroundPool
-                  if (!pool || pool.length === 0) return true
-                  return pool.includes(anim.id)
-                }).map(anim => {
-                  const AnimComponent = anim.component
-                  return (
-                    <button
-                      key={anim.id}
-                      onClick={() => {
-                        setSelectedAnimation(anim.id)
-                        setPreferredAnimation(anim.id)
-                      }}
-                      aria-pressed={selectedAnimation === anim.id}
-                      className={`p-2 rounded-xl transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                        selectedAnimation === anim.id
-                          ? 'bg-white/15 border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                          : 'bg-white/5 border border-transparent hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="aspect-[3/2] rounded-lg overflow-hidden bg-black/50 mb-2 relative">
-                        <AnimComponent animate topOffset={0} className="absolute inset-0" />
-                      </div>
-                      <p className="text-xs font-medium text-white">{anim.name}</p>
-                      <p className="text-[10px] text-white/95">{anim.description}</p>
-                    </button>
-                  )
-                })}
-              </div>
-            </>
-          )}
-        </SettingsCategory>
-
-        {/* ═══════════════ 6. Notifications ═══════════════ */}
+        {/* ═══════════════ 5. Notifications ═══════════════ */}
         <SettingsCategory
           id="notifications"
           icon={Bell}

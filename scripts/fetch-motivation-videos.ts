@@ -7,10 +7,12 @@ const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY
 const MOTIVATION_CHANNELS = [
   { id: 'UCAPByrKfwEJjJKfS9dN5Vww', name: 'Motiversity' },
   { id: 'UCMTk_R_Y49jvq-HQXDmKI0Q', name: 'MotivationHub' },
-  { id: 'UC8bYucAICXmYet8pZ5Ja48g', name: 'JEREMEY ANDERSON' },
   { id: 'UCqPgxwDcUsFB9qqXPxMNqNw', name: 'Absolute Motivation' },
-  { id: 'UCOgldZ39BfULNxHKZ9bLP1A', name: 'Your World Within' },
-  { id: 'UCfAOaM8vy8BSEd6JL4wdKiw', name: 'After Skool' },
+  { id: 'UCgkKA7xEOoBQNpC5TJxPLiw', name: 'Ben Lionel Scott' },
+  { id: 'UC0nOQ1R3Z-vRO7K6g-W7Jkg', name: 'Fearless Soul' },
+  { id: 'UCaKZDEMDdQc8t6GzFj1_TDw', name: 'Be Inspired' },
+  { id: 'UCf9_s9ii6BZ-klpgmtIi3WQ', name: 'Team Fearless' },
+  { id: 'UC8PICQUP0a_HsrA9S4IIgWw', name: 'Motivation2Study' },
 ]
 
 // Search keywords for each topic

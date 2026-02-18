@@ -1496,6 +1496,15 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* View mode toggle pill (image/video) */
+.view-mode-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.view-mode-toggle button {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
 /* ========== Morning Flow Module Transitions ========== */
 
 /* Green glow flash when a module completes */
