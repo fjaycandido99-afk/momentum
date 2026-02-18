@@ -226,7 +226,6 @@ export function PathPage({ mindsetId }: PathPageProps) {
           script=""
           color={playingSound.color}
           youtubeId={playingSound.youtubeId}
-          showConstellation
           onClose={() => setPlayingSound(null)}
         />
       )}
