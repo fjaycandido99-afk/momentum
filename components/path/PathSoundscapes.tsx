@@ -43,7 +43,6 @@ export function PathSoundscapes({ mindsetId, onPathActivity }: PathSoundscapesPr
           script=""
           color={playingSound.color}
           youtubeId={playingSound.youtubeId}
-          showConstellation
           onClose={() => setPlayingSound(null)}
         />
       )}
