@@ -5,6 +5,7 @@ import { Flame, Trophy, Star, Zap, Crown, Sparkles, X, Share2 } from 'lucide-rea
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { useShareCard } from '@/hooks/useShareCard'
 import { generateStreakCard } from '@/hooks/useShareCardTemplates'
+import { StreakFlame } from '@/components/ui/StreakFlame'
 
 interface StreakDisplayProps {
   streak: number
@@ -84,12 +85,16 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
       {/* Streak Badge */}
       <div>
       <div
-        className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r ${
+        className={`relative flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r ${
           currentMilestone ? currentMilestone.bg : 'from-amber-500/20 to-orange-500/20'
         } border ${currentMilestone ? currentMilestone.border : 'border-amber-500/30'} ${
           isMilestone ? 'animate-pulse' : ''
         }`}
       >
+        {/* Flame animation behind badge */}
+        <div className="absolute -top-4 left-1">
+          <StreakFlame streak={streak} size="md" />
+        </div>
         {/* Progress ring toward next milestone */}
         <div className="relative w-8 h-8 flex items-center justify-center">
           {nextMilestone && (() => {
@@ -259,9 +264,12 @@ export function StreakBadge({ streak, freezeCount }: { streak: number; freezeCou
   }
 
   return (
-    <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r ${
+    <div className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r ${
       currentMilestone ? currentMilestone.bg : 'from-amber-500/20 to-orange-500/20'
     } border ${currentMilestone ? currentMilestone.border : 'border-amber-500/30'}`}>
+      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+        <StreakFlame streak={streak} size="sm" />
+      </div>
       <Flame className={`w-3.5 h-3.5 ${currentMilestone?.color || 'text-amber-400'}`} />
       <span className={`text-xs font-bold ${currentMilestone?.color || 'text-amber-400'}`}>
         {streak}

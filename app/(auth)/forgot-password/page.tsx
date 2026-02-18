@@ -112,8 +112,9 @@ export default function ForgotPasswordPage() {
         {/* Form */}
         <form onSubmit={handleResetPassword} className="space-y-5">
           <div>
-            <label className="block text-white/95 text-sm mb-2">Email</label>
+            <label htmlFor="email" className="block text-white/95 text-sm mb-2">Email</label>
             <input
+              id="email"
               type="email"
               placeholder="you@email.com"
               value={email}
@@ -125,7 +126,7 @@ export default function ForgotPasswordPage() {
           </div>
 
           {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <div role="alert" className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
               {error}
             </div>
           )}

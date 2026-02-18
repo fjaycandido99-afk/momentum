@@ -81,14 +81,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if guide already exists for today
-    const existingGuide = await prisma.dailyGuide.findUnique({
-      where: {
-        user_id_date: {
-          user_id: user.id,
-          date: new Date(dateKey),
-        },
-      },
-    })
+    const existingGuide = forceRegenerate
+      ? await prisma.dailyGuide.findUnique({
+          where: {
+            user_id_date: {
+              user_id: user.id,
+              date: new Date(dateKey),
+            },
+          },
+          select: { id: true },
+        })
+      : await prisma.dailyGuide.findUnique({
+          where: {
+            user_id_date: {
+              user_id: user.id,
+              date: new Date(dateKey),
+            },
+          },
+        })
 
     // If guide exists and not forcing regeneration, return existing
     if (existingGuide && !forceRegenerate) {
@@ -247,8 +257,8 @@ export async function POST(request: NextRequest) {
         energy_level: dayContext.energyLevel || null,
         modules: modules.modules,
         morning_prime_script: contentMap.morning_prime?.script || null,
-        movement_script: contentMap.movement?.script || null,
-        workout_script: contentMap.movement?.script || null,
+        movement_script: contentMap.workout?.script || null,
+        workout_script: contentMap.workout?.script || null,
         micro_lesson_script: contentMap.micro_lesson?.script || null,
         breath_script: contentMap.breath?.script || null,
         day_close_script: contentMap.day_close?.script || null,
@@ -274,8 +284,8 @@ export async function POST(request: NextRequest) {
         energy_level: dayContext.energyLevel || null,
         modules: modules.modules,
         morning_prime_script: contentMap.morning_prime?.script || null,
-        movement_script: contentMap.movement?.script || null,
-        workout_script: contentMap.movement?.script || null,
+        movement_script: contentMap.workout?.script || null,
+        workout_script: contentMap.workout?.script || null,
         micro_lesson_script: contentMap.micro_lesson?.script || null,
         breath_script: contentMap.breath?.script || null,
         day_close_script: contentMap.day_close?.script || null,

@@ -138,7 +138,7 @@ export function MotivationSection({
                         onToggleFavorite(video)
                       }}
                       aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-                      className="absolute top-2 right-2 z-10 p-1 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+                      className="absolute top-2 right-2 z-10 p-2.5 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
                     >
                       <Heart
                         className={`w-3.5 h-3.5 ${isFavorited ? 'text-red-500' : 'text-white/75'} ${heartPopId === video.youtubeId ? 'heart-pop' : ''}`}

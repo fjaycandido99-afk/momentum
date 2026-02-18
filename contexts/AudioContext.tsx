@@ -79,6 +79,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const userPausedRef = useRef(false)
   const musicEnabledRef = useRef(false)
   const wasPlayingBeforeSessionRef = useRef(false)
+  const skipAbortRef = useRef<AbortController | null>(null)
 
   // Load last played from localStorage on mount
   useEffect(() => {
@@ -144,6 +145,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
     const fetchMusic = async () => {
       try {
         const response = await fetch(`/api/music-videos?genre=${musicGenre}`)
+        if (!response.ok) { console.warn('[AudioContext] music fetch failed:', response.status); return }
         const data = await response.json()
         if (data.videos && data.videos.length > 0 && isMountedRef.current) {
           const randomVideo = data.videos[Math.floor(Math.random() * data.videos.length)]
@@ -270,7 +272,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
         bgMusicPlayerRef.current.playVideo()
         setIsMusicPlaying(true)
         wasPlayingBeforeSessionRef.current = false
-      } catch (e) {}
+      } catch (e) { console.warn('[AudioContext]', e) }
     }
   }, [isSessionActive, musicEnabled, isMusicLoaded])
 
@@ -290,7 +292,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
         try {
           bgMusicPlayerRef.current.stopVideo()
           bgMusicPlayerRef.current.destroy()
-        } catch (e) {}
+        } catch (e) { console.warn('[AudioContext]', e) }
         bgMusicPlayerRef.current = null
       }
       setIsMusicLoaded(false)
@@ -338,7 +340,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
       try {
         bgMusicPlayerRef.current.stopVideo()
         setIsMusicPlaying(false)
-      } catch (e) {}
+      } catch (e) { console.warn('[AudioContext]', e) }
     }
   }, [])
 
@@ -346,27 +348,34 @@ export function AudioProvider({ children }: AudioProviderProps) {
     if (!musicGenre) return
     userPausedRef.current = false
     setSessionActive(false)
-    try {
-      // Destroy current player
-      if (bgMusicPlayerRef.current) {
-        try {
-          bgMusicPlayerRef.current.stopVideo()
-          bgMusicPlayerRef.current.destroy()
-        } catch (e) {}
-        bgMusicPlayerRef.current = null
-      }
-      const container = document.getElementById('bg-music-player-global')
-      if (container) container.remove()
 
+    // Destroy current player
+    if (bgMusicPlayerRef.current) {
+      try {
+        bgMusicPlayerRef.current.stopVideo()
+        bgMusicPlayerRef.current.destroy()
+      } catch (e) { console.warn('[AudioContext]', e) }
+      bgMusicPlayerRef.current = null
+    }
+    const container = document.getElementById('bg-music-player-global')
+    if (container) container.remove()
+
+    // Cancel any in-flight skip request
+    if (skipAbortRef.current) skipAbortRef.current.abort()
+    skipAbortRef.current = new AbortController()
+
+    try {
       // Fetch a new random video
-      const response = await fetch(`/api/music-videos?genre=${musicGenre}`)
+      const response = await fetch(`/api/music-videos?genre=${musicGenre}`, { signal: skipAbortRef.current.signal })
+      if (!response.ok) { console.warn('[AudioContext] skipTrack fetch failed:', response.status); return }
       const data = await response.json()
       if (data.videos && data.videos.length > 0 && isMountedRef.current) {
         const randomVideo = data.videos[Math.floor(Math.random() * data.videos.length)]
         setBgMusicVideoId(randomVideo.youtubeId)
       }
-    } catch (error) {
-      console.error('[AudioContext] Skip error:', error)
+    } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') return
+      console.warn('[AudioContext] skipTrack fetch error:', e)
     }
   }, [musicGenre])
 

@@ -44,6 +44,22 @@ export async function GET() {
       }),
       prisma.dailyGuide.findFirst({
         where: { user_id: user.id, date: new Date(todayStr) },
+        select: {
+          id: true,
+          morning_prime_done: true,
+          movement_done: true,
+          micro_lesson_done: true,
+          breath_done: true,
+          day_close_done: true,
+          journal_freetext: true,
+          journal_win: true,
+          journal_gratitude: true,
+          mood_before: true,
+          mood_after: true,
+          music_genre_used: true,
+          daily_bonus_claimed: true,
+          daily_bonus_amount: true,
+        },
       }),
       prisma.dailyGuide.findMany({
         where: { user_id: user.id, date: { gte: weekStart } },

@@ -65,26 +65,39 @@ export async function POST(req: Request) {
       ])
     }
 
-    // Recalculate streak: walk backwards counting consecutive days with any path activity
+    // Recalculate streak: single query instead of N+1 loop
     let streak = 1 // today counts
-    const yesterday = new Date(today)
-    for (let i = 0; i < 365; i++) {
-      yesterday.setDate(yesterday.getDate() - 1)
-      const prevGuide = await prisma.dailyGuide.findUnique({
-        where: { user_id_date: { user_id: user.id, date: new Date(yesterday) } },
-        select: {
-          path_reflection_done: true,
-          path_exercise_done: true,
-          path_quote_viewed: true,
-          path_soundscape_played: true,
-        },
-      })
+    const recentGuides = await prisma.dailyGuide.findMany({
+      where: {
+        user_id: user.id,
+        date: { lt: today },
+        OR: [
+          { path_reflection_done: true },
+          { path_exercise_done: true },
+          { path_quote_viewed: true },
+          { path_soundscape_played: true },
+        ],
+      },
+      select: { date: true },
+      orderBy: { date: 'desc' },
+      take: 365,
+    })
 
-      if (!prevGuide) break
-      const hadActivity = prevGuide.path_reflection_done || prevGuide.path_exercise_done ||
-        prevGuide.path_quote_viewed || prevGuide.path_soundscape_played
-      if (!hadActivity) break
-      streak++
+    const oneDay = 24 * 60 * 60 * 1000
+    let expectedDate = new Date(today)
+    expectedDate.setDate(expectedDate.getDate() - 1)
+
+    for (const g of recentGuides) {
+      const guideDate = new Date(g.date)
+      guideDate.setHours(0, 0, 0, 0)
+      expectedDate.setHours(0, 0, 0, 0)
+
+      if (guideDate.getTime() === expectedDate.getTime()) {
+        streak++
+        expectedDate.setDate(expectedDate.getDate() - 1)
+      } else {
+        break
+      }
     }
 
     // Update streak on today's guide

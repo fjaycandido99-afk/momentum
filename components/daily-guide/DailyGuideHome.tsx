@@ -51,10 +51,20 @@ import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { MoodTintOverlay } from '@/components/ui/MoodTintOverlay'
 import { useScrollHeader } from '@/hooks/useScrollHeader'
 import type { DayType, TimeMode, EnergyLevel, ModuleType, CheckpointConfig } from '@/lib/daily-guide/decision-tree'
 
 type UserType = 'professional' | 'student' | 'hybrid'
+
+// Map mood string values to numeric 1-5 for MoodTintOverlay
+function moodToNumeric(mood: string | null): 1 | 2 | 3 | 4 | 5 | null {
+  if (!mood) return null
+  const map: Record<string, 1 | 2 | 3 | 4 | 5> = {
+    awful: 1, low: 2, medium: 3, okay: 3, good: 4, high: 5, great: 5,
+  }
+  return map[mood] || null
+}
 
 // Per-mindset address terms
 const MINDSET_ADDRESS: Record<string, string> = {
@@ -276,7 +286,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   }
 
   const fetchData = useCallback(async () => {
-    const minDelay = new Promise(resolve => setTimeout(resolve, 2500))
+    const minDelay = new Promise(resolve => setTimeout(resolve, 300))
     try {
       const [guideRes, prefsRes] = await Promise.all([
         fetch('/api/daily-guide/generate?date=' + today.toISOString(), { cache: 'no-store' }),
@@ -995,6 +1005,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
   return (
     <div ref={guideScrollRef} className={embedded ? `bg-black pb-8` : `min-h-screen bg-black pb-32`}>
+      {/* Mood-reactive tint overlay */}
+      <MoodTintOverlay mood={moodToNumeric(moodAfter || moodBefore)} />
+
       {/* Trial Banner (hidden in embedded/drawer mode) */}
       {!embedded && <TrialBanner variant="compact" />}
       {!embedded && <TrialEndingBanner />}

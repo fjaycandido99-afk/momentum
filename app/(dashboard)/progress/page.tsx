@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Loader2, Flame, Mail } from 'lucide-react'
+import { StreakFlame } from '@/components/ui/StreakFlame'
 import { StreakHeatmap } from '@/components/progress/StreakHeatmap'
 import { ListeningStats } from '@/components/progress/ListeningStats'
 import { ModulesCompleted } from '@/components/progress/ModulesCompleted'
@@ -94,9 +95,12 @@ export default function ProgressPage() {
         <div className="px-6 space-y-4">
           {/* Streak + XP Row */}
           <div className="flex gap-3">
-            <div className="glass-refined rounded-2xl p-4 flex items-center gap-3 flex-1">
-              <Flame className="w-6 h-6 text-amber-400" />
-              <div>
+            <div className="glass-refined rounded-2xl p-4 flex items-center gap-3 flex-1 relative overflow-hidden">
+              <div className="absolute -top-2 left-2">
+                <StreakFlame streak={gamification?.streak ?? data.streak} size="md" />
+              </div>
+              <Flame className="w-6 h-6 text-amber-400 relative z-10" />
+              <div className="relative z-10">
                 <p className="text-2xl font-bold text-amber-400">{gamification?.streak ?? data.streak}</p>
                 <p className="text-xs text-white/70">day streak</p>
               </div>

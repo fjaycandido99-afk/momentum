@@ -1,14 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { text, voiceId } = await request.json()
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 })
+    }
+
+    // Validate voiceId contains only alphanumeric characters
+    if (voiceId && !/^[a-zA-Z0-9]+$/.test(voiceId)) {
+      return NextResponse.json({ error: 'Invalid voiceId' }, { status: 400 })
     }
 
     const apiKey = process.env.ELEVENLABS_API_KEY

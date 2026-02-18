@@ -35,6 +35,7 @@ import { useScrollReveal, useParallax, useMagneticHover, useRippleBurst } from '
 import { useSectionTransitions } from '@/hooks/useSectionTransitions'
 import { useScrollHeader } from '@/hooks/useScrollHeader'
 import { useListeningMilestones } from '@/hooks/useListeningMilestones'
+import { AmbientMixer } from './AmbientMixer'
 import { LongPressPreview } from './LongPressPreview'
 import { WellnessWidget } from './WellnessWidget'
 import { SmartHomeNudge } from './SmartHomeNudge'
@@ -47,6 +48,8 @@ import { useListeningStats, checkAudioAchievements } from '@/hooks/useListeningS
 import { getAdaptiveSectionOrder, type FeedSection } from '@/lib/smart-home-feed'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { ACHIEVEMENTS } from '@/lib/achievements'
+import { haptic } from '@/lib/haptics'
+import { AudioVisualizer } from '@/components/player/AudioVisualizer'
 
 const WordAnimationPlayer = dynamic(
   () => import('@/components/player/WordAnimationPlayer').then(mod => mod.WordAnimationPlayer),
@@ -180,6 +183,9 @@ export function ImmersiveHome() {
     previewDuration: FREEMIUM_LIMITS.previewSeconds,
   })
 
+  // Ambient mixer
+  const [showMixer, setShowMixer] = useState(false)
+
   // Hamburger menu
   const [showMenu, setShowMenu] = useState(false)
 
@@ -221,6 +227,7 @@ export function ImmersiveHome() {
 
   // --- Guide playback ---
   const handlePlayGuide = async (guideId: string, guideName: string) => {
+    haptic('light')
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''
@@ -279,6 +286,7 @@ export function ImmersiveHome() {
   }
 
   const toggleGuidePlay = () => {
+    haptic('light')
     const audio = guideAudioRef.current
     if (!audio) return
     if (audioState.guideIsPlaying) {
@@ -526,6 +534,7 @@ export function ImmersiveHome() {
 
   // --- Play handlers ---
   const handlePlayMotivation = (video: VideoItem, index: number, topic?: string) => {
+    haptic('light')
     const playTopic = topic || topicName
     const topicVideos = motivationByTopic[playTopic] || motivationVideos
     triggerTap(video.id)
@@ -559,6 +568,7 @@ export function ImmersiveHome() {
   }
 
   const handlePlayMusic = (video: VideoItem, index: number, genreId: string, genreWord: string) => {
+    haptic('light')
     triggerTap(video.id)
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
@@ -758,6 +768,7 @@ export function ImmersiveHome() {
 
   // --- Section callbacks ---
   const handleSoundscapePlay = useCallback((item: typeof SOUNDSCAPE_ITEMS[number], isLocked: boolean) => {
+    haptic('light')
     if (isLocked) {
       stopPreview()
       setPaywallContentName(item.label)
@@ -1112,6 +1123,7 @@ export function ImmersiveHome() {
                   isContentFree={(type, id) => isContentFree(type, id)}
                   onPlay={handleSoundscapePlay}
                   onReopen={handleSoundscapeReopen}
+                  onOpenMixer={() => setShowMixer(true)}
                 />
               </div>
             )
@@ -1249,6 +1261,9 @@ export function ImmersiveHome() {
         <Bot className="w-6 h-6 text-amber-400" />
       </Link>
 
+      {/* Ambient Mixer */}
+      {showMixer && <AmbientMixer onClose={() => setShowMixer(false)} />}
+
       {/* Preview Timer */}
       {isPreviewActive && <PreviewTimer secondsLeft={secondsLeft} />}
 
@@ -1267,6 +1282,13 @@ export function ImmersiveHome() {
           }
         }}
       />
+
+      {/* Audio Visualizer — decorative bars above the player bar */}
+      {(audioState.musicPlaying || audioState.soundscapeIsPlaying) && (
+        <div className="fixed bottom-[68px] left-0 right-0 z-30 flex justify-center pointer-events-none">
+          <AudioVisualizer isPlaying={audioState.musicPlaying || audioState.soundscapeIsPlaying} barCount={24} height={32} className="opacity-40" />
+        </div>
+      )}
 
       {/* Bottom Player Bar */}
       <BottomPlayerBar

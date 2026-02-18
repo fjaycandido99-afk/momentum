@@ -136,7 +136,7 @@ function SettingsContent() {
   // Load preferences on mount
   useEffect(() => {
     const loadPreferences = async () => {
-      const minDelay = new Promise(resolve => setTimeout(resolve, 2500))
+      const minDelay = new Promise(resolve => setTimeout(resolve, 300))
       try {
         // Check auth status
         const [{ data: { user } }] = await Promise.all([
@@ -393,9 +393,10 @@ function SettingsContent() {
           {/* Schedule Times */}
           <div className="space-y-3">
             <div>
-              <label className="block text-sm text-white/95 mb-1.5">Wake time</label>
+              <label htmlFor="wake-time" className="block text-sm text-white/95 mb-1.5">Wake time</label>
               <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                 <input
+                  id="wake-time"
                   type="time"
                   value={wakeTime}
                   onChange={(e) => setWakeTime(e.target.value)}
@@ -407,9 +408,10 @@ function SettingsContent() {
             {(userType === 'professional' || userType === 'hybrid') && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="min-w-0">
-                  <label className="block text-sm text-white/95 mb-1.5">Work starts</label>
+                  <label htmlFor="work-start-time" className="block text-sm text-white/95 mb-1.5">Work starts</label>
                   <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                     <input
+                      id="work-start-time"
                       type="time"
                       value={workStartTime}
                       onChange={(e) => setWorkStartTime(e.target.value)}
@@ -419,9 +421,10 @@ function SettingsContent() {
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <label className="block text-sm text-white/95 mb-1.5">Work ends</label>
+                  <label htmlFor="work-end-time" className="block text-sm text-white/95 mb-1.5">Work ends</label>
                   <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                     <input
+                      id="work-end-time"
                       type="time"
                       value={workEndTime}
                       onChange={(e) => setWorkEndTime(e.target.value)}
@@ -436,9 +439,10 @@ function SettingsContent() {
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/95 mb-1.5">Classes start</label>
+                    <label htmlFor="class-start-time" className="block text-sm text-white/95 mb-1.5">Classes start</label>
                     <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
+                        id="class-start-time"
                         type="time"
                         value={classStartTime}
                         onChange={(e) => setClassStartTime(e.target.value)}
@@ -448,9 +452,10 @@ function SettingsContent() {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/95 mb-1.5">Classes end</label>
+                    <label htmlFor="class-end-time" className="block text-sm text-white/95 mb-1.5">Classes end</label>
                     <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
+                        id="class-end-time"
                         type="time"
                         value={classEndTime}
                         onChange={(e) => setClassEndTime(e.target.value)}
@@ -462,9 +467,10 @@ function SettingsContent() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/95 mb-1.5">Study starts</label>
+                    <label htmlFor="study-start-time" className="block text-sm text-white/95 mb-1.5">Study starts</label>
                     <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
+                        id="study-start-time"
                         type="time"
                         value={studyStartTime}
                         onChange={(e) => setStudyStartTime(e.target.value)}
@@ -474,9 +480,10 @@ function SettingsContent() {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <label className="block text-sm text-white/95 mb-1.5">Study ends</label>
+                    <label htmlFor="study-end-time" className="block text-sm text-white/95 mb-1.5">Study ends</label>
                     <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
+                        id="study-end-time"
                         type="time"
                         value={studyEndTime}
                         onChange={(e) => setStudyEndTime(e.target.value)}
@@ -792,10 +799,11 @@ function SettingsContent() {
               {/* Brightness slider */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm text-white/95">Brightness</label>
+                  <label htmlFor="bg-brightness" className="text-sm text-white/95">Brightness</label>
                   <span className="text-sm text-white/95">{Math.round(backgroundBrightness * 100)}%</span>
                 </div>
                 <input
+                  id="bg-brightness"
                   type="range"
                   min="0.2"
                   max="3"
@@ -814,7 +822,7 @@ function SettingsContent() {
               {/* Color hue slider */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm text-white/95">Color</label>
+                  <label htmlFor="bg-color-hue" className="text-sm text-white/95">Color</label>
                   <div className="flex items-center gap-2">
                     <div
                       className="w-4 h-4 rounded-full border border-white/25"
@@ -838,6 +846,7 @@ function SettingsContent() {
                     White
                   </button>
                   <input
+                    id="bg-color-hue"
                     type="range"
                     min="0"
                     max="360"
@@ -1048,7 +1057,7 @@ function SettingsContent() {
 
                 <button
                   onClick={() => subscription?.openUpgradeModal()}
-                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none shimmer-cta"
                 >
                   <Sparkles className="w-5 h-5" />
                   Upgrade to Premium - $4.99/mo

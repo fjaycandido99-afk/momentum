@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createClient } from '@/lib/supabase/server'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const body = await request.json()
     const { userId, email, name } = body
 
@@ -14,6 +19,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
+      )
+    }
+
+    // Verify authenticated user matches requested userId
+    if (user.id !== userId) {
+      return NextResponse.json(
+        { error: 'Forbidden' },
+        { status: 403 }
       )
     }
 
@@ -42,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user
-    const user = await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         id: userId,
         email,
@@ -53,7 +66,7 @@ export async function POST(request: NextRequest) {
     // Create default preferences
     await prisma.userPreferences.create({
       data: {
-        user_id: user.id,
+        user_id: newUser.id,
         voice_style: 'calm',
         activity_type: 'workout',
         daily_reminder: true,
@@ -63,13 +76,13 @@ export async function POST(request: NextRequest) {
     // Create default free subscription
     await prisma.subscription.create({
       data: {
-        user_id: user.id,
+        user_id: newUser.id,
         tier: 'free',
         status: 'active',
       },
     })
 
-    return NextResponse.json({ success: true, data: { user } })
+    return NextResponse.json({ success: true, data: { user: newUser } })
   } catch (error) {
     console.error('Auth setup error:', error)
     return NextResponse.json(

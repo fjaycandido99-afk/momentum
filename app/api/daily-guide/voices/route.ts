@@ -176,7 +176,7 @@ export async function GET(request: NextRequest) {
     // Get authenticated user
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    const userId = user?.id || searchParams.get('userId') || 'demo-user'
+    const userId = user?.id || 'demo-user'
     const tone = user ? await getUserTone(userId) : 'calm'
 
     // Get today's date at midnight

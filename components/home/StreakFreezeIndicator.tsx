@@ -26,7 +26,7 @@ export function StreakFreezeIndicator({ freezeCount, freezeUsedToday, streakLost
               1 freeze used ({freezeCount} remaining)
             </p>
           </div>
-          <button onClick={() => setDismissed(true)} className="p-1 text-white/70 hover:text-white">
+          <button onClick={() => setDismissed(true)} aria-label="Dismiss" className="p-1 text-white/70 hover:text-white">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -52,7 +52,7 @@ export function StreakFreezeIndicator({ freezeCount, freezeUsedToday, streakLost
               Complete all daily challenges to earn extra freezes
             </p>
           </div>
-          <button onClick={() => setDismissed(true)} className="p-1 text-white/70 hover:text-white">
+          <button onClick={() => setDismissed(true)} aria-label="Dismiss" className="p-1 text-white/70 hover:text-white">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>

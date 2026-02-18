@@ -123,7 +123,7 @@ export function PreviewPaywall({
           {/* Upgrade to Premium */}
           <button
             onClick={handleUpgrade}
-            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:from-amber-400 hover:to-orange-400 transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:from-amber-400 hover:to-orange-400 transition-all flex items-center justify-center gap-2 shimmer-cta"
           >
             <Crown className="w-5 h-5" />
             <span>Upgrade to Premium</span>

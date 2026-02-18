@@ -1,47 +1,49 @@
 'use client'
 
 import { useMemo, useCallback, useRef, useState, useEffect } from 'react'
-import { ConstellationBackground } from './ConstellationBackground'
-import { WaveFieldBackground } from './WaveFieldBackground'
-import { GeometricMeshBackground } from './GeometricMeshBackground'
-import { FirefliesBackground } from './FirefliesBackground'
-import { GridTraceBackground } from './GridTraceBackground'
-import { NeuralNetworkBackground } from './NeuralNetworkBackground'
-import { HexGridBackground } from './HexGridBackground'
-import { CircuitTraceBackground } from './CircuitTraceBackground'
-import { NebulaBackground } from './NebulaBackground'
-import { AstralVortexBackground } from './AstralVortexBackground'
-import { ShootingStarsBackground } from './ShootingStarsBackground'
-import { FallingSandBackground } from './FallingSandBackground'
-import { StoneRipplesBackground } from './StoneRipplesBackground'
-import { EmbersBackground } from './EmbersBackground'
-import { FracturesBackground } from './FracturesBackground'
-import { FallingPetalsBackground } from './FallingPetalsBackground'
-import { WaterDropsBackground } from './WaterDropsBackground'
-import { CherryBlossomsBackground } from './CherryBlossomsBackground'
-import { InkWashBackground } from './InkWashBackground'
-import { LightningBackground } from './LightningBackground'
-import { ErosionBackground } from './ErosionBackground'
-import { CigarSmokeBackground } from './CigarSmokeBackground'
-import { SparksBackground } from './SparksBackground'
-import { HourglassBackground } from './HourglassBackground'
-import { ColumnsBackground } from './ColumnsBackground'
-import { MarbleVeinsBackground } from './MarbleVeinsBackground'
-import { FallingLeavesBackground } from './FallingLeavesBackground'
-import { PendulumBackground } from './PendulumBackground'
-import { NewtonsCradleBackground } from './NewtonsCradleBackground'
-import { VoidBackground } from './VoidBackground'
-import { DissolutionBackground } from './DissolutionBackground'
-import { BubblesBackground } from './BubblesBackground'
-import { CandleFlamesBackground } from './CandleFlamesBackground'
-import { DandelionSeedsBackground } from './DandelionSeedsBackground'
-import { KatanaSlashBackground } from './KatanaSlashBackground'
-import { BambooForestBackground } from './BambooForestBackground'
-import { ZenGardenBackground } from './ZenGardenBackground'
-import { IncenseSmokeBackground } from './IncenseSmokeBackground'
-import { KatanaSwordBackground } from './KatanaSwordBackground'
-import { SamuraiHelmetBackground } from './SamuraiHelmetBackground'
-import { FourSeasonsBackground } from './FourSeasonsBackground'
+import dynamic from 'next/dynamic'
+
+const ConstellationBackground = dynamic(() => import('./ConstellationBackground').then(m => m.ConstellationBackground), { ssr: false })
+const WaveFieldBackground = dynamic(() => import('./WaveFieldBackground').then(m => m.WaveFieldBackground), { ssr: false })
+const GeometricMeshBackground = dynamic(() => import('./GeometricMeshBackground').then(m => m.GeometricMeshBackground), { ssr: false })
+const FirefliesBackground = dynamic(() => import('./FirefliesBackground').then(m => m.FirefliesBackground), { ssr: false })
+const GridTraceBackground = dynamic(() => import('./GridTraceBackground').then(m => m.GridTraceBackground), { ssr: false })
+const NeuralNetworkBackground = dynamic(() => import('./NeuralNetworkBackground').then(m => m.NeuralNetworkBackground), { ssr: false })
+const HexGridBackground = dynamic(() => import('./HexGridBackground').then(m => m.HexGridBackground), { ssr: false })
+const CircuitTraceBackground = dynamic(() => import('./CircuitTraceBackground').then(m => m.CircuitTraceBackground), { ssr: false })
+const NebulaBackground = dynamic(() => import('./NebulaBackground').then(m => m.NebulaBackground), { ssr: false })
+const AstralVortexBackground = dynamic(() => import('./AstralVortexBackground').then(m => m.AstralVortexBackground), { ssr: false })
+const ShootingStarsBackground = dynamic(() => import('./ShootingStarsBackground').then(m => m.ShootingStarsBackground), { ssr: false })
+const FallingSandBackground = dynamic(() => import('./FallingSandBackground').then(m => m.FallingSandBackground), { ssr: false })
+const StoneRipplesBackground = dynamic(() => import('./StoneRipplesBackground').then(m => m.StoneRipplesBackground), { ssr: false })
+const EmbersBackground = dynamic(() => import('./EmbersBackground').then(m => m.EmbersBackground), { ssr: false })
+const FracturesBackground = dynamic(() => import('./FracturesBackground').then(m => m.FracturesBackground), { ssr: false })
+const FallingPetalsBackground = dynamic(() => import('./FallingPetalsBackground').then(m => m.FallingPetalsBackground), { ssr: false })
+const WaterDropsBackground = dynamic(() => import('./WaterDropsBackground').then(m => m.WaterDropsBackground), { ssr: false })
+const CherryBlossomsBackground = dynamic(() => import('./CherryBlossomsBackground').then(m => m.CherryBlossomsBackground), { ssr: false })
+const InkWashBackground = dynamic(() => import('./InkWashBackground').then(m => m.InkWashBackground), { ssr: false })
+const LightningBackground = dynamic(() => import('./LightningBackground').then(m => m.LightningBackground), { ssr: false })
+const ErosionBackground = dynamic(() => import('./ErosionBackground').then(m => m.ErosionBackground), { ssr: false })
+const CigarSmokeBackground = dynamic(() => import('./CigarSmokeBackground').then(m => m.CigarSmokeBackground), { ssr: false })
+const SparksBackground = dynamic(() => import('./SparksBackground').then(m => m.SparksBackground), { ssr: false })
+const HourglassBackground = dynamic(() => import('./HourglassBackground').then(m => m.HourglassBackground), { ssr: false })
+const ColumnsBackground = dynamic(() => import('./ColumnsBackground').then(m => m.ColumnsBackground), { ssr: false })
+const MarbleVeinsBackground = dynamic(() => import('./MarbleVeinsBackground').then(m => m.MarbleVeinsBackground), { ssr: false })
+const FallingLeavesBackground = dynamic(() => import('./FallingLeavesBackground').then(m => m.FallingLeavesBackground), { ssr: false })
+const PendulumBackground = dynamic(() => import('./PendulumBackground').then(m => m.PendulumBackground), { ssr: false })
+const NewtonsCradleBackground = dynamic(() => import('./NewtonsCradleBackground').then(m => m.NewtonsCradleBackground), { ssr: false })
+const VoidBackground = dynamic(() => import('./VoidBackground').then(m => m.VoidBackground), { ssr: false })
+const DissolutionBackground = dynamic(() => import('./DissolutionBackground').then(m => m.DissolutionBackground), { ssr: false })
+const BubblesBackground = dynamic(() => import('./BubblesBackground').then(m => m.BubblesBackground), { ssr: false })
+const CandleFlamesBackground = dynamic(() => import('./CandleFlamesBackground').then(m => m.CandleFlamesBackground), { ssr: false })
+const DandelionSeedsBackground = dynamic(() => import('./DandelionSeedsBackground').then(m => m.DandelionSeedsBackground), { ssr: false })
+const KatanaSlashBackground = dynamic(() => import('./KatanaSlashBackground').then(m => m.KatanaSlashBackground), { ssr: false })
+const BambooForestBackground = dynamic(() => import('./BambooForestBackground').then(m => m.BambooForestBackground), { ssr: false })
+const ZenGardenBackground = dynamic(() => import('./ZenGardenBackground').then(m => m.ZenGardenBackground), { ssr: false })
+const IncenseSmokeBackground = dynamic(() => import('./IncenseSmokeBackground').then(m => m.IncenseSmokeBackground), { ssr: false })
+const KatanaSwordBackground = dynamic(() => import('./KatanaSwordBackground').then(m => m.KatanaSwordBackground), { ssr: false })
+const SamuraiHelmetBackground = dynamic(() => import('./SamuraiHelmetBackground').then(m => m.SamuraiHelmetBackground), { ssr: false })
+const FourSeasonsBackground = dynamic(() => import('./FourSeasonsBackground').then(m => m.FourSeasonsBackground), { ssr: false })
 
 export const BACKGROUND_ANIMATIONS = [
   { id: 'constellation', name: 'Constellation', description: 'Connected star nodes', component: ConstellationBackground },

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { X, Zap } from 'lucide-react'
 import { RARITY_TEXT, RARITY_COLORS } from '@/lib/achievements'
 
@@ -18,47 +18,79 @@ interface AchievementCelebrationProps {
 
 const RARITY_GLOW_STYLE: Record<string, string> = {
   common: '0 0 40px rgba(255,255,255,0.06)',
-  rare: '0 0 40px rgba(96,165,250,0.15)',
-  epic: '0 0 50px rgba(192,132,252,0.2)',
-  legendary: '0 0 60px rgba(251,191,36,0.25)',
+  rare: '0 0 40px rgba(255,255,255,0.12)',
+  epic: '0 0 50px rgba(255,255,255,0.18)',
+  legendary: '0 0 60px rgba(255,255,255,0.25)',
+}
+
+// Rarity-based particle config (black & white only)
+const PARTICLE_CONFIG: Record<string, { count: number; opacity: number; glow: string; sizeBoost: number }> = {
+  common: { count: 15, opacity: 0.5, glow: 'none', sizeBoost: 0 },
+  rare: { count: 20, opacity: 0.7, glow: 'none', sizeBoost: 0 },
+  epic: { count: 25, opacity: 0.85, glow: '0 0 4px rgba(255,255,255,0.4)', sizeBoost: 0 },
+  legendary: { count: 30, opacity: 0.95, glow: '0 0 6px rgba(255,255,255,0.6)', sizeBoost: 1 },
 }
 
 export function AchievementCelebration({ achievement, onClose }: AchievementCelebrationProps) {
   const [visible, setVisible] = useState(false)
-  const [particles, setParticles] = useState<{ id: number; x: number; size: number; delay: number; color: string; drift: number }[]>([])
+  const [fadeOut, setFadeOut] = useState(false)
 
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true))
-
-    const colors =
-      achievement.rarity === 'legendary' ? ['#fbbf24', '#f59e0b', '#fcd34d', '#f97316', '#fbbf24', '#fde68a'] :
-      achievement.rarity === 'epic' ? ['#a855f7', '#c084fc', '#7c3aed', '#818cf8', '#a78bfa', '#c4b5fd'] :
-      achievement.rarity === 'rare' ? ['#3b82f6', '#60a5fa', '#2563eb', '#93c5fd', '#6366f1', '#818cf8'] :
-      ['#9ca3af', '#d1d5db', '#e5e7eb', '#f3f4f6', '#6b7280', '#f9fafb']
-
-    const newParticles = Array.from({ length: 32 }, (_, i) => ({
+  // Generate confetti particles (falling from top — existing style)
+  const confettiParticles = useMemo(() => {
+    return Array.from({ length: 32 }, (_, i) => ({
       id: i,
       x: 10 + Math.random() * 80,
       size: 3 + Math.random() * 5,
       delay: Math.random() * 0.8,
-      color: colors[i % colors.length],
+      color: `rgba(255,255,255,${0.3 + Math.random() * 0.5})`,
       drift: (Math.random() - 0.5) * 60,
     }))
-    setParticles(newParticles)
+  }, [])
 
-    const timer = setTimeout(onClose, 4500)
-    return () => clearTimeout(timer)
-  }, [onClose, achievement.rarity])
+  // Generate burst particles (radial from center)
+  const burstParticles = useMemo(() => {
+    const config = PARTICLE_CONFIG[achievement.rarity] || PARTICLE_CONFIG.common
+    return Array.from({ length: config.count }, (_, i) => ({
+      id: i,
+      px: (Math.random() - 0.5) * 120, // -60 to 60
+      py: (Math.random() - 0.5) * 120,
+      size: 2 + Math.random() * 2 + config.sizeBoost,
+      opacity: config.opacity,
+      glow: config.glow,
+    }))
+  }, [achievement.rarity])
+
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true))
+
+    // Start fade-out at 3000ms
+    const fadeTimer = setTimeout(() => setFadeOut(true), 3000)
+    // Close at 3500ms (after 500ms fade-out)
+    const closeTimer = setTimeout(onClose, 3500)
+    return () => {
+      clearTimeout(fadeTimer)
+      clearTimeout(closeTimer)
+    }
+  }, [onClose])
 
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
+      style={fadeOut ? { animation: 'achievement-fade-out 500ms ease-out forwards' } : undefined}
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
 
-      {/* Confetti */}
-      {particles.map(p => (
+      {/* White flash overlay */}
+      {visible && (
+        <div
+          className="absolute inset-0 bg-white pointer-events-none"
+          style={{ animation: 'achievement-flash 150ms ease-out forwards' }}
+        />
+      )}
+
+      {/* Confetti (falling from top) */}
+      {confettiParticles.map(p => (
         <div
           key={p.id}
           className="absolute rounded-full"
@@ -93,16 +125,58 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
 
         <p className="text-[10px] text-white/60 uppercase tracking-[0.2em] font-medium mb-4">Achievement Unlocked</p>
 
-        <div className="text-5xl mb-3 animate-achievement-icon">{achievement.icon}</div>
+        {/* Icon with staged reveal */}
+        <div
+          className="text-5xl mb-3"
+          style={{ animation: 'achievement-icon-reveal 400ms ease-out 200ms both' }}
+        >
+          {achievement.icon}
+        </div>
 
-        <h3 className="text-lg font-bold text-white mb-1">{achievement.title}</h3>
-        <p className="text-[12px] text-white/70 leading-relaxed mb-4">{achievement.description}</p>
+        {/* Burst particles positioned around the icon */}
+        <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          {burstParticles.map(p => (
+            <div
+              key={p.id}
+              className="absolute rounded-full bg-white"
+              style={{
+                width: `${p.size}px`,
+                height: `${p.size}px`,
+                opacity: 0,
+                left: '0px',
+                top: '0px',
+                ['--px' as string]: `${p.px}px`,
+                ['--py' as string]: `${p.py}px`,
+                boxShadow: p.glow,
+                animation: 'achievement-particle 800ms ease-out 700ms forwards',
+              }}
+            />
+          ))}
+        </div>
 
-        <div className="flex items-center justify-center gap-3">
+        {/* Title with staged entry */}
+        <h3
+          className="text-lg font-bold text-white mb-1"
+          style={{ animation: 'achievement-title-in 300ms ease-out 500ms both' }}
+        >
+          {achievement.title}
+        </h3>
+        <p
+          className="text-[12px] text-white/70 leading-relaxed mb-4"
+          style={{ animation: 'achievement-title-in 300ms ease-out 600ms both' }}
+        >
+          {achievement.description}
+        </p>
+
+        {/* XP and rarity with staged entry */}
+        <div
+          className="flex items-center justify-center gap-3"
+          style={{ animation: 'achievement-xp-count 300ms ease-out 1200ms both' }}
+        >
           <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${RARITY_COLORS[achievement.rarity]} ${RARITY_TEXT[achievement.rarity]}`}>
             {achievement.rarity}
           </span>
-          <span className="flex items-center gap-1 text-amber-400 font-bold text-sm">
+          <span className="flex items-center gap-1 text-white font-bold text-sm">
             <Zap className="w-3.5 h-3.5" />
             +{achievement.xpReward} XP
           </span>
@@ -121,15 +195,6 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
         }
         .animate-achievement-enter {
           animation: achievement-enter 0.5s ease-out forwards;
-        }
-        @keyframes achievement-icon {
-          0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
-          40% { transform: scale(1.2) rotate(5deg); opacity: 1; }
-          60% { transform: scale(0.95) rotate(-2deg); }
-          100% { transform: scale(1) rotate(0deg); }
-        }
-        .animate-achievement-icon {
-          animation: achievement-icon 0.7s ease-out 0.2s both;
         }
       `}</style>
     </div>

@@ -70,9 +70,16 @@ export async function POST(request: NextRequest) {
     const body = await request.text()
     const signature = request.headers.get('x-revenuecat-signature')
 
-    // Verify webhook signature (optional but recommended)
+    // Verify webhook signature (mandatory)
     const webhookSecret = process.env.REVENUECAT_WEBHOOK_SECRET
-    if (webhookSecret && !verifyWebhookSignature(body, signature, webhookSecret)) {
+    if (!webhookSecret) {
+      console.error('REVENUECAT_WEBHOOK_SECRET not configured')
+      return NextResponse.json(
+        { error: 'Webhook not configured' },
+        { status: 500 }
+      )
+    }
+    if (!verifyWebhookSignature(body, signature, webhookSecret)) {
       console.error('Invalid RevenueCat webhook signature')
       return NextResponse.json(
         { error: 'Invalid signature' },

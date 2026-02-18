@@ -48,6 +48,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Reorder items if provided
     if (body.itemOrder && Array.isArray(body.itemOrder)) {
+      const playlistItems = await prisma.playlistItem.findMany({
+        where: { playlist_id: id },
+        select: { id: true }
+      })
+      const validIds = new Set(playlistItems.map(i => i.id))
+      const allValid = body.itemOrder.every((itemId: string) => validIds.has(itemId))
+      if (!allValid) return NextResponse.json({ error: 'Invalid item IDs' }, { status: 400 })
+
       const updates = body.itemOrder.map((itemId: string, index: number) =>
         prisma.playlistItem.update({ where: { id: itemId }, data: { position: index } })
       )

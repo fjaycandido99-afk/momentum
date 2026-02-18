@@ -81,17 +81,20 @@ export function HeroCarousel({ children, autoPlayMs = 5000 }: HeroCarouselProps)
       </div>
 
       {/* Dot indicators */}
-      <div className="flex items-center justify-center gap-1.5 mt-3">
+      <div className="flex items-center justify-center gap-0 mt-3">
         {Array.from({ length: count }, (_, i) => (
           <button
             key={i}
+            aria-label={`Go to slide ${i + 1}`}
             onClick={() => { pauseAutoPlay(10000); scrollTo(i) }}
-            className={`rounded-full transition-all duration-300 ${
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
+            <span className={`block rounded-full transition-all duration-300 ${
               i === activeIndex
                 ? 'w-5 h-1.5 bg-white/60 carousel-dot-active'
                 : 'w-1.5 h-1.5 bg-white/20'
-            }`}
-          />
+            }`} />
+          </button>
         ))}
       </div>
       <div className="px-6"><FeatureHint id="home-hero-swipe" text="Swipe for your Daily Guide, Path, Week & Quote" mode="once" /></div>

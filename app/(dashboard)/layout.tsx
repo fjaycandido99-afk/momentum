@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { MinimalNav } from '@/components/navigation/MinimalNav'
 import { DailyBackground } from '@/components/player/DailyBackground'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { PageTransition } from '@/components/ui/PageTransition'
 import { Providers } from './providers'
 
 function MindsetBackground() {

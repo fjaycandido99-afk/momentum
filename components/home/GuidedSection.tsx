@@ -452,7 +452,7 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
       <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header">Guided</h2>
       <div className="px-6"><FeatureHint id="home-guided" text="Voice-guided sessions for breathing, gratitude & sleep" mode="once" /></div>
       <div className="flex gap-3 overflow-x-auto px-6 pb-4 scrollbar-hide snap-row">
-        {VOICE_GUIDES.map((guide) => {
+        {VOICE_GUIDES.map((guide, index) => {
           const Icon = guide.icon
           const isLoading = loadingGuide === guide.id
           const isGuideActive = guideLabel === guide.name && guideIsPlaying
@@ -464,7 +464,8 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
               aria-label={`${guide.name} guide${isGuideActive ? ' (playing)' : isLoading ? ' (loading)' : ''}${isLocked ? ' (premium)' : ''}`}
               onClick={() => onPlay(guide.id, guide.name, isLocked)}
               disabled={isLoading}
-              className="shrink-0 press-scale snap-card"
+              className="shrink-0 press-scale snap-card card-stagger"
+              style={{ animationDelay: `${index * 80}ms` }}
             >
               <div
                 className={`relative w-40 h-52 rounded-2xl overflow-hidden flex flex-col bg-black border-2 border-white/[0.15] ${isGuideActive ? 'breathing-glow' : ''}`}

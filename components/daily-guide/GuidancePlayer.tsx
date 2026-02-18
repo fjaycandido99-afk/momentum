@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Pause, Play, RotateCcw, Volume2, VolumeX, Check, Music, Crown, Clock } from 'lucide-react'
+import { WaveformScrubber } from '@/components/player/WaveformScrubber'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
@@ -475,6 +476,7 @@ export function GuidancePlayer({
       const fetchMusic = async () => {
         try {
           const response = await fetch(`/api/music-videos?genre=${musicGenre}`)
+          if (!response.ok) { console.warn('[GuidancePlayer] music fetch failed:', response.status); return }
           const data = await response.json()
           if (data.videos && data.videos.length > 0) {
             // Pick a random video from the results
@@ -625,6 +627,15 @@ export function GuidancePlayer({
     }
   }, [musicVolume, musicLoaded, isMusicMuted])
 
+  const handleAudioEnd = useCallback(() => {
+    setIsPlaying(false)
+    setIsCompleted(true)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+    onComplete()
+  }, [onComplete])
+
   // Create audio element from base64 - use native audio on native platforms
   useEffect(() => {
     const audioId = nativeAudioId.current
@@ -738,16 +749,7 @@ export function GuidancePlayer({
         nativeAudioLoadedRef.current = false
       }
     }
-  }, [audioBase64, totalDuration])
-
-  const handleAudioEnd = useCallback(() => {
-    setIsPlaying(false)
-    setIsCompleted(true)
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-    }
-    onComplete()
-  }, [onComplete])
+  }, [audioBase64, totalDuration, handleAudioEnd])
 
   // Check for free tier time limit
   useEffect(() => {
@@ -1152,13 +1154,19 @@ export function GuidancePlayer({
 
       {/* Bottom controls */}
       <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
-        {/* Progress bar */}
-        <div role="progressbar" aria-valuenow={Math.round(currentTime)} aria-valuemin={0} aria-valuemax={totalDuration} aria-label="Playback progress" className="w-full h-1 bg-white/10 rounded-full mb-6 overflow-hidden">
-          <div
-            className="h-full bg-white/40 rounded-full transition-all duration-100"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        {/* Waveform scrubber */}
+        <WaveformScrubber
+          progress={progress / 100}
+          duration={totalDuration}
+          currentTime={currentTime}
+          onSeek={(time) => {
+            if (audioRef.current) {
+              audioRef.current.currentTime = time
+              setCurrentTime(time)
+            }
+          }}
+          className="mb-4"
+        />
 
         {/* Controls */}
         <div className="flex items-center justify-center gap-6">

@@ -101,14 +101,14 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
       guideAudioRef.current = null
     }
     if (bgPlayerRef.current && bgPlayerReadyRef.current) {
-      try { bgPlayerRef.current.stopVideo() } catch {}
+      try { bgPlayerRef.current.stopVideo() } catch (e) { console.warn('[HomeAudioContext] cleanup error:', e) }
     }
     if (bgProgressIntervalRef.current) {
       clearInterval(bgProgressIntervalRef.current)
       bgProgressIntervalRef.current = null
     }
     if (soundscapePlayerRef.current && soundscapeReadyRef.current) {
-      try { soundscapePlayerRef.current.stopVideo() } catch {}
+      try { soundscapePlayerRef.current.stopVideo() } catch (e) { console.warn('[HomeAudioContext] cleanup error:', e) }
     }
     currentBgVideoIdRef.current = null
     currentScVideoIdRef.current = null
@@ -118,7 +118,7 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
       keepaliveRef.current = null
     }
     if (wakeLockRef.current) {
-      try { wakeLockRef.current.release() } catch {}
+      try { wakeLockRef.current.release() } catch (e) { console.warn('[HomeAudioContext] cleanup error:', e) }
       wakeLockRef.current = null
     }
     if ('mediaSession' in navigator) {

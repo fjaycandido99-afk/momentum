@@ -6,8 +6,7 @@ import { sendPushToUser, NotificationType, NotificationPayload } from '@/lib/pus
 export const dynamic = 'force-dynamic'
 
 /**
- * Send a push notification to the current user (for testing)
- * or to a specific user (admin only)
+ * Send a push notification to the current authenticated user
  */
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +22,6 @@ export async function POST(request: NextRequest) {
       type = 'custom',
       title,
       body: messageBody,
-      targetUserId, // Optional: admin can send to specific user
     } = body
 
     // Validate notification type
@@ -51,8 +49,8 @@ export async function POST(request: NextRequest) {
     if (title) customPayload.title = title
     if (messageBody) customPayload.body = messageBody
 
-    // Send to target user or current user
-    const userId = targetUserId || user.id
+    // Always send to the authenticated user
+    const userId = user.id
     const result = await sendPushToUser(userId, type, customPayload)
 
     return NextResponse.json({

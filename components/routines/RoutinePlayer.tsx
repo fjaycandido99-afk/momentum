@@ -93,7 +93,7 @@ export function RoutinePlayer({ routineId, routineName, steps, onClose }: Routin
           <p className="text-xs text-white/70">{routineName}</p>
           <p className="text-sm text-white/85">Step {currentStep + 1} of {steps.length}</p>
         </div>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors press-scale">
+        <button onClick={onClose} aria-label="Close player" className="p-2 rounded-full hover:bg-white/10 transition-colors press-scale">
           <X className="w-5 h-5 text-white/85" />
         </button>
       </div>

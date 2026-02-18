@@ -23,6 +23,7 @@ export function LongPressPreview({ video, onClose }: LongPressPreviewProps) {
             <h3 className="text-base font-semibold text-white leading-snug flex-1">{video.title}</h3>
             <button
               onClick={onClose}
+              aria-label="Close preview"
               className="shrink-0 p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
             >
               <X className="w-4 h-4 text-white/80" />

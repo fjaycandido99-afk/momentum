@@ -1,9 +1,10 @@
 'use client'
 
-import { Play, Pause, Share2 } from 'lucide-react'
+import { Share2 } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { useShareCard } from '@/hooks/useShareCard'
 import { generateListeningCard } from '@/hooks/useShareCardTemplates'
+import PlayPauseIcon from '@/components/ui/PlayPauseIcon'
 
 type Mode = 'focus' | 'relax' | 'sleep' | 'energy'
 
@@ -86,11 +87,7 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
             onClick={(e) => { e.stopPropagation(); onTogglePlay() }}
             className="w-10 h-10 rounded-full border border-white/25 flex items-center justify-center hover:border-white/40 transition-colors press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
-            {isPlaying ? (
-              <Pause className="w-[18px] h-[18px] text-white" fill="white" />
-            ) : (
-              <Play className="w-[18px] h-[18px] text-white ml-0.5" fill="white" />
-            )}
+            <PlayPauseIcon isPlaying={isPlaying} size={20} />
           </button>
         </div>
       </div>

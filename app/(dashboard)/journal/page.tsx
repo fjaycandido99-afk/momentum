@@ -905,11 +905,12 @@ function JournalContent() {
           /* Dream Journal Mode */
           <div className="space-y-4">
             <div className="p-4 rounded-2xl bg-black border border-white/15">
-              <label className="text-sm text-white flex items-center gap-2 mb-2">
+              <label htmlFor="dream-text" className="text-sm text-white flex items-center gap-2 mb-2">
                 <Moon className="w-4 h-4 text-indigo-400" />
                 Describe your dream
               </label>
               <textarea
+                id="dream-text"
                 ref={dreamRef}
                 value={dreamText}
                 onChange={e => { setDreamText(e.target.value); setDreamSaved(false); setDreamInterpretation(null) }}
@@ -995,11 +996,12 @@ function JournalContent() {
               return (
                 <>
                 <div className="p-4 rounded-2xl bg-black border border-white/15">
-                  <label className="text-sm text-white flex items-center gap-2 mb-2">
+                  <label htmlFor="journal-win" className="text-sm text-white flex items-center gap-2 mb-2">
                     <Sparkles className="w-4 h-4 text-amber-400" />
                     {mp?.prompt1.label || 'What did you learn today?'}
                   </label>
                   <textarea
+                    id="journal-win"
                     ref={winRef}
                     value={win}
                     onChange={(e) => { setWin(e.target.value); setIsSaved(false) }}
@@ -1017,11 +1019,12 @@ function JournalContent() {
                 </div>
 
                 <div className="p-4 rounded-2xl bg-black border border-white/15">
-                  <label className="text-sm text-white flex items-center gap-2 mb-2">
+                  <label htmlFor="journal-gratitude" className="text-sm text-white flex items-center gap-2 mb-2">
                     <Heart className="w-4 h-4 text-pink-400" />
                     {mp?.prompt2.label || 'What are you grateful for?'}
                   </label>
                   <textarea
+                    id="journal-gratitude"
                     ref={gratitudeRef}
                     value={gratitude}
                     onChange={(e) => { setGratitude(e.target.value); setIsSaved(false) }}
@@ -1039,11 +1042,12 @@ function JournalContent() {
                 </div>
 
                 <div className="p-4 rounded-2xl bg-black border border-white/15">
-                  <label className="text-sm text-white flex items-center gap-2 mb-2">
+                  <label htmlFor="journal-intention" className="text-sm text-white flex items-center gap-2 mb-2">
                     <Target className="w-4 h-4 text-purple-400" />
                     {mp?.prompt3.label || "Tomorrow\u0027s intention"}
                   </label>
                   <textarea
+                    id="journal-intention"
                     ref={intentionRef}
                     value={intention}
                     onChange={(e) => { setIntention(e.target.value); setIsSaved(false) }}
@@ -1079,10 +1083,16 @@ function JournalContent() {
           <div>
             {/* Rotating prompt */}
             <div className="flex items-start gap-3 px-4 py-3 rounded-2xl bg-black border border-white/15">
-              <Shuffle
+              <button
+                type="button"
                 onClick={handleShuffle}
-                className="w-4 h-4 text-white/60 shrink-0 cursor-pointer hover:text-white transition-colors mt-0.5"
-              />
+                aria-label="Shuffle prompt"
+                className="shrink-0 mt-0.5"
+              >
+                <Shuffle
+                  className="w-4 h-4 text-white/60 cursor-pointer hover:text-white transition-colors"
+                />
+              </button>
               <p className="text-sm text-white leading-relaxed">
                 {displayPrompt.prompt.text}
               </p>
@@ -1106,13 +1116,14 @@ function JournalContent() {
             {(writingActive || freeText.trim()) && (
               <div className="-mt-px p-4 rounded-2xl bg-black border border-white/15">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs text-white/60 uppercase tracking-widest font-medium">Free Write</label>
+                  <label htmlFor="journal-freewrite" className="text-xs text-white/60 uppercase tracking-widest font-medium">Free Write</label>
                   <VoiceInput
                     onTranscript={handleVoiceTranscript}
                     onInterim={handleVoiceInterim}
                   />
                 </div>
                 <textarea
+                  id="journal-freewrite"
                   ref={freeTextRef}
                   value={freeText}
                   onChange={(e) => { setFreeText(e.target.value); setIsSaved(false) }}
@@ -1339,14 +1350,14 @@ function JournalContent() {
                           </p>
                           <div className="flex items-center gap-2">
                             {moodEmoji && <span className="text-sm" style={!entry.journal_mood || entry.journal_mood === selectedDate.toDateString() ? undefined : { filter: 'grayscale(1)', opacity: 0.5 }}>{moodEmoji}</span>}
-                            <span
-                              role="button"
+                            <button
+                              type="button"
                               onClick={(e) => { e.stopPropagation(); setDeleteConfirmDate(isConfirmingDelete ? null : entryDateStr) }}
                               className="p-1 -mr-1 rounded-lg hover:bg-red-500/15 text-white/25 hover:text-red-400 transition-colors"
                               aria-label="Delete entry"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                            </span>
+                            </button>
                           </div>
                         </div>
                         {entry.journal_freetext ? (

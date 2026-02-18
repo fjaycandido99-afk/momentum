@@ -95,6 +95,10 @@ const CONTENT_TYPES = {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { type, textOnly } = await request.json()
     const contentType = CONTENT_TYPES[type as keyof typeof CONTENT_TYPES] || CONTENT_TYPES.breathing
     const preWritten = CALM_VOICE_SCRIPTS[type as keyof typeof CALM_VOICE_SCRIPTS]
@@ -102,15 +106,11 @@ export async function POST(request: NextRequest) {
     // Get authenticated user's tone preference
     let tone = 'calm'
     try {
-      const supabase = await createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user?.id) {
-        const prefs = await prisma.userPreferences.findUnique({
-          where: { user_id: user.id },
-          select: { guide_tone: true },
-        })
-        tone = prefs?.guide_tone || 'calm'
-      }
+      const prefs = await prisma.userPreferences.findUnique({
+        where: { user_id: user.id },
+        select: { guide_tone: true },
+      })
+      tone = prefs?.guide_tone || 'calm'
     } catch {
       // Fall back to calm tone
     }

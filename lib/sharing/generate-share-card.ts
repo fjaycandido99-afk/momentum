@@ -1,5 +1,3 @@
-import html2canvas from 'html2canvas'
-
 /**
  * Renders a DOM element as a PNG image and triggers native sharing or download.
  */
@@ -8,6 +6,7 @@ export async function generateShareCard(
   filename: string = 'voxu-share.png'
 ): Promise<Blob | null> {
   try {
+    const html2canvas = (await import('html2canvas')).default
     const canvas = await html2canvas(element, {
       backgroundColor: '#0a0a0f',
       scale: 2,

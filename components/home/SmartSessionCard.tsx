@@ -281,7 +281,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
             <Sparkles className="w-4 h-4 text-purple-400" />
             <h3 className="text-sm font-medium text-white">Custom Session</h3>
           </div>
-          <button onClick={resetSession} className="p-1 rounded-full hover:bg-white/10">
+          <button onClick={resetSession} aria-label="Reset session" className="p-1 rounded-full hover:bg-white/10">
             <X className="w-4 h-4 text-white/60" />
           </button>
         </div>
@@ -390,7 +390,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
           <Sparkles className="w-4 h-4 text-purple-400" />
           <h3 className="text-sm font-medium text-white">Your Session</h3>
         </div>
-        <button onClick={resetSession} className="p-1 rounded-full hover:bg-white/10">
+        <button onClick={resetSession} aria-label="Reset session" className="p-1 rounded-full hover:bg-white/10">
           <X className="w-4 h-4 text-white/60" />
         </button>
       </div>

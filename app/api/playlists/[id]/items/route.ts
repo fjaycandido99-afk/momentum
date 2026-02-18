@@ -64,6 +64,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const { itemId } = await request.json()
     if (!itemId) return NextResponse.json({ error: 'itemId required' }, { status: 400 })
 
+    const item = await prisma.playlistItem.findFirst({
+      where: { id: itemId, playlist_id: id }
+    })
+    if (!item) return NextResponse.json({ error: 'Item not found in playlist' }, { status: 404 })
+
     await prisma.playlistItem.delete({ where: { id: itemId } })
 
     return NextResponse.json({ success: true })

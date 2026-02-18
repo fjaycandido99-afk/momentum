@@ -240,7 +240,13 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   if (!subscription) return
 
-  // Keep premium but mark as having payment issues
-  // In production, you might want to add a payment_failed status
+  // Mark subscription as past_due so the app can show payment issue warnings
   console.log(`Payment failed for customer ${customerId}`)
+
+  if (customerId) {
+    await prisma.subscription.updateMany({
+      where: { stripe_customer_id: customerId },
+      data: { status: 'past_due' }
+    })
+  }
 }
