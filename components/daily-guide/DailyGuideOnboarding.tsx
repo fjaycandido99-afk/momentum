@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
@@ -18,8 +18,12 @@ import {
   Sparkles,
   PenLine,
   X,
+  Play,
+  Pause,
+  Volume2,
 } from 'lucide-react'
 import type { GuideTone } from '@/lib/ai/daily-guide-prompts'
+import type { YTPlayer } from '@/lib/youtube-types'
 import { ONBOARDING_COPY } from '@/lib/onboarding-copy'
 import { SuccessAnimation } from '@/components/ui/SuccessAnimation'
 
@@ -68,6 +72,8 @@ const PREVIEW_CARDS = [
     image: '/backgrounds/bg9.jpg',
     icon: Zap,
     pills: ['7 Topics', 'Video & Audio'],
+    sampleYoutubeId: 'dkHn3ciJg9o',
+    sampleStart: 60,
   },
   {
     title: 'Music',
@@ -75,6 +81,8 @@ const PREVIEW_CARDS = [
     image: '/backgrounds/lofi/lofi1.jpg',
     icon: Music,
     pills: ['7 Genres', 'Background Play'],
+    sampleYoutubeId: 'lTRiuFIWV54',
+    sampleStart: 45,
   },
   {
     title: 'Soundscapes',
@@ -82,6 +90,8 @@ const PREVIEW_CARDS = [
     image: '/backgrounds/bg10.jpg',
     icon: Headphones,
     pills: ['17 Sounds', 'Ambient Mixer'],
+    sampleYoutubeId: 'xNN7iTA57jM',
+    sampleStart: 30,
   },
   {
     title: 'Daily Guide & AI',
@@ -89,6 +99,8 @@ const PREVIEW_CARDS = [
     image: '/backgrounds/bg22.jpg',
     icon: Sparkles,
     pills: ['Morning Modules', 'AI Coaching'],
+    sampleYoutubeId: '77ZozI0rw7w',
+    sampleStart: 60,
   },
   {
     title: 'Journal & Progress',
@@ -123,6 +135,95 @@ export function DailyGuideOnboarding() {
     const idx = Math.round(el.scrollLeft / cardWidth)
     setActiveCard(Math.min(idx, PREVIEW_CARDS.length - 1))
   }, [])
+
+  // Audio preview player
+  const [playingCardIndex, setPlayingCardIndex] = useState<number | null>(null)
+  const previewPlayerRef = useRef<YTPlayer | null>(null)
+  const previewContainerRef = useRef<HTMLDivElement>(null)
+  const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const destroyPreviewPlayer = useCallback(() => {
+    if (previewTimerRef.current) {
+      clearTimeout(previewTimerRef.current)
+      previewTimerRef.current = null
+    }
+    try { previewPlayerRef.current?.destroy() } catch {}
+    previewPlayerRef.current = null
+  }, [])
+
+  const togglePreview = useCallback((cardIndex: number) => {
+    const card = PREVIEW_CARDS[cardIndex]
+    if (!card.sampleYoutubeId) return
+
+    // If same card is playing, stop it
+    if (playingCardIndex === cardIndex) {
+      destroyPreviewPlayer()
+      setPlayingCardIndex(null)
+      return
+    }
+
+    // Stop previous
+    destroyPreviewPlayer()
+    setPlayingCardIndex(cardIndex)
+
+    const loadPlayer = () => {
+      if (!previewContainerRef.current) return
+      previewContainerRef.current.innerHTML = ''
+      const div = document.createElement('div')
+      div.id = 'onboarding-preview-' + Date.now()
+      previewContainerRef.current.appendChild(div)
+
+      previewPlayerRef.current = new window.YT.Player(div.id, {
+        videoId: card.sampleYoutubeId!,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          rel: 0,
+          start: card.sampleStart ?? 0,
+          end: (card.sampleStart ?? 0) + 30,
+        },
+        events: {
+          onReady: (e: { target: YTPlayer }) => {
+            e.target.setVolume(50)
+            e.target.playVideo()
+            // Fallback 30s timer in case 'end' param doesn't fire ENDED
+            previewTimerRef.current = setTimeout(() => {
+              setPlayingCardIndex(null)
+              destroyPreviewPlayer()
+            }, 30000)
+          },
+          onStateChange: (e: { data: number; target: YTPlayer }) => {
+            if (e.data === window.YT.PlayerState.ENDED) {
+              setPlayingCardIndex(null)
+              destroyPreviewPlayer()
+            }
+          },
+        },
+      })
+    }
+
+    if (window.YT?.Player) {
+      loadPlayer()
+    } else {
+      const tag = document.createElement('script')
+      tag.src = 'https://www.youtube.com/iframe_api'
+      const first = document.getElementsByTagName('script')[0]
+      first.parentNode?.insertBefore(tag, first)
+      window.onYouTubeIframeAPIReady = loadPlayer
+    }
+  }, [playingCardIndex, destroyPreviewPlayer])
+
+  // Stop preview when leaving step 0
+  useEffect(() => {
+    if (step !== 0) {
+      destroyPreviewPlayer()
+      setPlayingCardIndex(null)
+    }
+  }, [step, destroyPreviewPlayer])
 
   const handleNext = () => {
     if (step < totalSteps - 1 && !animating) {
@@ -231,8 +332,8 @@ export function DailyGuideOnboarding() {
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex gap-4 overflow-x-auto px-[7.5vw] pb-4 no-scrollbar"
-              style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
+              className="flex gap-4 overflow-x-auto px-[7.5vw] pb-1 no-scrollbar"
+              style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
             >
               {PREVIEW_CARDS.map((card, i) => {
                 const Icon = card.icon
@@ -251,6 +352,26 @@ export function DailyGuideOnboarding() {
                     />
                     {/* Gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                    {/* Audio preview button */}
+                    {card.sampleYoutubeId && (
+                      <button
+                        onClick={() => togglePreview(i)}
+                        className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 h-9 rounded-full bg-white/15 backdrop-blur hover:bg-white/25 transition-all press-scale"
+                        aria-label={playingCardIndex === i ? 'Pause sample' : 'Play sample'}
+                      >
+                        {playingCardIndex === i ? (
+                          <>
+                            <Volume2 className="w-4 h-4 text-white animate-pulse" />
+                            <span className="text-xs text-white/90 font-medium">Playing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-4 h-4 text-white ml-0.5" />
+                            <span className="text-xs text-white/80 font-medium">Preview</span>
+                          </>
+                        )}
+                      </button>
+                    )}
                     {/* Content */}
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                       <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur flex items-center justify-center mb-3">
@@ -496,13 +617,6 @@ export function DailyGuideOnboarding() {
             />
           ))}
         </div>
-        {/* Animated progress bar */}
-        <div className="mt-2 mx-auto max-w-[120px] h-0.5 bg-white/5 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-white/30 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
-          />
-        </div>
       </div>
 
       {/* Content */}
@@ -559,6 +673,9 @@ export function DailyGuideOnboarding() {
           )}
         </div>
       </div>
+
+      {/* Hidden YouTube player for audio previews */}
+      <div ref={previewContainerRef} className="fixed -left-[9999px] w-0 h-0 overflow-hidden" aria-hidden="true" />
     </div>
   )
 }
