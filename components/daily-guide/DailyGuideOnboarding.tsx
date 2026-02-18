@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import {
   ChevronRight,
   ChevronLeft,
@@ -11,13 +12,15 @@ import {
   GraduationCap,
   Clock,
   Mic2,
+  Zap,
+  Music,
+  Headphones,
   Sparkles,
-  Layers,
+  PenLine,
+  X,
 } from 'lucide-react'
 import type { GuideTone } from '@/lib/ai/daily-guide-prompts'
-import { BACKGROUND_ANIMATIONS, setPreferredAnimation } from '@/components/player/DailyBackground'
 import { ONBOARDING_COPY } from '@/lib/onboarding-copy'
-import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { SuccessAnimation } from '@/components/ui/SuccessAnimation'
 
 type UserType = 'professional' | 'student'
@@ -58,6 +61,44 @@ const TONES: { value: GuideTone; label: string; description: string }[] = [
   },
 ]
 
+const PREVIEW_CARDS = [
+  {
+    title: 'Motivation',
+    tagline: 'Powerful speeches to fuel your day',
+    image: '/backgrounds/bg9.jpg',
+    icon: Zap,
+    pills: ['7 Topics', 'Video & Audio'],
+  },
+  {
+    title: 'Music',
+    tagline: 'Lo-fi, jazz, piano & more to set your mood',
+    image: '/backgrounds/lofi/lofi1.jpg',
+    icon: Music,
+    pills: ['7 Genres', 'Background Play'],
+  },
+  {
+    title: 'Soundscapes',
+    tagline: 'Rain, ocean, forest & 14 more environments',
+    image: '/backgrounds/bg10.jpg',
+    icon: Headphones,
+    pills: ['17 Sounds', 'Ambient Mixer'],
+  },
+  {
+    title: 'Daily Guide & AI',
+    tagline: 'Personalized modules & smart coaching',
+    image: '/backgrounds/bg22.jpg',
+    icon: Sparkles,
+    pills: ['Morning Modules', 'AI Coaching'],
+  },
+  {
+    title: 'Journal & Progress',
+    tagline: 'Reflect daily, track your growth & earn XP',
+    image: '/backgrounds/bg18.jpg',
+    icon: PenLine,
+    pills: ['Guided Prompts', 'Mood & Streaks'],
+  },
+]
+
 export function DailyGuideOnboarding() {
   const router = useRouter()
   const [step, setStep] = useState(0)
@@ -71,15 +112,17 @@ export function DailyGuideOnboarding() {
     wakeTime: '07:00',
     guideTone: 'calm',
   })
-  const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null)
-  const mindsetCtx = useMindsetOptional()
-
-  // Filter backgrounds to the user's mindset pool
-  const filteredAnimations = mindsetCtx?.backgroundPool
-    ? BACKGROUND_ANIMATIONS.filter(a => mindsetCtx.backgroundPool.includes(a.id))
-    : BACKGROUND_ANIMATIONS
-
   const totalSteps = 4
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [activeCard, setActiveCard] = useState(0)
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const cardWidth = el.scrollWidth / PREVIEW_CARDS.length
+    const idx = Math.round(el.scrollLeft / cardWidth)
+    setActiveCard(Math.min(idx, PREVIEW_CARDS.length - 1))
+  }, [])
 
   const handleNext = () => {
     if (step < totalSteps - 1 && !animating) {
@@ -151,9 +194,6 @@ export function DailyGuideOnboarding() {
       })
 
       if (response.ok) {
-        // Save animation preference to localStorage
-        setPreferredAnimation(selectedAnimation)
-
         // Generate today's guide
         await fetch('/api/daily-guide/generate', {
           method: 'POST',
@@ -174,8 +214,82 @@ export function DailyGuideOnboarding() {
 
   const renderStep = () => {
     switch (step) {
-      // Step 0: Design Your Day
+      // Step 0: Discover Voxu — Feature Preview Carousel
       case 0:
+        return (
+          <div className="w-full max-w-none">
+            <div className="text-center mb-6 px-6">
+              <h2 className="text-2xl font-bold text-white mb-1">
+                {ONBOARDING_COPY.preview.title}
+              </h2>
+              <p className="text-white/70 text-sm">
+                {ONBOARDING_COPY.preview.subtitle}
+              </p>
+            </div>
+
+            {/* Carousel */}
+            <div
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className="flex gap-4 overflow-x-auto px-[7.5vw] pb-4 no-scrollbar"
+              style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
+            >
+              {PREVIEW_CARDS.map((card, i) => {
+                const Icon = card.icon
+                return (
+                  <div
+                    key={i}
+                    className="relative w-[85vw] shrink-0 aspect-[3/4] rounded-2xl overflow-hidden"
+                    style={{ scrollSnapAlign: 'center' }}
+                  >
+                    {/* Background image */}
+                    <Image
+                      src={card.image}
+                      alt={card.title}
+                      fill
+                      className="object-cover"
+                    />
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                    {/* Content */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur flex items-center justify-center mb-3">
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-1">{card.title}</h3>
+                      <p className="text-sm text-white/70 mb-3">{card.tagline}</p>
+                      <div className="flex gap-2">
+                        {card.pills.map((pill) => (
+                          <span
+                            key={pill}
+                            className="px-3 py-1 rounded-full bg-white/10 text-xs text-white/80 backdrop-blur-sm"
+                          >
+                            {pill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Dot indicators */}
+            <div className="flex justify-center gap-2 mt-4">
+              {PREVIEW_CARDS.map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    i === activeCard ? 'bg-white' : 'bg-white/30'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        )
+
+      // Step 1: Design Your Day
+      case 1:
         return (
           <div>
             <h2 className="text-xl font-semibold text-white mb-1 text-center">
@@ -265,8 +379,8 @@ export function DailyGuideOnboarding() {
           </div>
         )
 
-      // Step 1: Choose Your Guide
-      case 1:
+      // Step 2: Choose Your Guide
+      case 2:
         return (
           <div>
             <div className="text-center mb-8">
@@ -304,66 +418,6 @@ export function DailyGuideOnboarding() {
                   </div>
                 </button>
               ))}
-            </div>
-          </div>
-        )
-
-      // Step 2: Set Your Scene
-      case 2:
-        return (
-          <div>
-            <div className="text-center mb-5">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.03] flex items-center justify-center mx-auto mb-4">
-                <Layers className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-xl font-semibold text-white mb-1">
-                {ONBOARDING_COPY.step2.title}
-              </h2>
-              <p className="text-white/75 text-sm">
-                {ONBOARDING_COPY.step2.subtitle}
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {/* Daily Rotation option */}
-              <button
-                onClick={() => setSelectedAnimation(null)}
-                className={`p-2 rounded-xl transition-all press-scale ${
-                  selectedAnimation === null
-                    ? 'bg-white/[0.08] border border-white/[0.15] shadow-[0_0_15px_rgba(255,255,255,0.08)] glow-sm'
-                    : 'bg-white/5 border border-transparent hover:bg-white/10'
-                }`}
-              >
-                <div className="aspect-[3/2] rounded-lg overflow-hidden bg-black/50 mb-2 relative flex items-center justify-center">
-                  <div className="text-center">
-                    <Sparkles className="w-5 h-5 text-white/75 mx-auto mb-1" />
-                    <span className="text-[10px] text-white/70">Auto</span>
-                  </div>
-                </div>
-                <p className="text-xs font-medium text-white text-center">Daily Rotation</p>
-                <p className="text-[10px] text-white/95 text-center">Changes each day</p>
-              </button>
-
-              {/* Individual animation options with live preview */}
-              {filteredAnimations.map(anim => {
-                const AnimComponent = anim.component
-                return (
-                  <button
-                    key={anim.id}
-                    onClick={() => setSelectedAnimation(anim.id)}
-                    className={`p-2 rounded-xl transition-all press-scale ${
-                      selectedAnimation === anim.id
-                        ? 'bg-white/[0.08] border border-white/[0.15] shadow-[0_0_15px_rgba(255,255,255,0.08)] glow-sm'
-                        : 'bg-white/5 border border-transparent hover:bg-white/10'
-                    }`}
-                  >
-                    <div className="aspect-[3/2] rounded-lg overflow-hidden bg-black/50 mb-2 relative">
-                      <AnimComponent animate topOffset={0} className="absolute inset-0" />
-                    </div>
-                    <p className="text-xs font-medium text-white text-center">{anim.name}</p>
-                    <p className="text-[10px] text-white/95 text-center">{anim.description}</p>
-                  </button>
-                )
-              })}
             </div>
           </div>
         )
@@ -406,10 +460,6 @@ export function DailyGuideOnboarding() {
                   <Mic2 className="w-3.5 h-3.5 text-white/95" />
                   <span>Tone: {TONES.find(t => t.value === data.guideTone)?.label}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Layers className="w-3.5 h-3.5 text-white/95" />
-                  <span>Background: {selectedAnimation ? filteredAnimations.find(a => a.id === selectedAnimation)?.name : 'Daily Rotation'}</span>
-                </div>
               </div>
               <div className="mt-3 pt-3 border-t border-white/15 text-xs text-white/95">
                 Wake: {data.wakeTime} &middot; All modules on
@@ -424,7 +474,16 @@ export function DailyGuideOnboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-black flex flex-col relative">
+      {/* Skip button */}
+      <button
+        onClick={() => router.push('/daily-guide')}
+        className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors press-scale"
+        aria-label="Skip onboarding"
+      >
+        <X className="w-4 h-4 text-white/70" />
+      </button>
+
       {/* Progress */}
       <div className="p-4">
         <div className="flex justify-center gap-2">
@@ -447,10 +506,10 @@ export function DailyGuideOnboarding() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto px-6 pb-32">
+      <div className={`flex-1 flex flex-col min-h-0 overflow-y-auto pb-32 ${step === 0 ? 'px-0' : 'px-6'}`}>
         <div
           key={step}
-          className={`w-full max-w-sm my-auto ${animating ? 'animate-slide-down-exit' : 'animate-slide-up-enter'}`}
+          className={`w-full my-auto ${step === 0 ? '' : 'max-w-sm mx-auto'} ${animating ? 'animate-slide-down-exit' : 'animate-slide-up-enter'}`}
         >
           {renderStep()}
         </div>

@@ -14,6 +14,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'jkrpreixylczfdfdyxrm.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+      },
     ],
   },
   async headers() {

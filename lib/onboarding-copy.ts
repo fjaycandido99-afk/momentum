@@ -1,4 +1,8 @@
 export const ONBOARDING_COPY = {
+  preview: {
+    title: 'Welcome to Voxu',
+    subtitle: 'Everything you need for your daily growth',
+  },
   step0: {
     title: 'Design Your Day',
     subtitle: "We'll build a system designed just for you",
