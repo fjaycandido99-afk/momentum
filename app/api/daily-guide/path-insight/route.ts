@@ -41,6 +41,16 @@ const FALLBACK_INSIGHTS: Record<MindsetId, Array<{ text: string; theme: string; 
     { text: 'Your shadow is not your enemy — it is the unlived life waiting to be integrated. What quality have you been denying? It holds a gift for you.', theme: 'Shadow Work', affirmation: 'I embrace all parts of myself.' },
     { text: 'Synchronicity is the universe arranging meaningful coincidences. Stay alert today — the patterns you notice are invitations from the deeper self.', theme: 'Synchronicity', affirmation: 'I trust the meaningful connections I discover.' },
   ],
+  manifestor: [
+    { text: 'Your imagination is not fantasy — it is a preview of what is coming. Spend time today feeling into the reality you want as if it already exists.', theme: 'Creative Visualization', affirmation: 'I live in the feeling of my wish fulfilled.' },
+    { text: 'Resistance is the only thing between you and your desire. Today, release the doubt, the worry, the "how." Trust that the bridge of incidents is forming.', theme: 'Letting Go', affirmation: 'I release resistance and allow my good to flow.' },
+    { text: 'You do not attract what you want — you attract what you are. Align your inner state with your desire today. Feel abundant before abundance arrives.', theme: 'Energetic Alignment', affirmation: 'I am already the person who has what I desire.' },
+  ],
+  hustler: [
+    { text: 'Nobody owes you anything. Your results are a direct reflection of your effort. Today, close the gap between where you are and where you want to be through pure execution.', theme: 'Extreme Ownership', affirmation: 'I own every outcome in my life.' },
+    { text: 'Motivation is unreliable. Discipline is not. Stop waiting to feel like it and go do the work. The feeling follows the action, not the other way around.', theme: 'Discipline Over Motivation', affirmation: 'I do not negotiate with weakness.' },
+    { text: 'The person you want to become is on the other side of the hard things you keep avoiding. Do the thing you are resisting most — that is where the growth is.', theme: 'Embrace the Suck', affirmation: 'I am built for the hard things.' },
+  ],
 }
 
 interface PathInsight {

@@ -207,4 +207,71 @@ export const MINDSET_FRAMEWORKS: Record<MindsetId, DecisionFramework[]> = {
       conclusion: 'Synchronicity is the universe whispering through pattern. It does not replace rational thought — it complements it. When logic and intuition align, you are on the right path.',
     },
   ],
+  manifestor: [
+    {
+      title: 'The Assumption Technique',
+      description: 'Neville Goddard taught that assuming the feeling of your wish fulfilled is the key to manifestation. Use this framework to clarify and embody your desire.',
+      questions: [
+        { prompt: 'What do you truly want? State it clearly as if telling a friend.', placeholder: 'Describe your desire in specific terms...' },
+        { prompt: 'If this were already yours, how would you feel right now? Describe the emotions.', placeholder: 'Relief, joy, confidence, freedom...' },
+        { prompt: 'What would you be doing differently tomorrow if this were already done?', placeholder: 'How does your daily life look in the fulfilled state...' },
+        { prompt: 'What belief or doubt is keeping you from assuming it is already yours?', placeholder: 'Name the resistance honestly...' },
+      ],
+      conclusion: 'Neville taught: "Assume the feeling of the wish fulfilled and observe the route that your attention follows." You do not create the path — you become the destination, and the path appears.',
+    },
+    {
+      title: 'The Vibration Check',
+      description: 'Your emotional state is your point of attraction. Use this to realign your energy when you notice you have drifted into doubt or fear.',
+      questions: [
+        { prompt: 'What is your dominant emotion right now? Name it honestly.', placeholder: 'Anxious, hopeful, frustrated, peaceful...' },
+        { prompt: 'Is this emotion aligned with the reality you want to create? If not, what emotion would be?', placeholder: 'Identify the target feeling...' },
+        { prompt: 'What is one thought, memory, or visualization that could shift you into that feeling right now?', placeholder: 'A scene, a song, a memory that lifts you...' },
+      ],
+      conclusion: 'You cannot attract abundance from a state of lack, or love from a state of fear. Shift the feeling first. The circumstances follow the vibration, not the other way around.',
+    },
+    {
+      title: 'The Revision Practice',
+      description: 'Neville\'s Revision technique rewrites events that did not go as desired, reprogramming your subconscious and changing future patterns.',
+      questions: [
+        { prompt: 'What event from today or recently did not go the way you wanted?', placeholder: 'A conversation, a result, a reaction...' },
+        { prompt: 'How would you have liked it to go? Describe the ideal version in vivid detail.', placeholder: 'Rewrite the scene as you wish it had unfolded...' },
+        { prompt: 'Close your eyes and replay the revised version. How does it feel?', placeholder: 'Describe the feelings of the revised scene...' },
+      ],
+      conclusion: 'Revision is not denial — it is reprogramming. By revising the past in imagination, you plant new seeds in the subconscious. The revised pattern becomes the template for future experiences.',
+    },
+  ],
+  hustler: [
+    {
+      title: 'The No-Excuses Audit',
+      description: 'Strip away every excuse and face the raw truth about where you are and what you are actually doing about it.',
+      questions: [
+        { prompt: 'What goal are you not making progress on? Be specific.', placeholder: 'Name the exact thing you are stalling on...' },
+        { prompt: 'List every excuse you have told yourself about why you have not done it.', placeholder: 'Time, money, energy, other people...' },
+        { prompt: 'Now cross out each excuse. What is the real reason?', placeholder: 'Usually it is fear, comfort, or lack of discipline...' },
+        { prompt: 'What is the single next action you can take in the next 60 minutes?', placeholder: 'One concrete step — no planning, just doing...' },
+      ],
+      conclusion: 'Goggins says: "The only person who is going to fix you is you." Excuses are comfortable. Results are not. Burn the excuses and take the action. Now.',
+    },
+    {
+      title: 'The After Action Review',
+      description: 'Borrowed from military practice — review your day with brutal honesty to identify wins, losses, and what needs to change.',
+      questions: [
+        { prompt: 'What did you execute on today? List every win, no matter how small.', placeholder: 'Workouts, tasks completed, commitments honored...' },
+        { prompt: 'Where did you slack off, procrastinate, or make excuses?', placeholder: 'Be ruthlessly honest...' },
+        { prompt: 'What is the one change that would make tomorrow 10% better?', placeholder: 'One adjustment, one commitment...' },
+      ],
+      conclusion: 'Jocko teaches: "Discipline equals freedom." This review is not self-punishment — it is self-respect. The person who reviews their day with honesty is the person who improves without limit.',
+    },
+    {
+      title: 'The Uncomfortable Truth',
+      description: 'When you are stuck, it is usually because you are avoiding something hard. This framework forces you to face it.',
+      questions: [
+        { prompt: 'What is the thing you know you should be doing but keep avoiding?', placeholder: 'The hard conversation, the workout, the project...' },
+        { prompt: 'What is the worst that happens if you do it? What is the worst that happens if you keep avoiding it?', placeholder: 'Compare the cost of action vs. inaction...' },
+        { prompt: 'If someone you respect were watching your life right now, would they be impressed or disappointed?', placeholder: 'Be honest with yourself...' },
+        { prompt: 'Set a timer. How quickly can you start this task? Not finish — just start.', placeholder: 'Commit to a start time...' },
+      ],
+      conclusion: 'Hormozi says: "The thing you are most afraid of doing is usually the thing you most need to do." Stop thinking about it. Start it. The resistance disappears the moment you begin.',
+    },
+  ],
 }

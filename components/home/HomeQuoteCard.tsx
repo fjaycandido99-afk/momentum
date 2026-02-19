@@ -21,6 +21,8 @@ const ACCENT_COLORS: Record<MindsetId, string> = {
   hedonist: 'border-emerald-400/30',
   samurai: 'border-red-400/30',
   scholar: 'border-blue-400/30',
+  manifestor: 'border-amber-400/30',
+  hustler: 'border-zinc-400/30',
 }
 
 export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {

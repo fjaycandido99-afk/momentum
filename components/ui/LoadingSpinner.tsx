@@ -68,6 +68,8 @@ const MINDSET_WORDS: Record<MindsetId, string[]> = {
   hedonist: ['savor', 'bloom', 'gratitude', 'warmth', 'delight', 'radiance', 'cherish', 'indulge'],
   samurai: ['discipline', 'honor', 'focus', 'master', 'sharpen', 'forge', 'strike', 'resolve'],
   scholar: ['wonder', 'discover', 'awaken', 'seek', 'unravel', 'illuminate', 'ponder', 'fathom'],
+  manifestor: ['attract', 'believe', 'intend', 'align', 'receive', 'radiate', 'manifest', 'envision'],
+  hustler: ['grind', 'execute', 'dominate', 'outwork', 'conquer', 'relentless', 'unleash', 'attack'],
 }
 
 const GENERIC_WORDS = ['breathe', 'focus', 'flow', 'calm', 'center', 'ground', 'drift', 'settle']

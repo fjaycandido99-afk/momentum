@@ -294,4 +294,108 @@ export const MINDSET_PARABLES: Record<MindsetId, Parable[]> = {
       moral: 'Height gives perspective; depth gives understanding. True wisdom requires both the view from above and the dive within.',
     },
   ],
+  manifestor: [
+    {
+      title: 'Neville\'s Ladder',
+      story: 'Neville Goddard told his students to imagine climbing a ladder each night before sleep — to feel the rungs under their hands, the strain in their arms, the height beneath their feet. Then he told them to write on a card: "I will NOT climb a ladder" and carry it all day. Within a week, nearly every student found themselves climbing a ladder in some unexpected way. The imagination had overridden the conscious intention.',
+      moral: 'What you vividly imagine and feel, you will experience. The subconscious mind does not distinguish between real and imagined.',
+    },
+    {
+      title: 'The Woman and the Apartment',
+      story: 'Florence Scovel Shinn counseled a woman desperate for a new home. Florence told her to give thanks for the perfect apartment as if it were already hers. The woman protested — she had no leads, no money. Florence insisted: "Act as if it is done." The woman began thanking God for her beautiful new home every morning. Within three weeks, a friend offered her a stunning apartment at a price she could afford, without her having searched for it.',
+      moral: 'Gratitude for the unseen opens doors that effort alone cannot. Assume the feeling of the wish fulfilled.',
+    },
+    {
+      title: 'Dispenza\'s Meditation',
+      story: 'A woman in Joe Dispenza\'s workshop had been told her disease was incurable. For weeks, she sat in meditation each morning, refusing to open her eyes as the old self. Instead, she rehearsed being the healthy, vibrant version of herself — feeling the energy, the joy, the freedom. Her body, receiving new signals from a new mind, began to heal. Her doctors called it a miracle. She called it practice.',
+      moral: 'Your body follows the blueprint of your mind. Change the inner image, and the outer condition must follow.',
+    },
+    {
+      title: 'The Pruning Shears of Revision',
+      story: 'Neville taught a technique he called "revision." Each night before sleep, replay the events of the day — but change any scene that did not go well. Rewrite the argument into a kind conversation. Rewrite the rejection into an acceptance. A businessman practiced this nightly. Within months, he noticed that his days began to resemble his revised nights. "I stopped accepting the day as final," he said.',
+      moral: 'The past is not fixed. By revising it in imagination, you change the pattern that creates your future.',
+    },
+    {
+      title: 'Wayne Dyer and the Oranges',
+      story: 'Wayne Dyer would hold up an orange and ask, "If I squeeze this orange, what comes out?" The audience would say, "Orange juice." "Why?" he asked. "Because that\'s what\'s inside." He would nod. "When life squeezes you — when pressure comes — what comes out of you is what\'s inside. If you are filled with anger, anger comes out. If you are filled with love, love comes out. Fill yourself with what you want to give."',
+      moral: 'You cannot give what you do not have within. Fill yourself first, and what overflows will create your world.',
+    },
+    {
+      title: 'The Bridge of Incidents',
+      story: 'A man wanted a promotion but saw no path to it. Neville told him to imagine his boss congratulating him — to feel the handshake, hear the words, see the office. The man did this every night. He did not scheme or plot. Within two months, a series of unlikely events — a transfer, a retirement, a reorganization — led directly to his promotion. No single event seemed connected, yet together they formed a perfect bridge.',
+      moral: 'You do not need to know the "how." Assume the end, and the means will arrange themselves through a bridge of incidents.',
+    },
+    {
+      title: 'Shinn and the Affirmation',
+      story: 'A struggling artist came to Florence Scovel Shinn in despair. She gave him a single affirmation: "Infinite Spirit, open the way for my great abundance. I am an irresistible magnet for all that belongs to me by divine right." He repeated it skeptically. She said, "Your skepticism does not matter. The words are seeds. Plant them and they will grow regardless of your doubt." Within a year, the artist\'s work was being collected by galleries.',
+      moral: 'Words spoken in faith are seeds planted in consciousness. Even seeds planted in doubt will grow if tended with repetition.',
+    },
+    {
+      title: 'The Two Cups',
+      story: 'A teacher placed two cups of water before her students. Over one, they spoke words of gratitude and love. Over the other, words of frustration and hate. After a week, the first cup remained clear while the second grew cloudy. "Your body is mostly water," she said. "What words are you speaking over yourself every day? Your inner dialogue is shaping you at the molecular level."',
+      moral: 'Your self-talk is not neutral. It is a creative force. Speak to yourself as you would speak to what you love.',
+    },
+    {
+      title: 'Dispenza\'s Morning Choice',
+      story: 'Joe Dispenza teaches that the moment you wake up is the most critical. If you reach for your phone, you become the old self instantly — same thoughts, same reactions, same reality. Instead, he sits with eyes closed and asks: "What is the greatest ideal of myself I can be today?" He does not open his eyes until he can feel that version of himself. Then he begins the day as that person.',
+      moral: 'Every morning is a choice between repeating the past and creating the future. Choose before you open your eyes.',
+    },
+    {
+      title: 'The Pearl of Great Price',
+      story: 'Neville often spoke of the pearl of great price — the one treasure worth selling everything for. "The pearl," he said, "is your imagination. Most people trade it for facts, for logic, for what is \'realistic.\' They sell the only thing that can change their world. Guard your imagination. It is more valuable than any possession because it is the source of all possessions."',
+      moral: 'Your imagination is the most powerful tool you possess. Protect it from doubt, cynicism, and the tyranny of "realism."',
+    },
+  ],
+  hustler: [
+    {
+      title: 'Goggins and the Broken Feet',
+      story: 'David Goggins ran his first ultramarathon — 100 miles — with no training. By mile 70, his feet were broken, his kidneys were shutting down, and he was urinating blood. His wife begged him to stop. He taped his feet and kept running. He finished. Not because it was smart. Because he needed to know what he was capable of when every fiber of his body screamed quit.',
+      moral: 'You will never know your limits unless you push past what your mind says is possible. The body can take far more than the mind believes.',
+    },
+    {
+      title: 'Jocko\'s Alarm Clock',
+      story: 'Jocko Willink posts a photo of his watch every morning — 4:30 AM. Every single morning. Someone asked, "Don\'t you ever want to sleep in?" He replied, "The enemy is not sleeping in. The enemy is the version of me that thinks I deserve a break before I\'ve earned one. I win the first battle of the day before the sun comes up."',
+      moral: 'Discipline starts the moment you wake up. Win the first battle, and the rest of the day bends to your will.',
+    },
+    {
+      title: 'Hormozi and the Gym',
+      story: 'When Alex Hormozi was broke and sleeping on the gym floor, a friend told him to "take it easy" and get a real job. Hormozi worked 16-hour days for two years without a single day off. He went from sleeping on the floor to building a $100 million business. Years later, the same friend asked for business advice. Hormozi said, "I already gave it to you — you just didn\'t want to hear it."',
+      moral: 'The people who tell you to slow down are often the ones who never sped up. Results come from seasons of unreasonable effort.',
+    },
+    {
+      title: 'The 40% Rule',
+      story: 'Navy SEALs discovered that when your mind tells you you\'re done, you are actually only at 40% of your capacity. Goggins took this personally. Every time his body said stop, he said "I\'m not even halfway." He used this in runs, in training, in studying. His life became a laboratory for proving that the mind quits long before the body has to.',
+      moral: 'When you think you are done, you are only 40% done. Your mind is a governor, not an authority. Override it.',
+    },
+    {
+      title: 'Gary Vee and the Lemonade',
+      story: 'Gary Vaynerchuk\'s first business was a lemonade stand at age six. He ran multiple stands simultaneously across his neighborhood. When other kids gave up after a slow day, Gary would move his stand to a different corner. "I was outworking the other lemonade kids at six years old," he says. "Nothing has changed except the size of the stand."',
+      moral: 'Hustle is not something you learn — it is something you practice. Start small, work relentlessly, and never stop moving the stand.',
+    },
+    {
+      title: 'Jocko and the Ambush',
+      story: 'In Ramadi, Jocko\'s unit was ambushed from three sides. In the chaos, a young soldier froze. Jocko grabbed him and said one word: "Good." The soldier looked at him in disbelief. Jocko said, "Got ambushed? Good. Now we know where they are. Got problems? Good. Now we get to solve them." From that day, "Good" became the team\'s response to every setback.',
+      moral: 'Every problem is an opportunity. When things go wrong, say "Good" and find the advantage. Mindset turns disasters into fuel.',
+    },
+    {
+      title: 'The Accountability Mirror',
+      story: 'As a young man, Goggins was overweight, depressed, and going nowhere. One night, he looked in the mirror and wrote sticky notes of everything he hated about his life — all the excuses, all the lies he told himself. He stuck them to the mirror and read them every morning. Then he started eliminating them one by one. "The mirror doesn\'t lie," he says. "And neither should you."',
+      moral: 'Radical self-honesty is the first step to transformation. Look in the mirror, tell the truth, then go to work.',
+    },
+    {
+      title: 'Hormozi\'s Price of Free',
+      story: 'Hormozi tells a story of offering free consulting when he was unknown. No one took it. Then he charged $500 an hour, and his calendar filled up. "People do not value what they do not pay for," he realized. "Including yourself. If you give away your time, your energy, your attention for free — you are telling the world it is worthless. Price yourself like you matter."',
+      moral: 'Value your time and effort or no one else will. The price you set for yourself is the price the world pays.',
+    },
+    {
+      title: 'The Calloused Mind',
+      story: 'Goggins describes the process of "callusing your mind" the same way you callus your hands — through repeated friction. You run when you do not want to run. You study when you do not want to study. You show up when every excuse says stay home. Over time, what was unbearable becomes normal. What was normal becomes easy. What was easy becomes your warm-up.',
+      moral: 'Discomfort repeated becomes resilience. Do hard things on purpose and your capacity for hard things grows without limit.',
+    },
+    {
+      title: 'Gary Vee\'s Patience',
+      story: 'People are surprised when Gary Vaynerchuk, the king of hustle, talks about patience. "I\'m patient because I\'m confident," he says. "I know I\'m going to outwork everyone in the room. I\'m not anxious because I know the compound effect of daily effort over decades. Most people overestimate what they can do in a year and underestimate what they can do in ten."',
+      moral: 'Hustle without patience is burnout. Hustle with patience is unstoppable. Trust the compound effect and keep showing up.',
+    },
+  ],
 }

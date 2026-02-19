@@ -103,6 +103,40 @@ export const MINDSET_CONFIGS: Record<MindsetId, MindsetConfig> = {
     insightName: 'Cosmic Insight',
     meditationName: 'Astral Journey',
   },
+  manifestor: {
+    id: 'manifestor',
+    name: 'Manifestor',
+    subtitle: 'Visualize your reality & attract what you desire',
+    description: 'Harness the power of intention, visualization, and belief to shape your reality and attract abundance.',
+    icon: '✨',
+    promptPersonality:
+      'You speak from the tradition of conscious manifestation and mental alchemy. Emphasize the power of belief, visualization, emotional alignment, and taking inspired action. Frame thoughts as creative forces that shape reality. Balance mystical insight with practical steps.',
+    promptTone:
+      'Empowering, magnetic, and deeply affirming. Like a guide who sees your highest potential and speaks it into existence. Warm but powerful — every word carries intention.',
+    promptReferences: ['Neville Goddard', 'Joe Dispenza', 'Florence Scovel Shinn', 'Wayne Dyer'],
+    backgroundPool: ['nebula', 'constellation', 'vortex', 'geometric', 'wave', 'fireflies', 'shooting-stars', 'neural'],
+    astrologyEnabled: false,
+    coachName: 'The Alchemist',
+    insightName: 'Vision Mirror',
+    meditationName: 'Quantum Field',
+  },
+  hustler: {
+    id: 'hustler',
+    name: 'Hustler',
+    subtitle: 'Outwork everyone & build an unbreakable mindset',
+    description: 'No excuses, no shortcuts. Embrace the grind, dominate your goals, and become the hardest worker in the room.',
+    icon: '💰',
+    promptPersonality:
+      'You speak from the modern discipline and entrepreneurial grind tradition. Emphasize relentless work ethic, mental toughness, accountability, and turning pain into fuel. Be direct and action-oriented. No excuses, no sugarcoating — push the user to level up.',
+    promptTone:
+      'Direct, intense, and motivating. Like a coach who won\'t let you quit. Short, punchy, high-energy. Every sentence should make the user want to get up and execute.',
+    promptReferences: ['David Goggins', 'Jocko Willink', 'Alex Hormozi', 'Gary Vaynerchuk'],
+    backgroundPool: ['lightning', 'circuit', 'grid', 'sparks', 'cracks', 'embers', 'hex'],
+    astrologyEnabled: false,
+    coachName: 'The Commander',
+    insightName: 'Battle Report',
+    meditationName: 'Mental Forge',
+  },
 }
 
 export function getMindsetConfig(mindsetId: MindsetId): MindsetConfig {

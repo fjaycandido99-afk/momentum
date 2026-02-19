@@ -89,6 +89,20 @@ const MINDSET_CHALLENGE_POOL: Record<MindsetId, DailyChallenge[]> = {
     { id: 'scholar_soundscape', title: 'Astral Listening', description: 'Listen to a soundscape for cosmic perspective', icon: '🔮', xpReward: 15, condition: { type: 'soundscape_listen' }, mindsetTag: 'Scholar' },
     { id: 'scholar_evening', title: 'Evening Integration', description: 'Complete your evening module to integrate the day', icon: '🔮', xpReward: 20, condition: { type: 'evening_module' }, mindsetTag: 'Scholar' },
   ],
+  manifestor: [
+    { id: 'manifest_journal', title: 'Scripting Session', description: 'Write a journal entry scripting your ideal reality', icon: '✨', xpReward: 25, condition: { type: 'journal_entry' }, mindsetTag: 'Manifestor' },
+    { id: 'manifest_morning', title: 'Morning Intention', description: 'Set your vibration with the morning module', icon: '✨', xpReward: 20, condition: { type: 'morning_module' }, mindsetTag: 'Manifestor' },
+    { id: 'manifest_gratitude', title: 'Gratitude Amplifier', description: 'Write gratitude as if your desires are already fulfilled', icon: '✨', xpReward: 15, condition: { type: 'gratitude_entry' }, mindsetTag: 'Manifestor' },
+    { id: 'manifest_breathe', title: 'Alignment Breathwork', description: 'Complete a breathing session to raise your frequency', icon: '✨', xpReward: 20, condition: { type: 'breathing_session' }, mindsetTag: 'Manifestor' },
+    { id: 'manifest_soundscape', title: 'Visualization Flow', description: 'Listen to a soundscape while visualizing your goals', icon: '✨', xpReward: 15, condition: { type: 'soundscape_listen' }, mindsetTag: 'Manifestor' },
+  ],
+  hustler: [
+    { id: 'hustler_all', title: 'No Days Off', description: 'Complete all daily modules — zero excuses', icon: '💀', xpReward: 50, condition: { type: 'all_modules' }, mindsetTag: 'Hustler' },
+    { id: 'hustler_morning', title: 'Win the Morning', description: 'Attack the morning module before anything else', icon: '💀', xpReward: 20, condition: { type: 'morning_module' }, mindsetTag: 'Hustler' },
+    { id: 'hustler_xp', title: 'Stack the Wins', description: 'Earn 50 XP through pure execution', icon: '💀', xpReward: 25, condition: { type: 'xp_earned', amount: 50 }, mindsetTag: 'Hustler' },
+    { id: 'hustler_3mod', title: 'Triple Down', description: 'Complete 3 modules — outwork your old self', icon: '💀', xpReward: 25, condition: { type: 'modules_complete', count: 3 }, mindsetTag: 'Hustler' },
+    { id: 'hustler_journal', title: 'After Action Report', description: 'Journal what you executed on today — own the results', icon: '💀', xpReward: 20, condition: { type: 'journal_entry' }, mindsetTag: 'Hustler' },
+  ],
 }
 
 /** Seeded PRNG for deterministic daily selection */

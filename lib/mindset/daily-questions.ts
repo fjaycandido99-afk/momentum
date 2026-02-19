@@ -54,4 +54,20 @@ export const MINDSET_DAILY_QUESTIONS: Record<MindsetId, string[]> = {
     'What myth or story mirrors your current journey?',
     'What would you discover if you looked within?',
   ],
+  manifestor: [
+    'What did you visualize with full emotion today?',
+    'Are your thoughts aligned with what you want to attract?',
+    'What limiting belief are you ready to release?',
+    'What would the highest version of you do right now?',
+    'What are you assuming about your future — and is it empowering?',
+    'What would change if you fully believed your dream was already done?',
+  ],
+  hustler: [
+    'Did you do more than what was expected of you today?',
+    'What excuse did you destroy today?',
+    'Where did you take the easy way out — and how do you fix that?',
+    'Are you working as hard as you tell people you are?',
+    'What did you do today that nobody else was willing to do?',
+    'If today was your last chance to prove yourself, did you leave it all on the table?',
+  ],
 }

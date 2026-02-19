@@ -20,6 +20,8 @@ export const MINDSET_TOPIC_MAP: Record<MindsetId, string[]> = {
   hedonist: ['Confidence', 'Focus', 'Hustle'],
   samurai: ['Discipline', 'Courage', 'Resilience'],
   scholar: ['Mindset', 'Focus', 'Confidence'],
+  manifestor: ['Confidence', 'Mindset', 'Focus'],
+  hustler: ['Hustle', 'Discipline', 'Resilience'],
 }
 
 export const MINDSET_SOUNDSCAPE_MAP: Record<MindsetId, string> = {
@@ -29,6 +31,8 @@ export const MINDSET_SOUNDSCAPE_MAP: Record<MindsetId, string> = {
   hedonist: 'ocean',
   samurai: 'forest',
   scholar: 'night',
+  manifestor: 'ocean',
+  hustler: 'energy',
 }
 
 // --- #1: Smart Flow Transitions ---

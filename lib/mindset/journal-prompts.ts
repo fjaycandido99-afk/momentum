@@ -109,4 +109,38 @@ export const MINDSET_JOURNAL_PROMPTS: Record<MindsetId, MindsetJournalPrompts> =
       icon: 'target',
     },
   },
+  manifestor: {
+    prompt1: {
+      label: 'What did you visualize becoming real today?',
+      placeholder: 'I saw myself...',
+      icon: 'sparkles',
+    },
+    prompt2: {
+      label: 'What are you grateful for as if it already exists?',
+      placeholder: 'I am grateful for...',
+      icon: 'heart',
+    },
+    prompt3: {
+      label: 'What intention will you set for tomorrow?',
+      placeholder: 'Tomorrow I am...',
+      icon: 'target',
+    },
+  },
+  hustler: {
+    prompt1: {
+      label: 'What did you outwork today?',
+      placeholder: 'I crushed...',
+      icon: 'sparkles',
+    },
+    prompt2: {
+      label: 'What pain did you push through?',
+      placeholder: 'I pushed through...',
+      icon: 'heart',
+    },
+    prompt3: {
+      label: "Tomorrow's mission",
+      placeholder: 'Tomorrow I will dominate...',
+      icon: 'target',
+    },
+  },
 }

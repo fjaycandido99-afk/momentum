@@ -289,4 +289,98 @@ export const MINDSET_VIRTUES: Record<MindsetId, Virtue[]> = {
       ],
     },
   ],
+  manifestor: [
+    {
+      name: 'Intention',
+      description: 'Setting clear, focused desires and holding them in mind with conviction and feeling.',
+      practices: [
+        'Write down your primary intention for today and read it aloud with feeling.',
+        'Before each task, set a micro-intention for the outcome you want.',
+        'Spend five minutes visualizing one goal as if it has already been achieved.',
+      ],
+    },
+    {
+      name: 'Belief',
+      description: 'Cultivating unwavering faith that your desires are not only possible but inevitable.',
+      practices: [
+        'Catch one limiting belief today and consciously replace it with an empowering one.',
+        'Recall a time something "impossible" happened in your life and feel that certainty again.',
+        'Affirm "It is done" about one desire and hold the feeling throughout the day.',
+      ],
+    },
+    {
+      name: 'Alignment',
+      description: 'Matching your emotional state to the reality you want to experience.',
+      practices: [
+        'Notice your dominant emotion right now — does it match who you want to become?',
+        'Choose one activity today purely because it raises your vibration.',
+        'Before reacting to a situation, ask: "What would the version of me who already has this feel?"',
+      ],
+    },
+    {
+      name: 'Gratitude',
+      description: 'Appreciating what you have and what is coming as if it has already arrived.',
+      practices: [
+        'Write three things you are grateful for as if they just appeared today for the first time.',
+        'Thank the universe for one desire as though it has already manifested.',
+        'End the day by acknowledging three things that went right, no matter how small.',
+      ],
+    },
+    {
+      name: 'Surrender',
+      description: 'Releasing attachment to the "how" and trusting the process of manifestation.',
+      practices: [
+        'Identify one outcome you are gripping tightly and consciously release control over how it arrives.',
+        'When anxiety arises about a goal, repeat: "I trust the timing of my life."',
+        'Practice doing nothing productive for ten minutes and notice what surfaces.',
+      ],
+    },
+  ],
+  hustler: [
+    {
+      name: 'Discipline',
+      description: 'Showing up and doing the work regardless of how you feel.',
+      practices: [
+        'Complete your hardest task first thing in the morning.',
+        'Follow your schedule exactly as planned — no negotiations with yourself.',
+        'Do one thing today you do not feel like doing, simply because you committed to it.',
+      ],
+    },
+    {
+      name: 'Accountability',
+      description: 'Taking full ownership of your results — no excuses, no blame, no victim mentality.',
+      practices: [
+        'Look in the mirror and honestly assess one area where you have been slacking.',
+        'Own one failure or shortcoming today without deflecting to anyone else.',
+        'Write down the result you got today and the effort you actually put in — be brutally honest.',
+      ],
+    },
+    {
+      name: 'Mental Toughness',
+      description: 'Building the capacity to endure discomfort, push through resistance, and keep going.',
+      practices: [
+        'When you want to quit a task, do ten more minutes before stopping.',
+        'Take a cold shower or do something physically uncomfortable on purpose.',
+        'When your mind says "I can\'t," respond with "Watch me."',
+      ],
+    },
+    {
+      name: 'Execution',
+      description: 'Bias toward action over planning, talking, or waiting for the perfect moment.',
+      practices: [
+        'Pick one thing you have been overthinking and take the first action within the next hour.',
+        'Set a timer for 25 minutes and work with zero distractions.',
+        'At the end of the day, count the number of things you did versus the number you planned.',
+      ],
+    },
+    {
+      name: 'Relentlessness',
+      description: 'Refusing to stop, slow down, or give up until the mission is complete.',
+      practices: [
+        'Finish something today that you started and abandoned before.',
+        'When faced with a setback, immediately ask: "What is my next move?"',
+        'Extend one work session beyond what feels comfortable — push the limit.',
+      ],
+    },
+  ],
 }

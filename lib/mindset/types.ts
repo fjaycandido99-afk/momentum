@@ -1,4 +1,4 @@
-export type MindsetId = 'stoic' | 'existentialist' | 'cynic' | 'hedonist' | 'samurai' | 'scholar'
+export type MindsetId = 'stoic' | 'existentialist' | 'cynic' | 'hedonist' | 'samurai' | 'scholar' | 'manifestor' | 'hustler'
 
 export interface MindsetConfig {
   id: MindsetId
@@ -31,4 +31,6 @@ export const MINDSET_IDS: MindsetId[] = [
   'hedonist',
   'samurai',
   'scholar',
+  'manifestor',
+  'hustler',
 ]

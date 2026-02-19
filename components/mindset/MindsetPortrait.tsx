@@ -11,6 +11,8 @@ const PORTRAIT_PATHS: Record<MindsetId, string> = {
   hedonist: '/portraits/hedonist.jpg',
   samurai: '/portraits/samurai.jpg',
   scholar: '/portraits/scholar.jpg',
+  manifestor: '/portraits/manifestor.jpg',
+  hustler: '/portraits/hustler.jpg',
 }
 
 interface MindsetPortraitProps {

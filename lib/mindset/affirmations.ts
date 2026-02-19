@@ -108,6 +108,42 @@ export const MINDSET_AFFIRMATIONS: Record<MindsetId, string[]> = {
     'I honor the questions I cannot yet answer.',
     'I grow not by having answers, but by living into the questions.',
   ],
+
+  manifestor: [
+    'I am a powerful creator. My thoughts shape my reality.',
+    'Everything I desire is already on its way to me.',
+    'I align my energy with abundance and receive freely.',
+    'I am worthy of everything I envision for myself.',
+    'My imagination is the blueprint for my future.',
+    'I release resistance and allow my good to flow in.',
+    'I live in the feeling of my wish fulfilled.',
+    'My beliefs create my world. Today I choose empowering ones.',
+    'I am a magnet for opportunities, abundance, and joy.',
+    'The universe rearranges itself to match my vibration.',
+    'I assume the best and the best assumes me.',
+    'What I focus on expands. I focus on what I want.',
+    'I am already the person who has what I desire.',
+    'My inner state creates my outer reality. I choose alignment.',
+    'Today I live as if my prayers have already been answered.',
+  ],
+
+  hustler: [
+    'Nobody is coming to save me. I save myself through action.',
+    'I do not wait for motivation. I create it through discipline.',
+    'Today I outwork the person I was yesterday. No exceptions.',
+    'Comfort is the enemy of progress. I choose the hard path.',
+    'I am not talented. I am relentless. That is my advantage.',
+    'While they sleep, I work. While they talk, I execute.',
+    'Pain is temporary. Quitting lasts forever. I do not quit.',
+    'I own every outcome in my life. No excuses. No blame.',
+    'My work ethic is my identity. I show up every single day.',
+    'Discipline is my freedom. The grind is my therapy.',
+    'I do not negotiate with weakness. I eliminate it.',
+    'Results are earned, not given. I earn mine today.',
+    'I embrace the suffering that makes me stronger.',
+    'I am built for this. I was made for the hard things.',
+    'Today I stack wins. Small or large, they all compound.',
+  ],
 }
 
 /**

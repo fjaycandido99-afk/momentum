@@ -208,4 +208,68 @@ export const MINDSET_DETAILS: Record<MindsetId, MindsetDetail> = {
       'Cosmic backgrounds + astrology features unlocked',
     ],
   },
+  manifestor: {
+    figureName: 'Neville Goddard',
+    figureDates: '1905 – 1972',
+    figureTitle: 'Mystic & Manifestation Pioneer',
+    quote: 'Assume the feeling of your wish fulfilled.',
+    overview:
+      'The Manifestor path teaches that your imagination is the creative force of reality. What you believe, feel, and visualize with conviction becomes your lived experience. This isn\'t passive wishful thinking — it\'s the disciplined practice of aligning your inner state with your desired outcome. Neville Goddard, Joe Dispenza, and Wayne Dyer all point to the same truth: you create your world from the inside out.',
+    principles: [
+      {
+        title: 'Assumption',
+        description: 'Assume the feeling of your wish fulfilled. Live from the end, not toward it.',
+      },
+      {
+        title: 'Emotional Alignment',
+        description: 'Your emotions are your signal. When you feel it as real, the universe responds.',
+      },
+      {
+        title: 'Revision',
+        description: 'Rewrite the story of your day before sleep. What you imagine overwrites what happened.',
+      },
+      {
+        title: 'Inspired Action',
+        description: 'Manifestation isn\'t passive. When you align your inner world, the right actions become obvious.',
+      },
+    ],
+    appExperience: [
+      'AI coach is empowering and affirming — speaks to your highest potential',
+      'Quotes from Neville Goddard, Joe Dispenza, Florence Scovel Shinn, and Wayne Dyer',
+      'Journal prompts focus on visualization, intention-setting, and gratitude',
+      'Cosmic, luminous background visuals',
+    ],
+  },
+  hustler: {
+    figureName: 'David Goggins',
+    figureDates: '1975 – Present',
+    figureTitle: 'Ultra-Endurance Athlete & Author',
+    quote: 'You are in danger of living a life so comfortable and soft that you will die without ever realizing your true potential.',
+    overview:
+      'The Hustler path is for those who believe in outworking everyone in the room. No excuses, no shortcuts, no days off. This mindset draws from modern warriors of discipline — David Goggins, Jocko Willink, Alex Hormozi, and Gary Vee — who prove that relentless execution beats talent every time. Pain is the price of growth, and the grind is the way.',
+    principles: [
+      {
+        title: 'No Excuses',
+        description: 'Your circumstances don\'t define you. Your response to them does. Eliminate every excuse.',
+      },
+      {
+        title: 'Discipline Over Motivation',
+        description: 'Motivation fades. Discipline stays. Show up and execute whether you feel like it or not.',
+      },
+      {
+        title: 'Embrace the Suck',
+        description: 'Growth lives on the other side of discomfort. Seek the hard path — that\'s where the gains are.',
+      },
+      {
+        title: 'Extreme Ownership',
+        description: 'Everything in your life is your responsibility. No blaming, no complaining — only action.',
+      },
+    ],
+    appExperience: [
+      'AI coach is direct, intense, and won\'t let you make excuses',
+      'Quotes from Goggins, Jocko Willink, Alex Hormozi, and Gary Vee',
+      'Journal prompts push accountability, execution, and mental toughness',
+      'Bold, high-energy background visuals',
+    ],
+  },
 }

@@ -120,6 +120,38 @@ function ScholarIcon() {
   )
 }
 
+function ManifestorIcon() {
+  return (
+    <>
+      {/* Central eye */}
+      <ellipse cx="12" cy="12" rx="7" ry="4" />
+      <circle cx="12" cy="12" r="2" />
+      {/* Rays */}
+      <line x1="12" y1="3" x2="12" y2="6" />
+      <line x1="12" y1="18" x2="12" y2="21" />
+      <line x1="4" y1="8" x2="6.5" y2="9.5" />
+      <line x1="17.5" y1="9.5" x2="20" y2="8" />
+      <line x1="4" y1="16" x2="6.5" y2="14.5" />
+      <line x1="17.5" y1="14.5" x2="20" y2="16" />
+    </>
+  )
+}
+
+function HustlerIcon() {
+  return (
+    <>
+      {/* Mountain peak */}
+      <path d="M12 4 L20 20 L4 20 Z" />
+      {/* Flag at peak */}
+      <line x1="12" y1="4" x2="12" y2="2" />
+      <path d="M12 2 L16 3.5 L12 5" />
+      {/* Steps */}
+      <line x1="8" y1="16" x2="16" y2="16" />
+      <line x1="9" y1="13" x2="15" y2="13" />
+    </>
+  )
+}
+
 const ICON_MAP: Record<MindsetId, () => JSX.Element> = {
   stoic: StoicIcon,
   existentialist: ExistentialistIcon,
@@ -127,6 +159,8 @@ const ICON_MAP: Record<MindsetId, () => JSX.Element> = {
   hedonist: HedonistIcon,
   samurai: SamuraiIcon,
   scholar: ScholarIcon,
+  manifestor: ManifestorIcon,
+  hustler: HustlerIcon,
 }
 
 export function MindsetIcon({ mindsetId, className = 'w-6 h-6', size }: MindsetIconProps) {

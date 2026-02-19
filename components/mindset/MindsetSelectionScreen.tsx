@@ -49,6 +49,18 @@ const MINDSET_THEME: Record<MindsetId, { accent: string; glow: string; gradient:
     gradient: 'from-blue-500/10 via-transparent to-transparent',
     tagline: 'Cosmic wisdom',
   },
+  manifestor: {
+    accent: 'text-amber-300',
+    glow: 'rgba(252,211,77,0.3)',
+    gradient: 'from-amber-500/10 via-transparent to-transparent',
+    tagline: 'Create your reality',
+  },
+  hustler: {
+    accent: 'text-cyan-300',
+    glow: 'rgba(103,232,249,0.3)',
+    gradient: 'from-cyan-500/10 via-transparent to-transparent',
+    tagline: 'Outwork everyone',
+  },
 }
 
 function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap: (id: MindsetId) => void }) {
