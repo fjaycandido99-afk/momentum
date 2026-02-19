@@ -143,7 +143,7 @@ export function LoadingScreen() {
 
   if (showRings) {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-40">
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-40" data-nextjs-scroll-focus-boundary>
         <div className="w-28 h-28 relative flex items-center justify-center">
           <div className="absolute inset-0 rounded-full bg-white/10 blur-xl" />
           <div
