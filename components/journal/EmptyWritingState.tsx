@@ -67,14 +67,14 @@ export function EmptyWritingState({ mindsetId, onStartWriting, visible }: EmptyW
           <p className="text-lg italic text-white leading-relaxed [text-shadow:0_1px_8px_rgba(0,0,0,0.9)]">
             &ldquo;{quote.text}&rdquo;
           </p>
-          <p className="text-xs text-white/90 mt-2 [text-shadow:0_1px_4px_rgba(0,0,0,0.8)]">&mdash; {quote.author}</p>
+          <p className="text-xs text-white/50 mt-2 [text-shadow:0_1px_4px_rgba(0,0,0,0.8)]">&mdash; {quote.author}</p>
         </div>
       )}
 
       {/* Start writing button */}
       <button
         onClick={() => onStartWriting()}
-        className="px-5 py-2 rounded-full bg-black border border-white/20 text-white text-sm hover:bg-black/80 transition-all mb-5"
+        className="px-5 py-2 rounded-full bg-black border border-white/20 text-white text-sm hover:bg-black/80 transition-all mb-5 press-scale"
       >
         <PenLine className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
         Start writing...
@@ -86,7 +86,7 @@ export function EmptyWritingState({ mindsetId, onStartWriting, visible }: EmptyW
           <button
             key={i}
             onClick={() => onStartWriting(chip + ' ')}
-            className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-xs text-white hover:bg-black/80 transition-all"
+            className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-xs text-white hover:bg-black/80 transition-all press-scale"
           >
             {chip}
           </button>

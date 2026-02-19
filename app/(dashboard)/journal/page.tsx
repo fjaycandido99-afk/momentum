@@ -859,7 +859,7 @@ function JournalContent() {
                   placeholder="What's on your mind..."
                   autoCapitalize="sentences"
                   enterKeyHint="send"
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white text-sm placeholder-white/60 focus:outline-none focus:border-white/60"
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white text-sm placeholder-white/60 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/20"
                 />
                 <button
                   onClick={sendChatMessage}
@@ -920,7 +920,7 @@ function JournalContent() {
                 autoComplete="off"
                 spellCheck
                 enterKeyHint="enter"
-                className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none resize-none"
+                className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                 rows={6}
                 maxLength={3000}
               />
@@ -1011,7 +1011,7 @@ function JournalContent() {
                     autoComplete="off"
                     spellCheck
                     enterKeyHint="enter"
-                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none resize-none"
+                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                     rows={3}
                     maxLength={500}
                   />
@@ -1034,7 +1034,7 @@ function JournalContent() {
                     autoComplete="off"
                     spellCheck
                     enterKeyHint="enter"
-                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none resize-none"
+                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                     rows={3}
                     maxLength={500}
                   />
@@ -1057,7 +1057,7 @@ function JournalContent() {
                     autoComplete="off"
                     spellCheck
                     enterKeyHint="enter"
-                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none resize-none"
+                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                     rows={2}
                     maxLength={300}
                   />
@@ -1133,7 +1133,7 @@ function JournalContent() {
                   autoComplete="off"
                   spellCheck
                   enterKeyHint="enter"
-                  className="w-full bg-transparent text-lg leading-loose text-white placeholder-white/30 caret-amber-400 px-1 py-2 focus:outline-none resize-none"
+                  className="w-full bg-transparent text-lg leading-loose text-white placeholder-white/30 caret-amber-400 px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                   rows={8}
                   maxLength={5000}
                 />
@@ -1480,7 +1480,7 @@ function JournalContent() {
               autoComplete="off"
               spellCheck
               enterKeyHint="enter"
-              className="flex-1 w-full bg-transparent text-white text-lg leading-loose placeholder-white/30 caret-amber-400 focus:outline-none resize-none"
+              className="flex-1 w-full bg-transparent text-white text-lg leading-loose placeholder-white/30 caret-amber-400 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
             />
           </div>
 

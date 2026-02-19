@@ -52,7 +52,7 @@ export function AudioPreview({
   return (
     <button
       onClick={togglePlay}
-      className={`w-full p-4 rounded-xl text-left transition-all press-scale ${
+      className={`w-full p-4 rounded-xl text-left transition-all press-scale focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:outline-none ${
         isSelected
           ? 'bg-white/15 border border-white/30'
           : 'bg-white/5 border border-white/15 hover:bg-white/10'

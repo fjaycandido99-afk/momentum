@@ -18,7 +18,8 @@ export function BackgroundPreview({ animationId, isSelected, onSelect }: Backgro
     <button
       onClick={onSelect}
       aria-pressed={isSelected}
-      className={`relative rounded-xl overflow-hidden transition-all press-scale ${
+      aria-label={anim.name}
+      className={`relative rounded-xl overflow-hidden transition-all press-scale focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:outline-none ${
         isSelected
           ? 'ring-2 ring-white/50 scale-[1.02]'
           : 'hover:ring-1 hover:ring-white/20'

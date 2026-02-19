@@ -53,7 +53,7 @@ export function CoachingPlans() {
             <button
               key={plan.id}
               onClick={() => setSelectedPlanId(plan.id)}
-              className="text-left p-4 rounded-2xl bg-black border border-white/10 press-scale transition-all"
+              className="text-left p-4 rounded-2xl bg-black border border-white/15 press-scale transition-all"
             >
               <div className={`p-2.5 rounded-xl bg-gradient-to-br ${plan.color} w-fit mb-3`}>
                 <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />

@@ -227,11 +227,11 @@ export default function CoachPage() {
           </button>
         </div>
         {activeTab === 'plans' ? (
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <div key="plans" className="flex-1 overflow-y-auto scrollbar-hide animate-fade-in">
             <CoachingPlans />
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div key="chat" className="flex-1 flex flex-col items-center justify-center p-6 animate-fade-in">
             <div className="bg-black rounded-2xl border border-white/10 p-8 text-center">
               <div className="p-4 rounded-full bg-amber-500/20 mb-4 mx-auto w-fit">
                 <Crown className="w-8 h-8 text-amber-400" />
@@ -305,11 +305,11 @@ export default function CoachPage() {
       )}
 
       {activeTab === 'plans' ? (
-        <div className="flex-1 overflow-y-auto scrollbar-hide">
+        <div key="plans" className="flex-1 overflow-y-auto scrollbar-hide animate-fade-in">
           <CoachingPlans />
         </div>
       ) : (
-      <>
+      <div key="chat" className="flex-1 flex flex-col animate-fade-in">
       {/* Mode toggle pills */}
       <div className="flex px-6 gap-2 pt-3 pb-1">
         <button
@@ -455,7 +455,7 @@ export default function CoachPage() {
           </button>
         </div>
       </div>
-      </>
+      </div>
       )}
     </div>
   )

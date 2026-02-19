@@ -54,7 +54,7 @@ export function LanguageSelector({ currentLocale = 'en', onLocaleChange }: Langu
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white text-sm"
+        className="w-full flex items-center justify-between px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white text-sm transition-colors hover:bg-white/[0.08]"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-label="Select language"
@@ -68,12 +68,19 @@ export function LanguageSelector({ currentLocale = 'en', onLocaleChange }: Langu
           role="listbox"
           style={dropdownStyle}
           className="bg-[#1c1c20] border border-white/15 rounded-xl overflow-hidden animate-fade-in shadow-xl shadow-black/50"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setIsOpen(false)
+              buttonRef.current?.focus()
+            }
+          }}
         >
-          {locales.map((locale) => (
+          {locales.map((locale, index) => (
             <li key={locale}>
               <button
                 role="option"
                 aria-selected={locale === selected}
+                autoFocus={index === 0}
                 onClick={() => handleSelect(locale)}
                 className={`w-full text-left px-4 py-3 text-sm transition-colors ${
                   locale === selected

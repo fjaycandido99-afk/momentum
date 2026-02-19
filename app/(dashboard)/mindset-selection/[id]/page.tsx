@@ -51,12 +51,12 @@ export default function MindsetDetailPage() {
       </button>
 
       {/* Portrait — fades into background */}
-      <div className="pt-10 -mb-4 flex justify-center">
+      <div className="pt-10 -mb-4 flex justify-center opacity-0 animate-fade-in" style={{ animationDelay: '0ms', animationFillMode: 'forwards' }}>
         <MindsetPortrait mindsetId={mindsetId} size="lg" />
       </div>
 
       {/* Figure info — overlaps slightly with portrait fade */}
-      <div className="relative text-center px-6">
+      <div className="relative text-center px-6 opacity-0 animate-fade-in" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
         <p className="text-white/35 text-[11px] uppercase tracking-[0.2em]">
           {detail.figureDates}
         </p>
@@ -69,7 +69,7 @@ export default function MindsetDetailPage() {
       </div>
 
       {/* Mindset header */}
-      <div className="text-center px-6 mt-6 flex flex-col items-center">
+      <div className="text-center px-6 mt-6 flex flex-col items-center opacity-0 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
         <MindsetIcon mindsetId={mindsetId} className="w-16 h-16 text-white/80" />
         <h1 className="text-2xl font-light mt-3 tracking-wide">
           {config.name}
@@ -83,7 +83,7 @@ export default function MindsetDetailPage() {
       <div className="mx-auto mt-8 w-12 h-px bg-white/10" />
 
       {/* Philosophy overview */}
-      <section className="px-6 mt-8">
+      <section className="px-6 mt-8 opacity-0 animate-fade-in" style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}>
         <h3 className="text-[11px] uppercase tracking-[0.2em] text-white/35 mb-3">
           The Philosophy
         </h3>
@@ -93,7 +93,7 @@ export default function MindsetDetailPage() {
       </section>
 
       {/* Core principles */}
-      <section className="px-6 mt-8">
+      <section className="px-6 mt-8 opacity-0 animate-fade-in" style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}>
         <h3 className="text-[11px] uppercase tracking-[0.2em] text-white/35 mb-4">
           Core Principles
         </h3>
@@ -110,7 +110,7 @@ export default function MindsetDetailPage() {
       </section>
 
       {/* Your Experience */}
-      <section className="px-6 mt-8 pb-36">
+      <section className="px-6 mt-8 pb-36 opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
         <h3 className="text-[11px] uppercase tracking-[0.2em] text-white/35 mb-4">
           What Changes For You
         </h3>
