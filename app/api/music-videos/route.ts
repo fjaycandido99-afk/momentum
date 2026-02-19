@@ -215,9 +215,10 @@ export async function GET(request: NextRequest) {
         youtubeId: video.id,
         title: video.snippet.title,
         channel: video.snippet.channelTitle,
-        thumbnail: video.snippet.thumbnails?.high?.url ||
-                   video.snippet.thumbnails?.medium?.url ||
-                   `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`,
+        thumbnail: video.snippet.thumbnails?.maxres?.url ||
+                   video.snippet.thumbnails?.standard?.url ||
+                   video.snippet.thumbnails?.high?.url ||
+                   `https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`,
         duration,
       })
     }

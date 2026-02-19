@@ -11,7 +11,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-const VALID_GENRES = ['lofi', 'piano', 'jazz', 'classical', 'ambient', 'study', 'sleep']
+const VALID_GENRES = ['lofi', 'piano', 'jazz', 'classical', 'ambient', 'study', 'sleep', 'rain']
 
 /**
  * GET /api/backgrounds?genre=lofi
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     if (!genre || !VALID_GENRES.includes(genre)) {
       return NextResponse.json(
-        { error: 'Invalid genre. Use: lofi, piano, jazz, classical, ambient, study, sleep' },
+        { error: 'Invalid genre. Use: lofi, piano, jazz, classical, ambient, study, sleep, rain' },
         { status: 400 }
       )
     }

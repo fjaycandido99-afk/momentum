@@ -101,7 +101,7 @@ export function FocusMusicPicker({ selected, onSelect }: FocusMusicPickerProps) 
     const video = data.videos[videoIdx]
     const bg = data.backgrounds.length > 0
       ? data.backgrounds[videoIdx % data.backgrounds.length]
-      : `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`
+      : `https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`
     onSelect({
       genreId: genre.id,
       genreWord: genre.word,

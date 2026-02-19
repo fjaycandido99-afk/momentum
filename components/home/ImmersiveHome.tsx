@@ -606,7 +606,7 @@ export function ImmersiveHome() {
             content_text: video.title,
             content_id: youtubeId,
             content_title: video.title,
-            thumbnail: video.thumbnail || `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`,
+            thumbnail: video.thumbnail || `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`,
           }),
         })
         mutateMotivationFavorites()
@@ -653,7 +653,7 @@ export function ImmersiveHome() {
             content_text: video.title,
             content_id: youtubeId,
             content_title: video.title,
-            thumbnail: video.thumbnail || `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`,
+            thumbnail: video.thumbnail || `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`,
           }),
         })
         mutateMusicFavorites()
