@@ -26,11 +26,11 @@ export interface MindsetConfig {
 
 export const MINDSET_IDS: MindsetId[] = [
   'stoic',
+  'hustler',
+  'samurai',
   'existentialist',
   'cynic',
   'hedonist',
-  'samurai',
   'scholar',
   'manifestor',
-  'hustler',
 ]
