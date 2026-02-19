@@ -5,7 +5,7 @@ import { MusicGenreSection } from './MusicGenreSection'
 import { SkeletonCardRow } from '@/components/ui/Skeleton'
 import { useLazySection } from '@/hooks/useLazySection'
 import { useGenreVideos, useGenreBackgrounds } from '@/hooks/useHomeSWR'
-import { shuffleWithSeed, type VideoItem } from './home-types'
+import { shuffleWithSeed, MUSIC_GENRE_BACKGROUNDS, type VideoItem } from './home-types'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
 
 interface LazyGenreSectionProps {
@@ -56,16 +56,20 @@ export function LazyGenreSection({
   const isVisible = useLazySection(sectionRef)
 
   const { genreVideos: videos, genreLoading, mutateGenre } = useGenreVideos(genre.id, isVisible)
-  const { genreBackgrounds: rawBgs } = useGenreBackgrounds(genre.id, isVisible)
+  // Use static backgrounds if available, otherwise fetch from API
+  const staticBgs = MUSIC_GENRE_BACKGROUNDS[genre.id]
+  const hasStatic = staticBgs && staticBgs.length > 0
+  const { genreBackgrounds: rawBgs } = useGenreBackgrounds(genre.id, isVisible && !hasStatic)
 
   // Shuffle backgrounds with daily seed
   const shuffledBgs = React.useMemo(() => {
-    if (rawBgs.length === 0) return []
+    const source = hasStatic ? staticBgs : rawBgs
+    if (source.length === 0) return []
     const now = new Date()
     const dateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
     const genreSeed = genre.id.split('').reduce((acc: number, ch: string) => acc + ch.charCodeAt(0), 0)
-    return shuffleWithSeed(rawBgs, genreSeed + dateSeed)
-  }, [rawBgs, genre.id])
+    return shuffleWithSeed(source, genreSeed + dateSeed)
+  }, [hasStatic, staticBgs, rawBgs, genre.id])
 
   // Notify parent when data loads (for restore logic)
   const hasNotifiedRef = useRef(false)
