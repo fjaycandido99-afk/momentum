@@ -9,8 +9,6 @@ import {
   Briefcase,
   GraduationCap,
   BookOpen,
-  Calendar,
-  Clock,
   Layers,
   Sun,
   Sparkles,
@@ -29,7 +27,6 @@ import {
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { useThemeOptional } from '@/contexts/ThemeContext'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
@@ -81,7 +78,6 @@ function SettingsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
-  const themeContext = useThemeOptional()
   const subscription = useSubscriptionOptional()
   const mindsetCtx = useMindsetOptional()
   const [isLoading, setIsLoading] = useState(true)
@@ -123,10 +119,10 @@ function SettingsContent() {
   const [dailyReminder, setDailyReminder] = useState(true)
   const [reminderTime, setReminderTime] = useState('07:00')
   const [backgroundMusicEnabled, setBackgroundMusicEnabled] = useState(true)
-  const [preferredMusicGenre, setPreferredMusicGenre] = useState<string | null>(null)
   const [bedtimeReminderEnabled, setBedtimeReminderEnabled] = useState(false)
   const [astrologyEnabled, setAstrologyEnabled] = useState(false)
   const [zodiacSign, setZodiacSign] = useState<string | null>(null)
+  const [locale, setLocale] = useState('en')
 
   // Load preferences on mount
   useEffect(() => {
@@ -158,7 +154,6 @@ function SettingsContent() {
           if (data.daily_reminder !== undefined) setDailyReminder(data.daily_reminder)
           if (data.reminder_time) setReminderTime(data.reminder_time)
           if (data.background_music_enabled !== undefined) setBackgroundMusicEnabled(data.background_music_enabled)
-          if (data.preferred_music_genre !== undefined) setPreferredMusicGenre(data.preferred_music_genre)
           if (data.bedtime_reminder_enabled !== undefined) setBedtimeReminderEnabled(data.bedtime_reminder_enabled)
           if (data.astrology_enabled !== undefined) setAstrologyEnabled(data.astrology_enabled)
           if (data.zodiac_sign !== undefined) setZodiacSign(data.zodiac_sign)
@@ -173,6 +168,14 @@ function SettingsContent() {
     }
     loadPreferences()
   }, [supabase.auth])
+
+  // Load persisted locale on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('voxu_locale')
+      if (saved) setLocale(saved)
+    } catch {}
+  }, [])
 
   // Auto-save preferences
   const savePreferences = useCallback(async () => {
@@ -199,7 +202,6 @@ function SettingsContent() {
           daily_reminder: dailyReminder,
           reminder_time: reminderTime,
           background_music_enabled: backgroundMusicEnabled,
-          preferred_music_genre: preferredMusicGenre,
           bedtime_reminder_enabled: bedtimeReminderEnabled,
           astrology_enabled: astrologyEnabled,
           zodiac_sign: zodiacSign,
@@ -223,7 +225,7 @@ function SettingsContent() {
     } finally {
       setIsSaving(false)
     }
-  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, backgroundMusicEnabled, preferredMusicGenre, bedtimeReminderEnabled, astrologyEnabled, zodiacSign])
+  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, backgroundMusicEnabled, bedtimeReminderEnabled, astrologyEnabled, zodiacSign])
 
   // Debounced auto-save when any preference changes
   useEffect(() => {
@@ -268,9 +270,9 @@ function SettingsContent() {
   }
 
   return (
-    <div className="min-h-screen text-white pb-24">
+    <div className="min-h-screen text-white pb-[calc(env(safe-area-inset-bottom)+6rem)]">
       {/* Header */}
-      <div className="sticky top-0 z-50 px-6 pt-12 pb-6 mb-4 bg-black">
+      <div className="sticky top-0 z-50 px-6 pt-[max(3rem,env(safe-area-inset-top))] pb-4 mb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
@@ -647,6 +649,38 @@ function SettingsContent() {
           </div>
         </SettingsCategory>
 
+        {/* ═══════════════ 3b. Sound ═══════════════ */}
+        <SettingsCategory
+          id="sound"
+          icon={Volume2}
+          title="Sound"
+          description="Background music preferences"
+        >
+          <div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-white text-sm">Background Music</p>
+                <p className="text-white/75 text-xs">Play ambient music during your Daily Guide sessions</p>
+              </div>
+              <button
+                onClick={() => setBackgroundMusicEnabled(!backgroundMusicEnabled)}
+                role="switch"
+                aria-checked={backgroundMusicEnabled}
+                aria-label="Background music"
+                className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                  backgroundMusicEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                    backgroundMusicEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </SettingsCategory>
+
         {/* ═══════════════ 4. Your Mindset ═══════════════ */}
         <SettingsCategory
           id="mindset"
@@ -760,7 +794,7 @@ function SettingsContent() {
         >
           <div>
             <p className="text-sm text-white/85 mb-3">Display Language</p>
-            <LanguageSelector />
+            <LanguageSelector currentLocale={locale as any} onLocaleChange={(l) => { setLocale(l); localStorage.setItem('voxu_locale', l) }} />
           </div>
         </SettingsCategory>
 

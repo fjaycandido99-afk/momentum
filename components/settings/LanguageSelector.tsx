@@ -13,6 +13,9 @@ interface LanguageSelectorProps {
 export function LanguageSelector({ currentLocale = 'en', onLocaleChange }: LanguageSelectorProps) {
   const [selected, setSelected] = useState<Locale>(currentLocale)
   const [isOpen, setIsOpen] = useState(false)
+
+  // Sync with parent prop
+  useEffect(() => { setSelected(currentLocale) }, [currentLocale])
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
 
