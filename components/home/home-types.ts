@@ -58,14 +58,14 @@ export const VALID_SOUNDSCAPE_IDS = ['focus', 'relax', 'sleep', 'energy', 'rain'
 export const BACKGROUND_IMAGES = [4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29,30,31].map(i => `/backgrounds/bg${i}.jpg`)
 
 // Static genre background URLs — guarantees images show without API dependency
-const SB = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const sbBg = (genre: string, count: number) =>
-  Array.from({ length: count }, (_, i) => `${SB}/storage/v1/object/public/backgrounds/${genre}/${genre}-${String(i + 1).padStart(2, '0')}.jpg`)
+const _SB = 'https://jkrpreixylczfdfdyxrm.supabase.co'
+const _bg = (genre: string, n: number) =>
+  Array.from({ length: n }, (_, i) => `${_SB}/storage/v1/object/public/backgrounds/${genre}/${genre}-${String(i + 1).padStart(2, '0')}.jpg`)
 
 export const MUSIC_GENRE_BACKGROUNDS: Record<string, string[]> = {
-  lofi: sbBg('lofi', 17),
-  piano: sbBg('piano', 42),
-  classical: sbBg('classical', 42),
+  lofi: _bg('lofi', 17),
+  piano: _bg('piano', 42),
+  classical: _bg('classical', 42),
 }
 
 // --- Helpers ---

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Play, Pause, Music, RefreshCw, Heart } from 'lucide-react'
-import { VideoItem, formatDuration } from './home-types'
+import { VideoItem, formatDuration, MUSIC_GENRE_BACKGROUNDS } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
 import { SkeletonCardRow } from '@/components/ui/Skeleton'
@@ -103,15 +103,17 @@ export function MusicGenreSection({
                   onPointerMove={onMagneticMove}
                   onPointerLeave={onMagneticLeave}
                 >
-                  {(genreBackgrounds.length > 0 || fallbackBackgrounds.length > 0) && (
-                    <img
-                      src={genreBackgrounds.length > 0
-                        ? genreBackgrounds[index % genreBackgrounds.length]
-                        : fallbackBackgrounds[(index + 15 + genreIndex * 5) % fallbackBackgrounds.length]}
-                      alt={video.title}
-                      className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
-                    />
-                  )}
+                  {(() => {
+                    const bgs = genreBackgrounds.length > 0 ? genreBackgrounds : (MUSIC_GENRE_BACKGROUNDS[genre.id] || [])
+                    const src = bgs.length > 0 ? bgs[index % bgs.length] : (fallbackBackgrounds.length > 0 ? fallbackBackgrounds[(index + 15 + genreIndex * 5) % fallbackBackgrounds.length] : null)
+                    return src ? (
+                      <img
+                        src={src}
+                        alt={video.title}
+                        className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
+                      />
+                    ) : null
+                  })()}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
 
                   {/* Progress ring on active card */}
