@@ -19,7 +19,6 @@ import {
   Sun,
   Moon,
 } from 'lucide-react'
-import Link from 'next/link'
 import { GenerationProgress } from './GenerationProgress'
 import { DayTypeIndicator } from './DayTypeIndicator'
 import { GuidancePlayer } from './GuidancePlayer'
@@ -1343,6 +1342,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                             <MicroLessonVideo
                               isCompleted={completedModules.includes(module)}
                               dayType={guide.day_type as 'work' | 'off' | 'recovery' | 'class' | 'study' | 'exam'}
+                              onDurationLoaded={(realDuration) => {
+                                setDurations(prev => ({ ...prev, micro_lesson: realDuration } as Record<ModuleType, number>))
+                              }}
                               onComplete={() => {
                                 setCompletedModules(prev => [...prev, module])
                                 setJustCompletedModule(module)
@@ -1445,12 +1447,6 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                   }).catch(err => console.error('[CosmicInsight checkin] error:', err))
                 }}
               />
-              <Link
-                href="/my-path"
-                className="mt-2 flex items-center justify-center gap-1.5 py-2 rounded-xl hover:bg-white/5 transition-colors text-xs text-indigo-400/80"
-              >
-                Explore your Depth Path →
-              </Link>
             </div>
           )}
 

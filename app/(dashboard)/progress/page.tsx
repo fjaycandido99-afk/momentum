@@ -19,8 +19,6 @@ import { WellnessScore } from '@/components/progress/WellnessScore'
 import { MonthlyRetrospective } from '@/components/progress/MonthlyRetrospective'
 import { MindsetEvolution } from '@/components/progress/MindsetEvolution'
 import { LetterToSelf } from '@/components/progress/LetterToSelf'
-import { ProgressHub } from '@/components/path/ProgressHub'
-import { useMindset } from '@/contexts/MindsetContext'
 import { migrateLocalXP } from '@/lib/gamification'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 
@@ -48,7 +46,6 @@ interface GamificationData {
 }
 
 export default function ProgressPage() {
-  const { mindset } = useMindset()
   const [data, setData] = useState<ProgressData | null>(null)
   const [gamification, setGamification] = useState<GamificationData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -199,11 +196,6 @@ export default function ProgressPage() {
             <ModulesCompleted count={data.modulesCompleted} activeDays={data.activeDays} />
             <ListeningStats totalMinutes={data.listeningMinutes} categoryMinutes={data.categoryMinutes} />
           </div>
-
-          {/* Path Progress */}
-          {mindset && (
-            <ProgressHub mindsetId={mindset} />
-          )}
 
           {/* Mood Insights */}
           {data?.moodInsights && (

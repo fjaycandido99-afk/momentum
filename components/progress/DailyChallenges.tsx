@@ -9,6 +9,7 @@ interface ChallengeData {
   icon: string
   xpReward: number
   completed: boolean
+  mindsetTag?: string
 }
 
 interface DailyChallengesProps {
@@ -53,9 +54,16 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
             <span className="text-lg shrink-0">{c.icon}</span>
 
             <div className="flex-1 min-w-0">
-              <p className={`text-xs font-medium ${c.completed ? 'text-emerald-400' : 'text-white'}`}>
-                {c.title}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <p className={`text-xs font-medium ${c.completed ? 'text-emerald-400' : 'text-white'}`}>
+                  {c.title}
+                </p>
+                {c.mindsetTag && (
+                  <span className="px-1.5 py-0.5 text-[9px] font-medium rounded-full bg-white/[0.08] border border-white/10 text-white/70 shrink-0">
+                    {c.mindsetTag}
+                  </span>
+                )}
+              </div>
               <p className="text-[10px] text-white/60 truncate">{c.description}</p>
             </div>
 

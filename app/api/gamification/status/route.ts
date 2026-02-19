@@ -7,6 +7,8 @@ import { getDailyChallenges, checkChallengeCondition } from '@/lib/daily-challen
 import { getWeekString, getWeeklyMissions, checkMissionProgress } from '@/lib/weekly-missions'
 import { computeSocialNudges } from '@/lib/social-proof'
 import { getUnlockedRewards, getNextReward } from '@/lib/unlockable-content'
+import type { MindsetId } from '@/lib/mindset/types'
+import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 
 export const dynamic = 'force-dynamic'
 
@@ -99,7 +101,9 @@ export async function GET() {
     }))
 
     // --- Daily Challenges ---
-    const dailyChallenges = getDailyChallenges(todayStr)
+    const mindsetRaw = prefs?.mindset as MindsetId | undefined
+    const mindsetId = (mindsetRaw && mindsetRaw in MINDSET_CONFIGS) ? mindsetRaw : null
+    const dailyChallenges = getDailyChallenges(todayStr, mindsetId)
     const challengeStatus = dailyChallenges.map(c => ({
       ...c,
       completed: checkChallengeCondition(

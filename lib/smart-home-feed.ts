@@ -69,7 +69,7 @@ export function getPostGuideRecommendation(
 
 // --- #2: Adaptive Home Feed ---
 
-export type FeedSection = 'soundscapes' | 'guided' | 'motivation' | 'music' | 'path'
+export type FeedSection = 'soundscapes' | 'guided' | 'motivation' | 'music' | 'wisdom'
 
 interface FeedSignals {
   journalMood?: string | null     // awful, low, okay, good, great
@@ -90,7 +90,7 @@ export function getAdaptiveSectionOrder(signals: FeedSignals): FeedSection[] {
     guided: 0,
     motivation: 0,
     music: 0,
-    path: 0,
+    wisdom: 0,
   }
 
   // Time of day
@@ -129,9 +129,20 @@ export function getAdaptiveSectionOrder(signals: FeedSignals): FeedSection[] {
     scores.music += 1
   }
 
-  // Streak bonus — reward consistency with path content
-  if (signals.streak >= 7) {
-    scores.path += 2
+  // Wisdom — higher when reflective, streak milestones, morning
+  if (signals.journalMood === 'awful' || signals.journalMood === 'low') {
+    scores.wisdom += 3
+  } else if (signals.journalMood === 'okay') {
+    scores.wisdom += 2
+  }
+  if (signals.timeOfDay === 'focus' || signals.timeOfDay === 'relax') {
+    scores.wisdom += 1
+  }
+  if (signals.streak > 0 && signals.streak % 7 === 0) {
+    scores.wisdom += 2 // streak milestones
+  }
+  if (signals.energyLevel === 'high') {
+    scores.wisdom -= 1 // prefer motivation/music when high energy
   }
 
   // Avoid repetition — deprioritize last played type
@@ -144,11 +155,6 @@ export function getAdaptiveSectionOrder(signals: FeedSignals): FeedSection[] {
   } else if (signals.lastPlayedType === 'soundscape') {
     scores.motivation += 1
     scores.music += 1
-  }
-
-  // Mindset path boost
-  if (signals.mindsetId) {
-    scores.path += 1
   }
 
   return (Object.entries(scores) as [FeedSection, number][])

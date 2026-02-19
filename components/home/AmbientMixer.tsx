@@ -1,28 +1,31 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { X, Layers } from 'lucide-react'
+import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 
 const AMBIENT_LAYERS = [
-  { id: 'rain', label: 'Rain', emoji: '\u{1F327}\u{FE0F}' },
-  { id: 'thunder', label: 'Thunder', emoji: '\u26A1' },
-  { id: 'fire', label: 'Fireplace', emoji: '\u{1F525}' },
-  { id: 'wind', label: 'Wind', emoji: '\u{1F32C}\u{FE0F}' },
-  { id: 'birds', label: 'Birds', emoji: '\u{1F426}' },
-  { id: 'waves', label: 'Ocean', emoji: '\u{1F30A}' },
-  { id: 'night', label: 'Night', emoji: '\u{1F319}' },
-  { id: 'cafe', label: 'Cafe', emoji: '\u2615' },
+  { id: 'rain', label: 'Rain', emoji: '\u{1F327}\u{FE0F}', soundscapeId: 'rain' },
+  { id: 'thunder', label: 'Thunder', emoji: '\u26A1', soundscapeId: 'thunder' },
+  { id: 'fire', label: 'Fireplace', emoji: '\u{1F525}', soundscapeId: 'fire' },
+  { id: 'wind', label: 'Wind', emoji: '\u{1F32C}\u{FE0F}', soundscapeId: 'wind' },
+  { id: 'birds', label: 'Birds', emoji: '\u{1F426}', soundscapeId: 'forest' },
+  { id: 'waves', label: 'Ocean', emoji: '\u{1F30A}', soundscapeId: 'ocean' },
+  { id: 'night', label: 'Night', emoji: '\u{1F319}', soundscapeId: 'night' },
+  { id: 'cafe', label: 'Cafe', emoji: '\u2615', soundscapeId: 'cafe' },
 ]
 
-const SOUND_URLS: Record<string, string> = {
-  rain: 'https://cdn.freesound.org/previews/531/531947_6364814-lq.mp3',
-  thunder: 'https://cdn.freesound.org/previews/362/362225_1166348-lq.mp3',
-  fire: 'https://cdn.freesound.org/previews/499/499257_4828702-lq.mp3',
-  wind: 'https://cdn.freesound.org/previews/406/406899_7716079-lq.mp3',
-  birds: 'https://cdn.freesound.org/previews/531/531015_10274857-lq.mp3',
-  waves: 'https://cdn.freesound.org/previews/467/467539_9653378-lq.mp3',
-  night: 'https://cdn.freesound.org/previews/380/380200_1676145-lq.mp3',
-  cafe: 'https://cdn.freesound.org/previews/454/454594_5765561-lq.mp3',
+// Build YouTube ID map from SOUNDSCAPE_ITEMS
+const LAYER_YOUTUBE_IDS: Record<string, string> = {}
+for (const layer of AMBIENT_LAYERS) {
+  const item = SOUNDSCAPE_ITEMS.find(s => s.id === layer.soundscapeId)
+  if (item) LAYER_YOUTUBE_IDS[layer.id] = item.youtubeId
+}
+
+interface YTPlayer {
+  setVolume: (vol: number) => void
+  destroy: () => void
+  playVideo: () => void
 }
 
 interface AmbientMixerProps {
@@ -31,57 +34,90 @@ interface AmbientMixerProps {
 
 export function AmbientMixer({ onClose }: AmbientMixerProps) {
   const [activeLayers, setActiveLayers] = useState<Record<string, number>>({})
-  const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map())
+  const playersRef = useRef<Map<string, YTPlayer>>(new Map())
+  const containersRef = useRef<Map<string, HTMLDivElement>>(new Map())
   const MAX_LAYERS = 3
+
+  const createPlayer = useCallback((layerId: string) => {
+    const youtubeId = LAYER_YOUTUBE_IDS[layerId]
+    if (!youtubeId) return
+    const YT = (window as any).YT
+    if (!YT?.Player) return
+
+    const containerId = `mixer-layer-${layerId}`
+    let container = document.getElementById(containerId) as HTMLDivElement | null
+    if (!container) {
+      container = document.createElement('div')
+      container.id = containerId
+      container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'
+      document.body.appendChild(container)
+    }
+    containersRef.current.set(layerId, container)
+
+    const player = new YT.Player(containerId, {
+      videoId: youtubeId,
+      playerVars: { autoplay: 1, loop: 1, playlist: youtubeId, controls: 0 },
+      events: {
+        onReady: (e: any) => {
+          e.target.setVolume(50)
+          e.target.playVideo()
+        },
+        onStateChange: (e: any) => {
+          if (e.data === YT.PlayerState.ENDED) {
+            e.target.playVideo()
+          }
+        },
+      },
+    })
+    playersRef.current.set(layerId, player)
+  }, [])
+
+  const destroyPlayer = useCallback((layerId: string) => {
+    const player = playersRef.current.get(layerId)
+    if (player) {
+      try { player.destroy() } catch {}
+      playersRef.current.delete(layerId)
+    }
+    const container = containersRef.current.get(layerId)
+    if (container?.parentNode) {
+      container.parentNode.removeChild(container)
+      containersRef.current.delete(layerId)
+    }
+  }, [])
 
   const toggleLayer = useCallback((id: string) => {
     if (activeLayers[id] !== undefined) {
-      // Fade out and remove
-      const audio = audioRefs.current.get(id)
-      if (audio) {
-        const fadeOut = setInterval(() => {
-          if (audio.volume > 0.05) {
-            audio.volume = Math.max(0, audio.volume - 0.05)
-          } else {
-            clearInterval(fadeOut)
-            audio.pause()
-            audio.src = ''
-            audioRefs.current.delete(id)
-          }
-        }, 30)
-      }
+      destroyPlayer(id)
       setActiveLayers(prev => {
         const next = { ...prev }
         delete next[id]
         return next
       })
     } else {
-      // Check max
       if (Object.keys(activeLayers).length >= MAX_LAYERS) return
-      // Create and play
-      const audio = new Audio(SOUND_URLS[id])
-      audio.loop = true
-      audio.volume = 0.5
-      audio.play().catch(() => {})
-      audioRefs.current.set(id, audio)
+      createPlayer(id)
       setActiveLayers(prev => ({ ...prev, [id]: 50 }))
     }
-  }, [activeLayers])
+  }, [activeLayers, createPlayer, destroyPlayer])
 
   const setVolume = useCallback((id: string, vol: number) => {
-    const audio = audioRefs.current.get(id)
-    if (audio) audio.volume = vol / 100
+    const player = playersRef.current.get(id)
+    if (player) {
+      try { player.setVolume(vol) } catch {}
+    }
     setActiveLayers(prev => ({ ...prev, [id]: vol }))
   }, [])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      audioRefs.current.forEach(audio => {
-        audio.pause()
-        audio.src = ''
+      playersRef.current.forEach((player, id) => {
+        try { player.destroy() } catch {}
+        const container = containersRef.current.get(id)
+        if (container?.parentNode) container.parentNode.removeChild(container)
       })
-      audioRefs.current.clear()
+      playersRef.current.clear()
+      containersRef.current.clear()
     }
   }, [])
 

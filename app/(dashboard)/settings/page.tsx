@@ -728,20 +728,11 @@ function SettingsContent() {
                     ))}
                   </div>
                   {zodiacSign && (
-                    <div className="space-y-2">
-                      <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
-                        <p className="text-sm text-white/80">
-                          <span className="text-indigo-400 font-medium">{ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}</span> selected.
-                          You&apos;ll receive cosmic insights tailored to your sign in your Morning Flow.
-                        </p>
-                      </div>
-                      <Link
-                        href="/my-path"
-                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500/15 to-purple-500/15 hover:from-indigo-500/25 hover:to-purple-500/25 border border-indigo-500/20 transition-all text-sm text-indigo-300 press-scale"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        Open Cosmic Guide
-                      </Link>
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+                      <p className="text-sm text-white/80">
+                        <span className="text-indigo-400 font-medium">{ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}</span> selected.
+                        You&apos;ll receive cosmic insights tailored to your sign in your Morning Flow.
+                      </p>
                     </div>
                   )}
                 </div>

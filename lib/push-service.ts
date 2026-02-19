@@ -28,7 +28,6 @@ export type NotificationType =
   | 'motivational_nudge'
   | 'daily_motivation'
   | 'featured_music'
-  | 'path_challenge'
   | 'custom'
 
 // Notification payload structure
@@ -177,17 +176,6 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'dismiss', title: 'Later' },
     ],
   },
-  path_challenge: {
-    title: 'Your Path Awaits',
-    body: 'Complete today\'s path challenge',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
-    tag: 'path-challenge',
-    actions: [
-      { action: 'open', title: 'Open Path' },
-      { action: 'dismiss', title: 'Later' },
-    ],
-  },
   custom: {
     title: 'Voxu',
     body: 'You have a new notification',
@@ -246,7 +234,6 @@ export async function sendPushToUser(
     motivational_nudge: 'motivational_nudge_alerts',
     daily_motivation: 'daily_motivation_alerts',
     featured_music: 'featured_music_alerts',
-    path_challenge: 'morning_reminder', // Uses morning_reminder preference
     custom: 'morning_reminder', // Custom always sends
   }
 
@@ -1005,78 +992,6 @@ export async function sendFeaturedMusic(): Promise<void> {
   }
 
   console.log(`Featured music: ${totalSent} sent, ${totalFailed} failed`)
-}
-
-/**
- * Send path challenge notifications to non-Scholar users
- * Personalized with their mindset name and current streak
- */
-export async function sendPathChallenge(): Promise<void> {
-  const MINDSET_NAMES: Record<string, string> = {
-    stoic: 'Stoic',
-    existentialist: 'Existentialist',
-    cynic: 'Cynic',
-    hedonist: 'Hedonist',
-    samurai: 'Samurai',
-  }
-
-  // Get non-Scholar users with push subscriptions
-  const users = await prisma.userPreferences.findMany({
-    where: {
-      mindset: { not: 'scholar' },
-    },
-    select: {
-      user_id: true,
-      mindset: true,
-    },
-  })
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  let totalSent = 0
-  let totalFailed = 0
-
-  for (const { user_id, mindset } of users) {
-    const mindsetName = MINDSET_NAMES[mindset] || 'Path'
-
-    // Check if they already completed today's path
-    const guide = await prisma.dailyGuide.findUnique({
-      where: { user_id_date: { user_id, date: today } },
-      select: {
-        path_reflection_done: true,
-        path_exercise_done: true,
-        path_quote_viewed: true,
-        path_soundscape_played: true,
-        path_streak: true,
-      },
-    })
-
-    const done = [
-      guide?.path_reflection_done,
-      guide?.path_exercise_done,
-      guide?.path_quote_viewed,
-      guide?.path_soundscape_played,
-    ].filter(Boolean).length
-
-    // Skip users who already completed all 4
-    if (done === 4) continue
-
-    let body = `Your ${mindsetName} challenge awaits. ${4 - done} activities remaining.`
-    if (guide?.path_streak && guide.path_streak > 1) {
-      body = `Keep your ${guide.path_streak}-day ${mindsetName} streak alive! ${4 - done} activities left.`
-    }
-
-    const result = await sendPushToUser(user_id, 'path_challenge', {
-      title: `Your ${mindsetName} Path`,
-      body,
-      data: { type: 'path_challenge', url: '/my-path' },
-    })
-    totalSent += result.sent
-    totalFailed += result.failed
-  }
-
-  console.log(`Path challenge: ${totalSent} sent, ${totalFailed} failed`)
 }
 
 /**

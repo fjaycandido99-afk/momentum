@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Bot, BarChart3, Compass } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Bot, BarChart3, Timer } from 'lucide-react'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { useHomeAudio } from '@/contexts/HomeAudioContext'
@@ -16,8 +16,8 @@ import { GuidedSection } from './GuidedSection'
 import { XPBadge } from './XPBadge'
 import { MotivationSection } from './MotivationSection'
 import { MusicTabsSection } from './MusicTabsSection'
-import { PathChallengeBanner } from './PathChallengeBanner'
 import { WelcomeBackCard } from './WelcomeBackCard'
+import { WisdomSection } from './WisdomSection'
 import { HeroCarousel } from './HeroCarousel'
 import { SavedMotivationSection } from './SavedMotivationSection'
 import {
@@ -39,7 +39,6 @@ import { AmbientMixer } from './AmbientMixer'
 import { LongPressPreview } from './LongPressPreview'
 import { WellnessWidget } from './WellnessWidget'
 import { SmartHomeNudge } from './SmartHomeNudge'
-import { PathContentSection } from './PathContentSection'
 import { DailyIntentionCard } from './DailyIntentionCard'
 import { DailyProgressRing } from './DailyProgressRing'
 import { useToast } from '@/contexts/ToastContext'
@@ -986,17 +985,6 @@ export function ImmersiveHome() {
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
           <div className="fixed right-6 top-[100px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
-            <Link href="/my-path" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
-              <Compass className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">
-                {mindsetCtx?.mindset === 'stoic' ? 'Stoic Path'
-                  : mindsetCtx?.mindset === 'existentialist' ? 'The Existentialist'
-                  : mindsetCtx?.mindset === 'cynic' ? "Cynic's Way"
-                  : mindsetCtx?.mindset === 'hedonist' ? 'Garden of Epicurus'
-                  : mindsetCtx?.mindset === 'samurai' ? 'Way of the Warrior'
-                  : 'My Path'}
-              </span>
-            </Link>
             <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
               <PenLine className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Journal</span>
@@ -1008,6 +996,10 @@ export function ImmersiveHome() {
             <Link href="/progress" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
               <BarChart3 className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Progress</span>
+            </Link>
+            <Link href="/focus" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+              <Timer className="w-4 h-4 text-white/85" />
+              <span className="text-sm text-white/90">Focus</span>
             </Link>
             <div className="mx-3 my-1 border-t border-white/15" />
             <Link href="/settings" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
@@ -1074,18 +1066,7 @@ export function ImmersiveHome() {
           </button>,
         ]
 
-        // Slide 2: Path Challenge
-        if (mindsetCtx) {
-          slides.push(
-            <PathChallengeBanner
-              key="path"
-              mindsetId={mindsetCtx.mindset}
-              embedded
-            />
-          )
-        }
-
-        // Slide 3: Daily Wellness
+        // Slide 2: Daily Wellness
         slides.push(
           <WellnessWidget
             key="wellness"
@@ -1186,22 +1167,6 @@ export function ImmersiveHome() {
                 )}
               </React.Fragment>
             )
-          case 'path':
-            return mindsetCtx ? (
-              <PathContentSection
-                key="path"
-                mindsetId={mindsetCtx.mindset}
-                motivationByTopic={motivationByTopic}
-                backgrounds={backgrounds}
-                activeCardId={audioState.activeCardId}
-                tappedCardId={audioState.tappedCardId}
-                musicPlaying={audioState.musicPlaying}
-                onPlay={(video, index, topic) => handleMotivationPlay(video, index, false, topic)}
-                onMagneticMove={magneticMove}
-                onMagneticLeave={magneticLeave}
-                onRipple={spawnRipple}
-              />
-            ) : null
           case 'music':
             return (
               <React.Fragment key="music">
@@ -1243,6 +1208,12 @@ export function ImmersiveHome() {
                   />
                 )}
               </React.Fragment>
+            )
+          case 'wisdom':
+            return (
+              <div key="wisdom" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
+                <WisdomSection />
+              </div>
             )
           default:
             return null

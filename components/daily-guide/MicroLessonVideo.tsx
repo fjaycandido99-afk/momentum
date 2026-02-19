@@ -98,6 +98,8 @@ interface MicroLessonVideoProps {
   onComplete: () => void
   onSkip?: () => void
   dayType?: DayType
+  /** Called when actual video duration is known (seconds) */
+  onDurationLoaded?: (seconds: number) => void
 }
 
 // Get today's topic based on day of year
@@ -109,7 +111,7 @@ function getTodaysTopic() {
   return DAILY_TOPICS[dayOfYear % DAILY_TOPICS.length]
 }
 
-export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'work' }: MicroLessonVideoProps) {
+export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'work', onDurationLoaded }: MicroLessonVideoProps) {
   const [topic] = useState(getTodaysTopic())
   const [video, setVideo] = useState<MotivationVideo | MusicVideo | null>(null)
   const [loading, setLoading] = useState(true)
@@ -190,7 +192,13 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
           const now = new Date()
           const dateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
           const videoIndex = Math.floor(seededRandom(dateSeed + 456) * sortedVideos.length)
-          setVideo(sortedVideos[videoIndex])
+          const selected = sortedVideos[videoIndex]
+          setVideo(selected)
+
+          // Report API duration immediately so timeRemaining is accurate before play
+          if (selected.duration && selected.duration > 0) {
+            onDurationLoaded?.(selected.duration)
+          }
         } else {
           setError('No videos available')
         }
@@ -204,19 +212,79 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
     fetchVideo()
   }, [topic.word, isMotivationMode, contentConfig.genre])
 
-  // Elapsed timer
+  // Track real duration from YouTube (more accurate than API metadata)
+  const [ytDuration, setYtDuration] = useState(0)
+  const durationReportedRef = useRef(false)
+  const onDurationLoadedRef = useRef(onDurationLoaded)
+  onDurationLoadedRef.current = onDurationLoaded
+
+  // Listen for YouTube iframe postMessage events for accurate time tracking
   useEffect(() => {
-    if (isPlaying && !isPaused) {
-      timerRef.current = setInterval(() => {
-        setElapsed(prev => prev + 1)
-      }, 1000)
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current)
+    if (!isPlaying) return
+
+    const handleMessage = (event: MessageEvent) => {
+      if (typeof event.data !== 'string') return
+      try {
+        const data = JSON.parse(event.data)
+        if (data.event === 'infoDelivery' && data.info) {
+          if (typeof data.info.currentTime === 'number') {
+            setElapsed(Math.floor(data.info.currentTime))
+          }
+          if (typeof data.info.duration === 'number' && data.info.duration > 0) {
+            setYtDuration(Math.floor(data.info.duration))
+            if (!durationReportedRef.current) {
+              durationReportedRef.current = true
+              onDurationLoadedRef.current?.(Math.floor(data.info.duration))
+            }
+          }
+        }
+        // Detect video ended via state change
+        if (data.event === 'onStateChange' && data.info === 0) {
+          // Video ended naturally
+        }
+      } catch {
+        // Ignore non-JSON messages
+      }
     }
+
+    window.addEventListener('message', handleMessage)
+
+    // Tell YouTube to start sending events
+    const iframe = iframeRef.current
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening' }), '*')
+    }
+
+    return () => window.removeEventListener('message', handleMessage)
+  }, [isPlaying])
+
+  // Fallback: interval-based timer only when YouTube messages aren't arriving
+  const lastYtUpdateRef = useRef(0)
+  useEffect(() => {
+    if (!isPlaying || isPaused) {
+      if (timerRef.current) clearInterval(timerRef.current)
+      return
+    }
+
+    // Check periodically if YouTube is sending updates; only use fallback if not
+    timerRef.current = setInterval(() => {
+      const now = Date.now()
+      if (now - lastYtUpdateRef.current > 3000) {
+        // No YouTube update in 3s, increment manually as fallback
+        setElapsed(prev => prev + 1)
+      }
+    }, 1000)
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [isPlaying, isPaused])
+
+  // Track when we last got a YouTube time update
+  useEffect(() => {
+    // elapsed is updated by YouTube messages — record the timestamp
+    lastYtUpdateRef.current = Date.now()
+  }, [elapsed])
 
   const sendCommand = useCallback((command: string) => {
     const iframe = iframeRef.current
@@ -293,7 +361,8 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
     return null
   }
 
-  const totalDuration = video.duration || 0
+  // Prefer real duration from YouTube, then API metadata, then 0
+  const totalDuration = ytDuration > 0 ? ytDuration : (video.duration || 0)
   const progress = totalDuration > 0 ? Math.min(elapsed / totalDuration, 1) : 0
 
   return (

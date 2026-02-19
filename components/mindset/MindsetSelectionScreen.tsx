@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MINDSET_IDS, type MindsetId } from '@/lib/mindset/types'
-import { AnimatedPathLogo } from '@/components/home/AnimatedPathLogo'
+import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 
 interface MindsetSelectionScreenProps {
   /** If true, show as a "Reset My Path" picker instead of onboarding */
@@ -81,7 +81,7 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
       {/* Content */}
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-3">
-          <AnimatedPathLogo mindsetId={id} size={42} />
+          <MindsetIcon mindsetId={id} className="w-10 h-10 text-white/80" />
           <span className={`text-[10px] ${theme.accent} font-medium tracking-wider uppercase mt-1`}>
             {theme.tagline}
           </span>
