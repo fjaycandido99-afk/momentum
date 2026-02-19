@@ -125,7 +125,7 @@ export function FocusMusicPicker({ selected, onSelect }: FocusMusicPickerProps) 
           <div className="relative w-40 h-40 rounded-2xl bg-white/[0.04] flex items-center justify-center">
             <Music className="w-8 h-8 text-white/25" strokeWidth={1.5} />
           </div>
-          <p className="text-sm text-white/95 mt-2">No music</p>
+          <p className="text-sm text-white/70 mt-2">No music</p>
         </button>
 
         {/* Genre cards */}
@@ -174,12 +174,12 @@ export function FocusMusicPicker({ selected, onSelect }: FocusMusicPickerProps) 
                       <Check className="w-5 h-5 text-black" strokeWidth={3} />
                     </div>
                   ) : (
-                    <Play className="w-8 h-8 text-white/95 drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
+                    <Play className="w-8 h-8 text-white drop-shadow-lg" fill="rgba(255,255,255,0.45)" />
                   )}
                 </div>
               </div>
 
-              <p className={`text-sm mt-2 ${isActive ? 'text-white font-medium' : 'text-white/95'}`}>
+              <p className={`text-sm mt-2 ${isActive ? 'text-white font-medium' : 'text-white/70'}`}>
                 {genre.word}
               </p>
             </button>

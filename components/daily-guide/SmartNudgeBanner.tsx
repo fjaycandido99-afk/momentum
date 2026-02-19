@@ -102,7 +102,7 @@ export function SmartNudgeBanner() {
           <p className={`text-[10px] font-medium tracking-widest uppercase mb-1 ${colors.text} opacity-70`}>
             {label}
           </p>
-          <p className="text-sm text-white/95 italic leading-relaxed">{nudge.message}</p>
+          <p className="text-sm text-white/70 italic leading-relaxed">{nudge.message}</p>
           {nudge.type !== 'streak_recovery' && (
             <FeatureHint id="smart-nudge" text="Nudges adapt to your patterns — dismiss if not relevant" mode="once" />
           )}
@@ -111,7 +111,7 @@ export function SmartNudgeBanner() {
           onClick={handleDismiss}
           className="p-1.5 rounded-lg hover:bg-white/10 transition-colors shrink-0"
         >
-          <X className="w-3.5 h-3.5 text-white/95" />
+          <X className="w-3.5 h-3.5 text-white/70" />
         </button>
       </div>
     </div>

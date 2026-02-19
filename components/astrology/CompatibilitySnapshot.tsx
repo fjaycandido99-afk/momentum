@@ -51,7 +51,7 @@ export function CompatibilitySnapshot({ zodiacSign }: CompatibilitySnapshotProps
       <p className="text-[10px] font-medium tracking-widest text-indigo-400/80 uppercase mb-1">
         Compatibility Snapshot
       </p>
-      <p className="text-xs text-white/95 mb-4">
+      <p className="text-xs text-white/70 mb-4">
         Today&apos;s harmonious signs for {ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}
       </p>
 
@@ -68,13 +68,13 @@ export function CompatibilitySnapshot({ zodiacSign }: CompatibilitySnapshotProps
             >
               <span className="text-2xl block mb-1">{ZODIAC_SYMBOLS[signId]}</span>
               <p className="text-xs font-medium text-white">{signData.label}</p>
-              <p className="text-[10px] text-white/95 capitalize mt-0.5">{signTraits.element}</p>
+              <p className="text-[10px] text-white/50 capitalize mt-0.5">{signTraits.element}</p>
             </div>
           )
         })}
       </div>
 
-      <p className="text-[11px] text-white/95 mt-3 text-center">
+      <p className="text-[11px] text-white/50 mt-3 text-center">
         {traits.element === 'fire' || traits.element === 'air'
           ? 'Fire & Air signs fuel each other\u2019s energy'
           : 'Earth & Water signs ground and nourish each other'}

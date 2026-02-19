@@ -48,7 +48,7 @@ export function MusicGenreSection({
       <div className="flex items-center justify-between px-8 mb-4">
         <div>
           <h2 className={`text-lg font-semibold text-white parallax-header genre-accent-${genre.id}`}>{genre.word}</h2>
-          <p className="text-xs text-white/95 mt-0.5">{genre.tagline}</p>
+          <p className="text-xs text-white/70 mt-0.5">{genre.tagline}</p>
           {genreIndex === 0 && <FeatureHint id="home-music-genre" text="Music plays in the background — shuffle for fresh picks" mode="once" />}
         </div>
         {onShuffle && (
@@ -157,14 +157,14 @@ export function MusicGenreSection({
                         <Pause className="w-8 h-8 text-white drop-shadow-lg icon-morph" fill="white" />
                       )
                     ) : (
-                      <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
+                      <Play className="w-8 h-8 text-white group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
                     )}
                   </div>
                   {isLocked && !isCardActive && (
                     <SoftLockBadge isLocked={true} size="md" />
                   )}
                 </div>
-                <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+                <p className="text-sm text-white/70 mt-2 line-clamp-2 leading-tight">{video.title}</p>
               </button>
             )
           })

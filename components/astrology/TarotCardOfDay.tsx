@@ -27,7 +27,7 @@ export function TarotCardOfDay({ zodiacSign }: TarotCardOfDayProps) {
         </div>
         <div className="flex-1">
           <h2 className="font-medium text-white">Tarot Card of the Day</h2>
-          <p className="text-xs text-white/95">Your daily cosmic draw</p>
+          <p className="text-xs text-white/50">Your daily cosmic draw</p>
         </div>
         <button
           onClick={handleShare}
@@ -59,7 +59,7 @@ export function TarotCardOfDay({ zodiacSign }: TarotCardOfDayProps) {
             {card.keywords.map((keyword) => (
               <span
                 key={keyword}
-                className="px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-[11px] text-white/95 capitalize"
+                className="px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-[11px] text-white/70 capitalize"
               >
                 {keyword}
               </span>

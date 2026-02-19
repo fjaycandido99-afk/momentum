@@ -72,8 +72,8 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
   if (streak === 0) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/15">
-        <Flame className="w-4 h-4 text-white/95" />
-        <span className="text-sm text-white/95">Start your streak!</span>
+        <Flame className="w-4 h-4 text-white/50" />
+        <span className="text-sm text-white/70">Start your streak!</span>
       </div>
     )
   }
@@ -130,12 +130,12 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
             </span>
           </div>
           {currentMilestone && (
-            <span className="text-[10px] text-white/95">{currentMilestone.label}</span>
+            <span className="text-[10px] text-white/50">{currentMilestone.label}</span>
           )}
         </div>
         {nextMilestone && (
           <div className="ml-2 pl-2 border-l border-white/15">
-            <div className="text-[10px] text-white/95">
+            <div className="text-[10px] text-white/50">
               {nextMilestone.days - streak} to {nextMilestone.label}
             </div>
           </div>
@@ -171,7 +171,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
                 onClick={handleCloseCelebration}
                 className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
               >
-                <X className="w-4 h-4 text-white/95" />
+                <X className="w-4 h-4 text-white" />
               </button>
 
               {/* Icon */}
@@ -190,7 +190,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
               </p>
 
               {/* Message */}
-              <p className="text-white/95 text-sm mb-6">
+              <p className="text-white/70 text-sm mb-6">
                 {currentMilestone.message}
               </p>
 
@@ -215,7 +215,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
                         className="transition-all duration-1000"
                       />
                     </svg>
-                    <div className="text-sm text-white/95">
+                    <div className="text-sm text-white/70">
                       Next: <span className="text-white font-medium">{nextMilestone.label}</span>
                       <span className="text-white/75 ml-1">({nextMilestone.days - streak} days)</span>
                     </div>
@@ -257,8 +257,8 @@ export function StreakBadge({ streak, freezeCount }: { streak: number; freezeCou
   if (streak === 0) {
     return (
       <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5">
-        <Flame className="w-3.5 h-3.5 text-white/95" />
-        <span className="text-xs text-white/95">0</span>
+        <Flame className="w-3.5 h-3.5 text-white/50" />
+        <span className="text-xs text-white/50">0</span>
       </div>
     )
   }

@@ -99,7 +99,7 @@ export function LazyGenreSection({
           <div className="flex items-center px-8 mb-4">
             <div>
               <h2 className={`text-lg font-semibold text-white parallax-header genre-accent-${genre.id}`}>{genre.word}</h2>
-              <p className="text-xs text-white/95 mt-0.5">{genre.tagline}</p>
+              <p className="text-xs text-white/70 mt-0.5">{genre.tagline}</p>
             </div>
           </div>
           <div className="px-2"><SkeletonCardRow heroCard={heroCard} /></div>

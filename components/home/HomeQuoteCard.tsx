@@ -116,7 +116,7 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
           </div>
           <div>
             <h2 className="text-lg font-medium text-white">Daily Quote</h2>
-            <p className="text-xs text-white/95">Your daily dose of wisdom</p>
+            <p className="text-xs text-white/70">Your daily dose of wisdom</p>
           </div>
         </div>
         <div className="flex items-center justify-between mt-4">

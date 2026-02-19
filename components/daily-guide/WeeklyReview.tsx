@@ -247,7 +247,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           </div>
           <div>
             <h2 className="font-semibold text-white">Weekly Review</h2>
-            <p className="text-xs text-white/95">{weekLabel}</p>
+            <p className="text-xs text-white/50">{weekLabel}</p>
           </div>
         </div>
         {isModal && onClose && (
@@ -256,14 +256,14 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
             aria-label="Close weekly review"
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
-            <X className="w-4 h-4 text-white/95" />
+            <X className="w-4 h-4 text-white" />
           </button>
         )}
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
+          <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
         </div>
       ) : (
         <>
@@ -277,46 +277,46 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
               <div className="grid grid-cols-2 gap-3">
                 {/* Energy Distribution */}
                 <div>
-                  <p className="text-[10px] text-white/95 uppercase tracking-wide mb-1.5">Energy</p>
+                  <p className="text-[10px] text-white/50 uppercase tracking-wide mb-1.5">Energy</p>
                   {(stats?.energyDistribution.low || stats?.energyDistribution.normal || stats?.energyDistribution.high) ? (
                     <>
                       <div className="flex gap-1.5 mt-1">
                         <div className="flex items-center gap-0.5">
                           <div className="w-2 h-2 rounded-full bg-blue-400/60" />
-                          <span className="text-[10px] text-white/95">Low {stats.energyDistribution.low}</span>
+                          <span className="text-[10px] text-white/50">Low {stats.energyDistribution.low}</span>
                         </div>
                         <div className="flex items-center gap-0.5">
                           <div className="w-2 h-2 rounded-full bg-amber-400/60" />
-                          <span className="text-[10px] text-white/95">Normal {stats.energyDistribution.normal}</span>
+                          <span className="text-[10px] text-white/50">Normal {stats.energyDistribution.normal}</span>
                         </div>
                         <div className="flex items-center gap-0.5">
                           <div className="w-2 h-2 rounded-full bg-emerald-400/60" />
-                          <span className="text-[10px] text-white/95">High {stats.energyDistribution.high}</span>
+                          <span className="text-[10px] text-white/50">High {stats.energyDistribution.high}</span>
                         </div>
                       </div>
                     </>
                   ) : (
-                    <p className="text-xs text-white/95">No data</p>
+                    <p className="text-xs text-white/50">No data</p>
                   )}
                 </div>
 
                 {/* Completion Rate */}
                 <div>
-                  <p className="text-[10px] text-white/95 uppercase tracking-wide mb-1.5">Completion</p>
-                  <p className="text-lg font-bold text-white">{stats?.completionRate || 0}<span className="text-xs text-white/95 font-normal">%</span></p>
-                  <p className="text-[10px] text-white/95">{stats?.completedDays || 0} full days</p>
+                  <p className="text-[10px] text-white/50 uppercase tracking-wide mb-1.5">Completion</p>
+                  <p className="text-lg font-bold text-white">{stats?.completionRate || 0}<span className="text-xs text-white/50 font-normal">%</span></p>
+                  <p className="text-[10px] text-white/50">{stats?.completedDays || 0} full days</p>
                 </div>
 
                 {/* Journal Count */}
                 <div>
-                  <p className="text-[10px] text-white/95 uppercase tracking-wide mb-1.5">Journals</p>
-                  <p className="text-lg font-bold text-white">{stats?.journalEntries || 0}<span className="text-xs text-white/95 font-normal">/7</span></p>
-                  <p className="text-[10px] text-white/95">entries written</p>
+                  <p className="text-[10px] text-white/50 uppercase tracking-wide mb-1.5">Journals</p>
+                  <p className="text-lg font-bold text-white">{stats?.journalEntries || 0}<span className="text-xs text-white/50 font-normal">/7</span></p>
+                  <p className="text-[10px] text-white/50">entries written</p>
                 </div>
 
                 {/* Mood Improvement */}
                 <div>
-                  <p className="text-[10px] text-white/95 uppercase tracking-wide mb-1.5">Mood Shift</p>
+                  <p className="text-[10px] text-white/50 uppercase tracking-wide mb-1.5">Mood Shift</p>
                   {stats && stats.moodImprovedPercent > 0 ? (
                     <>
                       <p className="text-lg font-bold text-emerald-400">
@@ -324,11 +324,11 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                       </p>
                       <div className="flex items-center gap-1">
                         <TrendingUp className="w-3 h-3 text-emerald-400/60" />
-                        <span className="text-[10px] text-white/95">improved</span>
+                        <span className="text-[10px] text-white/50">improved</span>
                       </div>
                     </>
                   ) : (
-                    <p className="text-xs text-white/95">No data</p>
+                    <p className="text-xs text-white/50">No data</p>
                   )}
                 </div>
               </div>
@@ -350,7 +350,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                     <div className="h-3 w-5/6 bg-white/5 rounded animate-pulse" />
                   </div>
                 ) : (
-                  <p className="text-sm text-white/95 leading-relaxed italic">
+                  <p className="text-sm text-white/70 leading-relaxed italic">
                     {aiSummary}
                   </p>
                 )}
@@ -401,7 +401,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           {stats?.journalEntries && stats.journalEntries > 0 && (
             <div className="px-4 pb-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-white/95 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-white flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-amber-400" />
                   What You Learned This Week
                 </h3>
@@ -416,13 +416,13 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
               <div className="space-y-2">
                 {stats.wins.slice(0, 3).map((win, i) => (
                   <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/15">
-                    <p className="text-sm text-white/95 italic line-clamp-2">"{win}"</p>
+                    <p className="text-sm text-white/70 italic line-clamp-2">"{win}"</p>
                   </div>
                 ))}
                 {stats.wins.length > 3 && (
                   <button
                     onClick={() => setShowFullJournal(true)}
-                    className="w-full p-3 rounded-xl bg-white/5 border border-white/15 text-white/95 text-sm hover:bg-white/10 transition-colors"
+                    className="w-full p-3 rounded-xl bg-white/5 border border-white/15 text-white/70 text-sm hover:bg-white/10 transition-colors"
                   >
                     +{stats.wins.length - 3} more entries
                   </button>
@@ -435,7 +435,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           <div className="p-4 border-t border-white/15">
             <div className="flex items-center gap-2 mb-3">
               <Target className="w-4 h-4 text-purple-400" />
-              <h3 className="text-sm font-medium text-white/95">This Week's Intention</h3>
+              <h3 className="text-sm font-medium text-white">This Week's Intention</h3>
             </div>
 
             {existingIntention && isSaved ? (
@@ -444,7 +444,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                   <Check className="w-4 h-4" />
                   <span className="text-xs font-medium">Set for this week</span>
                 </div>
-                <p className="text-white/95 italic">"{existingIntention}"</p>
+                <p className="text-white/70 italic">"{existingIntention}"</p>
                 <button
                   onClick={() => {
                     setIsSaved(false)
@@ -469,7 +469,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                   maxLength={200}
                 />
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs text-white/95">{intention.length}/200</span>
+                  <span className="text-xs text-white/50">{intention.length}/200</span>
                   <button
                     onClick={handleSaveIntention}
                     disabled={!intention.trim() || isSaving}
@@ -477,7 +477,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                       intention.trim()
                         ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30'
-                        : 'bg-white/5 text-white/95 cursor-not-allowed'
+                        : 'bg-white/5 text-white/40 cursor-not-allowed'
                     }`}
                   >
                     {isSaving ? (
@@ -519,7 +519,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
             </div>
             <div>
               <h2 className="font-semibold text-white">Week's Journal</h2>
-              <p className="text-xs text-white/95">{weekLabel}</p>
+              <p className="text-xs text-white/50">{weekLabel}</p>
             </div>
           </div>
           <button
@@ -527,7 +527,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
             aria-label="Close journal"
             className="p-2 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
-            <X className="w-5 h-5 text-white/95" />
+            <X className="w-5 h-5 text-white" />
           </button>
         </div>
 
@@ -552,24 +552,24 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                   }`}>
                     <span className={`text-xs font-medium ${
                       day.moduleCount >= 4 ? 'text-emerald-400' :
-                      day.moduleCount > 0 ? 'text-amber-400' : 'text-white/95'
+                      day.moduleCount > 0 ? 'text-amber-400' : 'text-white/50'
                     }`}>
                       {day.date.getDate()}
                     </span>
-                    <span className="text-[10px] text-white/95">
+                    <span className="text-[10px] text-white/50">
                       {day.dayName.slice(0, 3)}
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm text-white/95">{day.dayName}</p>
-                    <p className="text-xs text-white/95">
+                    <p className="text-sm text-white/70">{day.dayName}</p>
+                    <p className="text-xs text-white/50">
                       {day.moduleCount > 0 ? `${day.moduleCount}/5 modules` : 'No activity'}
                       {(day.journal_win || day.journal_gratitude || day.journal_intention) && ' • Journal ✓'}
                     </p>
                   </div>
                 </div>
                 {(day.journal_win || day.journal_gratitude || day.journal_intention) && (
-                  <ChevronRight className={`w-4 h-4 text-white/95 transition-transform ${
+                  <ChevronRight className={`w-4 h-4 text-white/50 transition-transform ${
                     expandedDay === index ? 'rotate-90' : ''
                   }`} />
                 )}
@@ -581,7 +581,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                   {day.journal_win && (
                     <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                       <p className="text-xs text-blue-400 mb-1">What I learned:</p>
-                      <p className="text-sm text-white/95 leading-relaxed">{day.journal_win}</p>
+                      <p className="text-sm text-white/70 leading-relaxed">{day.journal_win}</p>
                     </div>
                   )}
                   {day.journal_gratitude && (
@@ -589,7 +589,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                       <p className="text-xs text-pink-400 mb-1 flex items-center gap-1">
                         <Heart className="w-3 h-3" /> Grateful for:
                       </p>
-                      <p className="text-sm text-white/95 leading-relaxed">{day.journal_gratitude}</p>
+                      <p className="text-sm text-white/70 leading-relaxed">{day.journal_gratitude}</p>
                     </div>
                   )}
                   {day.journal_intention && (
@@ -597,7 +597,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                       <p className="text-xs text-purple-400 mb-1 flex items-center gap-1">
                         <Target className="w-3 h-3" /> Intention:
                       </p>
-                      <p className="text-sm text-white/95 leading-relaxed">{day.journal_intention}</p>
+                      <p className="text-sm text-white/70 leading-relaxed">{day.journal_intention}</p>
                     </div>
                   )}
                 </div>
@@ -609,7 +609,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         {/* Summary */}
         <div className="p-4 border-t border-white/15 bg-white/[0.02]">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-white/95">Total journal entries</span>
+            <span className="text-white/70">Total journal entries</span>
             <span className="text-blue-400 font-medium">{stats.journalEntries} / 7 days</span>
           </div>
         </div>
@@ -658,10 +658,10 @@ export function WeeklyReviewPrompt({ onOpen }: { onOpen: () => void }) {
           </div>
           <div className="text-left">
             <h3 className="font-medium text-white">Weekly Review</h3>
-            <p className="text-xs text-white/95">Reflect on your week & set intentions</p>
+            <p className="text-xs text-white/50">Reflect on your week & set intentions</p>
           </div>
         </div>
-        <ChevronRight className="w-5 h-5 text-white/95 group-hover:text-white/95 transition-colors" />
+        <ChevronRight className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
       </div>
     </button>
   )

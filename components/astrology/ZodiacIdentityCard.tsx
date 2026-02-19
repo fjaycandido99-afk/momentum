@@ -19,7 +19,7 @@ export function ZodiacIdentityCard({ zodiacSign }: ZodiacIdentityCardProps) {
           </div>
           <div>
             <h2 className="font-medium text-white">Discover Your Sign</h2>
-            <p className="text-xs text-white/95">Set your zodiac sign to unlock personalized cosmic guidance</p>
+            <p className="text-xs text-white/70">Set your zodiac sign to unlock personalized cosmic guidance</p>
           </div>
         </div>
         <Link
@@ -48,7 +48,7 @@ export function ZodiacIdentityCard({ zodiacSign }: ZodiacIdentityCardProps) {
           <div className="text-4xl">{symbol}</div>
           <div>
             <h2 className="text-xl font-medium text-white">{signData.label}</h2>
-            <p className="text-xs text-white/95">{signData.dates}</p>
+            <p className="text-xs text-white/50">{signData.dates}</p>
           </div>
         </div>
         <Link
@@ -56,7 +56,7 @@ export function ZodiacIdentityCard({ zodiacSign }: ZodiacIdentityCardProps) {
           className="p-2 rounded-xl hover:bg-white/10 transition-colors"
           aria-label="Change zodiac sign"
         >
-          <Settings className="w-4 h-4 text-white/95" />
+          <Settings className="w-4 h-4 text-white/50" />
         </Link>
       </div>
 
@@ -74,7 +74,7 @@ export function ZodiacIdentityCard({ zodiacSign }: ZodiacIdentityCardProps) {
         {traits.traits.split(', ').map((trait) => (
           <span
             key={trait}
-            className="px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-[11px] text-white/95"
+            className="px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-[11px] text-white/70"
           >
             {trait}
           </span>

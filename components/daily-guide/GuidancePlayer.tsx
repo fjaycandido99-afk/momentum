@@ -1032,11 +1032,11 @@ export function GuidancePlayer({
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-20">
         <div>
-          <span className="text-white/95 text-sm font-medium">
+          <span className="text-white text-sm font-medium">
             {config.label}
           </span>
           {withMusic && musicGenre && (
-            <div className="flex items-center gap-1.5 mt-1 text-white/95 text-xs">
+            <div className="flex items-center gap-1.5 mt-1 text-white/50 text-xs">
               <Music className="w-3 h-3" />
               <span>{genreLabels[musicGenre] || musicGenre}</span>
             </div>
@@ -1053,25 +1053,25 @@ export function GuidancePlayer({
                 }}
                 aria-label={isMusicMuted ? 'Music muted, tap to adjust volume' : 'Adjust music volume'}
                 className={`p-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                  isMusicMuted ? 'bg-white/5 text-white/95' : 'bg-white/10 hover:bg-white/20'
+                  isMusicMuted ? 'bg-white/5 text-white/50' : 'bg-white/10 hover:bg-white/20'
                 }`}
                 title="Tap to adjust volume, long press to mute"
               >
-                <Music className={`w-4 h-4 ${isMusicMuted ? 'text-white/95' : 'text-white'}`} />
+                <Music className={`w-4 h-4 ${isMusicMuted ? 'text-white/50' : 'text-white'}`} />
               </button>
 
               {/* Volume slider popup */}
               {showVolumeSlider && (
                 <div className="absolute top-full right-0 mt-2 p-3 rounded-xl bg-black/90 border border-white/25 backdrop-blur-sm z-30 min-w-[160px]">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-white/95">Music Volume</span>
+                    <span className="text-xs text-white/70">Music Volume</span>
                     <button
                       onClick={toggleMusicMute}
                       aria-label={isMusicMuted ? 'Unmute music' : 'Mute music'}
                       className="p-1 rounded hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       {isMusicMuted ? (
-                        <VolumeX className="w-3.5 h-3.5 text-white/95" />
+                        <VolumeX className="w-3.5 h-3.5 text-white/50" />
                       ) : (
                         <Volume2 className="w-3.5 h-3.5 text-white" />
                       )}
@@ -1097,12 +1097,12 @@ export function GuidancePlayer({
                       [&::-moz-range-thumb]:bg-white
                       [&::-moz-range-thumb]:border-0"
                   />
-                  <div className="flex justify-between text-[10px] text-white/95 mt-1">
+                  <div className="flex justify-between text-[10px] text-white/50 mt-1">
                     <span>0</span>
                     <span>{musicVolume}%</span>
                     <span>100</span>
                   </div>
-                  <p className="text-[10px] text-white/95 mt-2 text-center">
+                  <p className="text-[10px] text-white/50 mt-2 text-center">
                     Auto-ducks when voice plays
                   </p>
                 </div>
@@ -1136,7 +1136,7 @@ export function GuidancePlayer({
       {/* Main content - centered label */}
       <div className="h-full flex flex-col items-center justify-center px-8 pt-16 pb-32 relative z-10">
         <div className="text-center">
-          <p className="text-sm text-white/95 uppercase tracking-widest mb-4">
+          <p className="text-sm text-white/50 uppercase tracking-widest mb-4">
             {config.label}
           </p>
           {isPlaying && !isCompleted && (
@@ -1147,7 +1147,7 @@ export function GuidancePlayer({
             </div>
           )}
           {isCompleted && (
-            <p className="text-white/95 text-lg">Session complete</p>
+            <p className="text-white text-lg">Session complete</p>
           )}
         </div>
       </div>
@@ -1184,7 +1184,7 @@ export function GuidancePlayer({
             className="p-5 rounded-full bg-white/20 hover:bg-white/30 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] animate-float focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             {isCompleted ? (
-              <Check className="w-8 h-8 text-white/95" />
+              <Check className="w-8 h-8 text-white" />
             ) : isPlaying ? (
               <Pause className="w-8 h-8 text-white" />
             ) : (
@@ -1202,7 +1202,7 @@ export function GuidancePlayer({
         </div>
 
         {/* Time */}
-        <div className="text-center mt-4 text-white/95 text-sm">
+        <div className="text-center mt-4 text-white/50 text-sm">
           {Math.floor(currentTime)}s / {totalDuration}s
         </div>
       </div>
@@ -1223,7 +1223,7 @@ export function GuidancePlayer({
               <h3 className="text-xl font-bold text-white mb-2">
                 Session Limit Reached
               </h3>
-              <p className="text-white/95 text-sm mb-6">
+              <p className="text-white/70 text-sm mb-6">
                 Free sessions are limited to 10 minutes. Upgrade to Premium for unlimited session duration.
               </p>
               <div className="space-y-3">
@@ -1239,7 +1239,7 @@ export function GuidancePlayer({
                 </button>
                 <button
                   onClick={handleClose}
-                  className="w-full py-3 px-4 rounded-xl bg-white/10 text-white/95 font-medium hover:bg-white/15 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  className="w-full py-3 px-4 rounded-xl bg-white/10 text-white font-medium hover:bg-white/15 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   Close Session
                 </button>

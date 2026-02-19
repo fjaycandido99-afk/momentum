@@ -99,7 +99,7 @@ export function ContentDrawer({ isOpen, onToggle }: ContentDrawerProps) {
 
           {/* Peek label when closed */}
           {!isOpen && (
-            <p className="text-xs text-white/95 animate-fade-in">
+            <p className="text-xs text-white/50 animate-fade-in">
               Swipe up for Guide & Journal
             </p>
           )}
@@ -118,7 +118,7 @@ export function ContentDrawer({ isOpen, onToggle }: ContentDrawerProps) {
                   className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                     activeTab === tab.id
                       ? 'bg-white/10 text-white'
-                      : 'text-white/95 hover:text-white/95'
+                      : 'text-white/50 hover:text-white/70'
                   }`}
                 >
                   {tab.label}

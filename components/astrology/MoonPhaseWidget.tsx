@@ -96,7 +96,7 @@ export function MoonPhaseWidget() {
           <h3 className="text-lg font-medium text-white mb-0.5">{moonData.phaseName}</h3>
           <p className="text-sm text-indigo-300/80 mb-2">{moonData.illumination}% illuminated</p>
           {phaseMeaning && (
-            <p className="text-xs text-white/95 leading-relaxed">{phaseMeaning.meaning}</p>
+            <p className="text-xs text-white/70 leading-relaxed">{phaseMeaning.meaning}</p>
           )}
         </div>
       </div>
@@ -105,13 +105,13 @@ export function MoonPhaseWidget() {
       {phaseMeaning && (
         <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/15">
           <p className="text-[10px] uppercase tracking-wider text-indigo-400/70 mb-1">Cosmic Energy</p>
-          <p className="text-xs text-white/95 leading-relaxed">{phaseMeaning.energy}</p>
+          <p className="text-xs text-white/70 leading-relaxed">{phaseMeaning.energy}</p>
         </div>
       )}
 
-      <div className="mt-3 flex items-center gap-4 text-[11px] text-white/95">
-        <span>Next Full Moon: <span className="text-white/95">{formatDate(moonData.nextFullMoon)}</span></span>
-        <span>Next New Moon: <span className="text-white/95">{formatDate(moonData.nextNewMoon)}</span></span>
+      <div className="mt-3 flex items-center gap-4 text-[11px] text-white/50">
+        <span>Next Full Moon: <span className="text-white/50">{formatDate(moonData.nextFullMoon)}</span></span>
+        <span>Next New Moon: <span className="text-white/50">{formatDate(moonData.nextNewMoon)}</span></span>
       </div>
     </div>
   )

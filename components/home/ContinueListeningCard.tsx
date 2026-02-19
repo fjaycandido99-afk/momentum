@@ -41,7 +41,7 @@ export function ContinueListeningCard({
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-white/75 font-medium uppercase tracking-wide mb-0.5">Continue listening</p>
-            <p className="text-sm text-white/95 line-clamp-1 font-medium">{video.title}</p>
+            <p className="text-sm text-white line-clamp-1 font-medium">{video.title}</p>
             <p className="text-xs text-white/70 mt-0.5">{formatDuration(remaining)} remaining</p>
             {/* Progress bar */}
             <div className="mt-2 h-1 w-full rounded-full bg-white/10 overflow-hidden">

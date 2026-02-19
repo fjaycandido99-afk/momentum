@@ -49,7 +49,7 @@ export function PersistentPlayerBar() {
           <div className="w-[2px] rounded-full bg-white/80 animate-sound-bar-2" />
           <div className="w-[2px] rounded-full bg-white/80 animate-sound-bar-3" />
         </div>
-        <span className="text-sm text-white/95 max-w-[120px] truncate">{label}</span>
+        <span className="text-sm text-white/70 max-w-[120px] truncate">{label}</span>
         <button
           aria-label="Pause"
           onClick={handlePause}

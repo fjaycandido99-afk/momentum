@@ -916,8 +916,8 @@ export function ImmersiveHome() {
               }}
               className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors"
             >
-              <Home className="w-4 h-4 text-white/95" />
-              <span className="text-sm text-white/95">Home</span>
+              <Home className="w-4 h-4 text-white" />
+              <span className="text-sm text-white">Home</span>
             </button>
           </div>
         </div>
@@ -931,11 +931,11 @@ export function ImmersiveHome() {
         <div className="flex flex-col items-center gap-1 pb-2">
           <ChevronDown
             className={`w-5 h-5 transition-transform duration-300 ${
-              pullDistance >= PULL_THRESHOLD ? 'text-white rotate-180 scale-110' : 'text-white/95'
+              pullDistance >= PULL_THRESHOLD ? 'text-white rotate-180 scale-110' : 'text-white/50'
             }`}
             style={{ transform: pullDistance > 0 && pullDistance < PULL_THRESHOLD ? `rotate(${(pullDistance / PULL_THRESHOLD) * 180}deg)` : undefined }}
           />
-          <span className={`text-xs transition-all duration-200 ${pullDistance >= PULL_THRESHOLD ? 'text-white font-medium' : 'text-white/95'}`}>
+          <span className={`text-xs transition-all duration-200 ${pullDistance >= PULL_THRESHOLD ? 'text-white font-medium' : 'text-white/50'}`}>
             {pullDistance >= PULL_THRESHOLD ? 'Release for Daily Guide' : 'Pull down for Daily Guide'}
           </span>
         </div>

@@ -366,7 +366,7 @@ export function NotificationSettings() {
   if (isLoading) {
     return (
       <div className="p-4 flex items-center justify-center">
-        <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
+        <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
       </div>
     )
   }
@@ -376,11 +376,11 @@ export function NotificationSettings() {
       <div className="p-4 rounded-xl bg-white/5 border border-white/15">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-white/10">
-            <BellOff className="w-5 h-5 text-white/95" />
+            <BellOff className="w-5 h-5 text-white/50" />
           </div>
           <div>
-            <p className="text-sm text-white/95">Push notifications not available</p>
-            <p className="text-xs text-white/95">
+            <p className="text-sm text-white/70">Push notifications not available</p>
+            <p className="text-xs text-white/50">
               {supportInfo?.reason || 'Your device does not support push notifications'}
             </p>
             {supportInfo?.platform === 'ios' && !supportInfo?.isInstalled && (
@@ -402,8 +402,8 @@ export function NotificationSettings() {
             <BellOff className="w-5 h-5 text-red-400" />
           </div>
           <div>
-            <p className="text-sm text-white/95">Notifications blocked</p>
-            <p className="text-xs text-white/95">Enable notifications in your browser settings</p>
+            <p className="text-sm text-white/70">Notifications blocked</p>
+            <p className="text-xs text-white/50">Enable notifications in your browser settings</p>
           </div>
         </div>
       </div>
@@ -420,12 +420,12 @@ export function NotificationSettings() {
               {isSubscribed ? (
                 <Bell className="w-5 h-5 text-emerald-400" />
               ) : (
-                <BellOff className="w-5 h-5 text-white/95" />
+                <BellOff className="w-5 h-5 text-white/50" />
               )}
             </div>
             <div>
               <p className="text-sm text-white">Push Notifications</p>
-              <p className="text-xs text-white/95">
+              <p className="text-xs text-white/50">
                 {isSubscribed ? 'Enabled' : 'Disabled'}
               </p>
             </div>
@@ -436,7 +436,7 @@ export function NotificationSettings() {
             aria-label={isSubscribed ? 'Disable push notifications' : 'Enable push notifications'}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
               isSubscribed
-                ? 'bg-white/10 text-white/95 hover:bg-white/20'
+                ? 'bg-white/10 text-white/70 hover:bg-white/20'
                 : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
             } disabled:opacity-40`}
           >
@@ -454,7 +454,7 @@ export function NotificationSettings() {
       {/* Notification preferences (only show if subscribed) */}
       {isSubscribed && (
         <div className="space-y-2">
-          <p className="text-xs text-white/95 uppercase tracking-wider px-1">Notification Types</p>
+          <p className="text-xs text-white/50 uppercase tracking-wider px-1">Notification Types</p>
 
           {/* Morning reminder */}
           <NotificationToggle
@@ -580,10 +580,10 @@ function NotificationToggle({ icon: Icon, label, description, enabled, onToggle 
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Icon className={`w-4 h-4 ${enabled ? 'text-white/95' : 'text-white/95'}`} />
+          <Icon className={`w-4 h-4 ${enabled ? 'text-white' : 'text-white/50'}`} />
           <div className="text-left">
-            <p className={`text-sm ${enabled ? 'text-white' : 'text-white/95'}`}>{label}</p>
-            <p className="text-xs text-white/95">{description}</p>
+            <p className={`text-sm ${enabled ? 'text-white' : 'text-white/70'}`}>{label}</p>
+            <p className="text-xs text-white/50">{description}</p>
           </div>
         </div>
         <div

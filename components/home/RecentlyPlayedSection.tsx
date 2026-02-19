@@ -35,7 +35,7 @@ export function RecentlyPlayedSection({
         <Clock className="w-4 h-4 text-white/70" />
         <div>
           <h2 className="text-lg font-semibold text-white parallax-header">Recently Played</h2>
-          <p className="text-xs text-white/95 mt-0.5">Pick up where you left off</p>
+          <p className="text-xs text-white/70 mt-0.5">Pick up where you left off</p>
         </div>
       </div>
       <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide snap-row">
@@ -85,11 +85,11 @@ export function RecentlyPlayedSection({
                       <Pause className="w-7 h-7 text-white drop-shadow-lg icon-morph" fill="white" />
                     )
                   ) : (
-                    <Play className="w-7 h-7 text-white/95 group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
+                    <Play className="w-7 h-7 text-white group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
                   )}
                 </div>
               </div>
-              <p className="text-xs text-white/95 mt-1.5 line-clamp-2 leading-tight">{item.title}</p>
+              <p className="text-xs text-white/70 mt-1.5 line-clamp-2 leading-tight">{item.title}</p>
             </button>
           )
         })}

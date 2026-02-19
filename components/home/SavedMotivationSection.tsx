@@ -30,7 +30,7 @@ export function SavedMotivationSection({
     <div className="mb-8 liquid-reveal section-fade-bg">
       <div className="px-6 mb-4">
         <h2 className="text-lg font-semibold text-white parallax-header">{label}</h2>
-        <p className="text-xs text-white/95 mt-0.5">{subtitle}</p>
+        <p className="text-xs text-white/70 mt-0.5">{subtitle}</p>
       </div>
       <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide snap-row">
         {videos.map((video, index) => {
@@ -81,11 +81,11 @@ export function SavedMotivationSection({
                       <Pause className="w-8 h-8 text-white drop-shadow-lg icon-morph" fill="white" />
                     )
                   ) : (
-                    <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
+                    <Play className="w-8 h-8 text-white group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
                   )}
                 </div>
               </div>
-              <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+              <p className="text-sm text-white/70 mt-2 line-clamp-2 leading-tight">{video.title}</p>
             </button>
           )
         })}

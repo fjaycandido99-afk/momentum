@@ -20,7 +20,7 @@ export function PlanetaryTransits({ zodiacSign }: PlanetaryTransitsProps) {
         </div>
         <div>
           <h2 className="font-medium text-white">Planetary Transits</h2>
-          <p className="text-xs text-white/95">Where the planets are right now</p>
+          <p className="text-xs text-white/50">Where the planets are right now</p>
         </div>
       </div>
 
@@ -43,7 +43,7 @@ export function PlanetaryTransits({ zodiacSign }: PlanetaryTransitsProps) {
                   {transit.symbol}
                 </div>
                 <div className="text-xs font-medium text-white">{transit.planet}</div>
-                <div className={`text-[11px] mt-0.5 ${isInUserSign ? 'text-indigo-300' : 'text-white/95'}`}>
+                <div className={`text-[11px] mt-0.5 ${isInUserSign ? 'text-indigo-300' : 'text-white/70'}`}>
                   in {transit.currentSign}
                 </div>
               </div>

@@ -60,7 +60,7 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
                 <span className="text-[10px] text-white/60 font-medium shrink-0">{playlistPosition}</span>
               )}
             </div>
-            <p className="text-xs text-white/95 leading-tight truncate">{displayLabel}</p>
+            <p className="text-xs text-white/70 leading-tight truncate">{displayLabel}</p>
             <FeatureHint id="home-player-bar" text="Tap the title to open full player" mode="once" />
             {nextTrackTitle && isPlaying && (
               <p className="text-[10px] text-white/60 leading-tight truncate mt-0.5">

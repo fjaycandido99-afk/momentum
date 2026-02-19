@@ -312,10 +312,10 @@ export function CheckpointCard({
       <div className={`px-4 pt-4 pb-2 ${isCompleted ? 'opacity-50' : ''}`}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className={`text-sm font-semibold tracking-wider ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
+            <h2 className={`text-sm font-semibold tracking-wider ${isCompleted ? 'text-white/50' : 'text-white'}`}>
               {content.theme}
             </h2>
-            <p className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
+            <p className={`text-xs ${isCompleted ? 'text-white/50' : 'text-white/70'}`}>
               {content.tagline}
             </p>
           </div>
@@ -329,7 +329,7 @@ export function CheckpointCard({
             )}
             {isCompleted && (
               <div className="p-1.5 rounded-full bg-white/10">
-                <Check className="w-4 h-4 text-white/95" />
+                <Check className="w-4 h-4 text-white" />
               </div>
             )}
           </div>
@@ -338,7 +338,7 @@ export function CheckpointCard({
 
       {/* Preview */}
       <div className={`px-4 py-3 ${isCompleted ? 'opacity-40' : ''}`}>
-        <p className={`text-sm leading-relaxed ${isCompleted ? 'text-white/95' : 'text-white/95'} line-clamp-2`}>
+        <p className={`text-sm leading-relaxed ${isCompleted ? 'text-white/50' : 'text-white/70'} line-clamp-2`}>
           {preview}
         </p>
       </div>
@@ -388,7 +388,7 @@ export function CheckpointCard({
                 </button>
 
                 {/* Time display */}
-                <div className="text-xs text-white/95 font-mono">
+                <div className="text-xs text-white/50 font-mono">
                   {formatPlaybackTime(currentTime)} / {formatPlaybackTime(audioDuration)}
                 </div>
               </div>
@@ -402,8 +402,8 @@ export function CheckpointCard({
                 aria-label="Done"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
-                <Check className="w-3.5 h-3.5 text-white/95" />
-                <span className="text-xs text-white/95">Done</span>
+                <Check className="w-3.5 h-3.5 text-white" />
+                <span className="text-xs text-white">Done</span>
               </button>
             </div>
           </div>
@@ -417,14 +417,14 @@ export function CheckpointCard({
               `}>
                 <Icon className={`
                   w-4 h-4 transition-all
-                  ${isCompleted ? 'text-white/95' : isAvailable ? 'text-white animate-icon-bounce' : 'text-white/95'}
+                  ${isCompleted ? 'text-white/50' : isAvailable ? 'text-white animate-icon-bounce' : 'text-white/50'}
                 `} />
               </div>
               <div>
-                <p className={`text-sm font-medium ${isCompleted ? 'text-white/95' : 'text-white'}`}>
+                <p className={`text-sm font-medium ${isCompleted ? 'text-white/50' : 'text-white'}`}>
                   {checkpoint.name}
                 </p>
-                <span className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
+                <span className={`text-xs ${isCompleted ? 'text-white/50' : 'text-white/50'}`}>
                   {formatTime(checkpoint.time)}
                 </span>
               </div>
@@ -466,15 +466,15 @@ export function CheckpointCard({
                 title="Listen again"
               >
                 {isLoading || isAudioLoading ? (
-                  <Loader2 className="w-3.5 h-3.5 text-white/95 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 text-white/50 animate-spin" />
                 ) : (
-                  <RotateCcw className="w-3.5 h-3.5 text-white/95" />
+                  <RotateCcw className="w-3.5 h-3.5 text-white/70" />
                 )}
-                <span className="text-xs text-white/95">Replay</span>
+                <span className="text-xs text-white/70">Replay</span>
               </button>
             ) : !isAvailable ? (
               // Not available indicator
-              <div className="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-white/95">
+              <div className="px-3 py-1.5 rounded-lg bg-white/5 text-xs text-white/50">
                 {formatTime(checkpoint.time)}
               </div>
             ) : null}
@@ -536,7 +536,7 @@ export function CheckpointList({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-sm font-medium text-white/95 uppercase tracking-wider">
+        <h2 className="text-sm font-medium text-white uppercase tracking-wider">
           Checkpoints
         </h2>
         {!isPremium && (

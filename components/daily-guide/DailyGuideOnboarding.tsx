@@ -445,7 +445,7 @@ export function DailyGuideOnboarding() {
                         <Icon className="w-5 h-5 text-white" />
                       </div>
                       <h3 className="font-medium text-white text-sm">{type.label}</h3>
-                      <p className="text-xs text-white/95 mt-0.5">{type.desc}</p>
+                      <p className="text-xs text-white/70 mt-0.5">{type.desc}</p>
                     </button>
                   )
                 })}
@@ -473,7 +473,7 @@ export function DailyGuideOnboarding() {
                         w-12 h-12 rounded-xl text-sm font-medium transition-all press-scale
                         ${dayList.includes(day.value)
                           ? 'bg-white/[0.08] text-white border border-white/[0.15] shadow-[0_0_15px_rgba(255,255,255,0.1)] glow-sm'
-                          : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                          : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
                         }
                       `}
                     >
@@ -488,7 +488,7 @@ export function DailyGuideOnboarding() {
             <div>
               <p className="text-label px-1 mb-3">Wake time</p>
               <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/15">
-                <Clock className="w-5 h-5 text-white/95" />
+                <Clock className="w-5 h-5 text-white/70" />
                 <input
                   type="time"
                   value={data.wakeTime}
@@ -562,27 +562,27 @@ export function DailyGuideOnboarding() {
 
             <div className="glass rounded-xl p-4 text-left max-w-sm mx-auto glow-sm">
               <h3 className="text-sm font-medium text-white mb-3">Your setup</h3>
-              <div className="space-y-2 text-sm text-white/95">
+              <div className="space-y-2 text-sm text-white/70">
                 <div className="flex items-center gap-2">
                   {data.userType === 'professional' ? (
-                    <Briefcase className="w-3.5 h-3.5 text-white/95" />
+                    <Briefcase className="w-3.5 h-3.5 text-white/70" />
                   ) : (
-                    <GraduationCap className="w-3.5 h-3.5 text-white/95" />
+                    <GraduationCap className="w-3.5 h-3.5 text-white/70" />
                   )}
                   <span className="capitalize">{data.userType}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-3.5 h-3.5 text-white/95" />
+                  <Clock className="w-3.5 h-3.5 text-white/70" />
                   <span>
                     {data.userType === 'professional' ? 'Work' : 'Class'}: {(data.userType === 'professional' ? data.workDays : data.classDays).map(d => DAYS.find(day => day.value === d)?.label).join(', ')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Mic2 className="w-3.5 h-3.5 text-white/95" />
+                  <Mic2 className="w-3.5 h-3.5 text-white/70" />
                   <span>Tone: {TONES.find(t => t.value === data.guideTone)?.label}</span>
                 </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-white/15 text-xs text-white/95">
+              <div className="mt-3 pt-3 border-t border-white/15 text-xs text-white/50">
                 Wake: {data.wakeTime} &middot; All modules on
               </div>
             </div>

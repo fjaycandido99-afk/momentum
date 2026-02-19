@@ -142,7 +142,7 @@ export function ZodiacAffirmations({ zodiacSign }: ZodiacAffirmationsProps) {
         <p className="text-[10px] font-medium tracking-widest text-indigo-400/80 uppercase mb-3">
           Zodiac Affirmations
         </p>
-        <div className="flex items-center gap-2 text-white/95">
+        <div className="flex items-center gap-2 text-white/70">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-sm">Channeling your sign&apos;s energy...</span>
         </div>
@@ -167,7 +167,7 @@ export function ZodiacAffirmations({ zodiacSign }: ZodiacAffirmationsProps) {
             key={index}
             className="p-3 rounded-xl bg-white/5 border border-white/15"
           >
-            <p className="text-sm text-white/95 italic leading-relaxed mb-2">
+            <p className="text-sm text-white/70 italic leading-relaxed mb-2">
               &ldquo;{text}&rdquo;
             </p>
             <div className="flex items-center gap-1">
@@ -177,7 +177,7 @@ export function ZodiacAffirmations({ zodiacSign }: ZodiacAffirmationsProps) {
                 className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
               >
                 <Heart className={`w-3.5 h-3.5 transition-colors ${
-                  favorites[index] ? 'text-pink-400 fill-pink-400' : 'text-white/95 hover:text-pink-400'
+                  favorites[index] ? 'text-pink-400 fill-pink-400' : 'text-white/50 hover:text-pink-400'
                 }`} />
               </button>
               <button
@@ -188,7 +188,7 @@ export function ZodiacAffirmations({ zodiacSign }: ZodiacAffirmationsProps) {
                 {copiedIndex === index ? (
                   <Check className="w-3.5 h-3.5 text-emerald-400" />
                 ) : (
-                  <Share2 className="w-3.5 h-3.5 text-white/95 hover:text-white/80 transition-colors" />
+                  <Share2 className="w-3.5 h-3.5 text-white/50 hover:text-white/80 transition-colors" />
                 )}
               </button>
             </div>

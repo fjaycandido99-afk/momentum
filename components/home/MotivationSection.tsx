@@ -48,7 +48,7 @@ export function MotivationSection({
           <h2 className="text-lg font-semibold text-white parallax-header">
             {topicName}
           </h2>
-          <p className="text-xs text-white/95 mt-0.5">
+          <p className="text-xs text-white/70 mt-0.5">
             {tagline || (TOPIC_TAGLINES[topicName] || 'Motivation')}
           </p>
           <FeatureHint id="home-motivation" text="Swipe to browse — long-press to preview" mode="once" />
@@ -155,14 +155,14 @@ export function MotivationSection({
                         <Pause className="w-8 h-8 text-white drop-shadow-lg icon-morph" fill="white" />
                       )
                     ) : (
-                      <Play className="w-8 h-8 text-white/95 group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
+                      <Play className="w-8 h-8 text-white group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
                     )}
                   </div>
                   {isLocked && !isCardActive && (
                     <SoftLockBadge isLocked={true} size="md" />
                   )}
                 </div>
-                <p className="text-sm text-white/95 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+                <p className="text-sm text-white/70 mt-2 line-clamp-2 leading-tight">{video.title}</p>
               </button>
             )
           })

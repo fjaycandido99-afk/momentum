@@ -99,7 +99,7 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
           aria-label="Close"
           className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
-          <X className="w-4 h-4 text-white/95" />
+          <X className="w-4 h-4 text-white" />
         </button>
 
         <div className="rounded-3xl bg-gradient-to-br from-emerald-500/20 via-white/[0.08] to-white/[0.03] border border-emerald-500/30 overflow-hidden p-8 text-center">
@@ -143,7 +143,7 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
           </h2>
 
           {/* Subtitle */}
-          <p className="text-white/95 mb-4">
+          <p className="text-white/70 mb-4">
             You crushed your morning routine
           </p>
 
@@ -151,18 +151,18 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
           <div className="flex justify-center gap-6 mb-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-emerald-400">{modulesCompleted}</p>
-              <p className="text-xs text-white/95 uppercase tracking-wide">Modules</p>
+              <p className="text-xs text-white/50 uppercase tracking-wide">Modules</p>
             </div>
             <div className="w-px bg-white/10" />
             <div className="text-center">
               <p className="text-3xl font-bold text-amber-400">100%</p>
-              <p className="text-xs text-white/95 uppercase tracking-wide">Complete</p>
+              <p className="text-xs text-white/50 uppercase tracking-wide">Complete</p>
             </div>
           </div>
 
           {/* Encouragement message */}
           <div className="p-4 rounded-xl bg-white/5 border border-white/15">
-            <p className="text-sm text-white/95">
+            <p className="text-sm text-white/70">
               You're building momentum! Keep this energy going throughout your day.
             </p>
           </div>

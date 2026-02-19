@@ -172,7 +172,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
           isToday ? 'font-bold text-white' :
           completionLevel >= 4 ? 'text-emerald-400' :
           completionLevel >= 2 ? 'text-amber-400' :
-          isFuture ? 'text-white/95' : 'text-white/95'
+          isFuture ? 'text-white/40' : 'text-white/70'
         }`}>
           {day}
         </span>
@@ -229,12 +229,12 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
             aria-label="Previous month"
             className="p-2 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
-            <ChevronLeft className="w-4 h-4 text-white/95" />
+            <ChevronLeft className="w-4 h-4 text-white" />
           </button>
           <button
             onClick={goToToday}
             aria-label="Go to today"
-            className="text-sm font-medium text-white hover:text-white/95 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded-lg px-2 py-1"
+            className="text-sm font-medium text-white hover:text-white/90 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded-lg px-2 py-1"
           >
             {MONTHS[month]} {year}
           </button>
@@ -243,7 +243,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
             aria-label="Next month"
             className="p-2 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
-            <ChevronRight className="w-4 h-4 text-white/95" />
+            <ChevronRight className="w-4 h-4 text-white" />
           </button>
         </div>
       </div>
@@ -252,14 +252,14 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
       <div className="p-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-5 h-5 text-white/95 animate-spin" />
+            <Loader2 className="w-5 h-5 text-white/50 animate-spin" />
           </div>
         ) : (
           <>
             {/* Day headers */}
             <div className="grid grid-cols-7 gap-1 mb-2">
               {DAYS_OF_WEEK.map(day => (
-                <div key={day} className="text-center text-xs text-white/95 py-1">
+                <div key={day} className="text-center text-xs text-white/50 py-1">
                   {day}
                 </div>
               ))}
@@ -298,7 +298,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
       </div>
 
       {/* Legend */}
-      <div className="px-4 pb-4 flex items-center justify-center gap-4 text-[10px] text-white/95">
+      <div className="px-4 pb-4 flex items-center justify-center gap-4 text-[10px] text-white/50">
         <div className="flex items-center gap-1">
           <Check className="w-3 h-3 text-emerald-400" />
           <span>Complete</span>
@@ -346,7 +346,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                       {getCompletionLevel(selectedDayData)}/5 modules
                     </span>
                   ) : (
-                    <span className="text-xs text-white/95">No activity</span>
+                    <span className="text-xs text-white/50">No activity</span>
                   )}
                 </div>
               </div>
@@ -355,7 +355,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                 aria-label="Close"
                 className="p-2 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
-                <X className="w-5 h-5 text-white/95" />
+                <X className="w-5 h-5 text-white" />
               </button>
             </div>
 
@@ -369,7 +369,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                         <BookOpen className="w-4 h-4" />
                         <span className="text-sm font-medium">What I learned</span>
                       </div>
-                      <p className="text-white/95 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
+                      <p className="text-white/70 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
                         {selectedDayData.journal_win}
                       </p>
                     </div>
@@ -380,7 +380,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                         <Heart className="w-4 h-4" />
                         <span className="text-sm font-medium">Grateful for</span>
                       </div>
-                      <p className="text-white/95 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
+                      <p className="text-white/70 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
                         {selectedDayData.journal_gratitude}
                       </p>
                     </div>
@@ -391,7 +391,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                         <Target className="w-4 h-4" />
                         <span className="text-sm font-medium">Intention</span>
                       </div>
-                      <p className="text-white/95 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
+                      <p className="text-white/70 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
                         {selectedDayData.journal_intention}
                       </p>
                     </div>
@@ -399,8 +399,8 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <BookOpen className="w-8 h-8 text-white/95 mx-auto mb-2" />
-                  <p className="text-white/95 text-sm">No journal entry for this day</p>
+                  <BookOpen className="w-8 h-8 text-white/50 mx-auto mb-2" />
+                  <p className="text-white/70 text-sm">No journal entry for this day</p>
                 </div>
               )}
             </div>
@@ -408,22 +408,22 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
             {/* Modules completed */}
             {getCompletionLevel(selectedDayData) > 0 && (
               <div className="px-4 pb-4">
-                <p className="text-xs text-white/95 mb-2">Completed modules</p>
+                <p className="text-xs text-white/50 mb-2">Completed modules</p>
                 <div className="flex flex-wrap gap-2">
                   {selectedDayData.morning_prime_done && (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/95">Morning</span>
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Morning</span>
                   )}
                   {selectedDayData.movement_done && (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/95">Movement</span>
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Movement</span>
                   )}
                   {selectedDayData.micro_lesson_done && (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/95">Lesson</span>
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Lesson</span>
                   )}
                   {selectedDayData.breath_done && (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/95">Breath</span>
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Breath</span>
                   )}
                   {selectedDayData.day_close_done && (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/95">Day Close</span>
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Day Close</span>
                   )}
                 </div>
               </div>

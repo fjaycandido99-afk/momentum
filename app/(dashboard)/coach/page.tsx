@@ -69,7 +69,7 @@ function renderMarkdown(text: string) {
         return <strong key={ti} className="font-semibold text-white">{token.slice(2, -2)}</strong>
       }
       if (token.startsWith('*') && token.endsWith('*')) {
-        return <em key={ti} className="italic text-white/95">{token.slice(1, -1)}</em>
+        return <em key={ti} className="italic text-white/70">{token.slice(1, -1)}</em>
       }
       // Handle single line breaks
       return token.split('\n').map((line, li, arr) => (
@@ -213,7 +213,7 @@ export default function CoachPage() {
         <div className="sticky top-0 z-50 px-6 pt-12 pb-4 mb-4 flex items-center gap-3 bg-black">
           <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
           <Link href="/" aria-label="Back to home" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
-            <ChevronLeft className="w-5 h-5 text-white/95" />
+            <ChevronLeft className="w-5 h-5 text-white/70" />
           </Link>
           <h1 className="text-2xl font-light shimmer-text">{coachName}</h1>
         </div>
@@ -262,7 +262,7 @@ export default function CoachPage() {
         {/* Subtle gradient glow behind header */}
         <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.06] to-transparent pointer-events-none" />
         <Link href="/" aria-label="Back to home" className="relative p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
-          <ChevronLeft className="w-5 h-5 text-white/95" />
+          <ChevronLeft className="w-5 h-5 text-white/70" />
         </Link>
         <div className="relative flex items-center gap-3 flex-1">
           {/* Coach avatar */}
@@ -375,7 +375,7 @@ export default function CoachPage() {
                 className={`max-w-[80%] p-3.5 text-sm leading-relaxed rounded-2xl border border-white/10 ${
                   msg.role === 'user'
                     ? 'bg-black text-white rounded-br-md'
-                    : 'bg-black text-white/95 rounded-bl-md'
+                    : 'bg-black text-white/70 rounded-bl-md'
                 }`}
               >
                 {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
@@ -411,7 +411,7 @@ export default function CoachPage() {
                 key={qr.label}
                 aria-label={`Quick reply: ${qr.label}`}
                 onClick={() => sendMessage(qr.label)}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-black rounded-2xl border border-white/10 text-sm text-white/95 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-black rounded-2xl border border-white/10 text-sm text-white/70 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <span>{qr.icon}</span>
                 <span>{qr.label}</span>

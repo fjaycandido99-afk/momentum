@@ -463,10 +463,10 @@ export function ModuleCard({
       <div className={`px-4 pt-4 pb-2 ${isCompleted ? 'opacity-50' : ''}`}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className={`text-sm font-semibold tracking-wider ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
+            <h2 className={`text-sm font-semibold tracking-wider ${isCompleted ? 'text-white/50' : 'text-white'}`}>
               {content.theme}
             </h2>
-            <p className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
+            <p className={`text-xs ${isCompleted ? 'text-white/50' : 'text-white/70'}`}>
               {tagline}
             </p>
           </div>
@@ -480,7 +480,7 @@ export function ModuleCard({
             )}
             {isCompleted && (
               <div className="p-1.5 rounded-full bg-white/10">
-                <Check className="w-4 h-4 text-white/95" />
+                <Check className="w-4 h-4 text-white" />
               </div>
             )}
           </div>
@@ -494,14 +494,14 @@ export function ModuleCard({
           <div className="space-y-2">
             <p className="text-white font-medium">{content.technique}</p>
             {content.pattern && (
-              <p className="text-sm text-white/95 font-mono tracking-wide">
+              <p className="text-sm text-white/70 font-mono tracking-wide">
                 {content.pattern}
               </p>
             )}
           </div>
         ) : (
           // Other modules - show preview quote
-          <p className={`text-sm leading-relaxed ${isCompleted ? 'text-white/95' : 'text-white/95'} line-clamp-2`}>
+          <p className={`text-sm leading-relaxed ${isCompleted ? 'text-white/50' : 'text-white/70'} line-clamp-2`}>
             {preview}
           </p>
         )}
@@ -511,7 +511,7 @@ export function ModuleCard({
       {isReadingMode && readingScript && !isCompleted && (
         <div className="px-4 pb-4">
           <div className="rounded-xl bg-amber-950/20 border border-white/15 border-l-2 border-l-amber-400/60 p-4 max-h-60 overflow-y-auto">
-            <p className="text-sm text-white/95 leading-relaxed whitespace-pre-line">
+            <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">
               {readingScript}
             </p>
           </div>
@@ -529,8 +529,8 @@ export function ModuleCard({
               aria-label="Done reading"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
-              <Check className="w-3.5 h-3.5 text-white/95" />
-              <span className="text-xs text-white/95">Done</span>
+              <Check className="w-3.5 h-3.5 text-white" />
+              <span className="text-xs text-white">Done</span>
             </button>
           </div>
         </div>
@@ -581,7 +581,7 @@ export function ModuleCard({
                 </button>
 
                 {/* Time display */}
-                <div className="text-xs text-white/95 font-mono">
+                <div className="text-xs text-white/50 font-mono">
                   {formatTime(currentTime)} / {formatTime(audioDuration)}
                 </div>
               </div>
@@ -595,8 +595,8 @@ export function ModuleCard({
                 aria-label="Done"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
-                <Check className="w-3.5 h-3.5 text-white/95" />
-                <span className="text-xs text-white/95">Done</span>
+                <Check className="w-3.5 h-3.5 text-white" />
+                <span className="text-xs text-white">Done</span>
               </button>
             </div>
           </div>
@@ -610,28 +610,28 @@ export function ModuleCard({
               `}>
                 <Icon className={`
                   w-4 h-4 transition-all
-                  ${isCompleted ? 'text-white/95' : isActive ? 'text-white animate-icon-bounce' : 'text-white/95'}
+                  ${isCompleted ? 'text-white/50' : isActive ? 'text-white animate-icon-bounce' : 'text-white/70'}
                 `} />
               </div>
               <div>
-                <p className={`text-sm font-medium ${isCompleted ? 'text-white/95' : 'text-white'}`}>
+                <p className={`text-sm font-medium ${isCompleted ? 'text-white/50' : 'text-white'}`}>
                   {content.label}
                 </p>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
+                  <span className={`text-xs ${isCompleted ? 'text-white/50' : 'text-white/50'}`}>
                     {formatDuration(duration)}
                   </span>
                   {content.metadata && (
                     <>
-                      <span className="text-white/95">·</span>
-                      <span className={`text-xs ${isCompleted ? 'text-white/95' : 'text-white/95'}`}>
+                      <span className="text-white/50">·</span>
+                      <span className={`text-xs ${isCompleted ? 'text-white/50' : 'text-white/50'}`}>
                         {content.metadata}
                       </span>
                     </>
                   )}
                   {musicEnabled && musicGenre && !isCompleted && (
                     <>
-                      <span className="text-white/95">·</span>
+                      <span className="text-white/50">·</span>
                       <span className="text-xs text-purple-400/80">
                         {GENRE_LABELS[musicGenre] || musicGenre}
                       </span>
@@ -654,7 +654,7 @@ export function ModuleCard({
                     className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     title="Skip this module"
                   >
-                    <SkipForward className="w-4 h-4 text-white/95" />
+                    <SkipForward className="w-4 h-4 text-white/70" />
                   </button>
                 )}
                 <button
@@ -693,11 +693,11 @@ export function ModuleCard({
                 title="Listen again"
               >
                 {isLoading || isAudioLoading ? (
-                  <Loader2 className="w-3.5 h-3.5 text-white/95 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 text-white/50 animate-spin" />
                 ) : (
-                  <RotateCcw className="w-3.5 h-3.5 text-white/95" />
+                  <RotateCcw className="w-3.5 h-3.5 text-white/70" />
                 )}
-                <span className="text-xs text-white/95">Replay</span>
+                <span className="text-xs text-white/70">Replay</span>
               </button>
             )}
           </div>

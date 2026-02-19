@@ -273,12 +273,12 @@ function SettingsContent() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <Link href="/" aria-label="Back to home" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
-              <ChevronLeft className="w-5 h-5 text-white/95" />
+              <ChevronLeft className="w-5 h-5 text-white/70" />
             </Link>
             <h1 className="text-2xl font-light shimmer-text">Settings</h1>
           </div>
           {saveStatus === 'saving' && (
-            <span className="flex items-center gap-1.5 text-white/95 text-sm">
+            <span className="flex items-center gap-1.5 text-white/50 text-sm">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               Saving
             </span>
@@ -319,7 +319,7 @@ function SettingsContent() {
                     className={`p-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-2 press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                       userType === type.value
                         ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                        : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                        : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -344,7 +344,7 @@ function SettingsContent() {
                     className={`h-10 rounded-lg text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                       workDays.includes(day.value)
                         ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                        : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                        : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
                     }`}
                   >
                     {day.label}
@@ -368,7 +368,7 @@ function SettingsContent() {
                     className={`h-10 rounded-lg text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                       classDays.includes(day.value)
                         ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                        : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                        : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
                     }`}
                   >
                     {day.label}
@@ -381,7 +381,7 @@ function SettingsContent() {
           {/* Schedule Times */}
           <div className="space-y-3">
             <div>
-              <label htmlFor="wake-time" className="block text-sm text-white/95 mb-1.5">Wake time</label>
+              <label htmlFor="wake-time" className="block text-sm text-white/70 mb-1.5">Wake time</label>
               <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                 <input
                   id="wake-time"
@@ -396,7 +396,7 @@ function SettingsContent() {
             {(userType === 'professional' || userType === 'hybrid') && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="min-w-0">
-                  <label htmlFor="work-start-time" className="block text-sm text-white/95 mb-1.5">Work starts</label>
+                  <label htmlFor="work-start-time" className="block text-sm text-white/70 mb-1.5">Work starts</label>
                   <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                     <input
                       id="work-start-time"
@@ -409,7 +409,7 @@ function SettingsContent() {
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <label htmlFor="work-end-time" className="block text-sm text-white/95 mb-1.5">Work ends</label>
+                  <label htmlFor="work-end-time" className="block text-sm text-white/70 mb-1.5">Work ends</label>
                   <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                     <input
                       id="work-end-time"
@@ -427,7 +427,7 @@ function SettingsContent() {
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label htmlFor="class-start-time" className="block text-sm text-white/95 mb-1.5">Classes start</label>
+                    <label htmlFor="class-start-time" className="block text-sm text-white/70 mb-1.5">Classes start</label>
                     <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
                         id="class-start-time"
@@ -440,7 +440,7 @@ function SettingsContent() {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <label htmlFor="class-end-time" className="block text-sm text-white/95 mb-1.5">Classes end</label>
+                    <label htmlFor="class-end-time" className="block text-sm text-white/70 mb-1.5">Classes end</label>
                     <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
                         id="class-end-time"
@@ -455,7 +455,7 @@ function SettingsContent() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="min-w-0">
-                    <label htmlFor="study-start-time" className="block text-sm text-white/95 mb-1.5">Study starts</label>
+                    <label htmlFor="study-start-time" className="block text-sm text-white/70 mb-1.5">Study starts</label>
                     <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
                         id="study-start-time"
@@ -468,7 +468,7 @@ function SettingsContent() {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <label htmlFor="study-end-time" className="block text-sm text-white/95 mb-1.5">Study ends</label>
+                    <label htmlFor="study-end-time" className="block text-sm text-white/70 mb-1.5">Study ends</label>
                     <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                       <input
                         id="study-end-time"
@@ -516,10 +516,10 @@ function SettingsContent() {
                     } ${segment.required ? 'cursor-default' : 'cursor-pointer hover:bg-white/10 press-scale'}`}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className={`w-4 h-4 ${isEnabled ? 'text-white' : 'text-white/95'}`} />
-                      <span className={isEnabled ? 'text-white' : 'text-white/95'}>{segment.label}</span>
+                      <Icon className={`w-4 h-4 ${isEnabled ? 'text-white' : 'text-white/50'}`} />
+                      <span className={isEnabled ? 'text-white' : 'text-white/70'}>{segment.label}</span>
                       {segment.required && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/95">Required</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/50">Required</span>
                       )}
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -545,11 +545,11 @@ function SettingsContent() {
                   className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                     guideTone === tone.value
                       ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                      : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                      : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
                   }`}
                 >
                   <p className="font-medium text-sm">{tone.label}</p>
-                  <p className="text-xs text-white/95 mt-0.5">{tone.description}</p>
+                  <p className="text-xs text-white/50 mt-0.5">{tone.description}</p>
                 </button>
               ))}
             </div>
@@ -626,7 +626,7 @@ function SettingsContent() {
             </div>
             {bedtimeReminderEnabled && wakeTime && (
               <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/15">
-                <p className="text-sm text-white/95">
+                <p className="text-sm text-white/70">
                   You&apos;ll be reminded at{' '}
                   <span className="text-white font-medium">
                     {(() => {
@@ -720,7 +720,7 @@ function SettingsContent() {
                         }`}
                       >
                         <span className="text-xl block mb-0.5">{sign.symbol}</span>
-                        <p className={`text-xs font-medium ${zodiacSign === sign.id ? 'text-white' : 'text-white/95'}`}>{sign.label}</p>
+                        <p className={`text-xs font-medium ${zodiacSign === sign.id ? 'text-white' : 'text-white/70'}`}>{sign.label}</p>
                         <p className="text-[9px] text-white/75 mt-0.5">{sign.dates}</p>
                       </button>
                     ))}
@@ -797,12 +797,12 @@ function SettingsContent() {
                     </span>
                   </div>
                   {subscription.isTrialing && subscription.trialDaysLeft > 0 && (
-                    <p className="text-sm text-white/95">
+                    <p className="text-sm text-white/70">
                       {subscription.trialDaysLeft} days left in trial
                     </p>
                   )}
                   {subscription.billingPeriodEnd && !subscription.isTrialing && (
-                    <p className="text-sm text-white/95">
+                    <p className="text-sm text-white/70">
                       Next billing: {subscription.billingPeriodEnd.toLocaleDateString()}
                     </p>
                   )}
@@ -838,7 +838,7 @@ function SettingsContent() {
                   </button>
                   <Link
                     href="/pricing"
-                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/70 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                   >
                     <ExternalLink className="w-4 h-4" />
                     View Plans
@@ -849,10 +849,10 @@ function SettingsContent() {
               <div className="space-y-4">
                 <div className="p-4 rounded-xl bg-white/5 border border-white/15">
                   <p className="text-white font-medium mb-1">Free Plan</p>
-                  <p className="text-sm text-white/95 mb-3">
+                  <p className="text-sm text-white/70 mb-3">
                     1 session/day · 10-min limit · Limited features
                   </p>
-                  <ul className="space-y-2 text-sm text-white/95">
+                  <ul className="space-y-2 text-sm text-white/70">
                     <li className="flex items-center gap-2">
                       <Lock className="w-3.5 h-3.5" />
                       Daily checkpoints locked
@@ -875,12 +875,12 @@ function SettingsContent() {
                   <Sparkles className="w-5 h-5" />
                   Upgrade to Premium - $4.99/mo
                 </button>
-                <p className="text-center text-white/95 text-xs">
+                <p className="text-center text-white/50 text-xs">
                   7-day free trial · Cancel anytime
                 </p>
                 <Link
                   href="/pricing"
-                  className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 hover:text-white transition-colors mt-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/70 text-sm hover:bg-white/10 hover:text-white transition-colors mt-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Compare plans

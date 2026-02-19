@@ -52,7 +52,7 @@ export function FeatureLock({
       >
         <div className="flex flex-col items-center gap-2 p-4">
           <Lock className="w-6 h-6 text-white" />
-          <p className="text-sm text-white/95 font-medium text-center">
+          <p className="text-sm text-white font-medium text-center">
             {message}
           </p>
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-medium hover:bg-amber-500/30 transition-colors">
@@ -120,7 +120,7 @@ export function PremiumOnly({
           <Sparkles className="w-4 h-4 text-amber-400" />
         </div>
         <div className="flex-1">
-          <p className="text-sm text-white/95 font-medium">{upgradeMessage}</p>
+          <p className="text-sm text-white font-medium">{upgradeMessage}</p>
           <p className="text-xs text-amber-400 mt-0.5">Click to upgrade</p>
         </div>
         <Crown className="w-5 h-5 text-amber-400/60" />

@@ -9,13 +9,31 @@ const inter = Inter({ subsets: ['latin'] })
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], weight: ['300'], variable: '--font-cormorant' })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://voxu.app'),
   title: 'Voxu - Your AI Audio Coach',
-  description: 'Motivation, mindfulness, and focus - delivered automatically',
+  description: 'Motivation, mindfulness, and focus — delivered automatically through guided sessions, ambient soundscapes, and AI coaching.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'Voxu',
+  },
+  openGraph: {
+    title: 'Voxu - Your AI Audio Coach',
+    description: 'Motivation, mindfulness, and focus — delivered automatically through guided sessions, ambient soundscapes, and AI coaching.',
+    url: 'https://voxu.app',
+    siteName: 'Voxu',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Voxu - Your AI Audio Coach',
+    description: 'Motivation, mindfulness, and focus — delivered automatically.',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
   other: {
     'mobile-web-app-capable': 'yes',

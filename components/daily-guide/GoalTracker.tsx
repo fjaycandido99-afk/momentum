@@ -150,8 +150,8 @@ export function GoalTracker() {
     return (
       <div className="rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-4">
         <div className="flex items-center gap-3">
-          <Loader2 className="w-4 h-4 text-white/95 animate-spin" />
-          <span className="text-sm text-white/95">Loading goals...</span>
+          <Loader2 className="w-4 h-4 text-white/50 animate-spin" />
+          <span className="text-sm text-white/50">Loading goals...</span>
         </div>
       </div>
     )
@@ -175,7 +175,7 @@ export function GoalTracker() {
                 Goals
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">PRO</span>
               </h3>
-              <p className="text-xs text-white/95">Track habits & achieve more</p>
+              <p className="text-xs text-white/50">Track habits & achieve more</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -201,15 +201,15 @@ export function GoalTracker() {
           </div>
           <div className="text-left">
             <h3 className="font-medium text-white">Goals</h3>
-            <p className="text-xs text-white/95">
+            <p className="text-xs text-white/50">
               {activeGoals.length} active{completedGoals.length > 0 ? `, ${completedGoals.length} done` : ''}
             </p>
           </div>
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-white/95" />
+          <ChevronUp className="w-5 h-5 text-white/50" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-white/95" />
+          <ChevronDown className="w-5 h-5 text-white/50" />
         )}
       </button>
 
@@ -218,9 +218,9 @@ export function GoalTracker() {
           {/* Empty State */}
           {activeGoals.length === 0 && completedGoals.length === 0 && (
             <div className="text-center py-4">
-              <Target className="w-5 h-5 text-white/95 mx-auto mb-2" />
-              <p className="text-sm text-white/95">No goals yet</p>
-              <p className="text-xs text-white/95 mt-0.5">Add a goal to start tracking</p>
+              <Target className="w-5 h-5 text-white/50 mx-auto mb-2" />
+              <p className="text-sm text-white/70">No goals yet</p>
+              <p className="text-xs text-white/50 mt-0.5">Add a goal to start tracking</p>
             </div>
           )}
 
@@ -237,7 +237,7 @@ export function GoalTracker() {
                       aria-label={`Delete ${goal.title}`}
                       className="p-1 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
-                      <Trash2 className="w-3 h-3 text-white/95" />
+                      <Trash2 className="w-3 h-3 text-white/50" />
                     </button>
                   </div>
                 </div>
@@ -250,7 +250,7 @@ export function GoalTracker() {
                       />
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-[10px] text-white/95">
+                      <span className="text-[10px] text-white/50">
                         {goal.current_count}/{goal.target_count} {goal.frequency}
                       </span>
                       <span className="text-[10px] text-purple-400">{Math.round(progress)}%</span>
@@ -311,7 +311,7 @@ export function GoalTracker() {
             <div key={goal.id} className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 opacity-60">
               <div className="flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-sm text-white/95 line-through">{goal.title}</span>
+                <span className="text-sm text-white/50 line-through">{goal.title}</span>
               </div>
             </div>
           ))}
@@ -350,12 +350,12 @@ export function GoalTracker() {
                   className="w-16 p-2 rounded-lg bg-white/5 border border-white/15 text-white text-xs focus:outline-none text-center focus-visible:ring-1 focus-visible:ring-white/20"
                   placeholder="Target"
                 />
-                <span className="text-xs text-white/95">times</span>
+                <span className="text-xs text-white/50">times</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowAddForm(false)}
-                  className="flex-1 py-2 rounded-lg bg-white/5 text-white/95 text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  className="flex-1 py-2 rounded-lg bg-white/5 text-white text-xs hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   Cancel
                 </button>
@@ -379,7 +379,7 @@ export function GoalTracker() {
           ) : (
             <button
               onClick={() => setShowAddForm(true)}
-              className="w-full p-3 rounded-xl border border-dashed border-white/15 hover:border-white/25 text-white/95 hover:text-white/95 text-sm transition-colors flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+              className="w-full p-3 rounded-xl border border-dashed border-white/15 hover:border-white/25 text-white/70 hover:text-white text-sm transition-colors flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               <Plus className="w-4 h-4" />
               Add Goal
