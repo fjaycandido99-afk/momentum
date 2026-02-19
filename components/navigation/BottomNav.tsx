@@ -40,7 +40,7 @@ export function BottomNav() {
               className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg transition-all duration-200 nav-tap-spring focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                 isActive
                   ? 'text-white'
-                  : 'text-white/95 hover:text-white/95'
+                  : 'text-white/50 hover:text-white/70'
               }`}
             >
               <Icon className="w-5 h-5 transition-all duration-200" strokeWidth={isActive ? 2 : 1.5} />

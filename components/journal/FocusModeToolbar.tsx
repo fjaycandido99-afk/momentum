@@ -23,7 +23,7 @@ export function FocusModeToolbar({
   const chars = text.length
 
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 bg-black/95 backdrop-blur-sm border-t border-white/8 safe-area-pb">
+    <div className="flex items-center justify-between px-4 py-2.5 bg-black/95 backdrop-blur-sm border-t border-white/[0.08] safe-area-pb">
       {/* Left: close + label */}
       <div className="flex items-center gap-3">
         <button

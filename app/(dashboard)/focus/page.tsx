@@ -297,9 +297,9 @@ export default function FocusPage() {
   const ringGlow = intervalType === 'break' ? 'drop-shadow(0 0 12px rgba(52,211,153,0.4))' : 'drop-shadow(0 0 12px rgba(96,165,250,0.4))'
 
   return (
-    <div className="min-h-screen text-white pb-24">
+    <div className="min-h-screen text-white pb-[calc(env(safe-area-inset-bottom)+6rem)]">
       {/* Header */}
-      <div className="sticky top-0 z-40 px-6 pt-12 pb-4 bg-black">
+      <div className="sticky top-0 z-40 px-6 pt-[max(3rem,env(safe-area-inset-top))] pb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <div className="flex items-center gap-2">
           <Timer className="w-5 h-5 text-white/70" />
@@ -328,7 +328,7 @@ export default function FocusPage() {
                   className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all press-scale ${
                     durationMinutes === p.minutes
                       ? 'bg-white text-black'
-                      : 'bg-white/8 border border-white/15 text-white/80 hover:bg-white/15'
+                      : 'bg-white/[0.08] border border-white/15 text-white/80 hover:bg-white/15'
                   }`}
                 >
                   {p.label}
@@ -369,13 +369,16 @@ export default function FocusPage() {
 
       {/* Timer — collapsed mini bar or expanded bottom sheet */}
       {hasStarted && !timerExpanded && (
-        <button
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => { haptic('light'); setTimerExpanded(true) }}
-          className="fixed bottom-20 left-4 right-4 z-50 flex items-center justify-between px-5 py-3 rounded-2xl bg-black border border-white/10 press-scale"
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); haptic('light'); setTimerExpanded(true) } }}
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] left-4 right-4 z-50 flex items-center justify-between px-5 py-3 rounded-2xl bg-black border border-white/10 press-scale cursor-pointer"
         >
           <div className="flex items-center gap-3">
             <div className="relative w-8 h-8">
-              <svg width={32} height={32} className="transform -rotate-90">
+              <svg width={32} height={32} viewBox="0 0 32 32" className="transform -rotate-90">
                 <circle cx={16} cy={16} r={13} stroke="rgba(255,255,255,0.1)" strokeWidth={2} fill="none" />
                 <circle cx={16} cy={16} r={13} stroke={ringColor} strokeWidth={2} fill="none" strokeLinecap="round" strokeDasharray={2 * Math.PI * 13} strokeDashoffset={2 * Math.PI * 13 * (1 - progress)} />
               </svg>
@@ -396,7 +399,7 @@ export default function FocusPage() {
             </button>
             <ChevronUp className="w-4 h-4 text-white/40" />
           </div>
-        </button>
+        </div>
       )}
 
       {hasStarted && timerExpanded && (
@@ -404,7 +407,7 @@ export default function FocusPage() {
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
           <div
-            className="relative w-full bg-black border-t border-white/10 rounded-t-3xl px-6 pt-4 pb-8 max-h-[90vh] overflow-y-auto scrollbar-hide"
+            className="relative w-full bg-black border-t border-white/10 rounded-t-3xl px-6 pt-4 pb-[calc(env(safe-area-inset-bottom)+2rem)] max-h-[90vh] overflow-y-auto scrollbar-hide"
             onClick={e => e.stopPropagation()}
             style={{ animation: 'sheet-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both' }}
           >
@@ -425,7 +428,7 @@ export default function FocusPage() {
             {/* Timer ring */}
             <div className="flex justify-center mb-6">
               <div className="relative flex items-center justify-center">
-                <svg width={ringSize} height={ringSize} className="transform -rotate-90" style={{ filter: ringGlow }}>
+                <svg width={ringSize} height={ringSize} viewBox="0 0 240 240" className="transform -rotate-90" style={{ filter: ringGlow }}>
                   <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} stroke="rgba(255,255,255,0.08)" strokeWidth={ringStroke} fill="none" />
                   <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} stroke={ringColor} strokeWidth={ringStroke} fill="none" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} className="transition-[stroke-dashoffset] duration-1000 linear" />
                 </svg>
@@ -443,7 +446,7 @@ export default function FocusPage() {
               <button
                 onClick={handleEndEarly}
                 aria-label="End session"
-                className="w-12 h-12 rounded-full bg-white/8 border border-white/15 flex items-center justify-center hover:bg-white/15 transition-colors press-scale"
+                className="w-12 h-12 rounded-full bg-white/[0.08] border border-white/15 flex items-center justify-center hover:bg-white/15 transition-colors press-scale"
               >
                 <Square className="w-5 h-5 text-white/70" />
               </button>
@@ -467,7 +470,7 @@ export default function FocusPage() {
               <div className="flex justify-center mb-3">
                 <button
                   onClick={handleSkipBreak}
-                  className="px-5 py-2 rounded-full bg-white/8 border border-white/15 text-sm text-white/70 hover:bg-white/15 transition-colors press-scale"
+                  className="px-5 py-2 rounded-full bg-white/[0.08] border border-white/15 text-sm text-white/70 hover:bg-white/15 transition-colors press-scale"
                 >
                   Skip break
                 </button>

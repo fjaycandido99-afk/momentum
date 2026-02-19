@@ -44,7 +44,7 @@ export default function MindsetDetailPage() {
       {/* Back button */}
       <button
         onClick={() => router.back()}
-        className="fixed top-4 left-4 z-10 p-2 rounded-full bg-white/[0.06] hover:bg-white/10 transition-colors"
+        className="fixed top-4 left-4 z-10 p-2 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors"
         aria-label="Go back"
       >
         <ArrowLeft className="w-5 h-5 text-white/85" />
@@ -125,11 +125,11 @@ export default function MindsetDetailPage() {
       </section>
 
       {/* Sticky bottom button */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pt-10 pb-6 bg-gradient-to-t from-black from-70% to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pt-10 pb-6 bg-gradient-to-t from-black from-70% to-transparent pointer-events-none">
         <button
           onClick={handleChoose}
           disabled={isSubmitting}
-          className="w-full py-4 rounded-2xl font-medium text-sm transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed bg-white text-black hover:bg-white/90 active:scale-[0.98]"
+          className="pointer-events-auto w-full py-4 rounded-2xl font-medium text-sm transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed bg-white text-black hover:bg-white/90 active:scale-[0.98]"
         >
           {isSubmitting ? 'Saving...' : `Choose ${config.name}`}
         </button>

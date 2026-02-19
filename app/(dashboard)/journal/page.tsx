@@ -1153,7 +1153,7 @@ function JournalContent() {
               <button
                 onClick={handleSave}
                 disabled={!hasContent && !mood || isSaving || isSaved}
-                className={`flex-1 py-3 rounded-xl bg-white/8 hover:bg-white/12 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-sm font-medium transition-all flex items-center justify-center gap-2 ${
                   isSaved
                     ? 'text-emerald-400'
                     : hasContent || mood
@@ -1208,7 +1208,7 @@ function JournalContent() {
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-2.5 rounded-lg bg-white/8 hover:bg-white/12 text-white/70 text-sm font-medium transition-colors"
+                className="flex-1 py-2.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] text-white/70 text-sm font-medium transition-colors"
               >
                 Cancel
               </button>
@@ -1218,7 +1218,7 @@ function JournalContent() {
 
         {/* Mindset Insight */}
         {reflection && (
-          <div className="mt-4 p-4 rounded-2xl bg-black border border-white/8">
+          <div className="mt-4 p-4 rounded-2xl bg-black border border-white/[0.08]">
             <div className="flex items-start gap-2">
               <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
               <div>
@@ -1396,7 +1396,7 @@ function JournalContent() {
                           </button>
                           <button
                             onClick={() => setDeleteConfirmDate(null)}
-                            className="flex-1 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-white/60 text-xs font-medium transition-colors"
+                            className="flex-1 py-2 rounded-lg bg-white/[0.08] hover:bg-white/[0.12] text-white/60 text-xs font-medium transition-colors"
                           >
                             Cancel
                           </button>

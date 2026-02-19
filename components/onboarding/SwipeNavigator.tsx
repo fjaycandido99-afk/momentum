@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback, type ReactNode } from 'react'
+import { useRef, useCallback, type ReactNode } from 'react'
 
 interface SwipeNavigatorProps {
   children: ReactNode
@@ -17,13 +17,11 @@ export function SwipeNavigator({
 }: SwipeNavigatorProps) {
   const touchStartX = useRef<number | null>(null)
   const touchStartY = useRef<number | null>(null)
-  const [swiping, setSwiping] = useState(false)
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (!enabled) return
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
-    setSwiping(false)
   }, [enabled])
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
@@ -44,7 +42,6 @@ export function SwipeNavigator({
 
     touchStartX.current = null
     touchStartY.current = null
-    setSwiping(false)
   }, [enabled, onSwipeLeft, onSwipeRight])
 
   return (

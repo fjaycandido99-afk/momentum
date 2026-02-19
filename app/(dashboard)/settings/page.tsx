@@ -295,7 +295,7 @@ function SettingsContent() {
             <span role="alert" className="text-red-400 text-sm">Failed to save</span>
           )}
         </div>
-        <p className="text-white/95 text-sm mt-1">Customize your Daily Guide</p>
+        <p className="text-white/70 text-sm mt-1">Customize your Daily Guide</p>
       </div>
 
       <div className="px-6 space-y-3">
@@ -882,7 +882,7 @@ function SettingsContent() {
                 </p>
                 <Link
                   href="/pricing"
-                  className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 hover:text-white/95 transition-colors mt-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/95 text-sm hover:bg-white/10 hover:text-white transition-colors mt-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Compare plans
@@ -913,8 +913,8 @@ function SettingsContent() {
 
           {/* App Info */}
           <div className="text-center pt-2 pb-2">
-            <p className="text-white/95 text-sm">Voxu v0.1.0</p>
-            <p className="text-white/95 text-xs mt-1">Your AI Audio Coach</p>
+            <p className="text-white/50 text-sm">Voxu v0.1.0</p>
+            <p className="text-white/50 text-xs mt-1">Your AI Audio Coach</p>
           </div>
         </SettingsCategory>
       </div>

@@ -166,7 +166,7 @@ export function AmbientMixer({ onClose }: AmbientMixerProps) {
                       max={100}
                       value={vol}
                       onChange={e => setVolume(layer.id, Number(e.target.value))}
-                      className="w-full h-1 appearance-none bg-white/15 rounded-full accent-white cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                      className="w-full h-1 appearance-none bg-white/15 rounded-full accent-white cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0"
                       aria-label={`${layer.label} volume`}
                     />
                   </div>

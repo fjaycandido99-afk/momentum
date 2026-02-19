@@ -42,8 +42,8 @@ export function WelcomeScreen({ onContinue }: WelcomeScreenProps) {
           ].map((item, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 text-white/85 text-sm"
-              style={{ animationDelay: `${0.3 + i * 0.15}s` }}
+              className="flex items-center gap-3 text-white/85 text-sm opacity-0 animate-fade-in-up"
+              style={{ animationDelay: `${0.3 + i * 0.15}s`, animationFillMode: 'forwards' }}
             >
               <div className="w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
               {item.text}

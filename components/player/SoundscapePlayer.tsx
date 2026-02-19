@@ -121,9 +121,9 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
                 <div className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${
                   isActive
                     ? 'bg-white text-black'
-                    : 'bg-white/8 border border-white/15 text-white/70'
+                    : 'bg-white/[0.08] border border-white/15 text-white/70'
                 }`}>
-                  <Icon className="w-4.5 h-4.5" strokeWidth={1.5} />
+                  <Icon className="w-[18px] h-[18px]" strokeWidth={1.5} />
                   {isLocked && !isActive && (
                     <Lock className="absolute -top-0.5 -right-0.5 w-3 h-3 text-white" />
                   )}

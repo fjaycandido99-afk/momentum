@@ -111,7 +111,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                 billingPeriod === 'monthly'
                   ? 'bg-white/10 text-white'
-                  : 'text-white/95 hover:text-white/95'
+                  : 'text-white/95 hover:text-white'
               }`}
             >
               Monthly
@@ -122,7 +122,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                 billingPeriod === 'yearly'
                   ? 'bg-white/10 text-white'
-                  : 'text-white/95 hover:text-white/95'
+                  : 'text-white/95 hover:text-white'
               }`}
             >
               <span>Yearly</span>

@@ -219,10 +219,10 @@ export default function CoachPage() {
         </div>
         {/* Tab bar */}
         <div className="flex px-6 gap-2 pb-4 border-b border-white/10">
-          <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/8'}`}>
+          <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/[0.08]'}`}>
             <MessageSquare className="w-3.5 h-3.5" /> Chat
           </button>
-          <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/8'}`}>
+          <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/[0.08]'}`}>
             <ClipboardList className="w-3.5 h-3.5" /> Plans
           </button>
         </div>
@@ -237,7 +237,7 @@ export default function CoachPage() {
                 <Crown className="w-8 h-8 text-amber-400" />
               </div>
               <h2 className="text-xl font-medium text-white mb-2">Premium Feature</h2>
-              <p className="text-white/95 mb-6 max-w-xs">
+              <p className="text-white/70 mb-6 max-w-xs">
                 Get personalized coaching, motivation, and support from your AI wellness coach.
               </p>
               <button
@@ -286,10 +286,10 @@ export default function CoachPage() {
 
       {/* Tab bar */}
       <div className="flex px-6 gap-2 py-2 border-b border-white/10">
-        <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/8'}`}>
+        <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/[0.08]'}`}>
           <MessageSquare className="w-3.5 h-3.5" /> Chat
         </button>
-        <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/8'}`}>
+        <button onClick={() => setActiveTab('plans')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'plans' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/[0.08]'}`}>
           <ClipboardList className="w-3.5 h-3.5" /> Plans
         </button>
       </div>
@@ -317,7 +317,7 @@ export default function CoachPage() {
           className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
             chatMode === 'coach'
               ? 'bg-black border border-amber-500/30 text-amber-400'
-              : 'bg-black border border-white/8 text-white/60'
+              : 'bg-black border border-white/[0.08] text-white/60'
           }`}
         >
           Coach
@@ -327,7 +327,7 @@ export default function CoachPage() {
           className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
             chatMode === 'accountability'
               ? 'bg-black border border-emerald-500/30 text-emerald-400'
-              : 'bg-black border border-white/8 text-white/60'
+              : 'bg-black border border-white/[0.08] text-white/60'
           }`}
         >
           Check-in
@@ -380,7 +380,7 @@ export default function CoachPage() {
               >
                 {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
               </div>
-              <span className={`text-[10px] text-white/95 mt-1 ${msg.role === 'user' ? 'text-right' : 'ml-1'}`}>
+              <span className={`text-[10px] text-white/40 mt-1 ${msg.role === 'user' ? 'text-right' : 'ml-1'}`}>
                 {formatTime(msg.timestamp)}
               </span>
             </div>
@@ -444,7 +444,7 @@ export default function CoachPage() {
             className={`p-3 rounded-xl transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
               input.trim() && !isLoading
                 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-400'
-                : 'bg-white/5 text-white/95'
+                : 'bg-white/5 text-white/40'
             }`}
           >
             {isLoading ? (

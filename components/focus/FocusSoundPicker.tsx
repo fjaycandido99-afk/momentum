@@ -38,7 +38,7 @@ export function FocusSoundPicker({ selectedId, onSelect }: FocusSoundPickerProps
           }`}>
             <VolumeX className="w-5 h-5" strokeWidth={1.5} />
           </div>
-          <span className={`text-[10px] transition-colors ${selectedId === null ? 'text-white' : 'text-white'}`}>Silent</span>
+          <span className={`text-[10px] transition-colors ${selectedId === null ? 'text-white' : 'text-white/50'}`}>Silent</span>
         </button>
 
         {FOCUS_SOUNDS.map((item) => {
@@ -58,7 +58,7 @@ export function FocusSoundPicker({ selectedId, onSelect }: FocusSoundPickerProps
               }`}>
                 <Icon className="w-5 h-5" strokeWidth={1.5} />
               </div>
-              <span className={`text-[10px] transition-colors ${isActive ? 'text-white' : 'text-white'}`}>{item.label}</span>
+              <span className={`text-[10px] transition-colors ${isActive ? 'text-white' : 'text-white/50'}`}>{item.label}</span>
             </button>
           )
         })}

@@ -176,6 +176,7 @@ export function MindsetIcon({ mindsetId, className = 'w-6 h-6', size }: MindsetI
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
+      aria-hidden="true"
       {...(size ? { width: size, height: size } : {})}
     >
       <IconContent />

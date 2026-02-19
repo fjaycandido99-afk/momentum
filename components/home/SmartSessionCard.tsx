@@ -244,7 +244,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
             className="glass-refined rounded-2xl p-3 flex items-center justify-center active:scale-[0.98] transition-transform"
             title="Customize session"
           >
-            <SlidersHorizontal className="w-4.5 h-4.5 text-white" />
+            <SlidersHorizontal className="w-[18px] h-[18px] text-white" />
           </button>
         </div>
 
@@ -434,7 +434,7 @@ export function SmartSessionCard({ isPremium, onPlaySoundscape, onPlayGuide, onP
               <button
                 onClick={() => { setCurrentStep(i); playStep(step); setShowAdvanceNudge(false) }}
                 className={`flex-1 flex items-center gap-3 p-2.5 rounded-xl transition-all ${
-                  isActive ? 'bg-white/10 ring-1 ring-purple-500/30' : 'bg-white/5 hover:bg-white/8'
+                  isActive ? 'bg-white/10 ring-1 ring-purple-500/30' : 'bg-white/5 hover:bg-white/[0.08]'
                 } ${isComplete ? 'opacity-60' : ''}`}
               >
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${

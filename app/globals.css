@@ -43,6 +43,19 @@ body {
   color: rgb(var(--foreground));
   font-feature-settings: "rlig" 1, "calt" 1;
   background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+input[type="range"] {
+  touch-action: none;
 }
 
 /* Utility classes */
@@ -260,6 +273,10 @@ html {
   animation: slide-in-right 0.4s ease-out both;
 }
 
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out both;
+}
+
 .animate-slide-in-left {
   animation: slide-in-left 0.4s ease-out both;
 }
@@ -366,7 +383,7 @@ html {
 }
 
 /* Input focus ring */
-input:focus, select:focus, textarea:focus, button:focus {
+input:focus:not(:focus-visible), select:focus:not(:focus-visible), textarea:focus:not(:focus-visible), button:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -694,6 +711,26 @@ input:focus, select:focus, textarea:focus, button:focus {
   display: none;
 }
 
+/* Dark-themed thin scrollbar for visible scroll areas */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
 /* Sound bar animation for bottom player — transform-based for mobile GPU */
 @keyframes sound-bar-1 {
   0%, 100% { transform: scaleY(0.3); }
@@ -742,6 +779,7 @@ input:focus, select:focus, textarea:focus, button:focus {
 .glass-card-sm {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
   position: relative;
   overflow: hidden;
   transition: all 0.2s ease;
@@ -1368,6 +1406,8 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 .snap-row {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  touch-action: pan-x;
 }
 .snap-card {
   scroll-snap-align: start;
@@ -1489,6 +1529,7 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   font-size: 11px;
   font-weight: 500;
   text-transform: uppercase;

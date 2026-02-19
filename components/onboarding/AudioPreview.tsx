@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Play, Pause, Volume2 } from 'lucide-react'
 
 interface AudioPreviewProps {
@@ -20,6 +20,10 @@ export function AudioPreview({
 }: AudioPreviewProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    return () => { audioRef.current?.pause() }
+  }, [])
 
   const togglePlay = useCallback(() => {
     if (!previewUrl) {

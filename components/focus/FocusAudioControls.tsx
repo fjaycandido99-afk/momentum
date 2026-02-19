@@ -137,7 +137,7 @@ export function FocusAudioControls({
               }`}>
                 <Volume2 className="w-4 h-4" strokeWidth={1.5} />
               </div>
-              <span className={`text-[9px] ${!hasSound ? 'text-white' : 'text-white'}`}>Off</span>
+              <span className={`text-[9px] ${!hasSound ? 'text-white' : 'text-white/50'}`}>Off</span>
             </button>
             {FOCUS_SOUNDS.map((item) => {
               const Icon = item.icon
@@ -153,7 +153,7 @@ export function FocusAudioControls({
                   }`}>
                     <Icon className="w-4 h-4" strokeWidth={1.5} />
                   </div>
-                  <span className={`text-[9px] ${isActive ? 'text-white' : 'text-white'}`}>{item.label}</span>
+                  <span className={`text-[9px] ${isActive ? 'text-white' : 'text-white/50'}`}>{item.label}</span>
                 </button>
               )
             })}
@@ -168,11 +168,11 @@ export function FocusAudioControls({
               max={100}
               value={soundVol}
               onChange={(e) => handleSoundVolume(Number(e.target.value))}
-              className="flex-1 h-1 rounded-full appearance-none bg-white/10 accent-white/70 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+              className="flex-1 h-1 rounded-full appearance-none bg-white/10 accent-white cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0"
             />
             <button
               onClick={() => { haptic('light'); onToggleSoundscape() }}
-              className="w-7 h-7 rounded-full flex items-center justify-center bg-white/8 hover:bg-white/15 transition-colors press-scale shrink-0"
+              className="w-7 h-7 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/15 transition-colors press-scale shrink-0"
             >
               {soundscapePlaying ? (
                 <Pause className="w-3 h-3 text-white/70" fill="rgba(255,255,255,0.7)" />
@@ -217,7 +217,7 @@ export function FocusAudioControls({
               }`}>
                 <Music className="w-4 h-4" strokeWidth={1.5} />
               </div>
-              <span className={`text-[9px] ${!hasMusic ? 'text-white' : 'text-white'}`}>Off</span>
+              <span className={`text-[9px] ${!hasMusic ? 'text-white' : 'text-white/50'}`}>Off</span>
             </button>
             {FOCUS_GENRES.map((genre) => {
               const isActive = selectedMusic?.genreId === genre.id
@@ -234,7 +234,7 @@ export function FocusAudioControls({
                   }`}>
                     <span className="text-[11px] font-medium">{genre.word.slice(0, 2)}</span>
                   </div>
-                  <span className={`text-[9px] ${isActive ? 'text-white' : 'text-white'}`}>{genre.word}</span>
+                  <span className={`text-[9px] ${isActive ? 'text-white' : 'text-white/50'}`}>{genre.word}</span>
                 </button>
               )
             })}
@@ -249,11 +249,11 @@ export function FocusAudioControls({
               max={100}
               value={musicVol}
               onChange={(e) => handleMusicVolume(Number(e.target.value))}
-              className="flex-1 h-1 rounded-full appearance-none bg-white/10 accent-white/70 cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+              className="flex-1 h-1 rounded-full appearance-none bg-white/10 accent-white cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0"
             />
             <button
               onClick={() => { haptic('light'); onToggleMusic() }}
-              className="w-7 h-7 rounded-full flex items-center justify-center bg-white/8 hover:bg-white/15 transition-colors press-scale shrink-0"
+              className="w-7 h-7 rounded-full flex items-center justify-center bg-white/[0.08] hover:bg-white/15 transition-colors press-scale shrink-0"
             >
               {musicPlaying ? (
                 <Pause className="w-3 h-3 text-white/70" fill="rgba(255,255,255,0.7)" />

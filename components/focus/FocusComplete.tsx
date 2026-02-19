@@ -39,7 +39,7 @@ export function FocusComplete({ minutesCompleted, xpEarned, onStartAnother }: Fo
               haptic('light')
               router.push('/')
             }}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/8 border border-white/15 text-white/90 text-sm hover:bg-white/15 transition-colors press-scale"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/[0.08] border border-white/15 text-white/90 text-sm hover:bg-white/15 transition-colors press-scale"
           >
             <Home className="w-4 h-4" />
             Done
