@@ -89,7 +89,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                     key={a.id}
                     onClick={() => onAchievementClick?.(a)}
                     className={`
-                      relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200
+                      press-scale relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200
                       ${a.unlocked
                         ? `${RARITY_COLORS[a.rarity]} ${RARITY_BG[a.rarity]} ${RARITY_GLOW[a.rarity]} hover:scale-[1.03] active:scale-[0.97]`
                         : 'border-white/[0.06] bg-white/[0.02]'
@@ -136,7 +136,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
       {grouped.length > 3 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-center gap-1.5 py-2.5 mt-3 text-[11px] text-white/70 hover:text-white/85 transition-colors"
+          className="press-scale w-full flex items-center justify-center gap-1.5 py-2.5 mt-3 text-[11px] text-white/70 hover:text-white/85 transition-colors"
         >
           {expanded ? 'Show less' : `Show ${hiddenCount} more`}
           <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />

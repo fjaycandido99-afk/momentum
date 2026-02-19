@@ -227,7 +227,7 @@ export default function CoachPage() {
           </button>
         </div>
         {activeTab === 'plans' ? (
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto scrollbar-hide">
             <CoachingPlans />
           </div>
         ) : (
@@ -242,7 +242,7 @@ export default function CoachPage() {
               </p>
               <button
                 onClick={() => subscription?.openUpgradeModal()}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all mx-auto"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all press-scale mx-auto"
               >
                 <Sparkles className="w-5 h-5" />
                 Upgrade to Premium
@@ -305,7 +305,7 @@ export default function CoachPage() {
       )}
 
       {activeTab === 'plans' ? (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
           <CoachingPlans />
         </div>
       ) : (
@@ -345,7 +345,7 @@ export default function CoachPage() {
                 <button
                   key={type.id}
                   onClick={() => sendMessage(CHECK_IN_PROMPTS[type.id], type.id)}
-                  className="flex items-center gap-2 p-3 rounded-xl bg-black border border-white/10 hover:border-white/20 transition-all"
+                  className="flex items-center gap-2 p-3 rounded-xl bg-black border border-white/10 hover:border-white/20 transition-all press-scale"
                 >
                   <Icon className={`w-4 h-4 ${type.color}`} />
                   <span className="text-xs text-white/85">{type.label}</span>
@@ -357,7 +357,7 @@ export default function CoachPage() {
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-6 py-4 space-y-4">
         {messages.map((msg, i) => (
           <div
             key={i}

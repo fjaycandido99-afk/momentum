@@ -36,7 +36,7 @@ export function MindsetEvolution() {
   if (!data || dismissed) return null
 
   return (
-    <div className="glass-refined rounded-2xl p-5 border border-violet-500/20">
+    <div className="glass-refined rounded-2xl p-5 border border-violet-500/20 animate-fade-in">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <Compass className="w-4 h-4 text-violet-400" />
@@ -69,7 +69,7 @@ export function MindsetEvolution() {
 
       <button
         onClick={() => router.push('/mindset-selection')}
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 text-xs font-medium transition-colors"
+        className="press-scale w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 text-xs font-medium transition-colors"
       >
         Explore {MINDSET_LABELS[data.suggestedMindset] || data.suggestedMindset}
         <ArrowRight className="w-3.5 h-3.5" />

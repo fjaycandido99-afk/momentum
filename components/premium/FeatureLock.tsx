@@ -46,6 +46,9 @@ export function FeatureLock({
       <div
         className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] rounded-xl cursor-pointer"
         onClick={openUpgradeModal}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openUpgradeModal() } }}
       >
         <div className="flex flex-col items-center gap-2 p-4">
           <Lock className="w-6 h-6 text-white" />

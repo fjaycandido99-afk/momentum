@@ -55,7 +55,7 @@ interface DreamInterpretation {
 
 export default function JournalPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen" />}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-white/20 border-t-white/70 rounded-full animate-spin" /></div>}>
       <JournalContent />
     </Suspense>
   )
@@ -762,7 +762,7 @@ function JournalContent() {
             <button
               key={tab.id}
               onClick={() => setMode(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-md transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-md transition-all press-scale ${
                 mode === tab.id
                   ? 'bg-white/25 text-white shadow-sm'
                   : 'text-white/85 hover:text-white'
@@ -817,7 +817,7 @@ function JournalContent() {
             {/* Chat card — flex column with messages + pinned input */}
             <div className="flex flex-col rounded-2xl bg-black border border-white/15" style={{ maxHeight: '60vh' }}>
               {/* Messages area */}
-              <div className="flex-1 overflow-y-auto space-y-3 p-4">
+              <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 p-4">
                 {conversation.length === 0 && (
                   <div className="text-center py-6">
                     <MessageCircle className="w-8 h-8 text-violet-400/50 mx-auto mb-2" />
@@ -876,7 +876,7 @@ function JournalContent() {
               <button
                 onClick={saveConversation}
                 disabled={isSaving || isSaved}
-                className={`w-full py-3 rounded-2xl bg-black border border-white/25 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                className={`w-full py-3 rounded-2xl bg-black border border-white/25 text-sm font-medium transition-all press-scale flex items-center justify-center gap-2 ${
                   isSaved ? 'text-emerald-400' : 'text-white'
                 }`}
               >
@@ -931,7 +931,7 @@ function JournalContent() {
             <button
               onClick={submitDream}
               disabled={!dreamText.trim() || dreamLoading || dreamSaved}
-              className={`w-full py-3 rounded-2xl bg-black border border-white/25 text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+              className={`w-full py-3 rounded-2xl bg-black border border-white/25 text-sm font-medium transition-all press-scale flex items-center justify-center gap-2 ${
                 dreamSaved ? 'text-emerald-400' : dreamText.trim() ? 'text-white' : 'text-white/85 cursor-not-allowed'
               }`}
             >
@@ -946,7 +946,7 @@ function JournalContent() {
 
             {/* Dream interpretation — consolidated card */}
             {dreamInterpretation && (
-              <div className="p-4 rounded-2xl bg-black border border-indigo-500/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] space-y-3">
+              <div className="p-4 rounded-2xl bg-black border border-indigo-500/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] space-y-3 animate-fade-in">
                 {/* Symbols */}
                 {dreamInterpretation.symbols.length > 0 && (
                   <div>
@@ -1153,7 +1153,7 @@ function JournalContent() {
               <button
                 onClick={handleSave}
                 disabled={!hasContent && !mood || isSaving || isSaved}
-                className={`flex-1 py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-sm font-medium transition-all press-scale flex items-center justify-center gap-2 ${
                   isSaved
                     ? 'text-emerald-400'
                     : hasContent || mood
@@ -1218,7 +1218,7 @@ function JournalContent() {
 
         {/* Mindset Insight */}
         {reflection && (
-          <div className="mt-4 p-4 rounded-2xl bg-black border border-white/[0.08]">
+          <div className="mt-4 p-4 rounded-2xl bg-black border border-white/[0.08] animate-fade-in">
             <div className="flex items-start gap-2">
               <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
               <div>
@@ -1262,7 +1262,7 @@ function JournalContent() {
         {!hasJournalHistory ? (
           <button
             onClick={openUpgradeModal}
-            className="w-full p-6 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] hover:bg-white/5 transition-all group"
+            className="w-full p-6 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] hover:bg-white/5 transition-all press-scale group"
           >
             <div className="flex flex-col items-center gap-3">
               <div className="relative">

@@ -1,6 +1,6 @@
 'use client'
 
-import { Crown, Clock, ChevronRight } from 'lucide-react'
+import { Crown, Clock } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 
 interface TrialBannerProps {
@@ -56,7 +56,6 @@ export function TrialBanner({ variant = 'compact' }: TrialBannerProps) {
               }
             </p>
           </div>
-          <ChevronRight className="w-5 h-5 text-white/95" />
         </div>
 
         {/* Progress bar */}

@@ -1012,7 +1012,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {!embedded && <TrialEndingBanner />}
 
       {/* Header */}
-      <div className="sticky top-0 z-50 p-6 pt-12 mb-4 bg-black animate-fade-in-down">
+      <div className="sticky top-0 z-50 p-6 pt-12 mb-4 bg-black/95 backdrop-blur-xl animate-fade-in-down">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         {/* Greeting Section */}
         <div className="flex items-center justify-between mb-4">
@@ -1071,7 +1071,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
         {/* Day type dropdown (shown on tap) */}
         {guide && showDayTypePicker && (
-          <div className="flex items-center gap-2 mb-2 overflow-x-auto pb-1 -mx-6 px-6 animate-slide-up-enter">
+          <div className="flex items-center gap-2 mb-2 overflow-x-auto scrollbar-hide pb-1 -mx-6 px-6 animate-slide-up-enter">
             {getAvailableDayTypes().map(type => (
               <button
                 key={type}
@@ -1080,7 +1080,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                   flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all press-scale
                   ${guide.day_type === type
                     ? 'bg-white/15 text-white border border-white/25'
-                    : 'bg-white/5 text-white/95 border border-transparent hover:bg-white/10'
+                    : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
                   }
                 `}
               >
@@ -1124,7 +1124,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {!guide && !showEnergyPrompt && (
         <div className="px-6">
           <div className="text-center py-12">
-            <p className="text-white/95 mb-4">No guide generated yet</p>
+            <p className="text-white/70 mb-4">No guide generated yet</p>
             <button
               onClick={() => generateGuide()}
               disabled={isGenerating}
@@ -1155,7 +1155,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               <Lock className="w-5 h-5 text-white shrink-0" />
               <div className="flex-1">
                 <p className="text-sm text-white font-medium">Preview Mode</p>
-                <p className="text-xs text-white/85">Sign in to save your progress and unlock all features</p>
+                <p className="text-xs text-white/70">Sign in to save your progress and unlock all features</p>
               </div>
             </div>
           )}
@@ -1175,7 +1175,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                   Morning Flow
                 </h2>
                 {!morningAvailability.isAvailable && (
-                  <div className="flex items-center gap-1.5 text-xs text-white/95">
+                  <div className="flex items-center gap-1.5 text-xs text-white/50">
                     <Clock className="w-3 h-3" />
                     <span>Available at {morningAvailability.unlockTime}</span>
                   </div>
@@ -1197,7 +1197,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                         <h2 className="font-medium text-white">
                           {quickModeActive ? '5-Min Flow' : 'Morning Flow'}
                         </h2>
-                        <p className="text-xs text-white/95">
+                        <p className="text-xs text-white/70">
                           {completedModules.filter(m => displayModulesFiltered.includes(m)).length}/{displayModulesFiltered.length} complete
                           {timeRemaining && <span className="ml-2 text-white/75">{timeRemaining}</span>}
                         </p>
@@ -1210,9 +1210,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                         currentModule={getCurrentMorningModule() as ModuleType}
                       />
                       {showMorningFlow ? (
-                        <ChevronUp className="w-5 h-5 text-white/95" />
+                        <ChevronUp className="w-5 h-5 text-white/50" />
                       ) : (
-                        <ChevronDown className="w-5 h-5 text-white/95" />
+                        <ChevronDown className="w-5 h-5 text-white/50" />
                       )}
                     </div>
                   </button>
@@ -1414,11 +1414,11 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 <div className="p-4 opacity-60">
                   <div className="flex items-center gap-4">
                     <div className="p-2.5 rounded-xl bg-white/5">
-                      <Lock className="w-5 h-5 text-white/95" />
+                      <Lock className="w-5 h-5 text-white/50" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium text-white/95">Morning Flow</h3>
-                      <p className="text-sm text-white/95">Your morning modules will unlock at {morningAvailability.unlockTime}</p>
+                      <h3 className="font-medium text-white">Morning Flow</h3>
+                      <p className="text-sm text-white/70">Your morning modules will unlock at {morningAvailability.unlockTime}</p>
                     </div>
                   </div>
                 </div>
@@ -1466,20 +1466,20 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                     <h2 className="font-medium text-white">
                       {guide.day_type === 'exam' ? 'Exam Support' : 'Study Tools'}
                     </h2>
-                    <p className="text-xs text-white/95">
+                    <p className="text-xs text-white/70">
                       {guide.day_type === 'exam' ? 'Stay calm and focused' : 'Focus and breaks'}
                     </p>
                   </div>
                 </div>
                 {showStudentSection ? (
-                  <ChevronUp className="w-5 h-5 text-white/95" />
+                  <ChevronUp className="w-5 h-5 text-white/50" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-white/95" />
+                  <ChevronDown className="w-5 h-5 text-white/50" />
                 )}
               </button>
 
               {showStudentSection && (
-                <div className="p-4 pt-0 space-y-3">
+                <div className="p-4 pt-0 space-y-3 accordion-spring-enter">
                   {guide.day_type === 'exam' && guide.exam_calm_script && (
                     <ModuleCard
                       module={'exam_calm' as ModuleType}
@@ -1572,7 +1572,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                   Evening
                 </h2>
                 {!eveningAvailability.isAvailable && (
-                  <div className="flex items-center gap-1.5 text-xs text-white/95">
+                  <div className="flex items-center gap-1.5 text-xs text-white/50">
                     <Clock className="w-3 h-3" />
                     <span>Available at {eveningAvailability.unlockTime}</span>
                   </div>
@@ -1609,11 +1609,11 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 <div className="p-4 opacity-60">
                   <div className="flex items-center gap-4">
                     <div className="p-2.5 rounded-xl bg-white/5">
-                      <Lock className="w-5 h-5 text-white/95" />
+                      <Lock className="w-5 h-5 text-white/50" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium text-white/95">Day Close</h3>
-                      <p className="text-sm text-white/95">Wind down and reflect on the day</p>
+                      <h3 className="font-medium text-white">Day Close</h3>
+                      <p className="text-sm text-white/70">Wind down and reflect on the day</p>
                     </div>
                   </div>
                 </div>
@@ -1622,7 +1622,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
               {/* Tomorrow Preview */}
               {guide.tomorrow_preview && eveningAvailability.isAvailable && (
                 <div className="p-4 mt-3">
-                  <p className="text-sm text-white/95 mb-2">Tomorrow</p>
+                  <p className="text-sm text-white/50 mb-2">Tomorrow</p>
                   <p className="text-white text-sm leading-relaxed">
                     {guide.tomorrow_preview}
                   </p>
@@ -1667,9 +1667,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                         <Moon className="w-4 h-4 text-indigo-400" />
                         <span className="text-sm font-medium text-white">Bedtime Reminder</span>
                       </div>
-                      <p className="text-xs text-white/95">
+                      <p className="text-xs text-white/70">
                         Aim to be in bed by{' '}
-                        <span className="text-white/95">
+                        <span className="text-white/90">
                           {(() => {
                             const [h, m] = preferences.wake_time!.split(':').map(Number)
                             let bedH = h - 8

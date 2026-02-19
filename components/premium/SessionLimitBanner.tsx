@@ -19,6 +19,9 @@ export function SessionLimitBanner({ variant = 'full' }: SessionLimitBannerProps
     return (
       <div
         onClick={openUpgradeModal}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openUpgradeModal() } }}
         className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 cursor-pointer hover:bg-amber-500/15 transition-colors"
       >
         <Mic2 className="w-4 h-4 text-amber-400" />

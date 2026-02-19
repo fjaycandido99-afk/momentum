@@ -98,6 +98,7 @@ input[type="range"] {
   width: 3px;
   border-radius: 2px;
   background: white;
+  will-change: transform;
 }
 .eq-bars span:nth-child(1) { animation: eq-bounce 0.8s ease-in-out infinite alternate; }
 .eq-bars span:nth-child(2) { animation: eq-bounce 0.6s ease-in-out 0.15s infinite alternate; }
@@ -285,35 +286,6 @@ html {
   animation: scale-in 0.3s ease-out both;
 }
 
-/* Scroll-reveal: hidden by default, revealed by IntersectionObserver */
-.scroll-reveal {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-}
-.scroll-reveal.scroll-reveal--visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-.scroll-reveal[data-variant="slide-left"] {
-  transform: translateX(-24px);
-}
-.scroll-reveal[data-variant="slide-left"].scroll-reveal--visible {
-  transform: translateX(0);
-}
-.scroll-reveal[data-variant="slide-right"] {
-  transform: translateX(24px);
-}
-.scroll-reveal[data-variant="slide-right"].scroll-reveal--visible {
-  transform: translateX(0);
-}
-.scroll-reveal[data-variant="scale-up"] {
-  transform: scale(0.92);
-}
-.scroll-reveal[data-variant="scale-up"].scroll-reveal--visible {
-  transform: scale(1);
-}
-
 /* Streak flame */
 @keyframes flame-flicker {
   0%, 100% { transform: scaleY(1) scaleX(1); opacity: 0.9; }
@@ -326,6 +298,7 @@ html {
   animation: flame-flicker 1.5s ease-in-out infinite;
   transform-origin: bottom center;
   filter: drop-shadow(0 0 4px rgba(255,160,50,0.5));
+  will-change: transform;
 }
 
 .animate-glow-pulse {
@@ -435,6 +408,7 @@ input:focus:not(:focus-visible), select:focus:not(:focus-visible), textarea:focu
   height: 80px;
   background: linear-gradient(to bottom, transparent, rgba(174, 194, 224, 0.5), transparent);
   animation: rain-fall linear infinite;
+  will-change: transform;
 }
 
 .rain-drop-fast {
@@ -443,6 +417,7 @@ input:focus:not(:focus-visible), select:focus:not(:focus-visible), textarea:focu
   height: 120px;
   background: linear-gradient(to bottom, transparent, rgba(174, 194, 224, 0.7), transparent);
   animation: rain-fall-fast linear infinite;
+  will-change: transform;
 }
 
 /* Lightning flash effect */
@@ -594,7 +569,7 @@ input:focus:not(:focus-visible), select:focus:not(:focus-visible), textarea:focu
 .skeleton-shimmer {
   background: linear-gradient(90deg, #14141a 25%, #222228 50%, #14141a 75%);
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  animation: skeleton-shimmer 1.8s linear infinite;
 }
 
 .progress-fill {
@@ -970,6 +945,7 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 .card-gradient-border {
   animation: card-glow-pulse 5s ease-in-out infinite;
   transition: box-shadow 0.3s ease, transform 0.2s ease;
+  will-change: box-shadow;
 }
 
 .card-gradient-border:hover,
@@ -1099,10 +1075,35 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 .scroll-reveal {
   opacity: 0;
   transform: translateY(40px) scale(0.95);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
 
 .scroll-reveal.revealed {
   animation: scroll-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.scroll-reveal.scroll-reveal--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.scroll-reveal[data-variant="slide-left"] {
+  transform: translateX(-24px);
+}
+.scroll-reveal[data-variant="slide-left"].scroll-reveal--visible {
+  transform: translateX(0);
+}
+.scroll-reveal[data-variant="slide-right"] {
+  transform: translateX(24px);
+}
+.scroll-reveal[data-variant="slide-right"].scroll-reveal--visible {
+  transform: translateX(0);
+}
+.scroll-reveal[data-variant="scale-up"] {
+  transform: scale(0.92);
+}
+.scroll-reveal[data-variant="scale-up"].scroll-reveal--visible {
+  transform: scale(1);
 }
 
 /* Breathing Glow - active items pulse with a soft halo */
@@ -1293,28 +1294,9 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 
 /* ========== Glassmorphism Refined ========== */
 .glass-refined {
-  background: #000;
-  border: none;
-  box-shadow: none;
-  position: relative;
-}
-
-.glass-refined::before {
-  display: none;
-}
-
-.glass-refined::after {
-  display: none;
-}
-
-.glass-refined.glass-elevated {
-  background: #000;
-  border: none;
-  box-shadow: none;
-}
-
-.glass-refined.glass-elevated::after {
-  display: none;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
 }
 
 /* ========== Liquid Page Transitions ========== */

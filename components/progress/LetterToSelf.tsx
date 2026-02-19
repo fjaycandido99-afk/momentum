@@ -73,13 +73,13 @@ export function LetterToSelf() {
       </button>
 
       {expanded && (
-        <div className="px-5 pb-5 space-y-4">
+        <div className="px-5 pb-5 space-y-4 animate-fade-in">
           {/* Type selector */}
           <div className="flex gap-2">
             <button
               onClick={() => generateLetter('future')}
               disabled={loading}
-              className={`flex-1 py-3 text-xs font-medium rounded-lg transition-all ${
+              className={`press-scale flex-1 py-3 text-xs font-medium rounded-lg transition-all ${
                 letterType === 'future'
                   ? 'bg-pink-500/20 text-pink-300'
                   : 'bg-white/5 text-white/75 hover:text-white/80'
@@ -90,7 +90,7 @@ export function LetterToSelf() {
             <button
               onClick={() => generateLetter('past')}
               disabled={loading}
-              className={`flex-1 py-3 text-xs font-medium rounded-lg transition-all ${
+              className={`press-scale flex-1 py-3 text-xs font-medium rounded-lg transition-all ${
                 letterType === 'past'
                   ? 'bg-pink-500/20 text-pink-300'
                   : 'bg-white/5 text-white/75 hover:text-white/80'
@@ -117,7 +117,7 @@ export function LetterToSelf() {
                 <button
                   onClick={handleShare}
                   disabled={isShareGenerating}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 text-xs transition-colors"
+                  className="press-scale flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 text-xs transition-colors"
                 >
                   <Share2 className="w-3.5 h-3.5" />
                   Share
