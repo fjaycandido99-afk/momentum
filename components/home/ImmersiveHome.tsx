@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, Bot, BarChart3, Timer } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, Bot, BarChart3, Timer } from 'lucide-react'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { useHomeAudio } from '@/contexts/HomeAudioContext'
@@ -306,35 +306,6 @@ export function ImmersiveHome() {
   const spawnRipple = useRippleBurst()
   const { scrolled: headerScrolled, scrollY: headerScrollY } = useScrollHeader(scrollRef)
 
-  const touchStartY = useRef(0)
-  const [pullDistance, setPullDistance] = useState(0)
-  const [isPulling, setIsPulling] = useState(false)
-  const PULL_THRESHOLD = 100
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (showMorningFlow) return
-    const el = scrollRef.current
-    if (el && el.scrollTop <= 0) {
-      touchStartY.current = e.touches[0].clientY
-      setIsPulling(true)
-    }
-  }, [showMorningFlow])
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isPulling || showMorningFlow) return
-    const delta = e.touches[0].clientY - touchStartY.current
-    if (delta > 0) setPullDistance(Math.min(delta * 0.5, 150))
-  }, [isPulling, showMorningFlow])
-
-  const handleTouchEnd = useCallback(() => {
-    if (showMorningFlow) return
-    if (pullDistance >= PULL_THRESHOLD) {
-      stopBackgroundMusic()
-      setShowMorningFlow(true)
-    }
-    setPullDistance(0)
-    setIsPulling(false)
-  }, [pullDistance, showMorningFlow, stopBackgroundMusic])
 
   // --- Data fetching (SWR) ---
   const topicName = getTodaysTopicName()
@@ -842,9 +813,6 @@ export function ImmersiveHome() {
     <div
       ref={scrollRef}
       className={`relative min-h-screen text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer ? 'overflow-hidden max-h-screen' : ''}`}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       {/* --- Fullscreen overlays --- */}
 
@@ -924,23 +892,6 @@ export function ImmersiveHome() {
         </div>
       )}
 
-      {/* Pull-down indicator */}
-      <div
-        className="flex flex-col items-center justify-end overflow-hidden transition-all duration-200"
-        style={{ height: pullDistance > 0 ? `${pullDistance}px` : '0px', opacity: pullDistance > 0 ? 1 : 0 }}
-      >
-        <div className="flex flex-col items-center gap-1 pb-2">
-          <ChevronDown
-            className={`w-5 h-5 transition-transform duration-300 ${
-              pullDistance >= PULL_THRESHOLD ? 'text-white rotate-180 scale-110' : 'text-white/50'
-            }`}
-            style={{ transform: pullDistance > 0 && pullDistance < PULL_THRESHOLD ? `rotate(${(pullDistance / PULL_THRESHOLD) * 180}deg)` : undefined }}
-          />
-          <span className={`text-xs transition-all duration-200 ${pullDistance >= PULL_THRESHOLD ? 'text-white font-medium' : 'text-white/50'}`}>
-            {pullDistance >= PULL_THRESHOLD ? 'Release for Daily Guide' : 'Pull down for Daily Guide'}
-          </span>
-        </div>
-      </div>
 
       {/* Header — hidden when any fullscreen overlay is active */}
       {!showMorningFlow && !audioState.playingSound && !audioState.showSoundscapePlayer && (
