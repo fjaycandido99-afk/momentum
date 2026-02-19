@@ -38,6 +38,7 @@ import { useListeningMilestones } from '@/hooks/useListeningMilestones'
 import { AmbientMixer } from './AmbientMixer'
 import { LongPressPreview } from './LongPressPreview'
 import { WellnessWidget } from './WellnessWidget'
+import { DailyFeatureTip } from './DailyFeatureTip'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
 import { DailyProgressRing } from './DailyProgressRing'
@@ -1076,6 +1077,9 @@ export function ImmersiveHome() {
             hasJournaledToday={hasJournaledToday}
           />
         )
+
+        // Slide 3: Daily Feature Tip
+        slides.push(<DailyFeatureTip key="feature-tip" />)
 
         return <HeroCarousel>{slides}</HeroCarousel>
       })()}

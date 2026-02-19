@@ -43,32 +43,51 @@ export function useShareCard() {
     try {
       // Create off-screen card element
       const card = document.createElement('div')
-      card.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:540px;height:540px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:48px;'
+      card.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:540px;height:540px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden;'
 
       const gradients: Record<string, string> = {
-        quote: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-        affirmation: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 50%, #4a1942 100%)',
-        tarot: 'linear-gradient(135deg, #2a1810 0%, #3d2914 50%, #1a0e2e 100%)',
+        quote: 'linear-gradient(160deg, #0a0a12 0%, #111827 40%, #0f172a 100%)',
+        affirmation: 'linear-gradient(160deg, #0a0a12 0%, #1e1338 40%, #2d1b4e 100%)',
+        tarot: 'linear-gradient(160deg, #0a0a12 0%, #1a1408 40%, #2a1810 100%)',
       }
       const accents: Record<string, string> = {
         quote: '#f59e0b',
-        affirmation: '#8b5cf6',
+        affirmation: '#a78bfa',
         tarot: '#d97706',
+      }
+      const glows: Record<string, string> = {
+        quote: 'radial-gradient(ellipse at 70% 30%, rgba(245,158,11,0.08) 0%, transparent 60%)',
+        affirmation: 'radial-gradient(ellipse at 70% 30%, rgba(167,139,250,0.08) 0%, transparent 60%)',
+        tarot: 'radial-gradient(ellipse at 70% 30%, rgba(217,119,6,0.08) 0%, transparent 60%)',
       }
       const labels: Record<string, string> = {
         quote: 'Quote of the Day',
         affirmation: 'Daily Affirmation',
-        tarot: 'Tarot Card of the Day',
+        tarot: 'Tarot Reading',
       }
 
-      card.style.background = gradients[type]
+      // SVG spiral logo matching SpiralLogo.tsx
+      const spiralSvg = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="11.4" stroke="rgba(255,255,255,0.5)" stroke-width="0.8" stroke-dasharray="1.7 0.85"/>
+        <circle cx="16" cy="16" r="8.6" stroke="rgba(255,255,255,0.6)" stroke-width="0.8" stroke-dasharray="0.5 0.85"/>
+        <circle cx="16" cy="16" r="6" stroke="rgba(255,255,255,0.55)" stroke-width="0.8" stroke-dasharray="1.35 0.7"/>
+        <circle cx="16" cy="16" r="1.8" fill="white"/>
+      </svg>`
+
+      card.style.background = '#000000'
+
+      const isItalic = type === 'quote' || type === 'affirmation'
+      const contentSize = content.length > 120 ? '24px' : content.length > 70 ? '28px' : '32px'
 
       card.innerHTML = `
-        <div style="position:absolute;inset:16px;border:1px solid ${accents[type]}33;border-radius:16px;"></div>
-        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${accents[type]};margin-bottom:24px;">${labels[type]}</div>
-        <div style="font-size:20px;line-height:1.6;color:rgba(255,255,255,0.95);text-align:center;font-style:${type === 'quote' || type === 'affirmation' ? 'italic' : 'normal'};max-width:420px;">${type === 'quote' ? `&ldquo;${content}&rdquo;` : content}</div>
-        ${subtitle ? `<div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:16px;">&mdash; ${subtitle}</div>` : ''}
-        <div style="position:absolute;bottom:24px;font-size:12px;color:rgba(255,255,255,0.3);letter-spacing:1px;">VOXU</div>
+        <div style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:56px 48px 80px;">
+          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${accents[type]};margin-bottom:28px;font-weight:500;">${labels[type]}</div>
+          <div style="font-size:${contentSize};line-height:1.55;color:rgba(255,255,255,0.95);text-align:center;font-style:${isItalic ? 'italic' : 'normal'};max-width:440px;font-weight:300;">${type === 'quote' ? `\u201C${content}\u201D` : content}</div>
+          ${subtitle ? `<div style="font-size:14px;color:rgba(255,255,255,0.5);margin-top:20px;font-weight:400;">\u2014 ${subtitle}</div>` : ''}
+        </div>
+        <div style="position:absolute;bottom:28px;left:0;right:0;display:flex;justify-content:center;">
+          <span style="font-size:18px;letter-spacing:6px;color:rgba(255,255,255,0.4);font-weight:300;font-family:var(--font-cormorant),Georgia,serif;">VOXU</span>
+        </div>
       `
 
       document.body.appendChild(card)
