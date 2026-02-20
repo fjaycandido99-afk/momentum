@@ -473,6 +473,17 @@ model AudioCache {
   @@index([cache_key])
 }
 
+// Monthly ElevenLabs credit usage tracker
+// One row per month, tracks total characters sent to TTS API
+model TtsUsage {
+  id         String   @id @default(cuid())
+  month_key  String   @unique // "2026-02"
+  credits    Int      @default(0) // Characters used
+  updated_at DateTime @updatedAt
+
+  @@index([month_key])
+}
+
 // Cache for YouTube video search results (persists across Vercel cold starts)
 model VideoCache {
   id        String   @id @default(cuid())

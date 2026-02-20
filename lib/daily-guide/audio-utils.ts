@@ -35,11 +35,47 @@ export async function setSharedCache(cacheKey: string, audioBase64: string, dura
   }
 }
 
-// Generate audio with ElevenLabs (max 2 min)
+// Monthly credit limit (characters)
+const MONTHLY_CREDIT_LIMIT = 30_000
+
+function getMonthKey() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+async function getMonthlyUsage(): Promise<number> {
+  try {
+    const row = await prisma.ttsUsage.findUnique({ where: { month_key: getMonthKey() } })
+    return row?.credits ?? 0
+  } catch { return 0 }
+}
+
+async function trackUsage(characters: number) {
+  const key = getMonthKey()
+  try {
+    await prisma.ttsUsage.upsert({
+      where: { month_key: key },
+      update: { credits: { increment: characters } },
+      create: { month_key: key, credits: characters },
+    })
+  } catch (e) {
+    console.error('[TTS Usage] tracking error:', e)
+  }
+}
+
+// Generate audio with ElevenLabs (max 2 min, 30k credits/month)
 export async function generateAudio(script: string, tone: string = 'calm'): Promise<{ audioBase64: string | null; duration: number }> {
   const apiKey = process.env.ELEVENLABS_API_KEY
   if (!apiKey) {
     console.error('[ElevenLabs] No API key')
+    return { audioBase64: null, duration: 0 }
+  }
+
+  // Check monthly credit limit
+  const used = await getMonthlyUsage()
+  const charCount = script.length
+  if (used + charCount > MONTHLY_CREDIT_LIMIT) {
+    console.warn(`[ElevenLabs] Monthly limit reached (${used}/${MONTHLY_CREDIT_LIMIT}), falling back to browser TTS`)
     return { audioBase64: null, duration: 0 }
   }
 
@@ -72,6 +108,9 @@ export async function generateAudio(script: string, tone: string = 'calm'): Prom
       return { audioBase64: null, duration: 0 }
     }
 
+    // Track usage after successful generation
+    await trackUsage(charCount)
+
     const audioBuffer = await response.arrayBuffer()
     const audioBase64 = Buffer.from(audioBuffer).toString('base64')
 
@@ -84,3 +123,6 @@ export async function generateAudio(script: string, tone: string = 'calm'): Prom
     return { audioBase64: null, duration: 0 }
   }
 }
+
+// Export for admin/monitoring
+export { getMonthlyUsage, MONTHLY_CREDIT_LIMIT }
