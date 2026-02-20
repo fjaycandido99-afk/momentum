@@ -80,6 +80,7 @@ export const SOUNDSCAPE_BACKGROUNDS: Record<string, string[]> = {
   relax: _scBg('relax', 'relax', 4),
   sleep: _scBg('sleep', 'sleep-soundscape', 4),
   focus: _scBg('focus', 'focus-soundscape', 5),
+  energy: _scBg('energy', 'energy-soundscape', 5),
 }
 
 /** Get a daily-rotated soundscape background image */
