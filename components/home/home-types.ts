@@ -63,8 +63,8 @@ const _bg = (genre: string, n: number) =>
   Array.from({ length: n }, (_, i) => `${_SB}/storage/v1/object/public/backgrounds/${genre}/${genre}-${String(i + 1).padStart(2, '0')}.jpg`)
 
 // Static soundscape background URLs — one image per soundscape for the home cards
-const _scBg = (id: string, folder: string, n: number) =>
-  Array.from({ length: n }, (_, i) => `${_SB}/storage/v1/object/public/backgrounds/${folder}/${folder}-${String(i + 1).padStart(2, '0')}.jpg`)
+const _scBg = (id: string, folder: string, n: number, filePrefix?: string) =>
+  Array.from({ length: n }, (_, i) => `${_SB}/storage/v1/object/public/backgrounds/${folder}/${filePrefix || folder}-${String(i + 1).padStart(2, '0')}.jpg`)
 
 export const SOUNDSCAPE_BACKGROUNDS: Record<string, string[]> = {
   rain: _scBg('rain', 'rain', 4),
@@ -76,11 +76,11 @@ export const SOUNDSCAPE_BACKGROUNDS: Record<string, string[]> = {
   wind: _scBg('wind', 'wind', 2),
   stream: _scBg('stream', 'stream', 3),
   cafe: _scBg('cafe', 'cafe', 3),
-  piano: _scBg('piano', 'piano-soundscape', 5),
+  piano: _scBg('piano', 'piano-soundscape', 5, 'piano'),
   relax: _scBg('relax', 'relax', 4),
   sleep: _scBg('sleep', 'sleep-soundscape', 4),
-  focus: _scBg('focus', 'focus-soundscape', 5),
-  energy: _scBg('energy', 'energy-soundscape', 5),
+  focus: _scBg('focus', 'focus-soundscape', 5, 'focus'),
+  energy: _scBg('energy', 'energy-soundscape', 5, 'energy'),
   astral: _scBg('astral', 'astral', 4),
   cosmic: _scBg('cosmic', 'cosmic', 4),
   starlight: _scBg('starlight', 'starlight', 4),
