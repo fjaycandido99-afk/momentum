@@ -64,9 +64,16 @@ export async function POST(request: NextRequest) {
     // Permanent cache key — same theme+duration+tone reuses audio forever
     const cacheKey = `meditation-${validTheme}-${duration}-${tone}`
 
-    const cached = await prisma.audioCache.findUnique({
+    let cached = await prisma.audioCache.findUnique({
       where: { cache_key: cacheKey },
     })
+
+    // If exact match not found, try any cached version of this theme (any duration/tone/old date key)
+    if (!cached) {
+      cached = await prisma.audioCache.findFirst({
+        where: { cache_key: { startsWith: `meditation-${validTheme}-` } },
+      })
+    }
 
     if (cached) {
       return NextResponse.json({

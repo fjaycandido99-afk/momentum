@@ -44,6 +44,17 @@ export async function GET() {
       })
     }
 
+    // Reuse most recent past briefing audio if available (saves credits)
+    const recentBriefing = await prisma.dailyGuide.findFirst({
+      where: {
+        user_id: user.id,
+        ai_morning_briefing_audio: { not: null },
+      },
+      orderBy: { date: 'desc' },
+      select: { ai_morning_briefing_script: true, ai_morning_briefing_audio: true },
+    })
+    const fallbackAudio = recentBriefing?.ai_morning_briefing_audio || null
+
     // Gather context
     const [prefs, yesterday, goals] = await Promise.all([
       prisma.userPreferences.findUnique({
@@ -120,6 +131,8 @@ Style: Conversational, warm, like a trusted friend. Write for spoken delivery â€
     // Generate TTS via centralized function (tracks credits + enforces limit)
     const tone = prefs?.guide_tone || 'calm'
     const { audioBase64 } = await generateAudio(script, tone)
+    // If credits exhausted, reuse most recent past audio
+    const finalAudio = audioBase64 || fallbackAudio
 
     // Cache
     try {
@@ -127,14 +140,14 @@ Style: Conversational, warm, like a trusted friend. Write for spoken delivery â€
         where: { user_id_date: { user_id: user.id, date: today } },
         update: {
           ai_morning_briefing_script: script,
-          ...(audioBase64 ? { ai_morning_briefing_audio: audioBase64 } : {}),
+          ...(finalAudio ? { ai_morning_briefing_audio: finalAudio } : {}),
         },
         create: {
           user_id: user.id,
           date: today,
           day_type: 'work',
           ai_morning_briefing_script: script,
-          ai_morning_briefing_audio: audioBase64,
+          ai_morning_briefing_audio: finalAudio,
         },
       })
     } catch {
@@ -143,7 +156,7 @@ Style: Conversational, warm, like a trusted friend. Write for spoken delivery â€
 
     return NextResponse.json({
       script,
-      audio: audioBase64,
+      audio: finalAudio,
       cached: false,
     })
   } catch (error) {

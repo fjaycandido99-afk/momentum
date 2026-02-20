@@ -113,13 +113,27 @@ export async function POST(request: NextRequest) {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000)
     const POOL_SIZE = 3
     const variant = dayOfYear % POOL_SIZE
-    // Permanent cache key — no date, reused forever once generated
     const cacheKey = `calm-${type}-${tone}-v${variant}`
 
-    // Check permanent cache first
-    const cached = await getCachedAudio(cacheKey)
+    // Check today's variant first, then try ANY cached variant before spending credits
+    let cached = await getCachedAudio(cacheKey)
+    if (!cached) {
+      for (let i = 0; i < POOL_SIZE; i++) {
+        if (i === variant) continue
+        const alt = await getCachedAudio(`calm-${type}-${tone}-v${i}`)
+        if (alt) { cached = alt; break }
+      }
+      // Also check old date-based cache keys that may still exist
+      if (!cached) {
+        const oldKeys = await prisma.audioCache.findFirst({
+          where: { cache_key: { startsWith: `calm-${type}-` } },
+          select: { audio: true },
+        })
+        if (oldKeys) cached = { script: '', audioBase64: oldKeys.audio }
+      }
+    }
     if (cached) {
-      console.log(`[DB Cache HIT] Serving cached audio for ${cacheKey}`)
+      console.log(`[DB Cache HIT] Reusing cached audio for ${type}-${tone}`)
       const fallbackIndex = getFallbackScriptIndex(type)
       return NextResponse.json({
         script: preWritten?.[fallbackIndex] || '',
