@@ -44,8 +44,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
             <button
               key={item.id}
               aria-label={`${item.label} soundscape${isActive ? ' (playing)' : ''}${isLocked ? ' (premium)' : ''}`}
-              onPointerUp={(e) => {
-                if (e.pointerType !== 'touch') return
+              onClick={() => {
                 if (activeSoundscape?.soundId === item.id) {
                   onReopen(item.id)
                   return
