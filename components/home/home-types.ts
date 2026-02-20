@@ -82,6 +82,7 @@ export const SOUNDSCAPE_BACKGROUNDS: Record<string, string[]> = {
   focus: _scBg('focus', 'focus-soundscape', 5),
   energy: _scBg('energy', 'energy-soundscape', 5),
   astral: _scBg('astral', 'astral', 4),
+  cosmic: _scBg('cosmic', 'cosmic', 4),
 }
 
 /** Get a daily-rotated soundscape background image */
