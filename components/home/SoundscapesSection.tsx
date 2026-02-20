@@ -3,6 +3,7 @@
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
+import { getSoundscapeBackground } from './home-types'
 import { Layers } from 'lucide-react'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
 
@@ -51,20 +52,29 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
                 }
                 onPlay(item, isLocked)
               }}
-              className="flex flex-col items-center gap-2 shrink-0 press-scale snap-card card-stagger"
+              className="flex flex-col items-center gap-1.5 shrink-0 press-scale snap-card card-stagger"
               style={{ animationDelay: `${index * 80}ms` }}
             >
-              <div className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 bg-black border border-white/[0.12] ${isActive ? 'card-now-playing breathing-glow' : ''}`}>
-                {isActive ? (
-                  <div className="eq-bars"><span /><span /><span /></div>
-                ) : (
-                  <Icon className="w-6 h-6 text-white" strokeWidth={1.5} />
-                )}
+              <div className={`relative w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center transition-all duration-200 bg-black border border-white/[0.12] ${isActive ? 'card-now-playing breathing-glow' : ''}`}>
+                {(() => {
+                  const bg = getSoundscapeBackground(item.id)
+                  return bg ? (
+                    <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                  ) : null
+                })()}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20" />
+                <div className="relative z-10">
+                  {isActive ? (
+                    <div className="eq-bars"><span /><span /><span /></div>
+                  ) : (
+                    <Icon className="w-6 h-6 text-white drop-shadow-md" strokeWidth={1.5} />
+                  )}
+                </div>
                 {isLocked && !isActive && (
                   <SoftLockBadge isLocked={true} size="sm" className="top-0 right-0" />
                 )}
               </div>
-              <span className={`text-[11px] ${isActive ? 'text-white' : 'text-white'}`}>{item.label}</span>
+              <span className={`text-[11px] ${isActive ? 'text-white' : 'text-white/80'}`}>{item.label}</span>
             </button>
           )
         })}

@@ -62,6 +62,35 @@ const _SB = 'https://jkrpreixylczfdfdyxrm.supabase.co'
 const _bg = (genre: string, n: number) =>
   Array.from({ length: n }, (_, i) => `${_SB}/storage/v1/object/public/backgrounds/${genre}/${genre}-${String(i + 1).padStart(2, '0')}.jpg`)
 
+// Static soundscape background URLs — one image per soundscape for the home cards
+const _scBg = (id: string, folder: string, n: number) =>
+  Array.from({ length: n }, (_, i) => `${_SB}/storage/v1/object/public/backgrounds/${folder}/${folder}-${String(i + 1).padStart(2, '0')}.jpg`)
+
+export const SOUNDSCAPE_BACKGROUNDS: Record<string, string[]> = {
+  rain: _scBg('rain', 'rain', 4),
+  ocean: _scBg('ocean', 'ocean', 4),
+  forest: _scBg('forest', 'forest', 4),
+  fire: _scBg('fire', 'fire', 3),
+  thunder: _scBg('thunder', 'thunder', 2),
+  night: _scBg('night', 'night', 4),
+  wind: _scBg('wind', 'wind', 2),
+  stream: _scBg('stream', 'stream', 3),
+  cafe: _scBg('cafe', 'cafe', 3),
+  piano: _scBg('piano', 'piano-soundscape', 5),
+  relax: _scBg('relax', 'relax', 4),
+  sleep: _scBg('sleep', 'sleep-soundscape', 4),
+}
+
+/** Get a daily-rotated soundscape background image */
+export function getSoundscapeBackground(soundId: string): string | null {
+  const bgs = SOUNDSCAPE_BACKGROUNDS[soundId]
+  if (!bgs || bgs.length === 0) return null
+  const now = new Date()
+  const dateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
+  const idSeed = soundId.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+  return bgs[(dateSeed + idSeed) % bgs.length]
+}
+
 export const MUSIC_GENRE_BACKGROUNDS: Record<string, string[]> = {
   lofi: _bg('lofi', 17),
   piano: _bg('piano', 42),
