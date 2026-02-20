@@ -3,6 +3,7 @@
 import { useRef, useEffect } from 'react'
 import { VolumeX } from 'lucide-react'
 import { SOUNDSCAPE_ITEMS, type SoundscapeItem } from '@/components/player/SoundscapePlayer'
+import { getSoundscapeBackground } from '@/components/home/home-types'
 
 // All soundscapes available for focus
 const FOCUS_SOUNDS = SOUNDSCAPE_ITEMS
@@ -31,19 +32,20 @@ export function FocusSoundPicker({ selectedId, onSelect }: FocusSoundPickerProps
           onClick={() => onSelect(null)}
           className="flex flex-col items-center gap-1.5 shrink-0"
         >
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
+          <div className={`relative w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center transition-all duration-200 ${
             selectedId === null
               ? 'bg-white text-black'
               : 'bg-black border border-white/[0.12] text-white'
           }`}>
-            <VolumeX className="w-5 h-5" strokeWidth={1.5} />
+            <VolumeX className="w-6 h-6 relative z-10" strokeWidth={1.5} />
           </div>
-          <span className={`text-[10px] transition-colors ${selectedId === null ? 'text-white' : 'text-white/50'}`}>Silent</span>
+          <span className={`text-[11px] transition-colors ${selectedId === null ? 'text-white' : 'text-white/80'}`}>Silent</span>
         </button>
 
         {FOCUS_SOUNDS.map((item) => {
           const Icon = item.icon
           const isActive = item.id === selectedId
+          const bg = getSoundscapeBackground(item.id)
           return (
             <button
               key={item.id}
@@ -51,14 +53,22 @@ export function FocusSoundPicker({ selectedId, onSelect }: FocusSoundPickerProps
               onClick={() => onSelect(item)}
               className="flex flex-col items-center gap-1.5 shrink-0"
             >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
-                isActive
-                  ? 'bg-white text-black'
-                  : 'bg-black border border-white/[0.12] text-white'
+              <div className={`relative w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center transition-all duration-200 bg-black border border-white/[0.12] ${
+                isActive ? 'ring-2 ring-white' : ''
               }`}>
-                <Icon className="w-5 h-5" strokeWidth={1.5} />
+                {bg && (
+                  <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20" />
+                <div className="relative z-10">
+                  {isActive ? (
+                    <div className="eq-bars"><span /><span /><span /></div>
+                  ) : (
+                    <Icon className="w-6 h-6 text-white drop-shadow-md" strokeWidth={1.5} />
+                  )}
+                </div>
               </div>
-              <span className={`text-[10px] transition-colors ${isActive ? 'text-white' : 'text-white/50'}`}>{item.label}</span>
+              <span className={`text-[11px] transition-colors ${isActive ? 'text-white' : 'text-white/80'}`}>{item.label}</span>
             </button>
           )
         })}

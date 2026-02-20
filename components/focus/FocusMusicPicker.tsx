@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Music, Play, Check } from 'lucide-react'
-import { MUSIC_GENRES } from '@/components/home/home-types'
+import { MUSIC_GENRES, getGenreBackgrounds } from '@/components/home/home-types'
 import { haptic } from '@/lib/haptics'
 
 const FOCUS_GENRE_IDS = ['lofi', 'classical', 'piano', 'jazz', 'study', 'ambient']
@@ -132,9 +132,12 @@ export function FocusMusicPicker({ selected, onSelect }: FocusMusicPickerProps) 
         {FOCUS_GENRES.map((genre, gi) => {
           const data = cache[genre.id]
           const isActive = selected?.genreId === genre.id
+          const staticBgs = getGenreBackgrounds(genre.id)
           const bgUrl = isActive && selected?.thumbnail
             ? selected.thumbnail
-            : data?.backgrounds[gi % (data?.backgrounds.length || 1)]
+            : staticBgs.length > 0
+              ? staticBgs[gi % staticBgs.length]
+              : data?.backgrounds[gi % (data?.backgrounds.length || 1)]
           const video = data?.videos[0]
 
           return (
