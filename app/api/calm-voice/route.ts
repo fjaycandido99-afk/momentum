@@ -3,13 +3,7 @@ import Groq from 'groq-sdk'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 import { CALM_VOICE_SCRIPTS } from '@/lib/calm-voice-scripts'
-
-// Voice ID mapping by guide tone
-const TONE_VOICES: Record<string, string> = {
-  calm: 'XB0fDUnXU5powFXDhCwa',     // Charlotte - calm and soothing
-  neutral: 'uju3wxzG5OhpWcoi3SMy',   // Neutral voice
-  direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
-}
+import { generateAudio } from '@/lib/daily-guide/audio-utils'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -115,15 +109,17 @@ export async function POST(request: NextRequest) {
       // Fall back to calm tone
     }
 
-    const dateString = getTodayDateString()
-    // Date-based cache key: fresh content daily
-    const cacheKey = `calm-${type}-${dateString}-${tone}`
+    // Variant pool: 3 cached audio files per type+tone, cycled by day-of-year
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000)
+    const POOL_SIZE = 3
+    const variant = dayOfYear % POOL_SIZE
+    // Permanent cache key — no date, reused forever once generated
+    const cacheKey = `calm-${type}-${tone}-v${variant}`
 
-    // Check date-based cache first
+    // Check permanent cache first
     const cached = await getCachedAudio(cacheKey)
     if (cached) {
       console.log(`[DB Cache HIT] Serving cached audio for ${cacheKey}`)
-      // Try to get the script from AI generation cache, fall back to pre-written
       const fallbackIndex = getFallbackScriptIndex(type)
       return NextResponse.json({
         script: preWritten?.[fallbackIndex] || '',
@@ -134,14 +130,15 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Try Groq AI generation first for fresh daily content
+    // Generate script — try AI first, then pre-written fallback
+    const dateString = getTodayDateString()
     let script = ''
     try {
       const completion = await getGroq().chat.completions.create({
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: 'You are a calm, soothing meditation guide. Write scripts that are peaceful and reassuring. Use ellipses (...) for pauses. No markdown formatting.' },
-          { role: 'user', content: `${contentType.prompt} Today is ${dateString}. Make this unique and different from previous days.` },
+          { role: 'user', content: `${contentType.prompt} Today is ${dateString}. Variant ${variant + 1} of ${POOL_SIZE}. Make this unique.` },
         ],
         max_tokens: 500,
         temperature: 0.8,
@@ -151,13 +148,11 @@ export async function POST(request: NextRequest) {
       console.error('[Groq] AI generation failed, falling back to pre-written:', e)
     }
 
-    // Fall back to pre-written script if AI generation failed
     if (!script) {
       const fallbackIndex = getFallbackScriptIndex(type)
       script = preWritten?.[fallbackIndex] || ''
     }
 
-    // If textOnly, return script without generating audio
     if (textOnly) {
       return NextResponse.json({
         script,
@@ -169,47 +164,13 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Generate audio with ElevenLabs
-    const apiKey = process.env.ELEVENLABS_API_KEY
-    let audioBase64 = null
+    // Generate audio via centralized function (tracks credits + enforces limit)
+    const { audioBase64 } = await generateAudio(script, tone)
 
-    if (apiKey) {
-      // Select voice based on user's tone preference
-      const voiceId = TONE_VOICES[tone] || TONE_VOICES.calm
-
-      const ttsResponse = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-        {
-          method: 'POST',
-          headers: {
-            'Accept': 'audio/mpeg',
-            'Content-Type': 'application/json',
-            'xi-api-key': apiKey,
-          },
-          body: JSON.stringify({
-            text: script,
-            model_id: 'eleven_turbo_v2_5',
-            voice_settings: {
-              stability: 0.6,
-              similarity_boost: 0.75,
-            },
-          }),
-        }
-      )
-
-      if (ttsResponse.ok) {
-        const audioBuffer = await ttsResponse.arrayBuffer()
-        audioBase64 = Buffer.from(audioBuffer).toString('base64')
-
-        // Save to DB cache with date-based key
-        await setCachedAudio(cacheKey, script, audioBase64)
-        console.log(`[DB Cache SET] Saved audio for ${cacheKey}`)
-      } else {
-        const errorText = await ttsResponse.text()
-        console.error(`[ElevenLabs Error] Status: ${ttsResponse.status}, Response: ${errorText}`)
-      }
-    } else {
-      console.error('[ElevenLabs Error] No API key found')
+    // Cache permanently so this variant never costs credits again
+    if (audioBase64) {
+      await setCachedAudio(cacheKey, script, audioBase64)
+      console.log(`[DB Cache SET] Permanently cached ${cacheKey}`)
     }
 
     return NextResponse.json({

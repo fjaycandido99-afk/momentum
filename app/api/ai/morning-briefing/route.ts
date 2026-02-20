@@ -5,7 +5,7 @@ import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
-import { TONE_VOICES } from '@/lib/daily-guide/audio-utils'
+import { generateAudio } from '@/lib/daily-guide/audio-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -117,35 +117,9 @@ Style: Conversational, warm, like a trusted friend. Write for spoken delivery â€
       })
     }
 
-    // Generate TTS audio
-    let audioBase64: string | null = null
-    const apiKey = process.env.ELEVENLABS_API_KEY
+    // Generate TTS via centralized function (tracks credits + enforces limit)
     const tone = prefs?.guide_tone || 'calm'
-    const voiceId = TONE_VOICES[tone] || TONE_VOICES.calm
-
-    if (apiKey) {
-      try {
-        const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'xi-api-key': apiKey,
-          },
-          body: JSON.stringify({
-            text: script,
-            model_id: 'eleven_turbo_v2_5',
-            voice_settings: { stability: 0.6, similarity_boost: 0.75 },
-          }),
-        })
-
-        if (ttsResponse.ok) {
-          const buffer = await ttsResponse.arrayBuffer()
-          audioBase64 = Buffer.from(buffer).toString('base64')
-        }
-      } catch (ttsError) {
-        console.error('TTS error (non-fatal):', ttsError)
-      }
-    }
+    const { audioBase64 } = await generateAudio(script, tone)
 
     // Cache
     try {
