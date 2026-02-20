@@ -66,7 +66,10 @@ export default function FocusPage() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
       releaseWakeLock()
+      // Hide soundscape player overlay so home page shows feed, not the player
+      if (homeAudio) homeAudio.dispatch({ type: 'HIDE_SOUNDSCAPE_PLAYER' })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [releaseWakeLock])
 
   useEffect(() => {
@@ -139,7 +142,7 @@ export default function FocusPage() {
     setHasStarted(false)
     releaseWakeLock()
 
-    // Stop all audio
+    // Stop all audio and hide player overlays
     if (homeAudio) {
       if (homeAudio.audioState.soundscapeIsPlaying) homeAudio.dispatch({ type: 'PAUSE_SOUNDSCAPE' })
       if (homeAudio.audioState.musicPlaying) homeAudio.dispatch({ type: 'PAUSE_MUSIC' })
@@ -147,6 +150,7 @@ export default function FocusPage() {
         homeAudio.refs.guideAudioRef.current.pause()
         homeAudio.dispatch({ type: 'PAUSE_GUIDE' })
       }
+      homeAudio.dispatch({ type: 'HIDE_SOUNDSCAPE_PLAYER' })
     }
 
     const result = await logXPEventServer('focusSession', `focus-${totalMinutes}min`)
