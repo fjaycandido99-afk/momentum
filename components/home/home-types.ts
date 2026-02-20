@@ -76,7 +76,7 @@ export const SOUNDSCAPE_BACKGROUNDS: Record<string, string[]> = {
   wind: _scBg('wind', 'wind', 2),
   stream: _scBg('stream', 'stream', 3),
   cafe: _scBg('cafe', 'cafe', 3),
-  piano: _scBg('piano', 'piano-soundscape', 5, 'piano'),
+  piano: _scBg('piano', 'piano-soundscape', 5, 'piano').map(u => `${u}?v=2`),
   relax: _scBg('relax', 'relax', 4),
   sleep: _scBg('sleep', 'sleep-soundscape', 4),
   focus: _scBg('focus', 'focus-soundscape', 5, 'focus'),
