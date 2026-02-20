@@ -68,6 +68,7 @@ export const MUSIC_GENRE_BACKGROUNDS: Record<string, string[]> = {
   classical: _bg('classical', 42),
   jazz: _bg('jazz', 10),
   study: _bg('study', 15),
+  ambient: _bg('ambient', 17),
 }
 
 // --- Helpers ---
