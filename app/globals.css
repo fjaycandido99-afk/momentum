@@ -96,8 +96,10 @@ input[type="range"] {
 }
 .eq-bars span {
   width: 3px;
+  height: 18px;
   border-radius: 2px;
   background: white;
+  transform-origin: bottom;
   will-change: transform;
 }
 .eq-bars span:nth-child(1) { animation: eq-bounce 0.8s ease-in-out infinite alternate; }
@@ -106,8 +108,8 @@ input[type="range"] {
 .eq-bars.paused span { animation-play-state: paused; }
 
 @keyframes eq-bounce {
-  0%   { height: 4px; }
-  100% { height: 18px; }
+  0%   { transform: scaleY(0.22); }
+  100% { transform: scaleY(1); }
 }
 
 /* Section background with soft blurred edges over constellation */
@@ -1829,15 +1831,17 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 
 /* Soundscape mini EQ bars */
 @keyframes soundscape-eq {
-  0%, 100% { height: 3px; }
-  50% { height: 10px; }
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
 }
 
 .soundscape-eq-bar {
   display: inline-block;
   width: 2px;
+  height: 10px;
   border-radius: 1px;
   background: currentColor;
+  transform-origin: bottom;
   animation: soundscape-eq 0.8s ease-in-out infinite;
 }
 
