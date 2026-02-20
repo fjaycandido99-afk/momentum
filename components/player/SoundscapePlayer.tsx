@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Play, Pause, ChevronDown, Focus, Sparkles, Moon, Zap, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Wind, Droplets, Coffee, Music, Lock } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { getSoundscapeBackground } from '@/components/home/home-types'
 
 interface SoundscapePlayerProps {
   soundId: string
@@ -44,80 +45,14 @@ export const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
   { id: 'starlight', label: 'Starlight', subtitle: 'Night sky', icon: Moon, youtubeId: 'zcm6nV7Bod8' },
 ]
 
-const SB = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SOUNDSCAPE_BACKGROUNDS: Record<string, string[]> = {
-  rain: [
-    `${SB}/storage/v1/object/public/backgrounds/rain/rain-01.jpg?v=4`,
-    `${SB}/storage/v1/object/public/backgrounds/rain/rain-02.jpg?v=4`,
-    `${SB}/storage/v1/object/public/backgrounds/rain/rain-03.jpg?v=4`,
-  ],
-  sleep: [
-    `${SB}/storage/v1/object/public/backgrounds/sleep/sleep-bg-01.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/sleep/sleep-bg-02.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/sleep/sleep-bg-03.jpg?v=1`,
-  ],
-  relax: [
-    `${SB}/storage/v1/object/public/backgrounds/relax/relax-01.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/relax/relax-02.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/relax/relax-03.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/relax/relax-04.jpg?v=1`,
-  ],
-  ocean: [
-    `${SB}/storage/v1/object/public/backgrounds/ocean/ocean-01.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/ocean/ocean-02.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/ocean/ocean-03.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/ocean/ocean-04.jpg?v=1`,
-  ],
-  forest: [
-    `${SB}/storage/v1/object/public/backgrounds/forest/forest-01.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/forest/forest-02.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/forest/forest-03.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/forest/forest-04.jpg?v=1`,
-  ],
-  thunder: [
-    `${SB}/storage/v1/object/public/backgrounds/thunder/thunder-01.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/thunder/thunder-02.jpg?v=1`,
-  ],
-  fire: [
-    `${SB}/storage/v1/object/public/backgrounds/fire/fire-01.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/fire/fire-02.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/fire/fire-03.jpg?v=1`,
-  ],
-  night: [
-    `${SB}/storage/v1/object/public/backgrounds/night/night-01.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/night/night-02.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/night/night-03.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/night/night-04.jpg?v=1`,
-  ],
-  wind: [
-    `${SB}/storage/v1/object/public/backgrounds/wind/wind-01.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/wind/wind-02.jpg?v=1`,
-  ],
-  stream: [
-    `${SB}/storage/v1/object/public/backgrounds/stream/stream-01.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/stream/stream-02.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/stream/stream-03.jpg?v=1`,
-  ],
-  cafe: [
-    `${SB}/storage/v1/object/public/backgrounds/cafe/cafe-01.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/cafe/cafe-02.jpg?v=1`,
-    `${SB}/storage/v1/object/public/backgrounds/cafe/cafe-03.jpg?v=1`,
-  ],
-}
 
 export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlaying, onTogglePlay, onClose, onSwitchSound }: SoundscapePlayerProps) {
   const selectorRef = useRef<HTMLDivElement>(null)
   const { isContentFree } = useSubscription()
-  const [bgIndex, setBgIndex] = useState(0)
 
-  // Pick a random background image when switching to a soundscape that has images
-  useEffect(() => {
-    const images = SOUNDSCAPE_BACKGROUNDS[soundId]
-    if (images) setBgIndex(Math.floor(Math.random() * images.length))
-  }, [soundId])
-
-  const bgImages = SOUNDSCAPE_BACKGROUNDS[soundId]
-  const hasBg = bgImages && bgImages.length > 0
+  // Deterministic daily background — same image all day, rotates next day
+  const bgUrl = getSoundscapeBackground(soundId)
+  const hasBg = !!bgUrl
 
   // Scroll active item into view when sound changes
   useEffect(() => {
@@ -135,7 +70,7 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
       {hasBg && (
         <>
           <img
-            src={bgImages[bgIndex]}
+            src={bgUrl!}
             alt={label}
             className="absolute inset-0 w-full h-full object-cover z-0"
           />
