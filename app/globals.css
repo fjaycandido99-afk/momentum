@@ -689,9 +689,21 @@ input:focus:not(:focus-visible), select:focus:not(:focus-visible), textarea:focu
 
 .press-scale {
   transition: transform 100ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.press-scale:active {
-  transform: scale(0.97);
+/* Only apply scale on devices with pointer hover (mouse/trackpad) to avoid
+   fighting with scroll on touch devices */
+@media (hover: hover) {
+  .press-scale:active {
+    transform: scale(0.97);
+  }
+}
+/* On touch, use a brief delay so scroll isn't blocked */
+@media (hover: none) {
+  .press-scale:active {
+    transform: scale(0.98);
+    transition-delay: 80ms;
+  }
 }
 
 .text-label {
@@ -1264,15 +1276,13 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   animation: word-drop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Magnetic Tilt - subtle perspective shift */
+/* Magnetic Tilt - subtle perspective shift (mouse only, see useHomeAnimations) */
 .magnetic-tilt {
   transition: transform 0.2s ease-out;
-  will-change: transform;
 }
 
 /* Parallax section header */
 .parallax-header {
-  will-change: transform;
   transition: transform 0.1s linear;
 }
 
@@ -1470,7 +1480,7 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
 }
 .snap-card {
   scroll-snap-align: start;

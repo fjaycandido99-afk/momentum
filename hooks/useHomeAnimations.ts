@@ -67,6 +67,8 @@ export function useParallax(scrollRef: RefObject<HTMLElement | null>) {
  */
 export function useMagneticHover() {
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLElement>) => {
+    // Skip on touch — tilt is a hover effect, on touch it fires during scroll and feels janky
+    if (e.pointerType !== 'mouse') return
     const el = e.currentTarget
     const rect = el.getBoundingClientRect()
     const x = e.clientX - rect.left
