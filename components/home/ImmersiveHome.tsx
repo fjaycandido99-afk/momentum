@@ -21,7 +21,7 @@ import { WisdomSection } from './WisdomSection'
 import { HeroCarousel } from './HeroCarousel'
 import { SavedMotivationSection } from './SavedMotivationSection'
 import {
-  Mode, VideoItem, MUSIC_GENRES, MUSIC_GENRE_BACKGROUNDS,
+  Mode, VideoItem, MUSIC_GENRES, getGenreBackgrounds,
   getTimeContext, getSuggestedMode, getTodaysTopicName, getTodaysBackgrounds,
   getMoodTopicName,
 } from './home-types'
@@ -553,7 +553,7 @@ export function ImmersiveHome() {
     currentScVideoIdRef.current = null
 
     const genreVids = (genreVideos[genreId] || []).slice(0, 8)
-    const gBgs = genreBackgrounds[genreId]?.length > 0 ? genreBackgrounds[genreId] : (MUSIC_GENRE_BACKGROUNDS[genreId] || [])
+    const gBgs = genreBackgrounds[genreId]?.length > 0 ? genreBackgrounds[genreId] : getGenreBackgrounds(genreId)
     const bg = gBgs.length > 0 ? gBgs[index % gBgs.length] : backgrounds[(index + 15) % backgrounds.length]
 
     dispatch({
@@ -682,7 +682,7 @@ export function ImmersiveHome() {
       bg = bgs[nextIndex % bgs.length]
     } else {
       const gid = pl.genreId || ''
-      const gBgs = genreBackgrounds[gid]?.length > 0 ? genreBackgrounds[gid] : (MUSIC_GENRE_BACKGROUNDS[gid] || [])
+      const gBgs = genreBackgrounds[gid]?.length > 0 ? genreBackgrounds[gid] : getGenreBackgrounds(gid)
       bg = gBgs.length > 0 ? gBgs[nextIndex % gBgs.length] : backgrounds[(nextIndex + 15) % backgrounds.length]
     }
 
@@ -712,7 +712,7 @@ export function ImmersiveHome() {
       bg = bgs[prevIndex % bgs.length]
     } else {
       const gid = pl.genreId || ''
-      const gBgs = genreBackgrounds[gid]?.length > 0 ? genreBackgrounds[gid] : (MUSIC_GENRE_BACKGROUNDS[gid] || [])
+      const gBgs = genreBackgrounds[gid]?.length > 0 ? genreBackgrounds[gid] : getGenreBackgrounds(gid)
       bg = gBgs.length > 0 ? gBgs[prevIndex % gBgs.length] : backgrounds[(prevIndex + 15) % backgrounds.length]
     }
 
@@ -1266,7 +1266,7 @@ export function ImmersiveHome() {
                 bg = bgs[pl.index % bgs.length]
               } else {
                 const gid = pl.genreId || ''
-                const gBgs = genreBackgrounds[gid]?.length > 0 ? genreBackgrounds[gid] : (MUSIC_GENRE_BACKGROUNDS[gid] || [])
+                const gBgs = genreBackgrounds[gid]?.length > 0 ? genreBackgrounds[gid] : getGenreBackgrounds(gid)
                 bg = gBgs.length > 0 ? gBgs[pl.index % gBgs.length] : backgrounds[(pl.index + 15) % backgrounds.length]
               }
               dispatch({

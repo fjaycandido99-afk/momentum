@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Play, Pause, Music, RefreshCw, Heart } from 'lucide-react'
-import { VideoItem, formatDuration, MUSIC_GENRE_BACKGROUNDS } from './home-types'
+import { VideoItem, formatDuration, getGenreBackgrounds } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
 import { SkeletonCardRow } from '@/components/ui/Skeleton'
@@ -104,7 +104,7 @@ export function MusicGenreSection({
                   onPointerLeave={onMagneticLeave}
                 >
                   {(() => {
-                    const bgs = genreBackgrounds.length > 0 ? genreBackgrounds : (MUSIC_GENRE_BACKGROUNDS[genre.id] || [])
+                    const bgs = genreBackgrounds.length > 0 ? genreBackgrounds : (getGenreBackgrounds(genre.id) || [])
                     const src = bgs.length > 0 ? bgs[index % bgs.length] : (fallbackBackgrounds.length > 0 ? fallbackBackgrounds[(index + 15 + genreIndex * 5) % fallbackBackgrounds.length] : null)
                     return src ? (
                       <img

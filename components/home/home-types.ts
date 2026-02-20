@@ -122,6 +122,16 @@ export function getTodaysBackgrounds() {
   return shuffleWithSeed(BACKGROUND_IMAGES, dateSeed + 777)
 }
 
+/** Daily-shuffled genre backgrounds — use this instead of raw MUSIC_GENRE_BACKGROUNDS */
+export function getGenreBackgrounds(genreId: string): string[] {
+  const source = MUSIC_GENRE_BACKGROUNDS[genreId]
+  if (!source || source.length === 0) return []
+  const now = new Date()
+  const dateSeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
+  const genreSeed = genreId.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+  return shuffleWithSeed(source, genreSeed + dateSeed)
+}
+
 export function formatDuration(seconds: number): string {
   if (!seconds || seconds <= 0) return ''
   const hours = Math.floor(seconds / 3600)
