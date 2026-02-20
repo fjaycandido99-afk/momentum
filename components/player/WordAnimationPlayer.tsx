@@ -55,10 +55,8 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
 
   // Video/Image view mode (defaults to image for all categories)
   const [viewMode, setViewMode] = useState<'image' | 'video'>('image')
-  const visiblePlayerRef = useRef<YTPlayer | null>(null)
-  const visibleContainerRef = useRef<HTMLDivElement>(null)
-  const syncIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const latestTimeRef = useRef(0)
+  // Track saved time when switching modes (single-player swap approach)
+  const savedTimeRef = useRef(0)
 
   // Journal FAB state (motivation-only)
   const [showJournalFAB, setShowJournalFAB] = useState(false)
@@ -91,7 +89,73 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
   // Calculate progress percentage
   const progressPercent = activeDuration > 0 ? (activeCurrentTime / activeDuration) * 100 : 0
 
-  // Load YouTube IFrame API (only when NOT in external audio mode)
+  // Helper to create a YT player in a container
+  const createPlayer = useCallback((container: HTMLDivElement, opts: {
+    videoMode: boolean
+    seekTo?: number
+  }) => {
+    if (!window.YT) return null
+
+    container.innerHTML = ''
+    const playerDiv = document.createElement('div')
+    playerDiv.id = 'yt-player-' + Date.now()
+    container.appendChild(playerDiv)
+
+    const player = new window.YT.Player(playerDiv.id, {
+      videoId: youtubeId,
+      ...(opts.videoMode ? { width: '100%', height: '100%' } : {}),
+      playerVars: {
+        autoplay: 1,
+        controls: 0,
+        disablekb: 1,
+        fs: 0,
+        iv_load_policy: 3,
+        modestbranding: 1,
+        rel: 0,
+        showinfo: 0,
+        loop: 1,
+        playlist: youtubeId,
+        playsinline: 1,
+      },
+      events: {
+        onReady: (event) => {
+          event.target.setVolume(isMuted ? 0 : 80)
+          if (opts.seekTo && opts.seekTo > 1) {
+            event.target.seekTo(opts.seekTo, true)
+          }
+          event.target.playVideo()
+          setPlayerReady(true)
+          const videoDuration = event.target.getDuration()
+          if (videoDuration > 0) setDuration(videoDuration)
+          if (progressIntervalRef.current) clearInterval(progressIntervalRef.current)
+          progressIntervalRef.current = setInterval(() => {
+            if (playerRef.current) {
+              const time = playerRef.current.getCurrentTime()
+              setCurrentTime(time)
+            }
+          }, 1000)
+        },
+        onStateChange: (event) => {
+          if (event.data === 1) {
+            setIsPlayingLocal(true)
+          } else if (event.data === 2 || event.data === 5 || event.data === 0) {
+            setIsPlayingLocal(false)
+          }
+        },
+        onError: (event) => {
+          console.error('YouTube player error:', event.data)
+          if (event.data === 150 || event.data === 101 || event.data === 2) {
+            setEmbedError(true)
+          }
+        },
+      },
+    })
+
+    return player
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [youtubeId])
+
+  // Load YouTube IFrame API and create initial player (only for local audio mode)
   useEffect(() => {
     if (externalAudio) return
 
@@ -111,55 +175,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
 
     const initPlayer = () => {
       if (!containerRef.current) return
-
-      const playerDiv = document.createElement('div')
-      playerDiv.id = 'yt-player-' + Date.now()
-      containerRef.current.appendChild(playerDiv)
-
-      playerRef.current = new window.YT.Player(playerDiv.id, {
-        videoId: youtubeId,
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          iv_load_policy: 3,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          loop: 1,
-          playlist: youtubeId,
-          playsinline: 1,
-        },
-        events: {
-          onReady: (event) => {
-            event.target.setVolume(80)
-            event.target.playVideo()
-            setPlayerReady(true)
-            const videoDuration = event.target.getDuration()
-            setDuration(videoDuration)
-            progressIntervalRef.current = setInterval(() => {
-              if (playerRef.current) {
-                const time = playerRef.current.getCurrentTime()
-                setCurrentTime(time)
-              }
-            }, 1000)
-          },
-          onStateChange: (event) => {
-            if (event.data === 1) {
-              setIsPlayingLocal(true)
-            } else if (event.data === 2 || event.data === 5 || event.data === 0) {
-              setIsPlayingLocal(false)
-            }
-          },
-          onError: (event) => {
-            console.error('YouTube player error:', event.data)
-            if (event.data === 150 || event.data === 101 || event.data === 2) {
-              setEmbedError(true)
-            }
-          },
-        },
-      })
+      playerRef.current = createPlayer(containerRef.current, { videoMode: false })
     }
 
     loadYouTubeAPI()
@@ -167,12 +183,43 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
     return () => {
       if (playerRef.current) {
         playerRef.current.destroy()
+        playerRef.current = null
       }
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current)
       }
     }
-  }, [youtubeId, externalAudio])
+  }, [youtubeId, externalAudio, createPlayer])
+
+  // Handle viewMode switch: destroy old player, create new one in the right container
+  useEffect(() => {
+    if (externalAudio || !window.YT) return
+    // Skip on initial mount (handled by the init effect above)
+    if (!playerRef.current) return
+
+    // Save current playback time before destroying
+    try {
+      savedTimeRef.current = playerRef.current.getCurrentTime() || 0
+    } catch { savedTimeRef.current = 0 }
+
+    // Destroy the current player
+    playerRef.current.destroy()
+    playerRef.current = null
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current)
+      progressIntervalRef.current = null
+    }
+
+    // Create new player in the correct container
+    const container = containerRef.current
+    if (!container) return
+
+    playerRef.current = createPlayer(container, {
+      videoMode: viewMode === 'video',
+      seekTo: savedTimeRef.current,
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode])
 
   // Show journal FAB after 30s of playback, nudge fades after 5s
   useEffect(() => {
@@ -185,114 +232,6 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
       if (journalTimerRef.current) clearTimeout(journalTimerRef.current)
     }
   }, [])
-
-  // Keep latestTimeRef in sync for the sync interval closure
-  latestTimeRef.current = activeCurrentTime
-
-  // Visible YouTube player for video mode (muted, synced to background audio)
-  useEffect(() => {
-    if (viewMode !== 'video' || !visibleContainerRef.current) {
-      // Cleanup when switching back to image mode
-      if (visiblePlayerRef.current) {
-        visiblePlayerRef.current.destroy()
-        visiblePlayerRef.current = null
-      }
-      if (syncIntervalRef.current) {
-        clearInterval(syncIntervalRef.current)
-        syncIntervalRef.current = null
-      }
-      return
-    }
-
-    const createVisiblePlayer = () => {
-      if (!visibleContainerRef.current || !window.YT) return
-
-      // Clear any existing content
-      visibleContainerRef.current.innerHTML = ''
-      const playerDiv = document.createElement('div')
-      playerDiv.id = 'yt-visible-' + Date.now()
-      visibleContainerRef.current.appendChild(playerDiv)
-
-      visiblePlayerRef.current = new window.YT.Player(playerDiv.id, {
-        videoId: youtubeId,
-        width: '100%',
-        height: '100%',
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          iv_load_policy: 3,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          playsinline: 1,
-          mute: 1,
-        },
-        events: {
-          onReady: (event) => {
-            event.target.mute()
-            // Seek to current position (use ref for latest value)
-            const seekPos = latestTimeRef.current
-            if (seekPos > 1) {
-              event.target.seekTo(seekPos, true)
-            }
-            // Match play/pause state
-            if (isPlaying) {
-              event.target.playVideo()
-            } else {
-              event.target.pauseVideo()
-            }
-          },
-          onStateChange: () => {
-            // Keep it muted always
-            if (visiblePlayerRef.current) {
-              visiblePlayerRef.current.mute()
-            }
-          },
-        },
-      })
-
-      // Periodic sync every 5s (uses ref so we always get latest time)
-      syncIntervalRef.current = setInterval(() => {
-        if (!visiblePlayerRef.current) return
-        const audioTime = latestTimeRef.current
-        const videoTime = visiblePlayerRef.current.getCurrentTime()
-        if (Math.abs(audioTime - videoTime) > 2) {
-          visiblePlayerRef.current.seekTo(audioTime, true)
-        }
-      }, 5000)
-    }
-
-    if (window.YT) {
-      createVisiblePlayer()
-    }
-    // YT API should already be loaded since the background player uses it
-
-    return () => {
-      if (visiblePlayerRef.current) {
-        visiblePlayerRef.current.destroy()
-        visiblePlayerRef.current = null
-      }
-      if (syncIntervalRef.current) {
-        clearInterval(syncIntervalRef.current)
-        syncIntervalRef.current = null
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, youtubeId])
-
-  // Sync visible player play/pause state with audio
-  useEffect(() => {
-    if (viewMode !== 'video' || !visiblePlayerRef.current) return
-    try {
-      if (isPlaying) {
-        visiblePlayerRef.current.playVideo()
-      } else {
-        visiblePlayerRef.current.pauseVideo()
-      }
-    } catch { /* player may not be ready */ }
-  }, [isPlaying, viewMode])
 
   // Toggle mute (only for local audio mode)
   const toggleMute = useCallback(() => {
@@ -332,18 +271,11 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
       if (activeDuration > 0 && onSeek) {
         const seekTime = percent * activeDuration
         onSeek(seekTime)
-        // Sync visible player too
-        if (visiblePlayerRef.current) {
-          visiblePlayerRef.current.seekTo(seekTime, true)
-        }
       }
     } else if (playerRef.current && duration > 0) {
       const seekTime = percent * duration
       playerRef.current.seekTo(seekTime, true)
       setCurrentTime(seekTime)
-      if (visiblePlayerRef.current) {
-        visiblePlayerRef.current.seekTo(seekTime, true)
-      }
     }
   }, [duration, externalAudio, activeDuration, onSeek])
 
@@ -352,11 +284,14 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
 
   return (
     <div className="fixed inset-0 z-[55] overflow-hidden" style={{ backgroundColor: '#000000' }}>
-      {/* Hidden YouTube player container (only for local audio mode) */}
+      {/* Single YouTube player container — toggles between hidden (audio) and visible (video) */}
       {!externalAudio && (
         <div
           ref={containerRef}
-          className="absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden pointer-events-none"
+          className={viewMode === 'video'
+            ? 'absolute inset-0 w-full h-full [&>div]:w-full [&>div]:h-full [&>div>iframe]:w-full [&>div>iframe]:h-full'
+            : 'absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden pointer-events-none'
+          }
         />
       )}
 
@@ -364,12 +299,8 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
       <div className="absolute inset-0">
         {viewMode === 'video' ? (
           <>
-            <div
-              ref={visibleContainerRef}
-              className="w-full h-full [&>div]:w-full [&>div]:h-full [&>div>iframe]:w-full [&>div>iframe]:h-full"
-            />
-            {/* Block YouTube UI */}
-            <div className="absolute inset-0 z-[2]" />
+            {/* Block YouTube UI overlay */}
+            <div className="absolute inset-0 z-[2] pointer-events-none" />
           </>
         ) : (
           <>
@@ -399,7 +330,11 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
             onClick={() => setViewMode(viewMode === 'video' ? 'image' : 'video')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm focus-visible:outline-none"
           >
-            <Video className="w-3.5 h-3.5 text-white" />
+            {viewMode === 'video' ? (
+              <Image className="w-3.5 h-3.5 text-white" />
+            ) : (
+              <Video className="w-3.5 h-3.5 text-white" />
+            )}
             <span className="text-xs font-medium text-white">
               {viewMode === 'video' ? 'Switch to image' : 'Switch to video'}
             </span>
