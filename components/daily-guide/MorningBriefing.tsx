@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { EqBars } from '@/components/ui/EqBars'
 import { Sun, Play, Pause, ChevronDown, Loader2, RefreshCw } from 'lucide-react'
 import { logXPEventServer } from '@/lib/gamification'
 
@@ -17,7 +18,7 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
   const [showScript, setShowScript] = useState(false)
   const [xpAwarded, setXpAwarded] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const waveformHeights = useRef(Array.from({ length: 24 }, () => Math.random() * 100))
+
 
   const fetchBriefing = useCallback(() => {
     setLoading(true)
@@ -131,20 +132,10 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
           )}
         </div>
 
-        {/* Waveform placeholder */}
+        {/* Waveform */}
         {audioSrc && playing && (
-          <div className="flex items-center gap-0.5 mt-3 h-4 px-2">
-            {waveformHeights.current.map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 bg-amber-400/40 rounded-full animate-pulse"
-                style={{
-                  height: `${h}%`,
-                  animationDelay: `${i * 50}ms`,
-                  minHeight: '2px',
-                }}
-              />
-            ))}
+          <div className="mt-3 px-2">
+            <EqBars height={16} barWidth={2} gap={1} barCount={20} color="rgba(251,191,36,0.4)" />
           </div>
         )}
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { Share2 } from 'lucide-react'
+import { EqBars } from '@/components/ui/EqBars'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { useShareCard } from '@/hooks/useShareCard'
 import { generateListeningCard } from '@/hooks/useShareCardTemplates'
@@ -43,13 +44,7 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
         {/* Left: sound bars icon + text */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="w-10 h-10 shrink-0 rounded-full border border-white/25 flex items-center justify-center">
-            {/* Sound wave bars */}
-            <div className="flex items-end gap-[2px] w-4 h-4">
-              <div className={`w-[2.5px] rounded-full bg-white/70 ${isPlaying ? 'animate-sound-bar-1' : 'h-1.5'}`} />
-              <div className={`w-[2.5px] rounded-full bg-white/70 ${isPlaying ? 'animate-sound-bar-2' : 'h-2.5'}`} />
-              <div className={`w-[2.5px] rounded-full bg-white/70 ${isPlaying ? 'animate-sound-bar-3' : 'h-1'}`} />
-              <div className={`w-[2.5px] rounded-full bg-white/70 ${isPlaying ? 'animate-sound-bar-4' : 'h-2'}`} />
-            </div>
+            <EqBars height={16} barWidth={2.5} gap={2} barCount={4} color="rgba(255,255,255,0.7)" paused={!isPlaying} />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

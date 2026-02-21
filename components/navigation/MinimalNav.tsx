@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { EqBars } from '@/components/ui/EqBars'
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { Home, Pause } from 'lucide-react'
@@ -60,11 +61,7 @@ export function MinimalNav() {
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/') } }}
           className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors press-scale cursor-pointer"
         >
-          <div className="flex items-end gap-[2px] w-4 h-4">
-            <div className="w-[2.5px] rounded-full bg-white/80 animate-sound-bar-1" />
-            <div className="w-[2.5px] rounded-full bg-white/80 animate-sound-bar-2" />
-            <div className="w-[2.5px] rounded-full bg-white/80 animate-sound-bar-3" />
-          </div>
+          <EqBars height={16} barWidth={2.5} gap={2} color="rgba(255,255,255,0.8)" />
           <span className="text-sm text-white/70 max-w-[100px] truncate">{label}</span>
           <button
             aria-label="Pause"

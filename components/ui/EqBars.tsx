@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 
 interface EqBarsProps {
   height?: number
@@ -9,6 +9,17 @@ interface EqBarsProps {
   color?: string
   barCount?: number
   paused?: boolean
+}
+
+/** Generate deterministic speeds/phases for any bar count */
+function generateBarParams(count: number) {
+  const speeds: number[] = []
+  const phases: number[] = []
+  for (let i = 0; i < count; i++) {
+    speeds.push(2.2 + (i * 1.7 % 1.5))
+    phases.push((i * 0.9) % (Math.PI * 2))
+  }
+  return { speeds, phases }
 }
 
 /**
@@ -25,15 +36,22 @@ export function EqBars({
 }: EqBarsProps) {
   const barsRef = useRef<(HTMLDivElement | null)[]>([])
   const frameRef = useRef<number>(0)
+  const { speeds, phases } = useMemo(() => generateBarParams(barCount), [barCount])
 
   useEffect(() => {
     if (paused) {
       cancelAnimationFrame(frameRef.current)
+      // Set static varied heights when paused
+      const minH = Math.max(4, height * 0.2)
+      for (let i = 0; i < barsRef.current.length; i++) {
+        const el = barsRef.current[i]
+        if (!el) continue
+        const staticH = minH + (height - minH) * (0.3 + 0.4 * ((i * 0.7) % 1))
+        el.style.height = `${staticH}px`
+      }
       return
     }
 
-    const speeds = [2.5, 3.2, 2.8]
-    const phases = [0, 1.2, 0.6]
     const minH = Math.max(4, height * 0.2)
 
     const animate = () => {
@@ -49,7 +67,7 @@ export function EqBars({
 
     frameRef.current = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(frameRef.current)
-  }, [paused, height])
+  }, [paused, height, barCount, speeds, phases])
 
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap, height }}>

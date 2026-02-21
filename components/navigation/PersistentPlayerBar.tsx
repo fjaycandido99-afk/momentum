@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Pause } from 'lucide-react'
 import { useHomeAudioOptional } from '@/contexts/HomeAudioContext'
+import { EqBars } from '@/components/ui/EqBars'
 
 export function PersistentPlayerBar() {
   const router = useRouter()
@@ -43,12 +44,7 @@ export function PersistentPlayerBar() {
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/') } }}
         className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors press-scale cursor-pointer"
       >
-        {/* Sound bars */}
-        <div className="flex items-end gap-[2px] w-3 h-3">
-          <div className="w-[2px] rounded-full bg-white/80 animate-sound-bar-1" />
-          <div className="w-[2px] rounded-full bg-white/80 animate-sound-bar-2" />
-          <div className="w-[2px] rounded-full bg-white/80 animate-sound-bar-3" />
-        </div>
+        <EqBars height={12} barWidth={2} gap={2} color="rgba(255,255,255,0.8)" />
         <span className="text-sm text-white/70 max-w-[120px] truncate">{label}</span>
         <button
           aria-label="Pause"
