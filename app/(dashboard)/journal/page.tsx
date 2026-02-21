@@ -26,6 +26,7 @@ import { FocusModeToolbar } from '@/components/journal/FocusModeToolbar'
 import { EmptyWritingState } from '@/components/journal/EmptyWritingState'
 import { JournalMilestoneCelebration } from '@/components/journal/JournalMilestoneCelebration'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { TierBanner } from '@/components/premium/TierBanner'
 
 interface JournalEntry {
   date: string
@@ -785,6 +786,8 @@ function JournalContent() {
         </div>
         <FeatureHint id="journal-modes-v2" text="Try Chat for a guided AI conversation, or Dream to decode your dreams" mode="once" />
       </div>
+
+      <TierBanner page="journal" />
 
       {/* Spark Prompt */}
       {sparkPrompt && (

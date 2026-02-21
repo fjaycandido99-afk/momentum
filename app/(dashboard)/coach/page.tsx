@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, Send, Loader2, Sparkles, Crown, Bot, MessageSquare, ClipboardList, Sun, Clock, Moon, BarChart3 } from 'lucide-react'
+import { ChevronLeft, Send, Loader2, Sparkles, Crown, MessageSquare, ClipboardList, Sun, Clock, Moon, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { CoachingPlans } from '@/components/coach/CoachingPlans'
+import { CoachAvatar } from '@/components/coach/CoachAvatar'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { TierBanner } from '@/components/premium/TierBanner'
 import { MINDSET_CONFIGS, getCoachName } from '@/lib/mindset/configs'
 import { getActivePlan, COACHING_PLANS, getPlanProgress } from '@/lib/coaching-plans'
 import { logXPEventServer } from '@/lib/gamification'
@@ -217,6 +219,7 @@ export default function CoachPage() {
           </Link>
           <h1 className="text-2xl font-light shimmer-text">{coachName}</h1>
         </div>
+        <TierBanner page="coach" />
         {/* Tab bar */}
         <div className="flex px-6 gap-2 pb-4 border-b border-white/10">
           <button onClick={() => setActiveTab('chat')} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm transition-all ${activeTab === 'chat' ? 'bg-black text-white border border-white/20' : 'bg-black text-white/60 border border-white/[0.08]'}`}>
@@ -267,9 +270,7 @@ export default function CoachPage() {
         <div className="relative flex items-center gap-3 flex-1">
           {/* Coach avatar */}
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/30 to-orange-500/30 border border-amber-500/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-amber-400" />
-            </div>
+            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="md" />
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#08080c]" />
           </div>
           <div>
@@ -293,6 +294,8 @@ export default function CoachPage() {
           <ClipboardList className="w-3.5 h-3.5" /> Plans
         </button>
       </div>
+
+      <TierBanner page="coach" />
 
       {/* Active plan banner in chat tab */}
       {activeTab === 'chat' && activePlanBanner && (
@@ -366,9 +369,7 @@ export default function CoachPage() {
           >
             {/* Coach avatar for assistant messages */}
             {msg.role === 'assistant' && (
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500/25 to-orange-500/25 border border-amber-500/15 flex items-center justify-center mr-2 mt-1 shrink-0">
-                <Bot className="w-3.5 h-3.5 text-amber-400" />
-              </div>
+              <CoachAvatar mindsetId={mindsetCtx?.mindset} size="sm" className="mr-2 mt-1" />
             )}
             <div className="flex flex-col">
               <div
@@ -390,9 +391,7 @@ export default function CoachPage() {
         {/* Typing indicator */}
         {isLoading && (
           <div role="status" aria-label="Coach is typing" className="flex justify-start animate-fade-in-up">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500/25 to-orange-500/25 border border-amber-500/15 flex items-center justify-center mr-2 mt-1 shrink-0">
-              <Bot className="w-3.5 h-3.5 text-amber-400" />
-            </div>
+            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="sm" className="mr-2 mt-1" />
             <div className="p-3.5 bg-black rounded-2xl rounded-bl-md border border-white/10">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />

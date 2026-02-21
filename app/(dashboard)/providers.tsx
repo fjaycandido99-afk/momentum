@@ -10,6 +10,7 @@ import { AchievementProvider } from '@/contexts/AchievementContext'
 import { OfflineProvider } from '@/contexts/OfflineContext'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { UpgradeModalWithContext } from '@/components/premium/UpgradeModal'
+import { FeatureTooltipProvider } from '@/components/premium/FeatureTooltip'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import { SWRConfig } from 'swr'
@@ -30,10 +31,12 @@ export function Providers({ children }: ProvidersProps) {
                 <HomeAudioProvider>
                   <AchievementProvider>
                     <ToastProvider>
-                      <OfflineBanner />
-                      {children}
-                      <UpgradeModalWithContext />
-                      <ToastContainer />
+                      <FeatureTooltipProvider>
+                        <OfflineBanner />
+                        {children}
+                        <UpgradeModalWithContext />
+                        <ToastContainer />
+                      </FeatureTooltipProvider>
                     </ToastProvider>
                   </AchievementProvider>
                 </HomeAudioProvider>

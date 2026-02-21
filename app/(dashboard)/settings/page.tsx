@@ -31,6 +31,7 @@ import { NotificationSettings } from '@/components/notifications/NotificationSet
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { TierBanner } from '@/components/premium/TierBanner'
 import { SettingsCategory } from '@/components/settings/SettingsCategory'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
@@ -295,6 +296,8 @@ function SettingsContent() {
         </div>
         <p className="text-white/70 text-sm mt-1">Customize your Daily Guide</p>
       </div>
+
+      <TierBanner page="settings" />
 
       <div className="px-6 space-y-3">
         {/* ═══════════════ 1. Profile & Schedule ═══════════════ */}

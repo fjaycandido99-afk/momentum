@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, Bot, BarChart3, Timer } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Timer } from 'lucide-react'
+import { CoachAvatar } from '@/components/coach/CoachAvatar'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { useHomeAudio } from '@/contexts/HomeAudioContext'
@@ -11,6 +12,7 @@ import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
 import { BottomPlayerBar } from './BottomPlayerBar'
 import { DailySpark } from './DailySpark'
+import { CoachGreetingBubble } from './CoachGreetingBubble'
 import { SoundscapesSection } from './SoundscapesSection'
 import { GuidedSection } from './GuidedSection'
 import { XPBadge } from './XPBadge'
@@ -50,6 +52,8 @@ import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 import { haptic } from '@/lib/haptics'
 import { AudioVisualizer } from '@/components/player/AudioVisualizer'
+import { TierBanner } from '@/components/premium/TierBanner'
+import { useFeatureTooltip, type FeatureId } from '@/components/premium/FeatureTooltip'
 
 const WordAnimationPlayer = dynamic(
   () => import('@/components/player/WordAnimationPlayer').then(mod => mod.WordAnimationPlayer),
@@ -158,6 +162,9 @@ export function ImmersiveHome() {
 
   // Subscription context for freemium gating
   const { isPremium, isContentFree, dailyFreeUnlockUsed, useDailyFreeUnlock, openUpgradeModal } = useSubscription()
+
+  // Feature tooltip for locked content
+  const featureTooltipCtx = useFeatureTooltip()
 
   // Preview paywall state
   const [showPaywall, setShowPaywall] = useState(false)
@@ -747,6 +754,8 @@ export function ImmersiveHome() {
   const handleSoundscapePlay = useCallback((item: typeof SOUNDSCAPE_ITEMS[number], isLocked: boolean) => {
     haptic('light')
     if (isLocked) {
+      // Show educational tooltip first (once per session), then proceed
+      if (featureTooltipCtx?.showFeatureTooltip('all_content')) return
       stopPreview()
       setPaywallContentName(item.label)
       setPreviewUnlockCallback(() => () => {
@@ -784,6 +793,7 @@ export function ImmersiveHome() {
 
   const handleGuidePlay = useCallback((guideId: string, name: string, isLocked: boolean) => {
     if (isLocked) {
+      if (featureTooltipCtx?.showFeatureTooltip('guided_voices')) return
       stopPreview()
       setPaywallContentName(name)
       setPreviewUnlockCallback(() => () => handlePlayGuide(guideId, name))
@@ -796,6 +806,7 @@ export function ImmersiveHome() {
 
   const handleMotivationPlay = useCallback((video: VideoItem, index: number, isLocked: boolean, topic?: string) => {
     if (isLocked) {
+      if (featureTooltipCtx?.showFeatureTooltip('all_content')) return
       stopPreview()
       setPaywallContentName(video.title)
       setPreviewUnlockCallback(() => () => handlePlayMotivation(video, index, topic))
@@ -808,6 +819,7 @@ export function ImmersiveHome() {
 
   const handleMusicGenrePlay = useCallback((video: VideoItem, index: number, genreId: string, genreWord: string, isLocked: boolean) => {
     if (isLocked) {
+      if (featureTooltipCtx?.showFeatureTooltip('all_content')) return
       stopPreview()
       setPaywallContentName(video.title)
       setPreviewUnlockCallback(() => () => handlePlayMusic(video, index, genreId, genreWord))
@@ -971,6 +983,9 @@ export function ImmersiveHome() {
           </div>
         </>
       )}
+
+      {/* Tier-aware instruction banner */}
+      <TierBanner page="home" />
 
       {/* Welcome Back Card */}
       {showWelcomeBack && shouldShowWelcome && (
@@ -1188,13 +1203,13 @@ export function ImmersiveHome() {
       {/* Daily Spark */}
       {!showMorningFlow && <DailySpark />}
 
-      {/* Floating AI Coach Button */}
-      <Link
-        href="/coach"
-        className="fixed right-5 bottom-28 z-30 p-3.5 rounded-full bg-gradient-to-br from-amber-500/25 to-orange-500/25 border border-amber-500/25 hover:border-amber-500/40 shadow-lg shadow-amber-500/10 transition-all press-scale backdrop-blur-sm"
-      >
-        <Bot className="w-6 h-6 text-amber-400" />
-      </Link>
+      {/* Floating AI Coach Button + Greeting Bubble */}
+      <div className="fixed right-5 bottom-28 z-30 flex items-center gap-2">
+        <CoachGreetingBubble mindsetId={mindsetCtx?.mindset} />
+        <Link href="/coach" className="transition-all press-scale">
+          <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" />
+        </Link>
+      </div>
 
       {/* Ambient Mixer */}
       {showMixer && <AmbientMixer onClose={() => setShowMixer(false)} />}

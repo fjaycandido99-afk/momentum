@@ -21,6 +21,7 @@ import { MindsetEvolution } from '@/components/progress/MindsetEvolution'
 import { LetterToSelf } from '@/components/progress/LetterToSelf'
 import { migrateLocalXP } from '@/lib/gamification'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { TierBanner } from '@/components/premium/TierBanner'
 
 interface ProgressData {
   streak: number
@@ -81,6 +82,8 @@ export default function ProgressPage() {
         <h1 className="text-2xl font-semibold shimmer-text">Progress</h1>
         <FeatureHint id="progress-intro" text="Your streaks, listening time & journal stats at a glance" mode="once" />
       </div>
+
+      <TierBanner page="progress" />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">

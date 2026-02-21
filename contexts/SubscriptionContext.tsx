@@ -23,6 +23,7 @@ export interface SubscriptionData {
   sessionsToday: number
   canStartSession: boolean
   isPremium: boolean
+  isGuest: boolean
   billingPeriodEnd: string | null
   limits: typeof FREE_TIER_LIMITS | null
 }
@@ -36,6 +37,7 @@ interface SubscriptionContextType {
   sessionsToday: number
   canStartSession: boolean
   isPremium: boolean
+  isGuest: boolean
   billingPeriodEnd: Date | null
   isLoading: boolean
 
@@ -93,6 +95,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     sessionsToday: 0,
     canStartSession: true,
     isPremium: false,
+    isGuest: true,
     billingPeriodEnd: null,
     limits: FREE_TIER_LIMITS,
   })
@@ -249,6 +252,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     sessionsToday: subscriptionData.sessionsToday,
     canStartSession: subscriptionData.canStartSession,
     isPremium: subscriptionData.isPremium,
+    isGuest: subscriptionData.isGuest,
     billingPeriodEnd,
     isLoading,
     limits: subscriptionData.limits,
@@ -270,6 +274,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     subscriptionData.sessionsToday,
     subscriptionData.canStartSession,
     subscriptionData.isPremium,
+    subscriptionData.isGuest,
     subscriptionData.limits,
     billingPeriodEnd,
     isLoading,

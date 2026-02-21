@@ -11,6 +11,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { logXPEventServer } from '@/lib/gamification'
 import { haptic } from '@/lib/haptics'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { TierBanner } from '@/components/premium/TierBanner'
 import type { SoundscapeItem } from '@/components/player/SoundscapePlayer'
 
 type IntervalType = 'work' | 'break'
@@ -311,6 +312,8 @@ export default function FocusPage() {
         </div>
         {!hasStarted && <FeatureHint id="focus-intro" text="Set a timer, pick a sound, and get to work" mode="once" />}
       </div>
+
+      <TierBanner page="focus" />
 
       {/* Complete overlay */}
       {showComplete ? (

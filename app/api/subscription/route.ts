@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
           sessionsToday: 0,
           canStartSession: true,
           isPremium: false,
+          isGuest: true,
           limits: FREE_TIER_LIMITS,
         },
       })
@@ -92,6 +93,7 @@ export async function GET(request: NextRequest) {
         sessionsToday: subscription.sessions_today,
         canStartSession,
         isPremium,
+        isGuest: false,
         billingPeriodEnd: subscription.billing_period_end,
         limits: isPremium ? null : FREE_TIER_LIMITS,
       },
