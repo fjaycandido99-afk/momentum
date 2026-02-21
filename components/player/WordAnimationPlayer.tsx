@@ -58,6 +58,10 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
   // Track saved time when switching modes (single-player swap approach)
   const savedTimeRef = useRef(0)
 
+  // Visual-only video display for externalAudio + video mode
+  const videoDisplayRef = useRef<HTMLDivElement>(null)
+  const videoDisplayPlayerRef = useRef<YTPlayer | null>(null)
+
   // Journal FAB state (motivation-only)
   const [showJournalFAB, setShowJournalFAB] = useState(false)
   const [showNudge, setShowNudge] = useState(false)
@@ -221,6 +225,96 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode])
 
+  // ExternalAudio + video mode: create a muted visual-only player
+  useEffect(() => {
+    if (!externalAudio) return
+    if (viewMode !== 'video') {
+      // Destroy visual player when switching back to image
+      if (videoDisplayPlayerRef.current) {
+        try { videoDisplayPlayerRef.current.destroy() } catch {}
+        videoDisplayPlayerRef.current = null
+      }
+      return
+    }
+
+    // Wait for YT API
+    const createVisual = () => {
+      if (!videoDisplayRef.current || !window.YT) return
+      videoDisplayRef.current.innerHTML = ''
+      const div = document.createElement('div')
+      div.id = 'yt-visual-' + Date.now()
+      videoDisplayRef.current.appendChild(div)
+
+      const startAt = Math.floor(externalCurrentTime || 0)
+      videoDisplayPlayerRef.current = new window.YT.Player(div.id, {
+        videoId: youtubeId,
+        width: '100%',
+        height: '100%',
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          iv_load_policy: 3,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+          mute: 1,
+          start: startAt,
+          playsinline: 1,
+        },
+        events: {
+          onReady: (event) => {
+            event.target.setVolume(0)
+            event.target.mute()
+            if (startAt > 1) event.target.seekTo(startAt, true)
+            if (externalPlaying) event.target.playVideo()
+          },
+        },
+      })
+    }
+
+    if (window.YT) createVisual()
+    else {
+      const tag = document.createElement('script')
+      tag.src = 'https://www.youtube.com/iframe_api'
+      document.head.appendChild(tag)
+      window.onYouTubeIframeAPIReady = createVisual
+    }
+
+    return () => {
+      if (videoDisplayPlayerRef.current) {
+        try { videoDisplayPlayerRef.current.destroy() } catch {}
+        videoDisplayPlayerRef.current = null
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, externalAudio, youtubeId])
+
+  // Sync visual player play/pause state with external audio
+  useEffect(() => {
+    if (!externalAudio || viewMode !== 'video' || !videoDisplayPlayerRef.current) return
+    try {
+      if (externalPlaying) videoDisplayPlayerRef.current.playVideo()
+      else videoDisplayPlayerRef.current.pauseVideo()
+    } catch {}
+  }, [externalPlaying, externalAudio, viewMode])
+
+  // Periodically sync visual player position (every 10s to avoid stuttering)
+  useEffect(() => {
+    if (!externalAudio || viewMode !== 'video') return
+    const syncInterval = setInterval(() => {
+      if (!videoDisplayPlayerRef.current || !externalCurrentTime) return
+      try {
+        const visualTime = videoDisplayPlayerRef.current.getCurrentTime()
+        if (Math.abs(visualTime - externalCurrentTime) > 3) {
+          videoDisplayPlayerRef.current.seekTo(externalCurrentTime, true)
+        }
+      } catch {}
+    }, 10000)
+    return () => clearInterval(syncInterval)
+  }, [externalAudio, viewMode, externalCurrentTime])
+
   // Show journal FAB after 30s of playback, nudge fades after 5s
   useEffect(() => {
     journalTimerRef.current = setTimeout(() => {
@@ -271,6 +365,10 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
       if (activeDuration > 0 && onSeek) {
         const seekTime = percent * activeDuration
         onSeek(seekTime)
+        // Also sync visual player if in video mode
+        if (videoDisplayPlayerRef.current) {
+          try { videoDisplayPlayerRef.current.seekTo(seekTime, true) } catch {}
+        }
       }
     } else if (playerRef.current && duration > 0) {
       const seekTime = percent * duration
@@ -291,6 +389,17 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
           className={viewMode === 'video'
             ? 'absolute inset-0 w-full h-full [&>div]:w-full [&>div]:h-full [&>div>iframe]:w-full [&>div>iframe]:h-full'
             : 'absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden pointer-events-none'
+          }
+        />
+      )}
+
+      {/* Visual-only muted video display for externalAudio + video mode */}
+      {externalAudio && (
+        <div
+          ref={videoDisplayRef}
+          className={viewMode === 'video'
+            ? 'absolute inset-0 w-full h-full [&>div]:w-full [&>div]:h-full [&>div>iframe]:w-full [&>div>iframe]:h-full'
+            : 'hidden'
           }
         />
       )}
