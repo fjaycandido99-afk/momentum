@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
+import { EqBars } from '@/components/ui/EqBars'
 import { VolumeX } from 'lucide-react'
 import { SOUNDSCAPE_ITEMS, type SoundscapeItem } from '@/components/player/SoundscapePlayer'
 import { getSoundscapeBackground } from '@/components/home/home-types'
@@ -62,7 +63,7 @@ export function FocusSoundPicker({ selectedId, onSelect }: FocusSoundPickerProps
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20" />
                 <div className="relative z-10">
                   {isActive ? (
-                    <div className="eq-bars"><span /><span /><span /></div>
+                    <EqBars />
                   ) : (
                     <Icon className="w-6 h-6 text-white drop-shadow-md" strokeWidth={1.5} />
                   )}

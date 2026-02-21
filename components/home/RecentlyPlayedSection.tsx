@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Play, Pause, Clock } from 'lucide-react'
+import { EqBars } from '@/components/ui/EqBars'
 import type { RecentlyPlayedItem } from '@/hooks/useRecentlyPlayed'
 
 interface RecentlyPlayedSectionProps {
@@ -80,7 +81,7 @@ export function RecentlyPlayedSection({
                 <div className="relative z-10 rounded-full">
                   {isCardActive ? (
                     musicPlaying ? (
-                      <div className="eq-bars"><span /><span /><span /></div>
+                      <EqBars />
                     ) : (
                       <Pause className="w-7 h-7 text-white drop-shadow-lg icon-morph" fill="white" />
                     )

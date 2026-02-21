@@ -5,6 +5,7 @@ import { FeatureHint } from '@/components/ui/FeatureHint'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import { getSoundscapeBackground } from './home-types'
 import { Layers } from 'lucide-react'
+import { EqBars, SoundscapeEqBars } from '@/components/ui/EqBars'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
 
 interface SoundscapesSectionProps {
@@ -22,11 +23,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
       <h2 className="text-lg font-semibold text-white px-6 mb-4 parallax-header section-heading-reveal flex items-center gap-2">
         Soundscapes
         {activeSoundscape && soundscapeIsPlaying && (
-          <span className="inline-flex items-end gap-[2px] h-[12px] text-white/75">
-            <span className="soundscape-eq-bar" />
-            <span className="soundscape-eq-bar" />
-            <span className="soundscape-eq-bar" />
-          </span>
+          <SoundscapeEqBars />
         )}
         {onOpenMixer && (
           <button onClick={onOpenMixer} aria-label="Open ambient mixer" className="ml-auto p-2 rounded-full bg-white/[0.08] hover:bg-white/[0.12] transition-colors press-scale">
@@ -65,7 +62,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20" />
                 <div className="relative z-10">
                   {isActive ? (
-                    <div className="eq-bars"><span /><span /><span /></div>
+                    <EqBars />
                   ) : (
                     <Icon className="w-6 h-6 text-white drop-shadow-md" strokeWidth={1.5} />
                   )}

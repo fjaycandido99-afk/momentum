@@ -1,6 +1,7 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
+import { EqBars } from '@/components/ui/EqBars'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { VOICE_GUIDES } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
@@ -500,7 +501,7 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
                     {isLoading ? (
                       <Loader2 className="w-7 h-7 text-white animate-spin" />
                     ) : isGuideActive ? (
-                      <div className="eq-bars"><span /><span /><span /></div>
+                      <EqBars />
                     ) : (
                       <Icon className="w-7 h-7 text-white" strokeWidth={1.5} />
                     )}

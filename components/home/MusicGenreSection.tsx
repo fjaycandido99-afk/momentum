@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { Play, Pause, Music, RefreshCw, Heart } from 'lucide-react'
+import { EqBars } from '@/components/ui/EqBars'
 import { VideoItem, formatDuration, getGenreBackgrounds } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
@@ -154,7 +155,7 @@ export function MusicGenreSection({
                   <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
                     {isCardActive ? (
                       musicPlaying ? (
-                        <div className="eq-bars"><span /><span /><span /></div>
+                        <EqBars />
                       ) : (
                         <Pause className="w-8 h-8 text-white drop-shadow-lg icon-morph" fill="white" />
                       )

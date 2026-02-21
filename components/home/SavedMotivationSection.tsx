@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Play, Pause, Heart } from 'lucide-react'
+import { EqBars } from '@/components/ui/EqBars'
 import { VideoItem, formatDuration } from './home-types'
 
 interface SavedMotivationSectionProps {
@@ -76,7 +77,7 @@ export function SavedMotivationSection({
                 <div className={`relative z-10 rounded-full ${tappedCardId === video.id ? 'play-tap' : ''}`}>
                   {isCardActive ? (
                     musicPlaying ? (
-                      <div className="eq-bars"><span /><span /><span /></div>
+                      <EqBars />
                     ) : (
                       <Pause className="w-8 h-8 text-white drop-shadow-lg icon-morph" fill="white" />
                     )
