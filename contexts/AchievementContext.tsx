@@ -4,6 +4,23 @@ import { createContext, useContext, useState, useCallback, useRef, type ReactNod
 import { AchievementCelebration } from '@/components/progress/AchievementCelebration'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 
+const SHOWN_KEY = 'voxu_shown_achievements'
+
+function getShownIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(SHOWN_KEY)
+    return raw ? new Set(JSON.parse(raw)) : new Set()
+  } catch { return new Set() }
+}
+
+function markShown(id: string) {
+  try {
+    const ids = getShownIds()
+    ids.add(id)
+    localStorage.setItem(SHOWN_KEY, JSON.stringify([...ids]))
+  } catch {}
+}
+
 interface FullAchievement {
   id: string
   title: string
@@ -54,19 +71,25 @@ export function AchievementProvider({ children }: { children: ReactNode }) {
     }
     const [next, ...rest] = remaining
     setCurrent(next)
+    markShown(next.id)
     if (navigator.vibrate) navigator.vibrate([50, 100, 50])
     timerRef.current = setTimeout(() => showNext(rest), 4000)
   }, [])
 
   const triggerAchievements = useCallback((achievements: MinimalAchievement[]) => {
     if (achievements.length === 0) return
-    const resolved = achievements.map(resolveAchievement)
+    // Filter out achievements already shown to the user
+    const shown = getShownIds()
+    const unseen = achievements.filter(a => !shown.has(a.id))
+    if (unseen.length === 0) return
+    const resolved = unseen.map(resolveAchievement)
     if (current) {
       setQueue(prev => [...prev, ...resolved])
       return
     }
     const [first, ...rest] = resolved
     setCurrent(first)
+    markShown(first.id)
     if (navigator.vibrate) navigator.vibrate([50, 100, 50])
     setQueue(rest)
     timerRef.current = setTimeout(() => showNext(rest), 4000)
