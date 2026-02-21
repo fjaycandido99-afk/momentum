@@ -58,9 +58,13 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
   // Track saved time when switching modes (single-player swap approach)
   const savedTimeRef = useRef(0)
 
-  // Visual-only video display for externalAudio + video mode
+  // Video display for externalAudio + video mode
   const videoDisplayRef = useRef<HTMLDivElement>(null)
   const videoDisplayPlayerRef = useRef<YTPlayer | null>(null)
+  const videoProgressRef = useRef<NodeJS.Timeout | null>(null)
+  const [videoDuration, setVideoDuration] = useState(0)
+  const [videoCurrentTime, setVideoCurrentTime] = useState(0)
+  const [videoPlaying, setVideoPlaying] = useState(false)
 
   // Journal FAB state (motivation-only)
   const [showJournalFAB, setShowJournalFAB] = useState(false)
@@ -68,13 +72,14 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
   const [showJournal, setShowJournal] = useState(false)
   const journalTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Unified playing state: external mode uses parent state, local mode uses own state
-  const isPlaying = externalAudio ? (externalPlaying ?? false) : isPlayingLocal
+  // Unified playing state: video mode uses its own player, external mode uses parent state, local uses own
+  const isVideoMode = externalAudio && viewMode === 'video'
+  const isPlaying = isVideoMode ? videoPlaying : externalAudio ? (externalPlaying ?? false) : isPlayingLocal
 
-  // Unified duration/time: external mode uses parent values, local uses own
-  const activeDuration = externalAudio ? (externalDuration ?? 0) : duration
-  const activeCurrentTime = externalAudio ? (externalCurrentTime ?? 0) : currentTime
-  const activeReady = externalAudio ? (activeDuration > 0) : playerReady
+  // Unified duration/time
+  const activeDuration = isVideoMode ? videoDuration : externalAudio ? (externalDuration ?? 0) : duration
+  const activeCurrentTime = isVideoMode ? videoCurrentTime : externalAudio ? (externalCurrentTime ?? 0) : currentTime
+  const activeReady = isVideoMode ? (videoDuration > 0) : externalAudio ? ((externalDuration ?? 0) > 0) : playerReady
 
   // Get background color from the gradient class
   const bgColor = colorMap[color]?.bg || '#08080c'
@@ -225,19 +230,30 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode])
 
-  // ExternalAudio + video mode: create a muted visual-only player
+  // ExternalAudio + video mode: create a player with audio+video (pause external)
+  const wasExternalPlayingRef = useRef(false)
   useEffect(() => {
     if (!externalAudio) return
     if (viewMode !== 'video') {
-      // Destroy visual player when switching back to image
+      // Switching back to image — hand audio back to external player
       if (videoDisplayPlayerRef.current) {
+        if (videoProgressRef.current) { clearInterval(videoProgressRef.current); videoProgressRef.current = null }
+        // Get current position from visual player before destroying
+        let resumeTime = 0
+        try { resumeTime = videoDisplayPlayerRef.current.getCurrentTime() || 0 } catch {}
         try { videoDisplayPlayerRef.current.destroy() } catch {}
         videoDisplayPlayerRef.current = null
+        // Seek external player to where the video left off, then resume
+        if (resumeTime > 1 && onSeek) onSeek(resumeTime)
+        if (wasExternalPlayingRef.current && onTogglePlay) onTogglePlay()
       }
       return
     }
 
-    // Wait for YT API
+    // Entering video mode — pause external audio, create visible player with sound
+    wasExternalPlayingRef.current = !!externalPlaying
+    if (externalPlaying && onTogglePlay) onTogglePlay()
+
     const createVisual = () => {
       if (!videoDisplayRef.current || !window.YT) return
       videoDisplayRef.current.innerHTML = ''
@@ -259,16 +275,31 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
           modestbranding: 1,
           rel: 0,
           showinfo: 0,
-          mute: 1,
-          start: startAt,
           playsinline: 1,
+          start: startAt,
         },
         events: {
           onReady: (event) => {
-            event.target.setVolume(0)
-            event.target.mute()
+            event.target.setVolume(80)
+            event.target.unMute()
             if (startAt > 1) event.target.seekTo(startAt, true)
-            if (externalPlaying) event.target.playVideo()
+            event.target.playVideo()
+            const dur = event.target.getDuration()
+            if (dur > 0) setVideoDuration(dur)
+            // Track progress
+            if (videoProgressRef.current) clearInterval(videoProgressRef.current)
+            videoProgressRef.current = setInterval(() => {
+              if (videoDisplayPlayerRef.current) {
+                try {
+                  setVideoCurrentTime(videoDisplayPlayerRef.current.getCurrentTime())
+                  const d = videoDisplayPlayerRef.current.getDuration()
+                  if (d > 0) setVideoDuration(d)
+                } catch {}
+              }
+            }, 1000)
+          },
+          onStateChange: (event) => {
+            setVideoPlaying(event.data === 1)
           },
         },
       })
@@ -283,6 +314,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
     }
 
     return () => {
+      if (videoProgressRef.current) { clearInterval(videoProgressRef.current); videoProgressRef.current = null }
       if (videoDisplayPlayerRef.current) {
         try { videoDisplayPlayerRef.current.destroy() } catch {}
         videoDisplayPlayerRef.current = null
@@ -290,30 +322,6 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, externalAudio, youtubeId])
-
-  // Sync visual player play/pause state with external audio
-  useEffect(() => {
-    if (!externalAudio || viewMode !== 'video' || !videoDisplayPlayerRef.current) return
-    try {
-      if (externalPlaying) videoDisplayPlayerRef.current.playVideo()
-      else videoDisplayPlayerRef.current.pauseVideo()
-    } catch {}
-  }, [externalPlaying, externalAudio, viewMode])
-
-  // Periodically sync visual player position (every 10s to avoid stuttering)
-  useEffect(() => {
-    if (!externalAudio || viewMode !== 'video') return
-    const syncInterval = setInterval(() => {
-      if (!videoDisplayPlayerRef.current || !externalCurrentTime) return
-      try {
-        const visualTime = videoDisplayPlayerRef.current.getCurrentTime()
-        if (Math.abs(visualTime - externalCurrentTime) > 3) {
-          videoDisplayPlayerRef.current.seekTo(externalCurrentTime, true)
-        }
-      } catch {}
-    }, 10000)
-    return () => clearInterval(syncInterval)
-  }, [externalAudio, viewMode, externalCurrentTime])
 
   // Show journal FAB after 30s of playback, nudge fades after 5s
   useEffect(() => {
@@ -341,6 +349,15 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
 
   // Toggle play/pause
   const togglePlay = useCallback(() => {
+    // In video mode with external audio, control the visual player directly
+    if (externalAudio && viewMode === 'video' && videoDisplayPlayerRef.current) {
+      try {
+        const state = videoDisplayPlayerRef.current.getPlayerState()
+        if (state === 1) videoDisplayPlayerRef.current.pauseVideo()
+        else videoDisplayPlayerRef.current.playVideo()
+      } catch {}
+      return
+    }
     if (externalAudio) {
       onTogglePlay?.()
       return
@@ -354,21 +371,26 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
         setIsPlayingLocal(true)
       }
     }
-  }, [externalAudio, onTogglePlay, isPlayingLocal])
+  }, [externalAudio, onTogglePlay, isPlayingLocal, viewMode])
 
   // Seek to position
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const clickX = e.clientX - rect.left
     const percent = clickX / rect.width
-    if (externalAudio) {
+    if (externalAudio && viewMode === 'video' && videoDisplayPlayerRef.current) {
+      // In video mode, seek the visual player directly
+      try {
+        const dur = videoDisplayPlayerRef.current.getDuration() || activeDuration
+        if (dur > 0) {
+          const seekTime = percent * dur
+          videoDisplayPlayerRef.current.seekTo(seekTime, true)
+        }
+      } catch {}
+    } else if (externalAudio) {
       if (activeDuration > 0 && onSeek) {
         const seekTime = percent * activeDuration
         onSeek(seekTime)
-        // Also sync visual player if in video mode
-        if (videoDisplayPlayerRef.current) {
-          try { videoDisplayPlayerRef.current.seekTo(seekTime, true) } catch {}
-        }
       }
     } else if (playerRef.current && duration > 0) {
       const seekTime = percent * duration
