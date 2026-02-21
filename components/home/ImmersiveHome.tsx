@@ -241,6 +241,10 @@ export function ImmersiveHome() {
       try { soundscapePlayerRef.current.stopVideo() } catch {}
     }
     currentScVideoIdRef.current = null
+    // Stop music imperative
+    if (bgPlayerRef.current && bgPlayerReadyRef.current) {
+      try { bgPlayerRef.current.stopVideo() } catch {}
+    }
 
     dispatch({ type: 'PLAY_GUIDE', guideId, guideName })
 
@@ -751,13 +755,17 @@ export function ImmersiveHome() {
       })
     }
 
-    // Stop guide audio imperatively (but keep music for layering)
+    // Stop guide audio imperatively
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''
       guideAudioRef.current = null
     }
     if (isPlaying) setIsPlaying(false)
+    // Stop music player imperatively
+    if (bgPlayerRef.current && bgPlayerReadyRef.current) {
+      try { bgPlayerRef.current.stopVideo() } catch {}
+    }
 
     dispatch({
       type: 'PLAY_SOUNDSCAPE',

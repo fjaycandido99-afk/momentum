@@ -108,7 +108,7 @@ export type AudioAction =
 export function audioReducer(state: AudioState, action: AudioAction): AudioState {
   switch (action.type) {
     case 'PLAY_MUSIC':
-      // Keep soundscape layered — only stop guide
+      // Exclusive: stop guide and soundscape
       return {
         ...state,
         backgroundMusic: { youtubeId: action.youtubeId, label: action.label },
@@ -120,10 +120,15 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         currentPlaylist: action.playlist,
         playingSound: action.playingSound,
         homeAudioActive: true,
-        // Stop guide (but keep soundscape layered)
+        // Stop guide
         guideLabel: null,
         guideIsPlaying: false,
         loadingGuide: null,
+        // Stop soundscape
+        activeSoundscape: null,
+        soundscapeIsPlaying: false,
+        userPausedSoundscape: false,
+        showSoundscapePlayer: false,
       }
 
     case 'PAUSE_MUSIC':
@@ -148,7 +153,7 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
       }
 
     case 'PLAY_SOUNDSCAPE':
-      // Keep music layered — only stop guide
+      // Exclusive: stop guide and music
       return {
         ...state,
         activeSoundscape: action.soundscape,
@@ -156,10 +161,19 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         userPausedSoundscape: false,
         showSoundscapePlayer: true,
         homeAudioActive: true,
-        // Stop guide (but keep music layered)
+        // Stop guide
         guideLabel: null,
         guideIsPlaying: false,
         loadingGuide: null,
+        // Stop music
+        backgroundMusic: null,
+        musicPlaying: false,
+        userPausedMusic: false,
+        musicDuration: 0,
+        musicCurrentTime: 0,
+        activeCardId: null,
+        currentPlaylist: null,
+        playingSound: null,
       }
 
     case 'PAUSE_SOUNDSCAPE':
@@ -183,7 +197,7 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
       }
 
     case 'PLAY_GUIDE':
-      // Stop soundscape when guide starts (keep music — guide stops it separately)
+      // Exclusive: stop both music and soundscape
       return {
         ...state,
         guideLabel: action.guideName,
@@ -196,6 +210,15 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         showSoundscapePlayer: false,
         soundscapeIsPlaying: false,
         userPausedSoundscape: false,
+        // Stop music
+        backgroundMusic: null,
+        musicPlaying: false,
+        userPausedMusic: false,
+        musicDuration: 0,
+        musicCurrentTime: 0,
+        activeCardId: null,
+        currentPlaylist: null,
+        playingSound: null,
       }
 
     case 'GUIDE_LOADED':
