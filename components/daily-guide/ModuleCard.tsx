@@ -216,8 +216,13 @@ function extractPreview(script: string | null, defaultPreview: string): string {
 }
 
 function formatDuration(seconds: number): string {
-  const minutes = Math.floor(seconds / 60)
+  const totalMinutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  if (hours > 0) {
+    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`
+  }
   if (minutes === 0) {
     return `${remainingSeconds}s`
   }

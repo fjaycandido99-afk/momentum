@@ -207,6 +207,14 @@ const SEGMENT_ANIM: Record<string, { pattern: string; patternTiming: string; ove
   },
 }
 
+function formatPlayTime(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = Math.floor(seconds % 60)
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
 // Free tier time limit in seconds (10 minutes)
 const FREE_TIER_TIME_LIMIT = 10 * 60
 
@@ -1202,8 +1210,8 @@ export function GuidancePlayer({
         </div>
 
         {/* Time */}
-        <div className="text-center mt-4 text-white/50 text-sm">
-          {Math.floor(currentTime)}s / {totalDuration}s
+        <div className="text-center mt-4 text-white/50 text-sm tabular-nums">
+          {formatPlayTime(Math.floor(currentTime))} / {formatPlayTime(totalDuration)}
         </div>
       </div>
 
