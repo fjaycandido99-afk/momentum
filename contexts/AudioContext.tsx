@@ -145,7 +145,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
     const fetchMusic = async () => {
       try {
         const response = await fetch(`/api/music-videos?genre=${musicGenre}`)
-        if (!response.ok) { console.warn('[AudioContext] music fetch failed:', response.status); return }
+        if (!response.ok) return
         const data = await response.json()
         if (data.videos && data.videos.length > 0 && isMountedRef.current) {
           const randomVideo = data.videos[Math.floor(Math.random() * data.videos.length)]
@@ -272,7 +272,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
         bgMusicPlayerRef.current.playVideo()
         setIsMusicPlaying(true)
         wasPlayingBeforeSessionRef.current = false
-      } catch (e) { console.warn('[AudioContext]', e) }
+      } catch {}
     }
   }, [isSessionActive, musicEnabled, isMusicLoaded])
 
@@ -292,7 +292,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
         try {
           bgMusicPlayerRef.current.stopVideo()
           bgMusicPlayerRef.current.destroy()
-        } catch (e) { console.warn('[AudioContext]', e) }
+        } catch {}
         bgMusicPlayerRef.current = null
       }
       setIsMusicLoaded(false)
@@ -340,7 +340,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
       try {
         bgMusicPlayerRef.current.stopVideo()
         setIsMusicPlaying(false)
-      } catch (e) { console.warn('[AudioContext]', e) }
+      } catch {}
     }
   }, [])
 
@@ -354,7 +354,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
       try {
         bgMusicPlayerRef.current.stopVideo()
         bgMusicPlayerRef.current.destroy()
-      } catch (e) { console.warn('[AudioContext]', e) }
+      } catch {}
       bgMusicPlayerRef.current = null
     }
     const container = document.getElementById('bg-music-player-global')
@@ -367,7 +367,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
     try {
       // Fetch a new random video
       const response = await fetch(`/api/music-videos?genre=${musicGenre}`, { signal: skipAbortRef.current.signal })
-      if (!response.ok) { console.warn('[AudioContext] skipTrack fetch failed:', response.status); return }
+      if (!response.ok) return
       const data = await response.json()
       if (data.videos && data.videos.length > 0 && isMountedRef.current) {
         const randomVideo = data.videos[Math.floor(Math.random() * data.videos.length)]
@@ -375,7 +375,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
       }
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') return
-      console.warn('[AudioContext] skipTrack fetch error:', e)
+      console.error('[AudioContext] skipTrack fetch error:', e)
     }
   }, [musicGenre])
 

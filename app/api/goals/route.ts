@@ -61,6 +61,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title required' }, { status: 400 })
     }
 
+    if (title.length > 200 || (description && description.length > 5000)) {
+      return NextResponse.json({ error: 'Field too long' }, { status: 400 })
+    }
+
     const validFrequencies = ['daily', 'weekly', 'monthly']
     const safeFrequency = validFrequencies.includes(frequency) ? frequency : 'daily'
     const safeTarget = typeof target_count === 'number' && target_count > 0 ? target_count : 1

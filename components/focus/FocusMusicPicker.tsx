@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { Music, Play, Check } from 'lucide-react'
 import { MUSIC_GENRES, getGenreBackgrounds } from '@/components/home/home-types'
 import { haptic } from '@/lib/haptics'
@@ -150,10 +151,12 @@ export function FocusMusicPicker({ selected, onSelect }: FocusMusicPickerProps) 
               <div className="relative w-40 h-40 rounded-2xl overflow-hidden bg-[#14141a]">
                 {bgUrl ? (
                   <>
-                    <img
+                    <Image
                       src={bgUrl}
                       alt={genre.word}
-                      className={`absolute inset-0 w-full h-full object-cover transition-opacity ${
+                      fill
+                      sizes="160px"
+                      className={`object-cover transition-opacity ${
                         isActive ? 'opacity-80' : 'opacity-50 group-hover:opacity-65'
                       }`}
                     />

@@ -6,6 +6,7 @@ import { getGroq } from '@/lib/groq'
 import { VALID_SOUNDSCAPE_IDS } from '@/components/home/home-types'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +58,11 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { allowed } = rateLimit(`ai-smart-session:${user.id}`, { limit: 10, windowSeconds: 60 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
     // Check premium

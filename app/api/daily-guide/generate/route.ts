@@ -9,6 +9,7 @@ import {
 } from '@/lib/daily-guide/decision-tree'
 import { getDateString } from '@/lib/daily-guide/day-type'
 import type { DayType, TimeMode, EnergyLevel, GuideTone, WorkoutIntensity } from '@/lib/daily-guide/decision-tree'
+import { rateLimit } from '@/lib/rate-limit'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -28,6 +29,11 @@ export async function POST(request: NextRequest) {
         error: 'Unauthorized',
         details: authError?.message || 'No session found. Please sign in again.'
       }, { status: 401 })
+    }
+
+    const { allowed } = rateLimit(`ai-daily-guide:${user.id}`, { limit: 10, windowSeconds: 60 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
     const body = await request.json()
@@ -367,7 +373,7 @@ export async function POST(request: NextRequest) {
     const errorStack = error instanceof Error ? error.stack : undefined
     console.error('Error details:', { message: errorMessage, stack: errorStack })
     return NextResponse.json(
-      { error: 'Failed to generate daily guide', details: errorMessage },
+      { error: 'Failed to generate daily guide' },
       { status: 500 }
     )
   }

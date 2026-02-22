@@ -4,6 +4,7 @@ import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,11 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { allowed } = rateLimit(`ai-quote-explanation:${user.id}`, { limit: 15, windowSeconds: 60 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
     // Premium check

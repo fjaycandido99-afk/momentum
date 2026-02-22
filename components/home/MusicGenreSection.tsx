@@ -110,7 +110,7 @@ export function MusicGenreSection({
                     return src ? (
                       <img
                         src={src}
-                        alt={video.title}
+                        alt=""
                         className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
                       />
                     ) : null

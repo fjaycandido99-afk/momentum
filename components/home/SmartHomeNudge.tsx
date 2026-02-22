@@ -59,7 +59,7 @@ function pickNudge(props: SmartHomeNudgeProps): NudgeContent | null {
       icon: Wind,
       message: 'A short breathing session could help right now',
       action: 'Try it',
-      href: '#guided',
+      href: '/daily-guide',
       color: 'text-white',
     }
   }

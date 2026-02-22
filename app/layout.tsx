@@ -25,11 +25,13 @@ export const metadata: Metadata = {
     siteName: 'Voxu',
     type: 'website',
     locale: 'en_US',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Voxu - Your AI Audio Coach' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Voxu - Your AI Audio Coach',
     description: 'Motivation, mindfulness, and focus — delivered automatically.',
+    images: ['/og-image.png'],
   },
   robots: {
     index: true,
@@ -60,8 +62,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.ico" sizes="32x32" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="preconnect" href="https://www.youtube.com" />
+        <link rel="preconnect" href="https://i.ytimg.com" />
+        <link rel="preconnect" href="https://jkrpreixylczfdfdyxrm.supabase.co" crossOrigin="anonymous" />
       </head>
       <body className={`${inter.className} ${cormorant.variable} antialiased`}>
         <SkipToContent />

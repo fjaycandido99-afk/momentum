@@ -6,6 +6,7 @@ import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 import { generateAudio } from '@/lib/daily-guide/audio-utils'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,11 @@ export async function GET() {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { allowed } = rateLimit(`ai-morning-briefing:${user.id}`, { limit: 10, windowSeconds: 60 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
     const isPremium = await isPremiumUser(user.id)

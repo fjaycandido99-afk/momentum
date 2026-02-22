@@ -160,6 +160,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { date, journal_win, journal_gratitude, journal_learned, journal_intention, journal_freetext, journal_mood, journal_prompt, journal_conversation, journal_dream, journal_dream_interpretation } = body
 
+    // Validate text field lengths to prevent abuse
+    const MAX_FIELD_LEN = 10000
+    const textFields = [journal_win, journal_gratitude, journal_learned, journal_intention, journal_freetext, journal_dream]
+    for (const field of textFields) {
+      if (typeof field === 'string' && field.length > MAX_FIELD_LEN) {
+        return NextResponse.json({ error: 'Field too long' }, { status: 400 })
+      }
+    }
+
     const targetDate = date ? new Date(date) : new Date()
     targetDate.setHours(0, 0, 0, 0)
 

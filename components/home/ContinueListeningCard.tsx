@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 import { Play } from 'lucide-react'
 import { VideoItem, formatDuration } from './home-types'
 
@@ -26,10 +27,12 @@ export function ContinueListeningCard({
         onClick={onOpenPlayer}
         className="relative w-full rounded-2xl overflow-hidden text-left group press-scale"
       >
-        <img
+        <Image
           src={background}
           alt={video.title}
-          className="absolute inset-0 w-full h-full object-cover opacity-40"
+          fill
+          sizes="100vw"
+          className="object-cover opacity-40"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
         <div className="relative z-10 flex items-center gap-4 p-4">

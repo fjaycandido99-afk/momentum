@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Timer, Bot, PenLine, BarChart3, Headphones, Bookmark, Compass, Music, Settings, Share2, ChevronRight } from 'lucide-react'
+import { Timer, Bot, PenLine, BarChart3, Headphones, Bookmark, Compass, Settings, ChevronRight } from 'lucide-react'
 
 const TIPS = [
   { icon: Timer, title: 'Focus Timer', description: 'Deep work with Pomodoro sessions + ambient sounds', href: '/focus', accent: 'bg-orange-400/20 text-orange-300' },
@@ -11,9 +11,7 @@ const TIPS = [
   { icon: Headphones, title: 'Soundscapes', description: 'Layer ambient sounds for focus and relaxation', href: '/focus', accent: 'bg-teal-400/20 text-teal-300' },
   { icon: Bookmark, title: 'Saved Content', description: 'Revisit your saved quotes, reflections & favorites', href: '/saved', accent: 'bg-amber-400/20 text-amber-300' },
   { icon: Compass, title: 'Mindset Path', description: 'Explore your philosophical mindset and its wisdom', href: '/mindset-selection', accent: 'bg-rose-400/20 text-rose-300' },
-  { icon: Music, title: 'Music Genres', description: 'Discover lo-fi, classical, jazz & more for any mood', href: null, accent: 'bg-pink-400/20 text-pink-300' },
   { icon: Settings, title: 'Settings', description: 'Customize your schedule, tone, and daily flow', href: '/settings', accent: 'bg-slate-400/20 text-slate-300' },
-  { icon: Share2, title: 'Share', description: 'Share your streaks and quotes as images on social media', href: null, accent: 'bg-cyan-400/20 text-cyan-300' },
 ] as const
 
 function getTodaysTip() {
@@ -47,9 +45,5 @@ export function DailyFeatureTip() {
     </div>
   )
 
-  if (tip.href) {
-    return <Link href={tip.href} className="block h-full">{content}</Link>
-  }
-
-  return <div className="h-full">{content}</div>
+  return <Link href={tip.href} className="block h-full">{content}</Link>
 }

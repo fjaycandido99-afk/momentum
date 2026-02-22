@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import Image from 'next/image'
 import { Play, Pause, Check, SkipForward, RotateCcw } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 
@@ -384,10 +385,12 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
           />
           {/* Visual: background image with topic overlay */}
           <div className="absolute inset-0">
-            <img
+            <Image
               src={backgroundImage}
               alt=""
-              className="w-full h-full object-cover"
+              fill
+              sizes="100vw"
+              className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
           </div>
@@ -403,6 +406,7 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
             <div className="flex justify-center mb-4">
               <button
                 onClick={handlePauseToggle}
+                aria-label={isPaused ? 'Resume playback' : 'Pause playback'}
                 className="flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 hover:scale-105 transition-all"
               >
                 {isPaused ? (
@@ -448,14 +452,17 @@ export function MicroLessonVideo({ isCompleted, onComplete, onSkip, dayType = 'w
         <>
           <button
             onClick={handlePlay}
+            aria-label={isCompleted ? `Replay ${displayTitle}` : `Play ${displayTitle}`}
             className="w-full relative group"
           >
             {/* Dark background image */}
             <div className="absolute inset-0">
-              <img
+              <Image
                 src={backgroundImage}
                 alt=""
-                className={`w-full h-full object-cover ${isCompleted ? 'opacity-60' : ''}`}
+                fill
+                sizes="100vw"
+                className={`object-cover ${isCompleted ? 'opacity-60' : ''}`}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
             </div>

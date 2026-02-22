@@ -5,6 +5,7 @@ import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { allowed } = rateLimit(`ai-dream:${user.id}`, { limit: 10, windowSeconds: 60 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
     // Premium check
     const isPremium = await isPremiumUser(user.id)
 
@@ -31,6 +37,10 @@ export async function POST(request: NextRequest) {
 
     if (!dreamText?.trim()) {
       return NextResponse.json({ error: 'dreamText is required' }, { status: 400 })
+    }
+
+    if (dreamText.length > 5000) {
+      return NextResponse.json({ error: 'dreamText is too long' }, { status: 400 })
     }
 
     const mindset = await getUserMindset(user.id)

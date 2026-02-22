@@ -16,7 +16,7 @@ import { CoachGreetingBubble } from './CoachGreetingBubble'
 import { SoundscapesSection } from './SoundscapesSection'
 import { GuidedSection } from './GuidedSection'
 import { XPBadge } from './XPBadge'
-import { MotivationSection } from './MotivationSection'
+const MotivationSection = dynamic(() => import('./MotivationSection').then(m => m.MotivationSection), { ssr: false })
 import { MusicTabsSection } from './MusicTabsSection'
 import { WelcomeBackCard } from './WelcomeBackCard'
 import { WisdomSection } from './WisdomSection'
@@ -960,7 +960,7 @@ export function ImmersiveHome() {
       {/* Hamburger Menu Dropdown */}
       {showMenu && (
         <>
-          <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
+          <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} role="presentation" />
           <div className="fixed right-6 top-[100px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
             <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
               <PenLine className="w-4 h-4 text-white/85" />
@@ -1209,7 +1209,7 @@ export function ImmersiveHome() {
       {/* Floating AI Coach Button + Greeting Bubble */}
       <div className="fixed right-5 bottom-28 z-30 flex items-center gap-2">
         <CoachGreetingBubble mindsetId={mindsetCtx?.mindset} onVisibleChange={setIsCoachNudging} />
-        <Link href="/coach" className="transition-all press-scale">
+        <Link href="/coach" aria-label="Open AI coach" className="transition-all press-scale">
           <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" nudging={isCoachNudging} className="!w-20 !h-20" />
         </Link>
       </div>

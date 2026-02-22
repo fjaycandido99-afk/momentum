@@ -22,11 +22,6 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isOnline && !prevOnline.current) {
       syncOfflineData()
-        .then(({ synced, failed }) => {
-          if (synced > 0) {
-            console.log(`Synced ${synced} offline items${failed > 0 ? `, ${failed} failed` : ''}`)
-          }
-        })
         .catch(err => console.error('Sync failed:', err))
     }
     prevOnline.current = isOnline

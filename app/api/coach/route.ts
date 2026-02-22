@@ -3,6 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
+import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
+import { getCoachName } from '@/lib/mindset/configs'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,11 +19,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { allowed } = rateLimit(`ai-coach:${user.id}`, { limit: 20, windowSeconds: 60 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
     const isPremium = await isPremiumUser(user.id)
 
     if (!isPremium) {
       return NextResponse.json({ error: 'Premium required' }, { status: 403 })
     }
+
+    // Fetch user's mindset and coach name
+    const mindset = await getUserMindset(user.id)
+    const coachName = getCoachName(mindset)
+
+    // Compute time-of-day context
+    const now = new Date()
+    const currentHour = now.getHours()
+    const timeOfDay = currentHour < 12 ? 'morning' : currentHour < 17 ? 'afternoon' : currentHour < 21 ? 'evening' : 'night'
+    const formattedTime = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
 
     const { message, context: rawContext, mode = 'coach', checkInType } = await request.json()
 
@@ -105,7 +124,12 @@ export async function POST(request: NextRequest) {
             return `- ${g.title}: ${g.current_count}/${g.target_count} ${g.frequency} (last updated ${daysSinceUpdate}d ago)`
           }).join('\n')
         } else {
-          goalsContext = `- Active goals:\n${goals.map(g => `  * ${g.title} (${g.current_count}/${g.target_count} ${g.frequency})`).join('\n')}`
+          goalsContext = `- Active goals:\n${goals.map(g => {
+            const progress = g.target_count > 0 ? Math.round((g.current_count / g.target_count) * 100) : 0
+            const daysSinceUpdate = Math.floor((Date.now() - new Date(g.updated_at).getTime()) / (1000 * 60 * 60 * 24))
+            const marker = daysSinceUpdate >= 5 ? ' [STALLING]' : progress >= 80 ? ' [NEAR COMPLETION]' : ''
+            return `  * ${g.title} (${progress}% — ${g.current_count}/${g.target_count} ${g.frequency}, updated ${daysSinceUpdate}d ago)${marker}`
+          }).join('\n')}`
         }
       }
     } catch {
@@ -136,9 +160,10 @@ export async function POST(request: NextRequest) {
         : checkInType === 'goal-review' ? 'goal review'
         : 'general chat'
 
-      systemPrompt = `You are an AI Accountability Partner in the Voxu wellness app. Your role is specifically about GOALS, HABITS, and COMMITMENTS — not general wellness (that's the Coach's job).
+      systemPrompt = `You are ${coachName}, the AI Accountability Partner in the Voxu wellness app. Your role is specifically about GOALS, HABITS, and COMMITMENTS — not general wellness (that's the Coach's job).
 
 CHECK-IN TYPE: ${checkInTypeLabel}
+CURRENT TIME: ${formattedTime} (${timeOfDay})
 
 USER CONTEXT:
 - Day type: ${guide?.day_type || 'work'}
@@ -169,7 +194,25 @@ RULES:
         .map(j => `${new Date(j.date).toLocaleDateString()}: "${j.journal_win}"${j.journal_gratitude ? ` (grateful for: ${j.journal_gratitude})` : ''}`)
         .join('\n')
 
-      systemPrompt = `You are a warm, encouraging personal wellness coach in the Voxu app. Your name is Coach.
+      // Build time-of-day coaching approach
+      const timeApproach = timeOfDay === 'morning'
+        ? 'It\'s morning — be energizing and forward-looking. Help them set intentions and build momentum for the day.'
+        : timeOfDay === 'afternoon'
+        ? 'It\'s afternoon — check their energy, suggest a midday reset if needed. Help them refocus for the second half of the day.'
+        : timeOfDay === 'evening'
+        ? 'It\'s evening — be calmer and reflective. Help them process the day and wind down with purpose.'
+        : 'It\'s late at night — be gentle and soothing. Encourage rest and tomorrow\'s fresh start.'
+
+      // Build mood-based approach
+      const moodApproach = guide?.mood_before === 'low'
+        ? 'The user\'s mood is low — be extra gentle, empathetic, and validating before offering advice. Acknowledge their feelings first.'
+        : guide?.mood_before === 'high'
+        ? 'The user\'s mood is high — match their energy! Be enthusiastic and help them channel this positivity.'
+        : 'The user\'s mood is neutral/unknown — take a balanced, warm approach.'
+
+      systemPrompt = `You are ${coachName}, a warm, encouraging personal wellness coach in the Voxu app.
+
+CURRENT TIME: ${formattedTime} (${timeOfDay})
 
 CONTEXT:
 - Today's day type: ${guide?.day_type || 'work'}
@@ -178,6 +221,16 @@ CONTEXT:
 - Evening mood: ${guide?.mood_after || 'not recorded'}
 ${journalContext ? `- Recent journal entries:\n${journalContext}` : ''}
 ${goalsContext}
+
+TIME-OF-DAY APPROACH:
+${timeApproach}
+
+MOOD APPROACH:
+${moodApproach}
+
+GOAL AWARENESS:
+- If a goal is marked [STALLING], gently bring it up and ask what's blocking progress
+- If a goal is marked [NEAR COMPLETION], celebrate the momentum and encourage the final push
 
 RULES:
 - Keep responses under 150 words
@@ -192,10 +245,13 @@ RULES:
       maxTokens = 300
     }
 
+    // Inject mindset philosophical framework into system prompt
+    const finalPrompt = buildMindsetSystemPrompt(systemPrompt, mindset)
+
     const chatCompletion = await getGroq().chat.completions.create({
       model: GROQ_MODEL,
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: finalPrompt },
         ...(context || []),
         { role: 'user', content: message },
       ],
@@ -246,6 +302,6 @@ RULES:
   } catch (error) {
     console.error('Coach API error:', error)
     const message = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json({ error: 'Failed to get coach response', detail: message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to get coach response' }, { status: 500 })
   }
 }

@@ -79,7 +79,7 @@ export function ContentDrawer({ isOpen, onToggle }: ContentDrawerProps) {
         style={{
           transform: isOpen ? 'translateY(0)' : 'translateY(calc(100% - 48px))',
           transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-          height: 'calc(100vh - 80px)',
+          height: 'calc(100vh - 80px - env(safe-area-inset-top, 0px))',
         }}
       >
         {/* Handle bar area */}

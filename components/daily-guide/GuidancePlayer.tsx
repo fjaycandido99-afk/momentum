@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import Image from 'next/image'
 import { X, Pause, Play, RotateCcw, Volume2, VolumeX, Check, Music, Crown, Clock } from 'lucide-react'
 import { WaveformScrubber } from '@/components/player/WaveformScrubber'
 import type { YTPlayer } from '@/lib/youtube-types'
@@ -1019,14 +1020,13 @@ export function GuidancePlayer({
       {/* Background image based on music genre */}
       {backgroundImage && (
         <div className="absolute inset-0 z-0">
-          <img
+          <Image
             src={backgroundImage}
             alt=""
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              // Hide on error
-              (e.target as HTMLImageElement).style.display = 'none'
-            }}
+            fill
+            sizes="100vw"
+            className="object-cover"
+            unoptimized
           />
           {/* Dark overlay for readability */}
           <div className="absolute inset-0 bg-black/60" />

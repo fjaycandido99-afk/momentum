@@ -487,9 +487,9 @@ export default function PricingPage() {
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-white/50 text-sm">
           <span>Voxu {new Date().getFullYear()}</span>
           <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-white/70 transition-colors">Terms</a>
-            <a href="#" className="hover:text-white/70 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white/70 transition-colors">Support</a>
+            <a href="/terms" className="hover:text-white/70 transition-colors">Terms</a>
+            <a href="/privacy" className="hover:text-white/70 transition-colors">Privacy</a>
+            <a href="mailto:support@voxu.app" className="hover:text-white/70 transition-colors">Support</a>
           </div>
         </div>
       </footer>

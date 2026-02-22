@@ -17,12 +17,15 @@ model User {
 
   // Preferences
   preferences  UserPreferences?
-  sessions     Session[]
-  favorites    FavoriteContent[]
-  subscription Subscription?
-  goals        Goal[]
-  playlists    Playlist[]
-  routines     Routine[]
+  sessions          Session[]
+  favorites         FavoriteContent[]
+  subscription      Subscription?
+  goals             Goal[]
+  playlists         Playlist[]
+  routines          Routine[]
+  pushSubscriptions PushSubscription[]
+  xpEvents          XPEvent[]
+  achievements      UserAchievement[]
 }
 
 model Subscription {
@@ -409,6 +412,7 @@ model DailyGuide {
 model PushSubscription {
   id       String @id @default(cuid())
   user_id  String
+  user     User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
   endpoint String @unique
   p256dh   String @default("") // Public key for encryption (web push)
   auth     String @default("") // Auth secret (web push)
@@ -427,8 +431,10 @@ model PushSubscription {
   daily_quote_alerts        Boolean @default(true)
   daily_affirmation_alerts  Boolean @default(true)
   motivational_nudge_alerts Boolean @default(true)
-  daily_motivation_alerts   Boolean @default(true)
-  featured_music_alerts     Boolean @default(true)
+  daily_motivation_alerts       Boolean @default(true)
+  featured_music_alerts         Boolean @default(true)
+  coach_checkin_alerts          Boolean @default(true)
+  coach_accountability_alerts   Boolean @default(true)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -543,6 +549,7 @@ model Routine {
 model XPEvent {
   id         String   @id @default(cuid())
   user_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   event_type String
   xp_amount  Int
   source     String?
@@ -555,6 +562,7 @@ model XPEvent {
 model UserAchievement {
   id             String   @id @default(cuid())
   user_id        String
+  user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   achievement_id String
   unlocked_at    DateTime @default(now())
 

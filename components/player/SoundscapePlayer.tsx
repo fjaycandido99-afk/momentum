@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { Play, Pause, ChevronDown, Focus, Sparkles, Moon, Zap, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Wind, Droplets, Coffee, Music, Lock } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { getSoundscapeBackground } from '@/components/home/home-types'
@@ -29,8 +30,8 @@ export const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
   { id: 'relax', label: 'Relax', subtitle: 'Calm your mind', icon: Sparkles, youtubeId: 'WHPEKLQID4U' },
   { id: 'sleep', label: 'Sleep', subtitle: 'Drift away', icon: Moon, youtubeId: 'T8yEdNx4dB0' },
   { id: 'energy', label: 'Energy', subtitle: 'Power up', icon: Zap, youtubeId: 'jfKfPfyJRdk' },
-  { id: 'rain', label: 'Rain', subtitle: 'Gentle rainfall', icon: CloudRain, youtubeId: 'mPZkdNFkNps' },
-  { id: 'ocean', label: 'Ocean', subtitle: 'Crashing waves', icon: Waves, youtubeId: 'WHPEKLQID4U' },
+  { id: 'rain', label: 'Rain', subtitle: 'Gentle rainfall', icon: CloudRain, youtubeId: 'yIQd2Ya0Ziw' },
+  { id: 'ocean', label: 'Ocean', subtitle: 'Crashing waves', icon: Waves, youtubeId: 'bn9F19Hi1Lk' },
   { id: 'forest', label: 'Forest', subtitle: 'Nature sounds', icon: Trees, youtubeId: 'xNN7iTA57jM' },
   { id: 'fire', label: 'Fire', subtitle: 'Crackling fireplace', icon: Flame, youtubeId: 'UgHKb_7884o' },
   { id: 'thunder', label: 'Thunder', subtitle: 'Thunderstorm', icon: CloudLightning, youtubeId: 'nDq6TstdEi8' },
@@ -69,10 +70,13 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
       {/* === Fullscreen background image (for soundscapes with artwork) === */}
       {hasBg && (
         <>
-          <img
+          <Image
             src={bgUrl!}
             alt={label}
-            className="absolute inset-0 w-full h-full object-cover z-0"
+            fill
+            sizes="100vw"
+            priority
+            className="object-cover z-0"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/50 z-[2]" />
         </>
