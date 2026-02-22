@@ -200,7 +200,7 @@ function BotMouth({ emotion, nudging, eyeFill }: { emotion?: CoachEmotion; nudgi
   // Nudging — excited little open mouth
   if (nudging) {
     return (
-      <ellipse cx="50" cy="67" rx="5" ry="3.5" fill={eyeFill} opacity="0.8" />
+      <ellipse cx="50" cy="76" rx="5" ry="3.5" fill={eyeFill} opacity="0.8" />
     )
   }
 
@@ -208,33 +208,33 @@ function BotMouth({ emotion, nudging, eyeFill }: { emotion?: CoachEmotion; nudgi
     <g key={`mouth-${e}`}>
       {e === 'idle' && (
         /* Neutral — gentle smile */
-        <path d="M42 66 Q50 70 58 66" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7" />
+        <path d="M42 74 Q50 78 58 74" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7" />
       )}
       {e === 'listening' && (
         /* Attentive — open "o" */
-        <ellipse cx="50" cy="67" rx="4.5" ry="3.5" fill={eyeFill} opacity="0.7" />
+        <ellipse cx="50" cy="76" rx="4.5" ry="3.5" fill={eyeFill} opacity="0.7" />
       )}
       {e === 'thinking' && (
         /* Pursed/hmm — wavy squiggle */
-        <path d="M42 66 Q46 69 50 66 Q54 63 58 66" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7" />
+        <path d="M42 75 Q46 78 50 75 Q54 72 58 75" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7" />
       )}
       {e === 'happy' && (
         /* Wide smile — big grin */
         <>
-          <path d="M36 63 Q43 73 50 73 Q57 73 64 63" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.85" />
-          <path d="M38 64 Q50 75 62 64" fill={eyeFill} opacity="0.3" />
+          <path d="M36 72 Q43 82 50 82 Q57 82 64 72" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.85" />
+          <path d="M38 73 Q50 84 62 73" fill={eyeFill} opacity="0.3" />
         </>
       )}
       {e === 'empathetic' && (
         /* Sympathetic frown */
-        <path d="M40 69 Q50 64 60 69" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7" />
+        <path d="M40 78 Q50 73 60 78" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7" />
       )}
       {e === 'excited' && (
         /* Big open grin */
         <>
-          <ellipse cx="50" cy="67" rx="10" ry="6" fill={eyeFill} opacity="0.4" />
-          <path d="M34 63 Q42 75 50 75 Q58 75 66 63" stroke={eyeFill} strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.9" />
-          <path d="M36 64 Q50 78 64 64" fill={eyeFill} opacity="0.3" />
+          <ellipse cx="50" cy="76" rx="10" ry="6" fill={eyeFill} opacity="0.4" />
+          <path d="M34 72 Q42 84 50 84 Q58 84 66 72" stroke={eyeFill} strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.9" />
+          <path d="M36 73 Q50 87 64 73" fill={eyeFill} opacity="0.3" />
         </>
       )}
     </g>
@@ -265,8 +265,8 @@ function BotFace({ accent, nudging, emotion }: { accent: string; nudging?: boole
         {(nudging || emotion === 'excited') && <animate attributeName="r" values="3;5;3" dur={nudging ? '0.6s' : '0.8s'} repeatCount="indefinite" />}
       </circle>
 
-      {/* Large visor */}
-      <rect x="18" y="36" width="64" height="34" rx="14" fill={BOT.visor} />
+      {/* Large visor — extended down for mouth space */}
+      <rect x="18" y="36" width="64" height="44" rx="14" fill={BOT.visor} />
 
       {/* Eye gaze wrapper — shifts both eyes together */}
       <g key={`gaze-${emotion || 'idle'}`} transform={`translate(${cfg.eyeOffsetX}, ${cfg.eyeOffsetY})`}>
