@@ -5,6 +5,8 @@ import type { MindsetId } from '@/lib/mindset/types'
 
 interface CoachGreetingBubbleProps {
   mindsetId?: MindsetId | null
+  /** Called when the bubble appears or disappears */
+  onVisibleChange?: (visible: boolean) => void
 }
 
 // ── Per-mindset accent colors (matches CoachAvatar THEMES) ──
@@ -78,7 +80,7 @@ const NUDGE_INTERVAL_MS = 17 * 60 * 1000 // ~17 min
 const AUTO_DISMISS_MS = 8000
 const GREETING_SESSION_KEY = 'voxu_coach_greeting_shown'
 
-export function CoachGreetingBubble({ mindsetId }: CoachGreetingBubbleProps) {
+export function CoachGreetingBubble({ mindsetId, onVisibleChange }: CoachGreetingBubbleProps) {
   const mid = mindsetId || 'stoic'
   const [message, setMessage] = useState<string | null>(null)
   const [visible, setVisible] = useState(false)
@@ -89,6 +91,11 @@ export function CoachGreetingBubble({ mindsetId }: CoachGreetingBubbleProps) {
   const accent = ACCENT[mid] || ACCENT.stoic
   const coachName = COACH_NAME[mid] || COACH_NAME.stoic
   const greetings = GREETINGS[mid] || GREETINGS.stoic
+
+  // Notify parent of visibility changes
+  useEffect(() => {
+    onVisibleChange?.(visible)
+  }, [visible, onVisibleChange])
 
   const pickLocalGreeting = useCallback(() => {
     return greetings[Math.floor(Math.random() * greetings.length)]
