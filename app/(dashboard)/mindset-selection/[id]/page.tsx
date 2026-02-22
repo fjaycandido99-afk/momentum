@@ -71,7 +71,7 @@ export default function MindsetDetailPage() {
 
       {/* Mindset header */}
       <div className="text-center px-6 mt-6 flex flex-col items-center opacity-0 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
-        <CoachAvatar mindsetId={mindsetId} size="lg" />
+        <CoachAvatar mindsetId={mindsetId} size="lg" className="!w-24 !h-24" />
         <h1 className="text-2xl font-light mt-3 tracking-wide">
           {config.name}
         </h1>

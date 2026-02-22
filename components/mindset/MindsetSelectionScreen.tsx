@@ -96,7 +96,7 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <MindsetIcon mindsetId={id} className="w-10 h-10 text-white/80" />
-            <CoachAvatar mindsetId={id} size="sm" />
+            <CoachAvatar mindsetId={id} size="md" />
           </div>
           <span className={`text-[10px] ${theme.accent} font-medium tracking-wider uppercase mt-1`}>
             {theme.tagline}
