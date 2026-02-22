@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MINDSET_IDS, type MindsetId } from '@/lib/mindset/types'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
+import { CoachAvatar } from '@/components/coach/CoachAvatar'
 
 interface MindsetSelectionScreenProps {
   /** If true, show as a "Reset My Path" picker instead of onboarding */
@@ -93,7 +94,10 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
       {/* Content */}
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-3">
-          <MindsetIcon mindsetId={id} className="w-10 h-10 text-white/80" />
+          <div className="flex items-center gap-2">
+            <MindsetIcon mindsetId={id} className="w-10 h-10 text-white/80" />
+            <CoachAvatar mindsetId={id} size="sm" />
+          </div>
           <span className={`text-[10px] ${theme.accent} font-medium tracking-wider uppercase mt-1`}>
             {theme.tagline}
           </span>
