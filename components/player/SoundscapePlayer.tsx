@@ -40,8 +40,8 @@ export const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
   { id: 'cafe', label: 'Cafe', subtitle: 'Coffee shop ambience', icon: Coffee, youtubeId: 'gaGrHUekGrc' },
   { id: 'piano', label: 'Piano', subtitle: 'Soft melodies', icon: Music, youtubeId: '77ZozI0rw7w' },
   // Cosmic soundscapes
-  { id: 'cosmic', label: 'Cosmic', subtitle: 'Space ambient', icon: Sparkles, youtubeId: 'GPvQ5ZWWF1w' },
-  { id: 'astral', label: 'Astral', subtitle: 'Celestial drift', icon: Star, youtubeId: 'e3fqE01YYWs' },
+  { id: 'cosmic', label: 'Cosmic', subtitle: 'Space ambient', icon: Sparkles, youtubeId: 'tNkZsRW7h2c' },
+  { id: 'astral', label: 'Astral', subtitle: 'Celestial drift', icon: Star, youtubeId: 'gpvznAiKblU' },
   { id: 'starlight', label: 'Starlight', subtitle: 'Night sky', icon: Moon, youtubeId: 'zcm6nV7Bod8' },
 ]
 
