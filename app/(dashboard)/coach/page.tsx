@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { ChevronLeft, Send, Loader2, Sparkles, Crown, MessageSquare, ClipboardList, Sun, Clock, Moon, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { CoachingPlans } from '@/components/coach/CoachingPlans'
-import { CoachAvatar } from '@/components/coach/CoachAvatar'
+import { CoachAvatar, type CoachEmotion } from '@/components/coach/CoachAvatar'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { MINDSET_CONFIGS, getCoachName } from '@/lib/mindset/configs'
@@ -90,6 +90,21 @@ function renderMarkdown(text: string) {
   })
 }
 
+const EMOTION_KEYWORDS: { emotion: CoachEmotion; words: string[] }[] = [
+  { emotion: 'excited', words: ["let's go", 'crush it', 'amazing', 'incredible', 'unstoppable', 'fire', 'dominate', 'beast'] },
+  { emotion: 'happy', words: ['great', 'proud', 'well done', 'celebrate', 'awesome', 'fantastic', 'wonderful', 'excellent', 'congrats', 'progress', 'nice work'] },
+  { emotion: 'empathetic', words: ['understand', 'sorry', 'tough', 'difficult', 'struggle', 'pain', 'hear you', "it's okay", 'valid', 'challenging', 'feel for you'] },
+  { emotion: 'thinking', words: ['consider', 'think about', 'reflect', 'what if', 'perspective', 'hmm', 'interesting', 'let me'] },
+]
+
+function detectEmotion(text: string): CoachEmotion {
+  const lower = text.toLowerCase()
+  for (const { emotion, words } of EMOTION_KEYWORDS) {
+    if (words.some(w => lower.includes(w))) return emotion
+  }
+  return 'idle'
+}
+
 export default function CoachPage() {
   const subscription = useSubscriptionOptional()
   const mindsetCtx = useMindsetOptional()
@@ -98,6 +113,16 @@ export default function CoachPage() {
   const [chatMode, setChatMode] = useState<'coach' | 'accountability'>('coach')
   const [activePlanBanner, setActivePlanBanner] = useState<string | null>(null)
   const [hasLoggedCheckInXP, setHasLoggedCheckInXP] = useState(false)
+  const [coachEmotion, setCoachEmotion] = useState<CoachEmotion>('idle')
+  const emotionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const setEmotionWithDecay = useCallback((emotion: CoachEmotion, decayMs = 4000) => {
+    if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current)
+    setCoachEmotion(emotion)
+    if (emotion !== 'idle') {
+      emotionTimerRef.current = setTimeout(() => setCoachEmotion('idle'), decayMs)
+    }
+  }, [])
 
   useEffect(() => {
     const planId = getActivePlan()
@@ -156,6 +181,7 @@ export default function CoachPage() {
     setInput('')
     setShowQuickReplies(false)
     setIsLoading(true)
+    setEmotionWithDecay('thinking', 30000)
 
     try {
       const context = messages.slice(-10).map(m => ({
@@ -177,6 +203,7 @@ export default function CoachPage() {
       if (response.ok) {
         const data = await response.json()
         setMessages(prev => [...prev, { role: 'assistant', content: data.reply, timestamp: Date.now() }])
+        setEmotionWithDecay(detectEmotion(data.reply))
 
         // Award XP on first accountability check-in per session
         if (chatMode === 'accountability' && !hasLoggedCheckInXP) {
@@ -189,13 +216,16 @@ export default function CoachPage() {
         }
       } else if (response.status === 403) {
         setMessages(prev => [...prev, { role: 'assistant', content: `This feature requires a **Premium** subscription. Upgrade to chat with **${coachName}**!`, timestamp: Date.now() }])
+        setEmotionWithDecay('empathetic')
       } else {
         const errData = await response.json().catch(() => null)
         const detail = errData?.detail ? ` (${errData.detail})` : ''
         setMessages(prev => [...prev, { role: 'assistant', content: `Sorry, I couldn't process that. Please try again.${detail}`, timestamp: Date.now() }])
+        setEmotionWithDecay('idle')
       }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting. Please check your internet and try again.", timestamp: Date.now() }])
+      setEmotionWithDecay('idle')
     } finally {
       setIsLoading(false)
     }
@@ -270,7 +300,7 @@ export default function CoachPage() {
         <div className="relative flex items-center gap-3 flex-1">
           {/* Coach avatar */}
           <div className="relative">
-            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="md" />
+            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="md" emotion={coachEmotion} />
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#08080c]" />
           </div>
           <div>
@@ -369,7 +399,7 @@ export default function CoachPage() {
           >
             {/* Coach avatar for assistant messages */}
             {msg.role === 'assistant' && (
-              <CoachAvatar mindsetId={mindsetCtx?.mindset} size="sm" className="mr-2 mt-1" />
+              <CoachAvatar mindsetId={mindsetCtx?.mindset} size="sm" className="mr-2 mt-1" emotion="idle" />
             )}
             <div className="flex flex-col">
               <div
@@ -391,7 +421,7 @@ export default function CoachPage() {
         {/* Typing indicator */}
         {isLoading && (
           <div role="status" aria-label="Coach is typing" className="flex justify-start animate-fade-in-up">
-            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="sm" className="mr-2 mt-1" />
+            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="sm" className="mr-2 mt-1" emotion="thinking" />
             <div className="p-3.5 bg-black rounded-2xl rounded-bl-md border border-white/10">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
@@ -430,7 +460,10 @@ export default function CoachPage() {
             ref={inputRef}
             aria-label={chatMode === 'accountability' ? 'Share your progress...' : 'Ask your coach...'}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value)
+              setEmotionWithDecay(e.target.value.length > 0 ? 'listening' : 'idle')
+            }}
             onKeyDown={handleKeyDown}
             placeholder={chatMode === 'accountability' ? 'Share your progress...' : 'Ask your coach...'}
             className="flex-1 p-3 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-amber-500/20 resize-none max-h-32 transition-all"

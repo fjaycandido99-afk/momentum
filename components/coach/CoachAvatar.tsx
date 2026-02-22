@@ -3,10 +3,16 @@
 import { useId, useState } from 'react'
 import type { MindsetId } from '@/lib/mindset/types'
 
+export type CoachEmotion = 'idle' | 'listening' | 'thinking' | 'happy' | 'empathetic' | 'excited'
+
 interface CoachAvatarProps {
   mindsetId?: MindsetId | null
   size?: 'sm' | 'md' | 'lg'
   className?: string
+  /** When true, avatar plays attention-grabbing bounce + glow animation (used during nudges on home) */
+  nudging?: boolean
+  /** Emotional state — used during coach chat for reactive animations */
+  emotion?: CoachEmotion
 }
 
 const SIZE_CLASS = { sm: 'w-7 h-7', md: 'w-10 h-10', lg: 'w-16 h-16' }
@@ -26,40 +32,144 @@ interface MindsetTheme {
   border: string
 }
 
-const BLACK: [string, string] = ['#000000', '#000000']
-
 const THEMES: Record<MindsetId, MindsetTheme> = {
-  stoic:          { accent: '#d4b070', bg: BLACK, border: 'white' },
-  existentialist: { accent: '#8a9aba', bg: BLACK, border: 'white' },
-  cynic:          { accent: '#e86838', bg: BLACK, border: 'white' },
-  hedonist:       { accent: '#80d090', bg: BLACK, border: 'white' },
-  samurai:        { accent: '#d86058', bg: BLACK, border: 'white' },
-  scholar:        { accent: '#b088e0', bg: BLACK, border: 'white' },
-  manifestor:     { accent: '#e8b848', bg: BLACK, border: 'white' },
-  hustler:        { accent: '#8a9aaa', bg: BLACK, border: 'white' },
+  stoic:          { accent: '#d4b070', bg: ['#2a2010', '#080600'], border: 'white' },
+  existentialist: { accent: '#8a9aba', bg: ['#181e2c', '#060810'], border: 'white' },
+  cynic:          { accent: '#e86838', bg: ['#2a1408', '#080400'], border: 'white' },
+  hedonist:       { accent: '#80d090', bg: ['#102810', '#040a02'], border: 'white' },
+  samurai:        { accent: '#d86058', bg: ['#2a1010', '#080404'], border: 'white' },
+  scholar:        { accent: '#b088e0', bg: ['#1e102c', '#080410'], border: 'white' },
+  manifestor:     { accent: '#e8b848', bg: ['#2a2008', '#080600'], border: 'white' },
+  hustler:        { accent: '#8a9aaa', bg: ['#1c2028', '#060810'], border: 'white' },
+}
+
+// ── Emotion animation configs ────────────────────────────
+
+interface EmotionConfig {
+  headValues: string
+  headDur: string
+  breathValues: string
+  breathDur: string
+  eyeOffsetX: number
+  eyeOffsetY: number
+  eyeColor: 'default' | 'accent'
+  eyeGlowValues: string
+  eyeGlowDur: string
+  blinkDur: string
+  antennaDur: string
+  antennaValues: string
+}
+
+const EMOTION_CONFIGS: Record<CoachEmotion, EmotionConfig> = {
+  idle: {
+    headValues: '0 50 50;2 50 50;0 50 50;-2 50 50;0 50 50',
+    headDur: '6s',
+    breathValues: '0 0;0 -1;0 0',
+    breathDur: '4s',
+    eyeOffsetX: 0,
+    eyeOffsetY: 0,
+    eyeColor: 'default',
+    eyeGlowValues: '0.8;1;0.8',
+    eyeGlowDur: '3s',
+    blinkDur: '4s',
+    antennaDur: '2s',
+    antennaValues: '0.6;1;0.6',
+  },
+  listening: {
+    headValues: '0 50 50;8 50 50;10 50 50;8 50 50;0 50 50',
+    headDur: '3s',
+    breathValues: '0 0;0 -1;0 0',
+    breathDur: '5s',
+    eyeOffsetX: -5,
+    eyeOffsetY: 0,
+    eyeColor: 'default',
+    eyeGlowValues: '0.85;1;0.85',
+    eyeGlowDur: '1.5s',
+    blinkDur: '8s',
+    antennaDur: '2s',
+    antennaValues: '0.7;1;0.7',
+  },
+  thinking: {
+    headValues: '0 50 50;12 50 50;10 50 50;12 50 50;0 50 50',
+    headDur: '4s',
+    breathValues: '0 0;0 -2;0 2;0 0',
+    breathDur: '3s',
+    eyeOffsetX: 5,
+    eyeOffsetY: -5,
+    eyeColor: 'default',
+    eyeGlowValues: '0.5;1;0.5',
+    eyeGlowDur: '2s',
+    blinkDur: '8s',
+    antennaDur: '0.8s',
+    antennaValues: '0.4;1;0.4',
+  },
+  happy: {
+    headValues: '0 50 50;8 50 50;0 50 50;-8 50 50;0 50 50',
+    headDur: '1.2s',
+    breathValues: '0 0;0 -4;0 0',
+    breathDur: '1.5s',
+    eyeOffsetX: 0,
+    eyeOffsetY: -2,
+    eyeColor: 'default',
+    eyeGlowValues: '0.6;1;0.6',
+    eyeGlowDur: '0.8s',
+    blinkDur: '2s',
+    antennaDur: '0.6s',
+    antennaValues: '0.5;1;0.5',
+  },
+  empathetic: {
+    headValues: '0 50 50;-10 50 50;-8 50 50;-10 50 50;0 50 50',
+    headDur: '4s',
+    breathValues: '0 0;0 -2;0 0',
+    breathDur: '5s',
+    eyeOffsetX: -2,
+    eyeOffsetY: 4,
+    eyeColor: 'default',
+    eyeGlowValues: '0.4;0.7;0.4',
+    eyeGlowDur: '3s',
+    blinkDur: '5s',
+    antennaDur: '3s',
+    antennaValues: '0.3;0.6;0.3',
+  },
+  excited: {
+    headValues: '0 50 50;10 50 50;0 50 50;-10 50 50;0 50 50',
+    headDur: '0.8s',
+    breathValues: '0 0;0 -6;0 2;0 -4;0 0',
+    breathDur: '1s',
+    eyeOffsetX: 0,
+    eyeOffsetY: 0,
+    eyeColor: 'accent',
+    eyeGlowValues: '0.5;1;0.5',
+    eyeGlowDur: '0.5s',
+    blinkDur: '1.5s',
+    antennaDur: '0.4s',
+    antennaValues: '0.3;1;0.3',
+  },
 }
 
 // ── Animation helpers ─────────────────────────────────────
 
-function AnimatedHead({ children }: { children: React.ReactNode }) {
+function AnimatedHead({ children, emotion }: { children: React.ReactNode; emotion?: CoachEmotion }) {
+  const cfg = emotion ? EMOTION_CONFIGS[emotion] : EMOTION_CONFIGS.idle
   return (
-    <g>
+    <g key={`head-${emotion || 'idle'}`}>
       <animateTransform attributeName="transform" type="rotate"
-        values="0 50 50;1 50 50;0 50 50;-1 50 50;0 50 50"
-        dur="6s" repeatCount="indefinite" />
+        values={cfg.headValues}
+        dur={cfg.headDur} repeatCount="indefinite" />
       {children}
     </g>
   )
 }
 
 function BlinkingEye({ cx, cy, children, dur }: { cx: number; cy: number; children: React.ReactNode; dur?: string }) {
+  const d = dur || '4s'
   return (
     <g transform={`translate(${cx}, ${cy})`}>
-      <g>
+      <g key={`blink-${d}`}>
         <animateTransform attributeName="transform" type="scale"
           values="1 1;1 1;1 0.1;1 1"
           keyTimes="0;0.92;0.96;1"
-          dur={dur || '4s'} repeatCount="indefinite" />
+          dur={d} repeatCount="indefinite" />
         <g transform={`translate(${-cx}, ${-cy})`}>
           {children}
         </g>
@@ -68,20 +178,79 @@ function BlinkingEye({ cx, cy, children, dur }: { cx: number; cy: number; childr
   )
 }
 
-function BreathingBody({ children }: { children: React.ReactNode }) {
+function BreathingBody({ children, nudging, emotion }: { children: React.ReactNode; nudging?: boolean; emotion?: CoachEmotion }) {
+  // Nudging takes priority (home-page specific), then emotion, then default
+  const cfg = emotion ? EMOTION_CONFIGS[emotion] : EMOTION_CONFIGS.idle
+  const breathKey = nudging ? 'nudge' : (emotion || 'idle')
   return (
-    <g>
+    <g key={`breath-${breathKey}`}>
       <animateTransform attributeName="transform" type="translate"
-        values="0 0;0 -1;0 0"
-        dur="4s" repeatCount="indefinite" />
+        values={nudging ? '0 0;0 -4;0 1;0 -2;0 0' : cfg.breathValues}
+        dur={nudging ? '1.2s' : cfg.breathDur} repeatCount="indefinite" />
       {children}
+    </g>
+  )
+}
+
+// ── Bot Mouth (emotion-reactive) ────────────────────────
+
+function BotMouth({ emotion, nudging, eyeFill }: { emotion?: CoachEmotion; nudging?: boolean; eyeFill: string }) {
+  const e = emotion || 'idle'
+
+  // Nudging — excited little open mouth
+  if (nudging) {
+    return (
+      <ellipse cx="50" cy="67" rx="5" ry="3.5" fill={eyeFill} opacity="0.8" />
+    )
+  }
+
+  return (
+    <g key={`mouth-${e}`}>
+      {e === 'idle' && (
+        /* Neutral — gentle smile */
+        <path d="M42 66 Q50 70 58 66" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7" />
+      )}
+      {e === 'listening' && (
+        /* Attentive — open "o" */
+        <ellipse cx="50" cy="67" rx="4.5" ry="3.5" fill={eyeFill} opacity="0.7" />
+      )}
+      {e === 'thinking' && (
+        /* Pursed/hmm — wavy squiggle */
+        <path d="M42 66 Q46 69 50 66 Q54 63 58 66" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7" />
+      )}
+      {e === 'happy' && (
+        /* Wide smile — big grin */
+        <>
+          <path d="M36 63 Q43 73 50 73 Q57 73 64 63" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.85" />
+          <path d="M38 64 Q50 75 62 64" fill={eyeFill} opacity="0.3" />
+        </>
+      )}
+      {e === 'empathetic' && (
+        /* Sympathetic frown */
+        <path d="M40 69 Q50 64 60 69" stroke={eyeFill} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7" />
+      )}
+      {e === 'excited' && (
+        /* Big open grin */
+        <>
+          <ellipse cx="50" cy="67" rx="10" ry="6" fill={eyeFill} opacity="0.4" />
+          <path d="M34 63 Q42 75 50 75 Q58 75 66 63" stroke={eyeFill} strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.9" />
+          <path d="M36 64 Q50 78 64 64" fill={eyeFill} opacity="0.3" />
+        </>
+      )}
     </g>
   )
 }
 
 // ── Bot Face (Astro Bot style — round, clean, big eyes) ───
 
-function BotFace({ accent }: { accent: string }) {
+function BotFace({ accent, nudging, emotion }: { accent: string; nudging?: boolean; emotion?: CoachEmotion }) {
+  const cfg = emotion ? EMOTION_CONFIGS[emotion] : EMOTION_CONFIGS.idle
+  const eyeFill = nudging ? accent : cfg.eyeColor === 'accent' ? accent : '#4A9EFF'
+  const eyeGlowVals = nudging ? '0.7;1;0.7' : cfg.eyeGlowValues
+  const eyeGlowDur = nudging ? '0.8s' : cfg.eyeGlowDur
+  const blinkDur = nudging ? '1s' : cfg.blinkDur
+  const antR = nudging ? 4 : (emotion === 'excited' ? 4 : 3)
+
   return (
     <>
       {/* Round head */}
@@ -91,28 +260,35 @@ function BotFace({ accent }: { accent: string }) {
 
       {/* Antenna */}
       <line x1="50" y1="12" x2="50" y2="4" stroke={BOT.bodyEdge} strokeWidth="2.5" strokeLinecap="round" />
-      <circle cx="50" cy="4" r="3" fill={accent} opacity="0.8">
-        <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
+      <circle key={`ant-${emotion || 'idle'}`} cx="50" cy="4" r={antR} fill={accent} opacity="0.8">
+        <animate attributeName="opacity" values={nudging ? '0.5;1;0.5' : cfg.antennaValues} dur={nudging ? '0.6s' : cfg.antennaDur} repeatCount="indefinite" />
+        {(nudging || emotion === 'excited') && <animate attributeName="r" values="3;5;3" dur={nudging ? '0.6s' : '0.8s'} repeatCount="indefinite" />}
       </circle>
 
       {/* Large visor */}
       <rect x="18" y="36" width="64" height="34" rx="14" fill={BOT.visor} />
 
-      {/* Left eye — round glowing blue */}
-      <BlinkingEye cx={36} cy={53}>
-        <circle cx="36" cy="53" r="10" fill="#4A9EFF" opacity="0.9">
-          <animate attributeName="opacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
-        </circle>
-        <circle cx="33" cy="49" r="3" fill="white" opacity="0.45" />
-      </BlinkingEye>
+      {/* Eye gaze wrapper — shifts both eyes together */}
+      <g key={`gaze-${emotion || 'idle'}`} transform={`translate(${cfg.eyeOffsetX}, ${cfg.eyeOffsetY})`}>
+        {/* Left eye — round glowing */}
+        <BlinkingEye cx={36} cy={53} dur={blinkDur}>
+          <circle cx="36" cy="53" r="10" fill={eyeFill} opacity="0.9">
+            <animate attributeName="opacity" values={eyeGlowVals} dur={eyeGlowDur} repeatCount="indefinite" />
+          </circle>
+          <circle cx="33" cy="49" r="3" fill="white" opacity="0.45" />
+        </BlinkingEye>
 
-      {/* Right eye — round glowing blue */}
-      <BlinkingEye cx={64} cy={53} dur="4.3s">
-        <circle cx="64" cy="53" r="10" fill="#4A9EFF" opacity="0.9">
-          <animate attributeName="opacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
-        </circle>
-        <circle cx="61" cy="49" r="3" fill="white" opacity="0.45" />
-      </BlinkingEye>
+        {/* Right eye — round glowing */}
+        <BlinkingEye cx={64} cy={53} dur={blinkDur}>
+          <circle cx="64" cy="53" r="10" fill={eyeFill} opacity="0.9">
+            <animate attributeName="opacity" values={eyeGlowVals} dur={eyeGlowDur} repeatCount="indefinite" />
+          </circle>
+          <circle cx="61" cy="49" r="3" fill="white" opacity="0.45" />
+        </BlinkingEye>
+      </g>
+
+      {/* Mouth — emotion-reactive */}
+      <BotMouth emotion={emotion} nudging={nudging} eyeFill={eyeFill} />
     </>
   )
 }
@@ -124,29 +300,48 @@ interface OutfitSlots {
   onHead?: React.ReactNode
   ambient?: React.ReactNode
   accent: string
+  nudging?: boolean
+  emotion?: CoachEmotion
 }
 
-function OutfitLayout({ behindHead, onHead, ambient, accent }: OutfitSlots) {
+function OutfitLayout({ behindHead, onHead, ambient, accent, nudging, emotion }: OutfitSlots) {
   return (
     <>
       <g transform="translate(50 50) scale(0.68) translate(-50 -50)">
-        <BreathingBody>
+        <BreathingBody nudging={nudging} emotion={emotion}>
           {behindHead}
-          <AnimatedHead>
-            <BotFace accent={accent} />
+          <AnimatedHead emotion={emotion}>
+            <BotFace accent={accent} nudging={nudging} emotion={emotion} />
             {onHead}
           </AnimatedHead>
         </BreathingBody>
       </g>
       {/* Subtle ambient particles */}
-      <circle cx="22" cy="20" r="1" fill={accent} opacity="0.3">
-        <animate attributeName="cy" values="20;10;20" dur="4s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="0.3;0;0.3" dur="4s" repeatCount="indefinite" />
+      <circle cx="22" cy="20" r={nudging ? 1.5 : 1} fill={accent} opacity="0.3">
+        <animate attributeName="cy" values="20;10;20" dur={nudging ? '1.8s' : '4s'} repeatCount="indefinite" />
+        <animate attributeName="opacity" values={nudging ? '0.4;0.1;0.4' : '0.3;0;0.3'} dur={nudging ? '1.8s' : '4s'} repeatCount="indefinite" />
       </circle>
-      <circle cx="78" cy="18" r="0.8" fill={accent} opacity="0.25">
-        <animate attributeName="cy" values="18;8;18" dur="3.4s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="0.25;0;0.25" dur="3.4s" repeatCount="indefinite" />
+      <circle cx="78" cy="18" r={nudging ? 1.2 : 0.8} fill={accent} opacity="0.25">
+        <animate attributeName="cy" values="18;8;18" dur={nudging ? '1.4s' : '3.4s'} repeatCount="indefinite" />
+        <animate attributeName="opacity" values={nudging ? '0.35;0.05;0.35' : '0.25;0;0.25'} dur={nudging ? '1.4s' : '3.4s'} repeatCount="indefinite" />
       </circle>
+      {/* Extra particles when nudging */}
+      {nudging && (
+        <>
+          <circle cx="14" cy="40" r="1.2" fill={accent} opacity="0">
+            <animate attributeName="opacity" values="0;0.5;0" dur="1.2s" repeatCount="indefinite" />
+            <animate attributeName="cy" values="40;28;40" dur="1.2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="86" cy="36" r="1" fill={accent} opacity="0">
+            <animate attributeName="opacity" values="0;0.4;0" dur="1.5s" repeatCount="indefinite" />
+            <animate attributeName="cy" values="36;24;36" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="50" cy="12" r="1.3" fill={accent} opacity="0">
+            <animate attributeName="opacity" values="0;0.45;0" dur="1s" repeatCount="indefinite" />
+            <animate attributeName="cy" values="12;2;12" dur="1s" repeatCount="indefinite" />
+          </circle>
+        </>
+      )}
       {ambient}
     </>
   )
@@ -154,10 +349,12 @@ function OutfitLayout({ behindHead, onHead, ambient, accent }: OutfitSlots) {
 
 // ── 1. Sage (Stoic) — Detailed beard + laurels ───────────
 
-function SageOutfit({ theme }: { theme: MindsetTheme }) {
+function SageOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }) {
   return (
     <OutfitLayout
       accent={theme.accent}
+      nudging={nudging}
+      emotion={emotion}
       onHead={
         <>
           {/* Sideburns */}
@@ -187,10 +384,12 @@ function SageOutfit({ theme }: { theme: MindsetTheme }) {
 
 // ── 2. Guide (Existentialist) — Detailed glasses + beret ──
 
-function GuideOutfit({ theme }: { theme: MindsetTheme }) {
+function GuideOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }) {
   return (
     <OutfitLayout
       accent={theme.accent}
+      nudging={nudging}
+      emotion={emotion}
       onHead={
         <>
           {/* Beret on top */}
@@ -224,10 +423,12 @@ function GuideOutfit({ theme }: { theme: MindsetTheme }) {
 
 // ── 3. Challenger (Cynic) — Detailed mohawk + scar + studs ─
 
-function ChallengerOutfit({ theme }: { theme: MindsetTheme }) {
+function ChallengerOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }) {
   return (
     <OutfitLayout
       accent={theme.accent}
+      nudging={nudging}
+      emotion={emotion}
       onHead={
         <>
           {/* Mohawk — tall jagged spikes */}
@@ -257,10 +458,12 @@ function ChallengerOutfit({ theme }: { theme: MindsetTheme }) {
 
 // ── 4. Muse (Hedonist) — Detailed flower crown + leaves ───
 
-function MuseOutfit({ theme }: { theme: MindsetTheme }) {
+function MuseOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }) {
   return (
     <OutfitLayout
       accent={theme.accent}
+      nudging={nudging}
+      emotion={emotion}
       onHead={
         <g>
           <animateTransform attributeName="transform" type="translate"
@@ -309,10 +512,12 @@ function MuseOutfit({ theme }: { theme: MindsetTheme }) {
 
 // ── 5. Sensei (Samurai) — Detailed kabuto helmet ──────────
 
-function SenseiOutfit({ theme }: { theme: MindsetTheme }) {
+function SenseiOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }) {
   return (
     <OutfitLayout
       accent={theme.accent}
+      nudging={nudging}
+      emotion={emotion}
       onHead={
         <>
           {/* Helmet dome — fully solid */}
@@ -354,10 +559,12 @@ function SenseiOutfit({ theme }: { theme: MindsetTheme }) {
 
 // ── 6. Oracle (Scholar) — Detailed pointed hood + runes ───
 
-function OracleOutfit({ theme }: { theme: MindsetTheme }) {
+function OracleOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }) {
   return (
     <OutfitLayout
       accent={theme.accent}
+      nudging={nudging}
+      emotion={emotion}
       onHead={
         <>
           {/* Hood — fully solid with pointed top */}
@@ -404,10 +611,12 @@ function OracleOutfit({ theme }: { theme: MindsetTheme }) {
 
 // ── 7. Alchemist (Manifestor) — Ornate crown + crystal ────
 
-function AlchemistOutfit({ theme }: { theme: MindsetTheme }) {
+function AlchemistOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }) {
   return (
     <OutfitLayout
       accent={theme.accent}
+      nudging={nudging}
+      emotion={emotion}
       onHead={
         <>
           {/* Ornate zigzag crown/tiara */}
@@ -454,10 +663,12 @@ function AlchemistOutfit({ theme }: { theme: MindsetTheme }) {
 
 // ── 8. Commander (Hustler) — Detailed tactical headset ────
 
-function CommanderOutfit({ theme }: { theme: MindsetTheme }) {
+function CommanderOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }) {
   return (
     <OutfitLayout
       accent={theme.accent}
+      nudging={nudging}
+      emotion={emotion}
       onHead={
         <>
           {/* Headset band — fully solid padded */}
@@ -500,7 +711,7 @@ function CommanderOutfit({ theme }: { theme: MindsetTheme }) {
 
 // ── Outfit map & export ───────────────────────────────────
 
-const OUTFIT_MAP: Record<string, React.FC<{ theme: MindsetTheme }>> = {
+const OUTFIT_MAP: Record<string, React.FC<{ theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }>> = {
   stoic: SageOutfit,
   existentialist: GuideOutfit,
   cynic: ChallengerOutfit,
@@ -511,7 +722,7 @@ const OUTFIT_MAP: Record<string, React.FC<{ theme: MindsetTheme }>> = {
   hustler: CommanderOutfit,
 }
 
-export function CoachAvatar({ mindsetId, size = 'md', className = '' }: CoachAvatarProps) {
+export function CoachAvatar({ mindsetId, size = 'md', className = '', nudging, emotion }: CoachAvatarProps) {
   const reactId = useId()
   const [tapped, setTapped] = useState(false)
   const mid = mindsetId || 'stoic'
@@ -519,13 +730,16 @@ export function CoachAvatar({ mindsetId, size = 'md', className = '' }: CoachAva
   const Outfit = OUTFIT_MAP[mid] || SageOutfit
   const bgId = `cbg${reactId}`
   const clipId = `ccl${reactId}`
+  const glowId = `cglow${reactId}`
+  // Nudging overrides emotion (nudging is home-page specific)
+  const effectiveEmotion = nudging ? undefined : emotion
 
   return (
     <div
-      className={`${SIZE_CLASS[size]} rounded-full overflow-hidden shrink-0 cursor-pointer transition-transform duration-300 ${tapped ? 'scale-110' : ''} ${className}`}
+      className={`${SIZE_CLASS[size]} rounded-full overflow-visible shrink-0 cursor-pointer transition-transform duration-300 ${tapped ? 'scale-110' : ''} ${nudging ? 'animate-coach-bounce' : ''} ${className}`}
       onClick={() => { setTapped(true); setTimeout(() => setTapped(false), 600) }}
     >
-      <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">
+      <svg viewBox="-6 -6 112 112" width="100%" height="100%" aria-hidden="true" className="overflow-visible">
         <defs>
           <radialGradient id={bgId} cx="50%" cy="35%" r="65%">
             <stop offset="0%" stopColor={theme.bg[0]} />
@@ -534,12 +748,25 @@ export function CoachAvatar({ mindsetId, size = 'md', className = '' }: CoachAva
           <clipPath id={clipId}>
             <circle cx="50" cy="50" r="50" />
           </clipPath>
+          {nudging && (
+            <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
+              <stop offset="60%" stopColor={theme.accent} stopOpacity="0.25" />
+              <stop offset="100%" stopColor={theme.accent} stopOpacity="0" />
+            </radialGradient>
+          )}
         </defs>
+        {/* Pulsing glow ring when nudging */}
+        {nudging && (
+          <circle cx="50" cy="50" r="55" fill={`url(#${glowId})`}>
+            <animate attributeName="r" values="52;58;52" dur="1.4s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="1.4s" repeatCount="indefinite" />
+          </circle>
+        )}
         <g clipPath={`url(#${clipId})`}>
           <circle cx="50" cy="50" r="50" fill={`url(#${bgId})`} />
-          <Outfit theme={theme} />
+          <Outfit theme={theme} nudging={nudging} emotion={effectiveEmotion} />
         </g>
-        <circle cx="50" cy="50" r="49" fill="none" stroke={theme.border} strokeWidth="1" strokeOpacity="0.15" />
+        <circle cx="50" cy="50" r="49" fill="none" stroke={nudging ? theme.accent : theme.border} strokeWidth={nudging ? 1.5 : 1} strokeOpacity={nudging ? 0.4 : 0.15} />
       </svg>
     </div>
   )
