@@ -70,11 +70,11 @@ export const initialAudioState: AudioState = {
 // --- Actions ---
 
 export type AudioAction =
-  | { type: 'PLAY_MUSIC'; youtubeId: string; label: string; cardId: string; playlist: AudioState['currentPlaylist']; playingSound: AudioState['playingSound'] }
+  | { type: 'PLAY_MUSIC'; youtubeId: string; label: string; cardId: string; playlist: AudioState['currentPlaylist']; playingSound: AudioState['playingSound']; exclusive?: boolean }
   | { type: 'PAUSE_MUSIC' }
   | { type: 'RESUME_MUSIC' }
   | { type: 'STOP_MUSIC' }
-  | { type: 'PLAY_SOUNDSCAPE'; soundscape: NonNullable<AudioState['activeSoundscape']> }
+  | { type: 'PLAY_SOUNDSCAPE'; soundscape: NonNullable<AudioState['activeSoundscape']>; exclusive?: boolean }
   | { type: 'PAUSE_SOUNDSCAPE' }
   | { type: 'RESUME_SOUNDSCAPE' }
   | { type: 'SHOW_SOUNDSCAPE_PLAYER' }
@@ -107,8 +107,8 @@ export type AudioAction =
 
 export function audioReducer(state: AudioState, action: AudioAction): AudioState {
   switch (action.type) {
-    case 'PLAY_MUSIC':
-      // Exclusive: stop guide and soundscape
+    case 'PLAY_MUSIC': {
+      const exclusive = action.exclusive !== false // default true
       return {
         ...state,
         backgroundMusic: { youtubeId: action.youtubeId, label: action.label },
@@ -124,12 +124,15 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         guideLabel: null,
         guideIsPlaying: false,
         loadingGuide: null,
-        // Stop soundscape
-        activeSoundscape: null,
-        soundscapeIsPlaying: false,
-        userPausedSoundscape: false,
-        showSoundscapePlayer: false,
+        // Stop soundscape only in exclusive mode (Home page)
+        ...(exclusive && {
+          activeSoundscape: null,
+          soundscapeIsPlaying: false,
+          userPausedSoundscape: false,
+          showSoundscapePlayer: false,
+        }),
       }
+    }
 
     case 'PAUSE_MUSIC':
       return { ...state, musicPlaying: false, userPausedMusic: true }
@@ -152,8 +155,8 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         homeAudioActive: !!(state.activeSoundscape && state.soundscapeIsPlaying),
       }
 
-    case 'PLAY_SOUNDSCAPE':
-      // Exclusive: stop guide and music
+    case 'PLAY_SOUNDSCAPE': {
+      const exclusive = action.exclusive !== false // default true
       return {
         ...state,
         activeSoundscape: action.soundscape,
@@ -165,16 +168,19 @@ export function audioReducer(state: AudioState, action: AudioAction): AudioState
         guideLabel: null,
         guideIsPlaying: false,
         loadingGuide: null,
-        // Stop music
-        backgroundMusic: null,
-        musicPlaying: false,
-        userPausedMusic: false,
-        musicDuration: 0,
-        musicCurrentTime: 0,
-        activeCardId: null,
-        currentPlaylist: null,
-        playingSound: null,
+        // Stop music only in exclusive mode (Home page)
+        ...(exclusive && {
+          backgroundMusic: null,
+          musicPlaying: false,
+          userPausedMusic: false,
+          musicDuration: 0,
+          musicCurrentTime: 0,
+          activeCardId: null,
+          currentPlaylist: null,
+          playingSound: null,
+        }),
       }
+    }
 
     case 'PAUSE_SOUNDSCAPE':
       return { ...state, soundscapeIsPlaying: false, userPausedSoundscape: true }

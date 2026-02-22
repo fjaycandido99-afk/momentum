@@ -181,6 +181,7 @@ export default function FocusPage() {
       homeAudio.dispatch({
         type: 'PLAY_SOUNDSCAPE',
         soundscape: { soundId: selectedSound.id, label: selectedSound.label, subtitle: selectedSound.subtitle, youtubeId: selectedSound.youtubeId },
+        exclusive: false,
       })
       homeAudio.createSoundscapePlayer(selectedSound.youtubeId)
     }
@@ -193,6 +194,7 @@ export default function FocusPage() {
         cardId: `focus-${selectedMusic.genreId}`,
         playlist: null,
         playingSound: null,
+        exclusive: false,
       })
       homeAudio.createBgMusicPlayer(selectedMusic.youtubeId)
     }
@@ -230,7 +232,7 @@ export default function FocusPage() {
     setSelectedSound(sound)
     if (!homeAudio) return
     if (sound) {
-      homeAudio.dispatch({ type: 'PLAY_SOUNDSCAPE', soundscape: { soundId: sound.id, label: sound.label, subtitle: sound.subtitle, youtubeId: sound.youtubeId } })
+      homeAudio.dispatch({ type: 'PLAY_SOUNDSCAPE', soundscape: { soundId: sound.id, label: sound.label, subtitle: sound.subtitle, youtubeId: sound.youtubeId }, exclusive: false })
       homeAudio.createSoundscapePlayer(sound.youtubeId)
     } else {
       homeAudio.dispatch({ type: 'PAUSE_SOUNDSCAPE' })
@@ -241,7 +243,7 @@ export default function FocusPage() {
     setSelectedMusic(music)
     if (!homeAudio) return
     if (music) {
-      homeAudio.dispatch({ type: 'PLAY_MUSIC', youtubeId: music.youtubeId, label: music.genreWord, cardId: `focus-${music.genreId}`, playlist: null, playingSound: null })
+      homeAudio.dispatch({ type: 'PLAY_MUSIC', youtubeId: music.youtubeId, label: music.genreWord, cardId: `focus-${music.genreId}`, playlist: null, playingSound: null, exclusive: false })
       homeAudio.createBgMusicPlayer(music.youtubeId)
     } else {
       homeAudio.dispatch({ type: 'PAUSE_MUSIC' })
