@@ -193,6 +193,9 @@ export function ImmersiveHome() {
   // Ambient mixer
   const [showMixer, setShowMixer] = useState(false)
 
+  // Coach nudge animation state
+  const [isCoachNudging, setIsCoachNudging] = useState(false)
+
   // Hamburger menu
   const [showMenu, setShowMenu] = useState(false)
 
@@ -1205,9 +1208,9 @@ export function ImmersiveHome() {
 
       {/* Floating AI Coach Button + Greeting Bubble */}
       <div className="fixed right-5 bottom-28 z-30 flex items-center gap-2">
-        <CoachGreetingBubble mindsetId={mindsetCtx?.mindset} />
+        <CoachGreetingBubble mindsetId={mindsetCtx?.mindset} onVisibleChange={setIsCoachNudging} />
         <Link href="/coach" className="transition-all press-scale">
-          <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" />
+          <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" nudging={isCoachNudging} className="!w-20 !h-20" />
         </Link>
       </div>
 

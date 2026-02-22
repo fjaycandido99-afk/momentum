@@ -300,7 +300,7 @@ export default function CoachPage() {
         <div className="relative flex items-center gap-3 flex-1">
           {/* Coach avatar */}
           <div className="relative">
-            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="md" emotion={coachEmotion} />
+            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" emotion={coachEmotion} />
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#08080c]" />
           </div>
           <div>
@@ -399,7 +399,7 @@ export default function CoachPage() {
           >
             {/* Coach avatar for assistant messages */}
             {msg.role === 'assistant' && (
-              <CoachAvatar mindsetId={mindsetCtx?.mindset} size="sm" className="mr-2 mt-1" emotion="idle" />
+              <CoachAvatar mindsetId={mindsetCtx?.mindset} size="md" className="mr-2 mt-1" emotion="idle" />
             )}
             <div className="flex flex-col">
               <div
@@ -421,7 +421,7 @@ export default function CoachPage() {
         {/* Typing indicator */}
         {isLoading && (
           <div role="status" aria-label="Coach is typing" className="flex justify-start animate-fade-in-up">
-            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="sm" className="mr-2 mt-1" emotion="thinking" />
+            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="md" className="mr-2 mt-1" emotion="thinking" />
             <div className="p-3.5 bg-black rounded-2xl rounded-bl-md border border-white/10">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
