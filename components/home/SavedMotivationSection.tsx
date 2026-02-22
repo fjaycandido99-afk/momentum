@@ -53,7 +53,7 @@ export function SavedMotivationSection({
                 onPointerLeave={onMagneticLeave}
               >
                 <img
-                  src={backgrounds[index % backgrounds.length]}
+                  src={video.thumbnail || backgrounds[index % backgrounds.length]}
                   alt={video.title}
                   className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
                 />
