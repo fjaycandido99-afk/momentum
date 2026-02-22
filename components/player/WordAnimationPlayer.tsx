@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { ChevronDown, Volume2, VolumeX, ExternalLink, Play, Pause, SkipForward, SkipBack, PenLine, Image, Video, X } from 'lucide-react'
 import { PlayerJournalSheet } from './PlayerJournalSheet'
+import { useDeviceTilt } from '@/hooks/useDeviceTilt'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
 
@@ -65,6 +66,13 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
   const [videoDuration, setVideoDuration] = useState(0)
   const [videoCurrentTime, setVideoCurrentTime] = useState(0)
   const [videoPlaying, setVideoPlaying] = useState(false)
+
+  // Gyroscope / mouse tilt effect (motivation video mode only)
+  const isTiltActive = viewMode === 'video' && category === 'Motivation'
+  const { rotateX, rotateY } = useDeviceTilt({ enabled: isTiltActive })
+  const tiltStyle = isTiltActive
+    ? { transform: `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`, transition: 'transform 0.1s ease-out' }
+    : undefined
 
   // Journal FAB state (motivation-only)
   const [showJournalFAB, setShowJournalFAB] = useState(false)
@@ -412,6 +420,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
             ? 'absolute inset-0 w-full h-full [&>div]:w-full [&>div]:h-full [&>div>iframe]:w-full [&>div>iframe]:h-full'
             : 'absolute -top-[9999px] -left-[9999px] w-1 h-1 overflow-hidden pointer-events-none'
           }
+          style={tiltStyle}
         />
       )}
 
@@ -423,6 +432,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
             ? 'absolute inset-0 w-full h-full [&>div]:w-full [&>div]:h-full [&>div>iframe]:w-full [&>div>iframe]:h-full'
             : 'hidden'
           }
+          style={tiltStyle}
         />
       )}
 
