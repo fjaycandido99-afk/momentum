@@ -881,8 +881,12 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const timeRemaining = useMemo(() => {
     const incompleteModules = displayModules.filter(m => !completedModules.includes(m))
     const totalSeconds = incompleteModules.reduce((sum, m) => sum + (durations[m as ModuleType] || 60), 0)
-    const minutes = Math.ceil(totalSeconds / 60)
-    return minutes > 0 ? `~${minutes} min left` : null
+    const totalMinutes = Math.ceil(totalSeconds / 60)
+    if (totalMinutes <= 0) return null
+    const hours = Math.floor(totalMinutes / 60)
+    const mins = totalMinutes % 60
+    if (hours > 0) return mins > 0 ? `~${hours}h ${mins}m left` : `~${hours}h left`
+    return `~${totalMinutes} min left`
   }, [displayModules, completedModules, durations])
 
   const getCurrentMorningModule = (): string | null => {
