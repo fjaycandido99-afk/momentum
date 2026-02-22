@@ -16,17 +16,11 @@ const TIPS = [
   { icon: Share2, title: 'Share', description: 'Share your streaks and quotes as images on social media', href: null, accent: 'bg-cyan-400/20 text-cyan-300' },
 ] as const
 
-function hashCode(str: string) {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
-  }
-  return Math.abs(hash)
-}
-
 function getTodaysTip() {
-  const index = hashCode(new Date().toDateString()) % TIPS.length
-  return TIPS[index]
+  const now = new Date()
+  const start = new Date(now.getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((now.getTime() - start.getTime()) / 86400000)
+  return TIPS[dayOfYear % TIPS.length]
 }
 
 export function DailyFeatureTip() {
