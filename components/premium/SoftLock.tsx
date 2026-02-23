@@ -21,7 +21,7 @@ export function SoftLockBadge({ isLocked, size = 'sm', className = '' }: SoftLoc
   const iconClasses = size === 'sm' ? 'w-3 h-3' : 'w-3.5 h-3.5'
 
   return (
-    <div className={`absolute top-2 right-2 ${sizeClasses} ${className}`}>
+    <div className={`absolute top-2 left-2 ${sizeClasses} bg-black/40 rounded-full ${className}`}>
       <Lock className={`${iconClasses} text-white`} />
     </div>
   )
