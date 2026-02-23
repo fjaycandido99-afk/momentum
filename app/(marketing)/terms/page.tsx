@@ -15,7 +15,7 @@ export default function TermsOfServicePage() {
             Terms of Service
           </h1>
           <p className="text-sm text-white/50">
-            Last updated: February 21, 2026
+            Last updated: February 22, 2026
           </p>
         </div>
       </section>
@@ -197,20 +197,86 @@ export default function TermsOfServicePage() {
           </p>
         </section>
 
-        {/* 10. Changes to These Terms */}
+        {/* 10. International Users (GDPR) */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            10. Changes to These Terms
+            10. International Users — GDPR
+          </h2>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            If you are located in the European Economic Area (EEA), the United Kingdom, or Switzerland, the following additional terms apply:
+          </p>
+          <ul className="list-disc list-inside text-sm text-white/70 space-y-1 mb-4">
+            <li>We process your personal data in accordance with the General Data Protection Regulation (GDPR) and applicable local laws</li>
+            <li>You have the right to access, correct, delete, restrict processing of, and port your personal data as described in our{' '}
+              <Link href="/privacy" className="text-amber-400 hover:text-amber-300 transition-colors">
+                Privacy Policy
+              </Link>
+            </li>
+            <li>You may withdraw consent for optional data processing at any time without affecting the lawfulness of prior processing</li>
+            <li>You have the right to lodge a complaint with your local data protection authority</li>
+          </ul>
+          <p className="text-sm text-white/70 leading-relaxed">
+            Your data may be transferred to and processed in countries outside the EEA. When this occurs, we ensure appropriate safeguards are in place, including standard contractual clauses, to protect your data in accordance with GDPR requirements.
+          </p>
+        </section>
+
+        {/* 11. California Users (CCPA/CPRA) */}
+        <section className="py-6 border-t border-white/5">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            11. California Users — CCPA/CPRA
+          </h2>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            If you are a California resident, the California Consumer Privacy Act (CCPA) and California Privacy Rights Act (CPRA) grant you additional rights:
+          </p>
+          <ul className="list-disc list-inside text-sm text-white/70 space-y-1 mb-4">
+            <li><strong className="text-white/90">Right to Know</strong> — You may request details about the personal information we collect, use, and disclose</li>
+            <li><strong className="text-white/90">Right to Delete</strong> — You may request deletion of your personal information, subject to certain exceptions</li>
+            <li><strong className="text-white/90">Right to Correct</strong> — You may request correction of inaccurate personal information</li>
+            <li><strong className="text-white/90">Right to Opt-Out</strong> — You may opt out of the sale or sharing of your personal information</li>
+            <li><strong className="text-white/90">Non-Discrimination</strong> — We will not discriminate against you for exercising your privacy rights</li>
+          </ul>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            Voxu does not sell your personal information and does not share it for cross-context behavioral advertising.
+          </p>
+          <p className="text-sm text-white/70 leading-relaxed">
+            For details on the categories of personal information we collect and how to exercise your rights, see our{' '}
+            <Link href="/privacy" className="text-amber-400 hover:text-amber-300 transition-colors">
+              Privacy Policy
+            </Link>.
+          </p>
+        </section>
+
+        {/* 12. Dispute Resolution */}
+        <section className="py-6 border-t border-white/5">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            12. Dispute Resolution
+          </h2>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            We encourage you to contact us first to resolve any disputes informally by emailing{' '}
+            <a href="mailto:support@voxu.app" className="text-amber-400 hover:text-amber-300 transition-colors">
+              support@voxu.app
+            </a>.
+            We will attempt to resolve any dispute within 30 days.
+          </p>
+          <p className="text-sm text-white/70 leading-relaxed">
+            If an informal resolution is not reached, disputes will be resolved through binding arbitration as outlined in Section 9, except where prohibited by applicable law. Nothing in these Terms limits your right to bring claims before a competent court where required by law, including consumer protection laws in your jurisdiction.
+          </p>
+        </section>
+
+        {/* 13. Changes to These Terms */}
+        <section className="py-6 border-t border-white/5">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            13. Changes to These Terms
           </h2>
           <p className="text-sm text-white/70 leading-relaxed">
             We may revise these Terms at any time by posting the updated version on this page with a new &quot;Last updated&quot; date. Your continued use of the Service after changes are posted constitutes your acceptance of the revised Terms. We encourage you to review these Terms periodically.
           </p>
         </section>
 
-        {/* 11. Contact Us */}
+        {/* 14. Contact Us */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            11. Contact Us
+            14. Contact Us
           </h2>
           <p className="text-sm text-white/70 leading-relaxed">
             If you have any questions about these Terms of Service, please contact us at:

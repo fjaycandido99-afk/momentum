@@ -8,6 +8,29 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Priority Alerts enums
+enum AlertPriority {
+  urgent
+  high
+  normal
+  low
+}
+
+enum AlertStatus {
+  pending
+  queued
+  sent
+  delivered
+  failed
+  cancelled
+}
+
+enum AlertChannel {
+  push
+  in_app
+  email
+}
+
 model User {
   id         String   @id @default(cuid())
   email      String   @unique
@@ -26,6 +49,11 @@ model User {
   pushSubscriptions PushSubscription[]
   xpEvents          XPEvent[]
   achievements      UserAchievement[]
+
+  // Priority Alerts
+  alertPreferences UserAlertPreference[]
+  scheduledAlerts  ScheduledAlert[]
+  alertHistory     AlertHistory[]
 }
 
 model Subscription {
@@ -583,4 +611,135 @@ model RoutineStep {
   created_at       DateTime @default(now())
 
   @@index([routine_id])
+}
+
+// ═══════════════ Priority Alerts System ═══════════════
+
+// Defines available alert categories & default settings
+model AlertType {
+  id               String        @id // e.g. "morning_reminder", "streak_at_risk"
+  label            String
+  description      String?
+  category         String        @default("general") // "reminder" | "coach" | "insight" | "streak" | "general"
+  default_priority AlertPriority @default(normal)
+  default_channel  AlertChannel  @default(push)
+  cooldown_minutes Int           @default(0)
+  premium_only     Boolean       @default(false)
+  enabled          Boolean       @default(true)
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
+
+  // Relations
+  userPreferences UserAlertPreference[]
+  scheduledAlerts ScheduledAlert[]
+  alertHistory    AlertHistory[]
+
+  @@map("alert_types")
+}
+
+// Per-user overrides for each alert type
+model UserAlertPreference {
+  id            String         @id @default(cuid())
+  user_id       String
+  user          User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  alert_type_id String
+  alert_type    AlertType      @relation(fields: [alert_type_id], references: [id], onDelete: Cascade)
+  enabled       Boolean        @default(true)
+  priority      AlertPriority? // NULL = use alert_type default
+  channel       AlertChannel?  // NULL = use alert_type default
+  quiet_start   String?        // Time string "22:00" — do not disturb start
+  quiet_end     String?        // Time string "07:00" — do not disturb end
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  @@unique([user_id, alert_type_id])
+  @@index([user_id])
+  @@index([alert_type_id])
+  @@map("user_alert_preferences")
+}
+
+// Queue for time-based and recurring alerts
+model ScheduledAlert {
+  id            String        @id @default(cuid())
+  user_id       String
+  user          User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  alert_type_id String
+  alert_type    AlertType     @relation(fields: [alert_type_id], references: [id], onDelete: Cascade)
+  priority      AlertPriority @default(normal)
+  channel       AlertChannel  @default(push)
+  status        AlertStatus   @default(pending)
+
+  // Scheduling
+  scheduled_at    DateTime  // When to send
+  expires_at      DateTime? // Auto-cancel if not sent by this time
+  recurrence      String?   // NULL = one-time, "daily", "weekly", "custom"
+  recurrence_rule String?   // Cron expression for custom recurrence
+  next_run_at     DateTime? // Next occurrence for recurring alerts
+
+  // Content
+  title String
+  body  String
+  data  Json   @default("{}") // Custom payload (deep links, metadata)
+
+  // Processing
+  attempts     Int       @default(0)
+  max_attempts Int       @default(3)
+  last_error   String?
+  processed_at DateTime? // When actually processed/sent
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  alertHistory AlertHistory[]
+
+  @@index([user_id])
+  @@index([status])
+  @@index([scheduled_at])
+  @@index([next_run_at])
+  @@index([priority, scheduled_at])
+  @@map("scheduled_alerts")
+}
+
+// Log of all sent alerts with delivery tracking
+model AlertHistory {
+  id                 String        @id @default(cuid())
+  user_id            String
+  user               User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  alert_type_id      String
+  alert_type         AlertType     @relation(fields: [alert_type_id], references: [id], onDelete: SetNull)
+  scheduled_alert_id String?
+  scheduled_alert    ScheduledAlert? @relation(fields: [scheduled_alert_id], references: [id], onDelete: SetNull)
+  priority           AlertPriority
+  channel            AlertChannel
+  status             AlertStatus   @default(sent)
+
+  // Content snapshot
+  title String
+  body  String
+  data  Json   @default("{}")
+
+  // Delivery tracking
+  sent_at      DateTime  @default(now())
+  delivered_at DateTime?
+  read_at      DateTime?
+  clicked_at   DateTime?
+  dismissed_at DateTime?
+
+  // Error tracking
+  error_message String?
+  error_code    String?
+
+  // Device info
+  platform        String? // "web" | "ios" | "android"
+  subscription_id String? // Reference to PushSubscription
+
+  created_at DateTime @default(now())
+
+  @@index([user_id])
+  @@index([alert_type_id])
+  @@index([sent_at(sort: Desc)])
+  @@index([user_id, status])
+  @@index([scheduled_alert_id])
+  @@map("alert_history")
 }

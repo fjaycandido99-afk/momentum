@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, BellOff, Loader2, Check, Sunrise, Clock, Moon, Flame, Calendar, Lightbulb, Quote, Sparkles, Heart, Play, Music } from 'lucide-react'
+import { Bell, BellOff, Loader2, Check, Sunrise, Clock, Moon, Flame, Calendar, Lightbulb, Quote, Sparkles, Heart, Play, Music, MessageCircle, Target } from 'lucide-react'
 import {
   isPushSupported,
   getNotificationPermission,
@@ -38,6 +38,8 @@ interface NotificationPreferences {
   motivational_nudge_alerts: boolean
   daily_motivation_alerts: boolean
   featured_music_alerts: boolean
+  coach_checkin_alerts: boolean
+  coach_accountability_alerts: boolean
 }
 
 export function NotificationSettings() {
@@ -65,6 +67,8 @@ export function NotificationSettings() {
     motivational_nudge_alerts: true,
     daily_motivation_alerts: true,
     featured_music_alerts: true,
+    coach_checkin_alerts: true,
+    coach_accountability_alerts: true,
   })
 
   useEffect(() => {
@@ -104,6 +108,8 @@ export function NotificationSettings() {
                 motivational_nudge_alerts: sub.motivational_nudge_alerts ?? true,
                 daily_motivation_alerts: sub.daily_motivation_alerts ?? true,
                 featured_music_alerts: sub.featured_music_alerts ?? true,
+                coach_checkin_alerts: sub.coach_checkin_alerts ?? true,
+                coach_accountability_alerts: sub.coach_accountability_alerts ?? true,
               })
             }
           }
@@ -164,6 +170,8 @@ export function NotificationSettings() {
                 motivational_nudge_alerts: sub.motivational_nudge_alerts ?? true,
                 daily_motivation_alerts: sub.daily_motivation_alerts ?? true,
                 featured_music_alerts: sub.featured_music_alerts ?? true,
+                coach_checkin_alerts: sub.coach_checkin_alerts ?? true,
+                coach_accountability_alerts: sub.coach_accountability_alerts ?? true,
               })
             }
           }
@@ -553,6 +561,24 @@ export function NotificationSettings() {
             description="Featured genre to set your mood at 5 PM"
             enabled={preferences.featured_music_alerts}
             onToggle={() => handlePreferenceChange('featured_music_alerts')}
+          />
+
+          {/* Coach check-in */}
+          <NotificationToggle
+            icon={MessageCircle}
+            label="Coach Check-In"
+            description="Midday message from your AI coach at 11 AM"
+            enabled={preferences.coach_checkin_alerts}
+            onToggle={() => handlePreferenceChange('coach_checkin_alerts')}
+          />
+
+          {/* Coach accountability */}
+          <NotificationToggle
+            icon={Target}
+            label="Coach Accountability"
+            description="Evening goal review from your coach at 8 PM"
+            enabled={preferences.coach_accountability_alerts}
+            onToggle={() => handlePreferenceChange('coach_accountability_alerts')}
           />
         </div>
       )}

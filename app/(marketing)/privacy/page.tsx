@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="text-sm text-white/50">
-            Last updated: February 21, 2026
+            Last updated: February 22, 2026
           </p>
         </div>
       </section>
@@ -148,10 +148,106 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
 
-        {/* 6. Children's Privacy */}
+        {/* 6. GDPR (European Users) */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            6. Children&apos;s Privacy
+            6. GDPR — European Users
+          </h2>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            If you are located in the European Economic Area (EEA), the United Kingdom, or Switzerland, the following additional provisions apply under the General Data Protection Regulation (GDPR):
+          </p>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Lawful Basis for Processing
+          </h3>
+          <ul className="list-disc list-inside text-sm text-white/70 space-y-1 mb-4">
+            <li><strong className="text-white/90">Consent</strong> — For push notifications, optional analytics, and marketing communications</li>
+            <li><strong className="text-white/90">Contract</strong> — To provide the Voxu service you signed up for, including AI coaching and content delivery</li>
+            <li><strong className="text-white/90">Legitimate Interest</strong> — To improve our service, prevent fraud, and ensure security</li>
+          </ul>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Your GDPR Rights
+          </h3>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            In addition to the rights listed in Section 5, you have the right to:
+          </p>
+          <ul className="list-disc list-inside text-sm text-white/70 space-y-1 mb-4">
+            <li><strong className="text-white/90">Restrict Processing</strong> — Request that we limit how we use your data</li>
+            <li><strong className="text-white/90">Data Portability</strong> — Receive your data in a structured, machine-readable format</li>
+            <li><strong className="text-white/90">Object</strong> — Object to processing based on legitimate interest</li>
+            <li><strong className="text-white/90">Withdraw Consent</strong> — Withdraw any previously given consent at any time</li>
+            <li><strong className="text-white/90">Lodge a Complaint</strong> — File a complaint with your local data protection authority</li>
+          </ul>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Data Retention
+          </h3>
+          <p className="text-sm text-white/70 leading-relaxed">
+            We retain your personal data only for as long as necessary to provide our services and fulfill the purposes described in this policy. When you delete your account, we will delete or anonymize your data within 30 days, except where we are required to retain it by law.
+          </p>
+        </section>
+
+        {/* 7. CCPA/CPRA (California Users) */}
+        <section className="py-6 border-t border-white/5">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            7. CCPA/CPRA — California Users
+          </h2>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            If you are a California resident, the California Consumer Privacy Act (CCPA) and California Privacy Rights Act (CPRA) provide you with additional rights regarding your personal information.
+          </p>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Categories of Personal Information Collected
+          </h3>
+          <ul className="list-disc list-inside text-sm text-white/70 space-y-1 mb-4">
+            <li><strong className="text-white/90">Identifiers</strong> — Email address, display name, device identifiers</li>
+            <li><strong className="text-white/90">Commercial Information</strong> — Subscription and payment history</li>
+            <li><strong className="text-white/90">Internet Activity</strong> — Usage data, interaction patterns, feature preferences</li>
+            <li><strong className="text-white/90">Inferences</strong> — Content preferences derived from your usage</li>
+          </ul>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Your CCPA/CPRA Rights
+          </h3>
+          <ul className="list-disc list-inside text-sm text-white/70 space-y-1 mb-4">
+            <li><strong className="text-white/90">Right to Know</strong> — Request what personal information we collect, use, and disclose</li>
+            <li><strong className="text-white/90">Right to Delete</strong> — Request deletion of your personal information</li>
+            <li><strong className="text-white/90">Right to Correct</strong> — Request correction of inaccurate personal information</li>
+            <li><strong className="text-white/90">Right to Opt-Out</strong> — Opt out of the sale or sharing of your personal information</li>
+            <li><strong className="text-white/90">Non-Discrimination</strong> — We will not discriminate against you for exercising your privacy rights</li>
+          </ul>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Do Not Sell or Share
+          </h3>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            Voxu does not sell your personal information. We do not share your personal information for cross-context behavioral advertising purposes.
+          </p>
+
+          <p className="text-sm text-white/70 leading-relaxed">
+            To exercise your California privacy rights, contact us at{' '}
+            <a href="mailto:privacy@voxu.app" className="text-amber-400 hover:text-amber-300 transition-colors">
+              privacy@voxu.app
+            </a>.
+            We will verify your identity before processing your request and respond within 45 days.
+          </p>
+        </section>
+
+        {/* 8. International Data Transfers */}
+        <section className="py-6 border-t border-white/5">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            8. International Data Transfers
+          </h2>
+          <p className="text-sm text-white/70 leading-relaxed">
+            Your information may be transferred to and processed in countries other than your country of residence, including the United States. These countries may have different data protection laws. When we transfer your data internationally, we ensure appropriate safeguards are in place, including standard contractual clauses approved by relevant authorities, to protect your personal information in accordance with this policy.
+          </p>
+        </section>
+
+        {/* 9. Children's Privacy */}
+        <section className="py-6 border-t border-white/5">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            9. Children&apos;s Privacy
           </h2>
           <p className="text-sm text-white/70 leading-relaxed">
             Voxu is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that we have collected personal data from a child under 13 without parental consent, we will take steps to delete that information. If you believe we may have collected information from a child under 13, please contact us at{' '}
@@ -161,10 +257,10 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
 
-        {/* 7. Cookies & Local Storage */}
+        {/* 10. Cookies & Local Storage */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            7. Cookies &amp; Local Storage
+            10. Cookies &amp; Local Storage
           </h2>
           <p className="text-sm text-white/70 leading-relaxed mb-4">
             Voxu uses cookies and browser local storage to:
@@ -179,20 +275,20 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
 
-        {/* 8. Changes to This Policy */}
+        {/* 11. Changes to This Policy */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            8. Changes to This Policy
+            11. Changes to This Policy
           </h2>
           <p className="text-sm text-white/70 leading-relaxed">
             We may update this Privacy Policy from time to time. When we make changes, we will update the &quot;Last updated&quot; date at the top of this page. We encourage you to review this policy periodically. Continued use of Voxu after changes are posted constitutes your acceptance of the updated policy.
           </p>
         </section>
 
-        {/* 9. Contact Us */}
+        {/* 12. Contact Us */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            9. Contact Us
+            12. Contact Us
           </h2>
           <p className="text-sm text-white/70 leading-relaxed">
             If you have any questions about this Privacy Policy or our data practices, please contact us at:

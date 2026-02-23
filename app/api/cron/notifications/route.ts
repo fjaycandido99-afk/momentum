@@ -11,6 +11,8 @@ import {
   sendDailyMotivation,
   sendFeaturedMusic,
   sendEveningReminders,
+  sendCoachCheckins,
+  sendCoachAccountability,
 } from '@/lib/push-service'
 import { cleanupExpiredAudioCache } from '@/lib/daily-guide/cache-cleanup'
 
@@ -99,6 +101,14 @@ export async function GET(request: NextRequest) {
         await sendEveningReminders()
         return NextResponse.json({ success: true, type: 'evening_reminders' })
 
+      case 'coach_checkin':
+        await sendCoachCheckins()
+        return NextResponse.json({ success: true, type: 'coach_checkins' })
+
+      case 'coach_accountability':
+        await sendCoachAccountability()
+        return NextResponse.json({ success: true, type: 'coach_accountability' })
+
       case 'all':
         // Send all types (for testing)
         await sendMorningReminders()
@@ -112,11 +122,13 @@ export async function GET(request: NextRequest) {
         await sendDailyMotivation()
         await sendFeaturedMusic()
         await sendEveningReminders()
+        await sendCoachCheckins()
+        await sendCoachAccountability()
         return NextResponse.json({ success: true, type: 'all' })
 
       default:
         return NextResponse.json(
-          { error: 'Invalid type. Use: morning, bedtime, streak, weekly, insight, cleanup, daily_quote, daily_affirmation, motivational_nudge, daily_motivation, featured_music, evening, or all' },
+          { error: 'Invalid type. Use: morning, bedtime, streak, weekly, insight, cleanup, daily_quote, daily_affirmation, motivational_nudge, daily_motivation, featured_music, evening, coach_checkin, coach_accountability, or all' },
           { status: 400 }
         )
     }

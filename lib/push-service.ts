@@ -13,6 +13,8 @@ import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 import { getDailyAffirmation } from '@/lib/mindset/affirmations'
+import { getCoachName } from '@/lib/mindset/configs'
+import { isPremiumUser } from './subscription-check'
 
 // Notification types that can be sent
 export type NotificationType =
@@ -28,6 +30,8 @@ export type NotificationType =
   | 'motivational_nudge'
   | 'daily_motivation'
   | 'featured_music'
+  | 'coach_checkin'
+  | 'coach_accountability'
   | 'custom'
 
 // Notification payload structure
@@ -176,6 +180,28 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'dismiss', title: 'Later' },
     ],
   },
+  coach_checkin: {
+    title: 'Coach Check-In',
+    body: 'Your coach has a midday message for you',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'coach-checkin',
+    actions: [
+      { action: 'open', title: 'Open Coach' },
+      { action: 'dismiss', title: 'Later' },
+    ],
+  },
+  coach_accountability: {
+    title: 'Evening Accountability',
+    body: 'Time to review your goals and commitments',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: 'coach-accountability',
+    actions: [
+      { action: 'open', title: 'Review Goals' },
+      { action: 'dismiss', title: 'Later' },
+    ],
+  },
   custom: {
     title: 'Voxu',
     body: 'You have a new notification',
@@ -234,6 +260,8 @@ export async function sendPushToUser(
     motivational_nudge: 'motivational_nudge_alerts',
     daily_motivation: 'daily_motivation_alerts',
     featured_music: 'featured_music_alerts',
+    coach_checkin: 'coach_checkin_alerts',
+    coach_accountability: 'coach_accountability_alerts',
     custom: 'morning_reminder', // Custom always sends
   }
 
@@ -1042,4 +1070,163 @@ export async function sendEveningReminders(): Promise<void> {
   }
 
   console.log(`Evening reminders: ${totalSent} sent, ${totalFailed} failed`)
+}
+
+/**
+ * Send midday coach check-in notifications to premium users
+ * Personalized with mindset coach character, references morning activity and streak
+ */
+export async function sendCoachCheckins(): Promise<void> {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { coach_checkin_alerts: true },
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  let totalSent = 0
+  let totalFailed = 0
+  let totalSkipped = 0
+
+  for (const { user_id } of subscriptions) {
+    // Coach notifications are premium-only
+    const premium = await isPremiumUser(user_id)
+    if (!premium) {
+      totalSkipped++
+      continue
+    }
+
+    const mindset = await getUserMindset(user_id)
+    const coachName = getCoachName(mindset)
+    let body = `${coachName} here — how's your day going so far?`
+
+    try {
+      const [todayGuide, prefs] = await Promise.all([
+        prisma.dailyGuide.findUnique({
+          where: { user_id_date: { user_id, date: today } },
+          select: { morning_prime_done: true, mood_before: true, energy_level: true },
+        }),
+        prisma.userPreferences.findUnique({
+          where: { user_id },
+          select: { current_streak: true },
+        }),
+      ])
+
+      const topGoal = await prisma.goal.findFirst({
+        where: { user_id, status: 'active' },
+        select: { title: true, current_count: true, target_count: true },
+        orderBy: { updated_at: 'desc' },
+      })
+
+      if (todayGuide?.morning_prime_done && prefs?.current_streak && prefs.current_streak > 1) {
+        body = `${coachName}: Great morning flow! You're on a ${prefs.current_streak}-day streak. How's the rest of your day shaping up?`
+      } else if (todayGuide?.morning_prime_done) {
+        body = `${coachName}: You started strong this morning. How are you feeling now?`
+      } else if (prefs?.current_streak && prefs.current_streak > 2) {
+        body = `${coachName}: ${prefs.current_streak}-day streak going strong. Check in when you're ready.`
+      }
+
+      if (topGoal) {
+        const progress = topGoal.target_count > 0 ? Math.round((topGoal.current_count / topGoal.target_count) * 100) : 0
+        if (progress >= 80) {
+          body = `${coachName}: You're ${progress}% through "${topGoal.title}" — the finish line is close!`
+        }
+      }
+    } catch {
+      // Fall back to default
+    }
+
+    const result = await sendPushToUser(user_id, 'coach_checkin', {
+      title: `${coachName} — Midday Check-In`,
+      body,
+      data: { type: 'coach_checkin', url: '/coach' },
+    })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Coach check-ins: ${totalSent} sent, ${totalFailed} failed, ${totalSkipped} skipped (not premium)`)
+}
+
+/**
+ * Send evening coach accountability notifications to premium users
+ * Only targets users with active goals or streaks, personalized per mindset
+ */
+export async function sendCoachAccountability(): Promise<void> {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { coach_accountability_alerts: true },
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  let totalSent = 0
+  let totalFailed = 0
+  let totalSkipped = 0
+
+  for (const { user_id } of subscriptions) {
+    // Coach notifications are premium-only
+    const premium = await isPremiumUser(user_id)
+    if (!premium) {
+      totalSkipped++
+      continue
+    }
+
+    // Only send to users with active goals or streaks
+    const [goals, prefs] = await Promise.all([
+      prisma.goal.findMany({
+        where: { user_id, status: 'active' },
+        select: { title: true, current_count: true, target_count: true, updated_at: true },
+        take: 5,
+      }),
+      prisma.userPreferences.findUnique({
+        where: { user_id },
+        select: { current_streak: true },
+      }),
+    ])
+
+    if (goals.length === 0 && (!prefs?.current_streak || prefs.current_streak === 0)) {
+      totalSkipped++
+      continue
+    }
+
+    const mindset = await getUserMindset(user_id)
+    const coachName = getCoachName(mindset)
+    let body = `${coachName}: Time for your evening review. How did today go?`
+
+    try {
+      // Find stalling or near-complete goals
+      const stallingGoals = goals.filter(g => {
+        const daysSince = Math.floor((Date.now() - new Date(g.updated_at).getTime()) / (1000 * 60 * 60 * 24))
+        return daysSince >= 5
+      })
+      const nearCompleteGoals = goals.filter(g => {
+        const progress = g.target_count > 0 ? (g.current_count / g.target_count) * 100 : 0
+        return progress >= 80
+      })
+
+      if (nearCompleteGoals.length > 0) {
+        const goal = nearCompleteGoals[0]
+        const progress = Math.round((goal.current_count / goal.target_count) * 100)
+        body = `${coachName}: "${goal.title}" is at ${progress}%. One more push and you've done it!`
+      } else if (stallingGoals.length > 0) {
+        body = `${coachName}: "${stallingGoals[0].title}" hasn't moved in a while. What's one small step you could take?`
+      } else if (prefs?.current_streak && prefs.current_streak > 3) {
+        body = `${coachName}: ${prefs.current_streak} days strong. Let's keep the momentum — quick check-in?`
+      }
+    } catch {
+      // Fall back to default
+    }
+
+    const result = await sendPushToUser(user_id, 'coach_accountability', {
+      title: `${coachName} — Evening Review`,
+      body,
+      data: { type: 'coach_accountability', url: '/coach' },
+    })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Coach accountability: ${totalSent} sent, ${totalFailed} failed, ${totalSkipped} skipped (not premium or no goals/streak)`)
 }
