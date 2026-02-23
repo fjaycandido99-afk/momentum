@@ -22,12 +22,16 @@ import {
   Lock,
   Star,
   Compass,
+  Shield,
+  FileText,
+  ShieldAlert,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
+import { AlertPreferencesSettings } from '@/components/alerts/AlertPreferencesSettings'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
@@ -747,9 +751,16 @@ function SettingsContent() {
           id="notifications"
           icon={Bell}
           title="Notifications"
-          description="Push notification settings"
+          description="Push notifications, alert types & quiet hours"
         >
           <NotificationSettings />
+          <div className="mt-6 pt-6 border-t border-white/10">
+            <div className="flex items-center gap-2 mb-4">
+              <ShieldAlert className="w-4 h-4 text-white/50" />
+              <p className="text-xs text-white/50 uppercase tracking-wider">Priority Alerts</p>
+            </div>
+            <AlertPreferencesSettings />
+          </div>
         </SettingsCategory>
 
         {/* ═══════════════ 7. Language ═══════════════ */}
@@ -910,6 +921,25 @@ function SettingsContent() {
                 Sign In to Save Progress
               </Link>
             )}
+          </div>
+
+          {/* Legal Links */}
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <Link
+              href="/privacy"
+              className="flex items-center gap-1.5 text-white/50 text-sm hover:text-white/70 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Privacy Policy
+            </Link>
+            <span className="text-white/20">|</span>
+            <Link
+              href="/terms"
+              className="flex items-center gap-1.5 text-white/50 text-sm hover:text-white/70 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Terms of Service
+            </Link>
           </div>
 
           {/* App Info */}
