@@ -77,6 +77,18 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
   const autoSkipNextRef = useRef<(() => void) | null>(null)
   const guideAudioRef = useRef<HTMLAudioElement | null>(null)
 
+  // Desired-playing refs — track what the state machine *wants*, so YouTube
+  // onStateChange can distinguish user-initiated pauses from browser-forced ones
+  // (e.g. when a second iframe player steals the audio focus).
+  const wantMusicPlayingRef = useRef(false)
+  const wantSoundscapePlayingRef = useRef(false)
+  const musicRetryCountRef = useRef(0)
+  const soundscapeRetryCountRef = useRef(0)
+
+  // Keep refs in sync with reducer state
+  useEffect(() => { wantMusicPlayingRef.current = audioState.musicPlaying }, [audioState.musicPlaying])
+  useEffect(() => { wantSoundscapePlayingRef.current = audioState.soundscapeIsPlaying }, [audioState.soundscapeIsPlaying])
+
   // --- Side-effect hooks ---
   useAudioSideEffects({
     state: audioState,
@@ -177,6 +189,7 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
           onReady: () => { bgPlayerReadyRef.current = true },
           onStateChange: (event) => {
             if (event.data === 1) {
+              musicRetryCountRef.current = 0
               dispatch({ type: 'MUSIC_YT_PLAYING' })
               if (bgProgressIntervalRef.current) clearInterval(bgProgressIntervalRef.current)
               bgProgressIntervalRef.current = setInterval(() => {
@@ -189,7 +202,14 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
                 }
               }, 1000)
             } else if (event.data === 2) {
-              dispatch({ type: 'MUSIC_YT_PAUSED' })
+              // Browser may force-pause this player when the other iframe starts.
+              // If state says we *want* music playing, re-play instead of confirming pause.
+              if (wantMusicPlayingRef.current && musicRetryCountRef.current < 3) {
+                musicRetryCountRef.current++
+                setTimeout(() => { try { event.target.playVideo() } catch {} }, 300)
+              } else {
+                dispatch({ type: 'MUSIC_YT_PAUSED' })
+              }
             } else if (event.data === 0) {
               if (autoSkipNextRef.current) {
                 autoSkipNextRef.current()
@@ -214,9 +234,17 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
         events: {
           onReady: () => { soundscapeReadyRef.current = true },
           onStateChange: (event) => {
-            if (event.data === 1) dispatch({ type: 'SOUNDSCAPE_YT_PLAYING' })
-            else if (event.data === 2) dispatch({ type: 'SOUNDSCAPE_YT_PAUSED' })
-            else if (event.data === 0) {
+            if (event.data === 1) {
+              soundscapeRetryCountRef.current = 0
+              dispatch({ type: 'SOUNDSCAPE_YT_PLAYING' })
+            } else if (event.data === 2) {
+              if (wantSoundscapePlayingRef.current && soundscapeRetryCountRef.current < 3) {
+                soundscapeRetryCountRef.current++
+                setTimeout(() => { try { event.target.playVideo() } catch {} }, 300)
+              } else {
+                dispatch({ type: 'SOUNDSCAPE_YT_PAUSED' })
+              }
+            } else if (event.data === 0) {
               try { event.target.seekTo(0, true); event.target.playVideo() } catch {}
             }
           },
