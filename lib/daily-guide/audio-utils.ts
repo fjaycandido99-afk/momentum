@@ -36,7 +36,7 @@ export async function setSharedCache(cacheKey: string, audioBase64: string, dura
 }
 
 // Monthly credit limit (characters)
-const MONTHLY_CREDIT_LIMIT = 100_000
+const MONTHLY_CREDIT_LIMIT = 110_000
 
 function getMonthKey() {
   const now = new Date()
