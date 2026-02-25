@@ -26,7 +26,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
           <SoundscapeEqBars />
         )}
         {onOpenMixer && (
-          <button onClick={onOpenMixer} aria-label="Open ambient mixer" className="ml-auto p-2 rounded-full bg-white/[0.08] hover:bg-white/[0.12] transition-colors press-scale">
+          <button onClick={onOpenMixer} aria-label="Open ambient mixer" className="ml-auto p-2 rounded-full bg-white/[0.08] hover:bg-white/[0.12] active:bg-white/[0.12] transition-colors press-scale">
             <Layers className="w-4 h-4 text-white/60" />
           </button>
         )}

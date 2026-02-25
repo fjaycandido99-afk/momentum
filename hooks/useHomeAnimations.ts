@@ -30,10 +30,14 @@ export function useScrollReveal(containerRef: RefObject<HTMLElement | null>) {
 }
 
 /**
- * Parallax - moves elements at different speeds on scroll
+ * Parallax - moves elements at different speeds on scroll.
+ * Disabled on touch devices to prevent scroll jank.
  */
 export function useParallax(scrollRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
+    // Skip parallax on touch devices — causes jank during scroll
+    if (window.matchMedia('(hover: none)').matches) return
+
     const el = scrollRef.current
     if (!el) return
 
@@ -41,7 +45,6 @@ export function useParallax(scrollRef: RefObject<HTMLElement | null>) {
     const handleScroll = () => {
       cancelAnimationFrame(rafId)
       rafId = requestAnimationFrame(() => {
-        const scrollY = el.scrollTop || window.scrollY
         const headers = el.querySelectorAll<HTMLElement>('.parallax-header')
         headers.forEach((header) => {
           const rect = header.getBoundingClientRect()

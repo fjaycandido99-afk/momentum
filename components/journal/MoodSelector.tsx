@@ -66,8 +66,7 @@ export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: M
               }`}
             >
               <span
-                className={`text-xl transition-all ${isSelected ? '' : 'grayscale opacity-60'}`}
-                style={isSelected ? undefined : { filter: 'grayscale(1)' }}
+                className={`text-xl transition-opacity ${isSelected ? '' : 'opacity-40'}`}
               >
                 {m.emoji}
               </span>
@@ -100,8 +99,7 @@ export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: M
               }`}
             >
               <span
-                className={`text-2xl transition-all ${isSelected ? '' : ''}`}
-                style={isSelected ? undefined : { filter: 'grayscale(1)', opacity: 0.5 }}
+                className={`text-2xl transition-opacity ${isSelected ? '' : 'opacity-40'}`}
               >
                 {m.emoji}
               </span>

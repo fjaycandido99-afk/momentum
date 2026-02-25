@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CheckCircle2, Sparkles, Star, X } from 'lucide-react'
+import { CheckCircle2, Sparkles, Star, X } from 'lucide-react' // Star used for celebration sparkle
 
 interface MorningFlowCompleteProps {
   isOpen: boolean
@@ -34,7 +34,7 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
         'rgb(251, 113, 133)', // pink
       ]
 
-      const pieces = Array.from({ length: 50 }, (_, i) => ({
+      const pieces = Array.from({ length: 20 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
         delay: Math.random() * 0.5,
@@ -97,7 +97,7 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+          className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/20 transition-colors z-10 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           <X className="w-4 h-4 text-white" />
         </button>
@@ -105,16 +105,8 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
         <div className="rounded-3xl bg-gradient-to-br from-emerald-500/20 via-white/[0.08] to-white/[0.03] border border-emerald-500/30 overflow-hidden p-8 text-center">
           {/* Animated Icon */}
           <div className="relative w-24 h-24 mx-auto mb-6">
-            {/* Pulsing rings */}
+            {/* Single pulsing ring */}
             <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping" />
-            <div
-              className="absolute inset-2 rounded-full bg-emerald-500/30 animate-ping"
-              style={{ animationDelay: '0.2s' }}
-            />
-            <div
-              className="absolute inset-4 rounded-full bg-emerald-500/40 animate-ping"
-              style={{ animationDelay: '0.4s' }}
-            />
 
             {/* Center icon */}
             <div className="absolute inset-0 flex items-center justify-center">
@@ -123,17 +115,13 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
               </div>
             </div>
 
-            {/* Floating sparkles */}
+            {/* Static sparkles — no infinite animation */}
             <Sparkles
-              className="absolute -top-2 -right-2 w-6 h-6 text-yellow-400 animate-pulse"
+              className="absolute -top-2 -right-2 w-6 h-6 text-yellow-400 animate-fade-in"
             />
             <Star
-              className="absolute -bottom-1 -left-3 w-5 h-5 text-amber-400 animate-bounce"
+              className="absolute -bottom-1 -left-3 w-5 h-5 text-amber-400 animate-fade-in"
               style={{ animationDelay: '0.3s' }}
-            />
-            <Sparkles
-              className="absolute top-1/2 -right-4 w-4 h-4 text-emerald-300 animate-pulse"
-              style={{ animationDelay: '0.5s' }}
             />
           </div>
 
@@ -170,7 +158,7 @@ export function MorningFlowComplete({ isOpen, onClose, modulesCompleted }: Morni
           {/* Dismiss button */}
           <button
             onClick={onClose}
-            className="mt-6 px-6 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            className="mt-6 px-6 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 active:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             Continue Your Day
           </button>

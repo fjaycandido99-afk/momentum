@@ -46,27 +46,27 @@ function QuietHoursSection({
   onChange: (start: string, end: string) => void
 }) {
   return (
-    <div className="p-4 rounded-xl bg-white/[0.03] border border-white/15">
+    <div className="p-4 rounded-xl bg-white/[0.03] border border-white/15 overflow-hidden">
       <p className="text-sm text-white/85 mb-2">Quiet Hours</p>
       <p className="text-xs text-white/40 mb-3">Urgent alerts bypass quiet hours</p>
       <div className="grid grid-cols-2 gap-3">
-        <div>
+        <div className="min-w-0">
           <label className="text-xs text-white/50 mb-1 block">Start</label>
           <input
             type="time"
             value={quietStart}
             onChange={(e) => onChange(e.target.value, quietEnd)}
-            className="w-full h-11 rounded-xl bg-white/5 border border-white/15 px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/40"
+            className="w-full min-w-0 h-11 rounded-xl bg-white/5 border border-white/15 px-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-white/40"
             style={{ colorScheme: 'dark' }}
           />
         </div>
-        <div>
+        <div className="min-w-0">
           <label className="text-xs text-white/50 mb-1 block">End</label>
           <input
             type="time"
             value={quietEnd}
             onChange={(e) => onChange(quietStart, e.target.value)}
-            className="w-full h-11 rounded-xl bg-white/5 border border-white/15 px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/40"
+            className="w-full min-w-0 h-11 rounded-xl bg-white/5 border border-white/15 px-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-white/40"
             style={{ colorScheme: 'dark' }}
           />
         </div>

@@ -30,13 +30,11 @@
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
@@ -55,5 +53,27 @@
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Voxu needs microphone access for voice features</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<!-- App Transport Security - Allow web content (server-mode Capacitor) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+	</dict>
+
+	<!-- URL Scheme for OAuth callbacks -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.voxu.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>voxu</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

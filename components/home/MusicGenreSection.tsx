@@ -57,7 +57,7 @@ export function MusicGenreSection({
             onClick={onShuffle}
             disabled={shuffling}
             aria-label="Shuffle videos"
-            className="p-2 rounded-full bg-white/5 border border-white/15 hover:bg-white/10 transition-colors press-scale"
+            className="p-2 rounded-full bg-white/5 border border-white/15 hover:bg-white/10 active:bg-white/10 transition-colors press-scale"
           >
             <RefreshCw className={`w-4 h-4 text-white/85 ${shuffling ? 'animate-spin' : ''}`} />
           </button>
@@ -111,7 +111,7 @@ export function MusicGenreSection({
                       <img
                         src={src}
                         alt=""
-                        className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
+                        className="absolute inset-0 w-full h-full object-cover opacity-70 transition-opacity"
                       />
                     ) : null
                   })()}
@@ -143,7 +143,7 @@ export function MusicGenreSection({
                         onToggleFavorite(video)
                       }}
                       aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-                      className="absolute top-2 right-2 z-10 p-2.5 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+                      className="absolute top-2 right-2 z-10 p-2.5 rounded-full bg-black/40 hover:bg-black/60 active:bg-black/60 transition-colors"
                     >
                       <Heart
                         className={`w-3.5 h-3.5 ${isFavorited ? 'text-red-500' : 'text-white/75'} ${heartPopId === video.youtubeId ? 'heart-pop' : ''}`}
@@ -160,7 +160,7 @@ export function MusicGenreSection({
                         <Pause className="w-8 h-8 text-white drop-shadow-lg icon-morph" fill="white" />
                       )
                     ) : (
-                      <Play className="w-8 h-8 text-white group-hover:text-white transition-colors drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
+                      <Play className="w-8 h-8 text-white drop-shadow-lg icon-morph" fill="rgba(255,255,255,0.45)" />
                     )}
                   </div>
                   {isLocked && !isCardActive && (

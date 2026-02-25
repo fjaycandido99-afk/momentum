@@ -10,22 +10,6 @@ interface LoadingSpinnerProps {
 }
 
 export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerProps) {
-  const [rotation, setRotation] = useState(0)
-
-  useEffect(() => {
-    let frame: number
-    let start = performance.now()
-
-    const animate = (time: number) => {
-      const elapsed = (time - start) / 1000
-      setRotation(elapsed * 45)
-      frame = requestAnimationFrame(animate)
-    }
-
-    frame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frame)
-  }, [])
-
   const sizeClasses = {
     sm: 'w-8 h-8',
     md: 'w-12 h-12',
@@ -43,17 +27,17 @@ export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerPr
       {/* Outer ring - dashed, rotates clockwise slow */}
       <div
         className="absolute inset-0 rounded-full border-2 border-dashed border-white/40"
-        style={{ transform: `rotate(${rotation}deg)` }}
+        style={{ animation: 'spin 8s linear infinite' }}
       />
       {/* Middle ring - dotted, rotates counter-clockwise */}
       <div
         className="absolute inset-[15%] rounded-full border-2 border-dotted border-white/60"
-        style={{ transform: `rotate(${-rotation * 1.3}deg)` }}
+        style={{ animation: 'spin 6.15s linear infinite reverse' }}
       />
       {/* Inner ring - dashed, rotates clockwise faster */}
       <div
         className="absolute inset-[30%] rounded-full border-2 border-dashed border-white/50"
-        style={{ transform: `rotate(${rotation * 2}deg)` }}
+        style={{ animation: 'spin 4s linear infinite' }}
       />
       {/* Center dot with glow */}
       <div className={`${dotSizes[size]} rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.8)]`} />
@@ -85,8 +69,6 @@ export function LoadingScreen() {
   const [words, setWords] = useState(pool.slice(0, 4))
   const [wordIndex, setWordIndex] = useState(0)
   const [visible, setVisible] = useState(false)
-  const [rotation, setRotation] = useState(0)
-
   // On first session load (right after splash), show rings instead of words
   const [showRings] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -96,19 +78,6 @@ export function LoadingScreen() {
   useEffect(() => {
     sessionStorage.setItem('voxu_home_loaded', 'true')
   }, [])
-
-  // Ring rotation (only when showing rings)
-  useEffect(() => {
-    if (!showRings) return
-    let frame: number
-    const start = performance.now()
-    const animate = (time: number) => {
-      setRotation((time - start) / 1000 * 60)
-      frame = requestAnimationFrame(animate)
-    }
-    frame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frame)
-  }, [showRings])
 
   // Shuffle words on client mount to avoid hydration mismatch
   useEffect(() => {
@@ -148,19 +117,19 @@ export function LoadingScreen() {
           <div className="absolute inset-0 rounded-full bg-white/10 blur-xl" />
           <div
             className="absolute inset-0 rounded-full border-2 border-dashed border-white/35"
-            style={{ transform: `rotate(${rotation}deg)` }}
+            style={{ animation: 'spin 6s linear infinite' }}
           />
           <div
             className="absolute inset-3 rounded-full border-2 border-dotted border-white/50"
-            style={{ transform: `rotate(${-rotation * 1.2}deg)` }}
+            style={{ animation: 'spin 5s linear infinite reverse' }}
           />
           <div
             className="absolute inset-6 rounded-full border-2 border-dashed border-white/60"
-            style={{ transform: `rotate(${rotation * 1.5}deg)` }}
+            style={{ animation: 'spin 4s linear infinite' }}
           />
           <div
             className="absolute inset-9 rounded-full border-2 border-dotted border-white/70"
-            style={{ transform: `rotate(${-rotation * 2}deg)` }}
+            style={{ animation: 'spin 3s linear infinite reverse' }}
           />
           <div className="w-4 h-4 rounded-full bg-white shadow-[0_0_25px_rgba(255,255,255,0.9)]" />
         </div>
@@ -176,10 +145,9 @@ export function LoadingScreen() {
           fontFamily: 'var(--font-cormorant), Georgia, serif',
           opacity: visible ? 1 : 0,
           transform: visible ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(4px)',
-          filter: visible ? 'blur(0px)' : 'blur(6px)',
           transition: visible
-            ? 'opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 1s cubic-bezier(0.16, 1, 0.3, 1)'
-            : 'opacity 0.8s cubic-bezier(0.4, 0, 1, 1), transform 0.8s cubic-bezier(0.4, 0, 1, 1), filter 0.6s cubic-bezier(0.4, 0, 1, 1)',
+            ? 'opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)'
+            : 'opacity 0.8s cubic-bezier(0.4, 0, 1, 1), transform 0.8s cubic-bezier(0.4, 0, 1, 1)',
         }}
       >
         {words[wordIndex]}

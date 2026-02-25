@@ -908,7 +908,7 @@ export function ImmersiveHome() {
                 hasRestoredRef.current = false
                 hasPlaylistRestoredRef.current = false
               }}
-              className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors"
+              className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 active:bg-white/15 backdrop-blur-sm transition-colors"
             >
               <Home className="w-4 h-4 text-white" />
               <span className="text-sm text-white">Home</span>
@@ -962,24 +962,24 @@ export function ImmersiveHome() {
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} role="presentation" />
           <div className="fixed right-6 top-[100px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
-            <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+            <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <PenLine className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Journal</span>
             </Link>
-            <Link href="/saved" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+            <Link href="/saved" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <Save className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Saved</span>
             </Link>
-            <Link href="/progress" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+            <Link href="/progress" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <BarChart3 className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Progress</span>
             </Link>
-            <Link href="/focus" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+            <Link href="/focus" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <Timer className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Focus</span>
             </Link>
             <div className="mx-3 my-1 border-t border-white/15" />
-            <Link href="/settings" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+            <Link href="/settings" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <Settings className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Settings</span>
             </Link>

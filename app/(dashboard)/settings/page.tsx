@@ -25,6 +25,8 @@ import {
   Shield,
   FileText,
   ShieldAlert,
+  Trash2,
+  RefreshCw,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -77,6 +79,8 @@ const SEGMENT_OPTIONS = [
 import { ZODIAC_SIGNS } from '@/lib/astrology/constants'
 import { LanguageSelector } from '@/components/settings/LanguageSelector'
 import { Globe } from 'lucide-react'
+import { Capacitor } from '@capacitor/core'
+import { restorePurchases } from '@/lib/revenuecat'
 
 function SettingsContent() {
   const router = useRouter()
@@ -126,6 +130,9 @@ function SettingsContent() {
   const [astrologyEnabled, setAstrologyEnabled] = useState(false)
   const [zodiacSign, setZodiacSign] = useState<string | null>(null)
   const [locale, setLocale] = useState('en')
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isRestoring, setIsRestoring] = useState(false)
 
   // Load preferences on mount
   useEffect(() => {
@@ -264,6 +271,35 @@ function SettingsContent() {
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
+  }
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true)
+    try {
+      const response = await fetch('/api/user/delete-account', { method: 'POST' })
+      if (!response.ok) throw new Error('Delete failed')
+      await supabase.auth.signOut()
+      router.push('/login')
+      router.refresh()
+    } catch (error) {
+      console.error('Account deletion failed:', error)
+      setIsDeleting(false)
+      setDeleteConfirmOpen(false)
+    }
+  }
+
+  const handleRestorePurchases = async () => {
+    setIsRestoring(true)
+    try {
+      const hasPremium = await restorePurchases()
+      if (hasPremium) {
+        subscription?.refreshSubscription()
+      }
+    } catch (error) {
+      console.error('Restore failed:', error)
+    } finally {
+      setIsRestoring(false)
+    }
   }
 
   if (isLoading) {
@@ -858,6 +894,21 @@ function SettingsContent() {
                     View Plans
                   </Link>
                 </div>
+
+                {Capacitor.isNativePlatform() && (
+                  <button
+                    onClick={handleRestorePurchases}
+                    disabled={isRestoring}
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/15 text-white/70 text-sm hover:bg-white/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  >
+                    {isRestoring ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" />
+                    )}
+                    Restore Purchases
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
@@ -899,20 +950,78 @@ function SettingsContent() {
                   <ExternalLink className="w-4 h-4" />
                   Compare plans
                 </Link>
+
+                {Capacitor.isNativePlatform() && (
+                  <button
+                    onClick={handleRestorePurchases}
+                    disabled={isRestoring}
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 border border-white/15 text-white/70 text-sm hover:bg-white/10 transition-colors disabled:opacity-40 mt-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  >
+                    {isRestoring ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" />
+                    )}
+                    Restore Purchases
+                  </button>
+                )}
               </div>
             )}
           </div>
 
           {/* Sign In / Sign Out */}
-          <div className="pt-2">
+          <div className="pt-2 space-y-3">
             {isAuthenticated ? (
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/15 text-red-400 hover:bg-red-500/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-              >
-                <LogOut className="w-5 h-5" />
-                Sign Out
-              </button>
+              <>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/15 text-red-400 hover:bg-red-500/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Sign Out
+                </button>
+
+                {/* Delete Account */}
+                {!deleteConfirmOpen ? (
+                  <button
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl text-red-400/60 text-sm hover:text-red-400 hover:bg-red-500/10 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Account
+                  </button>
+                ) : (
+                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 space-y-3">
+                    <p className="text-red-400 text-sm font-medium">Are you sure?</p>
+                    <p className="text-white/60 text-xs">
+                      This will permanently delete your account and all your data. This action cannot be undone.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setDeleteConfirmOpen(false)}
+                        disabled={isDeleting}
+                        className="p-3 rounded-xl bg-white/10 text-white text-sm hover:bg-white/15 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting}
+                        className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-sm hover:bg-red-500/30 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                      >
+                        {isDeleting ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Deleting...
+                          </span>
+                        ) : (
+                          'Delete Forever'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <Link
                 href="/login"
