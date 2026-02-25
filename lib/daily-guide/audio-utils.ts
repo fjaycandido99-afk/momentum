@@ -36,7 +36,7 @@ export async function setSharedCache(cacheKey: string, audioBase64: string, dura
 }
 
 // Monthly credit limit (characters)
-const MONTHLY_CREDIT_LIMIT = 30_000
+const MONTHLY_CREDIT_LIMIT = 100_000
 
 function getMonthKey() {
   const now = new Date()
@@ -63,7 +63,7 @@ async function trackUsage(characters: number) {
   }
 }
 
-// Generate audio with ElevenLabs (max 2 min, 30k credits/month)
+// Generate audio with ElevenLabs (max 2 min, 100k credits/month)
 export async function generateAudio(script: string, tone: string = 'calm'): Promise<{ audioBase64: string | null; duration: number }> {
   const apiKey = process.env.ELEVENLABS_API_KEY
   if (!apiKey) {
