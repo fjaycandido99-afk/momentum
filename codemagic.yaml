@@ -63,6 +63,16 @@ workflows:
       - name: Build iOS
         script: |
           cd ios/App
+          # Find the provisioning profile downloaded by fetch-signing-files
+          PROFILE_PATH=$(find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" -type f 2>/dev/null | head -1)
+          if [ -n "$PROFILE_PATH" ]; then
+            PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" | plutil -extract Name raw -)
+            echo "Using profile: $PROFILE_NAME"
+          else
+            echo "ERROR: No provisioning profile found!"
+            ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>/dev/null || echo "Directory does not exist"
+            exit 1
+          fi
           xcodebuild \
             -project App.xcodeproj \
             -scheme App \
@@ -70,6 +80,9 @@ workflows:
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=FX8T7ASYCL \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             archive
 
       - name: Export IPA
