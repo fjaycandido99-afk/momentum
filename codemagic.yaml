@@ -13,6 +13,9 @@ workflows:
     environment:
       node: 22
       xcode: 16.2
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.voxu.app
       groups:
         - app_store_connect
       vars:
@@ -38,26 +41,17 @@ workflows:
       - name: Capacitor sync
         script: npx cap sync ios
 
-      - name: Set up code signing
+      - name: Debug signing
         script: |
-          keychain initialize
-          # Fix: load private key from the .p8 file the integration wrote
-          KEY_FILE=$(find "$HOME" -name "AuthKey_*.p8" -type f 2>/dev/null | head -1)
-          if [ -n "$KEY_FILE" ]; then
-            echo "Found key file: $KEY_FILE"
-            export APP_STORE_CONNECT_PRIVATE_KEY="$(cat "$KEY_FILE")"
-            echo "Key length after loading from file: ${#APP_STORE_CONNECT_PRIVATE_KEY}"
-          else
-            echo "ERROR: No .p8 key file found!"
-            echo "Current APP_STORE_CONNECT_PRIVATE_KEY length: ${#APP_STORE_CONNECT_PRIVATE_KEY}"
-          fi
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
-          echo "=== Profiles downloaded ==="
-          find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" 2>/dev/null || echo "No profiles"
-          keychain add-certificates
-          xcode-project use-profiles --project ios/App/App.xcodeproj
+          echo "=== Installed certificates ==="
+          security find-identity -v -p codesigning
+          echo "=== Provisioning profiles ==="
+          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>/dev/null || echo "No profiles directory"
+          for f in "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision; do
+            [ -f "$f" ] || continue
+            echo "--- Profile: $f ---"
+            security cms -D -i "$f" | plutil -extract Name raw - 2>/dev/null
+          done
 
       - name: Set version and build number
         script: |
@@ -68,16 +62,6 @@ workflows:
       - name: Build iOS
         script: |
           cd ios/App
-          # Find the provisioning profile downloaded by fetch-signing-files
-          PROFILE_PATH=$(find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" -type f 2>/dev/null | head -1)
-          if [ -n "$PROFILE_PATH" ]; then
-            PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" | plutil -extract Name raw -)
-            echo "Using profile: $PROFILE_NAME"
-          else
-            echo "ERROR: No provisioning profile found!"
-            ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>/dev/null || echo "Directory does not exist"
-            exit 1
-          fi
           xcodebuild \
             -project App.xcodeproj \
             -scheme App \
@@ -85,14 +69,27 @@ workflows:
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=FX8T7ASYCL \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             archive
 
-      - name: Export IPA
+      - name: Generate ExportOptions and export IPA
         script: |
           cd ios/App
+          PROFILE_PATH=$(find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" -type f 2>/dev/null | head -1)
+          if [ -z "$PROFILE_PATH" ]; then
+            echo "ERROR: No provisioning profile found!"
+            exit 1
+          fi
+          PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" | plutil -extract Name raw -)
+          echo "Using profile: $PROFILE_NAME"
+          /usr/libexec/PlistBuddy -c "Clear dict" ExportOptions.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :method string app-store" ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :teamID string FX8T7ASYCL" ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :signingCertificate string 'Apple Distribution'" ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.voxu.app string '$PROFILE_NAME'" ExportOptions.plist
+          echo "=== ExportOptions.plist ==="
+          cat ExportOptions.plist
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportOptionsPlist ExportOptions.plist \
