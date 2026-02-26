@@ -14,7 +14,7 @@ workflows:
         - app_store_connect  # Add API key credentials in Codemagic UI
       vars:
         BUNDLE_ID: com.voxu.app
-        APP_STORE_APPLE_ID: "REPLACE_WITH_APPLE_ID"  # Numeric App ID from App Store Connect
+        APP_STORE_APPLE_ID: "6759702163"
 
     cache:
       cache_paths:
@@ -24,7 +24,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: main
+        - pattern: master
           include: true
       cancel_previous_builds: true
 
