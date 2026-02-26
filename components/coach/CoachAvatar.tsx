@@ -389,6 +389,52 @@ function SageOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?
           {/* Leaf vein detail */}
           <path d="M18 26 L20 22" stroke={BOT.body} strokeWidth="0.3" opacity="0.4" />
           <path d="M82 26 L80 22" stroke={BOT.body} strokeWidth="0.3" opacity="0.4" />
+          {/* Extra laurel leaves — 2-3 more per side */}
+          <path d="M14 40 Q10 36 12 32 Q16 34 14 40 Z" fill={theme.accent} />
+          <path d="M12 44 Q8 40 10 36 Q14 38 12 44 Z" fill={theme.accent} />
+          <path d="M22 24 Q18 20 20 16 Q24 18 22 24 Z" fill={theme.accent} />
+          <path d="M86 40 Q90 36 88 32 Q84 34 86 40 Z" fill={theme.accent} />
+          <path d="M88 44 Q92 40 90 36 Q86 38 88 44 Z" fill={theme.accent} />
+          <path d="M78 24 Q82 20 80 16 Q76 18 78 24 Z" fill={theme.accent} />
+          {/* Extra leaf vein details */}
+          <path d="M16 38 L14 34" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" />
+          <path d="M84 38 L86 34" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" />
+          <path d="M13 42 L11 38" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <path d="M87 42 L89 38" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          {/* Olive branch behind left ear with small olives */}
+          <path d="M10 42 Q6 48 4 56" stroke={theme.accent} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <ellipse cx="6" cy="46" rx="2" ry="1.5" fill={theme.accent} />
+          <ellipse cx="5" cy="50" rx="2" ry="1.5" fill={theme.accent} />
+          <ellipse cx="4" cy="54" rx="2" ry="1.5" fill={theme.accent} />
+          <circle cx="6" cy="46" r="0.5" fill={BOT.body} opacity="0.3" />
+          <circle cx="5" cy="50" r="0.5" fill={BOT.body} opacity="0.3" />
+          {/* Olive branch behind right ear with small olives */}
+          <path d="M90 42 Q94 48 96 56" stroke={theme.accent} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <ellipse cx="94" cy="46" rx="2" ry="1.5" fill={theme.accent} />
+          <ellipse cx="95" cy="50" rx="2" ry="1.5" fill={theme.accent} />
+          <ellipse cx="96" cy="54" rx="2" ry="1.5" fill={theme.accent} />
+          <circle cx="94" cy="46" r="0.5" fill={BOT.body} opacity="0.3" />
+          <circle cx="95" cy="50" r="0.5" fill={BOT.body} opacity="0.3" />
+          {/* Deeper mustache curl accents */}
+          <path d="M24 66 Q20 68 22 72" stroke={theme.accent} strokeWidth="1.2" fill="none" />
+          <path d="M76 66 Q80 68 78 72" stroke={theme.accent} strokeWidth="1.2" fill="none" />
+          <path d="M26 64 Q22 62 20 66" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" fill="none" />
+          <path d="M74 64 Q78 62 80 66" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" fill="none" />
+          {/* More beard wave strands */}
+          <path d="M30 76 Q38 72 50 78" stroke={BOT.body} strokeWidth="0.5" opacity="0.35" fill="none" />
+          <path d="M50 78 Q62 72 70 76" stroke={BOT.body} strokeWidth="0.5" opacity="0.35" fill="none" />
+          <path d="M36 82 Q44 78 50 84" stroke={BOT.body} strokeWidth="0.45" opacity="0.3" fill="none" />
+          <path d="M50 84 Q56 78 64 82" stroke={BOT.body} strokeWidth="0.45" opacity="0.3" fill="none" />
+          <path d="M40 88 Q46 84 50 90" stroke={BOT.body} strokeWidth="0.4" opacity="0.28" fill="none" />
+          <path d="M50 90 Q54 84 60 88" stroke={BOT.body} strokeWidth="0.4" opacity="0.28" fill="none" />
+          <path d="M44 94 Q50 90 56 94" stroke={BOT.body} strokeWidth="0.35" opacity="0.25" fill="none" />
+          {/* Wisdom dot outer ring detail */}
+          <circle cx="50" cy="22" r="6.5" fill="none" stroke={theme.accent} strokeWidth="0.6" opacity="0.5" />
+          <circle cx="50" cy="22" r="8" fill="none" stroke={theme.accent} strokeWidth="0.3" opacity="0.3" strokeDasharray="1.5 1.5" />
+          {/* Forehead wrinkle lines above visor */}
+          <path d="M30 32 Q40 30 50 31 Q60 30 70 32" stroke={BOT.body} strokeWidth="0.5" opacity="0.25" fill="none" />
+          <path d="M32 34 Q42 32 50 33 Q58 32 68 34" stroke={BOT.body} strokeWidth="0.4" opacity="0.2" fill="none" />
+          <path d="M34 36 Q44 34 50 35 Q56 34 66 36" stroke={BOT.body} strokeWidth="0.35" opacity="0.18" fill="none" />
         </>
       }
     />
@@ -439,6 +485,39 @@ function GuideOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging
           {/* Temple arm bend detail */}
           <path d="M4 52 L4 54" stroke={BOT.body} strokeWidth="0.5" opacity="0.35" />
           <path d="M96 52 L96 54" stroke={BOT.body} strokeWidth="0.5" opacity="0.35" />
+          {/* Thicker temple arm tips that curve down */}
+          <path d="M2 50 Q0 52 0 56 Q-1 60 2 62" stroke={theme.accent} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <path d="M98 50 Q100 52 100 56 Q101 60 98 62" stroke={theme.accent} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          {/* Beret cross-hatch stitching pattern */}
+          <path d="M30 8 L34 14" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" />
+          <path d="M34 8 L30 14" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" />
+          <path d="M40 6 L44 12" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" />
+          <path d="M44 6 L40 12" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" />
+          <path d="M56 6 L60 12" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" />
+          <path d="M60 6 L56 12" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" />
+          <path d="M66 8 L70 14" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" />
+          <path d="M70 8 L66 14" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" />
+          {/* Beret button/nub on top — seam detail */}
+          <circle cx="50" cy="4" r="1.2" fill={BOT.body} opacity="0.25" />
+          <path d="M48 4 L52 4" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <path d="M50 2 L50 6" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          {/* Beret radial seam lines from button */}
+          <path d="M50 6 Q44 10 38 14" stroke={BOT.body} strokeWidth="0.3" opacity="0.22" fill="none" />
+          <path d="M50 6 Q56 10 62 14" stroke={BOT.body} strokeWidth="0.3" opacity="0.22" fill="none" />
+          {/* 2nd lens reflection arcs — secondary shine */}
+          <path d="M30 58 Q34 62 38 60" stroke={BOT.body} strokeWidth="0.8" opacity="0.18" strokeLinecap="round" fill="none" />
+          <path d="M58 58 Q62 62 66 60" stroke={BOT.body} strokeWidth="0.8" opacity="0.18" strokeLinecap="round" fill="none" />
+          {/* Lens tint gradient overlay — slight blue tint */}
+          <circle cx="36" cy="53" r="14" fill={BOT.body} opacity="0.06" />
+          <circle cx="64" cy="53" r="14" fill={BOT.body} opacity="0.06" />
+          {/* Frame nose pads */}
+          <ellipse cx="46" cy="60" rx="2.5" ry="1.5" fill={theme.accent} />
+          <ellipse cx="54" cy="60" rx="2.5" ry="1.5" fill={theme.accent} />
+          <ellipse cx="46" cy="60" rx="1.2" ry="0.7" fill={BOT.body} opacity="0.25" />
+          <ellipse cx="54" cy="60" rx="1.2" ry="0.7" fill={BOT.body} opacity="0.25" />
+          {/* Nose pad arms connecting to bridge */}
+          <path d="M47 59 L48 56" stroke={theme.accent} strokeWidth="0.6" />
+          <path d="M53 59 L52 56" stroke={theme.accent} strokeWidth="0.6" />
         </>
       }
     />
@@ -486,6 +565,58 @@ function ChallengerOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nu
           {/* Chin stud — larger */}
           <circle cx="56" cy="76" r="2.5" fill={theme.accent} />
           <circle cx="56" cy="76" r="1" fill={BOT.body} opacity="0.3" />
+          {/* More mohawk hair texture lines */}
+          <path d="M34 14 L35 -4" stroke={BOT.body} strokeWidth="0.4" opacity="0.28" />
+          <path d="M40 14 L40 -6" stroke={BOT.body} strokeWidth="0.45" opacity="0.3" />
+          <path d="M44 14 L45 -10" stroke={BOT.body} strokeWidth="0.35" opacity="0.25" />
+          <path d="M48 14 L48 -13" stroke={BOT.body} strokeWidth="0.4" opacity="0.28" />
+          <path d="M52 14 L52 -13" stroke={BOT.body} strokeWidth="0.4" opacity="0.28" />
+          <path d="M56 14 L55 -10" stroke={BOT.body} strokeWidth="0.35" opacity="0.25" />
+          <path d="M60 14 L60 -6" stroke={BOT.body} strokeWidth="0.45" opacity="0.3" />
+          <path d="M66 14 L65 -4" stroke={BOT.body} strokeWidth="0.4" opacity="0.28" />
+          {/* Chain link necklace below chin */}
+          <ellipse cx="32" cy="84" rx="2.5" ry="1.8" fill="none" stroke={theme.accent} strokeWidth="1" />
+          <ellipse cx="37" cy="85" rx="2.5" ry="1.8" fill="none" stroke={theme.accent} strokeWidth="1" />
+          <ellipse cx="42" cy="86" rx="2.5" ry="1.8" fill="none" stroke={theme.accent} strokeWidth="1" />
+          <ellipse cx="47" cy="86.5" rx="2.5" ry="1.8" fill="none" stroke={theme.accent} strokeWidth="1" />
+          <ellipse cx="52" cy="86.5" rx="2.5" ry="1.8" fill="none" stroke={theme.accent} strokeWidth="1" />
+          <ellipse cx="57" cy="86" rx="2.5" ry="1.8" fill="none" stroke={theme.accent} strokeWidth="1" />
+          <ellipse cx="62" cy="85" rx="2.5" ry="1.8" fill="none" stroke={theme.accent} strokeWidth="1" />
+          <ellipse cx="67" cy="84" rx="2.5" ry="1.8" fill="none" stroke={theme.accent} strokeWidth="1" />
+          {/* Additional ear studs on right side */}
+          <circle cx="88" cy="42" r="1.8" fill={theme.accent} />
+          <circle cx="88" cy="42" r="0.7" fill={BOT.body} opacity="0.3" />
+          <circle cx="90" cy="48" r="1.5" fill={theme.accent} />
+          <circle cx="90" cy="48" r="0.6" fill={BOT.body} opacity="0.25" />
+          <circle cx="89" cy="54" r="1.8" fill={theme.accent} />
+          <circle cx="89" cy="54" r="0.7" fill={BOT.body} opacity="0.3" />
+          {/* Scar tissue dots along scar edges */}
+          <circle cx="58" cy="26" r="0.8" fill={theme.accent} opacity="0.6" />
+          <circle cx="67" cy="24" r="0.7" fill={theme.accent} opacity="0.5" />
+          <circle cx="61" cy="36" r="0.8" fill={theme.accent} opacity="0.55" />
+          <circle cx="71" cy="34" r="0.7" fill={theme.accent} opacity="0.5" />
+          <circle cx="63" cy="44" r="0.8" fill={theme.accent} opacity="0.55" />
+          <circle cx="73" cy="42" r="0.7" fill={theme.accent} opacity="0.5" />
+          <circle cx="65" cy="56" r="0.7" fill={theme.accent} opacity="0.5" />
+          <circle cx="75" cy="54" r="0.6" fill={theme.accent} opacity="0.45" />
+          {/* Eyebrow notch/shave mark — left side */}
+          <rect x="28" y="34" width="6" height="1.5" rx="0.5" fill={BOT.visor} opacity="0.5" />
+          <path d="M29 33.5 L33 33.5" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          {/* Knuckle tape wraps on sides (visible near cheeks) */}
+          <g transform="translate(-8, 64)">
+            <rect x="0" y="0" width="8" height="12" rx="2" fill={theme.accent} opacity="0.7" />
+            <line x1="1" y1="2" x2="7" y2="2" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" />
+            <line x1="1" y1="5" x2="7" y2="5" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" />
+            <line x1="1" y1="8" x2="7" y2="8" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" />
+            <line x1="1" y1="10" x2="7" y2="10" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          </g>
+          <g transform="translate(100, 64)">
+            <rect x="0" y="0" width="8" height="12" rx="2" fill={theme.accent} opacity="0.7" />
+            <line x1="1" y1="2" x2="7" y2="2" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" />
+            <line x1="1" y1="5" x2="7" y2="5" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" />
+            <line x1="1" y1="8" x2="7" y2="8" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" />
+            <line x1="1" y1="10" x2="7" y2="10" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          </g>
         </>
       }
     />
@@ -559,6 +690,79 @@ function MuseOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?
           <circle cx="88" cy="28" r="2" fill={theme.accent} />
           <path d="M12 28 Q10 32 8 30" stroke={theme.accent} strokeWidth="1" fill="none" />
           <path d="M88 28 Q90 32 92 30" stroke={theme.accent} strokeWidth="1" fill="none" />
+          {/* Tendril curls on vine ends */}
+          <path d="M8 30 Q4 34 6 36 Q8 38 6 40" stroke={theme.accent} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+          <path d="M92 30 Q96 34 94 36 Q92 38 94 40" stroke={theme.accent} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+          <path d="M6 40 Q3 42 5 44" stroke={theme.accent} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+          <path d="M94 40 Q97 42 95 44" stroke={theme.accent} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+          {/* More leaf veins */}
+          <path d="M30 15 L29 12" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" />
+          <path d="M30 15 L31 13" stroke={BOT.body} strokeWidth="0.25" opacity="0.3" />
+          <path d="M35 12 L34 9" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" />
+          <path d="M43 10 L42 7" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" />
+          <path d="M43 10 L44 8" stroke={BOT.body} strokeWidth="0.25" opacity="0.3" />
+          <path d="M59 10 L58 7" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" />
+          <path d="M59 10 L60 8" stroke={BOT.body} strokeWidth="0.25" opacity="0.3" />
+          <path d="M67 12 L66 9" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" />
+          <path d="M73 15 L72 12" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" />
+          <path d="M73 15 L74 13" stroke={BOT.body} strokeWidth="0.25" opacity="0.3" />
+          {/* Small berry clusters on vine */}
+          <circle cx="26" cy="16" r="1.2" fill={theme.accent} />
+          <circle cx="27.5" cy="14.5" r="1" fill={theme.accent} />
+          <circle cx="25" cy="14.8" r="0.9" fill={theme.accent} />
+          <circle cx="26.5" cy="15" r="0.4" fill={BOT.body} opacity="0.3" />
+          <circle cx="74" cy="16" r="1.2" fill={theme.accent} />
+          <circle cx="72.5" cy="14.5" r="1" fill={theme.accent} />
+          <circle cx="75" cy="14.8" r="0.9" fill={theme.accent} />
+          <circle cx="73.5" cy="15" r="0.4" fill={BOT.body} opacity="0.3" />
+          {/* Dewdrop dots on petals */}
+          <circle cx="18" cy="17" r="0.7" fill={BOT.body} opacity="0.35" />
+          <circle cx="22" cy="19" r="0.5" fill={BOT.body} opacity="0.3" />
+          <circle cx="48" cy="5" r="0.7" fill={BOT.body} opacity="0.35" />
+          <circle cx="53" cy="6" r="0.5" fill={BOT.body} opacity="0.3" />
+          <circle cx="78" cy="17" r="0.7" fill={BOT.body} opacity="0.35" />
+          <circle cx="82" cy="19" r="0.5" fill={BOT.body} opacity="0.3" />
+          <circle cx="35" cy="9" r="0.6" fill={BOT.body} opacity="0.3" />
+          <circle cx="65" cy="9" r="0.6" fill={BOT.body} opacity="0.3" />
+          {/* Pollen dots floating */}
+          <circle cx="30" cy="4" r="0.5" fill={theme.accent} opacity="0.35">
+            <animate attributeName="cy" values="4;1;4" dur="3.5s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.35;0.15;0.35" dur="3.5s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="44" cy="2" r="0.4" fill={theme.accent} opacity="0.3">
+            <animate attributeName="cy" values="2;-1;2" dur="4s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.3;0.1;0.3" dur="4s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="56" cy="3" r="0.4" fill={theme.accent} opacity="0.3">
+            <animate attributeName="cy" values="3;0;3" dur="3.2s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.3;0.1;0.3" dur="3.2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="70" cy="4" r="0.5" fill={theme.accent} opacity="0.35">
+            <animate attributeName="cy" values="4;1;4" dur="3.8s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.35;0.15;0.35" dur="3.8s" repeatCount="indefinite" />
+          </circle>
+          {/* Butterfly 1 — near left flowers */}
+          <g transform="translate(8, 12)">
+            <animateTransform attributeName="transform" type="translate" values="8 12;10 8;8 12" dur="4s" repeatCount="indefinite" />
+            <path d="M0 0 Q-3 -3 -2 -5 Q0 -4 0 0 Z" fill={theme.accent} opacity="0.6" />
+            <path d="M0 0 Q3 -3 2 -5 Q0 -4 0 0 Z" fill={theme.accent} opacity="0.6" />
+            <path d="M0 0 Q-2 2 -1.5 4 Q0 3 0 0 Z" fill={theme.accent} opacity="0.5" />
+            <path d="M0 0 Q2 2 1.5 4 Q0 3 0 0 Z" fill={theme.accent} opacity="0.5" />
+            <line x1="0" y1="-1" x2="0" y2="1" stroke={theme.accent} strokeWidth="0.3" />
+            <line x1="0" y1="-1" x2="-1" y2="-2.5" stroke={theme.accent} strokeWidth="0.2" />
+            <line x1="0" y1="-1" x2="1" y2="-2.5" stroke={theme.accent} strokeWidth="0.2" />
+          </g>
+          {/* Butterfly 2 — near right flowers */}
+          <g transform="translate(92, 14)">
+            <animateTransform attributeName="transform" type="translate" values="92 14;90 10;92 14" dur="3.6s" repeatCount="indefinite" />
+            <path d="M0 0 Q-3 -2.5 -1.5 -4.5 Q0 -3.5 0 0 Z" fill={theme.accent} opacity="0.55" />
+            <path d="M0 0 Q3 -2.5 1.5 -4.5 Q0 -3.5 0 0 Z" fill={theme.accent} opacity="0.55" />
+            <path d="M0 0 Q-1.8 1.8 -1 3.5 Q0 2.5 0 0 Z" fill={theme.accent} opacity="0.45" />
+            <path d="M0 0 Q1.8 1.8 1 3.5 Q0 2.5 0 0 Z" fill={theme.accent} opacity="0.45" />
+            <line x1="0" y1="-0.5" x2="0" y2="0.5" stroke={theme.accent} strokeWidth="0.3" />
+            <line x1="0" y1="-0.5" x2="-0.8" y2="-2" stroke={theme.accent} strokeWidth="0.2" />
+            <line x1="0" y1="-0.5" x2="0.8" y2="-2" stroke={theme.accent} strokeWidth="0.2" />
+          </g>
         </g>
       }
     />
@@ -624,6 +828,56 @@ function SenseiOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudgin
           <path d="M0 50 L10 50" stroke={BOT.body} strokeWidth="0.4" opacity="0.3" />
           <path d="M88 44 L98 44" stroke={BOT.body} strokeWidth="0.5" opacity="0.35" />
           <path d="M90 50 L100 50" stroke={BOT.body} strokeWidth="0.4" opacity="0.3" />
+          {/* Face guard (menpo) across lower face */}
+          <path d="M22 64 Q26 60 36 62 Q44 60 50 62 Q56 60 64 62 Q74 60 78 64 L80 72 Q74 80 50 84 Q26 80 20 72 Z" fill={theme.accent} />
+          {/* Menpo breathing holes */}
+          <circle cx="38" cy="68" r="1.2" fill={BOT.visor} opacity="0.5" />
+          <circle cx="42" cy="70" r="1" fill={BOT.visor} opacity="0.5" />
+          <circle cx="46" cy="68" r="1.2" fill={BOT.visor} opacity="0.5" />
+          <circle cx="50" cy="70" r="1" fill={BOT.visor} opacity="0.5" />
+          <circle cx="54" cy="68" r="1.2" fill={BOT.visor} opacity="0.5" />
+          <circle cx="58" cy="70" r="1" fill={BOT.visor} opacity="0.5" />
+          <circle cx="62" cy="68" r="1.2" fill={BOT.visor} opacity="0.5" />
+          {/* Menpo chin ridge */}
+          <path d="M30 74 Q40 78 50 80 Q60 78 70 74" stroke={BOT.body} strokeWidth="0.6" opacity="0.35" fill="none" />
+          <path d="M34 76 Q44 80 50 82 Q56 80 66 76" stroke={BOT.body} strokeWidth="0.4" opacity="0.25" fill="none" />
+          {/* Menpo cheek plates edge detail */}
+          <path d="M24 64 Q28 66 34 64" stroke={BOT.body} strokeWidth="0.4" opacity="0.3" fill="none" />
+          <path d="M66 64 Q72 66 76 64" stroke={BOT.body} strokeWidth="0.4" opacity="0.3" fill="none" />
+          {/* Cord tassels hanging from helmet sides */}
+          <path d="M-4 56 L-6 66 L-2 66 L-4 56 Z" fill={theme.accent} />
+          <circle cx="-4" cy="68" r="1.5" fill={theme.accent} />
+          <circle cx="-4" cy="68" r="0.6" fill={BOT.body} opacity="0.4" />
+          <path d="M-6 66 L-8 72" stroke={theme.accent} strokeWidth="0.8" strokeLinecap="round" />
+          <path d="M-2 66 L0 72" stroke={theme.accent} strokeWidth="0.8" strokeLinecap="round" />
+          <path d="M104 56 L106 66 L102 66 L104 56 Z" fill={theme.accent} />
+          <circle cx="104" cy="68" r="1.5" fill={theme.accent} />
+          <circle cx="104" cy="68" r="0.6" fill={BOT.body} opacity="0.4" />
+          <path d="M106 66 L108 72" stroke={theme.accent} strokeWidth="0.8" strokeLinecap="round" />
+          <path d="M102 66 L100 72" stroke={theme.accent} strokeWidth="0.8" strokeLinecap="round" />
+          {/* More ornamental rivets on brow guard */}
+          <circle cx="22" cy="33" r="1" fill={theme.accent} />
+          <circle cx="22" cy="33" r="0.4" fill={BOT.body} opacity="0.4" />
+          <circle cx="38" cy="33" r="1" fill={theme.accent} />
+          <circle cx="38" cy="33" r="0.4" fill={BOT.body} opacity="0.4" />
+          <circle cx="62" cy="33" r="1" fill={theme.accent} />
+          <circle cx="62" cy="33" r="0.4" fill={BOT.body} opacity="0.4" />
+          <circle cx="78" cy="33" r="1" fill={theme.accent} />
+          <circle cx="78" cy="33" r="0.4" fill={BOT.body} opacity="0.4" />
+          {/* Plate edge gilding lines on dome */}
+          <path d="M10 28 Q50 22 90 28" stroke={BOT.body} strokeWidth="0.35" opacity="0.25" fill="none" />
+          <path d="M15 24 Q50 18 85 24" stroke={BOT.body} strokeWidth="0.3" opacity="0.2" fill="none" />
+          {/* War fan (tessen) tucked in left side */}
+          <g transform="translate(-10, 70) rotate(-15)">
+            <path d="M0 0 L-3 -12 Q0 -14 3 -12 Z" fill={theme.accent} />
+            <path d="M0 0 L-6 -10 Q0 -14 0 -12 Z" fill={theme.accent} opacity="0.8" />
+            <path d="M0 0 L6 -10 Q0 -14 0 -12 Z" fill={theme.accent} opacity="0.8" />
+            <path d="M0 -2 L0 -12" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" />
+            <path d="M0 -2 L-3 -11" stroke={BOT.body} strokeWidth="0.25" opacity="0.3" />
+            <path d="M0 -2 L3 -11" stroke={BOT.body} strokeWidth="0.25" opacity="0.3" />
+            <circle cx="0" cy="0" r="1" fill={theme.accent} />
+            <circle cx="0" cy="0" r="0.4" fill={BOT.body} opacity="0.4" />
+          </g>
         </>
       }
     />
@@ -678,6 +932,54 @@ function OracleOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudgin
           <path d="M8 74 L6 78" stroke={theme.accent} strokeWidth="0.8" strokeLinecap="round" />
           <path d="M96 72 L98 76" stroke={theme.accent} strokeWidth="1" strokeLinecap="round" />
           <path d="M92 74 L94 78" stroke={theme.accent} strokeWidth="0.8" strokeLinecap="round" />
+          {/* More fraying threads */}
+          <path d="M6 73 L3 78" stroke={theme.accent} strokeWidth="0.6" strokeLinecap="round" />
+          <path d="M10 74 L9 79" stroke={theme.accent} strokeWidth="0.5" strokeLinecap="round" />
+          <path d="M2 74 L0 77" stroke={theme.accent} strokeWidth="0.5" strokeLinecap="round" />
+          <path d="M94 73 L97 78" stroke={theme.accent} strokeWidth="0.6" strokeLinecap="round" />
+          <path d="M90 74 L91 79" stroke={theme.accent} strokeWidth="0.5" strokeLinecap="round" />
+          <path d="M98 74 L100 77" stroke={theme.accent} strokeWidth="0.5" strokeLinecap="round" />
+          {/* Glowing eye marking under hood — third eye area */}
+          <path d="M44 42 Q50 38 56 42 Q50 46 44 42 Z" fill={theme.accent} opacity="0.3" />
+          <circle cx="50" cy="42" r="2" fill={BOT.body} opacity="0.4">
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="3s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="50" cy="42" r="0.8" fill={BOT.body} opacity="0.6">
+            <animate attributeName="opacity" values="0.4;0.7;0.4" dur="3s" repeatCount="indefinite" />
+          </circle>
+          {/* More rune symbols — scattered across hood */}
+          {/* Rune: arrow/tiwaz left side */}
+          <path d="M16 36 L18 32 L20 36" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" fill="none" />
+          <line x1="18" y1="32" x2="18" y2="40" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" />
+          {/* Rune: algiz right side */}
+          <line x1="80" y1="40" x2="80" y2="32" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" />
+          <path d="M78 34 L80 32 L82 34" stroke={BOT.body} strokeWidth="0.4" opacity="0.35" fill="none" />
+          {/* Rune: ingwaz diamond on left */}
+          <path d="M12 38 L14 35 L16 38 L14 41 Z" fill="none" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" />
+          {/* Rune: sowilo zigzag upper right */}
+          <path d="M70 14 L74 12 L70 18 L74 16" stroke={BOT.body} strokeWidth="0.4" opacity="0.3" fill="none" />
+          {/* Rune: kenaz on left mid */}
+          <path d="M26 38 L28 34 L30 38" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" fill="none" />
+          <path d="M26 38 L28 42" stroke={BOT.body} strokeWidth="0.35" opacity="0.3" />
+          {/* Chain with pendant hanging from clasp */}
+          <path d="M50 86 L50 92" stroke={theme.accent} strokeWidth="1" strokeLinecap="round" />
+          <circle cx="50" cy="89" r="0.8" fill={theme.accent} />
+          <path d="M47 94 L50 90 L53 94 L50 98 Z" fill={theme.accent} />
+          <circle cx="50" cy="94" r="1.2" fill={BOT.body} opacity="0.35" />
+          <circle cx="50" cy="94" r="0.5" fill={BOT.body} opacity="0.5" />
+          {/* Hood inner lining edge — darker visible rim */}
+          <path d="M10 48 Q50 40 90 48" stroke={theme.accent} strokeWidth="1.2" opacity="0.6" fill="none" />
+          <path d="M12 46 Q50 38 88 46" stroke={BOT.body} strokeWidth="0.5" opacity="0.2" fill="none" />
+          {/* Mystical circle pattern on forehead area */}
+          <circle cx="50" cy="12" r="6" fill="none" stroke={BOT.body} strokeWidth="0.4" opacity="0.22" />
+          <circle cx="50" cy="12" r="8.5" fill="none" stroke={BOT.body} strokeWidth="0.3" opacity="0.18" strokeDasharray="1.2 2" />
+          {/* Small crossmarks at circle cardinal points */}
+          <line x1="50" y1="3" x2="50" y2="5" stroke={BOT.body} strokeWidth="0.3" opacity="0.25" />
+          <line x1="49" y1="4" x2="51" y2="4" stroke={BOT.body} strokeWidth="0.3" opacity="0.25" />
+          <line x1="41" y1="12" x2="43" y2="12" stroke={BOT.body} strokeWidth="0.3" opacity="0.25" />
+          <line x1="42" y1="11" x2="42" y2="13" stroke={BOT.body} strokeWidth="0.3" opacity="0.25" />
+          <line x1="57" y1="12" x2="59" y2="12" stroke={BOT.body} strokeWidth="0.3" opacity="0.25" />
+          <line x1="58" y1="11" x2="58" y2="13" stroke={BOT.body} strokeWidth="0.3" opacity="0.25" />
         </>
       }
       ambient={
@@ -753,6 +1055,41 @@ function AlchemistOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nud
           {/* Filigree scrollwork on band */}
           <path d="M22 30 Q26 28 30 30 Q26 32 22 30" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" fill="none" />
           <path d="M70 30 Q74 28 78 30 Q74 32 70 30" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" fill="none" />
+          {/* More filigree scrollwork patterns */}
+          <path d="M38 30 Q42 28 46 30 Q42 32 38 30" stroke={BOT.body} strokeWidth="0.3" opacity="0.28" fill="none" />
+          <path d="M54 30 Q58 28 62 30 Q58 32 54 30" stroke={BOT.body} strokeWidth="0.3" opacity="0.28" fill="none" />
+          <path d="M12 30 Q15 27 18 30 Q15 33 12 30" stroke={BOT.body} strokeWidth="0.25" opacity="0.25" fill="none" />
+          <path d="M82 30 Q85 27 88 30 Q85 33 82 30" stroke={BOT.body} strokeWidth="0.25" opacity="0.25" fill="none" />
+          {/* Chain links connecting side gems to crown */}
+          {/* Left chain: side gem to crown point */}
+          <ellipse cx="16" cy="20" rx="1.5" ry="1" fill="none" stroke={theme.accent} strokeWidth="0.6" />
+          <ellipse cx="16" cy="17" rx="1" ry="1.5" fill="none" stroke={theme.accent} strokeWidth="0.6" />
+          <ellipse cx="17" cy="14.5" rx="1.5" ry="1" fill="none" stroke={theme.accent} strokeWidth="0.6" />
+          {/* Right chain: side gem to crown point */}
+          <ellipse cx="84" cy="20" rx="1.5" ry="1" fill="none" stroke={theme.accent} strokeWidth="0.6" />
+          <ellipse cx="84" cy="17" rx="1" ry="1.5" fill="none" stroke={theme.accent} strokeWidth="0.6" />
+          <ellipse cx="83" cy="14.5" rx="1.5" ry="1" fill="none" stroke={theme.accent} strokeWidth="0.6" />
+          {/* Engraved symbols on crown band */}
+          {/* Star/asterisk symbol */}
+          <line x1="26" y1="29" x2="26" y2="33" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <line x1="24" y1="31" x2="28" y2="31" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <line x1="24.5" y1="29.5" x2="27.5" y2="32.5" stroke={BOT.body} strokeWidth="0.25" opacity="0.25" />
+          <line x1="27.5" y1="29.5" x2="24.5" y2="32.5" stroke={BOT.body} strokeWidth="0.25" opacity="0.25" />
+          {/* Circle-dot symbol */}
+          <circle cx="48" cy="31" r="1.5" fill="none" stroke={BOT.body} strokeWidth="0.3" opacity="0.28" />
+          <circle cx="48" cy="31" r="0.3" fill={BOT.body} opacity="0.3" />
+          {/* Triangle symbol */}
+          <path d="M52 32.5 L53.5 29.5 L55 32.5 Z" fill="none" stroke={BOT.body} strokeWidth="0.3" opacity="0.28" />
+          {/* Moon crescent symbol */}
+          <path d="M74 29.5 Q76 31 74 32.5 Q75.5 31 74 29.5" stroke={BOT.body} strokeWidth="0.3" opacity="0.28" fill="none" />
+          {/* Gem facet highlights — light glints on all gems */}
+          <path d="M17 26 L18 24 L19 26" stroke={BOT.body} strokeWidth="0.4" opacity="0.4" fill="none" />
+          <path d="M81 26 L82 24 L83 26" stroke={BOT.body} strokeWidth="0.4" opacity="0.4" fill="none" />
+          <path d="M34 26 L35 24.5 L36 26" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" fill="none" />
+          <path d="M64 26 L65 24.5 L66 26" stroke={BOT.body} strokeWidth="0.3" opacity="0.35" fill="none" />
+          {/* Crown velvet lining visible at edges */}
+          <path d="M10 33 Q20 35 30 34 Q40 35 50 34 Q60 35 70 34 Q80 35 90 33" stroke={BOT.body} strokeWidth="0.6" opacity="0.15" fill="none" />
+          <rect x="8" y="33" width="84" height="2" rx="1" fill={BOT.body} opacity="0.08" />
         </>
       }
       ambient={
@@ -765,6 +1102,29 @@ function AlchemistOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nud
           </circle>
           <circle cx="50" cy="2" r="0.9" fill={theme.accent} opacity="0">
             <animate attributeName="opacity" values="0;0.35;0" dur="4s" repeatCount="indefinite" />
+          </circle>
+          {/* Small floating sparkle dots */}
+          <circle cx="30" cy="8" r="0.6" fill={theme.accent} opacity="0">
+            <animate attributeName="opacity" values="0;0.45;0" dur="2.8s" repeatCount="indefinite" />
+            <animate attributeName="cy" values="8;5;8" dur="2.8s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="70" cy="6" r="0.5" fill={theme.accent} opacity="0">
+            <animate attributeName="opacity" values="0;0.4;0" dur="3.2s" repeatCount="indefinite" />
+            <animate attributeName="cy" values="6;3;6" dur="3.2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="42" cy="4" r="0.4" fill={theme.accent} opacity="0">
+            <animate attributeName="opacity" values="0;0.35;0" dur="2.2s" repeatCount="indefinite" />
+            <animate attributeName="cy" values="4;1;4" dur="2.2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="58" cy="5" r="0.5" fill={theme.accent} opacity="0">
+            <animate attributeName="opacity" values="0;0.38;0" dur="3.6s" repeatCount="indefinite" />
+            <animate attributeName="cy" values="5;2;5" dur="3.6s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="15" cy="20" r="0.4" fill={theme.accent} opacity="0">
+            <animate attributeName="opacity" values="0;0.3;0" dur="4.2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="85" cy="18" r="0.4" fill={theme.accent} opacity="0">
+            <animate attributeName="opacity" values="0;0.3;0" dur="3.8s" repeatCount="indefinite" />
           </circle>
         </>
       }
@@ -837,6 +1197,76 @@ function CommanderOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nud
           <circle cx="-1" cy="44" r="0.5" fill={BOT.body} opacity="0.35" />
           <circle cx="-1" cy="48" r="1" fill={theme.accent} />
           <circle cx="-1" cy="48" r="0.4" fill={BOT.body} opacity="0.5" />
+          {/* Cable/wire from left ear cup to headband */}
+          <path d="M-2 42 Q-6 36 -4 28 Q-2 20 8 16" stroke={theme.accent} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+          <path d="M-2 42 Q-6 36 -4 28 Q-2 20 8 16" stroke={BOT.body} strokeWidth="0.4" opacity="0.2" fill="none" />
+          {/* Cable clip on band */}
+          <rect x="6" y="14" width="4" height="3" rx="1" fill={theme.accent} />
+          <rect x="7" y="15" width="2" height="1" rx="0.5" fill={BOT.body} opacity="0.25" />
+          {/* LED status strip on headband */}
+          <rect x="28" y="10" width="44" height="2" rx="1" fill={theme.accent} opacity="0.7" />
+          <circle cx="34" cy="11" r="0.8" fill={BOT.body} opacity="0.4">
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="40" cy="11" r="0.8" fill={BOT.body} opacity="0.4">
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1.8s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="46" cy="11" r="0.8" fill={BOT.body} opacity="0.4">
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1.2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="52" cy="11" r="0.8" fill={BOT.body} opacity="0.4">
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="58" cy="11" r="0.8" fill={BOT.body} opacity="0.4">
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1.4s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="64" cy="11" r="0.8" fill={BOT.body} opacity="0.4">
+            <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1.7s" repeatCount="indefinite" />
+          </circle>
+          {/* More mic windscreen texture */}
+          <line x1="12" y1="75" x2="20" y2="75" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <line x1="12" y1="77" x2="20" y2="77" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <line x1="12" y1="79" x2="20" y2="79" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <line x1="12" y1="81" x2="20" y2="81" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          {/* Windscreen dot texture */}
+          <circle cx="14" cy="76.5" r="0.3" fill={BOT.body} opacity="0.25" />
+          <circle cx="16" cy="78.5" r="0.3" fill={BOT.body} opacity="0.25" />
+          <circle cx="18" cy="76.5" r="0.3" fill={BOT.body} opacity="0.25" />
+          <circle cx="15" cy="80" r="0.3" fill={BOT.body} opacity="0.25" />
+          <circle cx="17" cy="80" r="0.3" fill={BOT.body} opacity="0.25" />
+          {/* Tactical HUD monocle over right eye */}
+          <rect x="56" y="38" width="22" height="16" rx="3" fill={theme.accent} opacity="0.35" />
+          <rect x="57" y="39" width="20" height="14" rx="2.5" fill="none" stroke={theme.accent} strokeWidth="0.8" />
+          {/* HUD display lines */}
+          <line x1="60" y1="42" x2="72" y2="42" stroke={BOT.body} strokeWidth="0.3" opacity="0.2" />
+          <line x1="60" y1="45" x2="68" y2="45" stroke={BOT.body} strokeWidth="0.3" opacity="0.2" />
+          <line x1="60" y1="48" x2="74" y2="48" stroke={BOT.body} strokeWidth="0.3" opacity="0.2" />
+          {/* HUD crosshair/reticle */}
+          <circle cx="67" cy="45" r="3" fill="none" stroke={BOT.body} strokeWidth="0.25" opacity="0.18" />
+          <line x1="67" y1="42" x2="67" y2="43" stroke={BOT.body} strokeWidth="0.25" opacity="0.18" />
+          <line x1="67" y1="47" x2="67" y2="48" stroke={BOT.body} strokeWidth="0.25" opacity="0.18" />
+          <line x1="64" y1="45" x2="65" y2="45" stroke={BOT.body} strokeWidth="0.25" opacity="0.18" />
+          <line x1="69" y1="45" x2="70" y2="45" stroke={BOT.body} strokeWidth="0.25" opacity="0.18" />
+          {/* Monocle arm connecting to headband */}
+          <path d="M76 38 Q82 34 86 40" stroke={theme.accent} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          {/* Serial number markings on left ear cup */}
+          <line x1="0" y1="58" x2="2" y2="58" stroke={BOT.body} strokeWidth="0.3" opacity="0.25" />
+          <line x1="3" y1="58" x2="4" y2="58" stroke={BOT.body} strokeWidth="0.3" opacity="0.25" />
+          <line x1="5" y1="58" x2="7" y2="58" stroke={BOT.body} strokeWidth="0.3" opacity="0.25" />
+          <line x1="8" y1="58" x2="9" y2="58" stroke={BOT.body} strokeWidth="0.3" opacity="0.25" />
+          {/* Volume dial on right ear cup */}
+          <circle cx="95" cy="46" r="3.5" fill={theme.accent} />
+          <circle cx="95" cy="46" r="2.5" fill="none" stroke={BOT.body} strokeWidth="0.4" opacity="0.3" />
+          <circle cx="95" cy="46" r="1" fill={BOT.body} opacity="0.25" />
+          {/* Dial tick marks */}
+          <line x1="95" y1="42.8" x2="95" y2="43.5" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <line x1="97.7" y1="44.3" x2="97.2" y2="44.8" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <line x1="98.5" y1="46" x2="97.8" y2="46" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <line x1="97.7" y1="47.7" x2="97.2" y2="47.2" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <line x1="95" y1="49.2" x2="95" y2="48.5" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          <line x1="92.3" y1="47.7" x2="92.8" y2="47.2" stroke={BOT.body} strokeWidth="0.3" opacity="0.3" />
+          {/* Dial position indicator */}
+          <line x1="95" y1="46" x2="97" y2="44.5" stroke={BOT.body} strokeWidth="0.5" opacity="0.4" />
         </>
       }
     />
