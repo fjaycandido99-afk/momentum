@@ -55,7 +55,7 @@ export const VOICE_GUIDES = [
 export const VALID_SOUNDSCAPE_IDS = ['focus', 'relax', 'sleep', 'energy', 'rain', 'ocean', 'forest', 'fire', 'thunder', 'night', 'wind', 'stream', 'cafe', 'piano', 'cosmic', 'astral', 'starlight'] as const
 
 
-export const BACKGROUND_IMAGES = [4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29,30,31].map(i => `/backgrounds/bg${i}.jpg`)
+export const BACKGROUND_IMAGES = [4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49].map(i => `/backgrounds/bg${i}.jpg`)
 
 // Static genre background URLs — guarantees images show without API dependency
 const _SB = 'https://jkrpreixylczfdfdyxrm.supabase.co'
