@@ -13,8 +13,8 @@ export function WelcomeBackCard({ daysAway, lastStreak, onDismiss }: WelcomeBack
   const Icon = hour >= 5 && hour < 18 ? Sunrise : Moon
 
   return (
-    <div className="px-6 mt-4 mb-4 liquid-reveal section-fade-bg">
-      <div className="relative p-5 card-gradient-border-lg">
+    <div className="px-6 mt-4 mb-6 liquid-reveal section-fade-bg">
+      <div className="relative p-5 card-surface-lg">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-xl bg-[#111113] border border-white/15">
             <Icon className="w-5 h-5 text-amber-400/90" />
@@ -28,7 +28,7 @@ export function WelcomeBackCard({ daysAway, lastStreak, onDismiss }: WelcomeBack
           </div>
         </div>
 
-        <p className="text-sm text-white/80 mb-4">
+        <p className="text-sm text-white/90 mb-4">
           {lastStreak >= 7
             ? "Your progress isn't lost — let's rebuild that momentum."
             : "Every day is a fresh start. Let's make this one count."}

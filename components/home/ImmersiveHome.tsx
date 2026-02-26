@@ -1011,7 +1011,7 @@ export function ImmersiveHome() {
             onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
             className="w-full h-full text-left group"
           >
-            <div className="relative p-5 rounded-2xl border border-white/[0.15] press-scale bg-black h-full flex flex-col justify-between overflow-hidden">
+            <div className="relative p-5 card-surface-lg press-scale h-full flex flex-col justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
                   <guideCTA.Icon className="w-5 h-5 text-white" />

@@ -45,8 +45,8 @@ export function WeeklyDigestCard({ isPremium }: WeeklyDigestCardProps) {
   if (!isDigestDay || error) return null
 
   return (
-    <div className="px-6 mb-4 liquid-reveal section-fade-bg">
-      <div className="p-5 rounded-3xl bg-black border border-white/15">
+    <div className="px-6 mb-6 liquid-reveal section-fade-bg">
+      <div className="p-5 card-surface-lg">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
             <BarChart3 className="w-4 h-4 text-white/85" />
@@ -72,7 +72,7 @@ export function WeeklyDigestCard({ isPremium }: WeeklyDigestCardProps) {
           </div>
         ) : !isPremium ? (
           <div>
-            <p className="text-xs text-white/75 mb-3">
+            <p className="text-xs text-white/85 mb-3">
               See your weekly stats, AI insights, and mood trends.
             </p>
             <Link

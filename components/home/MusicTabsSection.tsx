@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Music } from 'lucide-react'
 import { LazyGenreSection } from './LazyGenreSection'
 import type { VideoItem } from './home-types'
 import type { FreemiumContentType } from '@/lib/subscription-constants'
@@ -83,15 +82,19 @@ export function MusicTabsSection({
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center gap-2 px-8 mb-3">
-        <Music className="w-4 h-4 text-white/60" />
-        <h2 className="text-lg font-semibold text-white">Music</h2>
+      <div className="flex items-center justify-between px-6 mb-5">
+        <div className="flex items-center gap-2.5 section-header">
+          <div>
+            <h2 className="section-header-title">Music</h2>
+            <p className="section-header-subtitle">Background music for your flow</p>
+          </div>
+        </div>
       </div>
 
       {/* Genre pills */}
       <div
         ref={pillsRef}
-        className="flex gap-2 overflow-x-auto px-8 pb-4 scrollbar-hide"
+        className="flex gap-2 overflow-x-auto px-6 pb-4 scrollbar-hide"
       >
         {genres.map(g => {
           const isActive = g.id === selectedGenreId

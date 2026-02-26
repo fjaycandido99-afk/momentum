@@ -807,6 +807,60 @@ input:focus:not(:focus-visible), select:focus:not(:focus-visible), textarea:focu
 }
 
 
+/* Unified card surface for horizontal scroll cards */
+.card-surface {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+@media (hover: hover) {
+  .card-surface:hover {
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.08);
+  }
+}
+.card-surface:active {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Unified card surface for full-width standalone cards */
+.card-surface-lg {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: border-color 0.2s ease;
+}
+
+/* Section header accent bar */
+.section-header::before {
+  content: '';
+  width: 2px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 1px;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.section-header-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: white;
+  line-height: 1.3;
+}
+
+.section-header-subtitle {
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 2px;
+}
+
 /* Endel-style clean cards */
 .glass-card {
   background: rgba(255, 255, 255, 0.06);
@@ -2124,8 +2178,19 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   .animate-fab-pulse {
     animation-duration: 3.5s;
   }
+  /* Breathing glow — use border-color pulse instead of box-shadow on mobile */
+  @keyframes breathing-glow-mobile {
+    0%, 100% { border-color: rgba(255, 255, 255, 0.15); }
+    50% { border-color: rgba(255, 255, 255, 0.35); }
+  }
   .breathing-glow {
-    animation-duration: 4s;
+    animation: breathing-glow-mobile 4s ease-in-out infinite;
+    box-shadow: none;
+  }
+
+  /* Guide card overlay — hidden on mobile to save GPU layers */
+  .guide-overlay-layer {
+    display: none;
   }
 }
 

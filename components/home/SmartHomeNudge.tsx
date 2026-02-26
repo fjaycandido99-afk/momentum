@@ -109,7 +109,7 @@ export function SmartHomeNudge(props: SmartHomeNudgeProps) {
 
   return (
     <div className="px-6 mb-6 animate-fade-in-up">
-      <div className="relative p-4 rounded-2xl border border-white/25 bg-black">
+      <div className="relative p-4 card-surface-lg">
         <button
           onClick={() => setDismissed(true)}
           className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors"
@@ -122,7 +122,7 @@ export function SmartHomeNudge(props: SmartHomeNudgeProps) {
             <Icon className={`w-4 h-4 ${nudge.color}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-white/80 mb-2">{nudge.message}</p>
+            <p className="text-sm text-white/90 mb-2">{nudge.message}</p>
             <Link
               href={nudge.href}
               className={`text-xs font-medium ${nudge.color} hover:underline`}

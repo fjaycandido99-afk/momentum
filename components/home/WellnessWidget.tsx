@@ -36,12 +36,12 @@ export function WellnessWidget({ journalMood, streak, modulesCompletedToday, has
     : 'You\'re doing great — keep it up'
 
   return (
-    <div className="relative p-4 rounded-2xl border border-white/25 bg-black h-full flex flex-col overflow-hidden">
+    <div className="relative p-4 card-surface-lg h-full flex flex-col">
       {/* Top: title + score */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-medium text-white">Daily Wellness</h2>
-          <p className="text-[10px] text-white/70">{zone.label}</p>
+          <p className="text-[10px] text-white/80">{zone.label}</p>
         </div>
         <div className="relative w-10 h-10 shrink-0">
           <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
@@ -81,7 +81,7 @@ export function WellnessWidget({ journalMood, streak, modulesCompletedToday, has
       </div>
 
       {/* Tip */}
-      <p className="text-[9px] text-white/60 mt-1.5 truncate">{tip}</p>
+      <p className="text-[9px] text-white/70 mt-1.5 truncate">{tip}</p>
     </div>
   )
 }

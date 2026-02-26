@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Play, Pause, Clock } from 'lucide-react'
+import { Play, Pause } from 'lucide-react'
 import { EqBars } from '@/components/ui/EqBars'
 import type { RecentlyPlayedItem } from '@/hooks/useRecentlyPlayed'
 
@@ -31,15 +31,16 @@ export function RecentlyPlayedSection({
   if (items.length === 0) return null
 
   return (
-    <div className="mb-8 liquid-reveal section-fade-bg">
-      <div className="flex items-center gap-2 px-6 mb-4">
-        <Clock className="w-4 h-4 text-white/70" />
-        <div>
-          <h2 className="text-lg font-semibold text-white parallax-header">Recently Played</h2>
-          <p className="text-xs text-white/70 mt-0.5">Pick up where you left off</p>
+    <div className="mb-10 liquid-reveal section-fade-bg">
+      <div className="flex items-center justify-between px-6 mb-5">
+        <div className="flex items-center gap-2.5 section-header">
+          <div>
+            <h2 className="section-header-title parallax-header">Recently Played</h2>
+            <p className="section-header-subtitle">Pick up where you left off</p>
+          </div>
         </div>
       </div>
-      <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide snap-row">
+      <div className="flex gap-4 overflow-x-auto px-6 pb-3 scrollbar-hide snap-row">
         {items.map((item, index) => {
           const isCardActive = activeCardId === item.youtubeId
 
@@ -55,7 +56,7 @@ export function RecentlyPlayedSection({
               style={{ animationDelay: `${index * 60}ms` }}
             >
               <div
-                className={`relative w-36 h-36 rounded-2xl card-gradient-border flex items-center justify-center magnetic-tilt ${isCardActive ? 'card-now-playing breathing-glow' : ''}`}
+                className={`relative w-36 h-36 rounded-2xl card-surface flex items-center justify-center magnetic-tilt ${isCardActive ? 'card-now-playing breathing-glow' : ''}`}
                 onPointerMove={onMagneticMove}
                 onPointerLeave={onMagneticLeave}
               >
@@ -90,7 +91,7 @@ export function RecentlyPlayedSection({
                   )}
                 </div>
               </div>
-              <p className="text-xs text-white/70 mt-1.5 line-clamp-2 leading-tight">{item.title}</p>
+              <p className="text-xs text-white/85 mt-1.5 line-clamp-2 leading-tight">{item.title}</p>
             </button>
           )
         })}

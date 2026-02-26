@@ -27,7 +27,7 @@ export function DailyFeatureTip() {
   const [iconColor, textColor] = tip.accent.split(' ')
 
   const content = (
-    <div className="p-5 rounded-2xl border border-white/[0.15] bg-black h-full flex flex-col justify-between">
+    <div className="p-5 card-surface-lg h-full flex flex-col justify-between">
       <div>
         <div className="flex items-center gap-2">
           <div className={`flex items-center justify-center w-7 h-7 rounded-full ${iconColor}`}>
@@ -36,7 +36,7 @@ export function DailyFeatureTip() {
           <span className="text-[10px] uppercase tracking-wider text-white/50 font-medium">Daily Tip</span>
         </div>
         <h3 className="text-lg font-semibold text-white mt-2.5">{tip.title}</h3>
-        <p className="text-sm text-white/70 mt-0.5 leading-snug">{tip.description}</p>
+        <p className="text-sm text-white/85 mt-0.5 leading-snug">{tip.description}</p>
       </div>
       <div className="flex items-center justify-between mt-auto pt-2">
         <span className={`text-sm font-medium ${textColor}`}>Try it</span>

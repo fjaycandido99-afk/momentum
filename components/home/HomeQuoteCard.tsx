@@ -109,7 +109,7 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
 
   if (embedded) {
     return (
-      <div className="p-6 bg-black rounded-2xl border border-white/[0.15] press-scale min-h-[10rem] flex flex-col justify-between">
+      <div className="p-6 card-surface-lg press-scale min-h-[10rem] flex flex-col justify-between">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
             <Quote className="w-5 h-5 text-white" />
@@ -150,8 +150,8 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
   }
 
   return (
-    <div className="px-6 mb-4 liquid-reveal section-fade-bg">
-      <div className="p-5 card-gradient-border-lg press-scale">
+    <div className="px-6 mb-6 liquid-reveal section-fade-bg">
+      <div className="p-5 card-surface-lg press-scale">
         <blockquote className={`pl-3 border-l-2 ${accent} mb-3`}>
           <p className="text-[14px] text-white italic leading-relaxed">
             &ldquo;{quote.text}&rdquo;

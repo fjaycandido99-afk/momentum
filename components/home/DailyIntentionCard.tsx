@@ -50,13 +50,13 @@ export function DailyIntentionCard({ dailyIntention, today }: DailyIntentionCard
   // Already set — show confirmation
   if (dailyIntention) {
     return (
-      <div className="mx-6 mb-4 p-4 rounded-2xl bg-black border border-white/15">
+      <div className="mx-6 mb-6 p-4 card-surface-lg">
         <div className="flex items-start gap-3">
           <div className="p-1.5 rounded-lg bg-emerald-500/20">
             <Check className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-white/85 mb-1">Today's intention</p>
+            <p className="text-xs text-white/90 mb-1">Today's intention</p>
             <p className="text-sm text-white leading-relaxed">{dailyIntention}</p>
             <Link
               href="/journal"
@@ -73,7 +73,7 @@ export function DailyIntentionCard({ dailyIntention, today }: DailyIntentionCard
 
   // Not set — show picker
   return (
-    <div className="mx-6 mb-4 p-4 rounded-2xl bg-black border border-white/15">
+    <div className="mx-6 mb-6 p-4 card-surface-lg">
       <div className="flex items-center gap-2 mb-3">
         <Target className="w-4 h-4 text-white" />
         <p className="text-sm font-medium text-white">What's your focus today?</p>

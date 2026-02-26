@@ -43,16 +43,18 @@ export function MotivationSection({
   const [heartPopId, setHeartPopId] = useState<string | null>(null)
 
   return (
-    <div className="mb-8 liquid-reveal section-fade-bg">
-      <div className="flex items-center justify-between px-6 mb-4">
-        <div>
-          <h2 className="text-lg font-semibold text-white parallax-header">
-            {topicName}
-          </h2>
-          <p className="text-xs text-white/70 mt-0.5">
-            {tagline || (TOPIC_TAGLINES[topicName] || 'Motivation')}
-          </p>
-          <FeatureHint id="home-motivation" text="Swipe to browse — long-press to preview" mode="once" />
+    <div className="mb-10 liquid-reveal section-fade-bg">
+      <div className="flex items-center justify-between px-6 mb-5">
+        <div className="flex items-center gap-2.5 section-header">
+          <div>
+            <h2 className="section-header-title parallax-header">
+              {topicName}
+            </h2>
+            <p className="section-header-subtitle">
+              {tagline || (TOPIC_TAGLINES[topicName] || 'Motivation')}
+            </p>
+            <FeatureHint id="home-motivation" text="Swipe to browse — long-press to preview" mode="once" />
+          </div>
         </div>
         {onShuffle && (
           <button
@@ -77,7 +79,7 @@ export function MotivationSection({
           />
         </div>
       ) : (
-      <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide snap-row">
+      <div className="flex gap-4 overflow-x-auto px-6 pb-3 scrollbar-hide snap-row">
         {(
           videos.slice(0, 8).map((video, index) => {
             const isLocked = !isContentFree('motivation', index)
@@ -102,7 +104,7 @@ export function MotivationSection({
                 onTouchCancel={onLongPressEnd}
               >
                 <div
-                  className={`relative ${cardSize} rounded-2xl card-gradient-border flex items-center justify-center magnetic-tilt ${isCardActive ? 'card-now-playing breathing-glow' : ''}`}
+                  className={`relative ${cardSize} rounded-2xl card-surface flex items-center justify-center magnetic-tilt ${isCardActive ? 'card-now-playing breathing-glow' : ''}`}
                   onPointerMove={onMagneticMove}
                   onPointerLeave={onMagneticLeave}
                 >
@@ -163,7 +165,7 @@ export function MotivationSection({
                     <SoftLockBadge isLocked={true} size="md" />
                   )}
                 </div>
-                <p className="text-sm text-white/70 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+                <p className="text-sm text-white/85 mt-2 line-clamp-2 leading-tight">{video.title}</p>
               </button>
             )
           })

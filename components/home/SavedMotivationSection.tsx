@@ -28,12 +28,16 @@ export function SavedMotivationSection({
   if (videos.length === 0) return null
 
   return (
-    <div className="mb-8 liquid-reveal section-fade-bg">
-      <div className="px-6 mb-4">
-        <h2 className="text-lg font-semibold text-white parallax-header">{label}</h2>
-        <p className="text-xs text-white/70 mt-0.5">{subtitle}</p>
+    <div className="mb-10 liquid-reveal section-fade-bg">
+      <div className="flex items-center justify-between px-6 mb-5">
+        <div className="flex items-center gap-2.5 section-header">
+          <div>
+            <h2 className="section-header-title parallax-header">{label}</h2>
+            <p className="section-header-subtitle">{subtitle}</p>
+          </div>
+        </div>
       </div>
-      <div className="flex gap-4 overflow-x-auto px-6 pb-2 scrollbar-hide snap-row">
+      <div className="flex gap-4 overflow-x-auto px-6 pb-3 scrollbar-hide snap-row">
         {videos.map((video, index) => {
           const isCardActive = activeCardId === video.id
           return (
@@ -48,7 +52,7 @@ export function SavedMotivationSection({
               style={{ animationDelay: `${index * 60}ms` }}
             >
               <div
-                className={`relative w-40 h-40 rounded-2xl card-gradient-border flex items-center justify-center magnetic-tilt ${isCardActive ? 'card-now-playing breathing-glow' : ''}`}
+                className={`relative w-40 h-40 rounded-2xl card-surface flex items-center justify-center magnetic-tilt ${isCardActive ? 'card-now-playing breathing-glow' : ''}`}
                 onPointerMove={onMagneticMove}
                 onPointerLeave={onMagneticLeave}
               >
@@ -86,7 +90,7 @@ export function SavedMotivationSection({
                   )}
                 </div>
               </div>
-              <p className="text-sm text-white/70 mt-2 line-clamp-2 leading-tight">{video.title}</p>
+              <p className="text-sm text-white/85 mt-2 line-clamp-2 leading-tight">{video.title}</p>
             </button>
           )
         })}

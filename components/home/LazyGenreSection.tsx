@@ -99,11 +99,13 @@ export function LazyGenreSection({
   return (
     <div ref={sectionRef}>
       {!isVisible ? (
-        <div className="mb-12 liquid-reveal section-fade-bg">
-          <div className="flex items-center px-8 mb-4">
-            <div>
-              <h2 className={`text-lg font-semibold text-white parallax-header genre-accent-${genre.id}`}>{genre.word}</h2>
-              <p className="text-xs text-white/70 mt-0.5">{genre.tagline}</p>
+        <div className="mb-10 liquid-reveal section-fade-bg">
+          <div className="flex items-center justify-between px-6 mb-5">
+            <div className="flex items-center gap-2.5 section-header">
+              <div>
+                <h2 className="section-header-title parallax-header">{genre.word}</h2>
+                <p className="section-header-subtitle">{genre.tagline}</p>
+              </div>
             </div>
           </div>
           <div className="px-2"><SkeletonCardRow heroCard={heroCard} /></div>
