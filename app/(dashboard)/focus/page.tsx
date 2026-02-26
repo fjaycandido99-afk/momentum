@@ -540,6 +540,7 @@ export default function FocusPage() {
               onToggleMusic={handleToggleMusic}
               onChangeSoundscape={handleChangeSoundscape}
               onChangeMusic={handleChangeMusic}
+              isContentFree={isContentFree}
             />
 
             {/* Progress */}

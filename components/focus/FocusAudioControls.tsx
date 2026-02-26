@@ -6,6 +6,8 @@ import { haptic } from '@/lib/haptics'
 import { useHomeAudioOptional } from '@/contexts/HomeAudioContext'
 import { SOUNDSCAPE_ITEMS, type SoundscapeItem } from '@/components/player/SoundscapePlayer'
 import { MUSIC_GENRES } from '@/components/home/home-types'
+import { SoftLockBadge } from '@/components/premium/SoftLock'
+import type { FreemiumContentType } from '@/lib/subscription-constants'
 import type { FocusMusicChoice } from './FocusMusicPicker'
 
 // All soundscapes available for focus
@@ -21,8 +23,9 @@ interface FocusAudioControlsProps {
   musicPlaying: boolean
   onToggleSoundscape: () => void
   onToggleMusic: () => void
-  onChangeSoundscape: (sound: SoundscapeItem | null) => void
+  onChangeSoundscape: (sound: SoundscapeItem | null, isLocked: boolean) => void
   onChangeMusic: (music: FocusMusicChoice | null) => void
+  isContentFree: (type: FreemiumContentType, id: number | string) => boolean
 }
 
 interface GenreVideo {
@@ -40,6 +43,7 @@ export function FocusAudioControls({
   onToggleMusic,
   onChangeSoundscape,
   onChangeMusic,
+  isContentFree,
 }: FocusAudioControlsProps) {
   const [soundVol, setSoundVol] = useState(100)
   const [musicVol, setMusicVol] = useState(80)
@@ -129,7 +133,7 @@ export function FocusAudioControls({
         {showSoundPicker && (
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-3 px-3">
             <button
-              onClick={() => { haptic('light'); onChangeSoundscape(null); setShowSoundPicker(false) }}
+              onClick={() => { haptic('light'); onChangeSoundscape(null, false); setShowSoundPicker(false) }}
               className="flex flex-col items-center gap-1 shrink-0"
             >
               <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
@@ -142,16 +146,20 @@ export function FocusAudioControls({
             {FOCUS_SOUNDS.map((item) => {
               const Icon = item.icon
               const isActive = item.id === selectedSound?.id
+              const isLocked = !isContentFree('soundscape', item.id)
               return (
                 <button
                   key={item.id}
-                  onClick={() => { onChangeSoundscape(item); setShowSoundPicker(false) }}
+                  onClick={() => { onChangeSoundscape(item, isLocked); setShowSoundPicker(false) }}
                   className="flex flex-col items-center gap-1 shrink-0"
                 >
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                  <div className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                     isActive ? 'bg-white text-black' : 'bg-black border border-white/[0.12] text-white'
                   }`}>
                     <Icon className="w-4 h-4" strokeWidth={1.5} />
+                    {isLocked && !isActive && (
+                      <SoftLockBadge isLocked={true} size="sm" className="top-[-2px] right-[-2px] !w-3.5 !h-3.5" />
+                    )}
                   </div>
                   <span className={`text-[9px] ${isActive ? 'text-white' : 'text-white/50'}`}>{item.label}</span>
                 </button>
