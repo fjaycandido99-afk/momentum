@@ -162,8 +162,11 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
                       backgroundImage: svgBg(layer.svg),
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
-                      '--gl-t': layer.dur,
-                    } as React.CSSProperties}
+                      ...(isGuideActive ? {
+                        animationDuration: layer.dur,
+                        WebkitAnimationDuration: layer.dur,
+                      } : {}),
+                    }}
                   />
                 ))}
 
@@ -173,8 +176,9 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
                     className={`absolute inset-0 pointer-events-none guide-overlay-layer ${GUIDE_OVERLAY[guide.id].cls}`}
                     style={{
                       ...GUIDE_OVERLAY[guide.id].style,
-                      '--gl-t': GUIDE_OVERLAY[guide.id].dur,
-                    } as React.CSSProperties}
+                      animationDuration: GUIDE_OVERLAY[guide.id].dur,
+                      WebkitAnimationDuration: GUIDE_OVERLAY[guide.id].dur,
+                    }}
                   />
                 )}
 

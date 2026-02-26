@@ -1376,20 +1376,94 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   100% { transform: translateY(-60%) scale(0.9); opacity: 0; }
 }
 
-/* Guided layer animation utility classes — applied via className for mobile Safari compatibility */
-.gl-active-spin { -webkit-animation: gl-spin var(--gl-t, 40s) linear infinite; animation: gl-spin var(--gl-t, 40s) linear infinite; will-change: transform, opacity; }
-.gl-active-spin-r { -webkit-animation: gl-spin-r var(--gl-t, 40s) linear infinite; animation: gl-spin-r var(--gl-t, 40s) linear infinite; will-change: transform, opacity; }
-.gl-active-breathe { -webkit-animation: gl-breathe var(--gl-t, 24s) ease-in-out infinite; animation: gl-breathe var(--gl-t, 24s) ease-in-out infinite; will-change: transform, opacity; }
-.gl-active-float { -webkit-animation: gl-float var(--gl-t, 22s) ease-in-out infinite; animation: gl-float var(--gl-t, 22s) ease-in-out infinite; will-change: transform, opacity; }
-.gl-active-wave { -webkit-animation: gl-wave var(--gl-t, 26s) ease-in-out infinite; animation: gl-wave var(--gl-t, 26s) ease-in-out infinite; will-change: transform, opacity; }
-.gl-active-orbit { -webkit-animation: gl-orbit var(--gl-t, 30s) ease-in-out infinite; animation: gl-orbit var(--gl-t, 30s) ease-in-out infinite; will-change: transform, opacity; }
-.gl-active-expand { -webkit-animation: gl-expand var(--gl-t, 28s) ease-in-out infinite; animation: gl-expand var(--gl-t, 28s) ease-in-out infinite; will-change: transform, opacity; }
-.gl-active-pulse { -webkit-animation: gl-pulse var(--gl-t, 14s) ease-in-out infinite; animation: gl-pulse var(--gl-t, 14s) ease-in-out infinite; will-change: transform, opacity; }
-.gl-active-overlay-ring { -webkit-animation: gl-overlay-ring var(--gl-t, 15s) ease-in-out infinite; animation: gl-overlay-ring var(--gl-t, 15s) ease-in-out infinite; }
-.gl-active-overlay-sweep { -webkit-animation: gl-overlay-sweep var(--gl-t, 16s) ease-in-out infinite; animation: gl-overlay-sweep var(--gl-t, 16s) ease-in-out infinite; }
-.gl-active-overlay-pulse { -webkit-animation: gl-overlay-pulse var(--gl-t, 12s) ease-in-out infinite; animation: gl-overlay-pulse var(--gl-t, 12s) ease-in-out infinite; }
-.gl-active-overlay-scan { -webkit-animation: gl-overlay-scan var(--gl-t, 14s) ease-in-out infinite; animation: gl-overlay-scan var(--gl-t, 14s) ease-in-out infinite; }
-.gl-active-overlay-rise { -webkit-animation: gl-overlay-rise var(--gl-t, 14s) ease-in-out infinite; animation: gl-overlay-rise var(--gl-t, 14s) ease-in-out infinite; }
+/* Guided layer animation classes — longhand properties for mobile Safari compatibility */
+/* Duration is set via inline animationDuration to avoid var() in animation shorthand (Safari bug) */
+.gl-active-spin {
+  animation-name: gl-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: 40s;
+  will-change: transform, opacity;
+}
+.gl-active-spin-r {
+  animation-name: gl-spin-r;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: 40s;
+  will-change: transform, opacity;
+}
+.gl-active-breathe {
+  animation-name: gl-breathe;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 24s;
+  will-change: transform, opacity;
+}
+.gl-active-float {
+  animation-name: gl-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 22s;
+  will-change: transform, opacity;
+}
+.gl-active-wave {
+  animation-name: gl-wave;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 26s;
+  will-change: transform, opacity;
+}
+.gl-active-orbit {
+  animation-name: gl-orbit;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 30s;
+  will-change: transform, opacity;
+}
+.gl-active-expand {
+  animation-name: gl-expand;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 28s;
+  will-change: transform, opacity;
+}
+.gl-active-pulse {
+  animation-name: gl-pulse;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 14s;
+  will-change: transform, opacity;
+}
+.gl-active-overlay-ring {
+  animation-name: gl-overlay-ring;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 15s;
+}
+.gl-active-overlay-sweep {
+  animation-name: gl-overlay-sweep;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 16s;
+}
+.gl-active-overlay-pulse {
+  animation-name: gl-overlay-pulse;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 12s;
+}
+.gl-active-overlay-scan {
+  animation-name: gl-overlay-scan;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 14s;
+}
+.gl-active-overlay-rise {
+  animation-name: gl-overlay-rise;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 14s;
+}
 
 /* Ripple Burst - expanding ring on tap */
 @keyframes ripple-burst {
