@@ -41,11 +41,18 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
+          echo "=== Fetching signing files ==="
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create
+          echo "=== Profiles downloaded ==="
+          find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" 2>/dev/null || echo "No profiles found"
           keychain add-certificates
-          xcode-project use-profiles
+          echo "=== Applying profiles to Xcode project ==="
+          xcode-project use-profiles --project ios/App/App.xcodeproj
+          echo "=== Checking PROVISIONING_PROFILE in pbxproj ==="
+          grep -i "PROVISIONING_PROFILE" ios/App/App.xcodeproj/project.pbxproj || echo "NO PROVISIONING_PROFILE FOUND"
+          grep "CODE_SIGN" ios/App/App.xcodeproj/project.pbxproj || echo "NO CODE_SIGN FOUND"
 
       - name: Set version and build number
         script: |
