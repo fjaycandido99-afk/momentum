@@ -56,6 +56,11 @@ workflows:
       - name: Build iOS
         script: |
           cd ios/App
+          # Write API key to file for xcodebuild provisioning
+          API_KEY_DIR="$HOME/private_keys"
+          mkdir -p "$API_KEY_DIR"
+          API_KEY_PATH="$API_KEY_DIR/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8"
+          echo -n "$APP_STORE_CONNECT_PRIVATE_KEY" > "$API_KEY_PATH"
           xcodebuild \
             -project App.xcodeproj \
             -scheme App \
@@ -64,6 +69,9 @@ workflows:
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
             -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
             CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM=FX8T7ASYCL \
             archive
