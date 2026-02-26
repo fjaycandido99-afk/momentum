@@ -41,6 +41,7 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
+
           # Load API key from the .p8 file written by the integration
           KEY_FILE=$(find "$HOME" -name "AuthKey_*.p8" -type f 2>/dev/null | head -1)
           if [ -n "$KEY_FILE" ]; then
@@ -51,15 +52,29 @@ workflows:
             echo "ERROR: No .p8 key file found!"
             exit 1
           fi
-          # No existing Distribution cert — CLI will create a new one + profile
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
-          echo "=== Certificates ==="
+
+          # Step 1: Create a new Distribution certificate (generates private key + CSR + submits to Apple)
+          echo "=== Creating Distribution certificate ==="
+          app-store-connect create-certificate --type DISTRIBUTION --save
+
+          # Step 2: Add the certificate to the keychain
+          echo "=== Adding certificates to keychain ==="
+          keychain add-certificates
+
+          echo "=== Installed certificates ==="
           security find-identity -v -p codesigning
+
+          # Step 3: Create provisioning profile for App Store distribution
+          echo "=== Creating provisioning profile ==="
+          app-store-connect create-profile \
+            --type IOS_APP_STORE \
+            --bundle-id-identifier "$BUNDLE_ID" \
+            --save
+
           echo "=== Profiles ==="
           find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" 2>/dev/null || echo "No profiles"
-          keychain add-certificates
+
+          # Step 4: Apply profiles to Xcode project
           xcode-project use-profiles --project ios/App/App.xcodeproj
 
       - name: Set version and build number
