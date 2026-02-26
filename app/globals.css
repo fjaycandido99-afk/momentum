@@ -1266,6 +1266,116 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   animation: breathing-glow 3s ease-in-out infinite;
 }
 
+/* ── Guided Section Layer Animations ───────────────────── */
+
+/* Slow clockwise rotation with subtle scale pulse */
+@keyframes gl-spin {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(90deg) scale(1.08); }
+  50% { transform: rotate(180deg) scale(0.95); }
+  75% { transform: rotate(270deg) scale(1.06); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* Counter-clockwise with opposite scale rhythm */
+@keyframes gl-spin-r {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-90deg) scale(0.94); }
+  50% { transform: rotate(-180deg) scale(1.1); }
+  75% { transform: rotate(-270deg) scale(0.96); }
+  100% { transform: rotate(-360deg) scale(1); }
+}
+
+/* Deep breathing expand/contract with rotation sway */
+@keyframes gl-breathe {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; }
+  20% { transform: scale(1.3) rotate(4deg); opacity: 0.65; }
+  40% { transform: scale(1.65) rotate(-3deg); opacity: 0.35; }
+  60% { transform: scale(1.4) rotate(2deg); opacity: 0.55; }
+  80% { transform: scale(1.1) rotate(-1deg); opacity: 0.75; }
+}
+
+/* Dreamy floating drift — organic wandering path */
+@keyframes gl-float {
+  0%, 100% { transform: translate(0,0) rotate(0deg); opacity: 0.75; }
+  15% { transform: translate(14px,-22px) rotate(4deg); opacity: 1; }
+  30% { transform: translate(-10px,-38px) rotate(-3deg); opacity: 0.5; }
+  45% { transform: translate(8px,-18px) rotate(5deg); opacity: 0.85; }
+  60% { transform: translate(-16px,-30px) rotate(-2deg); opacity: 0.6; }
+  75% { transform: translate(6px,-12px) rotate(3deg); opacity: 0.9; }
+  90% { transform: translate(-4px,-5px) rotate(-1deg); opacity: 0.8; }
+}
+
+/* Horizontal wave sway — ocean-like lateral movement */
+@keyframes gl-wave {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); opacity: 0.8; }
+  16% { transform: translateX(22px) translateY(-6px) rotate(3deg); opacity: 1; }
+  33% { transform: translateX(-16px) translateY(10px) rotate(-4deg); opacity: 0.6; }
+  50% { transform: translateX(20px) translateY(-12px) rotate(3deg); opacity: 0.9; }
+  66% { transform: translateX(-18px) translateY(6px) rotate(-2deg); opacity: 0.7; }
+  83% { transform: translateX(10px) translateY(-4px) rotate(1deg); opacity: 0.85; }
+}
+
+/* Circular orbital path — drifting around center */
+@keyframes gl-orbit {
+  0% { transform: translate(0,0) rotate(0deg); opacity: 0.8; }
+  20% { transform: translate(18px,-16px) rotate(5deg); opacity: 1; }
+  40% { transform: translate(0,-30px) rotate(0deg); opacity: 0.6; }
+  60% { transform: translate(-18px,-16px) rotate(-5deg); opacity: 0.9; }
+  80% { transform: translate(-8px,-4px) rotate(-2deg); opacity: 0.75; }
+  100% { transform: translate(0,0) rotate(0deg); opacity: 0.8; }
+}
+
+/* Expanding bloom — dramatic outward growth */
+@keyframes gl-expand {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.75; }
+  25% { transform: scale(1.4) rotate(6deg); opacity: 1; }
+  50% { transform: scale(1.8) rotate(-4deg); opacity: 0.4; }
+  75% { transform: scale(1.3) rotate(3deg); opacity: 0.8; }
+}
+
+/* Twinkle pulse — rapid opacity + small scale shifts */
+@keyframes gl-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  20% { opacity: 1; transform: scale(1.15); }
+  40% { opacity: 0.3; transform: scale(0.92); }
+  60% { opacity: 0.95; transform: scale(1.12); }
+  80% { opacity: 0.35; transform: scale(0.95); }
+}
+
+/* Guided overlay animations */
+@keyframes gl-overlay-ring {
+  0%, 100% { transform: scale(0.3); opacity: 0; }
+  30% { transform: scale(1.2); opacity: 0.8; }
+  60% { transform: scale(2); opacity: 0.4; }
+  100% { transform: scale(3); opacity: 0; }
+}
+@keyframes gl-overlay-sweep {
+  0% { transform: rotate(0deg) scale(0.8); opacity: 0.4; }
+  50% { transform: rotate(180deg) scale(1.5); opacity: 0.9; }
+  100% { transform: rotate(360deg) scale(0.8); opacity: 0.4; }
+}
+@keyframes gl-overlay-pulse {
+  0%, 100% { opacity: 0.1; transform: scale(0.9); }
+  25% { opacity: 1; transform: scale(1.2); }
+  50% { opacity: 0.05; transform: scale(0.85); }
+  75% { opacity: 0.8; transform: scale(1.1); }
+}
+@keyframes gl-overlay-scan {
+  0% { transform: translateY(-150%) scaleY(2); opacity: 0; }
+  5% { opacity: 0.9; }
+  50% { transform: translateY(0%) scaleY(1); opacity: 1; }
+  95% { opacity: 0.9; }
+  100% { transform: translateY(150%) scaleY(2); opacity: 0; }
+}
+@keyframes gl-overlay-rise {
+  0% { transform: translateY(60%) scale(0.7); opacity: 0; }
+  25% { transform: translateY(15%) scale(1.2); opacity: 0.9; }
+  50% { transform: translateY(-10%) scale(1); opacity: 1; }
+  75% { transform: translateY(-35%) scale(1.3); opacity: 0.5; }
+  100% { transform: translateY(-60%) scale(0.9); opacity: 0; }
+}
+
 /* Ripple Burst - expanding ring on tap */
 @keyframes ripple-burst {
   0% {
