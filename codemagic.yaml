@@ -41,9 +41,9 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
-          # Fetch existing profiles (don't create new API-based ones)
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE
+            --type IOS_APP_STORE \
+            --create
           keychain add-certificates
           xcode-project use-profiles
 
@@ -63,9 +63,9 @@ workflows:
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
-            CODE_SIGN_STYLE=Manual \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM=FX8T7ASYCL \
-            PROVISIONING_PROFILE_SPECIFIER="Voxu App Store Distribution" \
             archive
 
       - name: Export IPA
