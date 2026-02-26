@@ -13,9 +13,6 @@ workflows:
     environment:
       node: 22
       xcode: 16.2
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.voxu.app
       groups:
         - app_store_connect
       vars:
@@ -41,17 +38,29 @@ workflows:
       - name: Capacitor sync
         script: npx cap sync ios
 
-      - name: Debug signing
+      - name: Set up code signing
         script: |
-          echo "=== Installed certificates ==="
+          keychain initialize
+          # Load API key from the .p8 file written by the integration
+          KEY_FILE=$(find "$HOME" -name "AuthKey_*.p8" -type f 2>/dev/null | head -1)
+          if [ -n "$KEY_FILE" ]; then
+            echo "Found key file: $KEY_FILE"
+            export APP_STORE_CONNECT_PRIVATE_KEY="$(cat "$KEY_FILE")"
+            echo "Key length: ${#APP_STORE_CONNECT_PRIVATE_KEY}"
+          else
+            echo "ERROR: No .p8 key file found!"
+            exit 1
+          fi
+          # No existing Distribution cert — CLI will create a new one + profile
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          echo "=== Certificates ==="
           security find-identity -v -p codesigning
-          echo "=== Provisioning profiles ==="
-          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>/dev/null || echo "No profiles directory"
-          for f in "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision; do
-            [ -f "$f" ] || continue
-            echo "--- Profile: $f ---"
-            security cms -D -i "$f" | plutil -extract Name raw - 2>/dev/null
-          done
+          echo "=== Profiles ==="
+          find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" 2>/dev/null || echo "No profiles"
+          keychain add-certificates
+          xcode-project use-profiles --project ios/App/App.xcodeproj
 
       - name: Set version and build number
         script: |
