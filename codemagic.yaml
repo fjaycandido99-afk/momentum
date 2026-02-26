@@ -40,27 +40,24 @@ workflows:
 
       - name: Set up code signing
         script: |
-          set -e
-          set -o pipefail
           keychain initialize
-          echo "=== ENV CHECK ==="
-          echo "BUNDLE_ID=$BUNDLE_ID"
-          echo "APP_STORE_CONNECT_KEY_IDENTIFIER=${APP_STORE_CONNECT_KEY_IDENTIFIER:-NOT SET}"
-          echo "APP_STORE_CONNECT_ISSUER_ID=${APP_STORE_CONNECT_ISSUER_ID:-NOT SET}"
-          echo "APP_STORE_CONNECT_PRIVATE_KEY length=${#APP_STORE_CONNECT_PRIVATE_KEY}"
-          echo "=== Fetching signing files (verbose) ==="
+          # Fix: load private key from the .p8 file the integration wrote
+          KEY_FILE=$(find "$HOME" -name "AuthKey_*.p8" -type f 2>/dev/null | head -1)
+          if [ -n "$KEY_FILE" ]; then
+            echo "Found key file: $KEY_FILE"
+            export APP_STORE_CONNECT_PRIVATE_KEY="$(cat "$KEY_FILE")"
+            echo "Key length after loading from file: ${#APP_STORE_CONNECT_PRIVATE_KEY}"
+          else
+            echo "ERROR: No .p8 key file found!"
+            echo "Current APP_STORE_CONNECT_PRIVATE_KEY length: ${#APP_STORE_CONNECT_PRIVATE_KEY}"
+          fi
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --create \
-            --verbose 2>&1 || echo "fetch-signing-files exit code: $?"
-          echo "=== Profiles directory ==="
-          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>/dev/null || echo "No profiles directory"
-          echo "=== Certificates in keychain ==="
+            --create
+          echo "=== Profiles downloaded ==="
+          find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" 2>/dev/null || echo "No profiles"
           keychain add-certificates
-          echo "=== Applying profiles ==="
-          xcode-project use-profiles --project ios/App/App.xcodeproj 2>&1 || echo "use-profiles exit code: $?"
-          echo "=== pbxproj signing settings ==="
-          grep -E "(PROVISIONING_PROFILE|CODE_SIGN_STYLE|DEVELOPMENT_TEAM)" ios/App/App.xcodeproj/project.pbxproj || echo "No signing settings found"
+          xcode-project use-profiles --project ios/App/App.xcodeproj
 
       - name: Set version and build number
         script: |
