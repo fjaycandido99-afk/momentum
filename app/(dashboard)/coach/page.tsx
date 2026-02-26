@@ -116,7 +116,7 @@ export default function CoachPage() {
   const [coachEmotion, setCoachEmotion] = useState<CoachEmotion>('idle')
   const emotionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const setEmotionWithDecay = useCallback((emotion: CoachEmotion, decayMs = 4000) => {
+  const setEmotionWithDecay = useCallback((emotion: CoachEmotion, decayMs = 8000) => {
     if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current)
     setCoachEmotion(emotion)
     if (emotion !== 'idle') {

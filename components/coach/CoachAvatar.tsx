@@ -13,6 +13,8 @@ interface CoachAvatarProps {
   nudging?: boolean
   /** Emotional state — used during coach chat for reactive animations */
   emotion?: CoachEmotion
+  /** When true, renders a plain bot with no mindset accessories */
+  plain?: boolean
 }
 
 const SIZE_CLASS = { sm: 'w-7 h-7', md: 'w-10 h-10', lg: 'w-16 h-16' }
@@ -62,88 +64,88 @@ interface EmotionConfig {
 
 const EMOTION_CONFIGS: Record<CoachEmotion, EmotionConfig> = {
   idle: {
-    headValues: '0 50 50;2 50 50;0 50 50;-2 50 50;0 50 50',
-    headDur: '6s',
-    breathValues: '0 0;0 -1;0 0',
+    headValues: '0 50 50;4 50 50;0 50 50;-4 50 50;0 50 50',
+    headDur: '5s',
+    breathValues: '0 0;0 -3;0 0',
     breathDur: '4s',
     eyeOffsetX: 0,
     eyeOffsetY: 0,
     eyeColor: 'default',
-    eyeGlowValues: '0.8;1;0.8',
+    eyeGlowValues: '0.7;1;0.7',
     eyeGlowDur: '3s',
     blinkDur: '4s',
     antennaDur: '2s',
-    antennaValues: '0.6;1;0.6',
-  },
-  listening: {
-    headValues: '0 50 50;8 50 50;10 50 50;8 50 50;0 50 50',
-    headDur: '3s',
-    breathValues: '0 0;0 -1;0 0',
-    breathDur: '5s',
-    eyeOffsetX: -5,
-    eyeOffsetY: 0,
-    eyeColor: 'default',
-    eyeGlowValues: '0.85;1;0.85',
-    eyeGlowDur: '1.5s',
-    blinkDur: '8s',
-    antennaDur: '2s',
-    antennaValues: '0.7;1;0.7',
-  },
-  thinking: {
-    headValues: '0 50 50;12 50 50;10 50 50;12 50 50;0 50 50',
-    headDur: '4s',
-    breathValues: '0 0;0 -2;0 2;0 0',
-    breathDur: '3s',
-    eyeOffsetX: 5,
-    eyeOffsetY: -5,
-    eyeColor: 'default',
-    eyeGlowValues: '0.5;1;0.5',
-    eyeGlowDur: '2s',
-    blinkDur: '8s',
-    antennaDur: '0.8s',
     antennaValues: '0.4;1;0.4',
   },
-  happy: {
-    headValues: '0 50 50;8 50 50;0 50 50;-8 50 50;0 50 50',
-    headDur: '1.2s',
-    breathValues: '0 0;0 -4;0 0',
-    breathDur: '1.5s',
-    eyeOffsetX: 0,
-    eyeOffsetY: -2,
+  listening: {
+    headValues: '0 50 50;18 50 50;14 50 50;18 50 50;0 50 50',
+    headDur: '2.5s',
+    breathValues: '0 0;0 -2;0 0',
+    breathDur: '4s',
+    eyeOffsetX: -10,
+    eyeOffsetY: 0,
     eyeColor: 'default',
-    eyeGlowValues: '0.6;1;0.6',
-    eyeGlowDur: '0.8s',
-    blinkDur: '2s',
-    antennaDur: '0.6s',
+    eyeGlowValues: '0.75;1;0.75',
+    eyeGlowDur: '1.2s',
+    blinkDur: '6s',
+    antennaDur: '1.5s',
     antennaValues: '0.5;1;0.5',
   },
-  empathetic: {
-    headValues: '0 50 50;-10 50 50;-8 50 50;-10 50 50;0 50 50',
-    headDur: '4s',
-    breathValues: '0 0;0 -2;0 0',
-    breathDur: '5s',
-    eyeOffsetX: -2,
-    eyeOffsetY: 4,
+  thinking: {
+    headValues: '0 50 50;22 50 50;18 50 50;22 50 50;0 50 50',
+    headDur: '3s',
+    breathValues: '0 0;0 -3;0 3;0 0',
+    breathDur: '2.5s',
+    eyeOffsetX: 10,
+    eyeOffsetY: -8,
     eyeColor: 'default',
-    eyeGlowValues: '0.4;0.7;0.4',
-    eyeGlowDur: '3s',
-    blinkDur: '5s',
-    antennaDur: '3s',
-    antennaValues: '0.3;0.6;0.3',
+    eyeGlowValues: '0.3;1;0.3',
+    eyeGlowDur: '1.5s',
+    blinkDur: '6s',
+    antennaDur: '0.6s',
+    antennaValues: '0.2;1;0.2',
   },
-  excited: {
-    headValues: '0 50 50;10 50 50;0 50 50;-10 50 50;0 50 50',
+  happy: {
+    headValues: '0 50 50;20 50 50;0 50 50;-20 50 50;0 50 50',
     headDur: '0.8s',
-    breathValues: '0 0;0 -6;0 2;0 -4;0 0',
+    breathValues: '0 0;0 -12;0 0',
     breathDur: '1s',
     eyeOffsetX: 0,
-    eyeOffsetY: 0,
-    eyeColor: 'accent',
-    eyeGlowValues: '0.5;1;0.5',
-    eyeGlowDur: '0.5s',
+    eyeOffsetY: -3,
+    eyeColor: 'default',
+    eyeGlowValues: '0.4;1;0.4',
+    eyeGlowDur: '0.6s',
     blinkDur: '1.5s',
     antennaDur: '0.4s',
     antennaValues: '0.3;1;0.3',
+  },
+  empathetic: {
+    headValues: '0 50 50;-18 50 50;-14 50 50;-18 50 50;0 50 50',
+    headDur: '3.5s',
+    breathValues: '0 0;0 -3;0 0',
+    breathDur: '4s',
+    eyeOffsetX: -4,
+    eyeOffsetY: 8,
+    eyeColor: 'default',
+    eyeGlowValues: '0.3;0.6;0.3',
+    eyeGlowDur: '2.5s',
+    blinkDur: '4s',
+    antennaDur: '2.5s',
+    antennaValues: '0.2;0.5;0.2',
+  },
+  excited: {
+    headValues: '0 50 50;25 50 50;0 50 50;-25 50 50;0 50 50',
+    headDur: '0.6s',
+    breathValues: '0 0;0 -14;0 4;0 -8;0 0',
+    breathDur: '0.8s',
+    eyeOffsetX: 0,
+    eyeOffsetY: 0,
+    eyeColor: 'accent',
+    eyeGlowValues: '0.3;1;0.3',
+    eyeGlowDur: '0.4s',
+    blinkDur: '1s',
+    antennaDur: '0.3s',
+    antennaValues: '0.2;1;0.2',
   },
 }
 
@@ -262,7 +264,7 @@ function BotFace({ accent, nudging, emotion }: { accent: string; nudging?: boole
       <line x1="50" y1="12" x2="50" y2="4" stroke={BOT.bodyEdge} strokeWidth="2.5" strokeLinecap="round" />
       <circle key={`ant-${emotion || 'idle'}`} cx="50" cy="4" r={antR} fill={accent} opacity="0.8">
         <animate attributeName="opacity" values={nudging ? '0.5;1;0.5' : cfg.antennaValues} dur={nudging ? '0.6s' : cfg.antennaDur} repeatCount="indefinite" />
-        {(nudging || emotion === 'excited') && <animate attributeName="r" values="3;5;3" dur={nudging ? '0.6s' : '0.8s'} repeatCount="indefinite" />}
+        {(nudging || emotion === 'excited') && <animate attributeName="r" values="3;5;3" dur={nudging ? '0.6s' : cfg.antennaDur} repeatCount="indefinite" />}
       </circle>
 
       {/* Large visor — extended down for mouth space */}
@@ -1273,6 +1275,12 @@ function CommanderOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nud
   )
 }
 
+// ── Plain bot (no accessories) ────────────────────────────
+
+function PlainOutfit({ theme, nudging, emotion }: { theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }) {
+  return <OutfitLayout accent={theme.accent} nudging={nudging} emotion={emotion} />
+}
+
 // ── Outfit map & export ───────────────────────────────────
 
 const OUTFIT_MAP: Record<string, React.FC<{ theme: MindsetTheme; nudging?: boolean; emotion?: CoachEmotion }>> = {
@@ -1286,12 +1294,12 @@ const OUTFIT_MAP: Record<string, React.FC<{ theme: MindsetTheme; nudging?: boole
   hustler: CommanderOutfit,
 }
 
-export function CoachAvatar({ mindsetId, size = 'md', className = '', nudging, emotion }: CoachAvatarProps) {
+export function CoachAvatar({ mindsetId, size = 'md', className = '', nudging, emotion, plain }: CoachAvatarProps) {
   const reactId = useId()
   const [tapped, setTapped] = useState(false)
   const mid = mindsetId || 'stoic'
   const theme = THEMES[mid] || THEMES.stoic
-  const Outfit = OUTFIT_MAP[mid] || SageOutfit
+  const Outfit = plain ? PlainOutfit : (OUTFIT_MAP[mid] || SageOutfit)
   const bgId = `cbg${reactId}`
   const clipId = `ccl${reactId}`
   const glowId = `cglow${reactId}`

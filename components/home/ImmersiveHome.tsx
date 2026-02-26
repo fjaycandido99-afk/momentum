@@ -1210,7 +1210,7 @@ export function ImmersiveHome() {
       <div className="fixed right-5 bottom-28 z-30 flex items-center gap-2">
         <CoachGreetingBubble mindsetId={mindsetCtx?.mindset} onVisibleChange={setIsCoachNudging} />
         <Link href="/coach" aria-label="Open AI coach" className="transition-all press-scale">
-          <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" nudging={isCoachNudging} className="!w-20 !h-20" />
+          <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" nudging={isCoachNudging} plain className="!w-20 !h-20" />
         </Link>
       </div>
 

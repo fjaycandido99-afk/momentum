@@ -8,6 +8,10 @@ import { FocusAudioControls } from '@/components/focus/FocusAudioControls'
 import { FocusComplete } from '@/components/focus/FocusComplete'
 import { useHomeAudioOptional } from '@/contexts/HomeAudioContext'
 import { useToast } from '@/contexts/ToastContext'
+import { useSubscription } from '@/contexts/SubscriptionContext'
+import { PreviewPaywall, PreviewTimer, usePreview } from '@/components/premium/SoftLock'
+import { useFeatureTooltip } from '@/components/premium/FeatureTooltip'
+import { FREEMIUM_LIMITS } from '@/lib/subscription-constants'
 import { logXPEventServer } from '@/lib/gamification'
 import { haptic } from '@/lib/haptics'
 import { FeatureHint } from '@/components/ui/FeatureHint'
@@ -46,6 +50,29 @@ export default function FocusPage() {
 
   const homeAudio = useHomeAudioOptional()
   const { showToast } = useToast()
+  const { isContentFree, dailyFreeUnlockUsed, useDailyFreeUnlock } = useSubscription()
+  const featureTooltipCtx = useFeatureTooltip()
+
+  // Preview paywall state
+  const [showPaywall, setShowPaywall] = useState(false)
+  const [paywallContentName, setPaywallContentName] = useState('')
+  const [previewUnlockCallback, setPreviewUnlockCallback] = useState<(() => void) | null>(null)
+
+  // Preview timer hook
+  const handlePreviewEnd = useCallback(() => {
+    if (homeAudio) {
+      // Pause soundscape
+      if (homeAudio.audioState.soundscapeIsPlaying) {
+        homeAudio.dispatch({ type: 'PAUSE_SOUNDSCAPE' })
+      }
+    }
+    setShowPaywall(true)
+  }, [homeAudio])
+
+  const { isPreviewActive, secondsLeft, startPreview, stopPreview } = usePreview({
+    onPreviewEnd: handlePreviewEnd,
+    previewDuration: FREEMIUM_LIMITS.previewSeconds,
+  })
 
   // --- Wake Lock ---
   const requestWakeLock = useCallback(async () => {
@@ -228,7 +255,22 @@ export default function FocusPage() {
     else if (homeAudio.audioState.backgroundMusic) homeAudio.dispatch({ type: 'RESUME_MUSIC' })
   }, [homeAudio])
 
-  const handleChangeSoundscape = useCallback((sound: SoundscapeItem | null) => {
+  const handleChangeSoundscape = useCallback((sound: SoundscapeItem | null, isLocked: boolean) => {
+    haptic('light')
+    if (isLocked && sound) {
+      // Show educational tooltip first (once per session), then proceed
+      if (featureTooltipCtx?.showFeatureTooltip('all_content')) return
+      stopPreview()
+      setPaywallContentName(sound.label)
+      setPreviewUnlockCallback(() => () => {
+        setSelectedSound(sound)
+        if (homeAudio) {
+          homeAudio.dispatch({ type: 'PLAY_SOUNDSCAPE', soundscape: { soundId: sound.id, label: sound.label, subtitle: sound.subtitle, youtubeId: sound.youtubeId }, exclusive: false })
+          homeAudio.createSoundscapePlayer(sound.youtubeId)
+        }
+      })
+    }
+
     setSelectedSound(sound)
     if (!homeAudio) return
     if (sound) {
@@ -237,7 +279,9 @@ export default function FocusPage() {
     } else {
       homeAudio.dispatch({ type: 'PAUSE_SOUNDSCAPE' })
     }
-  }, [homeAudio])
+
+    if (isLocked) startPreview()
+  }, [homeAudio, featureTooltipCtx, stopPreview, startPreview])
 
   const handleChangeMusic = useCallback((music: FocusMusicChoice | null) => {
     setSelectedMusic(music)
@@ -361,7 +405,7 @@ export default function FocusPage() {
           </div>
 
           {/* Sound Picker */}
-          <FocusSoundPicker selectedId={selectedSound?.id ?? null} onSelect={setSelectedSound} />
+          <FocusSoundPicker selectedId={selectedSound?.id ?? null} onSelect={handleChangeSoundscape} isContentFree={isContentFree} />
 
           {/* Music Picker */}
           <FocusMusicPicker selected={selectedMusic} onSelect={setSelectedMusic} />
@@ -505,6 +549,25 @@ export default function FocusPage() {
           </div>
         </div>
       )}
+
+      {/* Preview Timer */}
+      {isPreviewActive && <PreviewTimer secondsLeft={secondsLeft} />}
+
+      {/* Preview Paywall Modal */}
+      <PreviewPaywall
+        isOpen={showPaywall}
+        onClose={() => { setShowPaywall(false); stopPreview() }}
+        contentName={paywallContentName}
+        showDailyUnlock={!dailyFreeUnlockUsed}
+        onUseDailyUnlock={() => {
+          useDailyFreeUnlock()
+          stopPreview()
+          if (previewUnlockCallback) {
+            previewUnlockCallback()
+            setPreviewUnlockCallback(null)
+          }
+        }}
+      />
     </div>
   )
 }
