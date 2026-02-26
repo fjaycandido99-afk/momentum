@@ -853,6 +853,7 @@ export function ImmersiveHome() {
           hasNext={!!audioState.currentPlaylist && audioState.currentPlaylist.index < audioState.currentPlaylist.videos.length - 1}
           hasPrevious={!!audioState.currentPlaylist && audioState.currentPlaylist.index > 0}
           backgroundImage={audioState.playingSound.backgroundImage}
+          backgroundImages={audioState.currentPlaylist?.type === 'motivation' ? backgrounds : undefined}
           onClose={handleClosePlayer}
           externalAudio
           externalPlaying={audioState.musicPlaying}

@@ -13,6 +13,8 @@ interface WordAnimationPlayerProps {
   color: string
   youtubeId: string
   backgroundImage?: string
+  /** Full image pool for slideshow — picks 10 random images seeded by youtubeId */
+  backgroundImages?: string[]
   onClose: () => void
   /** When true, audio is owned by the parent — no YT player is created here */
   externalAudio?: boolean
@@ -38,12 +40,157 @@ interface WordAnimationPlayerProps {
   category?: string
 }
 
+// --- Seeded shuffle (same algorithm as home-types) ---
+function seededRandom(seed: number) {
+  const x = Math.sin(seed) * 10000
+  return x - Math.floor(x)
+}
+
+function pickSlideshowImages(pool: string[], youtubeId: string, count = 10): string[] {
+  // Create a numeric seed from the youtubeId string
+  let seed = 0
+  for (let i = 0; i < youtubeId.length; i++) {
+    seed = (seed * 31 + youtubeId.charCodeAt(i)) | 0
+  }
+  const shuffled = [...pool]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(seededRandom(seed + i) * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled.slice(0, count)
+}
+
+// --- Background Slideshow ---
+function BackgroundSlideshow({ images, words, playing, youtubeId }: {
+  images: string[]
+  words: string[]
+  playing: boolean
+  youtubeId: string
+}) {
+  const slides = useRef<string[]>([])
+  const indexRef = useRef(0)
+  const activeLayerRef = useRef<'a' | 'b'>('a')
+  const [layerA, setLayerA] = useState('')
+  const [layerB, setLayerB] = useState('')
+  const [visibleLayer, setVisibleLayer] = useState<'a' | 'b'>('a')
+  const [currentWord, setCurrentWord] = useState('')
+  const [wordVisible, setWordVisible] = useState(false)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Pick 10 images when youtubeId or image pool changes
+  useEffect(() => {
+    slides.current = pickSlideshowImages(images, youtubeId)
+    indexRef.current = 0
+    activeLayerRef.current = 'a'
+    const first = slides.current[0] || ''
+    setLayerA(first)
+    setLayerB(first)
+    setVisibleLayer('a')
+  }, [images, youtubeId])
+
+  // Show the first word once words arrive
+  useEffect(() => {
+    if (words.length > 0 && !currentWord) {
+      setCurrentWord(words[0])
+      // Small delay so the initial fade-in is visible
+      requestAnimationFrame(() => setWordVisible(true))
+    }
+  }, [words, currentWord])
+
+  // Reset word when youtubeId changes
+  useEffect(() => {
+    setCurrentWord('')
+    setWordVisible(false)
+  }, [youtubeId])
+
+  // Advance: crossfade image + word together
+  const advance = useCallback(() => {
+    const nextIndex = (indexRef.current + 1) % slides.current.length
+    const nextSrc = slides.current[nextIndex]
+    if (!nextSrc) return
+    indexRef.current = nextIndex
+
+    // Step 1: fade out the word
+    setWordVisible(false)
+
+    const img = new window.Image()
+    img.src = nextSrc
+    img.onload = () => {
+      const hidden = activeLayerRef.current === 'a' ? 'b' : 'a'
+      if (hidden === 'b') setLayerB(nextSrc)
+      else setLayerA(nextSrc)
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          activeLayerRef.current = hidden
+          setVisibleLayer(hidden)
+
+          // Step 2: after image starts crossfading, swap word and fade it in
+          setTimeout(() => {
+            setCurrentWord(prev => {
+              const wordList = words
+              if (wordList.length === 0) return prev
+              const idx = wordList.indexOf(prev)
+              return wordList[(idx + 1) % wordList.length]
+            })
+            setWordVisible(true)
+          }, 800)
+        })
+      })
+    }
+  }, [words])
+
+  // Timer: advance every 12s while playing
+  useEffect(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    if (playing && slides.current.length > 1) {
+      timerRef.current = setInterval(advance, 12000)
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [playing, advance, youtubeId])
+
+  if (!layerA) return null
+
+  return (
+    <>
+      <img
+        src={layerA}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2s] ease-in-out"
+        style={{ opacity: visibleLayer === 'a' ? 1 : 0 }}
+      />
+      <img
+        src={layerB || layerA}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2s] ease-in-out"
+        style={{ opacity: visibleLayer === 'b' ? 1 : 0 }}
+      />
+      {/* Centered word overlay */}
+      {currentWord && (
+        <div className="absolute inset-0 flex items-center justify-center z-[1] pointer-events-none">
+          <span
+            className="text-5xl sm:text-7xl font-black tracking-[0.2em] text-white/90 transition-opacity duration-[1.2s] ease-in-out drop-shadow-[0_4px_30px_rgba(0,0,0,0.7)]"
+            style={{ opacity: wordVisible ? 1 : 0 }}
+          >
+            {currentWord}
+          </span>
+        </div>
+      )}
+    </>
+  )
+}
+
 // Clean dark theme - subtle and atmospheric
 const colorMap: Record<string, { primary: string; glow: string; bg: string }> = {
   'from-white/[0.06] to-white/[0.02]': { primary: 'rgba(245, 245, 250, 0.95)', glow: 'rgba(245, 245, 250, 0.2)', bg: '#08080c' },
 }
 
-export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, onClose, externalAudio = false, externalPlaying, onTogglePlay, externalDuration, externalCurrentTime, onSeek, onSkipNext, onSkipPrevious, hasNext = false, hasPrevious = false, category }: WordAnimationPlayerProps) {
+export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, backgroundImages, onClose, externalAudio = false, externalPlaying, onTogglePlay, externalDuration, externalCurrentTime, onSeek, onSkipNext, onSkipPrevious, hasNext = false, hasPrevious = false, category }: WordAnimationPlayerProps) {
   const [isPlayingLocal, setIsPlayingLocal] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [playerReady, setPlayerReady] = useState(false)
@@ -78,6 +225,9 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
   const [showJournalFAB, setShowJournalFAB] = useState(false)
   const [showNudge, setShowNudge] = useState(false)
   const [showJournal, setShowJournal] = useState(false)
+
+  // Slideshow words (AI-generated, cached in localStorage)
+  const [slideshowWords, setSlideshowWords] = useState<string[]>([])
   const journalTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Unified playing state: video mode uses its own player, external mode uses parent state, local uses own
@@ -343,6 +493,42 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
     }
   }, [])
 
+  // Fetch AI-generated slideshow words (cached in localStorage per youtubeId)
+  useEffect(() => {
+    if (!backgroundImages || backgroundImages.length === 0) return
+
+    const cacheKey = `video-words-${youtubeId}`
+    const cached = localStorage.getItem(cacheKey)
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSlideshowWords(parsed)
+          return
+        }
+      } catch { /* ignore bad cache */ }
+    }
+
+    let cancelled = false
+    fetch('/api/ai/video-words', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: word }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (cancelled) return
+        const words = data.words
+        if (Array.isArray(words) && words.length > 0) {
+          setSlideshowWords(words)
+          localStorage.setItem(cacheKey, JSON.stringify(words))
+        }
+      })
+      .catch(() => { /* fail silently — slideshow works without words */ })
+
+    return () => { cancelled = true }
+  }, [youtubeId, word, backgroundImages])
+
   // Toggle mute (only for local audio mode)
   const toggleMute = useCallback(() => {
     if (playerRef.current) {
@@ -445,7 +631,14 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, o
           </>
         ) : (
           <>
-            {backgroundImage ? (
+            {backgroundImages && backgroundImages.length > 0 ? (
+              <BackgroundSlideshow
+                images={backgroundImages}
+                words={slideshowWords}
+                playing={isPlaying}
+                youtubeId={youtubeId}
+              />
+            ) : backgroundImage ? (
               <img
                 src={backgroundImage}
                 alt={word}
