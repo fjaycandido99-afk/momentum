@@ -44,8 +44,9 @@ workflows:
           KEYCHAIN_PATH=/tmp/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
 
-          # Decode certificate from base64 env var
-          echo -n "$IOS_CERTIFICATE_BASE64" | base64 --decode > $CERTIFICATE_PATH
+          # Decode certificate from base64 env var (printf avoids echo -n issues on macOS)
+          printf '%s' "$IOS_CERTIFICATE_BASE64" | base64 -D -o $CERTIFICATE_PATH
+          echo "Certificate file size: $(wc -c < $CERTIFICATE_PATH) bytes"
 
           # Create temporary keychain
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
@@ -64,11 +65,15 @@ workflows:
         script: |
           PP_PATH=/tmp/build_pp.mobileprovision
 
-          # Decode provisioning profile from base64 env var
-          echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > $PP_PATH
+          # Decode provisioning profile from base64 env var (printf avoids echo -n issues on macOS)
+          printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 -D -o $PP_PATH
+
+          # Debug: verify the file looks valid
+          echo "Profile file size: $(wc -c < $PP_PATH) bytes"
+          echo "File header (hex): $(xxd -l 16 $PP_PATH)"
 
           # Extract UUID from provisioning profile
-          PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i $PP_PATH))
+          PP_UUID=$(/usr/bin/security cms -D -i $PP_PATH | /usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin)
           echo "Provisioning Profile UUID: $PP_UUID"
 
           # Install provisioning profile
@@ -76,8 +81,11 @@ workflows:
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
 
           # Extract and show profile name
-          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /dev/stdin <<< $(/usr/bin/security cms -D -i $PP_PATH))
-          echo "Profile name: $PROFILE_NAME"
+          PP_NAME=$(/usr/bin/security cms -D -i $PP_PATH | /usr/libexec/PlistBuddy -c "Print Name" /dev/stdin)
+          echo "Profile name: $PP_NAME"
+
+          # Save profile name for later steps
+          echo "$PP_NAME" > /tmp/pp_name.txt
 
       - name: Set version and build number
         script: |
@@ -88,6 +96,11 @@ workflows:
       - name: Build iOS
         script: |
           cd ios/App
+
+          # Read profile name saved from previous step
+          PP_NAME=$(cat /tmp/pp_name.txt)
+          echo "Using provisioning profile: $PP_NAME"
+
           xcodebuild \
             -project App.xcodeproj \
             -scheme App \
@@ -95,27 +108,46 @@ workflows:
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=FX8T7ASYCL \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PP_NAME" \
             archive
 
       - name: Generate ExportOptions and export IPA
         script: |
           cd ios/App
-          PROFILE_PATH=$(find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" -type f 2>/dev/null | head -1)
-          if [ -z "$PROFILE_PATH" ]; then
-            echo "ERROR: No provisioning profile found!"
-            exit 1
-          fi
-          PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" | plutil -extract Name raw -)
-          echo "Using profile: $PROFILE_NAME"
-          /usr/libexec/PlistBuddy -c "Clear dict" ExportOptions.plist 2>/dev/null || true
-          /usr/libexec/PlistBuddy -c "Add :method string app-store" ExportOptions.plist
-          /usr/libexec/PlistBuddy -c "Add :teamID string FX8T7ASYCL" ExportOptions.plist
-          /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" ExportOptions.plist
-          /usr/libexec/PlistBuddy -c "Add :signingCertificate string 'Apple Distribution'" ExportOptions.plist
-          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" ExportOptions.plist
-          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.voxu.app string '$PROFILE_NAME'" ExportOptions.plist
+
+          # Read profile name saved from install step
+          PP_NAME=$(cat /tmp/pp_name.txt)
+          echo "Using profile: $PP_NAME"
+
+          # Generate ExportOptions.plist dynamically
+          cat > ExportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>FX8T7ASYCL</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.voxu.app</key>
+              <string>${PP_NAME}</string>
+            </dict>
+          </dict>
+          </plist>
+          PLIST
+
           echo "=== ExportOptions.plist ==="
           cat ExportOptions.plist
+
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportOptionsPlist ExportOptions.plist \
