@@ -40,19 +40,27 @@ workflows:
 
       - name: Set up code signing
         script: |
+          set -e
+          set -o pipefail
           keychain initialize
-          echo "=== Fetching signing files ==="
+          echo "=== ENV CHECK ==="
+          echo "BUNDLE_ID=$BUNDLE_ID"
+          echo "APP_STORE_CONNECT_KEY_IDENTIFIER=${APP_STORE_CONNECT_KEY_IDENTIFIER:-NOT SET}"
+          echo "APP_STORE_CONNECT_ISSUER_ID=${APP_STORE_CONNECT_ISSUER_ID:-NOT SET}"
+          echo "APP_STORE_CONNECT_PRIVATE_KEY length=${#APP_STORE_CONNECT_PRIVATE_KEY}"
+          echo "=== Fetching signing files (verbose) ==="
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --create
-          echo "=== Profiles downloaded ==="
-          find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" 2>/dev/null || echo "No profiles found"
+            --create \
+            --verbose 2>&1 || echo "fetch-signing-files exit code: $?"
+          echo "=== Profiles directory ==="
+          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>/dev/null || echo "No profiles directory"
+          echo "=== Certificates in keychain ==="
           keychain add-certificates
-          echo "=== Applying profiles to Xcode project ==="
-          xcode-project use-profiles --project ios/App/App.xcodeproj
-          echo "=== Checking PROVISIONING_PROFILE in pbxproj ==="
-          grep -i "PROVISIONING_PROFILE" ios/App/App.xcodeproj/project.pbxproj || echo "NO PROVISIONING_PROFILE FOUND"
-          grep "CODE_SIGN" ios/App/App.xcodeproj/project.pbxproj || echo "NO CODE_SIGN FOUND"
+          echo "=== Applying profiles ==="
+          xcode-project use-profiles --project ios/App/App.xcodeproj 2>&1 || echo "use-profiles exit code: $?"
+          echo "=== pbxproj signing settings ==="
+          grep -E "(PROVISIONING_PROFILE|CODE_SIGN_STYLE|DEVELOPMENT_TEAM)" ios/App/App.xcodeproj/project.pbxproj || echo "No signing settings found"
 
       - name: Set version and build number
         script: |
