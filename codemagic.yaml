@@ -38,44 +38,46 @@ workflows:
       - name: Capacitor sync
         script: npx cap sync ios
 
-      - name: Set up code signing
+      - name: Install Apple Certificate
         script: |
-          keychain initialize
+          CERTIFICATE_PATH=/tmp/build_certificate.p12
+          KEYCHAIN_PATH=/tmp/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
 
-          # Load API key from the .p8 file written by the integration
-          KEY_FILE=$(find "$HOME" -name "AuthKey_*.p8" -type f 2>/dev/null | head -1)
-          if [ -n "$KEY_FILE" ]; then
-            echo "Found key file: $KEY_FILE"
-            export APP_STORE_CONNECT_PRIVATE_KEY="$(cat "$KEY_FILE")"
-            echo "Key length: ${#APP_STORE_CONNECT_PRIVATE_KEY}"
-          else
-            echo "ERROR: No .p8 key file found!"
-            exit 1
-          fi
+          # Decode certificate from base64 env var
+          echo -n "$IOS_CERTIFICATE_BASE64" | base64 --decode > $CERTIFICATE_PATH
 
-          # Step 1: Create a new Distribution certificate (generates private key + CSR + submits to Apple)
-          echo "=== Creating Distribution certificate ==="
-          app-store-connect create-certificate --type DISTRIBUTION --save
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-          # Step 2: Add the certificate to the keychain
-          echo "=== Adding certificates to keychain ==="
-          keychain add-certificates
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
 
           echo "=== Installed certificates ==="
-          security find-identity -v -p codesigning
+          security find-identity -v -p codesigning $KEYCHAIN_PATH
 
-          # Step 3: Create provisioning profile for App Store distribution
-          echo "=== Creating provisioning profile ==="
-          app-store-connect create-profile \
-            --type IOS_APP_STORE \
-            --bundle-id-identifier "$BUNDLE_ID" \
-            --save
+      - name: Install Provisioning Profile
+        script: |
+          PP_PATH=/tmp/build_pp.mobileprovision
 
-          echo "=== Profiles ==="
-          find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" 2>/dev/null || echo "No profiles"
+          # Decode provisioning profile from base64 env var
+          echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > $PP_PATH
 
-          # Step 4: Apply profiles to Xcode project
-          xcode-project use-profiles --project ios/App/App.xcodeproj
+          # Extract UUID from provisioning profile
+          PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i $PP_PATH))
+          echo "Provisioning Profile UUID: $PP_UUID"
+
+          # Install provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
+
+          # Extract and show profile name
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /dev/stdin <<< $(/usr/bin/security cms -D -i $PP_PATH))
+          echo "Profile name: $PROFILE_NAME"
 
       - name: Set version and build number
         script: |
@@ -118,6 +120,9 @@ workflows:
             -archivePath build/App.xcarchive \
             -exportOptionsPlist ExportOptions.plist \
             -exportPath build/export
+
+      - name: Cleanup Keychain
+        script: security delete-keychain /tmp/app-signing.keychain-db || true
 
     artifacts:
       - ios/App/build/export/*.ipa
