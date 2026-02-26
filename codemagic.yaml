@@ -63,17 +63,14 @@ workflows:
 
       - name: Install Provisioning Profile
         script: |
-          PP_PATH=/tmp/build_pp.mobileprovision
+          PP_PATH=ios/App/Voxu_App_Store_Distribution.mobileprovision
           PP_PLIST=/tmp/pp_decoded.plist
 
-          # Decode provisioning profile from base64 env var (printf avoids echo -n issues on macOS)
-          printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 -D -o $PP_PATH
-
-          # Debug: verify the file looks valid
+          # Verify the committed profile file
           echo "Profile file size: $(wc -c < $PP_PATH) bytes"
           echo "File header (hex): $(xxd -l 16 $PP_PATH)"
 
-          # Decode the CMS envelope to a plist file (avoids /dev/stdin issues)
+          # Decode the CMS envelope to a plist file
           /usr/bin/security cms -D -i $PP_PATH > $PP_PLIST
 
           # Extract UUID from decoded plist
