@@ -64,6 +64,7 @@ workflows:
       - name: Install Provisioning Profile
         script: |
           PP_PATH=/tmp/build_pp.mobileprovision
+          PP_PLIST=/tmp/pp_decoded.plist
 
           # Decode provisioning profile from base64 env var (printf avoids echo -n issues on macOS)
           printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 -D -o $PP_PATH
@@ -72,8 +73,11 @@ workflows:
           echo "Profile file size: $(wc -c < $PP_PATH) bytes"
           echo "File header (hex): $(xxd -l 16 $PP_PATH)"
 
-          # Extract UUID from provisioning profile
-          PP_UUID=$(/usr/bin/security cms -D -i $PP_PATH | /usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin)
+          # Decode the CMS envelope to a plist file (avoids /dev/stdin issues)
+          /usr/bin/security cms -D -i $PP_PATH > $PP_PLIST
+
+          # Extract UUID from decoded plist
+          PP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" $PP_PLIST)
           echo "Provisioning Profile UUID: $PP_UUID"
 
           # Install provisioning profile
@@ -81,11 +85,12 @@ workflows:
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$PP_UUID.mobileprovision
 
           # Extract and show profile name
-          PP_NAME=$(/usr/bin/security cms -D -i $PP_PATH | /usr/libexec/PlistBuddy -c "Print Name" /dev/stdin)
+          PP_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" $PP_PLIST)
           echo "Profile name: $PP_NAME"
 
-          # Save profile name for later steps
-          echo "$PP_NAME" > /tmp/pp_name.txt
+          # Verify it has push notifications
+          echo "=== Entitlements ==="
+          /usr/libexec/PlistBuddy -c "Print Entitlements" $PP_PLIST
 
       - name: Set version and build number
         script: |
@@ -96,11 +101,6 @@ workflows:
       - name: Build iOS
         script: |
           cd ios/App
-
-          # Read profile name saved from previous step
-          PP_NAME=$(cat /tmp/pp_name.txt)
-          echo "Using provisioning profile: $PP_NAME"
-
           xcodebuild \
             -project App.xcodeproj \
             -scheme App \
@@ -108,18 +108,14 @@ workflows:
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=FX8T7ASYCL \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$PP_NAME" \
             archive
 
       - name: Generate ExportOptions and export IPA
         script: |
           cd ios/App
 
-          # Read profile name saved from install step
-          PP_NAME=$(cat /tmp/pp_name.txt)
+          # Read profile name from decoded plist
+          PP_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /tmp/pp_decoded.plist)
           echo "Using profile: $PP_NAME"
 
           # Generate ExportOptions.plist dynamically
