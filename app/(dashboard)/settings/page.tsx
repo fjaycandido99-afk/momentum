@@ -938,7 +938,7 @@ function SettingsContent() {
                   className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none shimmer-cta"
                 >
                   <Sparkles className="w-5 h-5" />
-                  Upgrade to Premium - $4.99/mo
+                  Upgrade to Premium - $6.99/mo
                 </button>
                 <p className="text-center text-white/50 text-xs">
                   7-day free trial · Cancel anytime

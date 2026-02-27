@@ -3,8 +3,8 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = 'fjaycandido99@gmail.com';
-  const supabaseId = 'f699b103-0945-4a13-89d4-85d520a85baa';
+  const email = process.argv[2] || 'applereview@voxu.app';
+  const supabaseId = process.argv[3] || '';
 
   // Try to find by email first
   let user = await prisma.user.findUnique({

@@ -19,8 +19,8 @@ import {
 } from 'lucide-react'
 
 // Pricing constants
-const MONTHLY_PRICE = 4.99
-const YEARLY_PRICE = 39.99
+const MONTHLY_PRICE = 6.99
+const YEARLY_PRICE = 49.99
 const YEARLY_MONTHLY = (YEARLY_PRICE / 12).toFixed(2)
 const SAVINGS_PERCENT = Math.round((1 - YEARLY_PRICE / (MONTHLY_PRICE * 12)) * 100)
 
