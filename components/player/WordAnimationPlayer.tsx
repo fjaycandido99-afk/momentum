@@ -61,6 +61,10 @@ function pickSlideshowImages(pool: string[], youtubeId: string, count = 10): str
 }
 
 // --- Background Slideshow ---
+// Mobile Safari doesn't decode/paint images at opacity:0, so fading IN a hidden
+// layer causes a flash. Instead we use a z-index stack where both layers are
+// always at full opacity. The FRONT layer fades OUT to reveal the BACK layer
+// (which already has the next image visible and decoded).
 function BackgroundSlideshow({ images, words, playing, youtubeId }: {
   images: string[]
   words: string[]
@@ -69,30 +73,32 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
 }) {
   const slides = useRef<string[]>([])
   const indexRef = useRef(0)
-  const activeLayerRef = useRef<'a' | 'b'>('a')
-  const [layerA, setLayerA] = useState('')
-  const [layerB, setLayerB] = useState('')
-  const [visibleLayer, setVisibleLayer] = useState<'a' | 'b'>('a')
+  const wordIndexRef = useRef(0)
+  const fadingRef = useRef(false)
+  const [frontSrc, setFrontSrc] = useState('')
+  const [backSrc, setBackSrc] = useState('')
+  const [fading, setFading] = useState(false)
   const [currentWord, setCurrentWord] = useState('')
   const [wordVisible, setWordVisible] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const backRef = useRef<HTMLImageElement>(null)
 
   // Pick 10 images when youtubeId or image pool changes
   useEffect(() => {
     slides.current = pickSlideshowImages(images, youtubeId)
     indexRef.current = 0
-    activeLayerRef.current = 'a'
+    wordIndexRef.current = 0
     const first = slides.current[0] || ''
-    setLayerA(first)
-    setLayerB(first)
-    setVisibleLayer('a')
+    setFrontSrc(first)
+    setBackSrc(first)
+    setFading(false)
+    fadingRef.current = false
   }, [images, youtubeId])
 
   // Show the first word once words arrive
   useEffect(() => {
     if (words.length > 0 && !currentWord) {
       setCurrentWord(words[0])
-      // Small delay so the initial fade-in is visible
       requestAnimationFrame(() => setWordVisible(true))
     }
   }, [words, currentWord])
@@ -103,56 +109,57 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
     setWordVisible(false)
   }, [youtubeId])
 
-  // Advance: crossfade image + word together
+  // Advance: set back layer to next image, then fade front layer out
   const advance = useCallback(() => {
+    if (fadingRef.current || slides.current.length <= 1) return
     const nextIndex = (indexRef.current + 1) % slides.current.length
     const nextSrc = slides.current[nextIndex]
     if (!nextSrc) return
     indexRef.current = nextIndex
 
-    // Step 1: fade out the word
+    // Fade out word
     setWordVisible(false)
 
-    const doFlip = () => {
-      const hidden = activeLayerRef.current === 'a' ? 'b' : 'a'
-      if (hidden === 'b') setLayerB(nextSrc)
-      else setLayerA(nextSrc)
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          activeLayerRef.current = hidden
-          setVisibleLayer(hidden)
-
-          // Step 2: after image starts crossfading, swap word and fade it in
-          setTimeout(() => {
-            setCurrentWord(prev => {
-              const wordList = words
-              if (wordList.length === 0) return prev
-              const idx = wordList.indexOf(prev)
-              return wordList[(idx + 1) % wordList.length]
-            })
-            setWordVisible(true)
-          }, 800)
-        })
-      })
-    }
-
-    // Use decode() to ensure image is fully decoded before crossfade.
-    // This prevents the slideshow freezing on mobile (cached images can
-    // fire onload synchronously before the handler is attached) and
-    // ensures the image is paint-ready so the crossfade is smooth.
+    // Preload + decode the next image, then set it on the back layer and fade
     const img = new window.Image()
     img.src = nextSrc
-    if (typeof img.decode === 'function') {
-      img.decode().then(doFlip).catch(doFlip)
-    } else {
-      // Fallback: attach onload BEFORE setting src to avoid sync-fire miss
-      const fallback = new window.Image()
-      fallback.onload = doFlip
-      fallback.onerror = doFlip
-      fallback.src = nextSrc
+    const startFade = () => {
+      setBackSrc(nextSrc)
+      // Wait for React to commit the new src on the back <img>, then decode it
+      requestAnimationFrame(() => {
+        const doFade = () => {
+          fadingRef.current = true
+          setFading(true)
+        }
+        if (backRef.current && typeof backRef.current.decode === 'function') {
+          backRef.current.decode().then(doFade).catch(doFade)
+        } else {
+          requestAnimationFrame(doFade)
+        }
+      })
     }
-  }, [words])
+    if (typeof img.decode === 'function') {
+      img.decode().then(startFade).catch(startFade)
+    } else {
+      img.onload = startFade
+      img.onerror = startFade
+    }
+  }, [])
+
+  // When front layer finishes fading out, snap both layers to the new image
+  const handleTransitionEnd = useCallback(() => {
+    // Front layer is now invisible — snap it to the new image and show it again
+    setFrontSrc(backSrc)
+    setFading(false)
+    fadingRef.current = false
+
+    // Advance word and fade it back in
+    if (words.length > 0) {
+      wordIndexRef.current = (wordIndexRef.current + 1) % words.length
+      setCurrentWord(words[wordIndexRef.current])
+      setTimeout(() => setWordVisible(true), 200)
+    }
+  }, [backSrc, words])
 
   // Timer: advance every 12s while playing, every 20s while paused
   useEffect(() => {
@@ -169,35 +176,33 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
     }
   }, [playing, advance, youtubeId])
 
-  if (!layerA) return null
+  if (!frontSrc) return null
 
   return (
     <>
+      {/* Back layer — always opacity 1, shows the NEXT image during crossfade */}
       <img
-        src={layerA}
+        ref={backRef}
+        src={backSrc}
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
-        style={{
-          opacity: visibleLayer === 'a' ? 1 : 0,
-          transition: 'opacity 2s ease-in-out',
-          willChange: 'opacity',
-          backfaceVisibility: 'hidden',
-        }}
+        style={{ zIndex: 0 }}
       />
+      {/* Front layer — fades OUT from 1→0 to reveal back layer, then snaps back */}
       <img
-        src={layerB || layerA}
+        src={frontSrc}
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
         style={{
-          opacity: visibleLayer === 'b' ? 1 : 0,
-          transition: 'opacity 2s ease-in-out',
-          willChange: 'opacity',
-          backfaceVisibility: 'hidden',
+          zIndex: 1,
+          opacity: fading ? 0 : 1,
+          transition: fading ? 'opacity 2s ease-in-out' : 'none',
         }}
+        onTransitionEnd={handleTransitionEnd}
       />
       {/* Centered word overlay — scales down for longer words so it never overflows */}
       {currentWord && (
-        <div className="absolute inset-0 flex items-center justify-center z-[1] pointer-events-none px-4">
+        <div className="absolute inset-0 flex items-center justify-center z-[2] pointer-events-none px-4">
           <span
             className="font-black text-white/90 drop-shadow-[0_4px_30px_rgba(0,0,0,0.7)] text-center"
             style={{
