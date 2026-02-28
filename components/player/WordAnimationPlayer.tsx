@@ -113,9 +113,7 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
     // Step 1: fade out the word
     setWordVisible(false)
 
-    const img = new window.Image()
-    img.src = nextSrc
-    img.onload = () => {
+    const doFlip = () => {
       const hidden = activeLayerRef.current === 'a' ? 'b' : 'a'
       if (hidden === 'b') setLayerB(nextSrc)
       else setLayerA(nextSrc)
@@ -137,6 +135,22 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
           }, 800)
         })
       })
+    }
+
+    // Use decode() to ensure image is fully decoded before crossfade.
+    // This prevents the slideshow freezing on mobile (cached images can
+    // fire onload synchronously before the handler is attached) and
+    // ensures the image is paint-ready so the crossfade is smooth.
+    const img = new window.Image()
+    img.src = nextSrc
+    if (typeof img.decode === 'function') {
+      img.decode().then(doFlip).catch(doFlip)
+    } else {
+      // Fallback: attach onload BEFORE setting src to avoid sync-fire miss
+      const fallback = new window.Image()
+      fallback.onload = doFlip
+      fallback.onerror = doFlip
+      fallback.src = nextSrc
     }
   }, [words])
 
@@ -161,21 +175,25 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
       <img
         src={layerA}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2s] ease-in-out"
+        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2s] ease-in-out will-change-[opacity] [backface-visibility:hidden]"
         style={{ opacity: visibleLayer === 'a' ? 1 : 0 }}
       />
       <img
         src={layerB || layerA}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2s] ease-in-out"
+        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2s] ease-in-out will-change-[opacity] [backface-visibility:hidden]"
         style={{ opacity: visibleLayer === 'b' ? 1 : 0 }}
       />
-      {/* Centered word overlay */}
+      {/* Centered word overlay — scales down for longer words so it never overflows */}
       {currentWord && (
-        <div className="absolute inset-0 flex items-center justify-center z-[1] pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center z-[1] pointer-events-none px-4">
           <span
-            className="text-5xl sm:text-7xl font-black tracking-[0.2em] text-white/90 transition-opacity duration-[1.2s] ease-in-out drop-shadow-[0_4px_30px_rgba(0,0,0,0.7)]"
-            style={{ opacity: wordVisible ? 1 : 0 }}
+            className="font-black text-white/90 transition-opacity duration-[1.2s] ease-in-out drop-shadow-[0_4px_30px_rgba(0,0,0,0.7)] text-center"
+            style={{
+              opacity: wordVisible ? 1 : 0,
+              fontSize: `min(3rem, calc((100vw - 2rem) / ${currentWord.length * 1.2}))`,
+              letterSpacing: currentWord.length > 8 ? '0.12em' : '0.2em',
+            }}
           >
             {currentWord}
           </span>
