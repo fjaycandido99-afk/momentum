@@ -154,14 +154,15 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
     }
   }, [words])
 
-  // Timer: advance every 12s while playing
+  // Timer: advance every 12s while playing, every 20s while paused
   useEffect(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
-    if (playing && slides.current.length > 1) {
-      timerRef.current = setInterval(advance, 12000)
+    if (slides.current.length > 1) {
+      const interval = playing ? 12000 : 20000
+      timerRef.current = setInterval(advance, interval)
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
@@ -175,22 +176,33 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
       <img
         src={layerA}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2s] ease-in-out will-change-[opacity] [backface-visibility:hidden]"
-        style={{ opacity: visibleLayer === 'a' ? 1 : 0 }}
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{
+          opacity: visibleLayer === 'a' ? 1 : 0,
+          transition: 'opacity 2s ease-in-out',
+          willChange: 'opacity',
+          backfaceVisibility: 'hidden',
+        }}
       />
       <img
         src={layerB || layerA}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2s] ease-in-out will-change-[opacity] [backface-visibility:hidden]"
-        style={{ opacity: visibleLayer === 'b' ? 1 : 0 }}
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{
+          opacity: visibleLayer === 'b' ? 1 : 0,
+          transition: 'opacity 2s ease-in-out',
+          willChange: 'opacity',
+          backfaceVisibility: 'hidden',
+        }}
       />
       {/* Centered word overlay — scales down for longer words so it never overflows */}
       {currentWord && (
         <div className="absolute inset-0 flex items-center justify-center z-[1] pointer-events-none px-4">
           <span
-            className="font-black text-white/90 transition-opacity duration-[1.2s] ease-in-out drop-shadow-[0_4px_30px_rgba(0,0,0,0.7)] text-center"
+            className="font-black text-white/90 drop-shadow-[0_4px_30px_rgba(0,0,0,0.7)] text-center"
             style={{
               opacity: wordVisible ? 1 : 0,
+              transition: 'opacity 1.2s ease-in-out',
               fontSize: `min(3rem, calc((100vw - 2rem) / ${currentWord.length * 1.2}))`,
               letterSpacing: currentWord.length > 8 ? '0.12em' : '0.2em',
             }}
