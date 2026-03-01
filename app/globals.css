@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent iOS auto-zoom on input focus (triggers at font-size < 16px) */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 :root {
   /* Lifted dark theme — brighter than pure black */
   --background: 14 14 18;
