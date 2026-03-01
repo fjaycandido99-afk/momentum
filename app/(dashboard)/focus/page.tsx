@@ -214,16 +214,25 @@ export default function FocusPage() {
     }
 
     if (selectedMusic && homeAudio) {
-      homeAudio.dispatch({
-        type: 'PLAY_MUSIC',
-        youtubeId: selectedMusic.youtubeId,
-        label: selectedMusic.genreWord,
-        cardId: `focus-${selectedMusic.genreId}`,
-        playlist: null,
-        playingSound: null,
-        exclusive: false,
-      })
-      homeAudio.createBgMusicPlayer(selectedMusic.youtubeId)
+      // Stagger second player start — mobile WebViews force-pause one player
+      // when another starts simultaneously. Delay lets the first settle.
+      const startMusic = () => {
+        homeAudio.dispatch({
+          type: 'PLAY_MUSIC',
+          youtubeId: selectedMusic.youtubeId,
+          label: selectedMusic.genreWord,
+          cardId: `focus-${selectedMusic.genreId}`,
+          playlist: null,
+          playingSound: null,
+          exclusive: false,
+        })
+        homeAudio.createBgMusicPlayer(selectedMusic.youtubeId)
+      }
+      if (selectedSound) {
+        setTimeout(startMusic, 1500)
+      } else {
+        startMusic()
+      }
     }
 
     if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission()

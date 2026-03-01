@@ -204,9 +204,9 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
             } else if (event.data === 2) {
               // Browser may force-pause this player when the other iframe starts.
               // If state says we *want* music playing, re-play instead of confirming pause.
-              if (wantMusicPlayingRef.current && musicRetryCountRef.current < 3) {
+              if (wantMusicPlayingRef.current && musicRetryCountRef.current < 5) {
                 musicRetryCountRef.current++
-                setTimeout(() => { try { event.target.playVideo() } catch {} }, 300)
+                setTimeout(() => { try { event.target.playVideo() } catch {} }, 500 + musicRetryCountRef.current * 200)
               } else {
                 dispatch({ type: 'MUSIC_YT_PAUSED' })
               }
@@ -238,9 +238,9 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
               soundscapeRetryCountRef.current = 0
               dispatch({ type: 'SOUNDSCAPE_YT_PLAYING' })
             } else if (event.data === 2) {
-              if (wantSoundscapePlayingRef.current && soundscapeRetryCountRef.current < 3) {
+              if (wantSoundscapePlayingRef.current && soundscapeRetryCountRef.current < 5) {
                 soundscapeRetryCountRef.current++
-                setTimeout(() => { try { event.target.playVideo() } catch {} }, 300)
+                setTimeout(() => { try { event.target.playVideo() } catch {} }, 500 + soundscapeRetryCountRef.current * 200)
               } else {
                 dispatch({ type: 'SOUNDSCAPE_YT_PAUSED' })
               }
