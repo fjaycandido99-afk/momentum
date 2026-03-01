@@ -27,6 +27,7 @@ export function DailySpark() {
   const [spark, setSpark] = useState<Spark | null>(null)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const [answer, setAnswer] = useState('')
   const [answerFocused, setAnswerFocused] = useState(false)
 
@@ -42,6 +43,7 @@ export function DailySpark() {
     setDismissing(false)
     setSaved(false)
     setSaving(false)
+    setSaveError(false)
     setAnswer('')
     setAnswerFocused(false)
 
@@ -169,6 +171,7 @@ export function DailySpark() {
   const handleSubmitAnswer = async () => {
     if (!spark || !answer.trim() || saving || saved) return
     setSaving(true)
+    setSaveError(false)
     try {
       const contentText = JSON.stringify({
         question: spark.text,
@@ -186,9 +189,11 @@ export function DailySpark() {
         setSaved(true)
         // Auto-dismiss after a short delay so user sees the saved state
         setTimeout(() => dismiss(), 1500)
+      } else {
+        setSaveError(true)
       }
     } catch {
-      // silently fail
+      setSaveError(true)
     } finally {
       setSaving(false)
     }
@@ -197,6 +202,7 @@ export function DailySpark() {
   const handleSave = async () => {
     if (!spark || saving || saved) return
     setSaving(true)
+    setSaveError(false)
     try {
       const contentText = spark.author
         ? `"${spark.text}" — ${spark.author}`
@@ -211,9 +217,11 @@ export function DailySpark() {
       })
       if (res.ok) {
         setSaved(true)
+      } else {
+        setSaveError(true)
       }
     } catch {
-      // silently fail
+      setSaveError(true)
     } finally {
       setSaving(false)
     }
@@ -267,7 +275,7 @@ export function DailySpark() {
               >
                 <Heart
                   className={`w-4 h-4 transition-colors ${
-                    saved ? 'text-rose-400 fill-rose-400' : 'text-white/70 hover:text-white'
+                    saved ? 'text-rose-400 fill-rose-400' : saveError ? 'text-red-400' : 'text-white/70 hover:text-white'
                   }`}
                 />
               </button>
@@ -320,6 +328,9 @@ export function DailySpark() {
                   <Send className={`w-4 h-4 ${saving ? 'text-white/50' : 'text-violet-300'}`} />
                 </button>
               </div>
+              {saveError && (
+                <p className="text-xs text-red-400 mt-2 text-center">Couldn&apos;t save — tap to retry</p>
+              )}
               <button
                 onClick={() => dismiss()}
                 className="w-full mt-2 py-2 rounded-xl text-xs text-white/50 hover:text-white/70 transition-colors"

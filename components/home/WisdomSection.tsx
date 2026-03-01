@@ -18,8 +18,10 @@ export function WisdomSection() {
   const mindsetCtx = useMindsetOptional()
   const [expanded, setExpanded] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const [reflection, setReflection] = useState('')
   const [reflectionSaved, setReflectionSaved] = useState(false)
+  const [reflectionError, setReflectionError] = useState(false)
 
   const mindsetId = mindsetCtx?.mindset || 'stoic'
   const config = mindsetCtx?.config
@@ -43,8 +45,9 @@ export function WisdomSection() {
   const handleSaveQuote = useCallback(async () => {
     if (saved || !dailyQuote) return
     setSaved(true)
+    setSaveError(false)
     try {
-      await fetch('/api/favorites', {
+      const res = await fetch('/api/favorites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -54,16 +57,22 @@ export function WisdomSection() {
           content_title: `${config?.name || 'Daily'} Wisdom`,
         }),
       })
+      if (!res.ok) {
+        setSaved(false)
+        setSaveError(true)
+      }
     } catch {
       setSaved(false)
+      setSaveError(true)
     }
   }, [saved, dailyQuote, mindsetId, today, config?.name])
 
   const handleSaveReflection = useCallback(async () => {
     if (!reflection.trim() || reflectionSaved) return
     setReflectionSaved(true)
+    setReflectionError(false)
     try {
-      await fetch('/api/favorites', {
+      const res = await fetch('/api/favorites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -73,8 +82,13 @@ export function WisdomSection() {
           content_title: dailyQuestion || 'Daily Reflection',
         }),
       })
+      if (!res.ok) {
+        setReflectionSaved(false)
+        setReflectionError(true)
+      }
     } catch {
       setReflectionSaved(false)
+      setReflectionError(true)
     }
   }, [reflection, reflectionSaved, mindsetId, today, dailyQuestion])
 
@@ -99,7 +113,7 @@ export function WisdomSection() {
             >
               <Heart
                 className={`w-4 h-4 transition-colors ${
-                  saved ? 'text-rose-400 fill-rose-400' : 'text-white/40'
+                  saved ? 'text-rose-400 fill-rose-400' : saveError ? 'text-red-400 animate-pulse' : 'text-white/40'
                 }`}
               />
             </button>
@@ -156,6 +170,11 @@ export function WisdomSection() {
                   {reflectionSaved && (
                     <p className="text-[10px] text-emerald-400/70 mt-1.5">
                       Reflection saved
+                    </p>
+                  )}
+                  {reflectionError && (
+                    <p className="text-[10px] text-red-400/70 mt-1.5">
+                      Couldn&apos;t save — tap to retry
                     </p>
                   )}
                 </div>

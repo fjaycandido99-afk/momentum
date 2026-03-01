@@ -25,6 +25,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
   const [intention, setIntention] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [reflection, setReflection] = useState<string | null>(null)
 
@@ -58,6 +59,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
     if (!win.trim() && !gratitude.trim() && !intention.trim()) return
 
     setIsSaving(true)
+    setSaveError(false)
     try {
       const targetDate = date || new Date()
       const response = await fetch('/api/daily-guide/journal', {
@@ -80,9 +82,11 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
         if (showAsModal && onClose) {
           setTimeout(onClose, 1500)
         }
+      } else {
+        setSaveError(true)
       }
-    } catch (error) {
-      console.error('Failed to save journal:', error)
+    } catch {
+      setSaveError(true)
     } finally {
       setIsSaving(false)
     }
@@ -121,6 +125,11 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
           {isSaved && !showAsModal && (
             <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 text-emerald-400">
               <Check className="w-3 h-3" /> Saved
+            </span>
+          )}
+          {saveError && (
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium text-red-400">
+              Failed to save
             </span>
           )}
         {showAsModal && onClose && (

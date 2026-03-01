@@ -17,6 +17,7 @@ export function ZodiacAffirmations({ zodiacSign }: ZodiacAffirmationsProps) {
   const [affirmations, setAffirmations] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [favorites, setFavorites] = useState<Record<number, string | null>>({})
+  const [favoriteError, setFavoriteError] = useState<number | null>(null)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
 
   useEffect(() => {
@@ -101,20 +102,23 @@ export function ZodiacAffirmations({ zodiacSign }: ZodiacAffirmationsProps) {
   }
 
   const handleFavorite = async (text: string, index: number) => {
+    setFavoriteError(null)
     if (favorites[index]) {
-      // Unfavorite
       try {
-        await fetch('/api/favorites', {
+        const res = await fetch('/api/favorites', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: favorites[index] }),
         })
-        setFavorites(prev => ({ ...prev, [index]: null }))
-      } catch (error) {
-        console.error('Failed to remove favorite:', error)
+        if (res.ok) {
+          setFavorites(prev => ({ ...prev, [index]: null }))
+        } else {
+          setFavoriteError(index)
+        }
+      } catch {
+        setFavoriteError(index)
       }
     } else {
-      // Favorite
       try {
         const response = await fetch('/api/favorites', {
           method: 'POST',
@@ -127,9 +131,11 @@ export function ZodiacAffirmations({ zodiacSign }: ZodiacAffirmationsProps) {
         if (response.ok) {
           const data = await response.json()
           setFavorites(prev => ({ ...prev, [index]: data.favorite?.id || 'saved' }))
+        } else {
+          setFavoriteError(index)
         }
-      } catch (error) {
-        console.error('Failed to add favorite:', error)
+      } catch {
+        setFavoriteError(index)
       }
     }
   }
@@ -177,7 +183,7 @@ export function ZodiacAffirmations({ zodiacSign }: ZodiacAffirmationsProps) {
                 className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
               >
                 <Heart className={`w-3.5 h-3.5 transition-colors ${
-                  favorites[index] ? 'text-pink-400 fill-pink-400' : 'text-white/50 hover:text-pink-400'
+                  favorites[index] ? 'text-pink-400 fill-pink-400' : favoriteError === index ? 'text-red-400 animate-pulse' : 'text-white/50 hover:text-pink-400'
                 }`} />
               </button>
               <button

@@ -25,6 +25,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
   const [showCopied, setShowCopied] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const [favoriteId, setFavoriteId] = useState<string | null>(null)
+  const [favoriteError, setFavoriteError] = useState(false)
   const [explanation, setExplanation] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [loadingExplanation, setLoadingExplanation] = useState(false)
@@ -144,22 +145,25 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
 
   const handleFavorite = async () => {
     if (!quote) return
+    setFavoriteError(false)
 
     if (isFavorited && favoriteId) {
-      // Remove favorite
       try {
-        await fetch('/api/favorites', {
+        const res = await fetch('/api/favorites', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: favoriteId }),
         })
-        setIsFavorited(false)
-        setFavoriteId(null)
-      } catch (error) {
-        console.error('Failed to remove favorite:', error)
+        if (res.ok) {
+          setIsFavorited(false)
+          setFavoriteId(null)
+        } else {
+          setFavoriteError(true)
+        }
+      } catch {
+        setFavoriteError(true)
       }
     } else {
-      // Add favorite
       try {
         const response = await fetch('/api/favorites', {
           method: 'POST',
@@ -173,9 +177,11 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
           const data = await response.json()
           setIsFavorited(true)
           setFavoriteId(data.favorite.id)
+        } else {
+          setFavoriteError(true)
         }
-      } catch (error) {
-        console.error('Failed to add favorite:', error)
+      } catch {
+        setFavoriteError(true)
       }
     }
   }
@@ -241,7 +247,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                       className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       <Heart className={`w-3.5 h-3.5 transition-colors ${
-                        isFavorited ? 'text-pink-400 fill-pink-400' : isCompleted ? 'text-white/50' : 'text-white/70 hover:text-pink-400'
+                        isFavorited ? 'text-pink-400 fill-pink-400' : favoriteError ? 'text-red-400 animate-pulse' : isCompleted ? 'text-white/50' : 'text-white/70 hover:text-pink-400'
                       }`} />
                     </button>
                     <button

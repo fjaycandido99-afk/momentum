@@ -42,6 +42,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const [existingIntention, setExistingIntention] = useState<string | null>(null)
   const [showFullJournal, setShowFullJournal] = useState(false)
   const [expandedDay, setExpandedDay] = useState<number | null>(null)
@@ -213,6 +214,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
     if (!intention.trim()) return
 
     setIsSaving(true)
+    setSaveError(false)
     try {
       const response = await fetch('/api/daily-guide/journal', {
         method: 'POST',
@@ -226,9 +228,11 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
       if (response.ok) {
         setIsSaved(true)
         setExistingIntention(intention.trim())
+      } else {
+        setSaveError(true)
       }
-    } catch (error) {
-      console.error('Failed to save intention:', error)
+    } catch {
+      setSaveError(true)
     } finally {
       setIsSaving(false)
     }
@@ -485,6 +489,8 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         Saving...
                       </>
+                    ) : saveError ? (
+                      <span className="text-red-400">Failed — retry</span>
                     ) : (
                       'Set Intention'
                     )}

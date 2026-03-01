@@ -32,6 +32,7 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
   const [showCopied, setShowCopied] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const [favoriteId, setFavoriteId] = useState<string | null>(null)
+  const [favoriteError, setFavoriteError] = useState(false)
 
   // Load cosmic insight
   useEffect(() => {
@@ -127,18 +128,23 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
 
   const handleFavorite = async () => {
     if (!insight) return
+    setFavoriteError(false)
 
     if (isFavorited && favoriteId) {
       try {
-        await fetch('/api/favorites', {
+        const res = await fetch('/api/favorites', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: favoriteId }),
         })
-        setIsFavorited(false)
-        setFavoriteId(null)
-      } catch (error) {
-        console.error('Failed to remove favorite:', error)
+        if (res.ok) {
+          setIsFavorited(false)
+          setFavoriteId(null)
+        } else {
+          setFavoriteError(true)
+        }
+      } catch {
+        setFavoriteError(true)
       }
     } else {
       try {
@@ -154,9 +160,11 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
           const data = await response.json()
           setIsFavorited(true)
           setFavoriteId(data.favorite?.id || null)
+        } else {
+          setFavoriteError(true)
         }
-      } catch (error) {
-        console.error('Failed to add favorite:', error)
+      } catch {
+        setFavoriteError(true)
       }
     }
   }
@@ -272,7 +280,7 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
                       className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       <Heart className={`w-3.5 h-3.5 transition-colors ${
-                        isFavorited ? 'text-pink-400 fill-pink-400' : isCompleted ? 'text-white/70' : 'text-white/85 hover:text-pink-400'
+                        isFavorited ? 'text-pink-400 fill-pink-400' : favoriteError ? 'text-red-400 animate-pulse' : isCompleted ? 'text-white/70' : 'text-white/85 hover:text-pink-400'
                       }`} />
                     </button>
                     <button

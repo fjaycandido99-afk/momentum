@@ -21,6 +21,7 @@ export function PlayerJournalSheet({ open, onClose }: PlayerJournalSheetProps) {
   const [text, setText] = useState(STARTERS.thought)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const touchStartY = useRef(0)
   const sheetRef = useRef<HTMLDivElement>(null)
 
@@ -40,11 +41,13 @@ export function PlayerJournalSheet({ open, onClose }: PlayerJournalSheetProps) {
     // Don't save if it's just the starter text or empty
     if (!trimmed || trimmed === STARTERS[mode] || saving) return
     setSaving(true)
+    setSaveError(false)
     try {
+      let res: Response
       if (mode === 'thought') {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
-        await fetch('/api/daily-guide/journal', {
+        res = await fetch('/api/daily-guide/journal', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -53,7 +56,7 @@ export function PlayerJournalSheet({ open, onClose }: PlayerJournalSheetProps) {
           }),
         })
       } else {
-        await fetch('/api/goals', {
+        res = await fetch('/api/goals', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -63,14 +66,18 @@ export function PlayerJournalSheet({ open, onClose }: PlayerJournalSheetProps) {
           }),
         })
       }
-      setSaved(true)
-      setTimeout(() => {
-        setSaved(false)
-        setText(STARTERS[mode])
-        onClose()
-      }, 1500)
-    } catch (err) {
-      console.error('Save error:', err)
+      if (res.ok) {
+        setSaved(true)
+        setTimeout(() => {
+          setSaved(false)
+          setText(STARTERS[mode])
+          onClose()
+        }, 1500)
+      } else {
+        setSaveError(true)
+      }
+    } catch {
+      setSaveError(true)
     } finally {
       setSaving(false)
     }
@@ -188,6 +195,8 @@ export function PlayerJournalSheet({ open, onClose }: PlayerJournalSheetProps) {
                 <Check className="w-4 h-4" />
                 {mode === 'thought' ? 'Saved' : 'Goal Created'}
               </>
+            ) : saveError ? (
+              <span className="text-red-400">Failed to save — tap to retry</span>
             ) : saving ? (
               'Saving...'
             ) : mode === 'thought' ? (

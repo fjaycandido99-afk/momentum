@@ -30,6 +30,7 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
   const { shareAsImage, isGenerating } = useShareCard()
   const [favoriteId, setFavoriteId] = useState<string | null>(null)
   const [isToggling, setIsToggling] = useState(false)
+  const [saveError, setSaveError] = useState(false)
 
   const [explanation, setExplanation] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
@@ -46,14 +47,19 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
   const handleFavorite = useCallback(async () => {
     if (isToggling) return
     setIsToggling(true)
+    setSaveError(false)
     try {
       if (favoriteId) {
-        await fetch('/api/favorites', {
+        const res = await fetch('/api/favorites', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: favoriteId }),
         })
-        setFavoriteId(null)
+        if (res.ok) {
+          setFavoriteId(null)
+        } else {
+          setSaveError(true)
+        }
       } else {
         const res = await fetch('/api/favorites', {
           method: 'POST',
@@ -67,10 +73,12 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
         if (res.ok) {
           const data = await res.json()
           setFavoriteId(data.favorite?.id || null)
+        } else {
+          setSaveError(true)
         }
       }
     } catch {
-      // silently fail
+      setSaveError(true)
     } finally {
       setIsToggling(false)
     }
@@ -133,7 +141,7 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
               className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
             >
               <Heart
-                className={`w-4 h-4 transition-colors ${favoriteId ? 'fill-red-400 text-red-400' : 'text-white/70'}`}
+                className={`w-4 h-4 transition-colors ${favoriteId ? 'fill-red-400 text-red-400' : saveError ? 'text-red-400 animate-pulse' : 'text-white/70'}`}
               />
             </button>
             <button
@@ -172,7 +180,7 @@ export function HomeQuoteCard({ embedded = false }: { embedded?: boolean }) {
               className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
             >
               <Heart
-                className={`w-4 h-4 transition-colors ${favoriteId ? 'fill-red-400 text-red-400' : 'text-white/70'}`}
+                className={`w-4 h-4 transition-colors ${favoriteId ? 'fill-red-400 text-red-400' : saveError ? 'text-red-400 animate-pulse' : 'text-white/70'}`}
               />
             </button>
             <button
