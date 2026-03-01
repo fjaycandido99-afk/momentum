@@ -94,7 +94,7 @@ export function LoadingScreen() {
 
     const holdTimer = setTimeout(() => {
       setVisible(false)
-    }, 2000)
+    }, 2500)
 
     return () => clearTimeout(holdTimer)
   }, [visible, wordIndex])
