@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { ChevronLeft, CheckCircle, Loader2 } from 'lucide-react'
@@ -10,23 +10,7 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [rotation, setRotation] = useState(0)
   const supabase = createClient()
-
-  // Rotation animation
-  useEffect(() => {
-    let frame: number
-    let start = performance.now()
-
-    const animate = (time: number) => {
-      const elapsed = (time - start) / 1000
-      setRotation(elapsed * 45)
-      frame = requestAnimationFrame(animate)
-    }
-
-    frame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frame)
-  }, [])
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,17 +72,17 @@ export default function ForgotPasswordPage() {
             {/* Outer ring - dashed, rotates clockwise slow */}
             <div
               className="absolute inset-0 rounded-full border-2 border-dashed border-white/25"
-              style={{ transform: `rotate(${rotation}deg)` }}
+              style={{ animation: 'spin 8s linear infinite' }}
             />
             {/* Middle ring - dotted, rotates counter-clockwise */}
             <div
               className="absolute inset-2 rounded-full border-2 border-dotted border-white/40"
-              style={{ transform: `rotate(${-rotation * 1.3}deg)` }}
+              style={{ animation: 'spin 6s linear infinite reverse' }}
             />
             {/* Inner ring - dashed, rotates clockwise faster */}
             <div
               className="absolute inset-4 rounded-full border-2 border-dashed border-white/30"
-              style={{ transform: `rotate(${rotation * 2}deg)` }}
+              style={{ animation: 'spin 4s linear infinite' }}
             />
             {/* Center dot with glow */}
             <div className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" />

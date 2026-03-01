@@ -8,24 +8,8 @@ interface SplashScreenProps {
 }
 
 export function SplashScreen({ onComplete, minDuration = 2500 }: SplashScreenProps) {
-  const [rotation, setRotation] = useState(0)
   const [fadeOut, setFadeOut] = useState(false)
   const [showText, setShowText] = useState(false)
-
-  // Rotation animation
-  useEffect(() => {
-    let frame: number
-    let start = performance.now()
-
-    const animate = (time: number) => {
-      const elapsed = (time - start) / 1000
-      setRotation(elapsed * 60)
-      frame = requestAnimationFrame(animate)
-    }
-
-    frame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frame)
-  }, [])
 
   // Show text after delay
   useEffect(() => {
@@ -59,22 +43,22 @@ export function SplashScreen({ onComplete, minDuration = 2500 }: SplashScreenPro
         {/* Outer ring */}
         <div
           className="absolute inset-0 rounded-full border-2 border-dashed border-white/35"
-          style={{ transform: `rotate(${rotation}deg)` }}
+          style={{ animation: 'spin 6s linear infinite' }}
         />
         {/* Second ring */}
         <div
           className="absolute inset-3 rounded-full border-2 border-dotted border-white/50"
-          style={{ transform: `rotate(${-rotation * 1.2}deg)` }}
+          style={{ animation: 'spin 5s linear infinite reverse' }}
         />
         {/* Third ring */}
         <div
           className="absolute inset-6 rounded-full border-2 border-dashed border-white/60"
-          style={{ transform: `rotate(${rotation * 1.5}deg)` }}
+          style={{ animation: 'spin 4s linear infinite' }}
         />
         {/* Inner ring */}
         <div
           className="absolute inset-9 rounded-full border-2 border-dotted border-white/70"
-          style={{ transform: `rotate(${-rotation * 2}deg)` }}
+          style={{ animation: 'spin 3s linear infinite reverse' }}
         />
         {/* Center dot */}
         <div className="w-4 h-4 rounded-full bg-white shadow-[0_0_25px_rgba(255,255,255,0.9)]" />
