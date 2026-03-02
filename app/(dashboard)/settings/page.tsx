@@ -24,7 +24,6 @@ import {
   Compass,
   Shield,
   FileText,
-  ShieldAlert,
   Trash2,
   RefreshCw,
 } from 'lucide-react'
@@ -33,7 +32,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
-import { AlertPreferencesSettings } from '@/components/alerts/AlertPreferencesSettings'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
@@ -787,16 +785,9 @@ function SettingsContent() {
           id="notifications"
           icon={Bell}
           title="Notifications"
-          description="Push notifications, alert types & quiet hours"
+          description="Push notifications & reminders"
         >
           <NotificationSettings />
-          <div className="mt-6 pt-6 border-t border-white/10">
-            <div className="flex items-center gap-2 mb-4">
-              <ShieldAlert className="w-4 h-4 text-white/50" />
-              <p className="text-xs text-white/50 uppercase tracking-wider">Priority Alerts</p>
-            </div>
-            <AlertPreferencesSettings />
-          </div>
         </SettingsCategory>
 
         {/* ═══════════════ 7. Language ═══════════════ */}

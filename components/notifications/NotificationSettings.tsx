@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, BellOff, Loader2, Check, Sunrise, Clock, Moon, Flame, Calendar, Lightbulb, Quote, Sparkles, Heart, Play, Music, MessageCircle, Target } from 'lucide-react'
+import { Bell, BellOff, Loader2, Check, Sunrise, Moon, Sparkles, MessageCircle, Flame } from 'lucide-react'
 import {
   isPushSupported,
   getNotificationPermission,
@@ -10,7 +10,6 @@ import {
   getCurrentSubscription,
   registerServiceWorker,
   getPushSupportInfo,
-  isNativeApp,
 } from '@/lib/push-notifications'
 import {
   isNative as isNativePlatform,
@@ -19,7 +18,6 @@ import {
   scheduleEveningReminder,
   scheduleStreakReminder,
   scheduleWeeklyReviewReminder,
-  scheduleCheckpointReminder,
   cancelReminder,
   cancelAllReminders,
   getPendingReminders,
@@ -41,6 +39,44 @@ interface NotificationPreferences {
   coach_checkin_alerts: boolean
   coach_accountability_alerts: boolean
 }
+
+// Grouped toggle definitions — each group controls multiple underlying preferences
+const NOTIFICATION_GROUPS: {
+  id: string
+  icon: React.ElementType
+  label: string
+  description: string
+  keys: (keyof NotificationPreferences)[]
+}[] = [
+  {
+    id: 'daily_reminders',
+    icon: Sunrise,
+    label: 'Daily Reminders',
+    description: 'Morning flow & evening wind down',
+    keys: ['morning_reminder', 'evening_reminder', 'checkpoint_alerts'],
+  },
+  {
+    id: 'daily_inspiration',
+    icon: Sparkles,
+    label: 'Daily Inspiration',
+    description: 'Quotes, affirmations & motivation',
+    keys: ['daily_quote_alerts', 'daily_affirmation_alerts', 'motivational_nudge_alerts', 'daily_motivation_alerts', 'featured_music_alerts'],
+  },
+  {
+    id: 'coach',
+    icon: MessageCircle,
+    label: 'Coach Messages',
+    description: 'AI coach check-ins & accountability',
+    keys: ['coach_checkin_alerts', 'coach_accountability_alerts'],
+  },
+  {
+    id: 'streak_progress',
+    icon: Flame,
+    label: 'Streak & Progress',
+    description: 'Streak alerts & weekly review',
+    keys: ['streak_alerts', 'weekly_review', 'insight_alerts'],
+  },
+]
 
 export function NotificationSettings() {
   const [isSupported, setIsSupported] = useState(false)
@@ -71,72 +107,55 @@ export function NotificationSettings() {
     coach_accountability_alerts: true,
   })
 
+  const parsePrefsFromServer = (sub: any): NotificationPreferences => ({
+    morning_reminder: sub.morning_reminder ?? true,
+    checkpoint_alerts: sub.checkpoint_alerts ?? true,
+    evening_reminder: sub.evening_reminder ?? true,
+    streak_alerts: sub.streak_alerts ?? true,
+    weekly_review: sub.weekly_review ?? true,
+    insight_alerts: sub.insight_alerts ?? true,
+    daily_quote_alerts: sub.daily_quote_alerts ?? true,
+    daily_affirmation_alerts: sub.daily_affirmation_alerts ?? true,
+    motivational_nudge_alerts: sub.motivational_nudge_alerts ?? true,
+    daily_motivation_alerts: sub.daily_motivation_alerts ?? true,
+    featured_music_alerts: sub.featured_music_alerts ?? true,
+    coach_checkin_alerts: sub.coach_checkin_alerts ?? true,
+    coach_accountability_alerts: sub.coach_accountability_alerts ?? true,
+  })
+
   useEffect(() => {
     const checkStatus = async () => {
-      // Check for native platform first
       if (isNativePlatform) {
         const granted = await initNotifications()
-        setSupportInfo({
-          supported: true,
-          platform: 'ios', // or android - we'll detect this properly
-          isInstalled: true,
-          isNative: true,
-        })
+        setSupportInfo({ supported: true, platform: 'ios', isInstalled: true, isNative: true })
         setIsSupported(true)
         setPermission(granted ? 'granted' : 'denied')
 
-        // Check if we have pending reminders (means notifications are enabled)
         const pending = await getPendingReminders()
         setIsSubscribed(pending.length > 0)
 
-        // Fetch preferences from server
         try {
           const response = await fetch('/api/notifications/subscribe')
           if (response.ok) {
             const data = await response.json()
             if (data.subscriptions?.length > 0) {
-              const sub = data.subscriptions[0]
-              setPreferences({
-                morning_reminder: sub.morning_reminder,
-                checkpoint_alerts: sub.checkpoint_alerts,
-                evening_reminder: sub.evening_reminder,
-                streak_alerts: sub.streak_alerts,
-                weekly_review: sub.weekly_review,
-                insight_alerts: sub.insight_alerts ?? true,
-                daily_quote_alerts: sub.daily_quote_alerts ?? true,
-                daily_affirmation_alerts: sub.daily_affirmation_alerts ?? true,
-                motivational_nudge_alerts: sub.motivational_nudge_alerts ?? true,
-                daily_motivation_alerts: sub.daily_motivation_alerts ?? true,
-                featured_music_alerts: sub.featured_music_alerts ?? true,
-                coach_checkin_alerts: sub.coach_checkin_alerts ?? true,
-                coach_accountability_alerts: sub.coach_accountability_alerts ?? true,
-              })
+              setPreferences(parsePrefsFromServer(data.subscriptions[0]))
             }
           }
-        } catch (error) {
-          console.error('Error fetching notification preferences:', error)
-        }
+        } catch {}
 
         setIsLoading(false)
         return
       }
 
-      // Web push notifications
       const info = getPushSupportInfo()
       setSupportInfo(info)
       setIsSupported(info.supported)
 
       if (info.supported) {
         setPermission(getNotificationPermission())
+        if (!info.isNative) await registerServiceWorker()
 
-        // Register service worker (not needed for native)
-        if (!info.isNative) {
-          await registerServiceWorker()
-        }
-
-        // Check if already subscribed
-        const subscription = await getCurrentSubscription()
-        // For native apps, check server instead
         if (info.isNative) {
           try {
             const response = await fetch('/api/notifications/subscribe')
@@ -148,36 +167,19 @@ export function NotificationSettings() {
             setIsSubscribed(false)
           }
         } else {
+          const subscription = await getCurrentSubscription()
           setIsSubscribed(!!subscription)
         }
 
-        // Fetch preferences from server
         try {
           const response = await fetch('/api/notifications/subscribe')
           if (response.ok) {
             const data = await response.json()
             if (data.subscriptions?.length > 0) {
-              const sub = data.subscriptions[0]
-              setPreferences({
-                morning_reminder: sub.morning_reminder,
-                checkpoint_alerts: sub.checkpoint_alerts,
-                evening_reminder: sub.evening_reminder,
-                streak_alerts: sub.streak_alerts,
-                weekly_review: sub.weekly_review,
-                insight_alerts: sub.insight_alerts ?? true,
-                daily_quote_alerts: sub.daily_quote_alerts ?? true,
-                daily_affirmation_alerts: sub.daily_affirmation_alerts ?? true,
-                motivational_nudge_alerts: sub.motivational_nudge_alerts ?? true,
-                daily_motivation_alerts: sub.daily_motivation_alerts ?? true,
-                featured_music_alerts: sub.featured_music_alerts ?? true,
-                coach_checkin_alerts: sub.coach_checkin_alerts ?? true,
-                coach_accountability_alerts: sub.coach_accountability_alerts ?? true,
-              })
+              setPreferences(parsePrefsFromServer(data.subscriptions[0]))
             }
           }
-        } catch (error) {
-          console.error('Error fetching notification preferences:', error)
-        }
+        } catch {}
       }
 
       setIsLoading(false)
@@ -191,16 +193,12 @@ export function NotificationSettings() {
 
     try {
       if (isNativePlatform) {
-        // Native notifications
         if (isSubscribed) {
-          // Cancel all scheduled notifications
           await cancelAllReminders()
           setIsSubscribed(false)
         } else {
-          // Request permission and schedule reminders based on user preferences
           const granted = await initNotifications()
           if (granted) {
-            // Fetch user preferences for timing
             let morningHour = 7, morningMin = 0
             let eveningHour = 18, eveningMin = 0
 
@@ -220,9 +218,7 @@ export function NotificationSettings() {
                   eveningMin = m || 0
                 }
               }
-            } catch {
-              // Use defaults
-            }
+            } catch {}
 
             await scheduleMorningReminder(morningHour, morningMin)
             await scheduleEveningReminder(eveningHour, eveningMin)
@@ -234,13 +230,10 @@ export function NotificationSettings() {
           }
         }
       } else {
-        // Web push notifications
         if (isSubscribed) {
-          // Unsubscribe
           await unsubscribeFromPush()
           setIsSubscribed(false)
         } else {
-          // Subscribe
           await subscribeToPush()
           setIsSubscribed(true)
           setPermission('granted')
@@ -248,126 +241,78 @@ export function NotificationSettings() {
       }
     } catch (error) {
       console.error('Error toggling notifications:', error)
-      // Update permission state in case it was denied
-      if (!isNativePlatform) {
-        setPermission(getNotificationPermission())
-      }
+      if (!isNativePlatform) setPermission(getNotificationPermission())
     }
 
     setIsToggling(false)
   }
 
-  const handlePreferenceChange = async (key: keyof NotificationPreferences) => {
-    const newValue = !preferences[key]
-    setPreferences(prev => ({ ...prev, [key]: newValue }))
+  // Toggle a group — flips all underlying keys together
+  const handleGroupToggle = async (group: typeof NOTIFICATION_GROUPS[number]) => {
+    // Group is "on" if any key is true
+    const isCurrentlyOn = group.keys.some(k => preferences[k])
+    const newValue = !isCurrentlyOn
+
+    // Optimistic update
+    const patch: Partial<NotificationPreferences> = {}
+    for (const key of group.keys) patch[key] = newValue
+    setPreferences(prev => ({ ...prev, ...patch }))
 
     try {
-      // Update server-side preferences
+      // Update server
       await fetch('/api/notifications/subscribe', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [key]: newValue }),
+        body: JSON.stringify(patch),
       })
 
-      // For native, also update local notifications
+      // Native local notification scheduling
       if (isNativePlatform) {
-        if (newValue) {
-          // Schedule the notification
-          switch (key) {
-            case 'morning_reminder':
-              // Use user's wake time + 15 min, or default to 7am
-              try {
-                const prefsRes = await fetch('/api/daily-guide/preferences')
-                if (prefsRes.ok) {
-                  const prefsData = await prefsRes.json()
-                  if (prefsData.wake_time) {
-                    const [h, m] = prefsData.wake_time.split(':').map(Number)
-                    // Add 15 minutes to wake time
-                    const totalMin = h * 60 + (m || 0) + 15
-                    await scheduleMorningReminder(Math.floor(totalMin / 60), totalMin % 60)
-                  } else {
-                    await scheduleMorningReminder(7, 0)
-                  }
-                } else {
-                  await scheduleMorningReminder(7, 0)
+        if (group.id === 'daily_reminders') {
+          if (newValue) {
+            let morningHour = 7, morningMin = 0, eveningHour = 18, eveningMin = 0
+            try {
+              const prefsRes = await fetch('/api/daily-guide/preferences')
+              if (prefsRes.ok) {
+                const prefsData = await prefsRes.json()
+                if (prefsData.wake_time) {
+                  const [h, m] = prefsData.wake_time.split(':').map(Number)
+                  const totalMin = h * 60 + (m || 0) + 15
+                  morningHour = Math.floor(totalMin / 60)
+                  morningMin = totalMin % 60
                 }
-              } catch {
-                await scheduleMorningReminder(7, 0)
-              }
-              break
-            case 'evening_reminder':
-              // Use user's work end time, or default to 6pm
-              try {
-                const prefsRes = await fetch('/api/daily-guide/preferences')
-                if (prefsRes.ok) {
-                  const prefsData = await prefsRes.json()
-                  if (prefsData.work_end_time) {
-                    const [h, m] = prefsData.work_end_time.split(':').map(Number)
-                    await scheduleEveningReminder(h, m || 0)
-                  } else {
-                    await scheduleEveningReminder(18, 0)
-                  }
-                } else {
-                  await scheduleEveningReminder(18, 0)
+                if (prefsData.work_end_time) {
+                  const [h, m] = prefsData.work_end_time.split(':').map(Number)
+                  eveningHour = h
+                  eveningMin = m || 0
                 }
-              } catch {
-                await scheduleEveningReminder(18, 0)
               }
-              break
-            case 'streak_alerts':
-              await scheduleStreakReminder(20, 0) // 8pm reminder
-              break
-            case 'weekly_review':
-              await scheduleWeeklyReviewReminder(10, 0)
-              break
-            case 'checkpoint_alerts':
-              // Fetch actual checkpoint times from daily guide
-              try {
-                const guideRes = await fetch('/api/daily-guide/generate?date=' + new Date().toISOString())
-                if (guideRes.ok) {
-                  const guideData = await guideRes.json()
-                  const checkpoints = guideData.checkpoints || []
-                  for (const cp of checkpoints) {
-                    const [hour, minute] = cp.time.split(':').map(Number)
-                    const cpNum = parseInt(cp.id.replace('checkpoint_', '')) as 1 | 2 | 3
-                    await scheduleCheckpointReminder(cpNum, hour, minute, cp.name)
-                  }
-                }
-              } catch (e) {
-                // Fallback to default times if guide fetch fails
-                await scheduleCheckpointReminder(1, 9, 0, 'Focus Target')
-                await scheduleCheckpointReminder(2, 12, 30, 'Midday Reset')
-                await scheduleCheckpointReminder(3, 17, 0, 'Downshift')
-              }
-              break
+            } catch {}
+            await scheduleMorningReminder(morningHour, morningMin)
+            await scheduleEveningReminder(eveningHour, eveningMin)
+          } else {
+            await cancelReminder(NOTIFICATION_IDS.MORNING_REMINDER)
+            await cancelReminder(NOTIFICATION_IDS.EVENING_REMINDER)
+            await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_1)
+            await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_2)
+            await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_3)
           }
-        } else {
-          // Cancel the notification
-          switch (key) {
-            case 'morning_reminder':
-              await cancelReminder(NOTIFICATION_IDS.MORNING_REMINDER)
-              break
-            case 'evening_reminder':
-              await cancelReminder(NOTIFICATION_IDS.EVENING_REMINDER)
-              break
-            case 'streak_alerts':
-              await cancelReminder(NOTIFICATION_IDS.STREAK_REMINDER)
-              break
-            case 'weekly_review':
-              await cancelReminder(NOTIFICATION_IDS.WEEKLY_REVIEW)
-              break
-            case 'checkpoint_alerts':
-              await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_1)
-              await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_2)
-              await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_3)
-              break
+        } else if (group.id === 'streak_progress') {
+          if (newValue) {
+            await scheduleStreakReminder(20, 0)
+            await scheduleWeeklyReviewReminder(10, 0)
+          } else {
+            await cancelReminder(NOTIFICATION_IDS.STREAK_REMINDER)
+            await cancelReminder(NOTIFICATION_IDS.WEEKLY_REVIEW)
           }
         }
       }
     } catch (error) {
-      console.error('Error updating preference:', error)
-      // Revert on error
-      setPreferences(prev => ({ ...prev, [key]: !newValue }))
+      console.error('Error updating group preference:', error)
+      // Revert
+      const revert: Partial<NotificationPreferences> = {}
+      for (const key of group.keys) revert[key] = !newValue
+      setPreferences(prev => ({ ...prev, ...revert }))
     }
   }
 
@@ -393,7 +338,7 @@ export function NotificationSettings() {
             </p>
             {supportInfo?.platform === 'ios' && !supportInfo?.isInstalled && (
               <p className="text-xs text-amber-400 mt-2">
-                Tap the share button and select "Add to Home Screen" to enable notifications
+                Tap the share button and select &quot;Add to Home Screen&quot; to enable notifications
               </p>
             )}
           </div>
@@ -411,7 +356,7 @@ export function NotificationSettings() {
           </div>
           <div>
             <p className="text-sm text-white/70">Notifications blocked</p>
-            <p className="text-xs text-white/50">Enable notifications in your browser settings</p>
+            <p className="text-xs text-white/50">Enable notifications in your device settings</p>
           </div>
         </div>
       </div>
@@ -459,167 +404,42 @@ export function NotificationSettings() {
         </div>
       </div>
 
-      {/* Notification preferences (only show if subscribed) */}
+      {/* Grouped notification preferences */}
       {isSubscribed && (
         <div className="space-y-2">
-          <p className="text-xs text-white/50 uppercase tracking-wider px-1">Notification Types</p>
-
-          {/* Morning reminder */}
-          <NotificationToggle
-            icon={Sunrise}
-            label="Morning Reminder"
-            description="Start your day with morning flow"
-            enabled={preferences.morning_reminder}
-            onToggle={() => handlePreferenceChange('morning_reminder')}
-          />
-
-          {/* Checkpoint alerts */}
-          <NotificationToggle
-            icon={Clock}
-            label="Checkpoint Alerts"
-            description="Scheduled check-ins throughout the day"
-            enabled={preferences.checkpoint_alerts}
-            onToggle={() => handlePreferenceChange('checkpoint_alerts')}
-          />
-
-          {/* Evening reminder */}
-          <NotificationToggle
-            icon={Moon}
-            label="Evening Reminder"
-            description="Wind down with day close"
-            enabled={preferences.evening_reminder}
-            onToggle={() => handlePreferenceChange('evening_reminder')}
-          />
-
-          {/* Streak alerts */}
-          <NotificationToggle
-            icon={Flame}
-            label="Streak Alerts"
-            description="Don't lose your streak"
-            enabled={preferences.streak_alerts}
-            onToggle={() => handlePreferenceChange('streak_alerts')}
-          />
-
-          {/* Weekly review */}
-          <NotificationToggle
-            icon={Calendar}
-            label="Weekly Review"
-            description="Sunday reflection and intentions"
-            enabled={preferences.weekly_review}
-            onToggle={() => handlePreferenceChange('weekly_review')}
-          />
-
-          {/* Weekly insights */}
-          <NotificationToggle
-            icon={Lightbulb}
-            label="Weekly Insights"
-            description="Data-driven wellbeing insights"
-            enabled={preferences.insight_alerts}
-            onToggle={() => handlePreferenceChange('insight_alerts')}
-          />
-
-          {/* Daily quote */}
-          <NotificationToggle
-            icon={Quote}
-            label="Daily Quote"
-            description="Inspirational quote every morning at 8 AM"
-            enabled={preferences.daily_quote_alerts}
-            onToggle={() => handlePreferenceChange('daily_quote_alerts')}
-          />
-
-          {/* Daily affirmation */}
-          <NotificationToggle
-            icon={Sparkles}
-            label="Daily Affirmation"
-            description="Personalized AI affirmation at 7:30 AM"
-            enabled={preferences.daily_affirmation_alerts}
-            onToggle={() => handlePreferenceChange('daily_affirmation_alerts')}
-          />
-
-          {/* Motivational nudge */}
-          <NotificationToggle
-            icon={Heart}
-            label="Motivational Nudge"
-            description="Midday encouragement at 2 PM"
-            enabled={preferences.motivational_nudge_alerts}
-            onToggle={() => handlePreferenceChange('motivational_nudge_alerts')}
-          />
-
-          {/* Daily motivation */}
-          <NotificationToggle
-            icon={Play}
-            label="Daily Motivation"
-            description="Today's motivation topic at 9 AM"
-            enabled={preferences.daily_motivation_alerts}
-            onToggle={() => handlePreferenceChange('daily_motivation_alerts')}
-          />
-
-          {/* Featured music */}
-          <NotificationToggle
-            icon={Music}
-            label="Featured Music"
-            description="Featured genre to set your mood at 5 PM"
-            enabled={preferences.featured_music_alerts}
-            onToggle={() => handlePreferenceChange('featured_music_alerts')}
-          />
-
-          {/* Coach check-in */}
-          <NotificationToggle
-            icon={MessageCircle}
-            label="Coach Check-In"
-            description="Midday message from your AI coach at 11 AM"
-            enabled={preferences.coach_checkin_alerts}
-            onToggle={() => handlePreferenceChange('coach_checkin_alerts')}
-          />
-
-          {/* Coach accountability */}
-          <NotificationToggle
-            icon={Target}
-            label="Coach Accountability"
-            description="Evening goal review from your coach at 8 PM"
-            enabled={preferences.coach_accountability_alerts}
-            onToggle={() => handlePreferenceChange('coach_accountability_alerts')}
-          />
+          {NOTIFICATION_GROUPS.map((group) => {
+            const isOn = group.keys.some(k => preferences[k])
+            const Icon = group.icon
+            return (
+              <button
+                key={group.id}
+                onClick={() => handleGroupToggle(group)}
+                role="switch"
+                aria-checked={isOn}
+                aria-label={group.label}
+                className="w-full p-3 rounded-xl bg-white/[0.03] border border-white/15 hover:bg-white/[0.06] transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${isOn ? 'text-white' : 'text-white/50'}`} />
+                    <div className="text-left">
+                      <p className={`text-sm ${isOn ? 'text-white' : 'text-white/70'}`}>{group.label}</p>
+                      <p className="text-xs text-white/50">{group.description}</p>
+                    </div>
+                  </div>
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                      isOn ? 'bg-emerald-500/20' : 'bg-white/10'
+                    }`}
+                  >
+                    {isOn && <Check className="w-3 h-3 text-emerald-400" />}
+                  </div>
+                </div>
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
-  )
-}
-
-// Individual toggle component
-interface NotificationToggleProps {
-  icon: React.ElementType
-  label: string
-  description: string
-  enabled: boolean
-  onToggle: () => void
-}
-
-function NotificationToggle({ icon: Icon, label, description, enabled, onToggle }: NotificationToggleProps) {
-  return (
-    <button
-      onClick={onToggle}
-      role="switch"
-      aria-checked={enabled}
-      aria-label={label}
-      className="w-full p-3 rounded-xl bg-white/[0.03] border border-white/15 hover:bg-white/[0.06] transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Icon className={`w-4 h-4 ${enabled ? 'text-white' : 'text-white/50'}`} />
-          <div className="text-left">
-            <p className={`text-sm ${enabled ? 'text-white' : 'text-white/70'}`}>{label}</p>
-            <p className="text-xs text-white/50">{description}</p>
-          </div>
-        </div>
-        <div
-          className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-            enabled ? 'bg-emerald-500/20' : 'bg-white/10'
-          }`}
-        >
-          {enabled && <Check className="w-3 h-3 text-emerald-400" />}
-        </div>
-      </div>
-    </button>
   )
 }
