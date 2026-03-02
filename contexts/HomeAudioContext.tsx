@@ -9,6 +9,7 @@ import { useAudioSideEffects } from '@/hooks/useAudioSideEffects'
 import { useVisibilityResume } from '@/hooks/useVisibilityResume'
 import { useMediaSession } from '@/hooks/useMediaSession'
 import { useAudioOptional } from '@/contexts/AudioContext'
+import { isNativePlatform, stopGuideNative, pauseGuideNative } from '@/lib/guide-audio-native'
 
 // --- Context shape ---
 
@@ -23,6 +24,7 @@ export interface HomeAudioRefs {
   keepaliveRef: MutableRefObject<HTMLAudioElement | null>
   wakeLockRef: MutableRefObject<any>
   guideAudioRef: MutableRefObject<HTMLAudioElement | null>
+  guideNativeLoadedRef: MutableRefObject<boolean>
   autoSkipNextRef: MutableRefObject<(() => void) | null>
 }
 
@@ -76,6 +78,7 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
   const currentScVideoIdRef = useRef<string | null>(null)
   const autoSkipNextRef = useRef<(() => void) | null>(null)
   const guideAudioRef = useRef<HTMLAudioElement | null>(null)
+  const guideNativeLoadedRef = useRef(false)
 
   // Desired-playing refs — track what the state machine *wants*, so YouTube
   // onStateChange can distinguish user-initiated pauses from browser-forced ones
@@ -102,11 +105,14 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
     bgPlayerRef, bgPlayerReadyRef,
     soundscapePlayerRef, soundscapeReadyRef,
     currentBgVideoIdRef, currentScVideoIdRef,
-    guideAudioRef, wakeLockRef,
+    guideAudioRef, guideNativeLoadedRef, wakeLockRef,
   })
 
   // Stop all audio helper
   const stopAllHomeAudio = useCallback(() => {
+    if (isNativePlatform) {
+      stopGuideNative(guideNativeLoadedRef)
+    }
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''
@@ -144,6 +150,7 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
     state: audioState,
     dispatch,
     guideAudioRef,
+    guideNativeLoadedRef,
     onStopAll: stopAllHomeAudio,
   })
 
@@ -296,8 +303,13 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
       if (audioState.soundscapeIsPlaying) {
         dispatch({ type: 'PAUSE_SOUNDSCAPE' })
       }
-      if (audioState.guideIsPlaying && guideAudioRef.current) {
-        guideAudioRef.current.pause()
+      if (audioState.guideIsPlaying) {
+        if (isNativePlatform) {
+          pauseGuideNative(guideNativeLoadedRef)
+        }
+        if (guideAudioRef.current) {
+          guideAudioRef.current.pause()
+        }
         dispatch({ type: 'PAUSE_GUIDE' })
       }
       wasPausedForDailyGuideRef.current = true
@@ -309,7 +321,7 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
     bgPlayerRef, bgPlayerReadyRef,
     soundscapePlayerRef, soundscapeReadyRef,
     bgProgressIntervalRef, currentBgVideoIdRef, currentScVideoIdRef,
-    keepaliveRef, wakeLockRef, guideAudioRef, autoSkipNextRef,
+    keepaliveRef, wakeLockRef, guideAudioRef, guideNativeLoadedRef, autoSkipNextRef,
   }), [])
 
   const value = useMemo<HomeAudioContextType>(() => ({

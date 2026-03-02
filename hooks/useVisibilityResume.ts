@@ -3,6 +3,7 @@
 import { useEffect, type MutableRefObject } from 'react'
 import type { YTPlayer } from '@/lib/youtube-types'
 import type { AudioState } from './useAudioStateMachine'
+import { isNativePlatform, resumeGuideNative } from '@/lib/guide-audio-native'
 
 interface UseVisibilityResumeOptions {
   state: AudioState
@@ -13,12 +14,13 @@ interface UseVisibilityResumeOptions {
   currentBgVideoIdRef: MutableRefObject<string | null>
   currentScVideoIdRef: MutableRefObject<string | null>
   guideAudioRef: MutableRefObject<HTMLAudioElement | null>
+  guideNativeLoadedRef: MutableRefObject<boolean>
   wakeLockRef: MutableRefObject<any>
 }
 
 export function useVisibilityResume({
   state, bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef,
-  currentBgVideoIdRef, currentScVideoIdRef, guideAudioRef, wakeLockRef,
+  currentBgVideoIdRef, currentScVideoIdRef, guideAudioRef, guideNativeLoadedRef, wakeLockRef,
 }: UseVisibilityResumeOptions) {
   useEffect(() => {
     let reloadAttempted = false
@@ -55,8 +57,12 @@ export function useVisibilityResume({
       }
 
       // Resume guide audio - only if user didn't manually pause
-      if (state.guideLabel && guideAudioRef.current?.paused && !state.userPausedGuide) {
-        guideAudioRef.current.play().catch(() => {})
+      if (state.guideLabel && !state.userPausedGuide) {
+        if (isNativePlatform && guideNativeLoadedRef.current) {
+          resumeGuideNative(guideNativeLoadedRef)
+        } else if (guideAudioRef.current?.paused) {
+          guideAudioRef.current.play().catch(() => {})
+        }
       }
     }
 
@@ -86,5 +92,5 @@ export function useVisibilityResume({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [state.guideLabel, state.homeAudioActive, state.userPausedMusic, state.userPausedSoundscape, state.userPausedGuide,
       bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef,
-      currentBgVideoIdRef, currentScVideoIdRef, guideAudioRef, wakeLockRef])
+      currentBgVideoIdRef, currentScVideoIdRef, guideAudioRef, guideNativeLoadedRef, wakeLockRef])
 }

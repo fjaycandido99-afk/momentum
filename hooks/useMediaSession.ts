@@ -2,15 +2,17 @@
 
 import { useEffect, type MutableRefObject, type Dispatch } from 'react'
 import type { AudioState, AudioAction } from './useAudioStateMachine'
+import { isNativePlatform, pauseGuideNative, resumeGuideNative } from '@/lib/guide-audio-native'
 
 interface UseMediaSessionOptions {
   state: AudioState
   dispatch: Dispatch<AudioAction>
   guideAudioRef: MutableRefObject<HTMLAudioElement | null>
+  guideNativeLoadedRef: MutableRefObject<boolean>
   onStopAll: () => void
 }
 
-export function useMediaSession({ state, dispatch, guideAudioRef, onStopAll }: UseMediaSessionOptions) {
+export function useMediaSession({ state, dispatch, guideAudioRef, guideNativeLoadedRef, onStopAll }: UseMediaSessionOptions) {
   useEffect(() => {
     if (!('mediaSession' in navigator)) return
 
@@ -35,6 +37,8 @@ export function useMediaSession({ state, dispatch, guideAudioRef, onStopAll }: U
         dispatch({ type: 'RESUME_MUSIC' })
       } else if (state.activeSoundscape) {
         dispatch({ type: 'RESUME_SOUNDSCAPE' })
+      } else if (isNativePlatform && guideNativeLoadedRef.current) {
+        resumeGuideNative(guideNativeLoadedRef).then(() => dispatch({ type: 'RESUME_GUIDE' }))
       } else if (guideAudioRef.current) {
         guideAudioRef.current.play().then(() => dispatch({ type: 'RESUME_GUIDE' }))
       }
@@ -45,8 +49,9 @@ export function useMediaSession({ state, dispatch, guideAudioRef, onStopAll }: U
         dispatch({ type: 'PAUSE_MUSIC' })
       } else if (state.activeSoundscape) {
         dispatch({ type: 'PAUSE_SOUNDSCAPE' })
-      } else if (guideAudioRef.current) {
-        guideAudioRef.current.pause()
+      } else if (state.guideLabel) {
+        if (isNativePlatform) pauseGuideNative(guideNativeLoadedRef)
+        if (guideAudioRef.current) guideAudioRef.current.pause()
         dispatch({ type: 'PAUSE_GUIDE' })
       }
     })
@@ -56,5 +61,5 @@ export function useMediaSession({ state, dispatch, guideAudioRef, onStopAll }: U
     })
   }, [state.backgroundMusic, state.guideLabel, state.activeSoundscape,
       state.musicPlaying, state.guideIsPlaying, state.soundscapeIsPlaying,
-      dispatch, guideAudioRef, onStopAll])
+      dispatch, guideAudioRef, guideNativeLoadedRef, onStopAll])
 }

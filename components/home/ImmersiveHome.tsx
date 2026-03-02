@@ -51,6 +51,7 @@ import { getAdaptiveSectionOrder, type FeedSection } from '@/lib/smart-home-feed
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 import { haptic } from '@/lib/haptics'
+import { isNativePlatform, stopGuideNative, pauseGuideNative, resumeGuideNative, playGuideNative } from '@/lib/guide-audio-native'
 import { AudioVisualizer } from '@/components/player/AudioVisualizer'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { useFeatureTooltip, type FeatureId } from '@/components/premium/FeatureTooltip'
@@ -86,7 +87,7 @@ export function ImmersiveHome() {
 
   // Audio state machine (from persistent context)
   const { audioState, dispatch, refs: homeAudioRefs, createBgMusicPlayer, createSoundscapePlayer, stopBackgroundMusic, stopAllHomeAudio } = useHomeAudio()
-  const { bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef, bgProgressIntervalRef, currentBgVideoIdRef, currentScVideoIdRef, keepaliveRef, wakeLockRef, guideAudioRef, autoSkipNextRef } = homeAudioRefs
+  const { bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef, bgProgressIntervalRef, currentBgVideoIdRef, currentScVideoIdRef, keepaliveRef, wakeLockRef, guideAudioRef, guideNativeLoadedRef, autoSkipNextRef } = homeAudioRefs
 
   // Welcome back card
   const [showWelcomeBack, setShowWelcomeBack] = useState(false)
@@ -179,6 +180,7 @@ export function ImmersiveHome() {
     if (soundscapePlayerRef.current && soundscapeReadyRef.current) {
       try { soundscapePlayerRef.current.pauseVideo() } catch {}
     }
+    if (isNativePlatform) pauseGuideNative(guideNativeLoadedRef)
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
     }
@@ -238,6 +240,8 @@ export function ImmersiveHome() {
   // --- Guide playback ---
   const handlePlayGuide = async (guideId: string, guideName: string) => {
     haptic('light')
+    // Stop any existing guide audio
+    if (isNativePlatform) await stopGuideNative(guideNativeLoadedRef)
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''
@@ -272,20 +276,39 @@ export function ImmersiveHome() {
       if (guideRequestId.current !== thisRequest) return
 
       if (data.audioBase64) {
-        const audioUrl = `data:audio/mpeg;base64,${data.audioBase64}`
-        const audio = new Audio(audioUrl)
-        guideAudioRef.current = audio
-
-        audio.oncanplaythrough = () => {
-          if (guideRequestId.current !== thisRequest) {
-            audio.pause(); audio.src = ''; return
+        // Native app: use NativeAudio plugin for reliable playback
+        if (isNativePlatform) {
+          const success = await playGuideNative(data.audioBase64, guideNativeLoadedRef)
+          if (success) {
+            dispatch({ type: 'GUIDE_PLAY_STARTED' })
+            // Listen for completion via NativeAudio
+            const { NativeAudio } = await import('@capacitor-community/native-audio')
+            NativeAudio.addListener('complete', (event) => {
+              if (event.assetId === 'home-guide-audio') {
+                dispatch({ type: 'GUIDE_ENDED' })
+              }
+            })
+          } else {
+            // Fall through to web audio as fallback
+            dispatch({ type: 'GUIDE_ERROR' })
           }
-          audio.play()
-            .then(() => dispatch({ type: 'GUIDE_PLAY_STARTED' }))
-            .catch(err => console.error('Guide play error:', err))
+        } else {
+          // Web: use HTML5 Audio
+          const audioUrl = `data:audio/mpeg;base64,${data.audioBase64}`
+          const audio = new Audio(audioUrl)
+          guideAudioRef.current = audio
+
+          audio.oncanplaythrough = () => {
+            if (guideRequestId.current !== thisRequest) {
+              audio.pause(); audio.src = ''; return
+            }
+            audio.play()
+              .then(() => dispatch({ type: 'GUIDE_PLAY_STARTED' }))
+              .catch(err => console.error('Guide play error:', err))
+          }
+          audio.onended = () => dispatch({ type: 'GUIDE_ENDED' })
+          audio.onerror = () => dispatch({ type: 'GUIDE_ERROR' })
         }
-        audio.onended = () => dispatch({ type: 'GUIDE_ENDED' })
-        audio.onerror = () => dispatch({ type: 'GUIDE_ERROR' })
       }
     } catch (err) {
       console.error('Guide fetch error:', err)
@@ -301,13 +324,16 @@ export function ImmersiveHome() {
 
   const toggleGuidePlay = () => {
     haptic('light')
-    const audio = guideAudioRef.current
-    if (!audio) return
     if (audioState.guideIsPlaying) {
-      audio.pause()
+      if (isNativePlatform) pauseGuideNative(guideNativeLoadedRef)
+      if (guideAudioRef.current) guideAudioRef.current.pause()
       dispatch({ type: 'PAUSE_GUIDE' })
     } else {
-      audio.play().then(() => dispatch({ type: 'RESUME_GUIDE' }))
+      if (isNativePlatform && guideNativeLoadedRef.current) {
+        resumeGuideNative(guideNativeLoadedRef).then(() => dispatch({ type: 'RESUME_GUIDE' }))
+      } else if (guideAudioRef.current) {
+        guideAudioRef.current.play().then(() => dispatch({ type: 'RESUME_GUIDE' }))
+      }
     }
   }
 
@@ -524,6 +550,7 @@ export function ImmersiveHome() {
     const topicVideos = motivationByTopic[playTopic] || motivationVideos
     triggerTap(video.id)
     // Stop guide audio imperatively
+    if (isNativePlatform) stopGuideNative(guideNativeLoadedRef)
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''
@@ -555,6 +582,7 @@ export function ImmersiveHome() {
   const handlePlayMusic = (video: VideoItem, index: number, genreId: string, genreWord: string) => {
     haptic('light')
     triggerTap(video.id)
+    if (isNativePlatform) stopGuideNative(guideNativeLoadedRef)
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''
@@ -768,6 +796,7 @@ export function ImmersiveHome() {
     }
 
     // Stop guide audio imperatively
+    if (isNativePlatform) stopGuideNative(guideNativeLoadedRef)
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''
