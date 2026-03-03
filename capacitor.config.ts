@@ -22,7 +22,7 @@ const config: CapacitorConfig = {
     },
     NativeAudio: {
       preload: true,
-      focus: true,
+      focus: false, // Don't request exclusive audio focus — allows simultaneous playback
     },
     App: {},
   },

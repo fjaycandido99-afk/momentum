@@ -1,4 +1,5 @@
 import UIKit
+import AVFoundation
 import Capacitor
 
 @UIApplicationMain
@@ -7,6 +8,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Configure audio session for simultaneous playback (soundscape + music)
+        // .mixWithOthers allows multiple audio sources in the WebView to play at once
+        // .duckOthers lowers system audio volume when our audio plays
+        do {
+            try AVAudioSession.sharedInstance().setCategory(
+                .playback,
+                options: [.mixWithOthers]
+            )
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("[Voxu] Failed to configure audio session: \(error)")
+        }
+
         // Register for remote notifications
         UNUserNotificationCenter.current().delegate = self
         application.registerForRemoteNotifications()

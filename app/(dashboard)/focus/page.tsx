@@ -229,7 +229,10 @@ export default function FocusPage() {
         homeAudio.createBgMusicPlayer(selectedMusic.youtubeId)
       }
       if (selectedSound) {
-        setTimeout(startMusic, 1500)
+        // Longer stagger on native — iOS WKWebView is more aggressive about
+        // pausing one audio source when another starts
+        const staggerMs = typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.() ? 3000 : 1500
+        setTimeout(startMusic, staggerMs)
       } else {
         startMusic()
       }

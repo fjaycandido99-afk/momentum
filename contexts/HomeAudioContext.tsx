@@ -211,9 +211,13 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
             } else if (event.data === 2) {
               // Browser may force-pause this player when the other iframe starts.
               // If state says we *want* music playing, re-play instead of confirming pause.
-              if (wantMusicPlayingRef.current && musicRetryCountRef.current < 5) {
+              // Native iOS needs more retries with longer delays due to aggressive audio session management.
+              const maxRetries = isNativePlatform ? 10 : 5
+              const baseDelay = isNativePlatform ? 800 : 500
+              const retryIncrement = isNativePlatform ? 400 : 200
+              if (wantMusicPlayingRef.current && musicRetryCountRef.current < maxRetries) {
                 musicRetryCountRef.current++
-                setTimeout(() => { try { event.target.playVideo() } catch {} }, 500 + musicRetryCountRef.current * 200)
+                setTimeout(() => { try { event.target.playVideo() } catch {} }, baseDelay + musicRetryCountRef.current * retryIncrement)
               } else {
                 dispatch({ type: 'MUSIC_YT_PAUSED' })
               }
@@ -245,9 +249,12 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
               soundscapeRetryCountRef.current = 0
               dispatch({ type: 'SOUNDSCAPE_YT_PLAYING' })
             } else if (event.data === 2) {
-              if (wantSoundscapePlayingRef.current && soundscapeRetryCountRef.current < 5) {
+              const maxRetries = isNativePlatform ? 10 : 5
+              const baseDelay = isNativePlatform ? 800 : 500
+              const retryIncrement = isNativePlatform ? 400 : 200
+              if (wantSoundscapePlayingRef.current && soundscapeRetryCountRef.current < maxRetries) {
                 soundscapeRetryCountRef.current++
-                setTimeout(() => { try { event.target.playVideo() } catch {} }, 500 + soundscapeRetryCountRef.current * 200)
+                setTimeout(() => { try { event.target.playVideo() } catch {} }, baseDelay + soundscapeRetryCountRef.current * retryIncrement)
               } else {
                 dispatch({ type: 'SOUNDSCAPE_YT_PAUSED' })
               }
