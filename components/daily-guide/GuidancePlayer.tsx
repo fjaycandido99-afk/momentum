@@ -11,6 +11,7 @@ import { useThemeOptional } from '@/contexts/ThemeContext'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { Capacitor } from '@capacitor/core'
 import { App } from '@capacitor/app'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 
 // Check if running in native app
 const isNativePlatform = Capacitor.isNativePlatform()
@@ -413,6 +414,9 @@ export function GuidancePlayer({
       })
     }
   }, [musicGenre, themeContext])
+
+  // Lock body scroll while player is open (prevents iOS WKWebView scroll-through)
+  useBodyScrollLock()
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const musicPlayerRef = useRef<YTPlayer | null>(null)

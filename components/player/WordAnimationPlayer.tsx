@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { ChevronDown, Volume2, VolumeX, ExternalLink, Play, Pause, SkipForward, SkipBack, PenLine, Image, Video, X } from 'lucide-react'
 import { PlayerJournalSheet } from './PlayerJournalSheet'
 import { useDeviceTilt } from '@/hooks/useDeviceTilt'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import type { YTPlayer } from '@/lib/youtube-types'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
 
@@ -628,11 +629,14 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
     }
   }, [duration, externalAudio, activeDuration, onSeek])
 
+  // Lock body scroll while player is open (prevents iOS WKWebView scroll-through)
+  useBodyScrollLock()
+
   // Remaining time as negative (Spotify-style)
   const remainingTime = activeDuration > 0 ? activeDuration - activeCurrentTime : 0
 
   return (
-    <div className="fixed inset-0 z-[55] overflow-hidden" style={{ backgroundColor: '#000000' }}>
+    <div className="fixed inset-0 z-[55] overflow-hidden overscroll-none" style={{ backgroundColor: '#000000' }}>
       {/* Single YouTube player container — toggles between hidden (audio) and visible (video) */}
       {!externalAudio && (
         <div

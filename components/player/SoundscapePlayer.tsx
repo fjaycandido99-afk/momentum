@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import Image from 'next/image'
 import { Play, Pause, ChevronDown, Focus, Sparkles, Moon, Zap, CloudRain, Waves, Trees, Flame, CloudLightning, Star, Wind, Droplets, Coffee, Music, Lock } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
@@ -50,6 +51,9 @@ export const SOUNDSCAPE_ITEMS: SoundscapeItem[] = [
 export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlaying, onTogglePlay, onClose, onSwitchSound }: SoundscapePlayerProps) {
   const selectorRef = useRef<HTMLDivElement>(null)
   const { isContentFree } = useSubscription()
+
+  // Lock body scroll while player is open (prevents iOS WKWebView scroll-through)
+  useBodyScrollLock()
 
   // Deterministic daily background — same image all day, rotates next day
   const bgUrl = getSoundscapeBackground(soundId)
