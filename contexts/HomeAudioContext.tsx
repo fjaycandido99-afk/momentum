@@ -9,7 +9,7 @@ import { useAudioSideEffects } from '@/hooks/useAudioSideEffects'
 import { useVisibilityResume } from '@/hooks/useVisibilityResume'
 import { useMediaSession } from '@/hooks/useMediaSession'
 import { useAudioOptional } from '@/contexts/AudioContext'
-import { isNativePlatform, stopGuideNative, pauseGuideNative } from '@/lib/guide-audio-native'
+import { isNativePlatform } from '@/lib/guide-audio-native'
 
 // --- Context shape ---
 
@@ -110,9 +110,6 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
 
   // Stop all audio helper
   const stopAllHomeAudio = useCallback(() => {
-    if (isNativePlatform) {
-      stopGuideNative(guideNativeLoadedRef)
-    }
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''
@@ -210,14 +207,15 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
               }, 1000)
             } else if (event.data === 2) {
               // Browser may force-pause this player when the other iframe starts.
-              // If state says we *want* music playing, re-play instead of confirming pause.
-              // Native iOS needs more retries with longer delays due to aggressive audio session management.
-              const maxRetries = isNativePlatform ? 10 : 5
-              const baseDelay = isNativePlatform ? 800 : 500
-              const retryIncrement = isNativePlatform ? 400 : 200
-              if (wantMusicPlayingRef.current && musicRetryCountRef.current < maxRetries) {
+              // On native, if BOTH players want to play simultaneously (Focus mode),
+              // do NOT retry — it creates a ping-pong loop. Only retry when music is
+              // the sole intended player. The iOS AVAudioSession fix (in next native
+              // build) will properly allow simultaneous playback.
+              const bothWantPlaying = wantMusicPlayingRef.current && wantSoundscapePlayingRef.current
+              const shouldRetry = wantMusicPlayingRef.current && !(isNativePlatform && bothWantPlaying)
+              if (shouldRetry && musicRetryCountRef.current < 5) {
                 musicRetryCountRef.current++
-                setTimeout(() => { try { event.target.playVideo() } catch {} }, baseDelay + musicRetryCountRef.current * retryIncrement)
+                setTimeout(() => { try { event.target.playVideo() } catch {} }, 500 + musicRetryCountRef.current * 200)
               } else {
                 dispatch({ type: 'MUSIC_YT_PAUSED' })
               }
@@ -249,12 +247,12 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
               soundscapeRetryCountRef.current = 0
               dispatch({ type: 'SOUNDSCAPE_YT_PLAYING' })
             } else if (event.data === 2) {
-              const maxRetries = isNativePlatform ? 10 : 5
-              const baseDelay = isNativePlatform ? 800 : 500
-              const retryIncrement = isNativePlatform ? 400 : 200
-              if (wantSoundscapePlayingRef.current && soundscapeRetryCountRef.current < maxRetries) {
+              // Same logic: skip retry on native when both players want to play
+              const bothWantPlaying = wantMusicPlayingRef.current && wantSoundscapePlayingRef.current
+              const shouldRetry = wantSoundscapePlayingRef.current && !(isNativePlatform && bothWantPlaying)
+              if (shouldRetry && soundscapeRetryCountRef.current < 5) {
                 soundscapeRetryCountRef.current++
-                setTimeout(() => { try { event.target.playVideo() } catch {} }, baseDelay + soundscapeRetryCountRef.current * retryIncrement)
+                setTimeout(() => { try { event.target.playVideo() } catch {} }, 500 + soundscapeRetryCountRef.current * 200)
               } else {
                 dispatch({ type: 'SOUNDSCAPE_YT_PAUSED' })
               }
@@ -311,9 +309,6 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
         dispatch({ type: 'PAUSE_SOUNDSCAPE' })
       }
       if (audioState.guideIsPlaying) {
-        if (isNativePlatform) {
-          pauseGuideNative(guideNativeLoadedRef)
-        }
         if (guideAudioRef.current) {
           guideAudioRef.current.pause()
         }
