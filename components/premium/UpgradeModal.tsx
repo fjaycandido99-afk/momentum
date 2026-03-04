@@ -59,8 +59,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     }
   }
 
-  const monthlyPrice = 4.99
-  const yearlyPrice = 39.99
+  const monthlyPrice = 6.99
+  const yearlyPrice = 49.99
   const yearlyMonthly = (yearlyPrice / 12).toFixed(2)
   const savings = Math.round((1 - yearlyPrice / (monthlyPrice * 12)) * 100)
 
