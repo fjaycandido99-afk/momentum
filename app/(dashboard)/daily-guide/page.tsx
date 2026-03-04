@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { authFetch } from '@/lib/auth-fetch'
 
 export default function DailyGuidePage() {
   const router = useRouter()
@@ -16,7 +17,7 @@ export default function DailyGuidePage() {
       const minDelay = new Promise(resolve => setTimeout(resolve, 2500))
       try {
         const [response] = await Promise.all([
-          fetch('/api/daily-guide/preferences'),
+          authFetch('/api/daily-guide/preferences'),
           minDelay,
         ])
         if (response.ok) {

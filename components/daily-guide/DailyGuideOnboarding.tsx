@@ -26,6 +26,7 @@ import type { GuideTone } from '@/lib/ai/daily-guide-prompts'
 import type { YTPlayer } from '@/lib/youtube-types'
 import { ONBOARDING_COPY } from '@/lib/onboarding-copy'
 import { SuccessAnimation } from '@/components/ui/SuccessAnimation'
+import { authFetch } from '@/lib/auth-fetch'
 
 type UserType = 'professional' | 'student'
 
@@ -262,7 +263,7 @@ export function DailyGuideOnboarding() {
     try {
       // Save preferences — must complete before navigating so /daily-guide
       // sees guide_onboarding_done=true and doesn't redirect back here
-      const response = await fetch('/api/daily-guide/preferences', {
+      const response = await authFetch('/api/daily-guide/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -296,7 +297,7 @@ export function DailyGuideOnboarding() {
       }
 
       // Fire-and-forget: generate today's guide in background
-      fetch('/api/daily-guide/generate', {
+      authFetch('/api/daily-guide/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ timeMode: 'normal' }),

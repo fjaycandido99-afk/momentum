@@ -6,6 +6,7 @@ import { SplashScreen } from '@/components/ui/SplashScreen'
 import { useServiceWorker } from '@/hooks/useServiceWorker'
 import { useDeepLink } from '@/hooks/useDeepLink'
 import { useNativePush } from '@/hooks/useNativePush'
+import { installAuthInterceptor } from '@/lib/auth-interceptor'
 
 interface AppContextType {
   isGuest: boolean
@@ -28,6 +29,7 @@ interface AppWrapperProps {
 }
 
 export function AppWrapper({ children }: AppWrapperProps) {
+  installAuthInterceptor()
   useServiceWorker()
   useDeepLink()
   useNativePush()

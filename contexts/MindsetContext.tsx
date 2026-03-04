@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import type { MindsetId, MindsetConfig } from '@/lib/mindset/types'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
+import { authFetch } from '@/lib/auth-fetch'
 
 const STORAGE_KEY = 'voxu_mindset'
 
@@ -27,7 +28,7 @@ export function MindsetProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadMindset() {
       try {
-        const response = await fetch('/api/daily-guide/preferences')
+        const response = await authFetch('/api/daily-guide/preferences')
         if (response.ok) {
           const data = await response.json()
           if (data.isGuest) {
@@ -75,7 +76,7 @@ export function MindsetProvider({ children }: { children: ReactNode }) {
 
     // Save to API (non-blocking)
     try {
-      await fetch('/api/daily-guide/preferences', {
+      await authFetch('/api/daily-guide/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

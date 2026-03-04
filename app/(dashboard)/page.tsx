@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ImmersiveHome } from '@/components/home/ImmersiveHome'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { authFetch } from '@/lib/auth-fetch'
 
 export default function HomePage() {
   const router = useRouter()
@@ -25,7 +26,7 @@ export default function HomePage() {
       const minDelay = new Promise(resolve => setTimeout(resolve, 300))
       try {
         const [response] = await Promise.all([
-          fetch('/api/daily-guide/preferences'),
+          authFetch('/api/daily-guide/preferences'),
           minDelay,
         ])
         if (response.ok) {
