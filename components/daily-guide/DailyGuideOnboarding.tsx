@@ -261,7 +261,7 @@ export function DailyGuideOnboarding() {
     setIsSubmitting(true)
     try {
       // Smart defaults applied here
-      const response = await fetch('/api/daily-guide/preferences', {
+      await fetch('/api/daily-guide/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -292,22 +292,21 @@ export function DailyGuideOnboarding() {
           guide_onboarding_done: true,
           theme_onboarding_done: true,
         }),
-      })
+      }).catch(() => {})
 
-      if (response.ok) {
-        // Generate today's guide
-        await fetch('/api/daily-guide/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            timeMode: 'normal',
-          }),
-        })
+      // Fire-and-forget: generate today's guide in background, don't block navigation
+      fetch('/api/daily-guide/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timeMode: 'normal' }),
+      }).catch(() => {})
 
-        router.push('/daily-guide')
-      }
+      // Always navigate — daily-guide page handles missing data gracefully
+      router.push('/daily-guide')
     } catch (error) {
       console.error('Onboarding error:', error)
+      // Navigate anyway so user isn't stuck
+      router.push('/daily-guide')
     } finally {
       setIsSubmitting(false)
     }
