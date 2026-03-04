@@ -92,7 +92,7 @@ workflows:
       - name: Set version and build number
         script: |
           cd ios/App
-          agvtool new-marketing-version 1.0.0
+          agvtool new-marketing-version 1.1.0
           agvtool new-version -all $(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0) + 1))
 
       - name: Build iOS
