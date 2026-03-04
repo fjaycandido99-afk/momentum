@@ -202,7 +202,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Ensure User record exists (auth/setup may have failed on native signup)
-    const existingUser = await prisma.user.findUnique({ where: { id: user.id } })
+    let existingUser = await prisma.user.findUnique({ where: { id: user.id } })
+    if (!existingUser && user.email) {
+      // User may have re-created their Supabase account — old User record has same email but different id
+      existingUser = await prisma.user.findUnique({ where: { email: user.email } })
+      if (existingUser) {
+        // Update the old record to the new Supabase id
+        await prisma.user.update({ where: { email: user.email }, data: { id: user.id } })
+      }
+    }
     if (!existingUser) {
       await prisma.user.create({
         data: {
