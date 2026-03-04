@@ -14,24 +14,6 @@ export default function DailyGuidePage() {
 
   useEffect(() => {
     const checkOnboarding = async () => {
-      // If onboarding was completed locally, skip redirect and retry save
-      const onboardingDoneLocally = typeof window !== 'undefined' &&
-        (localStorage.getItem('voxu_onboarding_done') || sessionStorage.getItem('voxu_onboarding_done'))
-
-      if (onboardingDoneLocally) {
-        sessionStorage.removeItem('voxu_onboarding_done')
-        authFetch('/api/daily-guide/preferences', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ guide_onboarding_done: true, theme_onboarding_done: true }),
-        }).then(res => {
-          if (res.ok) localStorage.removeItem('voxu_onboarding_done')
-        }).catch(() => {})
-        setIsOnboarded(true)
-        setIsLoading(false)
-        return
-      }
-
       const minDelay = new Promise(resolve => setTimeout(resolve, 2500))
       try {
         const [response] = await Promise.all([
@@ -50,7 +32,6 @@ export default function DailyGuidePage() {
 
           if (data.guide_onboarding_done) {
             setIsOnboarded(true)
-            localStorage.removeItem('voxu_onboarding_done')
           } else {
             router.push('/daily-guide/onboarding')
             return

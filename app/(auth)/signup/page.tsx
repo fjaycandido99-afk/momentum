@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { authFetch } from '@/lib/auth-fetch'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 
 export default function SignupPage() {
@@ -48,7 +49,14 @@ export default function SignupPage() {
         return
       }
 
-      const response = await fetch('/api/auth/setup', {
+      // Wait for the Supabase session to be available (needed on native/Capacitor)
+      for (let i = 0; i < 3; i++) {
+        const { data: sessionData } = await supabase.auth.getSession()
+        if (sessionData.session) break
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+
+      const response = await authFetch('/api/auth/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -270,6 +270,20 @@ function SettingsContent() {
   }
 
   const handleSignOut = async () => {
+    // Clear all voxu_* and sb-* keys to prevent stale data leaking between accounts
+    if (typeof window !== 'undefined') {
+      const storages = [localStorage, sessionStorage]
+      for (const storage of storages) {
+        const keysToRemove: string[] = []
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i)
+          if (key && (key.startsWith('voxu_') || key.startsWith('sb-'))) {
+            keysToRemove.push(key)
+          }
+        }
+        keysToRemove.forEach(key => storage.removeItem(key))
+      }
+    }
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()

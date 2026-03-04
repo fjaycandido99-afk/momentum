@@ -15,28 +15,6 @@ export default function HomePage() {
 
   useEffect(() => {
     async function checkOnboarding() {
-      // If onboarding was completed locally but may not have saved to server,
-      // skip the redirect and retry the server save in background
-      const onboardingDoneLocally = typeof window !== 'undefined' &&
-        (localStorage.getItem('voxu_onboarding_done') || sessionStorage.getItem('voxu_onboarding_done'))
-
-      if (onboardingDoneLocally) {
-        // Clean up old sessionStorage key
-        sessionStorage.removeItem('voxu_onboarding_done')
-
-        // Retry saving to server in background
-        authFetch('/api/daily-guide/preferences', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ guide_onboarding_done: true, theme_onboarding_done: true }),
-        }).then(res => {
-          if (res.ok) localStorage.removeItem('voxu_onboarding_done')
-        }).catch(() => {})
-
-        setIsLoading(false)
-        return
-      }
-
       const minDelay = new Promise(resolve => setTimeout(resolve, 300))
       try {
         const [response] = await Promise.all([
@@ -62,9 +40,6 @@ export default function HomePage() {
           // Then check onboarding status
           if (!prefs.guide_onboarding_done) {
             setNeedsOnboarding(true)
-          } else {
-            // Server confirmed — clear any local flag
-            localStorage.removeItem('voxu_onboarding_done')
           }
         }
       } catch (error) {

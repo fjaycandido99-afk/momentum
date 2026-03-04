@@ -261,12 +261,19 @@ export function DailyGuideOnboarding() {
   const handleComplete = async () => {
     setIsSubmitting(true)
     try {
+      // Include mindset so mindset_selected_at gets set even if the earlier
+      // async save from MindsetContext failed (common on native/Capacitor)
+      const savedMindset = typeof window !== 'undefined'
+        ? localStorage.getItem('voxu_mindset') || 'stoic'
+        : 'stoic'
+
       // Save preferences — must complete before navigating so /daily-guide
       // sees guide_onboarding_done=true and doesn't redirect back here
       const response = await authFetch('/api/daily-guide/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          mindset: savedMindset,
           user_type: data.userType,
           work_days: data.workDays,
           wake_time: data.wakeTime,
@@ -294,6 +301,13 @@ export function DailyGuideOnboarding() {
 
       if (!response.ok) {
         console.error('Preferences save failed:', response.status, await response.text().catch(() => ''))
+        // Retry once after 1s
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        await authFetch('/api/daily-guide/preferences', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mindset: savedMindset, guide_onboarding_done: true, theme_onboarding_done: true }),
+        }).catch(() => {})
       }
 
       // Fire-and-forget: generate today's guide in background
@@ -303,18 +317,10 @@ export function DailyGuideOnboarding() {
         body: JSON.stringify({ timeMode: 'normal' }),
       }).catch(() => {})
 
-      // Mark onboarding done locally so home page doesn't loop back
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('voxu_onboarding_done', 'true')
-      }
-
       router.push('/')
       router.refresh()
     } catch (error) {
       console.error('Onboarding error:', error)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('voxu_onboarding_done', 'true')
-      }
       router.push('/')
       router.refresh()
     } finally {
