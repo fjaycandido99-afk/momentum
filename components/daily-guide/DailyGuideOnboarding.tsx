@@ -305,7 +305,7 @@ export function DailyGuideOnboarding() {
 
       // Mark onboarding done locally so home page doesn't loop back
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('voxu_onboarding_done', 'true')
+        localStorage.setItem('voxu_onboarding_done', 'true')
       }
 
       router.push('/')
@@ -313,7 +313,7 @@ export function DailyGuideOnboarding() {
     } catch (error) {
       console.error('Onboarding error:', error)
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem('voxu_onboarding_done', 'true')
+        localStorage.setItem('voxu_onboarding_done', 'true')
       }
       router.push('/')
       router.refresh()
