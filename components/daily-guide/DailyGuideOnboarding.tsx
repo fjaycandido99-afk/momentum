@@ -260,15 +260,15 @@ export function DailyGuideOnboarding() {
   const handleComplete = async () => {
     setIsSubmitting(true)
     try {
-      // Smart defaults applied here
-      await fetch('/api/daily-guide/preferences', {
+      // Save preferences — must complete before navigating so /daily-guide
+      // sees guide_onboarding_done=true and doesn't redirect back here
+      const response = await fetch('/api/daily-guide/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_type: data.userType,
           work_days: data.workDays,
           wake_time: data.wakeTime,
-          // Smart defaults for work/class hours
           work_start_time: '09:00',
           work_end_time: '17:00',
           class_days: data.classDays,
@@ -276,37 +276,41 @@ export function DailyGuideOnboarding() {
           class_end_time: '15:00',
           study_start_time: '18:00',
           study_end_time: '21:00',
-          // User-selected tone
           guide_tone: data.guideTone,
-          // Smart defaults
           default_time_mode: 'normal',
           workout_enabled: true,
           workout_intensity: 'full',
           background_music_enabled: true,
-          preferred_music_genre: null, // Daily rotation
+          preferred_music_genre: null,
           enabled_segments: ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'],
           micro_lesson_enabled: true,
           breath_cues_enabled: true,
           daily_guide_enabled: true,
-          // Skip BOTH onboarding flows
           guide_onboarding_done: true,
           theme_onboarding_done: true,
         }),
-      }).catch(() => {})
+      })
 
-      // Fire-and-forget: generate today's guide in background, don't block navigation
+      if (!response.ok) {
+        console.error('Preferences save failed:', response.status, await response.text().catch(() => ''))
+      }
+
+      // Fire-and-forget: generate today's guide in background
       fetch('/api/daily-guide/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ timeMode: 'normal' }),
       }).catch(() => {})
 
-      // Always navigate — daily-guide page handles missing data gracefully
-      router.push('/daily-guide')
+      // Navigate to home — avoids /daily-guide re-checking onboarding before
+      // the preferences write has propagated
+      router.push('/')
+      router.refresh()
     } catch (error) {
       console.error('Onboarding error:', error)
-      // Navigate anyway so user isn't stuck
-      router.push('/daily-guide')
+      // Navigate to home anyway so user isn't stuck
+      router.push('/')
+      router.refresh()
     } finally {
       setIsSubmitting(false)
     }
