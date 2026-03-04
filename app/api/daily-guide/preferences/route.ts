@@ -460,7 +460,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Update daily guide preferences error:', error)
     return NextResponse.json(
-      { error: 'Failed to update preferences' },
+      { error: 'Failed to update preferences', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
