@@ -14,6 +14,14 @@ export default function HomePage() {
 
   useEffect(() => {
     async function checkOnboarding() {
+      // If user just finished onboarding this session, skip the server check
+      // (handles the case where server cookies haven't synced yet in native WebView)
+      if (typeof window !== 'undefined' && sessionStorage.getItem('voxu_onboarding_done')) {
+        sessionStorage.removeItem('voxu_onboarding_done')
+        setIsLoading(false)
+        return
+      }
+
       const minDelay = new Promise(resolve => setTimeout(resolve, 300))
       try {
         const [response] = await Promise.all([

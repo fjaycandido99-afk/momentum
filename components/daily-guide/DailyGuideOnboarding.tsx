@@ -302,13 +302,18 @@ export function DailyGuideOnboarding() {
         body: JSON.stringify({ timeMode: 'normal' }),
       }).catch(() => {})
 
-      // Navigate to home — avoids /daily-guide re-checking onboarding before
-      // the preferences write has propagated
+      // Mark onboarding done locally so home page doesn't loop back
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('voxu_onboarding_done', 'true')
+      }
+
       router.push('/')
       router.refresh()
     } catch (error) {
       console.error('Onboarding error:', error)
-      // Navigate to home anyway so user isn't stuck
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('voxu_onboarding_done', 'true')
+      }
       router.push('/')
       router.refresh()
     } finally {
