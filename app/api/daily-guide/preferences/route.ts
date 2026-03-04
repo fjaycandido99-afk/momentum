@@ -201,6 +201,24 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Ensure User record exists (auth/setup may have failed on native signup)
+    const existingUser = await prisma.user.findUnique({ where: { id: user.id } })
+    if (!existingUser) {
+      await prisma.user.create({
+        data: {
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.name || null,
+        },
+      })
+      // Also create default subscription
+      await prisma.subscription.upsert({
+        where: { user_id: user.id },
+        update: {},
+        create: { user_id: user.id, tier: 'free', status: 'active' },
+      })
+    }
+
     const body = await request.json()
     const {
       // User type
