@@ -9,7 +9,6 @@ import { useAudioSideEffects } from '@/hooks/useAudioSideEffects'
 import { useVisibilityResume } from '@/hooks/useVisibilityResume'
 import { useMediaSession } from '@/hooks/useMediaSession'
 import { useAudioOptional } from '@/contexts/AudioContext'
-import { isNativePlatform } from '@/lib/guide-audio-native'
 
 // --- Context shape ---
 
@@ -206,13 +205,12 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
                 }
               }, 1000)
             } else if (event.data === 2) {
-              // Browser may force-pause this player when the other iframe starts.
-              // On native, if BOTH players want to play simultaneously (Focus mode),
-              // do NOT retry — it creates a ping-pong loop. Only retry when music is
-              // the sole intended player. The iOS AVAudioSession fix (in next native
-              // build) will properly allow simultaneous playback.
+              // Browser/OS may force-pause this player when the other iframe starts.
+              // If BOTH players want to play simultaneously (Focus mode), do NOT
+              // retry — it creates a ping-pong loop. Only retry when music is the
+              // sole intended player.
               const bothWantPlaying = wantMusicPlayingRef.current && wantSoundscapePlayingRef.current
-              const shouldRetry = wantMusicPlayingRef.current && !(isNativePlatform && bothWantPlaying)
+              const shouldRetry = wantMusicPlayingRef.current && !bothWantPlaying
               if (shouldRetry && musicRetryCountRef.current < 5) {
                 musicRetryCountRef.current++
                 setTimeout(() => { try { event.target.playVideo() } catch {} }, 500 + musicRetryCountRef.current * 200)
@@ -247,9 +245,9 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
               soundscapeRetryCountRef.current = 0
               dispatch({ type: 'SOUNDSCAPE_YT_PLAYING' })
             } else if (event.data === 2) {
-              // Same logic: skip retry on native when both players want to play
+              // Same logic: skip retry when both players want to play
               const bothWantPlaying = wantMusicPlayingRef.current && wantSoundscapePlayingRef.current
-              const shouldRetry = wantSoundscapePlayingRef.current && !(isNativePlatform && bothWantPlaying)
+              const shouldRetry = wantSoundscapePlayingRef.current && !bothWantPlaying
               if (shouldRetry && soundscapeRetryCountRef.current < 5) {
                 soundscapeRetryCountRef.current++
                 setTimeout(() => { try { event.target.playVideo() } catch {} }, 500 + soundscapeRetryCountRef.current * 200)
