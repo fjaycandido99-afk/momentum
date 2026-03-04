@@ -36,6 +36,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    prisma.featureEvent.create({ data: { user_id: user.id, feature: 'meditation_gen', action: 'use' } }).catch(() => {})
+
     const { allowed } = rateLimit(`ai-meditation:${user.id}`, { limit: 10, windowSeconds: 60 })
     if (!allowed) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })

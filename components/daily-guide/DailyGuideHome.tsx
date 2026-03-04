@@ -42,6 +42,7 @@ import { CosmicInsightCard } from './CosmicInsightCard'
 import { getFormattedDate } from '@/lib/daily-guide/day-type'
 import { useThemeOptional } from '@/contexts/ThemeContext'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { trackFeature } from '@/lib/analytics/track'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { SessionLimitBanner } from '@/components/premium/SessionLimitBanner'
 import { TrialBanner, TrialEndingBanner } from '@/components/premium/TrialBanner'
@@ -557,6 +558,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   }
 
   const playModule = async (moduleType: string, withMusic = false) => {
+    trackFeature('daily_guide', 'use')
     // Free users get text-only mode (no AI voice)
     const isTextOnly = subscription && !subscription.isPremium && !subscription.checkAccess('ai_voice')
 
@@ -732,6 +734,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
   const handlePlayerComplete = () => {
     if (!activePlayer) return
+    trackFeature('daily_guide', 'complete')
 
     // Award XP and check for new achievements
     logXPEventServer('moduleComplete').then(result => {

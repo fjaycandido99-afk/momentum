@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Bookmark, Loader2, Trash2 } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { trackFeature } from '@/lib/analytics/track'
 
 type SavedFilter = 'all' | 'quote' | 'journal' | 'affirmation' | 'reflection'
 
@@ -22,6 +23,7 @@ export default function SavedPage() {
   const [filter, setFilter] = useState<SavedFilter>('all')
 
   useEffect(() => {
+    trackFeature('saved_content', 'open')
     fetchFavorites()
   }, [])
 

@@ -12,6 +12,7 @@ import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/Weekl
 import { GoalTracker } from '@/components/daily-guide/GoalTracker'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { trackFeature } from '@/lib/analytics/track'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 import { MoodSelector, type MoodValue } from '@/components/journal/MoodSelector'
@@ -202,6 +203,9 @@ function JournalContent() {
     setCurrentPromptIndex(index)
   }, [selectedDate])
 
+  // Track journal page open
+  useEffect(() => { trackFeature('journal', 'open') }, [])
+
   // Load journal for selected date
   useEffect(() => {
     const loadJournal = async () => {
@@ -372,6 +376,7 @@ function JournalContent() {
         body: JSON.stringify(payload),
       })
       if (response.ok) {
+        trackFeature('journal', 'complete')
         const data = await response.json()
         setIsSaved(true)
         if (data.data?.journal_ai_reflection) {

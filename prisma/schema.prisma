@@ -587,6 +587,19 @@ model XPEvent {
   @@index([user_id, created_at])
 }
 
+model FeatureEvent {
+  id         String   @id @default(cuid())
+  user_id    String
+  feature    String
+  action     String
+  metadata   String?
+  created_at DateTime @default(now())
+
+  @@index([feature, created_at])
+  @@index([created_at])
+  @@index([user_id, created_at])
+}
+
 model UserAchievement {
   id             String   @id @default(cuid())
   user_id        String

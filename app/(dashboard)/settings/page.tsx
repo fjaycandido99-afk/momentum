@@ -40,6 +40,7 @@ import { SettingsCategory } from '@/components/settings/SettingsCategory'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
+import { trackFeature } from '@/lib/analytics/track'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 type GuideTone = 'calm' | 'direct' | 'neutral'
@@ -131,6 +132,9 @@ function SettingsContent() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isRestoring, setIsRestoring] = useState(false)
+
+  // Track settings page open
+  useEffect(() => { trackFeature('settings', 'open') }, [])
 
   // Load preferences on mount
   useEffect(() => {

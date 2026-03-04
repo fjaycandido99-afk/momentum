@@ -13,6 +13,7 @@ import { TierBanner } from '@/components/premium/TierBanner'
 import { MINDSET_CONFIGS, getCoachName } from '@/lib/mindset/configs'
 import { getActivePlan, COACHING_PLANS, getPlanProgress } from '@/lib/coaching-plans'
 import { logXPEventServer } from '@/lib/gamification'
+import { trackFeature } from '@/lib/analytics/track'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 
 interface Message {
@@ -124,6 +125,8 @@ export default function CoachPage() {
     }
   }, [])
 
+  useEffect(() => { trackFeature('coach', 'open') }, [])
+
   useEffect(() => {
     const planId = getActivePlan()
     if (planId) {
@@ -175,6 +178,7 @@ export default function CoachPage() {
   const sendMessage = async (text?: string, checkInType?: string) => {
     const trimmed = (text || input).trim()
     if (!trimmed || isLoading) return
+    trackFeature('coach', 'use')
 
     const userMessage: Message = { role: 'user', content: trimmed, timestamp: Date.now() }
     setMessages(prev => [...prev, userMessage])

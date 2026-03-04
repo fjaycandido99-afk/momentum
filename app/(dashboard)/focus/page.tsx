@@ -13,6 +13,7 @@ import { PreviewPaywall, PreviewTimer, usePreview } from '@/components/premium/S
 import { useFeatureTooltip } from '@/components/premium/FeatureTooltip'
 import { FREEMIUM_LIMITS } from '@/lib/subscription-constants'
 import { logXPEventServer } from '@/lib/gamification'
+import { trackFeature } from '@/lib/analytics/track'
 import { haptic } from '@/lib/haptics'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
@@ -181,6 +182,7 @@ export default function FocusPage() {
       homeAudio.dispatch({ type: 'HIDE_SOUNDSCAPE_PLAYER' })
     }
 
+    trackFeature('focus_timer', 'complete')
     const result = await logXPEventServer('focusSession', `focus-${totalMinutes}min`)
     if (result) setXpEarned(25)
     setCompletedWorkMinutes(totalMinutes)
@@ -190,6 +192,7 @@ export default function FocusPage() {
 
   const handleStart = useCallback(() => {
     haptic('medium')
+    trackFeature('focus_timer', 'use')
     plannedDurationRef.current = durationMinutes
     workSecondsElapsedRef.current = 0
     setCompletedWorkMinutes(0)

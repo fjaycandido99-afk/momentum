@@ -29,6 +29,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    prisma.featureEvent.create({ data: { user_id: user.id, feature: 'letter_to_self', action: 'use' } }).catch(() => {})
+
     const { allowed } = rateLimit(`ai-letter-to-self:${user.id}`, { limit: 5, windowSeconds: 60 })
     if (!allowed) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })

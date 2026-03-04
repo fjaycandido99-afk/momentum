@@ -13,6 +13,7 @@ import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
 import { BottomPlayerBar } from './BottomPlayerBar'
 import { DailySpark } from './DailySpark'
 import { CoachGreetingBubble } from './CoachGreetingBubble'
+import { trackFeature } from '@/lib/analytics/track'
 import { SoundscapesSection } from './SoundscapesSection'
 import { GuidedSection } from './GuidedSection'
 import { XPBadge } from './XPBadge'
@@ -239,6 +240,7 @@ export function ImmersiveHome() {
   // --- Guide playback ---
   const handlePlayGuide = async (guideId: string, guideName: string) => {
     haptic('light')
+    trackFeature('guided', 'use')
     // Stop any existing guide audio
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
@@ -562,6 +564,7 @@ export function ImmersiveHome() {
   // --- Play handlers ---
   const handlePlayMotivation = (video: VideoItem, index: number, topic?: string) => {
     haptic('light')
+    trackFeature('motivation', 'use')
     const playTopic = topic || topicName
     const topicVideos = motivationByTopic[playTopic] || motivationVideos
     triggerTap(video.id)
@@ -596,6 +599,7 @@ export function ImmersiveHome() {
 
   const handlePlayMusic = (video: VideoItem, index: number, genreId: string, genreWord: string) => {
     haptic('light')
+    trackFeature('music', 'use')
     triggerTap(video.id)
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
@@ -798,6 +802,7 @@ export function ImmersiveHome() {
   // --- Section callbacks ---
   const handleSoundscapePlay = useCallback((item: typeof SOUNDSCAPE_ITEMS[number], isLocked: boolean) => {
     haptic('light')
+    trackFeature('soundscapes', 'use')
     if (isLocked) {
       // Show educational tooltip first (once per session), then proceed
       if (featureTooltipCtx?.showFeatureTooltip('all_content')) return

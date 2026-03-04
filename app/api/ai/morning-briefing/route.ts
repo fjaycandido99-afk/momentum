@@ -19,6 +19,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    prisma.featureEvent.create({ data: { user_id: user.id, feature: 'morning_briefing', action: 'use' } }).catch(() => {})
+
     const { allowed } = rateLimit(`ai-morning-briefing:${user.id}`, { limit: 10, windowSeconds: 60 })
     if (!allowed) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
