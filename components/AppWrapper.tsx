@@ -7,6 +7,8 @@ import { useServiceWorker } from '@/hooks/useServiceWorker'
 import { useDeepLink } from '@/hooks/useDeepLink'
 import { useNativePush } from '@/hooks/useNativePush'
 import { installAuthInterceptor } from '@/lib/auth-interceptor'
+import { createClient } from '@/lib/supabase/client'
+import { initRevenueCat } from '@/lib/revenuecat'
 
 interface AppContextType {
   isGuest: boolean
@@ -37,6 +39,18 @@ export function AppWrapper({ children }: AppWrapperProps) {
   const [showSplash, setShowSplash] = useState(true)
   const [hasSeenSplash, setHasSeenSplash] = useState(false)
   const [isGuest, setIsGuest] = useState(true)
+
+  // Initialize RevenueCat on native
+  useEffect(() => {
+    const isNative = !!(window as any).Capacitor
+    if (!isNative) return
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.id) {
+        initRevenueCat(session.user.id).catch(() => {})
+      }
+    })
+  }, [])
 
   // Auth pages should not show splash
   const isAuthPage = pathname?.startsWith('/login') ||

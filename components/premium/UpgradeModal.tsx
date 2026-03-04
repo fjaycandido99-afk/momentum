@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Check, Crown, Sparkles, Zap, Clock, Music, Book, Download, Loader2 } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { purchaseProduct, REVENUECAT_PRODUCTS } from '@/lib/revenuecat'
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -36,24 +37,37 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
   if (!isOpen) return null
 
+  const isNative = typeof window !== 'undefined' && !!(window as any).Capacitor
+
   const handleUpgrade = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/stripe/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceType: billingPeriod }),
-      })
-
-      const data = await response.json()
-
-      if (data.url) {
-        window.location.href = data.url
+      if (isNative) {
+        // Native: use RevenueCat / Apple StoreKit
+        const productId = billingPeriod === 'yearly'
+          ? REVENUECAT_PRODUCTS.premium_yearly
+          : REVENUECAT_PRODUCTS.premium_monthly
+        const success = await purchaseProduct(productId)
+        if (success) {
+          await refreshSubscription()
+          onClose()
+        }
       } else {
-        console.error('No checkout URL returned')
+        // Web: use Stripe checkout
+        const response = await fetch('/api/stripe/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ priceType: billingPeriod }),
+        })
+        const data = await response.json()
+        if (data.url) {
+          window.location.href = data.url
+        } else {
+          console.error('No checkout URL returned')
+        }
       }
     } catch (error) {
-      console.error('Failed to create checkout:', error)
+      console.error('Failed to purchase:', error)
     } finally {
       setIsLoading(false)
     }
