@@ -85,11 +85,12 @@ export async function sendFCMNotification(
       notification: {
         title: payload.title,
         body: payload.body,
+        imageUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://voxu.app'}/apple-touch-icon.png`,
       },
       android: {
         priority: 'high' as const,
         notification: {
-          icon: payload.icon || 'ic_notification',
+          icon: payload.icon || 'ic_launcher',
           sound: 'default',
           defaultSound: true,
           defaultVibrateTimings: true,

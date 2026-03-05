@@ -58,8 +58,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   morning_reminder: {
     title: 'Good Morning!',
     body: 'Start your day with your morning flow',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'morning-reminder',
     actions: [
       { action: 'open', title: 'Start Flow' },
@@ -69,8 +69,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   checkpoint: {
     title: 'Checkpoint Time',
     body: 'Take a moment to check in with yourself',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'checkpoint',
     actions: [
       { action: 'open', title: 'Check In' },
@@ -80,8 +80,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   evening_reminder: {
     title: 'Evening Wind Down',
     body: 'Time to close out your day and reflect',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'evening-reminder',
     actions: [
       { action: 'open', title: 'Day Close' },
@@ -91,8 +91,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   bedtime_reminder: {
     title: 'Time for Rest',
     body: 'Get 8 hours of sleep for a great tomorrow',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'bedtime-reminder',
     actions: [
       { action: 'dismiss', title: 'Got it' },
@@ -101,8 +101,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   streak_at_risk: {
     title: 'Keep Your Streak!',
     body: "Don't break your streak - complete today's flow",
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'streak-risk',
     actions: [
       { action: 'open', title: 'Continue' },
@@ -111,8 +111,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   weekly_review: {
     title: 'Weekly Review Ready',
     body: 'See how your week went and celebrate your wins',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'weekly-review',
     actions: [
       { action: 'open', title: 'View Review' },
@@ -121,8 +121,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   insight: {
     title: 'Weekly Insight',
     body: 'See how your habits are impacting your wellbeing',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'weekly-insight',
     actions: [
       { action: 'open', title: 'View Insight' },
@@ -131,8 +131,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   daily_quote: {
     title: 'Daily Quote',
     body: 'Your daily dose of inspiration',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'daily-quote',
     actions: [
       { action: 'open', title: 'Read More' },
@@ -141,8 +141,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   daily_affirmation: {
     title: 'Daily Affirmation',
     body: 'Your personalized affirmation is ready',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'daily-affirmation',
     actions: [
       { action: 'open', title: 'View' },
@@ -151,8 +151,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   motivational_nudge: {
     title: 'Midday Check-In',
     body: 'A quick moment of encouragement',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'motivational-nudge',
     actions: [
       { action: 'open', title: 'Open' },
@@ -161,8 +161,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   daily_motivation: {
     title: "Today's Motivation",
     body: 'Fresh motivation videos are ready for you',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'daily-motivation',
     actions: [
       { action: 'open', title: 'Watch Now' },
@@ -172,8 +172,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   featured_music: {
     title: 'Featured Music',
     body: 'Set the mood with today\'s featured genre',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'featured-music',
     actions: [
       { action: 'open', title: 'Listen' },
@@ -183,8 +183,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   coach_checkin: {
     title: 'Coach Check-In',
     body: 'Your coach has a midday message for you',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'coach-checkin',
     actions: [
       { action: 'open', title: 'Open Coach' },
@@ -194,8 +194,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   coach_accountability: {
     title: 'Evening Accountability',
     body: 'Time to review your goals and commitments',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
     tag: 'coach-accountability',
     actions: [
       { action: 'open', title: 'Review Goals' },
@@ -205,8 +205,8 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
   custom: {
     title: 'Voxu',
     body: 'You have a new notification',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
   },
 }
 
