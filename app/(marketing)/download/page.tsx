@@ -175,10 +175,10 @@ export default function DownloadPage() {
         }`}
       >
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
+          <a href="/download" className="flex items-center gap-2.5">
             <VoxuLogo size={32} />
             <span className="text-lg font-semibold">Voxu</span>
-          </Link>
+          </a>
           <a
             href={APP_STORE_URL}
             target="_blank"
