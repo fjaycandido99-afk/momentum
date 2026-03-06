@@ -151,6 +151,18 @@ function SettingsContent() {
         const response = await fetch('/api/daily-guide/preferences')
         if (response.ok) {
           const data = await response.json()
+
+          // For guests, merge localStorage prefs over server defaults
+          if (data.isGuest) {
+            try {
+              const saved = localStorage.getItem('voxu_guest_prefs')
+              if (saved) {
+                const local = JSON.parse(saved)
+                Object.assign(data, local)
+              }
+            } catch {}
+          }
+
           if (data.user_type) setUserType(data.user_type)
           if (data.work_days) setWorkDays(data.work_days)
           if (data.class_days) setClassDays(data.class_days)
@@ -221,7 +233,22 @@ function SettingsContent() {
         }),
       })
       const data = await response.json()
-      if (response.ok && !data.isGuest) {
+      if (response.ok && data.isGuest) {
+        // Guest: persist to localStorage
+        try {
+          localStorage.setItem('voxu_guest_prefs', JSON.stringify({
+            user_type: userType, work_days: workDays, class_days: classDays,
+            wake_time: wakeTime, work_start_time: workStartTime, work_end_time: workEndTime,
+            class_start_time: classStartTime, class_end_time: classEndTime,
+            study_start_time: studyStartTime, study_end_time: studyEndTime,
+            guide_tone: guideTone, enabled_segments: enabledSegments,
+            daily_reminder: dailyReminder, reminder_time: reminderTime,
+            bedtime_reminder_enabled: bedtimeReminderEnabled,
+          }))
+        } catch {}
+        setSaveStatus('saved')
+        setTimeout(() => setSaveStatus('idle'), 2000)
+      } else if (response.ok) {
         setSaveStatus('saved')
         setTimeout(() => setSaveStatus('idle'), 2000)
       } else {

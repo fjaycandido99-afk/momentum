@@ -578,6 +578,13 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       // Morning flow modules use inline playback (no overlay)
       const isMorningFlowModule = ['morning_prime', 'breath'].includes(moduleType)
 
+      // Guest tone preference from localStorage
+      let guestTone: string | undefined
+      try {
+        const guestPrefs = localStorage.getItem('voxu_guest_prefs')
+        if (guestPrefs) guestTone = JSON.parse(guestPrefs).guide_tone
+      } catch {}
+
       // For breath module, use the daily voices API (ElevenLabs generated once per day)
       if (moduleType === 'breath') {
         console.log('[DailyGuideHome] Fetching breath audio...')
@@ -585,7 +592,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           const response = await fetch('/api/daily-guide/voices', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'breathing', textOnly: !!isTextOnly }),
+            body: JSON.stringify({ type: 'breathing', textOnly: !!isTextOnly, ...(guestTone && { tone: guestTone }) }),
           })
 
           if (response.ok) {
@@ -616,7 +623,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           const response = await fetch('/api/daily-guide/voices', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: `${currentDayTypeVoice}_prime`, textOnly: !!isTextOnly }),
+            body: JSON.stringify({ type: `${currentDayTypeVoice}_prime`, textOnly: !!isTextOnly, ...(guestTone && { tone: guestTone }) }),
           })
 
           if (response.ok) {
@@ -647,7 +654,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           const response = await fetch('/api/daily-guide/voices', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: `${currentDayTypeVoice}_close`, textOnly: !!isTextOnly }),
+            body: JSON.stringify({ type: `${currentDayTypeVoice}_close`, textOnly: !!isTextOnly, ...(guestTone && { tone: guestTone }) }),
           })
 
           if (response.ok) {

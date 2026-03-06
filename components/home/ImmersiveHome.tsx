@@ -269,10 +269,17 @@ export function ImmersiveHome() {
       const typeMap: Record<string, string> = { anxiety: 'grounding' }
       const mappedType = typeMap[guideId] || guideId
 
+      // Pass guest tone preference from localStorage
+      let guestTone: string | undefined
+      try {
+        const guestPrefs = localStorage.getItem('voxu_guest_prefs')
+        if (guestPrefs) guestTone = JSON.parse(guestPrefs).guide_tone
+      } catch {}
+
       const response = await fetch('/api/daily-guide/voices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: mappedType }),
+        body: JSON.stringify({ type: mappedType, ...(guestTone && { tone: guestTone }) }),
       })
       const data = await response.json()
 

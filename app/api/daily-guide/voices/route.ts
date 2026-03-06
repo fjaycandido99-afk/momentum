@@ -193,7 +193,8 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     const userId = user?.id || 'demo-user'
-    const tone = user ? await getUserTone(userId) : 'calm'
+    const requestTone = searchParams.get('tone')
+    const tone = user ? await getUserTone(userId) : (requestTone || 'calm')
 
     // Get today's date at midnight
     const today = new Date()
@@ -301,13 +302,13 @@ export async function GET(request: NextRequest) {
 // POST - Generate a specific voice type (library-first, no on-demand ElevenLabs)
 export async function POST(request: NextRequest) {
   try {
-    const { type, textOnly } = await request.json()
+    const { type, textOnly, tone: requestTone } = await request.json()
 
     // Get authenticated user
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     const userId = user?.id || 'demo-user'
-    const tone = user ? await getUserTone(userId) : 'calm'
+    const tone = user ? await getUserTone(userId) : (requestTone || 'calm')
 
     const isRegularVoice = VALID_VOICE_TYPES.includes(type)
     const isDayTypeVoice = VALID_DAY_TYPE_VOICES.includes(type)
