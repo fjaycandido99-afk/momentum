@@ -190,7 +190,8 @@ function SettingsContent() {
       }
     }
     loadPreferences()
-  }, [supabase.auth])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Load persisted locale on mount
   useEffect(() => {
