@@ -1,11 +1,11 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="512" height="512" rx="100" fill="#0a0a0f"/>
   <!-- Outer ring - solid, bold -->
-  <circle cx="256" cy="256" r="186" stroke="rgba(255,255,255,0.55)" stroke-width="8" fill="none"/>
+  <circle cx="256" cy="256" r="186" stroke="rgba(255,255,255,0.9)" stroke-width="9" fill="none"/>
   <!-- Middle ring -->
-  <circle cx="256" cy="256" r="133" stroke="rgba(255,255,255,0.75)" stroke-width="9" fill="none"/>
+  <circle cx="256" cy="256" r="133" stroke="rgba(255,255,255,0.92)" stroke-width="10" fill="none"/>
   <!-- Inner ring -->
-  <circle cx="256" cy="256" r="80" stroke="rgba(255,255,255,0.9)" stroke-width="10" fill="none"/>
+  <circle cx="256" cy="256" r="80" stroke="rgba(255,255,255,0.95)" stroke-width="11" fill="none"/>
   <!-- Center dot with glow -->
   <circle cx="256" cy="256" r="36" fill="rgba(255,255,255,0.15)"/>
   <circle cx="256" cy="256" r="26" fill="white"/>
