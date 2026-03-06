@@ -66,6 +66,10 @@ export default function FocusPage() {
       if (homeAudio.audioState.soundscapeIsPlaying) {
         homeAudio.dispatch({ type: 'PAUSE_SOUNDSCAPE' })
       }
+      // Pause music
+      if (homeAudio.audioState.musicPlaying) {
+        homeAudio.dispatch({ type: 'PAUSE_MUSIC' })
+      }
     }
     setShowPaywall(true)
   }, [homeAudio])

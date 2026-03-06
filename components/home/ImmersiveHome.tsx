@@ -175,6 +175,7 @@ export function ImmersiveHome() {
 
   // Preview timer hook
   const handlePreviewEnd = useCallback(() => {
+    // Stop all audio
     if (bgPlayerRef.current && bgPlayerReadyRef.current) {
       try { bgPlayerRef.current.pauseVideo() } catch {}
     }
@@ -184,8 +185,10 @@ export function ImmersiveHome() {
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
     }
+    // Update state so player UI reflects paused state
+    dispatch({ type: 'PAUSE_MUSIC' })
     setShowPaywall(true)
-  }, [])
+  }, [dispatch])
 
   const { isPreviewActive, secondsLeft, startPreview, stopPreview } = usePreview({
     onPreviewEnd: handlePreviewEnd,
@@ -1271,7 +1274,15 @@ export function ImmersiveHome() {
       {/* Preview Paywall Modal */}
       <PreviewPaywall
         isOpen={showPaywall}
-        onClose={() => { setShowPaywall(false); stopPreview() }}
+        onClose={() => {
+          setShowPaywall(false)
+          stopPreview()
+          // Stop playback and close player — preview ended without unlock
+          if (bgPlayerRef.current && bgPlayerReadyRef.current) {
+            try { bgPlayerRef.current.stopVideo() } catch {}
+          }
+          dispatch({ type: 'CLOSE_PLAYER' })
+        }}
         contentName={paywallContentName}
         showDailyUnlock={!dailyFreeUnlockUsed}
         onUseDailyUnlock={() => {
