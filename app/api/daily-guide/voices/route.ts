@@ -58,6 +58,22 @@ function getLibraryCacheKey(type: string, index: number, tone: string): string {
   return `library-${type}-s${index}-${tone}`
 }
 
+// Try user's tone first, then fall back to neutral (most seeded)
+async function findCachedAudio(type: string, index: number, tone: string) {
+  const primaryKey = getLibraryCacheKey(type, index, tone)
+  const hit = await getSharedCached(primaryKey)
+  if (hit) return { ...hit, cacheKey: primaryKey, fallback: false }
+
+  // If tone isn't neutral, try neutral as fallback
+  if (tone !== 'neutral') {
+    const fallbackKey = getLibraryCacheKey(type, index, 'neutral')
+    const fallbackHit = await getSharedCached(fallbackKey)
+    if (fallbackHit) return { ...fallbackHit, cacheKey: fallbackKey, fallback: true }
+  }
+
+  return null
+}
+
 // Fetch yesterday's journal entries for personalization
 async function getYesterdayContext(userId: string): Promise<string | null> {
   try {
@@ -221,20 +237,20 @@ export async function GET(request: NextRequest) {
         })
       }
 
-      // 2. Look up from pre-recorded library
+      // 2. Look up from pre-recorded library (try user's tone, then neutral fallback)
       const { script, index } = getFallbackScript(type)
-      const libraryCacheKey = getLibraryCacheKey(type, index, tone)
-      const libraryHit = await getSharedCached(libraryCacheKey)
+      const libraryHit = await findCachedAudio(type, index, tone)
 
       let audioBase64: string | null = null
       let duration = 0
 
       if (libraryHit) {
-        console.log(`[Voice Library HIT] ${libraryCacheKey}`)
+        console.log(`[Voice Library HIT] ${libraryHit.cacheKey}${libraryHit.fallback ? ' (fallback)' : ''}`)
         audioBase64 = libraryHit.audioBase64
         duration = libraryHit.duration
       } else {
         // Library miss — generate on-demand with ElevenLabs and cache
+        const libraryCacheKey = getLibraryCacheKey(type, index, tone)
         console.log(`[Voice Library MISS] ${libraryCacheKey} — generating on-demand (GET)`)
         const generated = await generateAudio(script, tone)
         if (generated.audioBase64) {
@@ -262,7 +278,7 @@ export async function GET(request: NextRequest) {
         audioBase64, // null if library miss — text-only fallback
         duration,
         cached: !!libraryHit,
-        libraryKey: libraryCacheKey,
+        libraryKey: libraryHit?.cacheKey || getLibraryCacheKey(type, index, tone),
       })
     }
 
@@ -373,19 +389,19 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 4. Look up audio from pre-recorded library (keyed to base script index)
-    const libraryCacheKey = getLibraryCacheKey(type, index, tone)
-    const libraryHit = await getSharedCached(libraryCacheKey)
+    // 4. Look up audio from pre-recorded library (try user's tone, then neutral fallback)
+    const libraryHit = await findCachedAudio(type, index, tone)
 
     let audioBase64: string | null = null
     let duration = 0
 
     if (libraryHit) {
-      console.log(`[Voice Library HIT] ${libraryCacheKey}`)
+      console.log(`[Voice Library HIT] ${libraryHit.cacheKey}${libraryHit.fallback ? ' (fallback)' : ''}`)
       audioBase64 = libraryHit.audioBase64
       duration = libraryHit.duration
     } else {
       // Library miss — generate on-demand with ElevenLabs and cache
+      const libraryCacheKey = getLibraryCacheKey(type, index, tone)
       console.log(`[Voice Library MISS] ${libraryCacheKey} — generating on-demand`)
       const generated = await generateAudio(displayScript, tone)
       if (generated.audioBase64) {
@@ -421,7 +437,7 @@ export async function POST(request: NextRequest) {
       duration,
       cached: !!libraryHit,
       personalized: !!personalizedText,
-      libraryKey: libraryCacheKey,
+      libraryKey: libraryHit?.cacheKey || getLibraryCacheKey(type, index, tone),
     })
   } catch (error) {
     console.error('Daily voices POST error:', error)
