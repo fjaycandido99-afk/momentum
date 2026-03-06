@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { VOICE_SCRIPTS, DAY_TYPE_VOICE_SCRIPTS } from '@/lib/daily-guide/voice-scripts'
-import { getSharedCached } from '@/lib/daily-guide/audio-utils'
+import { getSharedCached, setSharedCache, generateAudio } from '@/lib/daily-guide/audio-utils'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -233,6 +233,15 @@ export async function GET(request: NextRequest) {
         console.log(`[Voice Library HIT] ${libraryCacheKey}`)
         audioBase64 = libraryHit.audioBase64
         duration = libraryHit.duration
+      } else {
+        // Library miss — generate on-demand with ElevenLabs and cache
+        console.log(`[Voice Library MISS] ${libraryCacheKey} — generating on-demand (GET)`)
+        const generated = await generateAudio(script, tone)
+        if (generated.audioBase64) {
+          audioBase64 = generated.audioBase64
+          duration = generated.duration
+          await setSharedCache(libraryCacheKey, audioBase64, duration)
+        }
       }
 
       // Save to user's daily guide DB record if we have audio
@@ -376,8 +385,15 @@ export async function POST(request: NextRequest) {
       audioBase64 = libraryHit.audioBase64
       duration = libraryHit.duration
     } else {
-      // Library miss — serve text-only, NO on-demand ElevenLabs call
-      console.log(`[Voice Library MISS] ${libraryCacheKey} — serving text-only`)
+      // Library miss — generate on-demand with ElevenLabs and cache
+      console.log(`[Voice Library MISS] ${libraryCacheKey} — generating on-demand`)
+      const generated = await generateAudio(displayScript, tone)
+      if (generated.audioBase64) {
+        audioBase64 = generated.audioBase64
+        duration = generated.duration
+        // Cache for future requests
+        await setSharedCache(libraryCacheKey, audioBase64, duration)
+      }
     }
 
     // Save to user's daily guide DB record

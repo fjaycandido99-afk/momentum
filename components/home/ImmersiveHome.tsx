@@ -331,6 +331,23 @@ export function ImmersiveHome() {
           dispatch({ type: 'GUIDE_ERROR' })
           if (blobUrl) URL.revokeObjectURL(blobUrl)
         }
+      } else if (data.script && 'speechSynthesis' in window) {
+        // Fallback: browser TTS when no audio from server
+        dispatch({ type: 'GUIDE_PLAY_STARTED' })
+        const utterance = new SpeechSynthesisUtterance(data.script)
+        utterance.rate = 0.85
+        utterance.pitch = 1.0
+        utterance.onend = () => dispatch({ type: 'GUIDE_ENDED' })
+        utterance.onerror = () => dispatch({ type: 'GUIDE_ERROR' })
+        speechSynthesis.speak(utterance)
+        // Store a stub so pause/resume works
+        guideAudioRef.current = {
+          pause: () => speechSynthesis.pause(),
+          play: () => { speechSynthesis.resume(); return Promise.resolve() },
+          src: '',
+        } as any
+      } else {
+        dispatch({ type: 'GUIDE_ERROR' })
       }
     } catch (err) {
       console.error('Guide fetch error:', err)
