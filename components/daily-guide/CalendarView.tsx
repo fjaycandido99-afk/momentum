@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { ChevronLeft, ChevronRight, Loader2, Check, Circle, Flame, X, BookOpen, Heart, Target } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, Check, Circle, Flame, X, BookOpen, Heart, Target, Lightbulb, PenTool, Moon, MessageCircle } from 'lucide-react'
 
 interface DayData {
   date: Date
@@ -13,6 +13,11 @@ interface DayData {
   journal_win?: string | null
   journal_gratitude?: string | null
   journal_intention?: string | null
+  journal_learned?: string | null
+  journal_freetext?: string | null
+  journal_dream?: string | null
+  journal_conversation?: string | null
+  journal_mood?: string | null
 }
 
 interface CalendarViewProps {
@@ -25,6 +30,10 @@ const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ]
+
+function hasJournalEntry(day: DayData): boolean {
+  return !!(day.journal_win || day.journal_gratitude || day.journal_intention || day.journal_learned || day.journal_freetext || day.journal_dream || day.journal_conversation)
+}
 
 function getCompletionLevel(day: DayData): number {
   let count = 0
@@ -95,6 +104,11 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
               journal_win: entry.journal_win,
               journal_gratitude: entry.journal_gratitude,
               journal_intention: entry.journal_intention,
+              journal_learned: entry.journal_learned,
+              journal_freetext: entry.journal_freetext,
+              journal_dream: entry.journal_dream,
+              journal_conversation: entry.journal_conversation,
+              journal_mood: entry.journal_mood,
             }
           })
 
@@ -151,7 +165,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
     const isFuture = date > today
     const isSelected = selectedDate && date.getTime() === selectedDate.getTime()
     const completionLevel = dayData ? getCompletionLevel(dayData) : 0
-    const hasJournal = !!dayData?.journal_win
+    const hasJournal = dayData ? hasJournalEntry(dayData) : false
 
     return (
       <button
@@ -205,7 +219,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
       const level = getCompletionLevel(d)
       return level > 0 && level < 4
     }).length,
-    journalDays: Object.values(monthData).filter(d => d.journal_win).length,
+    journalDays: Object.values(monthData).filter(d => hasJournalEntry(d)).length,
   }
 
   return (
@@ -361,8 +375,8 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
 
             {/* Journal Content */}
             <div className="p-4">
-              {(selectedDayData.journal_win || selectedDayData.journal_gratitude || selectedDayData.journal_intention) ? (
-                <div className="space-y-3">
+              {hasJournalEntry(selectedDayData) ? (
+                <div className="space-y-3 max-h-[50vh] overflow-y-auto">
                   {selectedDayData.journal_win && (
                     <div>
                       <div className="flex items-center gap-2 text-blue-400 mb-1.5">
@@ -393,6 +407,52 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                       </div>
                       <p className="text-white/70 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
                         {selectedDayData.journal_intention}
+                      </p>
+                    </div>
+                  )}
+                  {selectedDayData.journal_learned && (
+                    <div>
+                      <div className="flex items-center gap-2 text-cyan-400 mb-1.5">
+                        <Lightbulb className="w-4 h-4" />
+                        <span className="text-sm font-medium">Insight</span>
+                      </div>
+                      <p className="text-white/70 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
+                        {selectedDayData.journal_learned}
+                      </p>
+                    </div>
+                  )}
+                  {selectedDayData.journal_freetext && (
+                    <div>
+                      <div className="flex items-center gap-2 text-white/80 mb-1.5">
+                        <PenTool className="w-4 h-4" />
+                        <span className="text-sm font-medium">Free write</span>
+                      </div>
+                      <p className="text-white/70 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
+                        {selectedDayData.journal_freetext}
+                      </p>
+                    </div>
+                  )}
+                  {selectedDayData.journal_dream && (
+                    <div>
+                      <div className="flex items-center gap-2 text-indigo-400 mb-1.5">
+                        <Moon className="w-4 h-4" />
+                        <span className="text-sm font-medium">Dream journal</span>
+                      </div>
+                      <p className="text-white/70 text-sm leading-relaxed bg-white/5 rounded-xl p-4">
+                        {selectedDayData.journal_dream}
+                      </p>
+                    </div>
+                  )}
+                  {selectedDayData.journal_conversation && (
+                    <div>
+                      <div className="flex items-center gap-2 text-green-400 mb-1.5">
+                        <MessageCircle className="w-4 h-4" />
+                        <span className="text-sm font-medium">Conversation</span>
+                      </div>
+                      <p className="text-white/70 text-sm leading-relaxed bg-white/5 rounded-xl p-4 line-clamp-6">
+                        {typeof selectedDayData.journal_conversation === 'string'
+                          ? selectedDayData.journal_conversation
+                          : 'Conversation recorded'}
                       </p>
                     </div>
                   )}
