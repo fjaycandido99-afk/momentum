@@ -47,6 +47,14 @@ export async function initRevenueCat(userId: string): Promise<void> {
       apiKey,
       appUserID: userId,
     })
+
+    // Ensure the subscription record has the revenuecat_user_id set
+    // so webhooks can find and update it
+    await fetch('/api/subscription/link-revenuecat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ revenuecatUserId: userId }),
+    }).catch(() => {}) // Non-critical, don't block app startup
   } catch (error) {
     console.error('Failed to initialize RevenueCat:', error)
   }
@@ -77,8 +85,20 @@ export async function hasPremiumAccess(): Promise<boolean> {
 export async function purchaseProduct(productId: string): Promise<boolean> {
   try {
     const { Purchases } = await import('@revenuecat/purchases-capacitor')
+
+    // Must fetch the full product object from the store first
+    const { products } = await Purchases.getProducts({
+      productIdentifiers: [productId],
+    })
+
+    const product = products.find((p: any) => p.identifier === productId)
+    if (!product) {
+      console.error(`Product ${productId} not found in store`)
+      throw new Error(`Product ${productId} not found. Make sure it's configured in App Store Connect and RevenueCat.`)
+    }
+
     const { customerInfo } = await Purchases.purchaseStoreProduct({
-      product: { identifier: productId } as any,
+      product,
     })
 
     // Check if premium is now active

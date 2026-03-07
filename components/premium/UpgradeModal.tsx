@@ -22,6 +22,7 @@ const PREMIUM_BENEFITS = [
 export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { refreshSubscription } = useSubscription()
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
   const handleUpgrade = async () => {
     setIsLoading(true)
+    setError(null)
     try {
       if (isNative) {
         // Native: use RevenueCat / Apple StoreKit
@@ -66,8 +68,9 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
           console.error('No checkout URL returned')
         }
       }
-    } catch (error) {
-      console.error('Failed to purchase:', error)
+    } catch (err: any) {
+      console.error('Failed to purchase:', err)
+      setError(err?.message || 'Purchase failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -194,6 +197,11 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               </>
             )}
           </button>
+          {error && (
+            <p className="text-center text-red-400 text-xs mt-3">
+              {error}
+            </p>
+          )}
           <p className="text-center text-white/50 text-xs mt-3">
             Cancel anytime. No commitment required.
           </p>
