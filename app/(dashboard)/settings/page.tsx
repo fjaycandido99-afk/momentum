@@ -644,93 +644,7 @@ function SettingsContent() {
           </div>
         </SettingsCategory>
 
-        {/* ═══════════════ 3. Reminders ═══════════════ */}
-        <SettingsCategory
-          id="reminders"
-          icon={Bell}
-          title="Reminders"
-          description="Daily & bedtime reminders"
-        >
-          {/* Daily Reminder */}
-          <div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-white text-sm">Daily Reminder</p>
-                <p className="text-white/75 text-xs">Get notified each morning</p>
-              </div>
-              <button
-                onClick={() => setDailyReminder(!dailyReminder)}
-                role="switch"
-                aria-checked={dailyReminder}
-                aria-label="Daily reminder"
-                className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                  dailyReminder ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                    dailyReminder ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-            {dailyReminder && (
-              <div className="mt-3 h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-                <input
-                  type="time"
-                  value={reminderTime}
-                  onChange={(e) => setReminderTime(e.target.value)}
-                  aria-label="Reminder time"
-                  className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                  style={{ colorScheme: 'dark' }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Bedtime Reminder */}
-          <div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-white text-sm">Bedtime Reminder</p>
-                <p className="text-white/75 text-xs">8 hours before wake time</p>
-              </div>
-              <button
-                onClick={() => setBedtimeReminderEnabled(!bedtimeReminderEnabled)}
-                role="switch"
-                aria-checked={bedtimeReminderEnabled}
-                aria-label="Bedtime reminder"
-                className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                  bedtimeReminderEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                    bedtimeReminderEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-            {bedtimeReminderEnabled && wakeTime && (
-              <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/15">
-                <p className="text-sm text-white/70">
-                  You&apos;ll be reminded at{' '}
-                  <span className="text-white font-medium">
-                    {(() => {
-                      const [h, m] = wakeTime.split(':').map(Number)
-                      let bedH = h - 8
-                      if (bedH < 0) bedH += 24
-                      const period = bedH >= 12 ? 'PM' : 'AM'
-                      const display = bedH % 12 || 12
-                      return `${display}:${(m || 0).toString().padStart(2, '0')} ${period}`
-                    })()}
-                  </span>
-                  {' '}to get 8 hours of sleep
-                </p>
-              </div>
-            )}
-          </div>
-        </SettingsCategory>
+        {/* Reminders section removed — merged into Notifications below */}
 
         {/* ═══════════════ 4. Your Mindset ═══════════════ */}
         <SettingsCategory
@@ -833,6 +747,89 @@ function SettingsContent() {
           title="Notifications"
           description="Push notifications & reminders"
         >
+          {/* Reminder time & bedtime */}
+          <div className="space-y-4 mb-2">
+            <div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-white text-sm">Morning Reminder</p>
+                  <p className="text-white/75 text-xs">Get notified each morning</p>
+                </div>
+                <button
+                  onClick={() => setDailyReminder(!dailyReminder)}
+                  role="switch"
+                  aria-checked={dailyReminder}
+                  aria-label="Daily reminder"
+                  className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                    dailyReminder ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                      dailyReminder ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+              {dailyReminder && (
+                <div className="mt-3 h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
+                  <input
+                    type="time"
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                    aria-label="Reminder time"
+                    className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-white text-sm">Bedtime Reminder</p>
+                  <p className="text-white/75 text-xs">8 hours before wake time</p>
+                </div>
+                <button
+                  onClick={() => setBedtimeReminderEnabled(!bedtimeReminderEnabled)}
+                  role="switch"
+                  aria-checked={bedtimeReminderEnabled}
+                  aria-label="Bedtime reminder"
+                  className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                    bedtimeReminderEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                      bedtimeReminderEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+              {bedtimeReminderEnabled && wakeTime && (
+                <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/15">
+                  <p className="text-sm text-white/70">
+                    You&apos;ll be reminded at{' '}
+                    <span className="text-white font-medium">
+                      {(() => {
+                        const [h, m] = wakeTime.split(':').map(Number)
+                        let bedH = h - 8
+                        if (bedH < 0) bedH += 24
+                        const period = bedH >= 12 ? 'PM' : 'AM'
+                        const display = bedH % 12 || 12
+                        return `${display}:${(m || 0).toString().padStart(2, '0')} ${period}`
+                      })()}
+                    </span>
+                    {' '}to get 8 hours of sleep
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-white/5 pt-2" />
+          </div>
+
           <NotificationSettings />
         </SettingsCategory>
 
