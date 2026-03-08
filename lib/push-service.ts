@@ -15,6 +15,7 @@ import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 import { getDailyAffirmation } from '@/lib/mindset/affirmations'
 import { getCoachName } from '@/lib/mindset/configs'
 import { isPremiumUser } from './subscription-check'
+import { isLocalHour } from './timezone-utils'
 
 // Notification types that can be sent
 export type NotificationType =
@@ -29,7 +30,7 @@ export type NotificationType =
   | 'daily_affirmation'
   | 'motivational_nudge'
   | 'daily_motivation'
-  | 'featured_music'
+
   | 'coach_checkin'
   | 'coach_accountability'
   | 'custom'
@@ -169,18 +170,7 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'dismiss', title: 'Later' },
     ],
   },
-  featured_music: {
-    title: 'Featured Music',
-    body: 'Set the mood with today\'s featured genre',
-    icon: '/icon-192.svg',
-    badge: '/apple-touch-icon.png',
-    tag: 'featured-music',
-    actions: [
-      { action: 'open', title: 'Listen' },
-      { action: 'dismiss', title: 'Later' },
-    ],
-  },
-  coach_checkin: {
+coach_checkin: {
     title: 'Coach Check-In',
     body: 'Your coach has a midday message for you',
     icon: '/icon-192.svg',
@@ -259,8 +249,7 @@ export async function sendPushToUser(
     daily_affirmation: 'daily_affirmation_alerts',
     motivational_nudge: 'motivational_nudge_alerts',
     daily_motivation: 'daily_motivation_alerts',
-    featured_music: 'featured_music_alerts',
-    coach_checkin: 'coach_checkin_alerts',
+coach_checkin: 'coach_checkin_alerts',
     coach_accountability: 'coach_accountability_alerts',
     custom: 'morning_reminder', // Custom always sends
   }
@@ -387,6 +376,26 @@ export async function sendPushToUser(
     sent,
     failed,
   }
+}
+
+/**
+ * Filter user IDs to only those whose local time matches the target hour.
+ * Uses timezone from UserPreferences. Falls back to UTC if not set.
+ */
+async function filterUsersByLocalHour(userIds: string[], targetHour: number): Promise<string[]> {
+  if (userIds.length === 0) return []
+
+  const prefs = await prisma.userPreferences.findMany({
+    where: { user_id: { in: userIds } },
+    select: { user_id: true, timezone: true },
+  })
+
+  const tzMap = new Map(prefs.map(p => [p.user_id, p.timezone]))
+
+  return userIds.filter(uid => {
+    const tz = tzMap.get(uid) || null
+    return isLocalHour(tz, targetHour)
+  })
 }
 
 /**
@@ -589,10 +598,16 @@ export async function sendStreakAtRiskReminders(): Promise<void> {
     },
   })
 
+  // Filter to users whose local time is 8 PM
+  const allUserIds = atRiskUsers.map(u => u.user_id)
+  const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 20)
+  const eligibleSet = new Set(eligibleUserIds)
+
   let totalSent = 0
   let totalFailed = 0
 
   for (const user of atRiskUsers) {
+    if (!eligibleSet.has(user.user_id)) continue
     const body = `You're on a ${user.current_streak}-day streak! Don't break it.`
     const result = await sendPushToUser(user.user_id, 'streak_at_risk', { body })
     totalSent += result.sent
@@ -612,6 +627,11 @@ export async function sendWeeklyReviewReminders(): Promise<void> {
     distinct: ['user_id'],
   })
 
+  // Filter to users whose local time is 10 AM (Sunday morning review)
+  const allUserIds = subscriptions.map(s => s.user_id)
+  const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 10)
+  const eligibleSet = new Set(eligibleUserIds)
+
   const weekAgo = new Date()
   weekAgo.setDate(weekAgo.getDate() - 7)
   weekAgo.setHours(0, 0, 0, 0)
@@ -620,6 +640,7 @@ export async function sendWeeklyReviewReminders(): Promise<void> {
   let totalFailed = 0
 
   for (const { user_id } of subscriptions) {
+    if (!eligibleSet.has(user_id)) continue
     let body = 'See how your week went and celebrate your wins'
     try {
       const weekGuides = await prisma.dailyGuide.findMany({
@@ -658,6 +679,11 @@ export async function sendWeeklyInsights(): Promise<void> {
     distinct: ['user_id'],
   })
 
+  // Filter to users whose local time is 12 PM (midday Wednesday insight)
+  const allUserIds = subscriptions.map(s => s.user_id)
+  const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 12)
+  const eligibleSet = new Set(eligibleUserIds)
+
   const twoWeeksAgo = new Date()
   twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
   twoWeeksAgo.setHours(0, 0, 0, 0)
@@ -668,6 +694,7 @@ export async function sendWeeklyInsights(): Promise<void> {
   const moodOrder: Record<string, number> = { low: 1, medium: 2, high: 3 }
 
   for (const { user_id } of subscriptions) {
+    if (!eligibleSet.has(user_id)) continue
     let body = 'See how your habits are impacting your wellbeing'
     try {
       const guides = await prisma.dailyGuide.findMany({
@@ -746,16 +773,20 @@ export async function sendDailyQuotes(): Promise<void> {
     distinct: ['user_id'],
   })
 
+  // Filter to users whose local time is 8 AM
+  const allUserIds = subscriptions.map(s => s.user_id)
+  const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 8)
+
   let totalSent = 0
   let totalFailed = 0
 
-  for (const { user_id } of subscriptions) {
+  for (const user_id of eligibleUserIds) {
     const result = await sendPushToUser(user_id, 'daily_quote', { body })
     totalSent += result.sent
     totalFailed += result.failed
   }
 
-  console.log(`Daily quotes: ${totalSent} sent, ${totalFailed} failed`)
+  console.log(`Daily quotes: ${totalSent} sent, ${totalFailed} failed (${allUserIds.length} total, ${eligibleUserIds.length} in 8AM window)`)
 }
 
 /**
@@ -769,6 +800,10 @@ export async function sendDailyAffirmations(): Promise<void> {
     distinct: ['user_id'],
   })
 
+  // Filter to users whose local time is 7 AM
+  const allUserIds = subscriptions.map(s => s.user_id)
+  const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 7)
+
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -777,7 +812,7 @@ export async function sendDailyAffirmations(): Promise<void> {
 
   const todayStr = today.toISOString().split('T')[0]
 
-  for (const { user_id } of subscriptions) {
+  for (const user_id of eligibleUserIds) {
     try {
       // Check for cached affirmation
       const guide = await prisma.dailyGuide.findUnique({
@@ -842,7 +877,7 @@ export async function sendDailyAffirmations(): Promise<void> {
     }
   }
 
-  console.log(`Daily affirmations: ${totalSent} sent, ${totalFailed} failed`)
+  console.log(`Daily affirmations: ${totalSent} sent, ${totalFailed} failed (${eligibleUserIds.length}/${allUserIds.length} in 7AM window)`)
 }
 
 /**
@@ -856,13 +891,17 @@ export async function sendMotivationalNudges(): Promise<void> {
     distinct: ['user_id'],
   })
 
+  // Filter to users whose local time is 2 PM
+  const allUserIds = subscriptions.map(s => s.user_id)
+  const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 14)
+
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
   let totalSent = 0
   let totalFailed = 0
 
-  for (const { user_id } of subscriptions) {
+  for (const user_id of eligibleUserIds) {
     let body = "A 2-minute check-in can shift your whole day. Ready?"
 
     try {
@@ -907,16 +946,6 @@ const MOTIVATION_TAGLINES: Record<string, string> = {
   Confidence: 'Believe in yourself',
 }
 
-// Music genres for featured music notifications
-const MUSIC_GENRE_NOTIFS = [
-  { id: 'lofi', word: 'Lo-Fi', tagline: 'Chill beats to help you focus' },
-  { id: 'classical', word: 'Classical', tagline: 'Timeless compositions for deep work' },
-  { id: 'piano', word: 'Piano', tagline: 'Peaceful keys for a calm mind' },
-  { id: 'jazz', word: 'Jazz', tagline: 'Smooth vibes for your evening' },
-  { id: 'study', word: 'Study', tagline: 'Focus music to power through tasks' },
-  { id: 'ambient', word: 'Ambient', tagline: 'Atmospheric sounds for deep relaxation' },
-]
-
 /**
  * Send daily motivation topic notifications
  * Features today's rotating topic with personalized context
@@ -934,10 +963,14 @@ export async function sendDailyMotivation(): Promise<void> {
     distinct: ['user_id'],
   })
 
+  // Filter to users whose local time is 9 AM
+  const allUserIds = subscriptions.map(s => s.user_id)
+  const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 9)
+
   let totalSent = 0
   let totalFailed = 0
 
-  for (const { user_id } of subscriptions) {
+  for (const user_id of eligibleUserIds) {
     let body = `Today's theme: ${todayTopic}. ${tagline}. New videos waiting for you.`
 
     try {
@@ -967,62 +1000,6 @@ export async function sendDailyMotivation(): Promise<void> {
 }
 
 /**
- * Send featured music genre notifications
- * Rotates through genres, personalized by user's preferred genre
- */
-export async function sendFeaturedMusic(): Promise<void> {
-  const now = new Date()
-  const startOfYear = new Date(now.getFullYear(), 0, 0)
-  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24))
-  const todayGenre = MUSIC_GENRE_NOTIFS[dayOfYear % MUSIC_GENRE_NOTIFS.length]
-
-  const subscriptions = await prisma.pushSubscription.findMany({
-    where: { featured_music_alerts: true },
-    select: { user_id: true },
-    distinct: ['user_id'],
-  })
-
-  let totalSent = 0
-  let totalFailed = 0
-
-  for (const { user_id } of subscriptions) {
-    let title = `${todayGenre.word} Music`
-    let body = todayGenre.tagline
-
-    try {
-      // Check user's preferred genre for personalization
-      const prefs = await prisma.userPreferences.findUnique({
-        where: { user_id },
-        select: { preferred_music_genre: true },
-      })
-
-      if (prefs?.preferred_music_genre) {
-        const preferred = MUSIC_GENRE_NOTIFS.find(g => g.id === prefs.preferred_music_genre)
-        if (preferred && preferred.id === todayGenre.id) {
-          // Their favorite genre is featured today
-          body = `Your favorite — ${preferred.tagline.toLowerCase()}. Tap to listen.`
-        } else if (preferred) {
-          // Suggest today's genre as a change
-          body = `Try something different today. ${todayGenre.tagline}.`
-        }
-      }
-    } catch {
-      // Fall back to default
-    }
-
-    const result = await sendPushToUser(user_id, 'featured_music', {
-      title,
-      body,
-      data: { type: 'featured_music', url: '/' },
-    })
-    totalSent += result.sent
-    totalFailed += result.failed
-  }
-
-  console.log(`Featured music: ${totalSent} sent, ${totalFailed} failed`)
-}
-
-/**
  * Send evening reminder notifications with mindset-specific journal prompts
  * Uses the evening_reminder preference (no new schema needed)
  */
@@ -1032,6 +1009,11 @@ export async function sendEveningReminders(): Promise<void> {
     select: { user_id: true },
     distinct: ['user_id'],
   })
+
+  // Filter to users whose local time is 9 PM
+  const allUserIds = subscriptions.map(s => s.user_id)
+  const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 21)
+  const eligibleSet = new Set(eligibleUserIds)
 
   const now = new Date()
   const startOfYear = new Date(now.getFullYear(), 0, 0)
@@ -1043,6 +1025,7 @@ export async function sendEveningReminders(): Promise<void> {
   let totalFailed = 0
 
   for (const { user_id } of subscriptions) {
+    if (!eligibleSet.has(user_id)) continue
     let body = 'Time to close out your day and reflect'
 
     try {
@@ -1083,6 +1066,11 @@ export async function sendCoachCheckins(): Promise<void> {
     distinct: ['user_id'],
   })
 
+  // Filter to users whose local time is 3 PM
+  const allUserIds = subscriptions.map(s => s.user_id)
+  const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 15)
+  const eligibleSet = new Set(eligibleUserIds)
+
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -1091,6 +1079,7 @@ export async function sendCoachCheckins(): Promise<void> {
   let totalSkipped = 0
 
   for (const { user_id } of subscriptions) {
+    if (!eligibleSet.has(user_id)) continue
     // Coach notifications are premium-only
     const premium = await isPremiumUser(user_id)
     if (!premium) {
@@ -1161,11 +1150,17 @@ export async function sendCoachAccountability(): Promise<void> {
     distinct: ['user_id'],
   })
 
+  // Filter to users whose local time is 9 PM
+  const allUserIds = subscriptions.map(s => s.user_id)
+  const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 21)
+  const eligibleSet = new Set(eligibleUserIds)
+
   let totalSent = 0
   let totalFailed = 0
   let totalSkipped = 0
 
   for (const { user_id } of subscriptions) {
+    if (!eligibleSet.has(user_id)) continue
     // Coach notifications are premium-only
     const premium = await isPremiumUser(user_id)
     if (!premium) {

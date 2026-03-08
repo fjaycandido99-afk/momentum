@@ -35,7 +35,6 @@ interface NotificationPreferences {
   daily_affirmation_alerts: boolean
   motivational_nudge_alerts: boolean
   daily_motivation_alerts: boolean
-  featured_music_alerts: boolean
   coach_checkin_alerts: boolean
   coach_accountability_alerts: boolean
 }
@@ -60,7 +59,7 @@ const NOTIFICATION_GROUPS: {
     icon: Sparkles,
     label: 'Daily Inspiration',
     description: 'Quotes, affirmations & motivation',
-    keys: ['daily_quote_alerts', 'daily_affirmation_alerts', 'motivational_nudge_alerts', 'daily_motivation_alerts', 'featured_music_alerts'],
+    keys: ['daily_quote_alerts', 'daily_affirmation_alerts', 'motivational_nudge_alerts', 'daily_motivation_alerts'],
   },
   {
     id: 'coach',
@@ -102,7 +101,6 @@ export function NotificationSettings() {
     daily_affirmation_alerts: true,
     motivational_nudge_alerts: true,
     daily_motivation_alerts: true,
-    featured_music_alerts: true,
     coach_checkin_alerts: true,
     coach_accountability_alerts: true,
   })
@@ -118,7 +116,6 @@ export function NotificationSettings() {
     daily_affirmation_alerts: sub.daily_affirmation_alerts ?? true,
     motivational_nudge_alerts: sub.motivational_nudge_alerts ?? true,
     daily_motivation_alerts: sub.daily_motivation_alerts ?? true,
-    featured_music_alerts: sub.featured_music_alerts ?? true,
     coach_checkin_alerts: sub.coach_checkin_alerts ?? true,
     coach_accountability_alerts: sub.coach_accountability_alerts ?? true,
   })

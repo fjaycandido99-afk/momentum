@@ -278,6 +278,9 @@ export async function POST(request: NextRequest) {
 
       // Mindset
       mindset,
+
+      // Timezone
+      timezone,
     } = body
 
     // If mindset changed, clear today's cached AI content so it regenerates with new mindset
@@ -404,6 +407,9 @@ export async function POST(request: NextRequest) {
 
         // Mindset
         ...(mindset !== undefined && { mindset, mindset_selected_at: new Date() }),
+
+        // Timezone
+        ...(timezone !== undefined && { timezone }),
       },
       create: {
         user_id: user.id,
@@ -458,6 +464,9 @@ export async function POST(request: NextRequest) {
         // Mindset
         mindset: mindset || 'stoic',
         mindset_selected_at: mindset ? new Date() : null,
+
+        // Timezone
+        timezone: timezone || null,
       },
     })
 

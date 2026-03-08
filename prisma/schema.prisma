@@ -162,6 +162,9 @@ model UserPreferences {
   astrology_enabled Boolean @default(false)
   zodiac_sign       String?
 
+  // Timezone (IANA format e.g. "America/New_York")
+  timezone String?
+
   // Mindset system
   mindset             String    @default("stoic")
   mindset_selected_at DateTime?

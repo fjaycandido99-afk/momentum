@@ -46,7 +46,6 @@ const ALERT_TO_NOTIFICATION_MAP: Record<string, NotificationType> = {
   daily_affirmation: 'daily_affirmation',
   motivational_nudge: 'motivational_nudge',
   daily_motivation: 'daily_motivation',
-  featured_music: 'featured_music',
   coach_checkin: 'coach_checkin',
   coach_accountability: 'coach_accountability',
 }

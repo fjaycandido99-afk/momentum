@@ -10,15 +10,15 @@
     },
     {
       "path": "/api/cron/notifications?type=streak",
-      "schedule": "0 20 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/notifications?type=weekly",
-      "schedule": "0 10 * * 0"
+      "schedule": "0 * * * 0"
     },
     {
       "path": "/api/cron/notifications?type=insight",
-      "schedule": "0 12 * * 3"
+      "schedule": "0 * * * 3"
     },
     {
       "path": "/api/cron/notifications?type=cleanup",
@@ -26,35 +26,31 @@
     },
     {
       "path": "/api/cron/notifications?type=daily_quote",
-      "schedule": "0 8 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/notifications?type=daily_affirmation",
-      "schedule": "30 7 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/notifications?type=motivational_nudge",
-      "schedule": "0 14 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/notifications?type=daily_motivation",
-      "schedule": "0 9 * * *"
+      "schedule": "0 * * * *"
     },
-    {
-      "path": "/api/cron/notifications?type=featured_music",
-      "schedule": "0 17 * * *"
-    },
-    {
+{
       "path": "/api/cron/notifications?type=evening",
       "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/notifications?type=coach_checkin",
-      "schedule": "0 15 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/notifications?type=coach_accountability",
-      "schedule": "0 1 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/alerts",

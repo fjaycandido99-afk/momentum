@@ -9,7 +9,6 @@ import {
   sendDailyAffirmations,
   sendMotivationalNudges,
   sendDailyMotivation,
-  sendFeaturedMusic,
   sendEveningReminders,
   sendCoachCheckins,
   sendCoachAccountability,
@@ -31,7 +30,6 @@ export const dynamic = 'force-dynamic'
  *     { "path": "/api/cron/notifications?type=weekly", "schedule": "0 10 * * 0" },
  *     { "path": "/api/cron/notifications?type=insight", "schedule": "0 12 * * 3" },
  *     { "path": "/api/cron/notifications?type=daily_motivation", "schedule": "0 9 * * *" },
- *     { "path": "/api/cron/notifications?type=featured_music", "schedule": "0 17 * * *" },
  *     { "path": "/api/cron/notifications?type=cleanup", "schedule": "0 3 * * *" }
  *   ]
  * }
@@ -93,10 +91,6 @@ export async function GET(request: NextRequest) {
         await sendDailyMotivation()
         return NextResponse.json({ success: true, type: 'daily_motivation' })
 
-      case 'featured_music':
-        await sendFeaturedMusic()
-        return NextResponse.json({ success: true, type: 'featured_music' })
-
       case 'evening':
         await sendEveningReminders()
         return NextResponse.json({ success: true, type: 'evening_reminders' })
@@ -120,7 +114,6 @@ export async function GET(request: NextRequest) {
         await sendDailyAffirmations()
         await sendMotivationalNudges()
         await sendDailyMotivation()
-        await sendFeaturedMusic()
         await sendEveningReminders()
         await sendCoachCheckins()
         await sendCoachAccountability()
@@ -128,7 +121,7 @@ export async function GET(request: NextRequest) {
 
       default:
         return NextResponse.json(
-          { error: 'Invalid type. Use: morning, bedtime, streak, weekly, insight, cleanup, daily_quote, daily_affirmation, motivational_nudge, daily_motivation, featured_music, evening, coach_checkin, coach_accountability, or all' },
+          { error: 'Invalid type. Use: morning, bedtime, streak, weekly, insight, cleanup, daily_quote, daily_affirmation, motivational_nudge, daily_motivation, evening, coach_checkin, coach_accountability, or all' },
           { status: 400 }
         )
     }

@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
         daily_affirmation_alerts: true,
         motivational_nudge_alerts: true,
         daily_motivation_alerts: true,
-        featured_music_alerts: true,
         coach_checkin_alerts: true,
         coach_accountability_alerts: true,
       }
@@ -89,7 +88,6 @@ export async function POST(request: NextRequest) {
       daily_affirmation_alerts: true,
       motivational_nudge_alerts: true,
       daily_motivation_alerts: true,
-      featured_music_alerts: true,
       coach_checkin_alerts: true,
       coach_accountability_alerts: true,
     }
@@ -154,7 +152,6 @@ export async function GET() {
         daily_affirmation_alerts: true,
         motivational_nudge_alerts: true,
         daily_motivation_alerts: true,
-        featured_music_alerts: true,
         coach_checkin_alerts: true,
         coach_accountability_alerts: true,
         created_at: true,
@@ -196,7 +193,6 @@ export async function PATCH(request: NextRequest) {
       daily_affirmation_alerts,
       motivational_nudge_alerts,
       daily_motivation_alerts,
-      featured_music_alerts,
       coach_checkin_alerts,
       coach_accountability_alerts,
     } = body
@@ -215,7 +211,6 @@ export async function PATCH(request: NextRequest) {
         ...(daily_affirmation_alerts !== undefined && { daily_affirmation_alerts }),
         ...(motivational_nudge_alerts !== undefined && { motivational_nudge_alerts }),
         ...(daily_motivation_alerts !== undefined && { daily_motivation_alerts }),
-        ...(featured_music_alerts !== undefined && { featured_music_alerts }),
         ...(coach_checkin_alerts !== undefined && { coach_checkin_alerts }),
         ...(coach_accountability_alerts !== undefined && { coach_accountability_alerts }),
       },

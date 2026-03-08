@@ -52,6 +52,21 @@ export function AppWrapper({ children }: AppWrapperProps) {
     })
   }, [])
 
+  // Sync timezone to server for timezone-aware notifications
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    if (!tz) return
+    const stored = sessionStorage.getItem('voxu_tz_synced')
+    if (stored === tz) return // Already synced this session
+    fetch('/api/daily-guide/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ timezone: tz }),
+    }).then(() => {
+      sessionStorage.setItem('voxu_tz_synced', tz)
+    }).catch(() => {})
+  }, [])
+
   // Auth pages should not show splash
   const isAuthPage = pathname?.startsWith('/login') ||
                      pathname?.startsWith('/signup') ||
