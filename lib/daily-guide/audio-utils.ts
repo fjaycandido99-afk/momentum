@@ -35,8 +35,8 @@ export async function setSharedCache(cacheKey: string, audioBase64: string, dura
   }
 }
 
-// Monthly credit limit (characters)
-const MONTHLY_CREDIT_LIMIT = 110_000
+// Monthly credit limit (characters) — raised to use available ElevenLabs credits
+const MONTHLY_CREDIT_LIMIT = 500_000
 
 function getMonthKey() {
   const now = new Date()
