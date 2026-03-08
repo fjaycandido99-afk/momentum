@@ -1074,9 +1074,6 @@ export function ImmersiveHome() {
         />
       )}
 
-      {/* Daily Intention Card */}
-      <DailyIntentionCard dailyIntention={dailyIntention} today={today} />
-
       {/* Hero Carousel: Daily Guide + Path + Featured */}
       {(() => {
         const slides: React.ReactNode[] = [
@@ -1223,6 +1220,9 @@ export function ImmersiveHome() {
                     onRipple={spawnRipple}
                   />
                 )}
+
+                {/* Daily Intention — "What's your focus today?" */}
+                <DailyIntentionCard dailyIntention={dailyIntention} today={today} />
               </React.Fragment>
             )
           case 'music':

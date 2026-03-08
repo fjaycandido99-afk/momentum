@@ -161,6 +161,22 @@ export function getAdaptiveSectionOrder(signals: FeedSignals): FeedSection[] {
     scores.music += 1
   }
 
+  // Base order: Guided → Soundscapes → Motivation → Music → Wisdom
+  // Adaptive scoring can promote sections but this is the default flow
+  const baseOrder: FeedSection[] = ['guided', 'soundscapes', 'motivation', 'music', 'wisdom']
+  const baseBoost: Record<FeedSection, number> = {
+    guided: 5,
+    soundscapes: 4,
+    motivation: 3,
+    music: 2,
+    wisdom: 1,
+  }
+
+  // Add base order bias to scores
+  for (const section of baseOrder) {
+    scores[section] += baseBoost[section]
+  }
+
   return (Object.entries(scores) as [FeedSection, number][])
     .sort((a, b) => b[1] - a[1])
     .map(([section]) => section)
