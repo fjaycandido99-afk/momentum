@@ -22,6 +22,23 @@ export async function POST(request: NextRequest) {
     if (nativeToken) {
       const endpoint = `native://${platform}/${user.id}`
 
+      // Enable all notification preferences by default for native users
+      const defaultPreferences = {
+        morning_reminder: true,
+        checkpoint_alerts: true,
+        evening_reminder: true,
+        streak_alerts: true,
+        weekly_review: true,
+        insight_alerts: true,
+        daily_quote_alerts: true,
+        daily_affirmation_alerts: true,
+        motivational_nudge_alerts: true,
+        daily_motivation_alerts: true,
+        featured_music_alerts: true,
+        coach_checkin_alerts: true,
+        coach_accountability_alerts: true,
+      }
+
       const savedSubscription = await prisma.pushSubscription.upsert({
         where: {
           endpoint,
@@ -31,6 +48,7 @@ export async function POST(request: NextRequest) {
           native_token: nativeToken,
           platform,
           updated_at: new Date(),
+          ...defaultPreferences,
         },
         create: {
           user_id: user.id,
@@ -39,6 +57,7 @@ export async function POST(request: NextRequest) {
           platform,
           p256dh: '',
           auth: '',
+          ...defaultPreferences,
         },
       })
 
@@ -58,6 +77,23 @@ export async function POST(request: NextRequest) {
     const p256dh = subscription.keys?.p256dh || ''
     const auth = subscription.keys?.auth || ''
 
+    // Enable all notification preferences by default for new web subscribers
+    const defaultPreferences = {
+      morning_reminder: true,
+      checkpoint_alerts: true,
+      evening_reminder: true,
+      streak_alerts: true,
+      weekly_review: true,
+      insight_alerts: true,
+      daily_quote_alerts: true,
+      daily_affirmation_alerts: true,
+      motivational_nudge_alerts: true,
+      daily_motivation_alerts: true,
+      featured_music_alerts: true,
+      coach_checkin_alerts: true,
+      coach_accountability_alerts: true,
+    }
+
     // Upsert the subscription
     const savedSubscription = await prisma.pushSubscription.upsert({
       where: {
@@ -76,6 +112,7 @@ export async function POST(request: NextRequest) {
         p256dh,
         auth,
         platform: platform || 'web',
+        ...defaultPreferences,
       },
     })
 
@@ -154,6 +191,7 @@ export async function PATCH(request: NextRequest) {
       evening_reminder,
       streak_alerts,
       weekly_review,
+      insight_alerts,
       daily_quote_alerts,
       daily_affirmation_alerts,
       motivational_nudge_alerts,
@@ -172,6 +210,7 @@ export async function PATCH(request: NextRequest) {
         ...(evening_reminder !== undefined && { evening_reminder }),
         ...(streak_alerts !== undefined && { streak_alerts }),
         ...(weekly_review !== undefined && { weekly_review }),
+        ...(insight_alerts !== undefined && { insight_alerts }),
         ...(daily_quote_alerts !== undefined && { daily_quote_alerts }),
         ...(daily_affirmation_alerts !== undefined && { daily_affirmation_alerts }),
         ...(motivational_nudge_alerts !== undefined && { motivational_nudge_alerts }),
