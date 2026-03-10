@@ -433,12 +433,7 @@ export async function sendBroadcastNotification(
  * Should be called hourly to match user-specific reminder times
  */
 export async function sendMorningReminders(): Promise<void> {
-  const now = new Date()
-  const currentHour = now.getHours()
-  const currentMinute = now.getMinutes()
-
-  // Find users who have daily_reminder enabled and whose reminder_time matches current hour
-  // We check within a 30-minute window to account for cron timing
+  // Find users who have daily_reminder enabled
   const usersToNotify = await prisma.userPreferences.findMany({
     where: {
       daily_reminder: true,
@@ -446,6 +441,7 @@ export async function sendMorningReminders(): Promise<void> {
     select: {
       user_id: true,
       reminder_time: true,
+      timezone: true,
     },
   })
 
@@ -457,12 +453,12 @@ export async function sendMorningReminders(): Promise<void> {
   let totalFailed = 0
   let totalSkipped = 0
 
-  for (const { user_id, reminder_time } of usersToNotify) {
+  for (const { user_id, reminder_time, timezone } of usersToNotify) {
     // Parse reminder_time (format: "HH:MM")
-    const [reminderHour, reminderMinute] = (reminder_time || '07:00').split(':').map(Number)
+    const [reminderHour] = (reminder_time || '07:00').split(':').map(Number)
 
-    // Check if current time is within the reminder window (same hour, within 30 min)
-    if (currentHour !== reminderHour) {
+    // Check if user's LOCAL hour matches their reminder hour
+    if (!isLocalHour(timezone, reminderHour)) {
       totalSkipped++
       continue
     }
@@ -521,9 +517,6 @@ export async function sendMorningReminders(): Promise<void> {
  * Should be called hourly to match user-specific bedtime
  */
 export async function sendBedtimeReminders(): Promise<void> {
-  const now = new Date()
-  const currentHour = now.getHours()
-
   // Find users who have bedtime_reminder_enabled
   const usersToNotify = await prisma.userPreferences.findMany({
     where: {
@@ -532,6 +525,7 @@ export async function sendBedtimeReminders(): Promise<void> {
     select: {
       user_id: true,
       wake_time: true,
+      timezone: true,
     },
   })
 
@@ -539,14 +533,14 @@ export async function sendBedtimeReminders(): Promise<void> {
   let totalFailed = 0
   let totalSkipped = 0
 
-  for (const { user_id, wake_time } of usersToNotify) {
+  for (const { user_id, wake_time, timezone } of usersToNotify) {
     // Parse wake_time (format: "HH:MM") and calculate bedtime (8 hours before)
     const [wakeHour] = (wake_time || '07:00').split(':').map(Number)
     let bedtimeHour = wakeHour - 8
     if (bedtimeHour < 0) bedtimeHour += 24
 
-    // Check if current hour matches bedtime hour
-    if (currentHour !== bedtimeHour) {
+    // Check if user's LOCAL hour matches their bedtime hour
+    if (!isLocalHour(timezone, bedtimeHour)) {
       totalSkipped++
       continue
     }
@@ -564,7 +558,7 @@ export async function sendBedtimeReminders(): Promise<void> {
 
     // Format wake time for display
     const wakeHourDisplay = wakeHour % 12 || 12
-    const wakePeriod = wakeHour >= 12 ? 'AM' : 'PM'
+    const wakePeriod = wakeHour >= 12 ? 'PM' : 'AM'
     const body = `Wind down for bed. 8 hours of sleep means waking refreshed at ${wakeHourDisplay}:00 ${wakePeriod}.`
 
     const result = await sendPushToUser(user_id, 'bedtime_reminder', { body })
