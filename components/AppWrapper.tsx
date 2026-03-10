@@ -53,18 +53,27 @@ export function AppWrapper({ children }: AppWrapperProps) {
   }, [])
 
   // Sync timezone to server for timezone-aware notifications
+  // Must wait for auth so the preferences endpoint actually persists it
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     if (!tz) return
     const stored = sessionStorage.getItem('voxu_tz_synced')
     if (stored === tz) return // Already synced this session
-    fetch('/api/daily-guide/preferences', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ timezone: tz }),
-    }).then(() => {
-      sessionStorage.setItem('voxu_tz_synced', tz)
-    }).catch(() => {})
+
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) return // Guest — skip, will retry on next session
+      fetch('/api/daily-guide/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timezone: tz }),
+      }).then(res => res.json()).then(data => {
+        // Only mark synced if the server actually saved it (not guest response)
+        if (data.success && !data.isGuest) {
+          sessionStorage.setItem('voxu_tz_synced', tz)
+        }
+      }).catch(() => {})
+    })
   }, [])
 
   // Auth pages should not show splash

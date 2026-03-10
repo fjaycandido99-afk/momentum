@@ -231,6 +231,8 @@ function SettingsContent() {
           workout_enabled: enabledSegments.includes('movement'),
           micro_lesson_enabled: enabledSegments.includes('micro_lesson'),
           breath_cues_enabled: enabledSegments.includes('breath'),
+          // Always include timezone so notification scheduling uses correct local time
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || undefined,
         }),
       })
       const data = await response.json()
