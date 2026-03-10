@@ -137,6 +137,64 @@ export function DailyGuideOnboarding() {
     setActiveCard(Math.min(idx, PREVIEW_CARDS.length - 1))
   }, [])
 
+  // Tone voice preview
+  const [previewingTone, setPreviewingTone] = useState<GuideTone | null>(null)
+  const [loadingTone, setLoadingTone] = useState<GuideTone | null>(null)
+  const toneAudioRef = useRef<HTMLAudioElement | null>(null)
+
+  const stopTonePreview = useCallback(() => {
+    if (toneAudioRef.current) {
+      toneAudioRef.current.pause()
+      toneAudioRef.current.src = ''
+      toneAudioRef.current = null
+    }
+    setPreviewingTone(null)
+    setLoadingTone(null)
+  }, [])
+
+  const toggleTonePreview = useCallback(async (tone: GuideTone) => {
+    // If same tone is playing, stop
+    if (previewingTone === tone) {
+      stopTonePreview()
+      return
+    }
+
+    // Stop any existing preview
+    stopTonePreview()
+    setLoadingTone(tone)
+
+    try {
+      const res = await authFetch(`/api/tts/preview?tone=${tone}`)
+      if (!res.ok) throw new Error('Preview failed')
+
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+
+      audio.addEventListener('ended', () => {
+        URL.revokeObjectURL(url)
+        setPreviewingTone(null)
+      })
+
+      audio.addEventListener('error', () => {
+        URL.revokeObjectURL(url)
+        stopTonePreview()
+      })
+
+      toneAudioRef.current = audio
+      await audio.play()
+      setPreviewingTone(tone)
+      setLoadingTone(null)
+    } catch {
+      setLoadingTone(null)
+    }
+  }, [previewingTone, stopTonePreview])
+
+  // Stop tone preview when leaving step 2
+  useEffect(() => {
+    if (step !== 2) stopTonePreview()
+  }, [step, stopTonePreview])
+
   // Audio preview player
   const [playingCardIndex, setPlayingCardIndex] = useState<number | null>(null)
   const previewPlayerRef = useRef<YTPlayer | null>(null)
@@ -544,13 +602,46 @@ export function DailyGuideOnboarding() {
                   `}
                 >
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-white">{tone.label}</h3>
                       <p className="text-sm text-white/75 mt-1">{tone.description}</p>
                     </div>
-                    {data.guideTone === tone.value && (
-                      <Check className="w-5 h-5 text-white" />
-                    )}
+                    <div className="flex items-center gap-2 ml-3">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleTonePreview(tone.value)
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.stopPropagation()
+                            e.preventDefault()
+                            toggleTonePreview(tone.value)
+                          }
+                        }}
+                        className={`
+                          w-9 h-9 rounded-full flex items-center justify-center shrink-0
+                          transition-all
+                          ${previewingTone === tone.value
+                            ? 'bg-white/20 text-white'
+                            : 'bg-white/10 text-white/60 hover:bg-white/15 hover:text-white/80'
+                          }
+                        `}
+                      >
+                        {loadingTone === tone.value ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : previewingTone === tone.value ? (
+                          <Volume2 className="w-4 h-4" />
+                        ) : (
+                          <Play className="w-4 h-4 ml-0.5" />
+                        )}
+                      </div>
+                      {data.guideTone === tone.value && (
+                        <Check className="w-5 h-5 text-white shrink-0" />
+                      )}
+                    </div>
                   </div>
                 </button>
               ))}
