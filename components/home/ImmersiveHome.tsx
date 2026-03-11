@@ -475,6 +475,9 @@ export function ImmersiveHome() {
   // never falls through to the default soundscape during the restore window.
   const hasPlaylistRestoredRef = useRef(false)
 
+  const restoreStartSecondsRef = useRef<number | undefined>(undefined)
+  const needsRestorePlaybackRef = useRef(false)
+
   useEffect(() => {
     if (hasRestoredRef.current) return
     const lastPlayed = audioContext?.lastPlayed
@@ -485,25 +488,32 @@ export function ImmersiveHome() {
     if (audioContext?.isSessionActive) return
     hasRestoredRef.current = true
 
+    // Save the seek position for Phase 3
+    restoreStartSecondsRef.current = lastPlayed.currentTime
+
     if (lastPlayed.type === 'music' && lastPlayed.genreId && lastPlayed.videoId) {
       const genre = MUSIC_GENRES.find(g => g.id === lastPlayed.genreId)
       if (genre) {
+        needsRestorePlaybackRef.current = true
         dispatch({
           type: 'RESTORE_LAST_PLAYED',
           partial: {
             backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.genreWord || genre.word },
-            musicPlaying: false,
-            userPausedMusic: true,
+            musicPlaying: true,
+            userPausedMusic: false,
+            homeAudioActive: true,
           },
         })
       }
     } else if (lastPlayed.type === 'motivation' && lastPlayed.videoId) {
+      needsRestorePlaybackRef.current = true
       dispatch({
         type: 'RESTORE_LAST_PLAYED',
         partial: {
           backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.label || topicName },
-          musicPlaying: false,
-          userPausedMusic: true,
+          musicPlaying: true,
+          userPausedMusic: false,
+          homeAudioActive: true,
         },
       })
     } else if (lastPlayed.type === 'soundscape' && lastPlayed.soundscapeId) {
@@ -522,6 +532,33 @@ export function ImmersiveHome() {
     // Clear pending flag after dispatch propagates
     isRestorePendingRef.current = false
   }, [audioContext?.lastPlayed, audioContext?.isSessionActive, topicName, dispatch])
+
+  // Phase 3: Once YT player is ready, load the restored video at saved position
+  useEffect(() => {
+    if (!needsRestorePlaybackRef.current) return
+    if (!audioState.backgroundMusic) return
+
+    const videoId = audioState.backgroundMusic.youtubeId
+    const startSeconds = restoreStartSecondsRef.current
+
+    // Poll for player readiness (YT player may not be ready yet on page load)
+    const tryLoad = () => {
+      if (bgPlayerReadyRef.current && bgPlayerRef.current) {
+        needsRestorePlaybackRef.current = false
+        createBgMusicPlayer(videoId, startSeconds)
+        return true
+      }
+      return false
+    }
+
+    if (tryLoad()) return
+
+    const interval = setInterval(() => {
+      if (tryLoad()) clearInterval(interval)
+    }, 200)
+
+    return () => clearInterval(interval)
+  }, [audioState.backgroundMusic, bgPlayerRef, bgPlayerReadyRef, createBgMusicPlayer])
 
   // Phase 2: Once genre/motivation videos load, upgrade the restore with full playlist data.
   // This runs reactively on genreVideos/motivationByTopic changes — no stale closure issues.
@@ -543,8 +580,9 @@ export function ImmersiveHome() {
         type: 'RESTORE_LAST_PLAYED',
         partial: {
           backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.genreWord || genre.word },
-          musicPlaying: false,
-          userPausedMusic: true,
+          musicPlaying: true,
+          userPausedMusic: false,
+          homeAudioActive: true,
           activeCardId: video?.id || null,
           currentPlaylist: {
             videos: videos.slice(0, 8),
@@ -566,8 +604,9 @@ export function ImmersiveHome() {
         type: 'RESTORE_LAST_PLAYED',
         partial: {
           backgroundMusic: { youtubeId: lastPlayed.videoId, label: restoredTopic },
-          musicPlaying: false,
-          userPausedMusic: true,
+          musicPlaying: true,
+          userPausedMusic: false,
+          homeAudioActive: true,
           activeCardId: video?.id || null,
           currentPlaylist: {
             videos: topicVideos.slice(0, 8),
@@ -581,6 +620,36 @@ export function ImmersiveHome() {
       hasPlaylistRestoredRef.current = true
     }
   }, [audioContext?.lastPlayed, genreVideos, motivationVideos, motivationByTopic, topicName, dispatch])
+
+  // --- Periodic save of playback position (every 10 seconds) + save on page unload ---
+  const lastSaveTimeRef = useRef(0)
+  useEffect(() => {
+    if (!audioState.musicPlaying || !audioState.backgroundMusic || !audioContext) return
+    const now = Date.now()
+    if (now - lastSaveTimeRef.current < 10000) return
+    lastSaveTimeRef.current = now
+
+    const lp = audioContext.lastPlayed
+    if (lp && lp.videoId === audioState.backgroundMusic.youtubeId) {
+      audioContext.setLastPlayed({ ...lp, currentTime: audioState.musicCurrentTime })
+    }
+  }, [audioState.musicCurrentTime, audioState.musicPlaying, audioState.backgroundMusic, audioContext])
+
+  // Save position immediately on page unload/refresh
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (!audioState.backgroundMusic || !audioContext?.lastPlayed) return
+      const lp = audioContext.lastPlayed
+      if (lp && lp.videoId === audioState.backgroundMusic.youtubeId && audioState.musicCurrentTime > 0) {
+        const updated = { ...lp, currentTime: audioState.musicCurrentTime, timestamp: Date.now() }
+        try {
+          localStorage.setItem('voxu_last_played', JSON.stringify(updated))
+        } catch {}
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [audioState.backgroundMusic, audioState.musicCurrentTime, audioContext])
 
   // --- Card tap animation ---
   const triggerTap = (videoId: string) => {

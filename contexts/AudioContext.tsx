@@ -12,6 +12,7 @@ interface LastPlayedInfo {
   soundscapeId?: string
   label?: string
   playlistIndex?: number
+  currentTime?: number
   timestamp?: number
 }
 

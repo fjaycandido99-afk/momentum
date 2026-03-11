@@ -31,7 +31,7 @@ interface HomeAudioContextType {
   audioState: AudioState
   dispatch: Dispatch<AudioAction>
   refs: HomeAudioRefs
-  createBgMusicPlayer: (youtubeId: string) => void
+  createBgMusicPlayer: (youtubeId: string, startSeconds?: number) => void
   createSoundscapePlayer: (youtubeId: string) => void
   stopBackgroundMusic: () => void
   stopAllHomeAudio: () => void
@@ -193,6 +193,12 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
           onStateChange: (event) => {
             if (event.data === 1) {
               musicRetryCountRef.current = 0
+              // Seek to saved position on restore
+              if (pendingSeekRef.current) {
+                const seekTo = pendingSeekRef.current
+                pendingSeekRef.current = undefined
+                try { event.target.seekTo(seekTo, true) } catch {}
+              }
               dispatch({ type: 'MUSIC_YT_PLAYING' })
               if (bgProgressIntervalRef.current) clearInterval(bgProgressIntervalRef.current)
               bgProgressIntervalRef.current = setInterval(() => {
@@ -274,9 +280,12 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
     }
   }, [])
 
-  const createBgMusicPlayer = useCallback((youtubeId: string) => {
+  const pendingSeekRef = useRef<number | undefined>(undefined)
+
+  const createBgMusicPlayer = useCallback((youtubeId: string, startSeconds?: number) => {
     if (bgPlayerRef.current && bgPlayerReadyRef.current) {
       currentBgVideoIdRef.current = youtubeId
+      pendingSeekRef.current = startSeconds && startSeconds > 0 ? startSeconds : undefined
       bgPlayerRef.current.loadVideoById(youtubeId)
       bgPlayerRef.current.setVolume(80)
     }
