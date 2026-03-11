@@ -6,6 +6,7 @@ import { PlayerJournalSheet } from './PlayerJournalSheet'
 import { useDeviceTilt } from '@/hooks/useDeviceTilt'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import type { YTPlayer } from '@/lib/youtube-types'
+import { EqBars } from '@/components/ui/EqBars'
 import '@/lib/youtube-types' // Import for global Window.YT declaration
 
 interface WordAnimationPlayerProps {
@@ -693,6 +694,15 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
         )}
         {/* Bottom gradient for controls readability */}
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-[3] pointer-events-none" />
+
+        {/* Center EQ bars when playing */}
+        {viewMode !== 'video' && (
+          <div className="absolute inset-0 flex items-center justify-center z-[4] pointer-events-none">
+            <div className={`transition-opacity duration-500 ${isPlaying ? 'opacity-60' : 'opacity-0'}`}>
+              <EqBars height={40} barWidth={4} gap={5} color="white" barCount={5} paused={!isPlaying} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* === Top bar === */}
