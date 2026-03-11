@@ -95,3 +95,33 @@ export async function setCachedVideos(
 export async function hasTodaysCache(type: 'motivation' | 'music', key: string): Promise<boolean> {
   return (await getCachedVideos(type, key)) !== null
 }
+
+// Get the most recent cached videos regardless of date (stale fallback)
+// Used when the API fails and today's cache doesn't exist yet
+export async function getStaleCachedVideos(type: 'motivation' | 'music', key: string): Promise<CachedVideos['videos'] | null> {
+  const cacheKey = `${type}-${key.toLowerCase()}`
+
+  // Check memory first (even if stale)
+  const memoryCached = memoryCache.get(cacheKey)
+  if (memoryCached && memoryCached.videos.length > 0) {
+    return memoryCached.videos
+  }
+
+  // Check DB — any date
+  try {
+    const dbCached = await prisma.videoCache.findUnique({
+      where: { cache_key: cacheKey },
+    })
+    if (dbCached) {
+      const videos = dbCached.videos as CachedVideos['videos']
+      if (videos && videos.length > 0) {
+        console.log(`[Video Cache] Stale fallback for ${cacheKey} (cached ${dbCached.cached_at.toISOString().split('T')[0]})`)
+        return videos
+      }
+    }
+  } catch (e) {
+    console.error('[Video Cache] DB stale read error:', e)
+  }
+
+  return null
+}

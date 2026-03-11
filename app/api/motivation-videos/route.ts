@@ -1,92 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCachedVideos, setCachedVideos } from '@/lib/video-cache'
+import { getCachedVideos, setCachedVideos, getStaleCachedVideos } from '@/lib/video-cache'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3'
-
-// Fallback videos when YouTube API quota is exceeded
-// Same curated videos as Discover page - verified embeddable
-const FALLBACK_VIDEOS: Record<string, Array<{
-  id: string
-  youtubeId: string
-  title: string
-  channel: string
-  duration?: number
-}>> = {
-  Discipline: [
-    { id: 'd1', youtubeId: 'W_VkLpnVFFo', title: 'SELF DISCIPLINE - Best Motivational Speech', channel: 'Motiversity', duration: 1800 },
-    { id: 'd2', youtubeId: 'nm1TxQj9IsQ', title: 'THE POWER OF DISCIPLINE - Motivational Video', channel: 'Motiversity', duration: 1920 },
-    { id: 'd3', youtubeId: 'v_1iqtOnUMg', title: 'DISCIPLINE YOUR MIND - Motivational Speech', channel: 'MotivationHub', duration: 2100 },
-    { id: 'd4', youtubeId: 'wnHW6o8WMas', title: 'NO EXCUSES - Best Motivational Video', channel: 'Motiversity', duration: 1680 },
-    { id: 'd5', youtubeId: 'dkHn3ciJg9o', title: 'DISCIPLINE - Powerful Motivational Speech', channel: 'Ben Lionel Scott', duration: 1920 },
-    { id: 'd6', youtubeId: 'g-jwWYX7Jlo', title: 'SELF MASTERY - Motivational Video Compilation', channel: 'Be Inspired', duration: 2040 },
-    { id: 'd7', youtubeId: 'dYTz-nm8Nqs', title: 'DISCIPLINE IS DESTINY - Motivational Speech', channel: 'Absolute Motivation', duration: 1800 },
-    { id: 'd8', youtubeId: 'IAAI7aLFjpA', title: 'THE SECRET TO SELF DISCIPLINE', channel: 'Motivation2Study', duration: 1740 },
-  ],
-  Focus: [
-    { id: 'f1', youtubeId: 'J1R0hiaHdpM', title: 'FOCUS ON YOURSELF - Best Motivational Speech', channel: 'Motiversity', duration: 1800 },
-    { id: 'f2', youtubeId: 'cDDWvj_q-o8', title: 'STOP WASTING TIME - Motivational Video', channel: 'Motiversity', duration: 1920 },
-    { id: 'f3', youtubeId: 'k9zTr2MAFRg', title: 'LASER FOCUS - Powerful Motivational Speech', channel: 'MotivationHub', duration: 2100 },
-    { id: 'f4', youtubeId: 'nU3IbigrFFs', title: 'THIS IS HOW WINNERS THINK', channel: 'Motiversity', duration: 1680 },
-    { id: 'f5', youtubeId: 'QqfjiUqJNTo', title: 'FOCUS - Best Motivational Video Speeches', channel: 'Ben Lionel Scott', duration: 1860 },
-    { id: 'f6', youtubeId: 'iGGDnFfkUqo', title: 'LOCK IN AND FOCUS - Motivational Speech', channel: 'Be Inspired', duration: 2040 },
-    { id: 'f7', youtubeId: 'VSceuiPBpxY', title: 'CUT THE DISTRACTIONS - Powerful Speech', channel: 'Team Fearless', duration: 1920 },
-    { id: 'f8', youtubeId: 'TQMbvJNRpLE', title: 'FOCUS ON YOUR GOALS - Study Motivation', channel: 'Motivation2Study', duration: 1800 },
-  ],
-  Mindset: [
-    { id: 'm1', youtubeId: 'GXoErccq0vw', title: 'CHANGE YOUR MINDSET - Motivational Speech', channel: 'Motiversity', duration: 1800 },
-    { id: 'm2', youtubeId: '_UJfwCuLYbI', title: 'MINDSET IS EVERYTHING - Powerful Speech', channel: 'Motiversity', duration: 1920 },
-    { id: 'm3', youtubeId: 'keCwRdbwNQY', title: 'THE MINDSET OF A CHAMPION', channel: 'MotivationHub', duration: 2100 },
-    { id: 'm4', youtubeId: 'yM8jrvF5zYs', title: 'TRAIN YOUR MIND TO WIN', channel: 'Absolute Motivation', duration: 1680 },
-    { id: 'm5', youtubeId: 'OMJKLfDYMCE', title: 'REPROGRAM YOUR MIND - Motivational Speech', channel: 'Ben Lionel Scott', duration: 1920 },
-    { id: 'm6', youtubeId: '1fuelMqdStg', title: 'THINK LIKE A WINNER - Motivational Video', channel: 'Be Inspired', duration: 2040 },
-    { id: 'm7', youtubeId: 'Vb_4Kk2XBKU', title: 'CONQUER YOUR MIND - Powerful Motivation', channel: 'Fearless Soul', duration: 1800 },
-    { id: 'm8', youtubeId: '7Oxz060iedY', title: 'BUILD A STRONG MINDSET - Study Motivation', channel: 'Motivation2Study', duration: 1740 },
-  ],
-  Courage: [
-    { id: 'c1', youtubeId: 'II4xp4vzRT8', title: 'FACE YOUR FEARS - Motivational Speech', channel: 'Motiversity', duration: 1800 },
-    { id: 'c2', youtubeId: '2MvAtEr0W3g', title: 'BE FEARLESS - Powerful Motivation', channel: 'MotivationHub', duration: 1920 },
-    { id: 'c3', youtubeId: 'mgmVOuLgFB0', title: 'COURAGE - Best Motivational Video', channel: 'Motiversity', duration: 2100 },
-    { id: 'c4', youtubeId: 'pO_Z0H3gDPg', title: 'TAKE THE RISK - Motivational Speech', channel: 'Motiversity', duration: 1680 },
-    { id: 'c5', youtubeId: 'Do-EfBE0_Ik', title: 'STEP INTO YOUR FEARS - Motivational Speech', channel: 'Ben Lionel Scott', duration: 1860 },
-    { id: 'c6', youtubeId: 'rKcCJhSaChs', title: 'UNSTOPPABLE - Powerful Motivational Video', channel: 'Be Inspired', duration: 2040 },
-    { id: 'c7', youtubeId: 'ZsCKMjkOKIw', title: 'FEAR NOTHING - Motivational Compilation', channel: 'Team Fearless', duration: 1920 },
-    { id: 'c8', youtubeId: 'LBXyVIFjaYs', title: 'YOU ARE BRAVE - Inspirational Speech', channel: 'Fearless Soul', duration: 1800 },
-  ],
-  Resilience: [
-    { id: 'r1', youtubeId: 'kZlXWp6vFdE', title: 'NEVER GIVE UP - Motivational Speech', channel: 'Motiversity', duration: 1800 },
-    { id: 'r2', youtubeId: '8ZhoeSaPF-k', title: 'KEEP GOING - Best Motivation', channel: 'Motiversity', duration: 1920 },
-    { id: 'r3', youtubeId: 'TqXLvwM8Ltk', title: 'RISE UP - Powerful Motivational Speech', channel: 'MotivationHub', duration: 2100 },
-    { id: 'r4', youtubeId: 'p6HPRqCIZOQ', title: 'UNBREAKABLE - Motivational Video', channel: 'Motiversity', duration: 1680 },
-    { id: 'r5', youtubeId: 'CZFK4AW0Y5k', title: 'GET BACK UP - Motivational Speech', channel: 'Ben Lionel Scott', duration: 1920 },
-    { id: 'r6', youtubeId: 'kCQHy_gBRvc', title: 'RESILIENCE - Powerful Motivational Video', channel: 'Be Inspired', duration: 2040 },
-    { id: 'r7', youtubeId: 'dqTTojTija8', title: 'KEEP FIGHTING - Best Motivational Video', channel: 'Absolute Motivation', duration: 1800 },
-    { id: 'r8', youtubeId: 'O2arpTO23dk', title: 'NEVER STOP TRYING - Inspirational Speech', channel: 'Fearless Soul', duration: 1740 },
-  ],
-  Hustle: [
-    { id: 'h1', youtubeId: 'g9_6RPn5VBs', title: 'WORK HARDER THAN EVERYONE - Motivation', channel: 'Motiversity', duration: 1800 },
-    { id: 'h2', youtubeId: 'P8P6RgUIhFg', title: 'GRIND NOW SHINE LATER - Motivation', channel: 'Motiversity', duration: 1920 },
-    { id: 'h3', youtubeId: '2X-8L5GBD-A', title: 'NO DAYS OFF - Motivational Speech', channel: 'Motiversity', duration: 2100 },
-    { id: 'h4', youtubeId: 'G-J0lkyhz7o', title: 'RISE AND GRIND - Motivational Video', channel: 'MotivationHub', duration: 1680 },
-    { id: 'h5', youtubeId: 'ilKXD8dBEUo', title: 'OUTWORK THEM ALL - Motivational Speech', channel: 'Ben Lionel Scott', duration: 1860 },
-    { id: 'h6', youtubeId: 'AVDgwRciVZc', title: 'THE GRIND - Best Motivational Video', channel: 'Be Inspired', duration: 2040 },
-    { id: 'h7', youtubeId: 'kDeYMDGX_WA', title: 'WORK IN SILENCE - Motivational Compilation', channel: 'Team Fearless', duration: 1920 },
-    { id: 'h8', youtubeId: 'zzfREEPbUsA', title: 'STUDY HARD - Academic Motivation', channel: 'Motivation2Study', duration: 1800 },
-  ],
-  Confidence: [
-    { id: 'cf1', youtubeId: 'FTnCMxN_JCY', title: 'BELIEVE IN YOURSELF - Motivational Speech', channel: 'Motiversity', duration: 1800 },
-    { id: 'cf2', youtubeId: 'w-HYZv6HzAs', title: 'SELF CONFIDENCE - Powerful Motivation', channel: 'MotivationHub', duration: 1920 },
-    { id: 'cf3', youtubeId: 'sPaJTS33Qzc', title: 'KNOW YOUR WORTH - Motivational Video', channel: 'Motiversity', duration: 2100 },
-    { id: 'cf4', youtubeId: 'lq_BvBpVeG8', title: 'OWN YOUR POWER - Motivational Speech', channel: 'Motiversity', duration: 1680 },
-    { id: 'cf5', youtubeId: 'YLgNKMq9HBg', title: 'CONFIDENCE - Best Motivational Speech', channel: 'Ben Lionel Scott', duration: 1860 },
-    { id: 'cf6', youtubeId: '3P4_E3GhUv8', title: 'YOU ARE ENOUGH - Powerful Motivational Video', channel: 'Be Inspired', duration: 2040 },
-    { id: 'cf7', youtubeId: 'R9eVbgVfbEM', title: 'UNSHAKEABLE CONFIDENCE - Motivational Speech', channel: 'Fearless Soul', duration: 1800 },
-    { id: 'cf8', youtubeId: '6vuetQSwFW8', title: 'BELIEVE IN YOURSELF - Study Motivation', channel: 'Motivation2Study', duration: 1740 },
-  ],
-}
 
 // Search keywords for each motivation topic
 const TOPIC_SEARCHES: Record<string, string[]> = {
@@ -118,6 +37,12 @@ function parseDuration(duration: string): number {
   return hours * 3600 + minutes * 60 + seconds
 }
 
+// Return stale cached videos or empty array as a last resort
+async function getFallback(topic: string) {
+  const stale = await getStaleCachedVideos('motivation', topic)
+  return stale || []
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const topic = searchParams.get('topic') || 'Discipline'
@@ -138,24 +63,20 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // No API key - use fallback videos (shuffle with seed if requested)
+  // No API key - use stale cache or return empty
   if (!YOUTUBE_API_KEY) {
-    let fallback = FALLBACK_VIDEOS[topic] || FALLBACK_VIDEOS['Discipline']
-    if (shuffle && seedParam) {
+    const fallback = await getFallback(topic)
+    if (shuffle && seedParam && fallback.length > 0) {
       const seed = parseInt(seedParam, 10) || Date.now()
-      // Seeded shuffle for fallback videos
-      fallback = [...fallback]
-      for (let i = fallback.length - 1; i > 0; i--) {
+      const shuffled = [...fallback]
+      for (let i = shuffled.length - 1; i > 0; i--) {
         const x = Math.sin(seed + i) * 10000
         const j = Math.floor((x - Math.floor(x)) * (i + 1))
-        ;[fallback[i], fallback[j]] = [fallback[j], fallback[i]]
+        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
       }
+      return NextResponse.json({ videos: shuffled, topic, fallback: true })
     }
-    return NextResponse.json({
-      videos: fallback,
-      topic,
-      fallback: true,
-    })
+    return NextResponse.json({ videos: fallback, topic, fallback: true })
   }
 
   const searchTerms = TOPIC_SEARCHES[topic] || TOPIC_SEARCHES['Discipline']
@@ -191,17 +112,12 @@ export async function GET(request: NextRequest) {
     if (!searchResponse.ok) {
       const error = await searchResponse.text()
       console.error('[YouTube API] Search error:', error)
-      // Return fallback videos on API error (quota exceeded, etc.)
-      const fallback = FALLBACK_VIDEOS[topic] || FALLBACK_VIDEOS['Discipline']
-
-      // Cache fallback so we don't keep hitting the API today
-      await setCachedVideos('motivation', topic, fallback)
-
-      return NextResponse.json({
-        videos: fallback,
-        topic,
-        fallback: true,
-      })
+      // Return stale cached videos on API error (quota exceeded, etc.)
+      const fallback = await getFallback(topic)
+      if (fallback.length > 0) {
+        await setCachedVideos('motivation', topic, fallback)
+      }
+      return NextResponse.json({ videos: fallback, topic, fallback: true })
     }
 
     const searchData = await searchResponse.json()
@@ -234,7 +150,6 @@ export async function GET(request: NextRequest) {
       }
 
       const title = video.snippet.title || ''
-      const description = video.snippet.description || ''
 
       // Skip videos with non-English characters in title
       if (nonEnglishPattern.test(title)) {
@@ -283,16 +198,11 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('[YouTube API] Error:', error)
-    // Return fallback videos on any error and cache them
-    const fallback = FALLBACK_VIDEOS[topic] || FALLBACK_VIDEOS['Discipline']
-
-    // Cache fallback so we don't keep hitting the API
-    setCachedVideos('motivation', topic, fallback)
-
-    return NextResponse.json({
-      videos: fallback,
-      topic,
-      fallback: true,
-    })
+    // Return stale cached videos on any error
+    const fallback = await getFallback(topic)
+    if (fallback.length > 0) {
+      setCachedVideos('motivation', topic, fallback)
+    }
+    return NextResponse.json({ videos: fallback, topic, fallback: true })
   }
 }
