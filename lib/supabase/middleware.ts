@@ -42,7 +42,8 @@ export async function updateSession(request: NextRequest) {
   // Public/auth routes - always accessible
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
                      request.nextUrl.pathname.startsWith('/signup') ||
-                     request.nextUrl.pathname.startsWith('/forgot-password')
+                     request.nextUrl.pathname.startsWith('/forgot-password') ||
+                     request.nextUrl.pathname.startsWith('/reset-password')
 
   // API routes - always accessible
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
@@ -67,8 +68,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from login/signup
-  if (user && isAuthRoute) {
+  // Redirect authenticated users away from login/signup (but NOT reset-password)
+  if (user && isAuthRoute && !request.nextUrl.pathname.startsWith('/reset-password')) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)

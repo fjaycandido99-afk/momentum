@@ -80,6 +80,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
   const isAuthPage = pathname?.startsWith('/login') ||
                      pathname?.startsWith('/signup') ||
                      pathname?.startsWith('/forgot-password') ||
+                     pathname?.startsWith('/reset-password') ||
                      pathname?.startsWith('/report/') ||
                      pathname?.startsWith('/portal/') ||
                      pathname?.startsWith('/invite/')
