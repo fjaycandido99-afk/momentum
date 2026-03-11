@@ -698,8 +698,8 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
         {/* Center EQ bars when playing */}
         {viewMode !== 'video' && (
           <div className="absolute inset-0 flex items-center justify-center z-[4] pointer-events-none">
-            <div className={`transition-opacity duration-500 ${isPlaying ? 'opacity-60' : 'opacity-0'}`}>
-              <EqBars height={40} barWidth={4} gap={5} color="white" barCount={5} paused={!isPlaying} />
+            <div className={`transition-opacity duration-500 ${isPlaying ? 'opacity-100' : 'opacity-0'}`}>
+              <EqBars height={40} barWidth={4} gap={5} color="#ffffff" barCount={10} paused={!isPlaying} />
             </div>
           </div>
         )}
