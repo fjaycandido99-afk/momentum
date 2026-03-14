@@ -39,6 +39,7 @@ export function SessionPlayer({
   const audioContext = useAudioOptional()
   const containerRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const blobUrlRef = useRef<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
   const analyserSetupDone = useRef(false)
@@ -92,7 +93,17 @@ export function SessionPlayer({
       return
     }
 
-    const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`)
+    // Use blob URL instead of data URL — blob URLs are same-origin which
+    // helps createMediaElementSource work on iOS WKWebView (Capacitor)
+    const binaryString = atob(audioBase64)
+    const bytes = new Uint8Array(binaryString.length)
+    for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i)
+    const blob = new Blob([bytes], { type: 'audio/mpeg' })
+    const blobUrl = URL.createObjectURL(blob)
+    blobUrlRef.current = blobUrl
+
+    const audio = new Audio(blobUrl)
+    audio.crossOrigin = 'anonymous'
     audioRef.current = audio
 
     audio.onloadedmetadata = () => {
@@ -127,6 +138,10 @@ export function SessionPlayer({
         audioRef.current.pause()
         audioRef.current.src = ''
         audioRef.current = null
+      }
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current)
+        blobUrlRef.current = null
       }
       if (audioCtxRef.current) {
         audioCtxRef.current.close().catch(() => {})
