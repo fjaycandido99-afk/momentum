@@ -62,7 +62,7 @@ export function SessionPlayer({
   const gainRef = useRef<GainNode | null>(null)
 
   const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null)
-  const [useSimulated, setUseSimulated] = useState(false)
+  const [useSimulated, setUseSimulated] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [audioDuration, setAudioDuration] = useState(duration)
