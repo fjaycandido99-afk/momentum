@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { X, Check, Crown, Sparkles, Zap, Clock, Music, Book, Download, Loader2 } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { purchaseProduct, REVENUECAT_PRODUCTS } from '@/lib/revenuecat'
@@ -202,20 +203,34 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               {error}
             </p>
           )}
-          <p className="text-center text-white/50 text-xs mt-3">
-            Cancel anytime. No commitment required.
+          <p className="text-center text-white/40 text-[11px] mt-3 leading-relaxed">
+            {billingPeriod === 'monthly'
+              ? `Voxu Premium: $${monthlyPrice}/month. `
+              : `Voxu Premium: $${yearlyPrice}/year ($${yearlyMonthly}/month). `}
+            Payment will be charged to your {isNative ? 'Apple ID' : 'payment method'} at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. {isNative ? 'Manage subscriptions in Settings > Apple ID > Subscriptions.' : 'Cancel anytime from your account settings.'}
           </p>
         </div>
 
-        {/* Trust indicators */}
-        <div className="px-6 pb-6 flex items-center justify-center gap-4 text-white/50 text-xs">
-          <div className="flex items-center gap-1">
-            <Check className="w-3 h-3" />
-            <span>Secure payment</span>
+        {/* Legal links & trust indicators */}
+        <div className="px-6 pb-6 space-y-3">
+          <div className="flex items-center justify-center gap-4 text-white/50 text-xs">
+            <div className="flex items-center gap-1">
+              <Check className="w-3 h-3" />
+              <span>Secure payment</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Check className="w-3 h-3" />
+              <span>Instant access</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Check className="w-3 h-3" />
-            <span>Instant access</span>
+          <div className="flex items-center justify-center gap-3 text-white/40 text-[11px]">
+            <Link href="/terms" className="underline hover:text-white/60 transition-colors">
+              Terms of Use
+            </Link>
+            <span className="text-white/20">|</span>
+            <Link href="/privacy" className="underline hover:text-white/60 transition-colors">
+              Privacy Policy
+            </Link>
           </div>
         </div>
       </div>
