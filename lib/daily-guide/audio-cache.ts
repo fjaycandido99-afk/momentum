@@ -4,7 +4,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { getSharedCached, setSharedCache, TONE_VOICES } from './audio-utils'
-import type { GuideSegment } from './day-type'
+// string is any valid segment string (session types + legacy types)
 
 export interface CachedGuideAudio {
   script: string
@@ -13,14 +13,14 @@ export interface CachedGuideAudio {
   createdAt: string
 }
 
-function getCacheKey(userId: string, date: string, segment: GuideSegment): string {
+function getCacheKey(userId: string, date: string, segment: string): string {
   return `daily-${userId}-${date}-${segment}`
 }
 
 export async function getCachedAudio(
   userId: string,
   date: string,
-  segment: GuideSegment
+  segment: string
 ): Promise<CachedGuideAudio | null> {
   const cacheKey = getCacheKey(userId, date, segment)
   try {
@@ -44,7 +44,7 @@ export async function getCachedAudio(
 export async function setCachedAudio(
   userId: string,
   date: string,
-  segment: GuideSegment,
+  segment: string,
   script: string,
   audioBase64: string,
   duration: number
@@ -65,7 +65,7 @@ export async function setCachedAudio(
 export async function hasCachedAudio(
   userId: string,
   date: string,
-  segment: GuideSegment
+  segment: string
 ): Promise<boolean> {
   const cacheKey = getCacheKey(userId, date, segment)
   try {
@@ -81,7 +81,7 @@ export async function hasCachedAudio(
 
 export async function generateAndCacheAudio(
   script: string,
-  segment: GuideSegment,
+  segment: string,
   tone: string = 'calm'
 ): Promise<{ audioBase64: string; duration: number } | null> {
   // Check shared cache first — keyed by segment+tone, reused forever

@@ -12,10 +12,7 @@ interface AudioVisualizerProps {
   inline?: boolean
 }
 
-// Cache MediaElementSource nodes — each audio element can only have one
-const sourceCache = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>()
-const contextCache = new WeakMap<HTMLAudioElement, AudioContext>()
-const analyserCache = new WeakMap<HTMLAudioElement, AnalyserNode>()
+import { sourceCache, contextCache, analyserCache } from './audio-analyser-cache'
 
 function AudioVisualizerInner({
   audioElement,

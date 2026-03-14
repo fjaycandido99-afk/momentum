@@ -80,8 +80,8 @@ export async function POST(req: Request) {
       prisma.dailyGuide.findMany({
         where: { user_id: user.id },
         select: {
-          morning_prime_done: true, movement_done: true, micro_lesson_done: true,
-          breath_done: true, day_close_done: true, date: true,
+          morning_prime_done: true, midday_reset_done: true, wind_down_done: true,
+          bedtime_story_done: true, date: true,
         },
         orderBy: { date: 'desc' },
         take: 30,
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
     let countingConsecutive = true
 
     for (const g of guides) {
-      const allDone = g.morning_prime_done && g.movement_done && g.micro_lesson_done && g.breath_done && g.day_close_done
+      const allDone = g.morning_prime_done && g.midday_reset_done && g.wind_down_done && g.bedtime_story_done
       if (allDone) {
         fullDayCount++
         if (countingConsecutive) consecutiveFullDays++
@@ -104,17 +104,16 @@ export async function POST(req: Request) {
         countingConsecutive = false
       }
       if (g.morning_prime_done) moduleTypesSeen.add('morning_prime')
-      if (g.movement_done) moduleTypesSeen.add('movement')
-      if (g.micro_lesson_done) moduleTypesSeen.add('micro_lesson')
-      if (g.breath_done) moduleTypesSeen.add('breath')
-      if (g.day_close_done) moduleTypesSeen.add('day_close')
+      if (g.midday_reset_done) moduleTypesSeen.add('midday_reset')
+      if (g.wind_down_done) moduleTypesSeen.add('wind_down')
+      if (g.bedtime_story_done) moduleTypesSeen.add('bedtime_story')
     }
     uniqueModuleTypes = moduleTypesSeen.size
 
     // Weekend active count
     const weekendGuides = guides.filter(g => {
       const day = g.date.getDay()
-      return (day === 0 || day === 6) && (g.morning_prime_done || g.movement_done || g.micro_lesson_done || g.breath_done || g.day_close_done)
+      return (day === 0 || day === 6) && (g.morning_prime_done || g.midday_reset_done || g.wind_down_done || g.bedtime_story_done)
     })
     const weekendActiveCount = weekendGuides.length
 

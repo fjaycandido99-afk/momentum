@@ -50,10 +50,9 @@ export async function GET(request: NextRequest) {
       },
       select: {
         morning_prime_done: true,
-        movement_done: true,
-        micro_lesson_done: true,
-        breath_done: true,
-        day_close_done: true,
+        midday_reset_done: true,
+        wind_down_done: true,
+        bedtime_story_done: true,
       },
     })
 
@@ -68,27 +67,24 @@ export async function GET(request: NextRequest) {
 
     // Calculate completed modules
     let completedModules = 0
-    const enabledSegments = prefs?.enabled_segments || ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close']
-    const morningSegments = enabledSegments.filter((s: string) =>
-      ['morning_prime', 'movement', 'micro_lesson', 'breath'].includes(s)
-    )
+    const enabledSegments = prefs?.enabled_segments || ['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story']
 
     if (guide) {
       if (guide.morning_prime_done && enabledSegments.includes('morning_prime')) completedModules++
-      if (guide.movement_done && enabledSegments.includes('movement')) completedModules++
-      if (guide.micro_lesson_done && enabledSegments.includes('micro_lesson')) completedModules++
-      if (guide.breath_done && enabledSegments.includes('breath')) completedModules++
+      if (guide.midday_reset_done && enabledSegments.includes('midday_reset')) completedModules++
+      if (guide.wind_down_done && enabledSegments.includes('wind_down')) completedModules++
+      if (guide.bedtime_story_done && enabledSegments.includes('bedtime_story')) completedModules++
     }
 
-    const totalModules = morningSegments.length
+    const totalModules = enabledSegments.length
     const streak = prefs?.current_streak || 0
 
     // Generate message based on progress
-    let message = 'Start your morning flow!'
+    let message = 'Start your daily sessions!'
     if (completedModules === totalModules) {
-      message = 'Morning complete! Great job!'
+      message = 'All sessions complete! Great job!'
     } else if (completedModules > 0) {
-      message = `${totalModules - completedModules} modules to go!`
+      message = `${totalModules - completedModules} sessions to go!`
     } else if (streak > 0) {
       message = `Keep your ${streak}-day streak going!`
     }

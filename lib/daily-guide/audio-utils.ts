@@ -117,7 +117,7 @@ export async function generateAudio(script: string, tone: string = 'calm'): Prom
     // Estimate duration: ~150 words per minute for calm speech, ~5 chars per word
     const estimatedDuration = Math.ceil((script.length / 5) / 150 * 60)
 
-    return { audioBase64, duration: Math.min(estimatedDuration, 120) } // Cap at 2 min
+    return { audioBase64, duration: estimatedDuration }
   } catch (error) {
     console.error('[ElevenLabs] Exception:', error)
     return { audioBase64: null, duration: 0 }

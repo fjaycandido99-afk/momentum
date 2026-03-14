@@ -68,11 +68,10 @@ const TONES = [
 ]
 
 const SEGMENT_OPTIONS = [
-  { id: 'morning_prime', label: 'Morning Greeting', icon: Sun, required: true },
-  { id: 'movement', label: 'Quote of the Day', icon: Sparkles },
-  { id: 'micro_lesson', label: 'Motivation Video', icon: Lightbulb },
-  { id: 'breath', label: 'Breath', icon: Wind },
-  { id: 'day_close', label: 'Day Close', icon: Moon, required: true },
+  { id: 'morning_prime', label: 'Morning Prime', icon: Sun, required: true },
+  { id: 'midday_reset', label: 'Midday Reset', icon: Sparkles },
+  { id: 'wind_down', label: 'Wind Down', icon: Wind },
+  { id: 'bedtime_story', label: 'Bedtime Story', icon: Moon, required: true },
 ]
 
 import { ZODIAC_SIGNS } from '@/lib/astrology/constants'
@@ -122,7 +121,7 @@ function SettingsContent() {
   const [studyStartTime, setStudyStartTime] = useState('18:00')
   const [studyEndTime, setStudyEndTime] = useState('21:00')
   const [guideTone, setGuideTone] = useState<GuideTone>('calm')
-  const [enabledSegments, setEnabledSegments] = useState<string[]>(['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'])
+  const [enabledSegments, setEnabledSegments] = useState<string[]>(['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story'])
   const [dailyReminder, setDailyReminder] = useState(true)
   const [reminderTime, setReminderTime] = useState('07:00')
   const [bedtimeReminderEnabled, setBedtimeReminderEnabled] = useState(false)
@@ -228,9 +227,9 @@ function SettingsContent() {
           bedtime_reminder_enabled: bedtimeReminderEnabled,
           astrology_enabled: astrologyEnabled,
           zodiac_sign: zodiacSign,
-          workout_enabled: enabledSegments.includes('movement'),
-          micro_lesson_enabled: enabledSegments.includes('micro_lesson'),
-          breath_cues_enabled: enabledSegments.includes('breath'),
+          workout_enabled: true, // legacy
+          micro_lesson_enabled: true, // legacy
+          breath_cues_enabled: true, // legacy
           // Always include timezone so notification scheduling uses correct local time
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || undefined,
         }),

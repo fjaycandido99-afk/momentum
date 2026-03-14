@@ -43,10 +43,9 @@ export async function GET() {
         journal_gratitude: true,
         journal_learned: true,
         morning_prime_done: true,
-        movement_done: true,
-        micro_lesson_done: true,
-        breath_done: true,
-        day_close_done: true,
+        midday_reset_done: true,
+        wind_down_done: true,
+        bedtime_story_done: true,
       },
       orderBy: { date: 'asc' },
     })
@@ -68,13 +67,12 @@ export async function GET() {
     for (const g of guides) {
       let modules = 0
       if (g.morning_prime_done) modules++
-      if (g.movement_done) modules++
-      if (g.micro_lesson_done) modules++
-      if (g.breath_done) modules++
-      if (g.day_close_done) modules++
+      if (g.midday_reset_done) modules++
+      if (g.wind_down_done) modules++
+      if (g.bedtime_story_done) modules++
 
       totalModules += modules
-      if (modules >= 4) completedDays++
+      if (modules >= 3) completedDays++
 
       if (g.journal_win) { journalEntries++; wins.push(g.journal_win) }
       if (g.journal_gratitude) gratitudes.push(g.journal_gratitude)

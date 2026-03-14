@@ -27,8 +27,8 @@ const DEFAULT_PREFERENCES = {
   workout_intensity: 'full',
   micro_lesson_enabled: true,
   breath_cues_enabled: true,
-  enabled_segments: ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'],
-  segment_order: ['morning_prime', 'movement', 'breath', 'micro_lesson'],
+  enabled_segments: ['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story'],
+  segment_order: ['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story'],
   background_music_enabled: true,
   preferred_music_genre: null,
   daily_reminder: true,
@@ -151,8 +151,8 @@ export async function GET() {
         breath_cues_enabled: true,
 
         // Segment customization
-        enabled_segments: ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'],
-        segment_order: ['morning_prime', 'movement', 'breath', 'micro_lesson'],
+        enabled_segments: ['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story'],
+        segment_order: ['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story'],
 
         // Background music
         background_music_enabled: true,
@@ -445,8 +445,8 @@ export async function POST(request: NextRequest) {
         breath_cues_enabled: breath_cues_enabled ?? true,
 
         // Segment customization
-        enabled_segments: enabled_segments || ['morning_prime', 'movement', 'micro_lesson', 'breath', 'day_close'],
-        segment_order: segment_order || ['morning_prime', 'movement', 'micro_lesson', 'breath'],
+        enabled_segments: enabled_segments || ['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story'],
+        segment_order: segment_order || ['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story'],
 
         // Background music
         background_music_enabled: background_music_enabled ?? true,

@@ -162,10 +162,9 @@ export function checkChallengeCondition(
   condition: ChallengeCondition,
   dailyGuide: {
     morning_prime_done?: boolean
-    movement_done?: boolean
-    micro_lesson_done?: boolean
-    breath_done?: boolean
-    day_close_done?: boolean
+    midday_reset_done?: boolean
+    wind_down_done?: boolean
+    bedtime_story_done?: boolean
     journal_freetext?: string | null
     journal_gratitude?: string | null
     journal_win?: string | null
@@ -179,15 +178,15 @@ export function checkChallengeCondition(
   if (!dailyGuide && condition.type !== 'xp_earned') return false
 
   const g = dailyGuide
-  const allModulesDone = g ? (g.morning_prime_done && g.movement_done && g.micro_lesson_done && g.breath_done && g.day_close_done) : false
-  const modulesDoneCount = g ? [g.morning_prime_done, g.movement_done, g.micro_lesson_done, g.breath_done, g.day_close_done].filter(Boolean).length : 0
+  const allModulesDone = g ? (g.morning_prime_done && g.midday_reset_done && g.wind_down_done && g.bedtime_story_done) : false
+  const modulesDoneCount = g ? [g.morning_prime_done, g.midday_reset_done, g.wind_down_done, g.bedtime_story_done].filter(Boolean).length : 0
   const hasJournal = !!(g?.journal_freetext || g?.journal_win || g?.journal_gratitude)
   const journalWords = [g?.journal_freetext, g?.journal_win, g?.journal_gratitude].filter(Boolean).join(' ').split(/\s+/).filter(Boolean).length
 
   switch (condition.type) {
     case 'journal_words': return journalWords >= condition.minWords
     case 'modules_complete': return modulesDoneCount >= condition.count
-    case 'breathing_session': return !!g?.breath_done
+    case 'breathing_session': return xpEvents.some(e => e.event_type === 'breathingSession')
     case 'mood_log': return !!(g?.mood_before || g?.mood_after)
     case 'all_modules': return !!allModulesDone
     case 'soundscape_listen': return xpEvents.some(e => e.event_type === 'focusSession')
@@ -196,7 +195,7 @@ export function checkChallengeCondition(
     case 'journal_entry': return hasJournal
     case 'xp_earned': return todaysXP >= condition.amount
     case 'morning_module': return !!g?.morning_prime_done
-    case 'evening_module': return !!g?.day_close_done
+    case 'evening_module': return !!g?.wind_down_done || !!g?.bedtime_story_done
     case 'gratitude_entry': return !!g?.journal_gratitude
     case 'music_listen': return !!g?.music_genre_used
     case 'goal_progress': return xpEvents.some(e => e.event_type === 'moduleComplete')

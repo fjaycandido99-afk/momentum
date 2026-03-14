@@ -30,17 +30,10 @@
       "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
     },
     {
-      "name": "Breathe",
-      "short_name": "Breathe",
-      "description": "Quick breathing exercise",
-      "url": "/?action=breathe",
-      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
-    },
-    {
-      "name": "Day Close",
-      "short_name": "Evening",
-      "description": "End of day reflection",
-      "url": "/?action=evening",
+      "name": "Daily Guide",
+      "short_name": "Guide",
+      "description": "Open your Daily Guide",
+      "url": "/daily-guide",
       "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
     }
   ],

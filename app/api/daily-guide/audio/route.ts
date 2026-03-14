@@ -7,18 +7,22 @@ import {
   generateAndCacheAudio,
 } from '@/lib/daily-guide/audio-cache'
 import { getDateString } from '@/lib/daily-guide/day-type'
-import type { GuideSegment } from '@/lib/daily-guide/day-type'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
 // All valid module/segment types
-const VALID_MODULES: GuideSegment[] = [
+const VALID_MODULES = [
+  // V2 sessions
+  'morning_prime',
+  'midday_reset',
+  'wind_down',
+  'bedtime_story',
+  // V1 legacy
   'morning',
   'evening',
   'midday',
   'afternoon',
-  'morning_prime',
   'workout',
   'breath',
   'micro_lesson',
@@ -27,7 +31,7 @@ const VALID_MODULES: GuideSegment[] = [
   'checkpoint_2',
   'checkpoint_3',
   'tomorrow_preview',
-]
+] as const
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,14 +46,14 @@ export async function GET(request: NextRequest) {
     const segmentParam = searchParams.get('segment')
     const dateStr = searchParams.get('date')
 
-    if (!segmentParam || !VALID_MODULES.includes(segmentParam as GuideSegment)) {
+    if (!segmentParam || !(VALID_MODULES as readonly string[]).includes(segmentParam)) {
       return NextResponse.json(
         { error: 'Invalid segment parameter' },
         { status: 400 }
       )
     }
 
-    const segment = segmentParam as GuideSegment
+    const segment = segmentParam as string
 
     const date = dateStr ? new Date(dateStr) : new Date()
     const dateKey = getDateString(date)
@@ -87,6 +91,16 @@ export async function GET(request: NextRequest) {
     // Get the appropriate script based on segment
     let script: string | null = null
     switch (segment) {
+      // V2 sessions
+      case 'midday_reset':
+        script = (guide as any).midday_reset_script
+        break
+      case 'wind_down':
+        script = (guide as any).wind_down_script
+        break
+      case 'bedtime_story':
+        script = (guide as any).bedtime_story_script
+        break
       // Legacy segments
       case 'morning':
         script = guide.morning_prime_script || guide.morning_script

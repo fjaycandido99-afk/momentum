@@ -23,9 +23,9 @@ export function useJournalMood(date: string) {
   const hasJournaledToday = !!(data?.journal_mood || data?.journal_win || data?.journal_gratitude || data?.journal_freetext || data?.journal_dream)
   const modulesCompletedToday = [
     data?.morning_prime_done,
-    data?.day_close_done,
-    data?.movement_done,
-    data?.micro_lesson_done,
+    data?.midday_reset_done,
+    data?.wind_down_done,
+    data?.bedtime_story_done,
   ].filter(Boolean).length
 
   return {

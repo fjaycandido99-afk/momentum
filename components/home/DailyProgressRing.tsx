@@ -5,9 +5,9 @@ import { Check, Circle, Gift } from 'lucide-react'
 
 interface DailyProgressRingProps {
   morningDone: boolean
-  movementDone: boolean
-  lessonDone: boolean
-  closeDone: boolean
+  middayDone: boolean
+  windDownDone: boolean
+  bedtimeDone: boolean
   hasJournaledToday: boolean
   dailyIntention: boolean
   dailyBonusClaimed?: boolean
@@ -15,18 +15,18 @@ interface DailyProgressRingProps {
 
 const TASKS = [
   { key: 'morningDone', label: 'Morning Prime' },
-  { key: 'movementDone', label: 'Movement' },
-  { key: 'lessonDone', label: 'Micro Lesson' },
-  { key: 'closeDone', label: 'Day Close' },
+  { key: 'middayDone', label: 'Midday Reset' },
+  { key: 'windDownDone', label: 'Wind Down' },
+  { key: 'bedtimeDone', label: 'Bedtime Story' },
   { key: 'hasJournaledToday', label: 'Journal' },
   { key: 'dailyIntention', label: 'Intention' },
 ] as const
 
 export function DailyProgressRing({
   morningDone,
-  movementDone,
-  lessonDone,
-  closeDone,
+  middayDone,
+  windDownDone,
+  bedtimeDone,
   hasJournaledToday,
   dailyIntention,
   dailyBonusClaimed,
@@ -36,9 +36,9 @@ export function DailyProgressRing({
 
   const statuses: Record<string, boolean> = {
     morningDone,
-    movementDone,
-    lessonDone,
-    closeDone,
+    middayDone,
+    windDownDone,
+    bedtimeDone,
     hasJournaledToday,
     dailyIntention,
   }

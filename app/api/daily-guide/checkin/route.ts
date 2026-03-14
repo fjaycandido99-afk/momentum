@@ -8,25 +8,24 @@ export const dynamic = 'force-dynamic'
 
 // All valid segments that can be checked in
 const VALID_SEGMENTS = [
-  // Morning flow segments
+  // V2 sessions (4 time-based)
   'morning_prime',
+  'midday_reset',
+  'wind_down',
+  'bedtime_story',
+  // Legacy segments (mapped to new sessions)
   'movement',
   'workout',
   'micro_lesson',
   'breath',
-  // Astrology
   'cosmic_insight',
-  // Evening
   'day_close',
-  // Checkpoints
   'checkpoint_1',
   'checkpoint_2',
   'checkpoint_3',
-  // Student-specific
   'pre_study',
   'study_break',
   'exam_calm',
-  // Legacy
   'morning',
   'midday',
   'afternoon',
@@ -93,17 +92,26 @@ export async function POST(request: NextRequest) {
         break
       case 'movement':
       case 'workout':
-        updateData.movement_done = true
+        updateData.midday_reset_done = true
         updateData.workout_completed = true // Legacy
         break
       case 'micro_lesson':
-        updateData.micro_lesson_done = true
+        updateData.wind_down_done = true
         break
       case 'breath':
-        updateData.breath_done = true
+        // Legacy breath segment — no dedicated session in V2
+        break
+      case 'midday_reset':
+        updateData.midday_reset_done = true
+        break
+      case 'wind_down':
+        updateData.wind_down_done = true
+        break
+      case 'bedtime_story':
+        updateData.bedtime_story_done = true
         break
       case 'day_close':
-        updateData.day_close_done = true
+        updateData.bedtime_story_done = true
         updateData.evening_played = true // Legacy
         break
       case 'checkpoint_1':
@@ -124,7 +132,7 @@ export async function POST(request: NextRequest) {
         updateData.morning_played = true
         break
       case 'evening':
-        updateData.day_close_done = true
+        updateData.bedtime_story_done = true
         updateData.evening_played = true
         break
       default:
@@ -153,20 +161,18 @@ export async function POST(request: NextRequest) {
 
     console.log('[checkin] Update result:', {
       morning_prime_done: guide.morning_prime_done,
-      movement_done: guide.movement_done,
-      micro_lesson_done: guide.micro_lesson_done,
-      breath_done: guide.breath_done,
-      day_close_done: guide.day_close_done,
+      midday_reset_done: guide.midday_reset_done,
+      wind_down_done: guide.wind_down_done,
+      bedtime_story_done: guide.bedtime_story_done,
     })
 
     return NextResponse.json({
       success: true,
       data: {
         morning_prime_done: guide.morning_prime_done,
-        movement_done: guide.movement_done,
-        micro_lesson_done: guide.micro_lesson_done,
-        breath_done: guide.breath_done,
-        day_close_done: guide.day_close_done,
+        midday_reset_done: guide.midday_reset_done,
+        wind_down_done: guide.wind_down_done,
+        bedtime_story_done: guide.bedtime_story_done,
         checkpoint_1_done: guide.checkpoint_1_done,
         checkpoint_2_done: guide.checkpoint_2_done,
         checkpoint_3_done: guide.checkpoint_3_done,

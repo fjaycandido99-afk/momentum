@@ -22,10 +22,9 @@ export async function GET() {
       select: {
         date: true,
         morning_prime_done: true,
-        movement_done: true,
-        micro_lesson_done: true,
-        breath_done: true,
-        day_close_done: true,
+        midday_reset_done: true,
+        wind_down_done: true,
+        bedtime_story_done: true,
       },
       orderBy: { date: 'asc' },
     })
@@ -44,15 +43,14 @@ export async function GET() {
       let modules = 0
       if (guide) {
         if (guide.morning_prime_done) modules++
-        if (guide.movement_done) modules++
-        if (guide.micro_lesson_done) modules++
-        if (guide.breath_done) modules++
-        if (guide.day_close_done) modules++
+        if (guide.midday_reset_done) modules++
+        if (guide.wind_down_done) modules++
+        if (guide.bedtime_story_done) modules++
       }
 
       if (modules > 0) activeDays++
       totalModules += modules
-      days.push({ date: dateStr, modules, total: 5 })
+      days.push({ date: dateStr, modules, total: 4 })
     }
 
     const completionRate = Math.round((activeDays / 7) * 100)

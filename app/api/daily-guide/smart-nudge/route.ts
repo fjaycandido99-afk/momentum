@@ -106,10 +106,9 @@ export async function GET() {
         journal_win: true,
         journal_gratitude: true,
         morning_prime_done: true,
-        movement_done: true,
-        micro_lesson_done: true,
-        breath_done: true,
-        day_close_done: true,
+        midday_reset_done: true,
+        wind_down_done: true,
+        bedtime_story_done: true,
         ai_streak_recovery_message: true,
       },
       orderBy: { date: 'desc' },
@@ -123,7 +122,7 @@ export async function GET() {
     const hasToday = guides.some(g => new Date(g.date).toISOString().split('T')[0] === todayStr)
     const recentDays = guides.slice(0, 7)
     const journalCount = recentDays.filter(g => g.journal_win || g.journal_gratitude).length
-    const activeDays = recentDays.filter(g => g.morning_prime_done || g.movement_done || g.day_close_done).length
+    const activeDays = recentDays.filter(g => g.morning_prime_done || g.midday_reset_done || g.bedtime_story_done).length
     const inactiveDays = 7 - activeDays
 
     // Check if streak is broken (recovery scenario)
@@ -154,10 +153,9 @@ export async function GET() {
     // Completion pattern
     const moduleCompletion = {
       morning_prime: recentDays.filter(g => g.morning_prime_done).length,
-      movement: recentDays.filter(g => g.movement_done).length,
-      micro_lesson: recentDays.filter(g => g.micro_lesson_done).length,
-      breath: recentDays.filter(g => g.breath_done).length,
-      day_close: recentDays.filter(g => g.day_close_done).length,
+      midday_reset: recentDays.filter(g => g.midday_reset_done).length,
+      wind_down: recentDays.filter(g => g.wind_down_done).length,
+      bedtime_story: recentDays.filter(g => g.bedtime_story_done).length,
     }
     const totalActive = Math.max(activeDays, 1)
     const hasSkippedModule = Object.values(moduleCompletion).some(
@@ -250,7 +248,7 @@ export async function GET() {
           // Recovery-specific prompt with mindset injection
           const mindset = await getUserMindset(user.id)
           const activeDaysInPeriod = guides.filter(g =>
-            g.journal_win || g.morning_prime_done || g.breath_done
+            g.journal_win || g.morning_prime_done || g.midday_reset_done
           ).length
           const wins = guides.filter(g => g.journal_win).map(g => g.journal_win!).slice(0, 3)
 

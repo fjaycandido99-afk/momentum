@@ -76,9 +76,9 @@ export async function GET() {
         journal_mood: true,
         energy_level: true,
         morning_prime_done: true,
-        breath_done: true,
-        movement_done: true,
-        day_close_done: true,
+        midday_reset_done: true,
+        wind_down_done: true,
+        bedtime_story_done: true,
         journal_win: true,
         journal_gratitude: true,
         journal_freetext: true,
@@ -111,9 +111,9 @@ export async function GET() {
     const engagementPerDay = guides.map(g => {
       let count = 0
       if (g.morning_prime_done) count++
-      if (g.breath_done) count++
-      if (g.movement_done) count++
-      if (g.day_close_done) count++
+      if (g.midday_reset_done) count++
+      if (g.wind_down_done) count++
+      if (g.bedtime_story_done) count++
       if (g.journal_win || g.journal_gratitude || g.journal_freetext) count++
       return Math.min(25, count * 5)
     })

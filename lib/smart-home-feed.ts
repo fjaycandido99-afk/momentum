@@ -55,12 +55,10 @@ export function getPostGuideRecommendation(
   const mindsetSoundscape = mindsetId ? MINDSET_SOUNDSCAPE_MAP[mindsetId] : 'focus'
 
   const MODULE_SOUNDSCAPE_MAP: Record<string, string> = {
-    breath: 'relax',
     morning_prime: mindsetSoundscape,
-    day_close: 'sleep',
-    movement: 'energy',
-    workout: 'energy',
-    micro_lesson: 'focus',
+    midday_reset: 'focus',
+    wind_down: 'relax',
+    bedtime_story: 'sleep',
     cosmic_insight: 'night',
   }
 

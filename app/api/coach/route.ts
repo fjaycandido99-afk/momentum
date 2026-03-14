@@ -79,9 +79,9 @@ export async function POST(request: NextRequest) {
         journal_win: true,
         journal_gratitude: true,
         morning_prime_done: true,
-        movement_done: true,
-        breath_done: true,
-        day_close_done: true,
+        midday_reset_done: true,
+        wind_down_done: true,
+        bedtime_story_done: true,
         accountability_streak: true,
         accountability_last_checkin: true,
       },
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         journal_win: true,
         journal_gratitude: true,
         morning_prime_done: true,
-        day_close_done: true,
+        bedtime_story_done: true,
       },
       orderBy: { date: 'desc' },
       take: 7,
@@ -143,12 +143,12 @@ export async function POST(request: NextRequest) {
       // Accountability mode
       const modulesCompleted = [
         guide?.morning_prime_done ? 'Morning Prime' : null,
-        guide?.movement_done ? 'Movement' : null,
-        guide?.breath_done ? 'Breathing' : null,
-        guide?.day_close_done ? 'Day Close' : null,
+        guide?.midday_reset_done ? 'Midday Reset' : null,
+        guide?.wind_down_done ? 'Wind Down' : null,
+        guide?.bedtime_story_done ? 'Bedtime Story' : null,
       ].filter(Boolean)
 
-      const streakDays = recentJournals.filter(g => g.morning_prime_done || g.day_close_done).length
+      const streakDays = recentJournals.filter(g => g.morning_prime_done || g.bedtime_story_done).length
       const recentWins = recentJournals
         .filter(g => g.journal_win)
         .map(g => g.journal_win!.substring(0, 60))

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Timer } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones } from 'lucide-react'
 import { CoachAvatar } from '@/components/coach/CoachAvatar'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -69,10 +69,10 @@ const SoundscapePlayerComponent = dynamic(
 
 function getDailyGuideCTA(): { subtitle: string; Icon: typeof Sun } {
   const hour = new Date().getHours()
-  if (hour >= 5 && hour < 12) return { subtitle: 'Start your morning flow', Icon: Sunrise }
-  if (hour >= 12 && hour < 17) return { subtitle: 'Midday check-in ready', Icon: Sun }
-  if (hour >= 17 && hour < 22) return { subtitle: 'Wind down with Day Close', Icon: Moon }
-  return { subtitle: 'Evening reflection & sleep', Icon: Moon }
+  if (hour >= 5 && hour < 11) return { subtitle: 'Morning Prime ready', Icon: Sunrise }
+  if (hour >= 11 && hour < 16) return { subtitle: 'Midday Reset ready', Icon: Sun }
+  if (hour >= 16 && hour < 21) return { subtitle: 'Time to Wind Down', Icon: Moon }
+  return { subtitle: 'Bedtime Story awaits', Icon: Moon }
 }
 
 export function ImmersiveHome() {
@@ -1075,9 +1075,9 @@ export function ImmersiveHome() {
               <XPBadge />
               <DailyProgressRing
                 morningDone={!!journalData?.morning_prime_done}
-                movementDone={!!journalData?.movement_done}
-                lessonDone={!!journalData?.micro_lesson_done}
-                closeDone={!!journalData?.day_close_done}
+                middayDone={!!journalData?.midday_reset_done}
+                windDownDone={!!journalData?.wind_down_done}
+                bedtimeDone={!!journalData?.bedtime_story_done}
                 hasJournaledToday={hasJournaledToday}
                 dailyIntention={!!dailyIntention}
                 dailyBonusClaimed={dailyBonusClaimed}
@@ -1106,6 +1106,10 @@ export function ImmersiveHome() {
         <>
           <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} role="presentation" />
           <div className="fixed right-6 top-[100px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
+            <button onClick={() => { setShowMenu(false); stopBackgroundMusic(); setShowMorningFlow(true) }} className="flex items-center gap-3 px-4 py-3 w-full hover:bg-white/5 active:bg-white/5 transition-colors">
+              <Headphones className="w-4 h-4 text-white/85" />
+              <span className="text-sm text-white/90">Daily Guide</span>
+            </button>
             <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <PenLine className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Journal</span>
@@ -1117,10 +1121,6 @@ export function ImmersiveHome() {
             <Link href="/progress" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <BarChart3 className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Progress</span>
-            </Link>
-            <Link href="/focus" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
-              <Timer className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">Focus</span>
             </Link>
             <div className="mx-3 my-1 border-t border-white/15" />
             <Link href="/settings" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
@@ -1166,8 +1166,8 @@ export function ImmersiveHome() {
               {/* Module progress */}
               <div className="flex items-center gap-4 mt-3">
                 <div className="flex items-center gap-2.5">
-                  {['Morning', 'Close', 'Move', 'Learn'].map((mod, i) => {
-                    const done = [journalData?.morning_prime_done, journalData?.day_close_done, journalData?.movement_done, journalData?.micro_lesson_done][i]
+                  {['Morning', 'Midday', 'Wind Down', 'Bedtime'].map((mod, i) => {
+                    const done = [journalData?.morning_prime_done, journalData?.midday_reset_done, journalData?.wind_down_done, journalData?.bedtime_story_done][i]
                     return (
                       <div key={mod} className="flex items-center gap-1">
                         <div className={`w-2.5 h-2.5 rounded-full ${done ? 'bg-white' : 'bg-white/30'}`} />

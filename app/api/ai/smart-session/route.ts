@@ -113,9 +113,9 @@ export async function POST(request: NextRequest) {
       prisma.dailyGuide.findMany({
         where: { user_id: user.id, date: { gte: weekAgo } },
         select: {
-          music_genre_used: true, breath_done: true, energy_level: true,
+          music_genre_used: true, energy_level: true,
           mood_before: true, mood_after: true, journal_mood: true,
-          day_type: true, movement_done: true,
+          day_type: true,
         },
         orderBy: { date: 'desc' },
       }),
@@ -177,7 +177,7 @@ Rules:
     } else {
       // Quick mode — context-aware
       const musicUsed = recentGuides.map(g => g.music_genre_used).filter(Boolean)
-      const breathDone = recentGuides.filter(g => g.breath_done).length
+      const breathDone = 0 // Legacy: breathing is no longer a standalone session
       const avgEnergy = recentGuides.filter(g => g.energy_level).map(g => g.energy_level)
 
       // Mood trend from recent journal entries

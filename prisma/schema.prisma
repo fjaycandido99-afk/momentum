@@ -141,8 +141,8 @@ model UserPreferences {
   breath_cues_enabled  Boolean @default(true)
 
   // Segment customization
-  enabled_segments String[] @default(["morning_prime", "movement", "micro_lesson", "breath", "day_close"])
-  segment_order    String[] @default(["morning_prime", "movement", "breath", "micro_lesson"]) // Morning flow order
+  enabled_segments String[] @default(["morning_prime", "midday_reset", "wind_down", "bedtime_story"])
+  segment_order    String[] @default(["morning_prime", "midday_reset", "wind_down", "bedtime_story"])
 
   // Background music preferences
   background_music_enabled Boolean @default(true)
@@ -241,9 +241,19 @@ model DailyGuide {
   energy_level String? // "low" | "normal" | "high" (morning input)
 
   // Selected modules for this day
-  modules String[] @default([]) // ["morning_prime", "movement", "micro_lesson", "breath", "day_close"]
+  modules String[] @default([]) // ["morning_prime", "midday_reset", "wind_down", "bedtime_story"]
 
-  // Core scripts - Morning Flow
+  // === V2 Session Scripts (4 time-based sessions) ===
+  midday_reset_script  String? // ~2 min recharge + affirmation
+  wind_down_script     String? // ~2 min evening reflection + grounding
+  bedtime_story_script String? // ~6-8 min motivational sleep story
+
+  // V2 Session completion tracking
+  midday_reset_done  Boolean @default(false)
+  wind_down_done     Boolean @default(false)
+  bedtime_story_done Boolean @default(false)
+
+  // === Legacy V1 scripts (kept for backward compat) ===
   morning_prime_script String? // 30-90s intention setting
   movement_script      String? // 60-90s energizing movement guidance
   micro_lesson_script  String? // 60-120s quick insight/tip
@@ -323,6 +333,15 @@ model DailyGuide {
   confidence_script         String?
   confidence_audio          String?
   confidence_duration       Int?
+
+  bedtime_story_audio       String?
+  bedtime_story_duration    Int?
+
+  midday_reset_audio        String?
+  midday_reset_duration     Int?
+
+  wind_down_audio           String?
+  wind_down_duration        Int?
 
   // Day-type specific Morning Prime voices (generated for all types daily)
   work_prime_script   String? // Work day morning intention

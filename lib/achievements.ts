@@ -82,7 +82,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'first_soundscape', title: 'Sound Explorer', description: 'Listen to your first soundscape', icon: '🎧', category: 'explorer', rarity: 'common', xpReward: 20, condition: { type: 'first_action', action: 'soundscape' } },
   { id: 'first_routine', title: 'Routine Builder', description: 'Create your first routine', icon: '📋', category: 'explorer', rarity: 'common', xpReward: 20, condition: { type: 'first_action', action: 'routine' } },
   { id: 'genre_explorer', title: 'Genre Explorer', description: 'Listen to 5 different music genres', icon: '🎵', category: 'explorer', rarity: 'rare', xpReward: 75, condition: { type: 'count', action: 'unique_genres', count: 5 } },
-  { id: 'all_modules', title: 'Full Experience', description: 'Complete all module types at least once', icon: '🌟', category: 'explorer', rarity: 'rare', xpReward: 100, condition: { type: 'count', action: 'unique_modules', count: 5 } },
+  { id: 'all_modules', title: 'Full Experience', description: 'Complete all session types at least once', icon: '🌟', category: 'explorer', rarity: 'rare', xpReward: 100, condition: { type: 'count', action: 'unique_modules', count: 4 } },
 
   // --- Dedication (5) ---
   { id: 'early_bird', title: 'Early Bird', description: 'Complete a module before 7 AM', icon: '🌅', category: 'dedication', rarity: 'common', xpReward: 30, condition: { type: 'time_range', start: 4, end: 7, action: 'moduleComplete' } },

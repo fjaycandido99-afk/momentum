@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { VOICE_SCRIPTS, DAY_TYPE_VOICE_SCRIPTS } from '@/lib/daily-guide/voice-scripts'
+import { BEDTIME_STORIES } from '@/lib/daily-guide/bedtime-scripts'
 import { generateAudio, getSharedCached, setSharedCache, getMonthlyUsage, MONTHLY_CREDIT_LIMIT } from '@/lib/daily-guide/audio-utils'
 
 // Force dynamic rendering
@@ -23,6 +24,8 @@ function getAllScriptTypes(): { type: string; scripts: string[] }[] {
   for (const [type, scripts] of Object.entries(DAY_TYPE_VOICE_SCRIPTS)) {
     all.push({ type, scripts })
   }
+  // Bedtime stories
+  all.push({ type: 'bedtime_story', scripts: BEDTIME_STORIES })
   return all
 }
 

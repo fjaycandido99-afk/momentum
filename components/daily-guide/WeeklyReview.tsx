@@ -108,10 +108,9 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
             let moduleCount = 0
             if (entry) {
               if (entry.morning_prime_done) moduleCount++
-              if (entry.movement_done) moduleCount++
-              if (entry.micro_lesson_done) moduleCount++
-              if (entry.breath_done) moduleCount++
-              if (entry.day_close_done) moduleCount++
+              if (entry.midday_reset_done) moduleCount++
+              if (entry.wind_down_done) moduleCount++
+              if (entry.bedtime_story_done) moduleCount++
 
               totalModules += moduleCount
 
@@ -569,7 +568,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                   <div>
                     <p className="text-sm text-white/70">{day.dayName}</p>
                     <p className="text-xs text-white/50">
-                      {day.moduleCount > 0 ? `${day.moduleCount}/5 modules` : 'No activity'}
+                      {day.moduleCount > 0 ? `${day.moduleCount}/4 sessions` : 'No activity'}
                       {(day.journal_win || day.journal_gratitude || day.journal_intention) && ' • Journal ✓'}
                     </p>
                   </div>

@@ -41,10 +41,9 @@ export async function GET() {
         journal_win: true,
         journal_gratitude: true,
         morning_prime_done: true,
-        movement_done: true,
-        micro_lesson_done: true,
-        breath_done: true,
-        day_close_done: true,
+        midday_reset_done: true,
+        wind_down_done: true,
+        bedtime_story_done: true,
       },
       orderBy: { date: 'asc' },
     })
@@ -64,14 +63,13 @@ export async function GET() {
       categoryMinutes[type] = (categoryMinutes[type] || 0) + (s.duration_actual || 0)
     })
 
-    // Modules completed
+    // Sessions completed
     let modulesCompleted = 0
     guides.forEach(g => {
       if (g.morning_prime_done) modulesCompleted++
-      if (g.movement_done) modulesCompleted++
-      if (g.micro_lesson_done) modulesCompleted++
-      if (g.breath_done) modulesCompleted++
-      if (g.day_close_done) modulesCompleted++
+      if (g.midday_reset_done) modulesCompleted++
+      if (g.wind_down_done) modulesCompleted++
+      if (g.bedtime_story_done) modulesCompleted++
     })
 
     // Mood data for chart

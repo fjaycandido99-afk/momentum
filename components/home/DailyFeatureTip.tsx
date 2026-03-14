@@ -1,10 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { Timer, Bot, PenLine, BarChart3, Headphones, Bookmark, Compass, Settings, ChevronRight } from 'lucide-react'
+import { Bot, PenLine, BarChart3, Headphones, Bookmark, Compass, Settings, ChevronRight } from 'lucide-react'
 
 const TIPS = [
-  { icon: Timer, title: 'Focus Timer', description: 'Deep work with Pomodoro sessions + ambient sounds', href: '/focus', accent: 'bg-orange-400/20 text-orange-300' },
   { icon: Bot, title: 'AI Coach', description: 'Get personalized coaching and accountability check-ins', href: '/coach', accent: 'bg-violet-400/20 text-violet-300' },
   { icon: PenLine, title: 'Journal', description: 'Reflect daily with guided, free, dream & chat modes', href: '/journal', accent: 'bg-emerald-400/20 text-emerald-300' },
   { icon: BarChart3, title: 'Progress', description: 'Track your streaks, XP, achievements & wellness score', href: '/progress', accent: 'bg-sky-400/20 text-sky-300' },

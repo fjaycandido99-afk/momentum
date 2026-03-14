@@ -1,513 +1,174 @@
 /**
- * Daily Guide Decision Tree
+ * Daily Guide Decision Tree (v2)
  *
- * Determines what modules and content to show based on:
- * - Day type (work/off/recovery)
- * - User preferences (workout, tone, time mode)
- * - Available time (quick/normal/full)
- * - Energy level (low/normal/high)
+ * Simplified to 4 time-based audio sessions:
+ * - Morning Prime (wake → 11am)
+ * - Midday Reset (11am → 4pm)
+ * - Wind Down (4pm → 9pm)
+ * - Bedtime Story (9pm → wake)
+ *
+ * Auto-selects the current session based on time of day.
+ * Time windows adjust based on user's wake_time preference.
  */
 
-export type DayType = 'work' | 'off' | 'recovery' | 'class' | 'study' | 'exam'
-export type Pace = 'focused' | 'open' | 'gentle'
-export type TimeMode = 'quick' | 'normal' | 'full'
-export type EnergyLevel = 'low' | 'normal' | 'high'
-export type WorkoutIntensity = 'none' | 'light' | 'full'
+export type SessionType = 'morning_prime' | 'midday_reset' | 'wind_down' | 'bedtime_story'
+
 export type GuideTone = 'calm' | 'direct' | 'neutral'
 
-export type ModuleType =
-  | 'morning_prime'
-  | 'workout'
-  | 'micro_lesson'
-  | 'breath'
-  | 'day_close'
-  | 'checkpoint_1'
-  | 'checkpoint_2'
-  | 'checkpoint_3'
-  | 'exam_calm'
-  | 'pre_study'
-  | 'study_break'
-  | 'cosmic_insight'
+export type SessionStatus = 'completed' | 'current' | 'upcoming' | 'missed'
 
-export interface UserPreferences {
-  workDays: number[]
-  workStartTime?: string
-  workEndTime?: string
-  wakeTime?: string
-  guideTone: GuideTone
-  workoutEnabled: boolean
-  workoutIntensity: WorkoutIntensity
-  microLessonEnabled: boolean
-  breathCuesEnabled: boolean
-  defaultTimeMode: TimeMode
-}
-
-export interface DayContext {
-  date: Date
-  dayType: DayType
-  pace: Pace
-  timeMode: TimeMode
-  energyLevel?: EnergyLevel
-  isRecoveryOverride: boolean
-  wasYesterdayHeavy?: boolean
-}
-
-export interface ModuleSelection {
-  modules: ModuleType[]
-  checkpoints: CheckpointConfig[]
-  durations: Record<ModuleType, number>
-}
-
-export interface CheckpointConfig {
-  id: 'checkpoint_1' | 'checkpoint_2' | 'checkpoint_3'
+export interface SessionConfig {
+  id: SessionType
   name: string
-  time: string // "09:00" format
-  description: string
+  tagline: string
+  startHour: number // 24h format
+  endHour: number   // 24h format
 }
 
-// Time durations in seconds for each time mode
-const TIME_DURATIONS: Record<TimeMode, Record<ModuleType, number>> = {
-  quick: {
-    morning_prime: 30,
-    workout: 180, // 3 min
-    micro_lesson: 0, // skip in quick
-    breath: 60,
-    day_close: 30,
-    checkpoint_1: 20,
-    checkpoint_2: 20,
-    checkpoint_3: 20,
-    pre_study: 30,
-    study_break: 60,
-    exam_calm: 45,
-    cosmic_insight: 0, // text-only, no duration
+export interface SessionState {
+  session: SessionConfig
+  status: SessionStatus
+}
+
+export interface TimeWindows {
+  morning_prime: { start: number; end: number }
+  midday_reset: { start: number; end: number }
+  wind_down: { start: number; end: number }
+  bedtime_story: { start: number; end: number }
+}
+
+// Session metadata
+export const SESSIONS: SessionConfig[] = [
+  {
+    id: 'morning_prime',
+    name: 'Morning Prime',
+    tagline: 'Wake up, set intention, energy',
+    startHour: 5,
+    endHour: 11,
   },
-  normal: {
-    morning_prime: 60,
-    workout: 300, // 5 min
-    micro_lesson: 180, // 3 min
-    breath: 90,
-    day_close: 45,
-    checkpoint_1: 30,
-    checkpoint_2: 30,
-    checkpoint_3: 30,
-    pre_study: 60,
-    study_break: 120,
-    exam_calm: 90,
-    cosmic_insight: 0, // text-only, no duration
+  {
+    id: 'midday_reset',
+    name: 'Midday Reset',
+    tagline: 'Recharge, affirm, refocus',
+    startHour: 11,
+    endHour: 16,
   },
-  full: {
-    morning_prime: 90,
-    workout: 420, // 7 min
-    micro_lesson: 300, // 5 min
-    breath: 120,
-    day_close: 60,
-    checkpoint_1: 45,
-    checkpoint_2: 45,
-    checkpoint_3: 45,
-    pre_study: 90,
-    study_break: 180,
-    exam_calm: 120,
-    cosmic_insight: 0, // text-only, no duration
+  {
+    id: 'wind_down',
+    name: 'Wind Down',
+    tagline: 'Reflect, release, ground',
+    startHour: 16,
+    endHour: 21,
   },
+  {
+    id: 'bedtime_story',
+    name: 'Bedtime Story',
+    tagline: 'Motivational sleep story',
+    startHour: 21,
+    endHour: 5, // wraps to next day
+  },
+]
+
+// Session durations in seconds
+export const SESSION_DURATIONS: Record<SessionType, number> = {
+  morning_prime: 120,   // 2 min
+  midday_reset: 120,    // 2 min
+  wind_down: 120,       // 2 min
+  bedtime_story: 420,   // ~7 min (6-8 min stories)
 }
 
 /**
- * Step 1: Classify the day type
+ * Parse "HH:MM" time string to hour number
  */
-export function classifyDayType(
-  date: Date,
-  preferences: UserPreferences,
-  isRecoveryOverride: boolean = false,
-  wasYesterdayHeavy: boolean = false
-): DayType {
-  // Recovery override takes precedence
-  if (isRecoveryOverride) {
-    return 'recovery'
-  }
-
-  // Check if yesterday was heavy and user might need recovery
-  // (This would be determined by tracking - for now, explicit override only)
-  if (wasYesterdayHeavy && isRecoveryOverride) {
-    return 'recovery'
-  }
-
-  // Check schedule
-  const dayOfWeek = date.getDay()
-  const isWorkDay = preferences.workDays.includes(dayOfWeek)
-
-  return isWorkDay ? 'work' : 'off'
+function parseHour(timeStr: string): number {
+  const [h] = timeStr.split(':').map(Number)
+  return h
 }
 
 /**
- * Step 2: Determine pace based on day type
+ * Get time windows adjusted by user's wake time.
+ * The wake time shifts the morning start; other windows adjust proportionally.
  */
-export function determinePace(dayType: DayType): Pace {
-  switch (dayType) {
-    case 'work':
-    case 'class':
-    case 'exam':
-      return 'focused'
-    case 'study':
-    case 'off':
-      return 'open'
-    case 'recovery':
-      return 'gentle'
+export function getTimeWindows(wakeTime: string = '07:00'): TimeWindows {
+  const wake = parseHour(wakeTime)
+
+  // Morning Prime: wake time → wake + 6 hours (capped at reasonable midday)
+  const morningEnd = Math.min(wake + 6, 14)
+  // Midday Reset: morning end → morning end + 5 hours
+  const middayEnd = Math.min(morningEnd + 5, 19)
+  // Wind Down: midday end → midday end + 4 hours (max 23)
+  const windDownEnd = Math.min(middayEnd + 4, 23)
+  // Bedtime Story: wind down end → wake time (next day)
+
+  return {
+    morning_prime: { start: wake, end: morningEnd },
+    midday_reset: { start: morningEnd, end: middayEnd },
+    wind_down: { start: middayEnd, end: windDownEnd },
+    bedtime_story: { start: windDownEnd, end: wake },
   }
 }
 
 /**
- * Step 3: Adjust pace based on energy level (optional override)
+ * Get the current session based on time of day
  */
-export function adjustPaceForEnergy(
-  basePace: Pace,
-  energyLevel?: EnergyLevel
-): Pace {
-  if (!energyLevel) return basePace
+export function getCurrentSession(now: Date = new Date(), wakeTime: string = '07:00'): SessionType {
+  const hour = now.getHours()
+  const windows = getTimeWindows(wakeTime)
 
-  // Low energy can downgrade pace even on work days
-  if (energyLevel === 'low') {
-    if (basePace === 'focused') return 'open'
-    return 'gentle'
+  // Check each window (bedtime_story wraps around midnight)
+  if (hour >= windows.morning_prime.start && hour < windows.morning_prime.end) {
+    return 'morning_prime'
   }
-
-  // High energy can upgrade pace
-  if (energyLevel === 'high') {
-    if (basePace === 'gentle') return 'open'
-    return basePace
+  if (hour >= windows.midday_reset.start && hour < windows.midday_reset.end) {
+    return 'midday_reset'
   }
-
-  return basePace
+  if (hour >= windows.wind_down.start && hour < windows.wind_down.end) {
+    return 'wind_down'
+  }
+  // Everything else is bedtime story (late night + early morning before wake)
+  return 'bedtime_story'
 }
 
 /**
- * Step 4: Select modules based on preferences and context
+ * Get all 4 sessions with their current status
  */
-export function selectModules(
-  dayContext: DayContext,
-  preferences: UserPreferences
-): ModuleType[] {
-  const modules: ModuleType[] = []
-  const { dayType, timeMode, pace } = dayContext
+export function getAllSessionsStatus(
+  completedSessions: SessionType[],
+  now: Date = new Date(),
+  wakeTime: string = '07:00'
+): SessionState[] {
+  const currentSession = getCurrentSession(now, wakeTime)
+  const windows = getTimeWindows(wakeTime)
+  const hour = now.getHours()
 
-  // Always include: Morning Prime + Day Close
-  modules.push('morning_prime')
+  // Session order for the day
+  const sessionOrder: SessionType[] = ['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story']
+  const currentIndex = sessionOrder.indexOf(currentSession)
 
-  // Include Workout if:
-  // - User enabled workouts AND
-  // - (dayType != RECOVERY OR user chose Light intensity)
-  if (preferences.workoutEnabled) {
-    if (dayType !== 'recovery') {
-      modules.push('workout')
-    } else if (preferences.workoutIntensity === 'light') {
-      modules.push('workout') // Light workout on recovery days
+  return SESSIONS.map((session, index) => {
+    const isCompleted = completedSessions.includes(session.id)
+    const isCurrent = session.id === currentSession
+
+    let status: SessionStatus
+    if (isCompleted) {
+      status = 'completed'
+    } else if (isCurrent) {
+      status = 'current'
+    } else if (index < currentIndex) {
+      status = 'missed' // past window, not completed
+    } else {
+      status = 'upcoming'
     }
-  }
 
-  // Include Micro Lesson if:
-  // - timeMode >= normal (not quick) AND
-  // - user opted in
-  if (timeMode !== 'quick' && preferences.microLessonEnabled) {
-    modules.push('micro_lesson')
-  }
-
-  // Include Breath Cues if:
-  // - workout is active OR
-  // - user has breath cues enabled OR
-  // - pace is gentle (recovery days)
-  if (
-    modules.includes('workout') ||
-    preferences.breathCuesEnabled ||
-    pace === 'gentle'
-  ) {
-    modules.push('breath')
-  }
-
-  // Always include Day Close
-  modules.push('day_close')
-
-  return modules
-}
-
-/**
- * Step 5: Configure checkpoints based on day type
- */
-export function configureCheckpoints(
-  dayContext: DayContext,
-  preferences: UserPreferences
-): CheckpointConfig[] {
-  const { dayType } = dayContext
-  const workStart = preferences.workStartTime || '09:00'
-  const workEnd = preferences.workEndTime || '17:00'
-
-  switch (dayType) {
-    case 'work':
-      // WORK: 3 checkpoints (pre-work, midday, post-work)
-      return [
-        {
-          id: 'checkpoint_1',
-          name: 'Focus Target',
-          time: workStart,
-          description: 'Set your intention for the work ahead',
-        },
-        {
-          id: 'checkpoint_2',
-          name: 'Midday Reset',
-          time: '12:30',
-          description: 'Quick reset to finish strong',
-        },
-        {
-          id: 'checkpoint_3',
-          name: 'Downshift',
-          time: workEnd,
-          description: 'Transition out of work mode',
-        },
-      ]
-
-    case 'off':
-      // OFF: 2 checkpoints (late morning, evening)
-      return [
-        {
-          id: 'checkpoint_1',
-          name: 'Nourish',
-          time: '10:30',
-          description: 'Do one thing that feeds your soul',
-        },
-        {
-          id: 'checkpoint_2',
-          name: 'Close the Loop',
-          time: '19:00',
-          description: 'Reflect on your day off',
-        },
-      ]
-
-    case 'recovery':
-      // RECOVERY: 1-2 checkpoints (midday + stronger close)
-      return [
-        {
-          id: 'checkpoint_1',
-          name: 'Gentle Movement',
-          time: '12:00',
-          description: 'Breathe and move gently',
-        },
-        // Stronger day close handled in day_close module
-      ]
-
-    case 'class':
-      // CLASS: 3 checkpoints (pre-class, between classes, after)
-      return [
-        {
-          id: 'checkpoint_1',
-          name: 'Class Prep',
-          time: '08:30',
-          description: 'Get focused before class',
-        },
-        {
-          id: 'checkpoint_2',
-          name: 'Midday Reset',
-          time: '12:30',
-          description: 'Recharge between classes',
-        },
-        {
-          id: 'checkpoint_3',
-          name: 'Day Review',
-          time: '17:00',
-          description: 'Recap what you learned',
-        },
-      ]
-
-    case 'study':
-      // STUDY: 3 checkpoints (focus blocks)
-      return [
-        {
-          id: 'checkpoint_1',
-          name: 'Deep Focus',
-          time: '09:00',
-          description: 'Enter your study zone',
-        },
-        {
-          id: 'checkpoint_2',
-          name: 'Study Break',
-          time: '12:00',
-          description: 'Rest and refuel',
-        },
-        {
-          id: 'checkpoint_3',
-          name: 'Final Push',
-          time: '15:00',
-          description: 'One more focused session',
-        },
-      ]
-
-    case 'exam':
-      // EXAM: 2 checkpoints (calm before, recovery after)
-      return [
-        {
-          id: 'checkpoint_1',
-          name: 'Exam Calm',
-          time: '07:00',
-          description: 'Center yourself before the exam',
-        },
-        {
-          id: 'checkpoint_2',
-          name: 'Decompress',
-          time: '16:00',
-          description: 'Release and recover',
-        },
-      ]
-  }
-}
-
-/**
- * Step 6: Get module durations based on time mode
- */
-export function getModuleDurations(timeMode: TimeMode): Record<ModuleType, number> {
-  return TIME_DURATIONS[timeMode]
-}
-
-/**
- * Step 7: Handle skip adaptation
- * If user skips a module, next checkpoint becomes shorter + more supportive
- */
-export function adaptForSkip(
-  currentModules: ModuleType[],
-  skippedModule: ModuleType,
-  currentDurations: Record<ModuleType, number>
-): { modules: ModuleType[]; durations: Record<ModuleType, number>; toneShift: string } {
-  const newDurations = { ...currentDurations }
-
-  // Shorten subsequent checkpoints by 30%
-  const checkpoints: ModuleType[] = ['checkpoint_1', 'checkpoint_2', 'checkpoint_3']
-  checkpoints.forEach(cp => {
-    if (newDurations[cp]) {
-      newDurations[cp] = Math.floor(newDurations[cp] * 0.7)
-    }
+    return { session, status }
   })
-
-  return {
-    modules: currentModules.filter(m => m !== skippedModule),
-    durations: newDurations,
-    toneShift: 'supportive', // Signal to use more supportive, no-guilt tone
-  }
 }
 
 /**
- * Step 8: Handle stress trigger
- * Immediately switch to breath module with calmer script
+ * Get session config by ID
  */
-export function handleStressTrigger(): {
-  module: ModuleType
-  duration: number
-  toneOverride: GuideTone
-} {
-  return {
-    module: 'breath',
-    duration: 90, // 60-120s breath module
-    toneOverride: 'calm', // Override to calm regardless of preference
-  }
-}
-
-/**
- * Main decision function: Build the complete day plan
- */
-export function buildDayPlan(
-  date: Date,
-  preferences: UserPreferences,
-  options: {
-    isRecoveryOverride?: boolean
-    wasYesterdayHeavy?: boolean
-    energyLevel?: EnergyLevel
-    timeMode?: TimeMode
-    dayTypeOverride?: DayType
-  } = {}
-): {
-  dayContext: DayContext
-  modules: ModuleSelection
-} {
-  const {
-    isRecoveryOverride = false,
-    wasYesterdayHeavy = false,
-    energyLevel,
-    timeMode = preferences.defaultTimeMode,
-    dayTypeOverride,
-  } = options
-
-  // Step 1: Classify day type (use override if provided)
-  const dayType = dayTypeOverride || classifyDayType(date, preferences, isRecoveryOverride, wasYesterdayHeavy)
-
-  // Step 2: Determine base pace
-  let pace = determinePace(dayType)
-
-  // Step 3: Adjust pace for energy level
-  pace = adjustPaceForEnergy(pace, energyLevel)
-
-  const dayContext: DayContext = {
-    date,
-    dayType,
-    pace,
-    timeMode,
-    energyLevel,
-    isRecoveryOverride,
-    wasYesterdayHeavy,
-  }
-
-  // Step 4: Select modules
-  const selectedModules = selectModules(dayContext, preferences)
-
-  // Step 5: Configure checkpoints
-  const checkpoints = configureCheckpoints(dayContext, preferences)
-
-  // Add checkpoint modules to selected modules
-  checkpoints.forEach(cp => {
-    selectedModules.push(cp.id)
-  })
-
-  // Step 6: Get durations
-  const durations = getModuleDurations(timeMode)
-
-  return {
-    dayContext,
-    modules: {
-      modules: selectedModules,
-      checkpoints,
-      durations,
-    },
-  }
-}
-
-/**
- * Get tomorrow's preview context
- */
-export function getTomorrowPreview(
-  tomorrow: Date,
-  preferences: UserPreferences
-): { dayType: DayType; pace: Pace; message: string } {
-  const dayType = classifyDayType(tomorrow, preferences)
-  const pace = determinePace(dayType)
-
-  const messages: Record<DayType, string> = {
-    work: "Tomorrow is a work day. I've set a focused morning for you.",
-    off: "Tomorrow is your day off. A relaxed start awaits.",
-    recovery: "Tomorrow is for recovery. Rest well tonight.",
-    class: "Tomorrow is a class day. Get ready to learn.",
-    study: "Tomorrow is a study day. Deep focus awaits.",
-    exam: "Tomorrow is exam day. You've got this.",
-  }
-
-  return {
-    dayType,
-    pace,
-    message: messages[dayType],
-  }
-}
-
-/**
- * Calculate time estimate for selected modules
- */
-export function calculateTotalTime(
-  modules: ModuleType[],
-  durations: Record<ModuleType, number>
-): number {
-  return modules.reduce((total, module) => total + (durations[module] || 0), 0)
+export function getSessionConfig(sessionId: SessionType): SessionConfig {
+  return SESSIONS.find(s => s.id === sessionId) || SESSIONS[0]
 }
 
 /**

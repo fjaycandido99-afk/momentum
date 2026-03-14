@@ -49,10 +49,9 @@ export async function GET() {
         select: {
           id: true,
           morning_prime_done: true,
-          movement_done: true,
-          micro_lesson_done: true,
-          breath_done: true,
-          day_close_done: true,
+          midday_reset_done: true,
+          wind_down_done: true,
+          bedtime_story_done: true,
           journal_freetext: true,
           journal_win: true,
           journal_gratitude: true,
@@ -67,8 +66,8 @@ export async function GET() {
         where: { user_id: user.id, date: { gte: weekStart } },
         select: {
           date: true,
-          morning_prime_done: true, movement_done: true, micro_lesson_done: true,
-          breath_done: true, day_close_done: true,
+          morning_prime_done: true, midday_reset_done: true, wind_down_done: true,
+          bedtime_story_done: true,
           journal_freetext: true, journal_win: true, journal_gratitude: true,
           mood_before: true, mood_after: true,
           music_genre_used: true,
@@ -123,7 +122,7 @@ export async function GET() {
       weekGuides.filter(g => g.journal_freetext || g.journal_win || g.journal_gratitude).map(g => g.date.toISOString().split('T')[0])
     ).size
     const weekModules = weekGuides.reduce((sum, g) => {
-      return sum + [g.morning_prime_done, g.movement_done, g.micro_lesson_done, g.breath_done, g.day_close_done].filter(Boolean).length
+      return sum + [g.morning_prime_done, g.midday_reset_done, g.wind_down_done, g.bedtime_story_done].filter(Boolean).length
     }, 0)
     const weekBreathing = weekEvents.filter(e => e.event_type === 'breathingSession').length
     const weekMoodLogs = weekGuides.filter(g => g.mood_before || g.mood_after).length

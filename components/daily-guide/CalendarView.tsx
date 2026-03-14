@@ -6,10 +6,9 @@ import { ChevronLeft, ChevronRight, Loader2, Check, Circle, Flame, X, BookOpen, 
 interface DayData {
   date: Date
   morning_prime_done?: boolean
-  movement_done?: boolean
-  micro_lesson_done?: boolean
-  breath_done?: boolean
-  day_close_done?: boolean
+  midday_reset_done?: boolean
+  wind_down_done?: boolean
+  bedtime_story_done?: boolean
   journal_win?: string | null
   journal_gratitude?: string | null
   journal_intention?: string | null
@@ -38,10 +37,9 @@ function hasJournalEntry(day: DayData): boolean {
 function getCompletionLevel(day: DayData): number {
   let count = 0
   if (day.morning_prime_done) count++
-  if (day.movement_done) count++
-  if (day.micro_lesson_done) count++
-  if (day.breath_done) count++
-  if (day.day_close_done) count++
+  if (day.midday_reset_done) count++
+  if (day.wind_down_done) count++
+  if (day.bedtime_story_done) count++
   return count
 }
 
@@ -97,10 +95,9 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
             dataMap[key] = {
               date,
               morning_prime_done: entry.morning_prime_done,
-              movement_done: entry.movement_done,
-              micro_lesson_done: entry.micro_lesson_done,
-              breath_done: entry.breath_done,
-              day_close_done: entry.day_close_done,
+              midday_reset_done: entry.midday_reset_done,
+              wind_down_done: entry.wind_down_done,
+              bedtime_story_done: entry.bedtime_story_done,
               journal_win: entry.journal_win,
               journal_gratitude: entry.journal_gratitude,
               journal_intention: entry.journal_intention,
@@ -172,7 +169,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
         key={day}
         onClick={() => handleDateClick(day)}
         disabled={isFuture}
-        aria-label={`${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}${completionLevel >= 4 ? ', complete' : completionLevel > 0 ? `, ${completionLevel} modules` : ''}${hasJournal ? ', has journal' : ''}`}
+        aria-label={`${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}${completionLevel >= 4 ? ', complete' : completionLevel > 0 ? `, ${completionLevel} sessions` : ''}${hasJournal ? ', has journal' : ''}`}
         className={`
           relative aspect-square flex flex-col items-center justify-center rounded-xl transition-all
           focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none
@@ -357,7 +354,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                     </span>
                   ) : getCompletionLevel(selectedDayData) > 0 ? (
                     <span className="text-xs text-amber-400">
-                      {getCompletionLevel(selectedDayData)}/5 modules
+                      {getCompletionLevel(selectedDayData)}/4 sessions
                     </span>
                   ) : (
                     <span className="text-xs text-white/50">No activity</span>
@@ -471,19 +468,16 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                 <p className="text-xs text-white/50 mb-2">Completed modules</p>
                 <div className="flex flex-wrap gap-2">
                   {selectedDayData.morning_prime_done && (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Morning</span>
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Morning Prime</span>
                   )}
-                  {selectedDayData.movement_done && (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Movement</span>
+                  {selectedDayData.midday_reset_done && (
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Midday Reset</span>
                   )}
-                  {selectedDayData.micro_lesson_done && (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Lesson</span>
+                  {selectedDayData.wind_down_done && (
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Wind Down</span>
                   )}
-                  {selectedDayData.breath_done && (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Breath</span>
-                  )}
-                  {selectedDayData.day_close_done && (
-                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Day Close</span>
+                  {selectedDayData.bedtime_story_done && (
+                    <span className="px-2 py-1 rounded-lg bg-white/5 text-xs text-white/70">Bedtime Story</span>
                   )}
                 </div>
               </div>
