@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { ChevronDown, Play, Pause, RotateCcw, Check } from 'lucide-react'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { CircularVisualizer } from '@/components/player/CircularVisualizer'
+import { sourceCache, contextCache, analyserCache } from '@/components/player/audio-analyser-cache'
 import type { SessionType } from '@/lib/daily-guide/decision-tree'
 
 // Session metadata
@@ -51,20 +52,57 @@ export function SessionPlayer({
   const [isLoaded, setIsLoaded] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
 
-  // Set up Web Audio analyser — must be called from a user gesture on mobile
+  // Set up Web Audio analyser — MUST be called from a user gesture on mobile
   const ensureAnalyser = useCallback(() => {
-    if (analyserSetupDone.current || !audioRef.current) return
+    if (!audioRef.current) return
+
+    const audio = audioRef.current
+
+    // If we already have a working analyser with a running context, nothing to do
+    if (analyserSetupDone.current && audioCtxRef.current?.state === 'running') return
+
+    // If previous setup left a suspended context (auto-play path), tear it down
+    if (analyserSetupDone.current && audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.close().catch(() => {})
+      audioCtxRef.current = null
+      analyserSetupDone.current = false
+      // Can't reuse a MediaElementSource after closing its context —
+      // but we need to recreate the audio element since createMediaElementSource
+      // can only be called once per element
+      sourceCache.delete(audio)
+      contextCache.delete(audio)
+      analyserCache.delete(audio)
+    }
+
     try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      // Check shared cache first (prevents "already connected" error)
+      let audioCtx = contextCache.get(audio)
+      let source = sourceCache.get(audio)
+      let analyser = analyserCache.get(audio)
+
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        contextCache.set(audio, audioCtx)
+      }
+
+      if (!source) {
+        source = audioCtx.createMediaElementSource(audio)
+        sourceCache.set(audio, source)
+      }
+
+      if (!analyser) {
+        analyser = audioCtx.createAnalyser()
+        analyser.fftSize = 128
+        analyser.smoothingTimeConstant = 0.75
+        source.connect(analyser)
+        analyser.connect(audioCtx.destination)
+        analyserCache.set(audio, analyser)
+      }
+
       audioCtxRef.current = audioCtx
-      const source = audioCtx.createMediaElementSource(audioRef.current)
-      const analyser = audioCtx.createAnalyser()
-      analyser.fftSize = 128
-      analyser.smoothingTimeConstant = 0.75
-      source.connect(analyser)
-      analyser.connect(audioCtx.destination)
       setAnalyserNode(analyser)
       analyserSetupDone.current = true
+
       // Resume immediately (we're in a user gesture)
       if (audioCtx.state === 'suspended') {
         audioCtx.resume().catch(() => {})
@@ -96,28 +134,10 @@ export function SessionPlayer({
       setAudioDuration(audio.duration)
       setIsLoaded(true)
       // Try auto-play (works on desktop, may fail on mobile)
+      // NOTE: Do NOT set up Web Audio analyser here — it must happen in a user gesture
+      // on mobile, otherwise the AudioContext stays suspended and the visualizer won't work
       audio.play()
-        .then(() => {
-          setIsPlaying(true)
-          // Try analyser setup — may work if browser allows auto-play context
-          if (!analyserSetupDone.current) {
-            try {
-              const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-              audioCtxRef.current = audioCtx
-              const source = audioCtx.createMediaElementSource(audio)
-              const analyser = audioCtx.createAnalyser()
-              analyser.fftSize = 128
-              analyser.smoothingTimeConstant = 0.75
-              source.connect(analyser)
-              analyser.connect(audioCtx.destination)
-              setAnalyserNode(analyser)
-              analyserSetupDone.current = true
-              if (audioCtx.state === 'suspended') {
-                audioCtx.resume().catch(() => {})
-              }
-            } catch {}
-          }
-        })
+        .then(() => setIsPlaying(true))
         .catch(() => {
           // Auto-play blocked (mobile) — user will tap play button
         })
@@ -136,9 +156,14 @@ export function SessionPlayer({
     audioContext?.pauseMusic()
 
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.src = ''
+      const el = audioRef.current
+      if (el) {
+        el.pause()
+        el.src = ''
+        // Clear shared caches for this element
+        sourceCache.delete(el)
+        contextCache.delete(el)
+        analyserCache.delete(el)
         audioRef.current = null
       }
       if (audioCtxRef.current) {
