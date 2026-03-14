@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { ChevronDown, Play, Pause, RotateCcw, Check } from 'lucide-react'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { CircularVisualizer } from '@/components/player/CircularVisualizer'
-import { BufferAnalyser } from '@/components/player/audio-analyser-cache'
 import type { AudioAnalyserLike } from '@/components/player/audio-analyser-cache'
 import type { SessionType } from '@/lib/daily-guide/decision-tree'
 
@@ -43,11 +42,14 @@ export function SessionPlayer({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const blobUrlRef = useRef<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const audioCtxRef = useRef<AudioContext | null>(null)
-  const setupDone = useRef(false)
 
-  // Pre-decoded buffer for BufferAnalyser fallback
-  const bufferAnalyserRef = useRef<BufferAnalyser | null>(null)
+  // Web Audio graph refs
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const audioBufferRef = useRef<AudioBuffer | null>(null)
+  const bufferSourceRef = useRef<AudioBufferSourceNode | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const gainRef = useRef<GainNode | null>(null)
+  const setupDone = useRef(false)
 
   const [analyserNode, setAnalyserNode] = useState<AudioAnalyserLike | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -56,34 +58,92 @@ export function SessionPlayer({
   const [isLoaded, setIsLoaded] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
 
-  // Pre-decode audio buffer on mount for BufferAnalyser fallback.
-  // decodeAudioData works even on a suspended AudioContext.
-  useEffect(() => {
-    if (!audioBase64) return
+  /**
+   * Start a muted BufferSourceNode through an AnalyserNode.
+   * The real audio plays via HTMLAudioElement.
+   * This silent copy feeds the AnalyserNode with real frequency data.
+   */
+  const startVisualizerSource = useCallback((fromTime: number) => {
+    if (!audioCtxRef.current || !audioBufferRef.current || !analyserRef.current) return
 
-    let cancelled = false
-    const decode = async () => {
-      try {
-        const binaryString = atob(audioBase64)
-        const bytes = new Uint8Array(binaryString.length)
-        for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i)
-
-        const tempCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-        const audioBuffer = await tempCtx.decodeAudioData(bytes.buffer)
-        tempCtx.close().catch(() => {})
-
-        if (!cancelled && audioRef.current) {
-          bufferAnalyserRef.current = new BufferAnalyser(audioBuffer, audioRef.current, 64)
-        }
-      } catch (err) {
-        console.warn('[SessionPlayer] Audio decode failed:', err)
-      }
+    // Stop any existing buffer source
+    if (bufferSourceRef.current) {
+      try { bufferSourceRef.current.stop() } catch {}
+      bufferSourceRef.current.disconnect()
     }
 
-    // Small delay to let audioRef get set first
-    const t = setTimeout(decode, 50)
-    return () => { cancelled = true; clearTimeout(t) }
-  }, [audioBase64])
+    const source = audioCtxRef.current.createBufferSource()
+    source.buffer = audioBufferRef.current
+    source.connect(analyserRef.current)
+    bufferSourceRef.current = source
+
+    const offset = Math.max(0, Math.min(fromTime, audioBufferRef.current.duration))
+    source.start(0, offset)
+  }, [])
+
+  const stopVisualizerSource = useCallback(() => {
+    if (bufferSourceRef.current) {
+      try { bufferSourceRef.current.stop() } catch {}
+      bufferSourceRef.current.disconnect()
+      bufferSourceRef.current = null
+    }
+  }, [])
+
+  /**
+   * Full setup: create AudioContext, decode audio, build graph.
+   * MUST be called from user gesture (tap) so AudioContext is not suspended on iOS.
+   * Only runs once — subsequent calls just start/restart the buffer source.
+   */
+  const setupAndStart = useCallback(async (fromTime: number) => {
+    // Already set up — just restart the source
+    if (setupDone.current) {
+      if (audioCtxRef.current?.state === 'suspended') {
+        await audioCtxRef.current.resume()
+      }
+      startVisualizerSource(fromTime)
+      return
+    }
+
+    if (!audioBase64) return
+
+    try {
+      // 1. Create AudioContext in user gesture — will be "running" on iOS
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      await audioCtx.resume()
+
+      // 2. Decode audio into buffer
+      const binaryString = atob(audioBase64)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i)
+      const audioBuffer = await audioCtx.decodeAudioData(bytes.buffer)
+
+      // 3. Build graph: BufferSource → Analyser → Gain(0) → Destination
+      //    Gain is 0 so no double audio — HTMLAudioElement handles real playback
+      const analyser = audioCtx.createAnalyser()
+      analyser.fftSize = 256
+      analyser.smoothingTimeConstant = 0.7
+
+      const gain = audioCtx.createGain()
+      gain.gain.value = 0
+
+      analyser.connect(gain)
+      gain.connect(audioCtx.destination)
+
+      // Store refs
+      audioCtxRef.current = audioCtx
+      audioBufferRef.current = audioBuffer
+      analyserRef.current = analyser
+      gainRef.current = gain
+      setupDone.current = true
+
+      setAnalyserNode(analyser)
+
+      // 4. Start buffer source at current playback position
+      startVisualizerSource(fromTime)
+    } catch (err) {
+      console.warn('[SessionPlayer] Visualizer setup failed:', err)
+    }
+  }, [audioBase64, startVisualizerSource])
 
   // Initialize audio element
   useEffect(() => {
@@ -100,23 +160,23 @@ export function SessionPlayer({
     blobUrlRef.current = blobUrl
 
     const audio = new Audio(blobUrl)
-    audio.crossOrigin = 'anonymous'
     audioRef.current = audio
 
     audio.onloadedmetadata = () => {
       setAudioDuration(audio.duration)
       setIsLoaded(true)
+      // Try auto-play (desktop only — mobile blocks this)
       audio.play()
         .then(() => {
           setIsPlaying(true)
-          // Desktop auto-play: try real analyser
-          tryWebAudioAnalyser()
+          setupAndStart(0)
         })
         .catch(() => {})
     }
 
     audio.onended = () => {
       setIsPlaying(false)
+      stopVisualizerSource()
       setIsCompleted(true)
       onComplete()
     }
@@ -135,60 +195,19 @@ export function SessionPlayer({
         URL.revokeObjectURL(blobUrlRef.current)
         blobUrlRef.current = null
       }
+      stopVisualizerSource()
       if (audioCtxRef.current) {
         audioCtxRef.current.close().catch(() => {})
         audioCtxRef.current = null
       }
+      audioBufferRef.current = null
+      analyserRef.current = null
+      gainRef.current = null
       setupDone.current = false
-      bufferAnalyserRef.current = null
       setAnalyserNode(null)
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [audioBase64])
-
-  /**
-   * Try createMediaElementSource (works on web, fails on WKWebView).
-   * If it fails, immediately fall back to pre-decoded BufferAnalyser.
-   * Called from user gesture.
-   */
-  const tryWebAudioAnalyser = useCallback(() => {
-    if (setupDone.current || !audioRef.current) return
-    setupDone.current = true
-
-    try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {})
-
-      const source = audioCtx.createMediaElementSource(audioRef.current)
-      const analyser = audioCtx.createAnalyser()
-      analyser.fftSize = 128
-      analyser.smoothingTimeConstant = 0.75
-      source.connect(analyser)
-      analyser.connect(audioCtx.destination)
-      audioCtxRef.current = audioCtx
-      setAnalyserNode(analyser)
-
-      // After 1 second, verify it's actually returning data.
-      // If not (WKWebView), switch to BufferAnalyser.
-      setTimeout(() => {
-        const testData = new Uint8Array(analyser.frequencyBinCount)
-        analyser.getByteFrequencyData(testData)
-        let hasData = false
-        for (let i = 0; i < testData.length; i++) {
-          if (testData[i] > 0) { hasData = true; break }
-        }
-        if (!hasData && bufferAnalyserRef.current) {
-          // Update the BufferAnalyser's audio element ref in case it changed
-          setAnalyserNode(bufferAnalyserRef.current)
-        }
-      }, 1000)
-    } catch {
-      // createMediaElementSource threw — use BufferAnalyser
-      if (bufferAnalyserRef.current) {
-        setAnalyserNode(bufferAnalyserRef.current)
-      }
-    }
-  }, [])
 
   // Time tracking
   useEffect(() => {
@@ -206,27 +225,23 @@ export function SessionPlayer({
     if (!audioRef.current) return
     if (isPlaying) {
       audioRef.current.pause()
+      stopVisualizerSource()
       setIsPlaying(false)
     } else {
-      tryWebAudioAnalyser()
-      if (audioCtxRef.current?.state === 'suspended') {
-        audioCtxRef.current.resume().catch(() => {})
-      }
+      const time = audioRef.current.currentTime
+      setupAndStart(time)
       audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
     }
-  }, [isPlaying, tryWebAudioAnalyser])
+  }, [isPlaying, setupAndStart, stopVisualizerSource])
 
   const restart = useCallback(() => {
     if (!audioRef.current) return
     audioRef.current.currentTime = 0
     setCurrentTime(0)
     setIsCompleted(false)
-    tryWebAudioAnalyser()
-    if (audioCtxRef.current?.state === 'suspended') {
-      audioCtxRef.current.resume().catch(() => {})
-    }
+    setupAndStart(0)
     audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
-  }, [tryWebAudioAnalyser])
+  }, [setupAndStart])
 
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!audioRef.current || audioDuration <= 0) return
@@ -237,7 +252,8 @@ export function SessionPlayer({
     const newTime = fraction * audioDuration
     audioRef.current.currentTime = newTime
     setCurrentTime(newTime)
-  }, [audioDuration])
+    if (isPlaying) startVisualizerSource(newTime)
+  }, [audioDuration, isPlaying, startVisualizerSource])
 
   const progress = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0
   const meta = SESSION_META[session]
