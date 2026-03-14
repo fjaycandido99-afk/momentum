@@ -6,7 +6,6 @@ import { useAudioOptional } from '@/contexts/AudioContext'
 import { CircularVisualizer } from '@/components/player/CircularVisualizer'
 import type { SessionType } from '@/lib/daily-guide/decision-tree'
 
-// Session metadata
 const SESSION_META: Record<SessionType, { label: string; subtitle: string }> = {
   morning_prime: { label: 'Morning Prime', subtitle: 'Wake up, set intention, energy' },
   midday_reset: { label: 'Midday Reset', subtitle: 'Recharge, affirm, refocus' },
@@ -18,11 +17,6 @@ function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60)
   const s = Math.floor(seconds % 60)
   return `${m}:${s.toString().padStart(2, '0')}`
-}
-
-/** Detect Capacitor native app */
-function isNativeApp(): boolean {
-  return typeof window !== 'undefined' && !!(window as any).Capacitor
 }
 
 interface SessionPlayerProps {
@@ -46,14 +40,12 @@ export function SessionPlayer({
   const containerRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Web Audio refs (used on web only — native uses simulated mode)
   const audioCtxRef = useRef<AudioContext | null>(null)
-  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null)
   const analyserSetupDone = useRef(false)
 
   const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null)
-  const [useSimulated, setUseSimulated] = useState(false)
+  // Default to simulated so visualizer always animates immediately
+  const [useSimulated, setUseSimulated] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [audioDuration, setAudioDuration] = useState(duration)
@@ -61,43 +53,35 @@ export function SessionPlayer({
   const [isCompleted, setIsCompleted] = useState(false)
 
   /**
-   * Set up Web Audio analyser using createMediaElementSource.
-   * Works on web browsers — perfectly in sync with audio playback.
-   * On native iOS (WKWebView), this fails so we use simulated mode instead.
-   * MUST be called from a user gesture.
+   * Try to connect createMediaElementSource for real frequency data.
+   * If it works (web browsers), switches off simulated mode.
+   * If it fails (iOS WKWebView), stays on simulated mode.
+   * Safe to call multiple times — only runs once.
    */
-  const ensureAnalyser = useCallback(() => {
+  const tryRealAnalyser = useCallback(() => {
     if (analyserSetupDone.current || !audioRef.current) return
-
-    // Native app: skip Web Audio entirely, use simulated visualizer
-    if (isNativeApp()) {
-      analyserSetupDone.current = true
-      setUseSimulated(true)
-      return
-    }
+    analyserSetupDone.current = true
 
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(() => {})
-      }
-
       const source = audioCtx.createMediaElementSource(audioRef.current)
       const analyser = audioCtx.createAnalyser()
       analyser.fftSize = 128
       analyser.smoothingTimeConstant = 0.75
       source.connect(analyser)
       analyser.connect(audioCtx.destination)
-
       audioCtxRef.current = audioCtx
-      sourceNodeRef.current = source
+
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {})
+      }
+
+      // Success — switch from simulated to real frequency data
       setAnalyserNode(analyser)
       setUseSimulated(false)
-      analyserSetupDone.current = true
-    } catch (err) {
-      console.warn('[SessionPlayer] Web Audio failed, using simulated visualizer:', err)
-      analyserSetupDone.current = true
-      setUseSimulated(true)
+    } catch {
+      // createMediaElementSource not supported (e.g. iOS WKWebView)
+      // Stay on simulated mode — it's already the default
     }
   }, [])
 
@@ -114,18 +98,15 @@ export function SessionPlayer({
     audio.onloadedmetadata = () => {
       setAudioDuration(audio.duration)
       setIsLoaded(true)
-      // Try auto-play (works on desktop, may fail on mobile)
+      // Try auto-play (works on desktop, blocked on mobile)
       audio.play()
         .then(() => {
           setIsPlaying(true)
-          // On native, enable simulated mode immediately for auto-play
-          if (isNativeApp() && !analyserSetupDone.current) {
-            analyserSetupDone.current = true
-            setUseSimulated(true)
-          }
+          // On desktop auto-play, try real analyser immediately
+          tryRealAnalyser()
         })
         .catch(() => {
-          // Auto-play blocked (mobile) — user will tap play button
+          // Auto-play blocked — user will tap play
         })
     }
 
@@ -151,10 +132,9 @@ export function SessionPlayer({
         audioCtxRef.current.close().catch(() => {})
         audioCtxRef.current = null
       }
-      sourceNodeRef.current = null
       analyserSetupDone.current = false
       setAnalyserNode(null)
-      setUseSimulated(false)
+      setUseSimulated(true)
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [audioBase64])
@@ -179,27 +159,25 @@ export function SessionPlayer({
       audioRef.current.pause()
       setIsPlaying(false)
     } else {
-      // Set up analyser on first user gesture
-      ensureAnalyser()
-      // Resume AudioContext if suspended
+      tryRealAnalyser()
       if (audioCtxRef.current?.state === 'suspended') {
         audioCtxRef.current.resume().catch(() => {})
       }
       audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
     }
-  }, [isPlaying, ensureAnalyser])
+  }, [isPlaying, tryRealAnalyser])
 
   const restart = useCallback(() => {
     if (!audioRef.current) return
     audioRef.current.currentTime = 0
     setCurrentTime(0)
     setIsCompleted(false)
-    ensureAnalyser()
+    tryRealAnalyser()
     if (audioCtxRef.current?.state === 'suspended') {
       audioCtxRef.current.resume().catch(() => {})
     }
     audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
-  }, [ensureAnalyser])
+  }, [tryRealAnalyser])
 
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!audioRef.current || audioDuration <= 0) return
@@ -220,9 +198,7 @@ export function SessionPlayer({
       ref={containerRef}
       style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 60, overflow: 'hidden', backgroundColor: '#000000' }}
     >
-      {/* Circular visualizer centered on screen */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {/* Soft radial glow behind the circle */}
         <div
           className="absolute pointer-events-none"
           style={{
@@ -235,8 +211,6 @@ export function SessionPlayer({
             transition: 'opacity 1.5s ease-in-out',
           }}
         />
-
-        {/* Circular waveform */}
         <div style={{ opacity: isPlaying ? 0.85 : 0.15, transition: 'opacity 1s ease-in-out' }}>
           <CircularVisualizer
             analyser={analyserNode}
@@ -246,31 +220,21 @@ export function SessionPlayer({
             size={300}
           />
         </div>
-
-        {/* Bottom gradient for controls readability */}
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none" />
       </div>
 
-      {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 flex items-center px-4 pt-[env(safe-area-inset-top)] h-14 z-20">
-        <button
-          onClick={onClose}
-          className="p-2 -ml-2 focus-visible:outline-none"
-          aria-label="Close"
-        >
+        <button onClick={onClose} className="p-2 -ml-2 focus-visible:outline-none" aria-label="Close">
           <ChevronDown className="w-7 h-7 text-white" />
         </button>
       </div>
 
-      {/* Bottom — title + progress + controls */}
       <div
         style={{ position: 'absolute', left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 1.25rem calc(env(safe-area-inset-bottom, 0px) + 16px)', zIndex: 10 }}
       >
-        {/* Title */}
         <h2 className="text-2xl font-bold text-white mb-1 text-center">{meta.label}</h2>
         <p className="text-sm text-white/50 mb-6 text-center">{meta.subtitle}</p>
 
-        {/* Completion badge */}
         {isCompleted && (
           <div className="flex flex-col items-center gap-2 mb-4 animate-fade-in">
             <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -280,7 +244,6 @@ export function SessionPlayer({
           </div>
         )}
 
-        {/* Progress bar */}
         {audioBase64 && (
           <div className="w-full mb-5">
             <div
@@ -301,15 +264,10 @@ export function SessionPlayer({
           </div>
         )}
 
-        {/* Controls row */}
         <div className="flex items-center justify-center gap-8">
           {isCompleted ? (
             <>
-              <button
-                onClick={restart}
-                className="p-2 focus-visible:outline-none"
-                aria-label="Restart"
-              >
+              <button onClick={restart} className="p-2 focus-visible:outline-none" aria-label="Restart">
                 <RotateCcw className="w-7 h-7 text-white" />
               </button>
               <button
@@ -335,10 +293,7 @@ export function SessionPlayer({
             </button>
           ) : (
             <button
-              onClick={() => {
-                setIsCompleted(true)
-                onComplete()
-              }}
+              onClick={() => { setIsCompleted(true); onComplete() }}
               className="px-6 py-3 rounded-full bg-white/15 focus-visible:outline-none"
             >
               <span className="text-sm font-medium text-white">Mark as Complete</span>
