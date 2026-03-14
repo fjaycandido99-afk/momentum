@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useCallback, memo } from 'react'
+import type { AudioAnalyserLike } from './audio-analyser-cache'
 
 interface CircularVisualizerProps {
-  analyser?: AnalyserNode | null
+  analyser?: AudioAnalyserLike | null
   isPlaying: boolean
   /** When true, generates a pleasing animated waveform without real audio data */
   simulatedMode?: boolean

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { ChevronDown, Play, Pause, RotateCcw, Check } from 'lucide-react'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { CircularVisualizer } from '@/components/player/CircularVisualizer'
+import { BufferAnalyser } from '@/components/player/audio-analyser-cache'
+import type { AudioAnalyserLike } from '@/components/player/audio-analyser-cache'
 import type { SessionType } from '@/lib/daily-guide/decision-tree'
 
 const SESSION_META: Record<SessionType, { label: string; subtitle: string }> = {
@@ -44,8 +46,7 @@ export function SessionPlayer({
   const audioCtxRef = useRef<AudioContext | null>(null)
   const analyserSetupDone = useRef(false)
 
-  const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null)
-  // Default to simulated so visualizer always animates immediately
+  const [analyserNode, setAnalyserNode] = useState<AudioAnalyserLike | null>(null)
   const [useSimulated, setUseSimulated] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -54,18 +55,26 @@ export function SessionPlayer({
   const [isCompleted, setIsCompleted] = useState(false)
 
   /**
-   * Try to connect createMediaElementSource for real frequency data.
-   * If it works (web browsers), switches off simulated mode.
-   * If it fails (iOS WKWebView), stays on simulated mode.
-   * Safe to call multiple times — only runs once.
+   * Try to set up audio analysis. Attempts two strategies:
+   * 1. createMediaElementSource (real FFT, works on web browsers)
+   * 2. BufferAnalyser fallback (reads decoded audio samples at currentTime,
+   *    works everywhere including iOS WKWebView)
+   * Must be called from a user gesture on iOS.
    */
-  const tryRealAnalyser = useCallback(() => {
-    if (analyserSetupDone.current || !audioRef.current) return
+  const trySetupAnalyser = useCallback(async () => {
+    if (analyserSetupDone.current || !audioRef.current || !audioBase64) return
     analyserSetupDone.current = true
 
+    const audio = audioRef.current
+
+    // Strategy 1: try createMediaElementSource (web browsers)
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-      const source = audioCtx.createMediaElementSource(audioRef.current)
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume()
+      }
+
+      const source = audioCtx.createMediaElementSource(audio)
       const analyser = audioCtx.createAnalyser()
       analyser.fftSize = 128
       analyser.smoothingTimeConstant = 0.75
@@ -73,18 +82,56 @@ export function SessionPlayer({
       analyser.connect(audioCtx.destination)
       audioCtxRef.current = audioCtx
 
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(() => {})
+      // Verify it actually returns data by checking after a short delay
+      await new Promise(r => setTimeout(r, 100))
+      const testData = new Uint8Array(analyser.frequencyBinCount)
+      analyser.getByteFrequencyData(testData)
+      let hasData = false
+      for (let i = 0; i < testData.length; i++) {
+        if (testData[i] > 0) { hasData = true; break }
       }
 
-      // Success — switch from simulated to real frequency data
-      setAnalyserNode(analyser)
-      setUseSimulated(false)
+      if (hasData) {
+        setAnalyserNode(analyser)
+        setUseSimulated(false)
+        return
+      }
+
+      // No data — close this context and try fallback
+      audioCtx.close().catch(() => {})
+      audioCtxRef.current = null
     } catch {
-      // createMediaElementSource not supported (e.g. iOS WKWebView)
-      // Stay on simulated mode — it's already the default
+      // createMediaElementSource not available
     }
-  }, [])
+
+    // Strategy 2: BufferAnalyser — decode audio and read samples at currentTime
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume()
+      }
+
+      const binaryString = atob(audioBase64)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i)
+      const arrayBuffer = bytes.buffer
+
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+      const bufferAnalyser = new BufferAnalyser(audioBuffer, audio, 64)
+
+      // Don't need the AudioContext running — BufferAnalyser reads from memory
+      audioCtx.close().catch(() => {})
+
+      setAnalyserNode(bufferAnalyser)
+      setUseSimulated(false)
+      return
+    } catch (err) {
+      console.warn('[SessionPlayer] BufferAnalyser setup failed:', err)
+    }
+
+    // Both strategies failed — stay on simulated
+    setUseSimulated(true)
+  }, [audioBase64])
 
   // Initialize audio element
   useEffect(() => {
@@ -93,8 +140,7 @@ export function SessionPlayer({
       return
     }
 
-    // Use blob URL instead of data URL — blob URLs are same-origin which
-    // helps createMediaElementSource work on iOS WKWebView (Capacitor)
+    // Use blob URL — same-origin, better compatibility than data URLs
     const binaryString = atob(audioBase64)
     const bytes = new Uint8Array(binaryString.length)
     for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i)
@@ -113,12 +159,9 @@ export function SessionPlayer({
       audio.play()
         .then(() => {
           setIsPlaying(true)
-          // On desktop auto-play, try real analyser immediately
-          tryRealAnalyser()
+          trySetupAnalyser()
         })
-        .catch(() => {
-          // Auto-play blocked — user will tap play
-        })
+        .catch(() => {})
     }
 
     audio.onended = () => {
@@ -174,25 +217,25 @@ export function SessionPlayer({
       audioRef.current.pause()
       setIsPlaying(false)
     } else {
-      tryRealAnalyser()
+      trySetupAnalyser()
       if (audioCtxRef.current?.state === 'suspended') {
         audioCtxRef.current.resume().catch(() => {})
       }
       audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
     }
-  }, [isPlaying, tryRealAnalyser])
+  }, [isPlaying, trySetupAnalyser])
 
   const restart = useCallback(() => {
     if (!audioRef.current) return
     audioRef.current.currentTime = 0
     setCurrentTime(0)
     setIsCompleted(false)
-    tryRealAnalyser()
+    trySetupAnalyser()
     if (audioCtxRef.current?.state === 'suspended') {
       audioCtxRef.current.resume().catch(() => {})
     }
     audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
-  }, [tryRealAnalyser])
+  }, [trySetupAnalyser])
 
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!audioRef.current || audioDuration <= 0) return
