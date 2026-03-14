@@ -25,6 +25,9 @@ function CircularVisualizerInner({
   const smoothedRef = useRef<Float32Array | null>(null)
   const prefersReducedMotion = useRef(false)
   const timeRef = useRef(0)
+  // Track consecutive zero-data frames to detect broken analyser (e.g. iOS WKWebView)
+  const zeroFramesRef = useRef(0)
+  const analyserBrokenRef = useRef(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -68,25 +71,47 @@ function CircularVisualizerInner({
     const smoothed = smoothedRef.current
 
     if (isPlaying && !prefersReducedMotion.current) {
-      if (analyser && !simulatedMode) {
+      // Determine if we should use real analyser or simulated
+      let useReal = analyser && !simulatedMode && !analyserBrokenRef.current
+
+      if (useReal) {
         // Real frequency data mode
-        const dataArray = new Uint8Array(analyser.frequencyBinCount)
-        analyser.getByteFrequencyData(dataArray)
+        const dataArray = new Uint8Array(analyser!.frequencyBinCount)
+        analyser!.getByteFrequencyData(dataArray)
 
-        const binCount = dataArray.length
-        for (let i = 0; i < barCount; i++) {
-          let sum = 0
-          const startBin = Math.floor(i * (binCount / barCount))
-          const endBin = Math.min(startBin + Math.max(1, Math.floor(binCount / barCount)), binCount)
-          for (let j = startBin; j < endBin; j++) {
-            sum += dataArray[j]
-          }
-          const avg = sum / (endBin - startBin)
-          const normalized = avg / 255
-
-          smoothed[i] = smoothed[i] + (normalized - smoothed[i]) * 0.25
+        // Check if analyser is returning actual data
+        let hasData = false
+        for (let j = 0; j < dataArray.length; j++) {
+          if (dataArray[j] > 0) { hasData = true; break }
         }
-      } else if (simulatedMode) {
+
+        if (hasData) {
+          zeroFramesRef.current = 0
+          const binCount = dataArray.length
+          for (let i = 0; i < barCount; i++) {
+            let sum = 0
+            const startBin = Math.floor(i * (binCount / barCount))
+            const endBin = Math.min(startBin + Math.max(1, Math.floor(binCount / barCount)), binCount)
+            for (let j = startBin; j < endBin; j++) {
+              sum += dataArray[j]
+            }
+            const avg = sum / (endBin - startBin)
+            const normalized = avg / 255
+            smoothed[i] = smoothed[i] + (normalized - smoothed[i]) * 0.25
+          }
+        } else {
+          // Analyser returning zeros — count frames
+          zeroFramesRef.current++
+          // After 30 consecutive zero frames (~0.5s), mark analyser as broken
+          // and fall through to simulated mode
+          if (zeroFramesRef.current > 30) {
+            analyserBrokenRef.current = true
+            useReal = false
+          }
+        }
+      }
+
+      if (!useReal) {
         // Simulated waveform — organic, audio-like animation
         timeRef.current += 0.016 // ~60fps
         const t = timeRef.current
@@ -185,6 +210,14 @@ function CircularVisualizerInner({
       }
     }
   }, [draw])
+
+  // Reset broken-analyser detection when playback restarts
+  useEffect(() => {
+    if (isPlaying) {
+      zeroFramesRef.current = 0
+      analyserBrokenRef.current = false
+    }
+  }, [isPlaying])
 
   useEffect(() => {
     if (prefersReducedMotion.current) {
