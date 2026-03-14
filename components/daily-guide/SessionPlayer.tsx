@@ -51,6 +51,7 @@ export function SessionPlayer({
   const audioContext = useAudioOptional()
   const containerRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const blobUrlRef = useRef<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Web Audio refs for buffer-based analyser
@@ -59,87 +60,92 @@ export function SessionPlayer({
   const bufferSourceRef = useRef<AudioBufferSourceNode | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const gainRef = useRef<GainNode | null>(null)
-  const analyserSetupDone = useRef(false)
 
   const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null)
+  const [useSimulated, setUseSimulated] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [audioDuration, setAudioDuration] = useState(duration)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
 
-  // Decode audio buffer once for visualizer (separate from HTMLAudioElement playback)
-  const decodedBufferReady = useRef(false)
-  useEffect(() => {
-    if (!audioBase64 || decodedBufferReady.current) return
-    decodedBufferReady.current = true
-
-    // Pre-decode the audio data so it's ready when user taps play
-    try {
-      const arrayBuffer = base64ToArrayBuffer(audioBase64)
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
-      ctx.decodeAudioData(arrayBuffer).then((decoded) => {
-        audioBufferRef.current = decoded
-        // Close this temporary context — we'll create a fresh one on user gesture
-        ctx.close().catch(() => {})
-      }).catch(() => {
-        ctx.close().catch(() => {})
-      })
-    } catch {}
-  }, [audioBase64])
-
   /**
-   * Start a silent BufferSourceNode synced to the audio element for visualizer analysis.
-   * The HTMLAudioElement handles actual playback; this buffer source feeds the AnalyserNode
-   * through a zero-gain node so we get frequency data without double audio.
-   * MUST be called from a user gesture on mobile.
+   * Try to set up Web Audio analyser using buffer-based approach.
+   * Called inside a user gesture (tap). If anything fails, enables simulated mode.
+   * Returns true if real analyser is working, false if falling back to simulated.
    */
-  const startVisualiserSource = useCallback((fromTime: number) => {
-    if (!audioBufferRef.current) return
+  const trySetupAnalyser = useCallback(async (fromTime: number): Promise<boolean> => {
+    if (!audioBase64) return false
 
-    // Create AudioContext on first call (user gesture guarantees it won't be suspended)
-    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
-      audioCtxRef.current = ctx
+    // Already have a working analyser — just restart the buffer source
+    if (analyserRef.current && audioCtxRef.current && audioBufferRef.current) {
+      try {
+        if (audioCtxRef.current.state === 'suspended') {
+          await audioCtxRef.current.resume()
+        }
+        // Stop existing source
+        if (bufferSourceRef.current) {
+          try { bufferSourceRef.current.stop() } catch {}
+          bufferSourceRef.current.disconnect()
+        }
+        const source = audioCtxRef.current.createBufferSource()
+        source.buffer = audioBufferRef.current
+        source.connect(analyserRef.current)
+        bufferSourceRef.current = source
+        const offset = Math.max(0, Math.min(fromTime, audioBufferRef.current.duration))
+        source.start(0, offset)
+        return true
+      } catch {
+        // Fall through to simulated
+      }
+    }
 
-      const analyser = ctx.createAnalyser()
+    // First-time setup — all inside user gesture for iOS compatibility
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      // Must resume immediately in user gesture on iOS
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume()
+      }
+
+      // Decode audio data
+      const arrayBuffer = base64ToArrayBuffer(audioBase64)
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+
+      // Create analyser chain: BufferSource → Analyser → Gain(0) → Destination
+      const analyser = audioCtx.createAnalyser()
       analyser.fftSize = 128
       analyser.smoothingTimeConstant = 0.75
-      analyserRef.current = analyser
 
-      // Zero-gain node: audio flows through analyser for data but produces no sound
-      const gain = ctx.createGain()
-      gain.gain.value = 0
-      gainRef.current = gain
+      const gain = audioCtx.createGain()
+      gain.gain.value = 0 // Silent — HTMLAudioElement handles actual playback
 
       analyser.connect(gain)
-      gain.connect(ctx.destination)
+      gain.connect(audioCtx.destination)
+
+      // Create and start buffer source
+      const source = audioCtx.createBufferSource()
+      source.buffer = audioBuffer
+      source.connect(analyser)
+      const offset = Math.max(0, Math.min(fromTime, audioBuffer.duration))
+      source.start(0, offset)
+
+      // Store refs
+      audioCtxRef.current = audioCtx
+      audioBufferRef.current = audioBuffer
+      analyserRef.current = analyser
+      gainRef.current = gain
+      bufferSourceRef.current = source
 
       setAnalyserNode(analyser)
-      analyserSetupDone.current = true
+      setUseSimulated(false)
+      return true
+    } catch (err) {
+      console.warn('[SessionPlayer] Web Audio failed, using simulated visualizer:', err)
+      setUseSimulated(true)
+      return false
     }
-
-    const ctx = audioCtxRef.current
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {})
-    }
-
-    // Stop any existing buffer source
-    if (bufferSourceRef.current) {
-      try { bufferSourceRef.current.stop() } catch {}
-      bufferSourceRef.current.disconnect()
-      bufferSourceRef.current = null
-    }
-
-    // Create new buffer source starting at the current playback position
-    const source = ctx.createBufferSource()
-    source.buffer = audioBufferRef.current
-    source.connect(analyserRef.current!)
-    bufferSourceRef.current = source
-
-    const offset = Math.max(0, Math.min(fromTime, audioBufferRef.current.duration))
-    source.start(0, offset)
-  }, [])
+  }, [audioBase64])
 
   /** Stop the visualiser buffer source (on pause/end) */
   const stopVisualiserSource = useCallback(() => {
@@ -161,6 +167,7 @@ export function SessionPlayer({
     const arrayBuffer = base64ToArrayBuffer(audioBase64)
     const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
     const blobUrl = URL.createObjectURL(blob)
+    blobUrlRef.current = blobUrl
 
     const audio = new Audio(blobUrl)
     audioRef.current = audio
@@ -195,17 +202,20 @@ export function SessionPlayer({
         audioRef.current.src = ''
         audioRef.current = null
       }
-      URL.revokeObjectURL(blobUrl)
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current)
+        blobUrlRef.current = null
+      }
       stopVisualiserSource()
       if (audioCtxRef.current) {
         audioCtxRef.current.close().catch(() => {})
         audioCtxRef.current = null
       }
+      audioBufferRef.current = null
       analyserRef.current = null
       gainRef.current = null
-      analyserSetupDone.current = false
-      decodedBufferReady.current = false
       setAnalyserNode(null)
+      setUseSimulated(false)
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [audioBase64])
@@ -231,20 +241,21 @@ export function SessionPlayer({
       stopVisualiserSource()
       setIsPlaying(false)
     } else {
-      // Start visualiser from current position (user gesture)
-      startVisualiserSource(audioRef.current.currentTime)
+      const time = audioRef.current.currentTime
+      // Set up analyser on user gesture — falls back to simulated if Web Audio fails
+      trySetupAnalyser(time)
       audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
     }
-  }, [isPlaying, startVisualiserSource, stopVisualiserSource])
+  }, [isPlaying, trySetupAnalyser, stopVisualiserSource])
 
   const restart = useCallback(() => {
     if (!audioRef.current) return
     audioRef.current.currentTime = 0
     setCurrentTime(0)
     setIsCompleted(false)
-    startVisualiserSource(0)
+    trySetupAnalyser(0)
     audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
-  }, [startVisualiserSource])
+  }, [trySetupAnalyser])
 
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!audioRef.current || audioDuration <= 0) return
@@ -257,9 +268,9 @@ export function SessionPlayer({
     setCurrentTime(newTime)
     // Re-sync visualiser source to new position
     if (isPlaying) {
-      startVisualiserSource(newTime)
+      trySetupAnalyser(newTime)
     }
-  }, [audioDuration, isPlaying, startVisualiserSource])
+  }, [audioDuration, isPlaying, trySetupAnalyser])
 
   const progress = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0
   const meta = SESSION_META[session]
@@ -290,6 +301,7 @@ export function SessionPlayer({
           <CircularVisualizer
             analyser={analyserNode}
             isPlaying={isPlaying}
+            simulatedMode={useSimulated}
             barCount={80}
             size={300}
           />

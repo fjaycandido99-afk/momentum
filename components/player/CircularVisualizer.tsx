@@ -5,6 +5,8 @@ import { useEffect, useRef, useCallback, memo } from 'react'
 interface CircularVisualizerProps {
   analyser?: AnalyserNode | null
   isPlaying: boolean
+  /** When true, generates a pleasing animated waveform without real audio data */
+  simulatedMode?: boolean
   barCount?: number
   size?: number
   className?: string
@@ -13,6 +15,7 @@ interface CircularVisualizerProps {
 function CircularVisualizerInner({
   analyser,
   isPlaying,
+  simulatedMode = false,
   barCount = 64,
   size = 280,
   className = '',
@@ -21,6 +24,7 @@ function CircularVisualizerInner({
   const animFrameRef = useRef<number>(0)
   const smoothedRef = useRef<Float32Array | null>(null)
   const prefersReducedMotion = useRef(false)
+  const timeRef = useRef(0)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -63,25 +67,44 @@ function CircularVisualizerInner({
 
     const smoothed = smoothedRef.current
 
-    if (analyser && isPlaying && !prefersReducedMotion.current) {
-      // Real frequency data mode
-      const dataArray = new Uint8Array(analyser.frequencyBinCount)
-      analyser.getByteFrequencyData(dataArray)
+    if (isPlaying && !prefersReducedMotion.current) {
+      if (analyser && !simulatedMode) {
+        // Real frequency data mode
+        const dataArray = new Uint8Array(analyser.frequencyBinCount)
+        analyser.getByteFrequencyData(dataArray)
 
-      const binCount = dataArray.length
-      for (let i = 0; i < barCount; i++) {
-        let sum = 0
-        const startBin = Math.floor(i * (binCount / barCount))
-        const endBin = Math.min(startBin + Math.max(1, Math.floor(binCount / barCount)), binCount)
-        for (let j = startBin; j < endBin; j++) {
-          sum += dataArray[j]
+        const binCount = dataArray.length
+        for (let i = 0; i < barCount; i++) {
+          let sum = 0
+          const startBin = Math.floor(i * (binCount / barCount))
+          const endBin = Math.min(startBin + Math.max(1, Math.floor(binCount / barCount)), binCount)
+          for (let j = startBin; j < endBin; j++) {
+            sum += dataArray[j]
+          }
+          const avg = sum / (endBin - startBin)
+          const normalized = avg / 255
+
+          smoothed[i] = smoothed[i] + (normalized - smoothed[i]) * 0.25
         }
-        const avg = sum / (endBin - startBin)
-        const normalized = avg / 255
-
-        smoothed[i] = smoothed[i] + (normalized - smoothed[i]) * 0.25
+      } else if (simulatedMode) {
+        // Simulated waveform — organic, audio-like animation
+        timeRef.current += 0.016 // ~60fps
+        const t = timeRef.current
+        for (let i = 0; i < barCount; i++) {
+          const angle = (i / barCount) * Math.PI * 2
+          // Layer multiple sine waves at different frequencies for organic movement
+          const wave1 = Math.sin(angle * 3 + t * 2.5) * 0.3
+          const wave2 = Math.sin(angle * 5 - t * 1.8) * 0.2
+          const wave3 = Math.sin(angle * 7 + t * 3.2) * 0.15
+          const wave4 = Math.sin(angle * 2 - t * 0.7) * 0.15
+          // Breathing base that slowly pulses
+          const breath = 0.18 + Math.sin(t * 0.8) * 0.06
+          const target = Math.max(0, breath + wave1 + wave2 + wave3 + wave4)
+          smoothed[i] = smoothed[i] + (target - smoothed[i]) * 0.15
+        }
       }
     } else {
+      // Fade out
       for (let i = 0; i < barCount; i++) {
         smoothed[i] = smoothed[i] * 0.92
         if (smoothed[i] < 0.01) smoothed[i] = 0
@@ -152,7 +175,7 @@ function CircularVisualizerInner({
     }
 
     animFrameRef.current = requestAnimationFrame(draw)
-  }, [isPlaying, barCount, size, analyser])
+  }, [isPlaying, barCount, size, analyser, simulatedMode])
 
   useEffect(() => {
     animFrameRef.current = requestAnimationFrame(draw)
