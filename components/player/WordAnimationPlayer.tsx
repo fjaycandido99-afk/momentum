@@ -695,8 +695,8 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
         {/* Bottom gradient for controls readability */}
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-[3] pointer-events-none" />
 
-        {/* Center EQ bars when playing */}
-        {viewMode !== 'video' && (
+        {/* Center EQ bars when playing (music only — motivation has word animations) */}
+        {viewMode !== 'video' && category !== 'Motivation' && (
           <div className="absolute inset-0 flex items-center justify-center z-[4] pointer-events-none">
             <div className={`transition-opacity duration-500 ${isPlaying ? 'opacity-100' : 'opacity-0'}`}>
               <EqBars height={40} barWidth={4} gap={5} color="#ffffff" barCount={10} paused={!isPlaying} />
@@ -783,9 +783,9 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
           <button
             aria-label="Close player"
             onClick={onClose}
-            className="p-1.5 rounded-full bg-white/10 flex-shrink-0 focus-visible:outline-none"
+            className="p-2.5 -mr-1 rounded-full bg-white/10 flex-shrink-0 focus-visible:outline-none"
           >
-            <X className="w-4 h-4 text-white/80" />
+            <X className="w-5 h-5 text-white/80" />
           </button>
         </div>
 
@@ -871,7 +871,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
 
       {/* Journal FAB + nudge (motivation only, after 30s) */}
       {!showJournal && showJournalFAB && (
-        <div className="absolute bottom-52 right-5 z-20 flex items-center gap-3 animate-fade-in">
+        <div className="absolute bottom-64 right-5 z-20 flex items-center gap-3 animate-fade-in">
           {showNudge && (
             <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-4 py-2 animate-nudge-in">
               <span className="text-white/90 text-xs font-medium whitespace-nowrap">
