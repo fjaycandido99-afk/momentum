@@ -20,6 +20,8 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+const IS_NATIVE = typeof window !== 'undefined' && !!(window as any).Capacitor
+
 interface SessionPlayerProps {
   session: SessionType
   script: string
@@ -42,13 +44,7 @@ export function SessionPlayer({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const blobUrlRef = useRef<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Web Audio graph refs
   const audioCtxRef = useRef<AudioContext | null>(null)
-  const audioBufferRef = useRef<AudioBuffer | null>(null)
-  const bufferSourceRef = useRef<AudioBufferSourceNode | null>(null)
-  const analyserRef = useRef<AnalyserNode | null>(null)
-  const gainRef = useRef<GainNode | null>(null)
   const setupDone = useRef(false)
 
   const [analyserNode, setAnalyserNode] = useState<AudioAnalyserLike | null>(null)
@@ -59,91 +55,28 @@ export function SessionPlayer({
   const [isCompleted, setIsCompleted] = useState(false)
 
   /**
-   * Start a muted BufferSourceNode through an AnalyserNode.
-   * The real audio plays via HTMLAudioElement.
-   * This silent copy feeds the AnalyserNode with real frequency data.
+   * Set up Web Audio analyser via createMediaElementSource.
+   * Only used on web — skipped entirely on native (Capacitor).
    */
-  const startVisualizerSource = useCallback((fromTime: number) => {
-    if (!audioCtxRef.current || !audioBufferRef.current || !analyserRef.current) return
-
-    // Stop any existing buffer source
-    if (bufferSourceRef.current) {
-      try { bufferSourceRef.current.stop() } catch {}
-      bufferSourceRef.current.disconnect()
-    }
-
-    const source = audioCtxRef.current.createBufferSource()
-    source.buffer = audioBufferRef.current
-    source.connect(analyserRef.current)
-    bufferSourceRef.current = source
-
-    const offset = Math.max(0, Math.min(fromTime, audioBufferRef.current.duration))
-    source.start(0, offset)
-  }, [])
-
-  const stopVisualizerSource = useCallback(() => {
-    if (bufferSourceRef.current) {
-      try { bufferSourceRef.current.stop() } catch {}
-      bufferSourceRef.current.disconnect()
-      bufferSourceRef.current = null
-    }
-  }, [])
-
-  /**
-   * Full setup: create AudioContext, decode audio, build graph.
-   * MUST be called from user gesture (tap) so AudioContext is not suspended on iOS.
-   * Only runs once — subsequent calls just start/restart the buffer source.
-   */
-  const setupAndStart = useCallback(async (fromTime: number) => {
-    // Already set up — just restart the source
-    if (setupDone.current) {
-      if (audioCtxRef.current?.state === 'suspended') {
-        await audioCtxRef.current.resume()
-      }
-      startVisualizerSource(fromTime)
-      return
-    }
-
-    if (!audioBase64) return
+  const setupWebAnalyser = useCallback(() => {
+    if (setupDone.current || !audioRef.current || IS_NATIVE) return
+    setupDone.current = true
 
     try {
-      // 1. Create AudioContext in user gesture — will be "running" on iOS
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-      await audioCtx.resume()
-
-      // 2. Decode audio into buffer
-      const binaryString = atob(audioBase64)
-      const bytes = new Uint8Array(binaryString.length)
-      for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i)
-      const audioBuffer = await audioCtx.decodeAudioData(bytes.buffer)
-
-      // 3. Build graph: BufferSource → Analyser → Gain(0) → Destination
-      //    Gain is 0 so no double audio — HTMLAudioElement handles real playback
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {})
+      const source = audioCtx.createMediaElementSource(audioRef.current)
       const analyser = audioCtx.createAnalyser()
       analyser.fftSize = 256
       analyser.smoothingTimeConstant = 0.7
-
-      const gain = audioCtx.createGain()
-      gain.gain.value = 0
-
-      analyser.connect(gain)
-      gain.connect(audioCtx.destination)
-
-      // Store refs
+      source.connect(analyser)
+      analyser.connect(audioCtx.destination)
       audioCtxRef.current = audioCtx
-      audioBufferRef.current = audioBuffer
-      analyserRef.current = analyser
-      gainRef.current = gain
-      setupDone.current = true
-
       setAnalyserNode(analyser)
-
-      // 4. Start buffer source at current playback position
-      startVisualizerSource(fromTime)
     } catch (err) {
-      console.warn('[SessionPlayer] Visualizer setup failed:', err)
+      console.warn('[SessionPlayer] Web Audio setup failed:', err)
     }
-  }, [audioBase64, startVisualizerSource])
+  }, [])
 
   // Initialize audio element
   useEffect(() => {
@@ -165,24 +98,21 @@ export function SessionPlayer({
     audio.onloadedmetadata = () => {
       setAudioDuration(audio.duration)
       setIsLoaded(true)
-      // Try auto-play (desktop only — mobile blocks this)
       audio.play()
         .then(() => {
           setIsPlaying(true)
-          setupAndStart(0)
+          setupWebAnalyser()
         })
         .catch(() => {})
     }
 
     audio.onended = () => {
       setIsPlaying(false)
-      stopVisualizerSource()
       setIsCompleted(true)
       onComplete()
     }
 
     audio.onerror = () => setIsLoaded(true)
-
     audioContext?.pauseMusic()
 
     return () => {
@@ -195,21 +125,16 @@ export function SessionPlayer({
         URL.revokeObjectURL(blobUrlRef.current)
         blobUrlRef.current = null
       }
-      stopVisualizerSource()
       if (audioCtxRef.current) {
         audioCtxRef.current.close().catch(() => {})
         audioCtxRef.current = null
       }
-      audioBufferRef.current = null
-      analyserRef.current = null
-      gainRef.current = null
       setupDone.current = false
       setAnalyserNode(null)
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [audioBase64])
 
-  // Time tracking
   useEffect(() => {
     if (isPlaying) {
       timerRef.current = setInterval(() => {
@@ -225,57 +150,48 @@ export function SessionPlayer({
     if (!audioRef.current) return
     if (isPlaying) {
       audioRef.current.pause()
-      stopVisualizerSource()
       setIsPlaying(false)
     } else {
-      const time = audioRef.current.currentTime
-      setupAndStart(time)
+      setupWebAnalyser()
+      if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume().catch(() => {})
       audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
     }
-  }, [isPlaying, setupAndStart, stopVisualizerSource])
+  }, [isPlaying, setupWebAnalyser])
 
   const restart = useCallback(() => {
     if (!audioRef.current) return
     audioRef.current.currentTime = 0
     setCurrentTime(0)
     setIsCompleted(false)
-    setupAndStart(0)
+    setupWebAnalyser()
+    if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume().catch(() => {})
     audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
-  }, [setupAndStart])
+  }, [setupWebAnalyser])
 
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!audioRef.current || audioDuration <= 0) return
-    const bar = e.currentTarget
-    const rect = bar.getBoundingClientRect()
+    const rect = e.currentTarget.getBoundingClientRect()
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
     const fraction = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    const newTime = fraction * audioDuration
-    audioRef.current.currentTime = newTime
-    setCurrentTime(newTime)
-    if (isPlaying) startVisualizerSource(newTime)
-  }, [audioDuration, isPlaying, startVisualizerSource])
+    audioRef.current.currentTime = fraction * audioDuration
+    setCurrentTime(fraction * audioDuration)
+  }, [audioDuration])
 
   const progress = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0
   const meta = SESSION_META[session]
 
   return (
-    <div
-      ref={containerRef}
-      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 60, overflow: 'hidden', backgroundColor: '#000000' }}
-    >
+    <div ref={containerRef} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 60, overflow: 'hidden', backgroundColor: '#000000' }}>
       <div className="absolute inset-0 flex items-center justify-center">
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            width: '320px', height: '320px', borderRadius: '50%',
-            background: 'radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 70%)',
-            filter: 'blur(40px)',
-            opacity: isPlaying ? 1 : 0,
-            transition: 'opacity 1.5s ease-in-out',
-          }}
-        />
+        <div className="absolute pointer-events-none" style={{ width: '320px', height: '320px', borderRadius: '50%', background: 'radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 70%)', filter: 'blur(40px)', opacity: isPlaying ? 1 : 0, transition: 'opacity 1.5s ease-in-out' }} />
         <div style={{ opacity: isPlaying ? 0.85 : 0.15, transition: 'opacity 1s ease-in-out' }}>
-          <CircularVisualizer analyser={analyserNode} isPlaying={isPlaying} barCount={80} size={300} />
+          <CircularVisualizer
+            analyser={analyserNode}
+            isPlaying={isPlaying}
+            simulated={IS_NATIVE}
+            barCount={80}
+            size={300}
+          />
         </div>
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none" />
       </div>
@@ -292,9 +208,7 @@ export function SessionPlayer({
 
         {isCompleted && (
           <div className="flex flex-col items-center gap-2 mb-4 animate-fade-in">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center">
-              <Check className="w-7 h-7 text-emerald-400" />
-            </div>
+            <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center"><Check className="w-7 h-7 text-emerald-400" /></div>
             <p className="text-sm text-emerald-400 font-medium">Session Complete</p>
           </div>
         )}
@@ -316,21 +230,12 @@ export function SessionPlayer({
         <div className="flex items-center justify-center gap-8">
           {isCompleted ? (
             <>
-              <button onClick={restart} className="p-2 focus-visible:outline-none" aria-label="Restart">
-                <RotateCcw className="w-7 h-7 text-white" />
-              </button>
-              <button onClick={onClose} className="w-16 h-16 rounded-full bg-white flex items-center justify-center transition-transform active:scale-95 focus-visible:outline-none">
-                <Check className="w-7 h-7 text-black" />
-              </button>
+              <button onClick={restart} className="p-2 focus-visible:outline-none" aria-label="Restart"><RotateCcw className="w-7 h-7 text-white" /></button>
+              <button onClick={onClose} className="w-16 h-16 rounded-full bg-white flex items-center justify-center transition-transform active:scale-95 focus-visible:outline-none"><Check className="w-7 h-7 text-black" /></button>
               <div className="w-11" />
             </>
           ) : audioBase64 ? (
-            <button
-              onClick={togglePlay}
-              disabled={!isLoaded}
-              className="w-16 h-16 rounded-full bg-white flex items-center justify-center disabled:opacity-40 transition-transform active:scale-95 focus-visible:outline-none"
-              aria-label={isPlaying ? 'Pause' : 'Play'}
-            >
+            <button onClick={togglePlay} disabled={!isLoaded} className="w-16 h-16 rounded-full bg-white flex items-center justify-center disabled:opacity-40 transition-transform active:scale-95 focus-visible:outline-none" aria-label={isPlaying ? 'Pause' : 'Play'}>
               {isPlaying ? <Pause className="w-7 h-7 text-black" fill="black" /> : <Play className="w-7 h-7 text-black ml-0.5" fill="black" />}
             </button>
           ) : (
