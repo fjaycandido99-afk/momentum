@@ -24,10 +24,9 @@ public class AudioAnalyzerPlugin: CAPPlugin, CAPBridgedPlugin {
     private var isSetup = false
     private var tapInstalled = false
 
-    // FFT
+    // FFT — using modern Swift vDSP overlay (avoids C type interop issues)
     private let fftSize = 1024
     private let bandCount = 64
-    private var fftSetup: vDSP_FFTSetup?
 
     // Playback tracking
     private var startFramePosition: AVAudioFramePosition = 0
@@ -41,7 +40,6 @@ public class AudioAnalyzerPlugin: CAPPlugin, CAPBridgedPlugin {
         guard !isSetup else { return }
         engine.attach(playerNode)
         engine.connect(playerNode, to: engine.mainMixerNode, format: nil)
-        fftSetup = vDSP_create_fftsetup(vDSP_Length(log2(Float(fftSize))), FFTRadix(kFFTRadix2))
         isSetup = true
     }
 
@@ -62,56 +60,58 @@ public class AudioAnalyzerPlugin: CAPPlugin, CAPBridgedPlugin {
         tapInstalled = false
     }
 
-    // MARK: - FFT Processing
+    // MARK: - FFT Processing (modern Swift vDSP API)
 
     private func processBuffer(_ buffer: AVAudioPCMBuffer) {
-        guard let channelData = buffer.floatChannelData?[0],
-              let fftSetup = fftSetup else { return }
+        guard let channelData = buffer.floatChannelData?[0] else { return }
 
         let frameCount = Int(buffer.frameLength)
         guard frameCount > 0 else { return }
 
-        let log2n = vDSP_Length(log2(Float(fftSize)))
-        let halfN = fftSize / 2
-
-        // Apply Hanning window
-        var window = [Float](repeating: 0, count: fftSize)
-        vDSP_hann_window(&window, vDSP_Length(fftSize), Int32(vDSP_HANN_NORM))
-
-        var windowedSignal = [Float](repeating: 0, count: fftSize)
+        // Copy samples into array, zero-pad if needed
+        var signal = [Float](repeating: 0, count: fftSize)
         let copyCount = min(frameCount, fftSize)
         for i in 0..<copyCount {
-            windowedSignal[i] = channelData[i]
+            signal[i] = channelData[i]
         }
-        vDSP_vmul(windowedSignal, 1, window, 1, &windowedSignal, 1, vDSP_Length(fftSize))
 
-        // All vDSP work happens inside withUnsafeMutableBufferPointer to satisfy Swift 6 pointer safety
-        var realPart = [Float](repeating: 0, count: halfN)
-        var imagPart = [Float](repeating: 0, count: halfN)
+        // Apply Hanning window
+        let window = vDSP.window(ofType: Float.self, usingSequence: .hanningNormalized, count: fftSize, isHalfWindow: false)
+        vDSP.multiply(signal, window, result: &signal)
+
+        // Compute magnitudes using vDSP.FFT (Swift overlay — no C types needed)
+        let halfN = fftSize / 2
         var magnitudes = [Float](repeating: 0, count: halfN)
-        var dbMagnitudes = [Float](repeating: 0, count: halfN)
-        var one: Float = 1.0
 
-        realPart.withUnsafeMutableBufferPointer { realBuf in
-            imagPart.withUnsafeMutableBufferPointer { imagBuf in
-                // Convert interleaved to split complex
-                windowedSignal.withUnsafeBufferPointer { signalBuf in
+        signal.withUnsafeMutableBufferPointer { signalBuf in
+            var realPart = [Float](repeating: 0, count: halfN)
+            var imagPart = [Float](repeating: 0, count: halfN)
+
+            realPart.withUnsafeMutableBufferPointer { realBuf in
+                imagPart.withUnsafeMutableBufferPointer { imagBuf in
+                    var splitComplex = DSPSplitComplex(realp: realBuf.baseAddress!, imagp: imagBuf.baseAddress!)
+
+                    // Convert interleaved real signal to split complex
                     signalBuf.baseAddress!.withMemoryRebound(to: DSPComplex.self, capacity: halfN) { complexPtr in
-                        var split = DSPSplitComplex(realp: realBuf.baseAddress!, imagp: imagBuf.baseAddress!)
-                        vDSP_ctoz(complexPtr, 2, &split, 1, vDSP_Length(halfN))
+                        vDSP_ctoz(complexPtr, 2, &splitComplex, 1, vDSP_Length(halfN))
                     }
+
+                    // Perform in-place FFT using OpaquePointer-based C API
+                    let log2n = vDSP_Length(log2(Float(self.fftSize)))
+                    if let fftSetup = vDSP_create_fftsetup(log2n, FFTRadix(kFFTRadix2)) {
+                        vDSP_fft_zrip(fftSetup, &splitComplex, 1, log2n, FFTDirection(FFT_FORWARD))
+                        vDSP_destroy_fftsetup(fftSetup)
+                    }
+
+                    // Compute squared magnitudes
+                    vDSP_zvmags(&splitComplex, 1, &magnitudes, 1, vDSP_Length(halfN))
                 }
-
-                // Perform FFT
-                var split = DSPSplitComplex(realp: realBuf.baseAddress!, imagp: imagBuf.baseAddress!)
-                vDSP_fft_zrip(fftSetup, &split, 1, log2n, FFTDirection(FFT_FORWARD))
-
-                // Calculate magnitudes
-                vDSP_zvmags(&split, 1, &magnitudes, 1, vDSP_Length(halfN))
             }
         }
 
-        // Convert to dB scale
+        // Convert to dB
+        var dbMagnitudes = [Float](repeating: 0, count: halfN)
+        var one: Float = 1.0
         vDSP_vdbcon(magnitudes, 1, &one, &dbMagnitudes, 1, vDSP_Length(halfN), 1)
 
         // Group into bands and normalize to 0-255
@@ -127,7 +127,6 @@ public class AudioAnalyzerPlugin: CAPPlugin, CAPBridgedPlugin {
         var bands = [Int](repeating: 0, count: bandCount)
 
         for i in 0..<bandCount {
-            // Logarithmic distribution of bins across bands
             let startBin = max(1, Int(pow(Float(binCount), Float(i) / Float(bandCount))))
             let endBin = max(startBin + 1, min(Int(pow(Float(binCount), Float(i + 1) / Float(bandCount))), binCount))
 
@@ -137,7 +136,6 @@ public class AudioAnalyzerPlugin: CAPPlugin, CAPBridgedPlugin {
             }
             let avg = sum / Float(endBin - startBin)
 
-            // Normalize: typical dB range for speech is -60 to 0
             let minDb: Float = -60.0
             let maxDb: Float = -5.0
             let normalized = ((avg - minDb) / (maxDb - minDb)) * 255.0
@@ -203,14 +201,12 @@ public class AudioAnalyzerPlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
 
-        // Write to temp file
         let tempDir = FileManager.default.temporaryDirectory
         let tempFile = tempDir.appendingPathComponent("voxu_session_\(UUID().uuidString).mp3")
 
         do {
             try audioData.write(to: tempFile)
 
-            // Clean up previous temp file
             if let prevURL = audioFileURL {
                 try? FileManager.default.removeItem(at: prevURL)
             }
@@ -237,16 +233,13 @@ public class AudioAnalyzerPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         do {
-            // Stop if already playing
             playerNode.stop()
-
             installTap()
 
             if !engine.isRunning {
                 try engine.start()
             }
 
-            // Schedule file from the beginning (or from pauseTime)
             let frameOffset = AVAudioFramePosition(pauseTime * file.processingFormat.sampleRate)
             let frameCount = AVAudioFrameCount(file.length - frameOffset)
 
@@ -349,9 +342,6 @@ public class AudioAnalyzerPlugin: CAPPlugin, CAPBridgedPlugin {
         removeTap()
         playerNode.stop()
         engine.stop()
-        if let fftSetup = fftSetup {
-            vDSP_destroy_fftsetup(fftSetup)
-        }
         if let url = audioFileURL {
             try? FileManager.default.removeItem(at: url)
         }
