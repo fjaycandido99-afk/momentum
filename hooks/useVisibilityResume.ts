@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, type MutableRefObject } from 'react'
+import { useEffect, useRef, type MutableRefObject } from 'react'
 import type { YTPlayer } from '@/lib/youtube-types'
 import type { AudioState } from './useAudioStateMachine'
 import { isNativePlatform } from '@/lib/guide-audio-native'
@@ -22,12 +22,20 @@ export function useVisibilityResume({
   state, bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef,
   currentBgVideoIdRef, currentScVideoIdRef, guideAudioRef, guideNativeLoadedRef, wakeLockRef,
 }: UseVisibilityResumeOptions) {
+  // Use refs to avoid stale closures — state values change frequently
+  // but the visibility handler should always read the latest values
+  const stateRef = useRef(state)
+  stateRef.current = state
+
   useEffect(() => {
     let reloadAttempted = false
+    let resumeTimeout: ReturnType<typeof setTimeout> | null = null
 
     const tryResume = () => {
+      const s = stateRef.current
+
       // Resume background music - only if user didn't manually pause
-      if (currentBgVideoIdRef.current && bgPlayerRef.current && bgPlayerReadyRef.current && !state.userPausedMusic) {
+      if (currentBgVideoIdRef.current && bgPlayerRef.current && bgPlayerReadyRef.current && !s.userPausedMusic) {
         try {
           const playerState = bgPlayerRef.current.getPlayerState()
           if (playerState !== 1) {
@@ -42,7 +50,7 @@ export function useVisibilityResume({
       }
 
       // Resume soundscape - only if user didn't manually pause
-      if (currentScVideoIdRef.current && soundscapePlayerRef.current && soundscapeReadyRef.current && !state.userPausedSoundscape) {
+      if (currentScVideoIdRef.current && soundscapePlayerRef.current && soundscapeReadyRef.current && !s.userPausedSoundscape) {
         try {
           const playerState = soundscapePlayerRef.current.getPlayerState()
           if (playerState !== 1) {
@@ -57,16 +65,15 @@ export function useVisibilityResume({
       }
 
       // Resume guide audio - only if user didn't manually pause
-      if (state.guideLabel && !state.userPausedGuide) {
+      if (s.guideLabel && !s.userPausedGuide) {
         if (guideAudioRef.current?.paused) {
           guideAudioRef.current.play().catch(() => {})
         }
       }
     }
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState !== 'visible') return
-      if (!state.homeAudioActive) return
+    const handleResume = () => {
+      if (!stateRef.current.homeAudioActive) return
 
       // Re-acquire wake lock
       if ('wakeLock' in navigator && !wakeLockRef.current) {
@@ -75,20 +82,43 @@ export function useVisibilityResume({
         }).catch(() => {})
       }
 
+      // Clear any pending retry from a previous event
+      if (resumeTimeout) clearTimeout(resumeTimeout)
+
       // First attempt: playVideo
       reloadAttempted = false
       tryResume()
 
       // Second attempt after 800ms: reload if still not playing
-      setTimeout(() => {
+      resumeTimeout = setTimeout(() => {
         reloadAttempted = true
         tryResume()
       }, 800)
     }
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return
+      handleResume()
+    }
+
+    // Web: use visibilitychange
     document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [state.guideLabel, state.homeAudioActive, state.userPausedMusic, state.userPausedSoundscape, state.userPausedGuide,
-      bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef,
+
+    // Native iOS: also use Capacitor App events (more reliable than visibilitychange in WKWebView)
+    let removeAppResumeListener: (() => void) | null = null
+    if (isNativePlatform) {
+      import('@capacitor/app').then(({ App }) => {
+        App.addListener('resume', handleResume).then(handle => {
+          removeAppResumeListener = () => handle.remove()
+        })
+      }).catch(() => {})
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      if (resumeTimeout) clearTimeout(resumeTimeout)
+      if (removeAppResumeListener) removeAppResumeListener()
+    }
+  }, [bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef,
       currentBgVideoIdRef, currentScVideoIdRef, guideAudioRef, guideNativeLoadedRef, wakeLockRef])
 }
