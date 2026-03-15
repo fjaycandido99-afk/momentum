@@ -31,6 +31,223 @@ interface SessionPlayerProps {
   onComplete: () => void
 }
 
+// ─── Web-only player (uses HTMLAudioElement + createMediaElementSource) ───
+
+function useWebPlayer(audioBase64: string | null, onComplete: () => void) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const blobUrlRef = useRef<string | null>(null)
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const setupDone = useRef(false)
+
+  const [analyser, setAnalyser] = useState<AudioAnalyserLike | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  const setupAnalyser = useCallback(() => {
+    if (setupDone.current || !audioRef.current) return
+    setupDone.current = true
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {})
+      const source = ctx.createMediaElementSource(audioRef.current)
+      const node = ctx.createAnalyser()
+      node.fftSize = 256
+      node.smoothingTimeConstant = 0.7
+      source.connect(node)
+      node.connect(ctx.destination)
+      audioCtxRef.current = ctx
+      setAnalyser(node)
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (!audioBase64) { setIsLoaded(true); return }
+
+    const bin = atob(audioBase64)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    const blob = new Blob([bytes], { type: 'audio/mpeg' })
+    const url = URL.createObjectURL(blob)
+    blobUrlRef.current = url
+
+    const audio = new Audio(url)
+    audioRef.current = audio
+
+    audio.onloadedmetadata = () => {
+      setAudioDuration(audio.duration)
+      setIsLoaded(true)
+      audio.play()
+        .then(() => { setIsPlaying(true); setupAnalyser() })
+        .catch(() => {})
+    }
+    audio.onended = () => { setIsPlaying(false); onComplete() }
+    audio.onerror = () => setIsLoaded(true)
+
+    const timer = setInterval(() => {
+      if (audioRef.current) setCurrentTime(audioRef.current.currentTime)
+    }, 100)
+
+    return () => {
+      clearInterval(timer)
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
+      if (audioCtxRef.current) audioCtxRef.current.close().catch(() => {})
+      setupDone.current = false
+      setAnalyser(null)
+    }
+  }, [audioBase64])
+
+  const play = useCallback(() => {
+    if (!audioRef.current) return
+    setupAnalyser()
+    if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume().catch(() => {})
+    audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
+  }, [setupAnalyser])
+
+  const pause = useCallback(() => {
+    audioRef.current?.pause()
+    setIsPlaying(false)
+  }, [])
+
+  const seek = useCallback((time: number) => {
+    if (audioRef.current) { audioRef.current.currentTime = time; setCurrentTime(time) }
+  }, [])
+
+  const restart = useCallback(() => {
+    if (!audioRef.current) return
+    audioRef.current.currentTime = 0
+    setCurrentTime(0)
+    setupAnalyser()
+    if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume().catch(() => {})
+    audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
+  }, [setupAnalyser])
+
+  return { analyser, isPlaying, currentTime, audioDuration, isLoaded, play, pause, seek, restart }
+}
+
+// ─── Native-only player (uses Capacitor AudioAnalyzer plugin) ───
+
+function useNativePlayer(audioBase64: string | null, onComplete: () => void) {
+  const adapterRef = useRef<any>(null)
+  const pluginRef = useRef<any>(null)
+  const listenersRef = useRef<any[]>([])
+  const loaded = useRef(false)
+
+  const [analyser, setAnalyser] = useState<AudioAnalyserLike | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!audioBase64) { setIsLoaded(true); return }
+
+    let cancelled = false
+
+    const init = async () => {
+      try {
+        // Dynamic import to avoid loading on web
+        const { AudioAnalyzer, NativeAnalyserAdapter } = await import('@/lib/capacitor-audio-analyzer')
+        pluginRef.current = AudioAnalyzer
+
+        const adapter = new NativeAnalyserAdapter(64)
+        adapterRef.current = adapter
+
+        // Listen for frequency data
+        const freqHandle = await AudioAnalyzer.addListener('frequencyData', (data) => {
+          adapter.updateBands(data.bands)
+        })
+        listenersRef.current.push(freqHandle)
+
+        // Listen for progress
+        const progressHandle = await AudioAnalyzer.addListener('playbackProgress', (data) => {
+          if (!cancelled) {
+            setCurrentTime(data.currentTime)
+            setIsPlaying(data.isPlaying)
+          }
+        })
+        listenersRef.current.push(progressHandle)
+
+        // Listen for completion
+        const completeHandle = await AudioAnalyzer.addListener('playbackComplete', () => {
+          if (!cancelled) {
+            setIsPlaying(false)
+            onComplete()
+          }
+        })
+        listenersRef.current.push(completeHandle)
+
+        // Load audio and auto-play
+        const result = await AudioAnalyzer.loadBase64({ data: audioBase64 })
+        if (!cancelled) {
+          setAudioDuration(result.duration)
+          setIsLoaded(true)
+          setAnalyser(adapter)
+          loaded.current = true
+          // Auto-play to match web behavior
+          await AudioAnalyzer.play()
+          setIsPlaying(true)
+        }
+      } catch (err) {
+        console.warn('[SessionPlayer] Native audio setup failed:', err)
+        if (!cancelled) setIsLoaded(true)
+      }
+    }
+
+    init()
+
+    return () => {
+      cancelled = true
+      listenersRef.current.forEach(h => h.remove())
+      listenersRef.current = []
+      pluginRef.current?.stop().catch(() => {})
+      loaded.current = false
+      setAnalyser(null)
+    }
+  }, [audioBase64])
+
+  const play = useCallback(async () => {
+    if (!pluginRef.current || !loaded.current) return
+    try {
+      await pluginRef.current.play()
+      setIsPlaying(true)
+    } catch {}
+  }, [])
+
+  const pause = useCallback(async () => {
+    if (!pluginRef.current) return
+    try {
+      const result = await pluginRef.current.pause()
+      setCurrentTime(result.currentTime)
+      setIsPlaying(false)
+    } catch {}
+  }, [])
+
+  const seek = useCallback(async (time: number) => {
+    if (!pluginRef.current) return
+    try {
+      await pluginRef.current.seek({ time })
+      setCurrentTime(time)
+    } catch {}
+  }, [])
+
+  const restart = useCallback(async () => {
+    if (!pluginRef.current || !loaded.current) return
+    try {
+      await pluginRef.current.seek({ time: 0 })
+      await pluginRef.current.play()
+      setCurrentTime(0)
+      setIsPlaying(true)
+    } catch {}
+  }, [])
+
+  return { analyser, isPlaying, currentTime, audioDuration, isLoaded, play, pause, seek, restart }
+}
+
+// ─── SessionPlayer Component ───
+
 export function SessionPlayer({
   session,
   script,
@@ -41,141 +258,43 @@ export function SessionPlayer({
 }: SessionPlayerProps) {
   const audioContext = useAudioOptional()
   const containerRef = useRef<HTMLDivElement>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const blobUrlRef = useRef<string | null>(null)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const audioCtxRef = useRef<AudioContext | null>(null)
-  const setupDone = useRef(false)
-
-  const [analyserNode, setAnalyserNode] = useState<AudioAnalyserLike | null>(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [audioDuration, setAudioDuration] = useState(duration)
-  const [isLoaded, setIsLoaded] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
 
-  /**
-   * Set up Web Audio analyser via createMediaElementSource.
-   * Only used on web — skipped entirely on native (Capacitor).
-   */
-  const setupWebAnalyser = useCallback(() => {
-    if (setupDone.current || !audioRef.current || IS_NATIVE) return
-    setupDone.current = true
+  const handleComplete = useCallback(() => {
+    setIsCompleted(true)
+    onComplete()
+  }, [onComplete])
 
-    try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {})
-      const source = audioCtx.createMediaElementSource(audioRef.current)
-      const analyser = audioCtx.createAnalyser()
-      analyser.fftSize = 256
-      analyser.smoothingTimeConstant = 0.7
-      source.connect(analyser)
-      analyser.connect(audioCtx.destination)
-      audioCtxRef.current = audioCtx
-      setAnalyserNode(analyser)
-    } catch (err) {
-      console.warn('[SessionPlayer] Web Audio setup failed:', err)
-    }
+  // Both hooks must always be called (React rules of hooks)
+  // Pass null audioBase64 to the inactive player so it does nothing
+  const webPlayer = useWebPlayer(IS_NATIVE ? null : audioBase64, handleComplete)
+  const nativePlayer = useNativePlayer(IS_NATIVE ? audioBase64 : null, handleComplete)
+  const player = IS_NATIVE ? nativePlayer : webPlayer
+
+  const { analyser, isPlaying, currentTime, audioDuration, isLoaded, play, pause, seek, restart } = player
+
+  // Pause background music when opening
+  useEffect(() => {
+    audioContext?.pauseMusic()
   }, [])
 
-  // Initialize audio element
-  useEffect(() => {
-    if (!audioBase64) {
-      setIsLoaded(true)
-      return
-    }
-
-    const binaryString = atob(audioBase64)
-    const bytes = new Uint8Array(binaryString.length)
-    for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i)
-    const blob = new Blob([bytes], { type: 'audio/mpeg' })
-    const blobUrl = URL.createObjectURL(blob)
-    blobUrlRef.current = blobUrl
-
-    const audio = new Audio(blobUrl)
-    audioRef.current = audio
-
-    audio.onloadedmetadata = () => {
-      setAudioDuration(audio.duration)
-      setIsLoaded(true)
-      audio.play()
-        .then(() => {
-          setIsPlaying(true)
-          setupWebAnalyser()
-        })
-        .catch(() => {})
-    }
-
-    audio.onended = () => {
-      setIsPlaying(false)
-      setIsCompleted(true)
-      onComplete()
-    }
-
-    audio.onerror = () => setIsLoaded(true)
-    audioContext?.pauseMusic()
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.src = ''
-        audioRef.current = null
-      }
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current)
-        blobUrlRef.current = null
-      }
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {})
-        audioCtxRef.current = null
-      }
-      setupDone.current = false
-      setAnalyserNode(null)
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [audioBase64])
-
-  useEffect(() => {
-    if (isPlaying) {
-      timerRef.current = setInterval(() => {
-        if (audioRef.current) setCurrentTime(audioRef.current.currentTime)
-      }, 100)
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [isPlaying])
-
   const togglePlay = useCallback(() => {
-    if (!audioRef.current) return
-    if (isPlaying) {
-      audioRef.current.pause()
-      setIsPlaying(false)
-    } else {
-      setupWebAnalyser()
-      if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume().catch(() => {})
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
-    }
-  }, [isPlaying, setupWebAnalyser])
+    if (isPlaying) pause()
+    else play()
+  }, [isPlaying, play, pause])
 
-  const restart = useCallback(() => {
-    if (!audioRef.current) return
-    audioRef.current.currentTime = 0
-    setCurrentTime(0)
+  const handleRestart = useCallback(() => {
     setIsCompleted(false)
-    setupWebAnalyser()
-    if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume().catch(() => {})
-    audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {})
-  }, [setupWebAnalyser])
+    restart()
+  }, [restart])
 
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    if (!audioRef.current || audioDuration <= 0) return
+    if (audioDuration <= 0) return
     const rect = e.currentTarget.getBoundingClientRect()
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
     const fraction = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    audioRef.current.currentTime = fraction * audioDuration
-    setCurrentTime(fraction * audioDuration)
-  }, [audioDuration])
+    seek(fraction * audioDuration)
+  }, [audioDuration, seek])
 
   const progress = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0
   const meta = SESSION_META[session]
@@ -185,13 +304,7 @@ export function SessionPlayer({
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="absolute pointer-events-none" style={{ width: '320px', height: '320px', borderRadius: '50%', background: 'radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 70%)', filter: 'blur(40px)', opacity: isPlaying ? 1 : 0, transition: 'opacity 1.5s ease-in-out' }} />
         <div style={{ opacity: isPlaying ? 0.85 : 0.15, transition: 'opacity 1s ease-in-out' }}>
-          <CircularVisualizer
-            analyser={analyserNode}
-            isPlaying={isPlaying}
-            simulated={IS_NATIVE}
-            barCount={80}
-            size={300}
-          />
+          <CircularVisualizer analyser={analyser} isPlaying={isPlaying} barCount={80} size={300} />
         </div>
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none" />
       </div>
@@ -230,7 +343,7 @@ export function SessionPlayer({
         <div className="flex items-center justify-center gap-8">
           {isCompleted ? (
             <>
-              <button onClick={restart} className="p-2 focus-visible:outline-none" aria-label="Restart"><RotateCcw className="w-7 h-7 text-white" /></button>
+              <button onClick={handleRestart} className="p-2 focus-visible:outline-none" aria-label="Restart"><RotateCcw className="w-7 h-7 text-white" /></button>
               <button onClick={onClose} className="w-16 h-16 rounded-full bg-white flex items-center justify-center transition-transform active:scale-95 focus-visible:outline-none"><Check className="w-7 h-7 text-black" /></button>
               <div className="w-11" />
             </>
