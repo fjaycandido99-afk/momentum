@@ -85,28 +85,33 @@ public class AudioAnalyzerPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         vDSP_vmul(windowedSignal, 1, window, 1, &windowedSignal, 1, vDSP_Length(fftSize))
 
-        // Set up split complex for FFT
+        // All vDSP work happens inside withUnsafeMutableBufferPointer to satisfy Swift 6 pointer safety
         var realPart = [Float](repeating: 0, count: halfN)
         var imagPart = [Float](repeating: 0, count: halfN)
+        var magnitudes = [Float](repeating: 0, count: halfN)
+        var dbMagnitudes = [Float](repeating: 0, count: halfN)
+        var one: Float = 1.0
 
-        windowedSignal.withUnsafeBufferPointer { ptr in
-            ptr.baseAddress!.withMemoryRebound(to: DSPComplex.self, capacity: halfN) { complexPtr in
-                var splitComplex = DSPSplitComplex(realp: &realPart, imagp: &imagPart)
-                vDSP_ctoz(complexPtr, 2, &splitComplex, 1, vDSP_Length(halfN))
+        realPart.withUnsafeMutableBufferPointer { realBuf in
+            imagPart.withUnsafeMutableBufferPointer { imagBuf in
+                // Convert interleaved to split complex
+                windowedSignal.withUnsafeBufferPointer { signalBuf in
+                    signalBuf.baseAddress!.withMemoryRebound(to: DSPComplex.self, capacity: halfN) { complexPtr in
+                        var split = DSPSplitComplex(realp: realBuf.baseAddress!, imagp: imagBuf.baseAddress!)
+                        vDSP_ctoz(complexPtr, 2, &split, 1, vDSP_Length(halfN))
+                    }
+                }
+
+                // Perform FFT
+                var split = DSPSplitComplex(realp: realBuf.baseAddress!, imagp: imagBuf.baseAddress!)
+                vDSP_fft_zrip(fftSetup, &split, 1, log2n, FFTDirection(FFT_FORWARD))
+
+                // Calculate magnitudes
+                vDSP_zvmags(&split, 1, &magnitudes, 1, vDSP_Length(halfN))
             }
         }
 
-        // Perform FFT
-        var splitComplex = DSPSplitComplex(realp: &realPart, imagp: &imagPart)
-        vDSP_fft_zrip(fftSetup, &splitComplex, 1, log2n, FFTDirection(FFT_FORWARD))
-
-        // Calculate magnitudes
-        var magnitudes = [Float](repeating: 0, count: halfN)
-        vDSP_zvmags(&splitComplex, 1, &magnitudes, 1, vDSP_Length(halfN))
-
         // Convert to dB scale
-        var dbMagnitudes = [Float](repeating: 0, count: halfN)
-        var one: Float = 1.0
         vDSP_vdbcon(magnitudes, 1, &one, &dbMagnitudes, 1, vDSP_Length(halfN), 1)
 
         // Group into bands and normalize to 0-255
@@ -144,7 +149,7 @@ public class AudioAnalyzerPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - Playback Time Tracking
 
     private func getCurrentTimeValue() -> TimeInterval {
-        guard let file = audioFile else { return 0 }
+        guard audioFile != nil else { return 0 }
 
         if isPlayerPlaying, let nodeTime = playerNode.lastRenderTime,
            let playerTime = playerNode.playerTime(forNodeTime: nodeTime) {
