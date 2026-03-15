@@ -129,7 +129,7 @@ function useWebPlayer(audioBase64: string | null, onComplete: () => void) {
 
 // ─── Native-only player (uses Capacitor AudioAnalyzer plugin) ───
 
-function useNativePlayer(audioBase64: string | null, onComplete: () => void) {
+function useNativePlayer(audioBase64: string | null, onComplete: () => void, onPluginMissing?: () => void) {
   const adapterRef = useRef<any>(null)
   const pluginRef = useRef<any>(null)
   const listenersRef = useRef<any[]>([])
@@ -191,8 +191,11 @@ function useNativePlayer(audioBase64: string | null, onComplete: () => void) {
           setIsPlaying(true)
         }
       } catch (err) {
-        console.warn('[SessionPlayer] Native audio setup failed:', err)
-        if (!cancelled) setIsLoaded(true)
+        console.warn('[SessionPlayer] Native audio plugin not available, falling back to web player:', err)
+        if (!cancelled) {
+          setIsLoaded(true)
+          onPluginMissing?.()
+        }
       }
     }
 
@@ -265,11 +268,16 @@ export function SessionPlayer({
     onComplete()
   }, [onComplete])
 
+  // If native plugin isn't available (old build), fall back to web player
+  const [nativeFailed, setNativeFailed] = useState(false)
+  const handlePluginMissing = useCallback(() => setNativeFailed(true), [])
+
   // Both hooks must always be called (React rules of hooks)
-  // Pass null audioBase64 to the inactive player so it does nothing
-  const webPlayer = useWebPlayer(IS_NATIVE ? null : audioBase64, handleComplete)
-  const nativePlayer = useNativePlayer(IS_NATIVE ? audioBase64 : null, handleComplete)
-  const player = IS_NATIVE ? nativePlayer : webPlayer
+  // Web player activates if: not native, OR native plugin failed (fallback)
+  const useWeb = !IS_NATIVE || nativeFailed
+  const webPlayer = useWebPlayer(useWeb ? audioBase64 : null, handleComplete)
+  const nativePlayer = useNativePlayer(IS_NATIVE && !nativeFailed ? audioBase64 : null, handleComplete, handlePluginMissing)
+  const player = IS_NATIVE && !nativeFailed ? nativePlayer : webPlayer
 
   const { analyser, isPlaying, currentTime, audioDuration, isLoaded, play, pause, seek, restart } = player
 
