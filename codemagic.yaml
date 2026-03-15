@@ -36,7 +36,18 @@ workflows:
         script: npm install
 
       - name: Capacitor sync
-        script: npx cap sync ios
+        script: |
+          npx cap sync ios
+          # Register custom native plugin (not an npm package, so cap sync won't find it)
+          node -e "
+            const fs = require('fs');
+            const f = 'ios/App/App/capacitor.config.json';
+            const c = JSON.parse(fs.readFileSync(f, 'utf8'));
+            if (!c.packageClassList.includes('AudioAnalyzerPlugin')) {
+              c.packageClassList.push('AudioAnalyzerPlugin');
+              fs.writeFileSync(f, JSON.stringify(c, null, '\t'));
+            }
+          "
 
       - name: Install Apple Certificate
         script: |
