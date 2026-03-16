@@ -642,10 +642,11 @@ function JournalContent() {
       const label = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
       const moodEmoji = entry.journal_mood ? (MOOD_EMOJI[entry.journal_mood] || '') : ''
       lines.push(`## ${label}${moodEmoji ? ` ${moodEmoji}` : ''}\n`)
+      const mp = mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset] : null
       if (entry.journal_freetext) lines.push(`### Free Write\n${entry.journal_freetext}\n`)
-      if (entry.journal_win) lines.push(`### Learned\n${entry.journal_win}\n`)
-      if (entry.journal_gratitude) lines.push(`### Grateful\n${entry.journal_gratitude}\n`)
-      if (entry.journal_intention) lines.push(`### Intention\n${entry.journal_intention}\n`)
+      if (entry.journal_win) lines.push(`### ${mp?.prompt1.tag || 'Learned'}\n${entry.journal_win}\n`)
+      if (entry.journal_gratitude) lines.push(`### ${mp?.prompt2.tag || 'Grateful'}\n${entry.journal_gratitude}\n`)
+      if (entry.journal_intention) lines.push(`### ${mp?.prompt3.tag || 'Intention'}\n${entry.journal_intention}\n`)
       if (entry.journal_tags?.length) lines.push(`**Tags:** ${entry.journal_tags.join(', ')}\n`)
       lines.push('---\n')
     }
@@ -656,7 +657,7 @@ function JournalContent() {
     a.download = `voxu-journal-${new Date().toISOString().split('T')[0]}.md`
     a.click()
     URL.revokeObjectURL(url)
-  }, [allEntries])
+  }, [allEntries, mindsetCtx])
 
   const hasContent = mode === 'guided'
     ? (win.trim() || gratitude.trim() || intention.trim())
@@ -1377,9 +1378,9 @@ function JournalContent() {
                         ) : null}
                         <div className="flex items-center gap-2 mt-2">
                           {entry.journal_freetext && <span className="text-[10px] text-cyan-400">✎ Free Write</span>}
-                          {entry.journal_win && <span className="text-[10px] text-amber-400">✦ Learned</span>}
-                          {entry.journal_gratitude && <span className="text-[10px] text-pink-400">♥ Grateful</span>}
-                          {entry.journal_intention && <span className="text-[10px] text-purple-400">◎ Intention</span>}
+                          {entry.journal_win && <span className="text-[10px] text-amber-400">✦ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt1.tag : 'Learned'}</span>}
+                          {entry.journal_gratitude && <span className="text-[10px] text-pink-400">♥ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt2.tag : 'Grateful'}</span>}
+                          {entry.journal_intention && <span className="text-[10px] text-purple-400">◎ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt3.tag : 'Intention'}</span>}
                         </div>
                         {entry.journal_tags && entry.journal_tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">

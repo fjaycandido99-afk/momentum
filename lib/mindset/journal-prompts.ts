@@ -1,9 +1,9 @@
 import type { MindsetId } from './types'
 
 export interface MindsetJournalPrompts {
-  prompt1: { label: string; placeholder: string; icon: 'sparkles' | 'heart' | 'target' }
-  prompt2: { label: string; placeholder: string; icon: 'sparkles' | 'heart' | 'target' }
-  prompt3: { label: string; placeholder: string; icon: 'sparkles' | 'heart' | 'target' }
+  prompt1: { label: string; placeholder: string; icon: 'sparkles' | 'heart' | 'target'; tag: string }
+  prompt2: { label: string; placeholder: string; icon: 'sparkles' | 'heart' | 'target'; tag: string }
+  prompt3: { label: string; placeholder: string; icon: 'sparkles' | 'heart' | 'target'; tag: string }
 }
 
 export const MINDSET_JOURNAL_PROMPTS: Record<MindsetId, MindsetJournalPrompts> = {
@@ -12,16 +12,19 @@ export const MINDSET_JOURNAL_PROMPTS: Record<MindsetId, MindsetJournalPrompts> =
       label: 'What was within your control today?',
       placeholder: 'Today I controlled...',
       icon: 'sparkles',
+      tag: 'Control',
     },
     prompt2: {
       label: 'What did you endure with grace?',
       placeholder: 'I faced this challenge...',
       icon: 'heart',
+      tag: 'Endurance',
     },
     prompt3: {
       label: "Tomorrow's virtue to practice",
       placeholder: 'Tomorrow I will practice...',
       icon: 'target',
+      tag: 'Virtue',
     },
   },
   existentialist: {
@@ -29,16 +32,19 @@ export const MINDSET_JOURNAL_PROMPTS: Record<MindsetId, MindsetJournalPrompts> =
       label: 'What choice defined you today?',
       placeholder: 'I chose to...',
       icon: 'sparkles',
+      tag: 'Choice',
     },
     prompt2: {
       label: 'Where did you find meaning?',
       placeholder: 'I found meaning in...',
       icon: 'heart',
+      tag: 'Meaning',
     },
     prompt3: {
       label: 'What will you create tomorrow?',
       placeholder: 'Tomorrow I will create...',
       icon: 'target',
+      tag: 'Creation',
     },
   },
   cynic: {
@@ -46,16 +52,19 @@ export const MINDSET_JOURNAL_PROMPTS: Record<MindsetId, MindsetJournalPrompts> =
       label: 'What unnecessary thing did you let go of?',
       placeholder: 'I let go of...',
       icon: 'sparkles',
+      tag: 'Letting Go',
     },
     prompt2: {
       label: 'What truth did you face today?',
       placeholder: 'The honest truth is...',
       icon: 'heart',
+      tag: 'Truth',
     },
     prompt3: {
       label: 'What illusion will you challenge tomorrow?',
       placeholder: 'Tomorrow I will question...',
       icon: 'target',
+      tag: 'Challenge',
     },
   },
   hedonist: {
@@ -63,16 +72,19 @@ export const MINDSET_JOURNAL_PROMPTS: Record<MindsetId, MindsetJournalPrompts> =
       label: 'What brought you genuine joy today?',
       placeholder: 'I savored...',
       icon: 'sparkles',
+      tag: 'Joy',
     },
     prompt2: {
       label: 'What simple pleasure are you grateful for?',
       placeholder: "I'm grateful for...",
       icon: 'heart',
+      tag: 'Pleasure',
     },
     prompt3: {
       label: 'What experience will you savor tomorrow?',
       placeholder: 'Tomorrow I will enjoy...',
       icon: 'target',
+      tag: 'Savor',
     },
   },
   samurai: {
@@ -80,16 +92,19 @@ export const MINDSET_JOURNAL_PROMPTS: Record<MindsetId, MindsetJournalPrompts> =
       label: 'Where did you show discipline today?',
       placeholder: 'I showed discipline by...',
       icon: 'sparkles',
+      tag: 'Discipline',
     },
     prompt2: {
       label: 'What skill did you sharpen?',
       placeholder: 'I trained in...',
       icon: 'heart',
+      tag: 'Training',
     },
     prompt3: {
       label: "Tomorrow's training focus",
       placeholder: 'Tomorrow I will master...',
       icon: 'target',
+      tag: 'Focus',
     },
   },
   scholar: {
@@ -97,16 +112,19 @@ export const MINDSET_JOURNAL_PROMPTS: Record<MindsetId, MindsetJournalPrompts> =
       label: 'What did you learn today?',
       placeholder: 'Today I learned...',
       icon: 'sparkles',
+      tag: 'Learned',
     },
     prompt2: {
       label: 'What are you grateful for?',
       placeholder: "I'm grateful for...",
       icon: 'heart',
+      tag: 'Grateful',
     },
     prompt3: {
       label: "Tomorrow's intention",
       placeholder: 'Tomorrow I will...',
       icon: 'target',
+      tag: 'Intention',
     },
   },
   manifestor: {
@@ -114,16 +132,19 @@ export const MINDSET_JOURNAL_PROMPTS: Record<MindsetId, MindsetJournalPrompts> =
       label: 'What did you visualize becoming real today?',
       placeholder: 'I saw myself...',
       icon: 'sparkles',
+      tag: 'Vision',
     },
     prompt2: {
       label: 'What are you grateful for as if it already exists?',
       placeholder: 'I am grateful for...',
       icon: 'heart',
+      tag: 'Grateful',
     },
     prompt3: {
       label: 'What intention will you set for tomorrow?',
       placeholder: 'Tomorrow I am...',
       icon: 'target',
+      tag: 'Intention',
     },
   },
   hustler: {
@@ -131,16 +152,19 @@ export const MINDSET_JOURNAL_PROMPTS: Record<MindsetId, MindsetJournalPrompts> =
       label: 'What did you outwork today?',
       placeholder: 'I crushed...',
       icon: 'sparkles',
+      tag: 'Outwork',
     },
     prompt2: {
       label: 'What pain did you push through?',
       placeholder: 'I pushed through...',
       icon: 'heart',
+      tag: 'Grit',
     },
     prompt3: {
       label: "Tomorrow's mission",
       placeholder: 'Tomorrow I will dominate...',
       icon: 'target',
+      tag: 'Mission',
     },
   },
 }
