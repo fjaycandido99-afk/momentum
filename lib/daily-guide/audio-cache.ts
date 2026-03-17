@@ -85,11 +85,14 @@ export async function generateAndCacheAudio(
   tone: string = 'calm'
 ): Promise<{ audioBase64: string; duration: number } | null> {
   // Check shared cache first — keyed by segment+tone, reused forever
-  const sharedKey = `segment-${segment}-${tone}`
-  const shared = await getSharedCached(sharedKey)
-  if (shared) {
-    console.log(`[Shared Audio Cache HIT] ${sharedKey}`)
-    return shared
+  // Skip shared cache for bedtime_story since each day has a unique AI-generated story
+  if (segment !== 'bedtime_story') {
+    const sharedKey = `segment-${segment}-${tone}`
+    const shared = await getSharedCached(sharedKey)
+    if (shared) {
+      console.log(`[Shared Audio Cache HIT] ${sharedKey}`)
+      return shared
+    }
   }
 
   const apiKey = process.env.ELEVENLABS_API_KEY
@@ -137,8 +140,11 @@ export async function generateAndCacheAudio(
 
     const result = { audioBase64, duration: estimatedDuration }
 
-    // Save to shared cache so it's never regenerated
-    await setSharedCache(sharedKey, audioBase64, estimatedDuration)
+    // Save to shared cache so it's never regenerated (except bedtime_story which changes daily)
+    if (segment !== 'bedtime_story') {
+      const sharedKey = `segment-${segment}-${tone}`
+      await setSharedCache(sharedKey, audioBase64, estimatedDuration)
+    }
 
     return result
   } catch (error) {
