@@ -120,6 +120,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const audioContextRef = useRef(audioContext)
   audioContextRef.current = audioContext
 
+  const [todayKey, setTodayKey] = useState(() => getDateString(new Date()))
   const today = new Date()
   const wakeTime = preferences?.wake_time || '07:00'
 
@@ -128,10 +129,11 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
   // Fetch guide data
   const fetchData = useCallback(async () => {
+    const freshDate = getDateString(new Date())
     const minDelay = new Promise(resolve => setTimeout(resolve, 300))
     try {
       const [guideRes, prefsRes] = await Promise.all([
-        fetch('/api/daily-guide/generate?date=' + getDateString(today), { cache: 'no-store' }),
+        fetch('/api/daily-guide/generate?date=' + freshDate, { cache: 'no-store' }),
         fetch('/api/daily-guide/preferences', { cache: 'no-store' }),
         minDelay,
       ]) as [Response, Response, unknown]
@@ -171,7 +173,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         }
       } else if (guideRes.status === 401) {
         // Guest — set demo guide
-        setGuide({ id: 'demo', date: getDateString(today) })
+        setGuide({ id: 'demo', date: getDateString(new Date()) })
       } else {
         generateGuide()
       }
@@ -190,6 +192,26 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     return () => { isMountedRef.current = false }
   }, [fetchData])
 
+  // Re-fetch when app resumes on a new day (native app stays mounted overnight)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState !== 'visible') return
+      const newKey = getDateString(new Date())
+      if (newKey !== todayKey) {
+        setTodayKey(newKey)
+        setCompletedSessions([])
+        setActiveSession(getCurrentSession())
+        setMoodBefore(null)
+        setMoodAfter(null)
+        setGuide(null)
+        setIsLoading(true)
+        fetchData()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [todayKey, fetchData])
+
   // Cleanup session active on unmount
   useEffect(() => {
     return () => { audioContextRef.current?.setSessionActive(false) }
@@ -203,7 +225,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       const response = await fetch('/api/daily-guide/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: getDateString(today), forceRegenerate: false }),
+        body: JSON.stringify({ date: getDateString(new Date()), forceRegenerate: false }),
       })
 
       if (response.ok) {
@@ -213,7 +235,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       } else {
         const errorData = await response.json().catch(() => ({}))
         if (response.status === 401) {
-          setGuide({ id: 'demo', date: getDateString(today) })
+          setGuide({ id: 'demo', date: getDateString(new Date()) })
         } else {
           setGenerationError(errorData.error || 'Failed to generate guide')
         }
