@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Clock, Loader2, BookOpen } from 'lucide-react'
+import { getDateString } from '@/lib/daily-guide/day-type'
 
 export function JournalLookback() {
   const [lookbackEntry, setLookbackEntry] = useState<{
@@ -16,7 +17,7 @@ export function JournalLookback() {
       try {
         const lastWeek = new Date()
         lastWeek.setDate(lastWeek.getDate() - 7)
-        const dateStr = lastWeek.toISOString().split('T')[0]
+        const dateStr = getDateString(lastWeek)
         const response = await fetch(`/api/daily-guide/journal?date=${dateStr}`)
         if (response.ok) {
           const data = await response.json()

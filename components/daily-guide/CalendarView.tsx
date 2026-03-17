@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight, Loader2, Check, Circle, Flame, X, BookOpen, Heart, Target, Lightbulb, PenTool, Moon, MessageCircle } from 'lucide-react'
+import { getDateString } from '@/lib/daily-guide/day-type'
 
 interface DayData {
   date: Date
@@ -78,7 +79,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
         const endDate = new Date(year, month + 1, 0)
 
         const response = await fetch(
-          `/api/daily-guide/journal?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
+          `/api/daily-guide/journal?startDate=${getDateString(startDate)}&endDate=${getDateString(endDate)}`
         )
 
         if (!isMountedRef.current) return
@@ -91,7 +92,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
 
           data.entries?.forEach((entry: any) => {
             const date = new Date(entry.date)
-            const key = date.toISOString().split('T')[0]
+            const key = getDateString(date)
             dataMap[key] = {
               date,
               morning_prime_done: entry.morning_prime_done,
@@ -145,7 +146,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
     onSelectDate?.(clickedDate)
 
     // Show journal popup if there's data for this day
-    const dateKey = clickedDate.toISOString().split('T')[0]
+    const dateKey = getDateString(clickedDate)
     const dayData = monthData[dateKey]
     if (dayData) {
       setSelectedDayData({ ...dayData, date: clickedDate })
@@ -156,7 +157,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
   const renderDay = (day: number) => {
     const date = new Date(year, month, day)
     date.setHours(0, 0, 0, 0)
-    const dateKey = date.toISOString().split('T')[0]
+    const dateKey = getDateString(date)
     const dayData = monthData[dateKey]
     const isToday = date.getTime() === today.getTime()
     const isFuture = date > today

@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { X, Check, PenLine, Target } from 'lucide-react'
 import { getPromptForDate } from '@/components/journal/JournalPrompts'
+import { getDateString } from '@/lib/daily-guide/day-type'
 
 type SheetMode = 'thought' | 'goal'
 
@@ -51,7 +52,7 @@ export function PlayerJournalSheet({ open, onClose }: PlayerJournalSheetProps) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            date: today.toISOString(),
+            date: getDateString(today),
             journal_freetext: trimmed,
           }),
         })

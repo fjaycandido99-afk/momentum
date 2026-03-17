@@ -5,6 +5,7 @@ import { PenLine, Check, Loader2, X, Sparkles, Heart, Target, Crown } from 'luci
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
+import { getDateString } from '@/lib/daily-guide/day-type'
 
 interface JournalEntryProps {
   date?: Date
@@ -34,7 +35,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
     const loadJournal = async () => {
       try {
         const targetDate = date || new Date()
-        const dateStr = targetDate.toISOString().split('T')[0]
+        const dateStr = getDateString(targetDate)
         const response = await fetch(`/api/daily-guide/journal?date=${dateStr}`)
         if (response.ok) {
           const data = await response.json()
@@ -66,7 +67,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          date: targetDate.toISOString(),
+          date: getDateString(targetDate),
           journal_win: win.trim() || undefined,
           journal_gratitude: gratitude.trim() || undefined,
           journal_intention: intention.trim() || undefined,

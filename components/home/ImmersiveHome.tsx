@@ -28,6 +28,7 @@ import {
   getTimeContext, getSuggestedMode, getTodaysTopicName, getTodaysBackgrounds,
   getMoodTopicName,
 } from './home-types'
+import { getDateString } from '@/lib/daily-guide/day-type'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
@@ -395,7 +396,18 @@ export function ImmersiveHome() {
   // --- Data fetching (SWR) ---
   const topicName = getTodaysTopicName()
   const [backgrounds] = useState(getTodaysBackgrounds)
-  const today = useMemo(() => new Date().toISOString().split('T')[0], [])
+  const [today, setToday] = useState(() => getDateString(new Date()))
+
+  // Refresh date when app resumes on a new day
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState !== 'visible') return
+      const fresh = getDateString(new Date())
+      if (fresh !== today) setToday(fresh)
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [today])
 
   // SWR: Preferences
   const { streak, mutatePreferences } = usePreferences()

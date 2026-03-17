@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { ChevronDown, Heart, Send } from 'lucide-react'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
 import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
+import { getDateString } from '@/lib/daily-guide/day-type'
 
 function dateSeed(dateStr: string): number {
   let hash = 0
@@ -26,7 +27,17 @@ export function WisdomSection() {
   const mindsetId = mindsetCtx?.mindset || 'stoic'
   const config = mindsetCtx?.config
 
-  const today = useMemo(() => new Date().toISOString().split('T')[0], [])
+  const [today, setToday] = useState(() => getDateString(new Date()))
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState !== 'visible') return
+      const fresh = getDateString(new Date())
+      if (fresh !== today) setToday(fresh)
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [today])
 
   const dailyQuote = useMemo(() => {
     const quotes = MINDSET_QUOTES[mindsetId]

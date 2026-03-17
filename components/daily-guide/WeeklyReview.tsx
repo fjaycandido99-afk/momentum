@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { CalendarDays, Trophy, Flame, PenLine, Check, Loader2, ChevronRight, Sparkles, Target, X, Zap, Heart, TrendingUp, BarChart3, Brain } from 'lucide-react'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { getDateString } from '@/lib/daily-guide/day-type'
 
 interface DayEntry {
   date: Date
@@ -71,7 +72,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
 
         // Fetch journal entries for the past week
         const response = await fetch(
-          `/api/daily-guide/journal?startDate=${start.toISOString()}&endDate=${end.toISOString()}`
+          `/api/daily-guide/journal?startDate=${getDateString(start)}&endDate=${getDateString(end)}`
         )
 
         if (response.ok) {
@@ -91,7 +92,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           // Create a map of entries by date
           const entryMap: Record<string, any> = {}
           entries.forEach((entry: any) => {
-            const dateKey = new Date(entry.date).toISOString().split('T')[0]
+            const dateKey = getDateString(new Date(entry.date))
             entryMap[dateKey] = entry
           })
 
@@ -102,7 +103,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           for (let i = 0; i < 7; i++) {
             const dayDate = new Date(start)
             dayDate.setDate(start.getDate() + i)
-            const dateKey = dayDate.toISOString().split('T')[0]
+            const dateKey = getDateString(dayDate)
             const entry = entryMap[dateKey]
 
             let moduleCount = 0
@@ -177,7 +178,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
 
         // Check for existing intention for this week
         const today = new Date()
-        const intentionResponse = await fetch(`/api/daily-guide/journal?date=${today.toISOString()}`)
+        const intentionResponse = await fetch(`/api/daily-guide/journal?date=${getDateString(today)}`)
         if (intentionResponse.ok) {
           const intentionData = await intentionResponse.json()
           if (intentionData.journal_intention) {
@@ -219,7 +220,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          date: new Date().toISOString(),
+          date: getDateString(new Date()),
           journal_intention: intention.trim(),
         }),
       })

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { getDateString } from '@/lib/daily-guide/day-type'
 import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
@@ -115,11 +116,9 @@ export async function GET() {
     })
 
     // Analyze patterns
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const todayStr = today.toISOString().split('T')[0]
+    const todayStr = getDateString(new Date())
 
-    const hasToday = guides.some(g => new Date(g.date).toISOString().split('T')[0] === todayStr)
+    const hasToday = guides.some(g => getDateString(new Date(g.date)) === todayStr)
     const recentDays = guides.slice(0, 7)
     const journalCount = recentDays.filter(g => g.journal_win || g.journal_gratitude).length
     const activeDays = recentDays.filter(g => g.morning_prime_done || g.midday_reset_done || g.bedtime_story_done).length
@@ -131,7 +130,9 @@ export async function GET() {
     if (prefs && prefs.current_streak === 0 && prefs.last_active_date) {
       const lastActive = new Date(prefs.last_active_date)
       lastActive.setHours(0, 0, 0, 0)
-      daysSinceActive = Math.floor((today.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24))
+      const now = new Date()
+      now.setHours(0, 0, 0, 0)
+      daysSinceActive = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24))
       if (daysSinceActive >= 1) {
         streakBroken = true
       }
@@ -275,9 +276,9 @@ export async function GET() {
           if (aiMessage) {
             try {
               await prisma.dailyGuide.upsert({
-                where: { user_id_date: { user_id: user.id, date: today } },
+                where: { user_id_date: { user_id: user.id, date: new Date(todayStr) } },
                 update: { ai_streak_recovery_message: aiMessage },
-                create: { user_id: user.id, date: today, day_type: 'work', ai_streak_recovery_message: aiMessage },
+                create: { user_id: user.id, date: new Date(todayStr), day_type: 'work', ai_streak_recovery_message: aiMessage },
               })
             } catch {
               // Non-fatal
