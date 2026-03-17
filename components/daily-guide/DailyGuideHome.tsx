@@ -18,7 +18,7 @@ import { logXPEventServer, XP_REWARDS } from '@/lib/gamification'
 import { MoodCheckIn } from './MoodCheckIn'
 import { JournalLookback } from './JournalLookback'
 import { CosmicInsightCard } from './CosmicInsightCard'
-import { getFormattedDate } from '@/lib/daily-guide/day-type'
+import { getFormattedDate, getDateString } from '@/lib/daily-guide/day-type'
 import { getCurrentSession, getAllSessionsStatus, SESSION_DURATIONS } from '@/lib/daily-guide/decision-tree'
 import type { SessionType, SessionStatus } from '@/lib/daily-guide/decision-tree'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
@@ -131,7 +131,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     const minDelay = new Promise(resolve => setTimeout(resolve, 300))
     try {
       const [guideRes, prefsRes] = await Promise.all([
-        fetch('/api/daily-guide/generate?date=' + today.toISOString(), { cache: 'no-store' }),
+        fetch('/api/daily-guide/generate?date=' + getDateString(today), { cache: 'no-store' }),
         fetch('/api/daily-guide/preferences', { cache: 'no-store' }),
         minDelay,
       ]) as [Response, Response, unknown]
@@ -171,7 +171,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         }
       } else if (guideRes.status === 401) {
         // Guest — set demo guide
-        setGuide({ id: 'demo', date: today.toISOString().split('T')[0] })
+        setGuide({ id: 'demo', date: getDateString(today) })
       } else {
         generateGuide()
       }
@@ -203,7 +203,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       const response = await fetch('/api/daily-guide/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ forceRegenerate: false }),
+        body: JSON.stringify({ date: getDateString(today), forceRegenerate: false }),
       })
 
       if (response.ok) {
@@ -213,7 +213,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       } else {
         const errorData = await response.json().catch(() => ({}))
         if (response.status === 401) {
-          setGuide({ id: 'demo', date: today.toISOString().split('T')[0] })
+          setGuide({ id: 'demo', date: getDateString(today) })
         } else {
           setGenerationError(errorData.error || 'Failed to generate guide')
         }

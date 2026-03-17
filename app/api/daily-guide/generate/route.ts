@@ -164,8 +164,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Update streak
-    const today = new Date()
+    // Update streak (use the client-provided date so timezone is correct)
+    const today = date
     const lastActive = preferences.last_active_date
     let newStreak = preferences.current_streak || 0
     const streakUpdateData: Record<string, any> = {}

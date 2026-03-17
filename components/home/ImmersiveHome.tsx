@@ -494,25 +494,23 @@ export function ImmersiveHome() {
     if (lastPlayed.type === 'music' && lastPlayed.genreId && lastPlayed.videoId) {
       const genre = MUSIC_GENRES.find(g => g.id === lastPlayed.genreId)
       if (genre) {
-        needsRestorePlaybackRef.current = true
         dispatch({
           type: 'RESTORE_LAST_PLAYED',
           partial: {
             backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.genreWord || genre.word },
-            musicPlaying: true,
-            userPausedMusic: false,
+            musicPlaying: false,
+            userPausedMusic: true,
             homeAudioActive: true,
           },
         })
       }
     } else if (lastPlayed.type === 'motivation' && lastPlayed.videoId) {
-      needsRestorePlaybackRef.current = true
       dispatch({
         type: 'RESTORE_LAST_PLAYED',
         partial: {
           backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.label || topicName },
-          musicPlaying: true,
-          userPausedMusic: false,
+          musicPlaying: false,
+          userPausedMusic: true,
           homeAudioActive: true,
         },
       })
@@ -580,8 +578,8 @@ export function ImmersiveHome() {
         type: 'RESTORE_LAST_PLAYED',
         partial: {
           backgroundMusic: { youtubeId: lastPlayed.videoId, label: lastPlayed.genreWord || genre.word },
-          musicPlaying: true,
-          userPausedMusic: false,
+          musicPlaying: false,
+          userPausedMusic: true,
           homeAudioActive: true,
           activeCardId: video?.id || null,
           currentPlaylist: {
@@ -604,8 +602,8 @@ export function ImmersiveHome() {
         type: 'RESTORE_LAST_PLAYED',
         partial: {
           backgroundMusic: { youtubeId: lastPlayed.videoId, label: restoredTopic },
-          musicPlaying: true,
-          userPausedMusic: false,
+          musicPlaying: false,
+          userPausedMusic: true,
           homeAudioActive: true,
           activeCardId: video?.id || null,
           currentPlaylist: {

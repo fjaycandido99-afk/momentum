@@ -15,7 +15,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const today = new Date()
+    const { searchParams } = new URL(request.url)
+    const dateStr = searchParams.get('date')
+    const today = dateStr ? new Date(dateStr) : new Date()
     const dateKey = getDateString(today)
 
     console.log('[reset] Deleting guide for user:', user.id, 'date:', dateKey)
