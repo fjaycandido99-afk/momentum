@@ -86,7 +86,30 @@ export async function POST(request: NextRequest) {
     })
 
     // If guide exists and not forcing regeneration, return existing
+    // But detect stale completion flags from UTC date migration:
+    // if bedtime_story_done is true but morning_prime_done is false, the done
+    // flags are from a previous day's session stored under today's date key.
     if (existingGuide && !forceRegenerate) {
+      if (existingGuide.bedtime_story_done && !existingGuide.morning_prime_done) {
+        // Reset stale done flags — keep the scripts
+        await prisma.dailyGuide.update({
+          where: { id: existingGuide.id },
+          data: {
+            morning_prime_done: false,
+            midday_reset_done: false,
+            wind_down_done: false,
+            bedtime_story_done: false,
+            mood_before: null,
+            mood_after: null,
+          },
+        })
+        existingGuide.morning_prime_done = false
+        existingGuide.midday_reset_done = false
+        existingGuide.wind_down_done = false
+        existingGuide.bedtime_story_done = false
+        existingGuide.mood_before = null
+        existingGuide.mood_after = null
+      }
       return NextResponse.json({
         success: true,
         data: existingGuide,
@@ -257,6 +280,27 @@ export async function GET(request: NextRequest) {
 
     if (!guide) {
       return NextResponse.json({ data: null, streak: preferences?.current_streak || 0 }, { headers })
+    }
+
+    // Detect stale completion flags from UTC date migration
+    if (guide.bedtime_story_done && !guide.morning_prime_done) {
+      await prisma.dailyGuide.update({
+        where: { id: guide.id },
+        data: {
+          morning_prime_done: false,
+          midday_reset_done: false,
+          wind_down_done: false,
+          bedtime_story_done: false,
+          mood_before: null,
+          mood_after: null,
+        },
+      })
+      guide.morning_prime_done = false
+      guide.midday_reset_done = false
+      guide.wind_down_done = false
+      guide.bedtime_story_done = false
+      guide.mood_before = null
+      guide.mood_after = null
     }
 
     return NextResponse.json({
