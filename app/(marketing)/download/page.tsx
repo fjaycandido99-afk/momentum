@@ -19,8 +19,7 @@ import {
   Zap,
 } from 'lucide-react'
 
-// App Store URL — update with your actual App Store link
-const APP_STORE_URL = 'https://apps.apple.com/app/voxu/id6740487880'
+const APP_STORE_URL = 'https://apps.apple.com/app/id6759702163'
 
 function VoxuLogo({ size = 64 }: { size?: number }) {
   return (
