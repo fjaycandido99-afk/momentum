@@ -173,9 +173,13 @@ export default function DownloadPage() {
         }`}
       >
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <a href="/download" className="flex items-center gap-2.5">
-            <VoxuLogo size={32} />
-            <span className="text-lg font-semibold">Voxu</span>
+          <a href="/download" className="flex items-center gap-2">
+            <div className="w-7 h-7 relative flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border border-white/50" />
+              <div className="absolute inset-[5px] rounded-full border border-white/70" />
+              <div className="w-2 h-2 rounded-full bg-white" />
+            </div>
+            <span className="text-lg font-semibold tracking-wide">Voxu</span>
           </a>
           <a
             href={APP_STORE_URL}
