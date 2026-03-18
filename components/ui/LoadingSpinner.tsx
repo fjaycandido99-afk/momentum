@@ -66,76 +66,15 @@ function pickRandom(pool: string[], count: number): string[] {
 export function LoadingScreen() {
   const mindsetCtx = useMindsetOptional()
   const pool = mindsetCtx ? MINDSET_WORDS[mindsetCtx.mindset] : GENERIC_WORDS
-  const [words, setWords] = useState(pool.slice(0, 4))
-  const [wordIndex, setWordIndex] = useState(0)
+  const [word, setWord] = useState(pool[0])
   const [visible, setVisible] = useState(false)
-  // On first session load (right after splash), show rings instead of words
-  const [showRings] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return !sessionStorage.getItem('voxu_home_loaded')
-  })
 
+  // Pick a random word on mount
   useEffect(() => {
-    sessionStorage.setItem('voxu_home_loaded', 'true')
-  }, [])
-
-  // Shuffle words on client mount to avoid hydration mismatch
-  useEffect(() => {
-    setWords(pickRandom(pool, 4))
+    setWord(pool[Math.floor(Math.random() * pool.length)])
+    const fadeIn = setTimeout(() => setVisible(true), 200)
+    return () => clearTimeout(fadeIn)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    const initialDelay = setTimeout(() => setVisible(true), 400)
-    return () => clearTimeout(initialDelay)
-  }, [])
-
-  useEffect(() => {
-    if (!visible) return
-
-    const holdTimer = setTimeout(() => {
-      setVisible(false)
-    }, 2500)
-
-    return () => clearTimeout(holdTimer)
-  }, [visible, wordIndex])
-
-  useEffect(() => {
-    if (visible) return
-
-    const nextTimer = setTimeout(() => {
-      setWordIndex((prev) => (prev + 1) % words.length)
-      setVisible(true)
-    }, 1000)
-
-    return () => clearTimeout(nextTimer)
-  }, [visible, words.length])
-
-  if (showRings) {
-    return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-40" data-nextjs-scroll-focus-boundary>
-        <div className="w-28 h-28 relative flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full bg-white/10 blur-xl" />
-          <div
-            className="absolute inset-0 rounded-full border-2 border-dashed border-white/35"
-            style={{ animation: 'spin 6s linear infinite' }}
-          />
-          <div
-            className="absolute inset-3 rounded-full border-2 border-dotted border-white/50"
-            style={{ animation: 'spin 5s linear infinite reverse' }}
-          />
-          <div
-            className="absolute inset-6 rounded-full border-2 border-dashed border-white/60"
-            style={{ animation: 'spin 4s linear infinite' }}
-          />
-          <div
-            className="absolute inset-9 rounded-full border-2 border-dotted border-white/70"
-            style={{ animation: 'spin 3s linear infinite reverse' }}
-          />
-          <div className="w-4 h-4 rounded-full bg-white shadow-[0_0_25px_rgba(255,255,255,0.9)]" />
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-40">
@@ -145,12 +84,10 @@ export function LoadingScreen() {
           fontFamily: 'var(--font-cormorant), Georgia, serif',
           opacity: visible ? 1 : 0,
           transform: visible ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(4px)',
-          transition: visible
-            ? 'opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)'
-            : 'opacity 0.8s cubic-bezier(0.4, 0, 1, 1), transform 0.8s cubic-bezier(0.4, 0, 1, 1)',
+          transition: 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.4s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        {words[wordIndex]}
+        {word}
       </span>
     </div>
   )

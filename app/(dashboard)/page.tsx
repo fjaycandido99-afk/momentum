@@ -15,7 +15,7 @@ export default function HomePage() {
 
   useEffect(() => {
     async function checkOnboarding() {
-      const minDelay = new Promise(resolve => setTimeout(resolve, 300))
+      const minDelay = new Promise(resolve => setTimeout(resolve, 2800))
       try {
         const [response] = await Promise.all([
           authFetch('/api/daily-guide/preferences'),
