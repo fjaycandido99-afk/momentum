@@ -421,13 +421,18 @@ export default function DownloadPage() {
               <div className="text-2xl font-bold">$0</div>
               <div className="text-xs text-white/40 mt-1">Daily sessions included</div>
             </div>
+            <div className="px-6 py-4 rounded-2xl bg-white/[0.03] border border-white/10">
+              <div className="text-sm text-white/50 mb-1">Monthly</div>
+              <div className="text-2xl font-bold">$6.99<span className="text-sm font-normal text-white/40">/mo</span></div>
+              <div className="text-xs text-white/40 mt-1">Cancel anytime</div>
+            </div>
             <div className="px-6 py-4 rounded-2xl bg-white/[0.05] border border-white/20 relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-white text-black px-3 py-0.5 rounded-full">
-                POPULAR
+                BEST VALUE
               </div>
-              <div className="text-sm text-white/50 mb-1">Premium</div>
-              <div className="text-2xl font-bold">$4.17<span className="text-sm font-normal text-white/40">/mo</span></div>
-              <div className="text-xs text-white/40 mt-1">$49.99/year (40% off)</div>
+              <div className="text-sm text-white/50 mb-1">Yearly</div>
+              <div className="text-2xl font-bold">$49.99<span className="text-sm font-normal text-white/40">/yr</span></div>
+              <div className="text-xs text-white/40 mt-1">$4.17/mo — save 40%</div>
             </div>
           </div>
 
