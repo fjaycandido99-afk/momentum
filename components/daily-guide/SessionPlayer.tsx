@@ -291,6 +291,31 @@ export function SessionPlayer({
     audioContext?.pauseMusic()
   }, [])
 
+  // Set up Media Session for lock screen / background playback controls
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+    const meta = SESSION_META[session]
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: meta.label,
+      artist: 'Voxu',
+      album: 'Daily Guide',
+    })
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
+
+    navigator.mediaSession.setActionHandler('play', () => play())
+    navigator.mediaSession.setActionHandler('pause', () => pause())
+    navigator.mediaSession.setActionHandler('stop', () => pause())
+
+    return () => {
+      navigator.mediaSession.metadata = null
+      navigator.mediaSession.playbackState = 'none'
+      navigator.mediaSession.setActionHandler('play', null)
+      navigator.mediaSession.setActionHandler('pause', null)
+      navigator.mediaSession.setActionHandler('stop', null)
+    }
+  }, [session, isPlaying, play, pause])
+
   const togglePlay = useCallback(() => {
     if (isPlaying) pause()
     else play()
