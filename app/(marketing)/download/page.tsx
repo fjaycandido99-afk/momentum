@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import {
   Wind,
   Brain,
@@ -468,20 +467,20 @@ export default function DownloadPage() {
       {/* Footer */}
       <footer className="border-t border-white/5 py-8 px-4">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+          <a href="/download" className="flex items-center gap-2">
             <VoxuLogo size={24} />
             <span className="text-sm text-white/40">&copy; {new Date().getFullYear()} Voxu. All rights reserved.</span>
-          </div>
+          </a>
           <div className="flex gap-6">
-            <Link href="/privacy" className="text-sm text-white/40 hover:text-white/70 transition-colors">
+            <a href="/privacy" className="text-sm text-white/40 hover:text-white/70 transition-colors">
               Privacy
-            </Link>
-            <Link href="/terms" className="text-sm text-white/40 hover:text-white/70 transition-colors">
+            </a>
+            <a href="/terms" className="text-sm text-white/40 hover:text-white/70 transition-colors">
               Terms
-            </Link>
-            <Link href="/support" className="text-sm text-white/40 hover:text-white/70 transition-colors">
+            </a>
+            <a href="/support" className="text-sm text-white/40 hover:text-white/70 transition-colors">
               Support
-            </Link>
+            </a>
           </div>
         </div>
       </footer>
