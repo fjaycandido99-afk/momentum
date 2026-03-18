@@ -242,26 +242,32 @@ export async function GET(request: NextRequest) {
         })
       }
 
-      // 2. Look up from pre-recorded library (try user's tone, then neutral fallback)
+      // 2. Look up from pre-recorded library (try user's tone first)
       const { script, index } = getFallbackScript(type)
       const libraryHit = await findCachedAudio(type, index, tone)
 
       let audioBase64: string | null = null
       let duration = 0
 
-      if (libraryHit) {
-        console.log(`[Voice Library HIT] ${libraryHit.cacheKey}${libraryHit.fallback ? ' (fallback)' : ''}`)
+      if (libraryHit && !libraryHit.fallback) {
+        // Exact tone match
+        console.log(`[Voice Library HIT] ${libraryHit.cacheKey}`)
         audioBase64 = libraryHit.audioBase64
         duration = libraryHit.duration
       } else {
-        // Library miss — generate on-demand with ElevenLabs and cache
+        // Tone not cached — generate with user's preferred tone and cache it
         const libraryCacheKey = getLibraryCacheKey(type, index, tone)
-        console.log(`[Voice Library MISS] ${libraryCacheKey} — generating on-demand (GET)`)
+        console.log(`[Voice Library MISS] ${libraryCacheKey} — generating with ${tone} tone`)
         const generated = await generateAudio(script, tone)
         if (generated.audioBase64) {
           audioBase64 = generated.audioBase64
           duration = generated.duration
           await setSharedCache(libraryCacheKey, audioBase64, duration)
+        } else if (libraryHit) {
+          // Generation failed — use neutral fallback
+          console.log(`[Voice Library] Generation failed, using neutral fallback`)
+          audioBase64 = libraryHit.audioBase64
+          duration = libraryHit.duration
         }
       }
 
@@ -394,26 +400,31 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 4. Look up audio from pre-recorded library (try user's tone, then neutral fallback)
+    // 4. Look up audio from pre-recorded library (try user's tone first)
     const libraryHit = await findCachedAudio(type, index, tone)
 
     let audioBase64: string | null = null
     let duration = 0
 
-    if (libraryHit) {
-      console.log(`[Voice Library HIT] ${libraryHit.cacheKey}${libraryHit.fallback ? ' (fallback)' : ''}`)
+    if (libraryHit && !libraryHit.fallback) {
+      // Exact tone match
+      console.log(`[Voice Library HIT] ${libraryHit.cacheKey}`)
       audioBase64 = libraryHit.audioBase64
       duration = libraryHit.duration
     } else {
-      // Library miss — generate on-demand with ElevenLabs and cache
+      // Tone not cached — generate with user's preferred tone and cache it
       const libraryCacheKey = getLibraryCacheKey(type, index, tone)
-      console.log(`[Voice Library MISS] ${libraryCacheKey} — generating on-demand`)
+      console.log(`[Voice Library MISS] ${libraryCacheKey} — generating with ${tone} tone`)
       const generated = await generateAudio(displayScript, tone)
       if (generated.audioBase64) {
         audioBase64 = generated.audioBase64
         duration = generated.duration
-        // Cache for future requests
         await setSharedCache(libraryCacheKey, audioBase64, duration)
+      } else if (libraryHit) {
+        // Generation failed — use neutral fallback
+        console.log(`[Voice Library] Generation failed, using neutral fallback`)
+        audioBase64 = libraryHit.audioBase64
+        duration = libraryHit.duration
       }
     }
 

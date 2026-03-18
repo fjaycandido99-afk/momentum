@@ -67,32 +67,42 @@ function useWebPlayer(audioBase64: string | null, onComplete: () => void) {
 
   useEffect(() => {
     if (!audioBase64) { setIsLoaded(true); return }
+    let cancelled = false
 
-    const bin = atob(audioBase64)
-    const bytes = new Uint8Array(bin.length)
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-    const blob = new Blob([bytes], { type: 'audio/mpeg' })
-    const url = URL.createObjectURL(blob)
-    blobUrlRef.current = url
+    // Use fetch with data URI to convert base64 → blob without atob (avoids memory spikes)
+    const loadAudio = async () => {
+      try {
+        const res = await fetch(`data:audio/mpeg;base64,${audioBase64}`)
+        const blob = await res.blob()
+        if (cancelled) return
+        const url = URL.createObjectURL(blob)
+        blobUrlRef.current = url
 
-    const audio = new Audio(url)
-    audioRef.current = audio
+        const audio = new Audio(url)
+        audioRef.current = audio
 
-    audio.onloadedmetadata = () => {
-      setAudioDuration(audio.duration)
-      setIsLoaded(true)
-      audio.play()
-        .then(() => { setIsPlaying(true); setupAnalyser() })
-        .catch(() => {})
+        audio.onloadedmetadata = () => {
+          if (cancelled) return
+          setAudioDuration(audio.duration)
+          setIsLoaded(true)
+          audio.play()
+            .then(() => { if (!cancelled) { setIsPlaying(true); setupAnalyser() } })
+            .catch(() => {})
+        }
+        audio.onended = () => { if (!cancelled) { setIsPlaying(false); onComplete() } }
+        audio.onerror = () => { if (!cancelled) setIsLoaded(true) }
+      } catch {
+        if (!cancelled) setIsLoaded(true)
+      }
     }
-    audio.onended = () => { setIsPlaying(false); onComplete() }
-    audio.onerror = () => setIsLoaded(true)
+    loadAudio()
 
     const timer = setInterval(() => {
       if (audioRef.current) setCurrentTime(audioRef.current.currentTime)
     }, 100)
 
     return () => {
+      cancelled = true
       clearInterval(timer)
       if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
       if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
@@ -268,12 +278,11 @@ export function SessionPlayer({
     onComplete()
   }, [onComplete])
 
-  // Both hooks must always be called (React rules of hooks)
-  // Use native plugin only if it's actually registered in this build
-  // Otherwise fall back to web player (works everywhere, just no native FFT visualizer)
-  const webPlayer = useWebPlayer(HAS_NATIVE_AUDIO_PLUGIN ? null : audioBase64, handleComplete)
-  const nativePlayer = useNativePlayer(HAS_NATIVE_AUDIO_PLUGIN ? audioBase64 : null, handleComplete)
-  const player = HAS_NATIVE_AUDIO_PLUGIN ? nativePlayer : webPlayer
+  // Always use web player for daily guide sessions — native plugin can crash on large audio
+  // (base64 strings passed through Capacitor bridge cause memory pressure on iOS)
+  const webPlayer = useWebPlayer(audioBase64, handleComplete)
+  const nativePlayer = useNativePlayer(null, handleComplete)
+  const player = webPlayer
 
   const { analyser, isPlaying, currentTime, audioDuration, isLoaded, play, pause, seek, restart } = player
 
