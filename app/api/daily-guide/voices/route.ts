@@ -4,7 +4,7 @@ import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { VOICE_SCRIPTS, DAY_TYPE_VOICE_SCRIPTS } from '@/lib/daily-guide/voice-scripts'
 import { BEDTIME_STORIES } from '@/lib/daily-guide/bedtime-scripts'
-import { getSharedCached, setSharedCache, generateAudio } from '@/lib/daily-guide/audio-utils'
+import { getSharedCached } from '@/lib/daily-guide/audio-utils'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -242,33 +242,17 @@ export async function GET(request: NextRequest) {
         })
       }
 
-      // 2. Look up from pre-recorded library (try user's tone first)
+      // 2. Look up from pre-generated library — never generate on-demand (saves credits)
       const { script, index } = getFallbackScript(type)
       const libraryHit = await findCachedAudio(type, index, tone)
 
       let audioBase64: string | null = null
       let duration = 0
 
-      if (libraryHit && !libraryHit.fallback) {
-        // Exact tone match
-        console.log(`[Voice Library HIT] ${libraryHit.cacheKey}`)
+      if (libraryHit) {
+        console.log(`[Voice Library HIT] ${libraryHit.cacheKey}${libraryHit.fallback ? ' (fallback)' : ''}`)
         audioBase64 = libraryHit.audioBase64
         duration = libraryHit.duration
-      } else {
-        // Tone not cached — generate with user's preferred tone and cache it
-        const libraryCacheKey = getLibraryCacheKey(type, index, tone)
-        console.log(`[Voice Library MISS] ${libraryCacheKey} — generating with ${tone} tone`)
-        const generated = await generateAudio(script, tone)
-        if (generated.audioBase64) {
-          audioBase64 = generated.audioBase64
-          duration = generated.duration
-          await setSharedCache(libraryCacheKey, audioBase64, duration)
-        } else if (libraryHit) {
-          // Generation failed — use neutral fallback
-          console.log(`[Voice Library] Generation failed, using neutral fallback`)
-          audioBase64 = libraryHit.audioBase64
-          duration = libraryHit.duration
-        }
       }
 
       // Save to user's daily guide DB record if we have audio
@@ -400,32 +384,16 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 4. Look up audio from pre-recorded library (try user's tone first)
+    // 4. Look up audio from pre-generated library — never generate on-demand (saves credits)
     const libraryHit = await findCachedAudio(type, index, tone)
 
     let audioBase64: string | null = null
     let duration = 0
 
-    if (libraryHit && !libraryHit.fallback) {
-      // Exact tone match
-      console.log(`[Voice Library HIT] ${libraryHit.cacheKey}`)
+    if (libraryHit) {
+      console.log(`[Voice Library HIT] ${libraryHit.cacheKey}${libraryHit.fallback ? ' (fallback)' : ''}`)
       audioBase64 = libraryHit.audioBase64
       duration = libraryHit.duration
-    } else {
-      // Tone not cached — generate with user's preferred tone and cache it
-      const libraryCacheKey = getLibraryCacheKey(type, index, tone)
-      console.log(`[Voice Library MISS] ${libraryCacheKey} — generating with ${tone} tone`)
-      const generated = await generateAudio(displayScript, tone)
-      if (generated.audioBase64) {
-        audioBase64 = generated.audioBase64
-        duration = generated.duration
-        await setSharedCache(libraryCacheKey, audioBase64, duration)
-      } else if (libraryHit) {
-        // Generation failed — use neutral fallback
-        console.log(`[Voice Library] Generation failed, using neutral fallback`)
-        audioBase64 = libraryHit.audioBase64
-        duration = libraryHit.duration
-      }
     }
 
     // Save to user's daily guide DB record
