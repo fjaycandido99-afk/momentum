@@ -81,8 +81,8 @@ const FEATURES = [
   },
   {
     icon: Shield,
-    title: '6 Mindset Philosophies',
-    description: 'Choose from Stoic, Warrior, Scholar, Zen, Visionary, or Empath — shaping your entire experience.',
+    title: '8 Mindset Philosophies',
+    description: 'Choose from Stoic, Existentialist, Cynic, Hedonist, Samurai Code, Scholar, Manifestor, or Hustler — shaping your entire experience.',
   },
 ]
 
@@ -252,12 +252,12 @@ export default function DownloadPage() {
           </div>
           <div className="w-px h-8 bg-white/10 hidden sm:block" />
           <div>
-            <div className="text-2xl font-bold">6</div>
+            <div className="text-2xl font-bold">8</div>
             <div className="text-sm text-white/50">Mindset philosophies</div>
           </div>
           <div className="w-px h-8 bg-white/10 hidden sm:block" />
           <div>
-            <div className="text-2xl font-bold">50+</div>
+            <div className="text-2xl font-bold">70+</div>
             <div className="text-sm text-white/50">Pre-recorded sessions</div>
           </div>
           <div className="w-px h-8 bg-white/10 hidden sm:block" />
