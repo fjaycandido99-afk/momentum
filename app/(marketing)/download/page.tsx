@@ -24,7 +24,6 @@ const APP_STORE_URL = 'https://apps.apple.com/app/id6759702163'
 function VoxuLogo({ size = 64 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="512" height="512" rx="100" fill="#0a0a0f"/>
       <circle cx="256" cy="256" r="186" stroke="rgba(255,255,255,0.9)" strokeWidth="9" fill="none"/>
       <circle cx="256" cy="256" r="133" stroke="rgba(255,255,255,0.92)" strokeWidth="10" fill="none"/>
       <circle cx="256" cy="256" r="80" stroke="rgba(255,255,255,0.95)" strokeWidth="11" fill="none"/>
