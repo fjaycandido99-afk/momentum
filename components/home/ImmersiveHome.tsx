@@ -1421,7 +1421,8 @@ export function ImmersiveHome() {
             } else {
               dispatch({ type: 'RESUME_MUSIC' })
               if (!currentBgVideoIdRef.current && audioState.backgroundMusic.youtubeId) {
-                createBgMusicPlayer(audioState.backgroundMusic.youtubeId)
+                createBgMusicPlayer(audioState.backgroundMusic.youtubeId, restoreStartSecondsRef.current || undefined)
+                restoreStartSecondsRef.current = 0
               }
             }
           } else if (audioState.guideLabel) {
