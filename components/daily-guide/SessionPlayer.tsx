@@ -69,11 +69,20 @@ function useWebPlayer(audioBase64: string | null, onComplete: () => void) {
     if (!audioBase64) { setIsLoaded(true); return }
     let cancelled = false
 
-    // Use fetch with data URI to convert base64 → blob without atob (avoids memory spikes)
+    // Convert base64 to blob URL — try fetch(data:URI) first, fall back to atob chunked
     const loadAudio = async () => {
       try {
-        const res = await fetch(`data:audio/mpeg;base64,${audioBase64}`)
-        const blob = await res.blob()
+        let blob: Blob
+        try {
+          const res = await fetch(`data:audio/mpeg;base64,${audioBase64}`)
+          blob = await res.blob()
+        } catch {
+          // Fallback for WKWebView where fetch(data:URI) may not work
+          const bin = atob(audioBase64)
+          const bytes = new Uint8Array(bin.length)
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+          blob = new Blob([bytes], { type: 'audio/mpeg' })
+        }
         if (cancelled) return
         const url = URL.createObjectURL(blob)
         blobUrlRef.current = url

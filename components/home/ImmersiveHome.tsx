@@ -299,27 +299,28 @@ export function ImmersiveHome() {
       if (guideRequestId.current !== thisRequest) return
 
       if (data.audioBase64) {
-        // Use HTML5 Audio on all platforms — NativeAudio doesn't support data: URLs
-        // On native, convert base64 to Blob URL for more reliable WebView playback
-        let audioSrc: string
+        // Convert base64 to blob URL on all platforms for consistent playback
         let blobUrl: string | null = null
-        if (isNativePlatform) {
+        try {
+          // Try fetch(data:URI) first — efficient and avoids atob memory spikes
+          const res = await fetch(`data:audio/mpeg;base64,${data.audioBase64}`)
+          const blob = await res.blob()
+          blobUrl = URL.createObjectURL(blob)
+        } catch {
+          // Fallback: atob for environments where fetch(data:URI) fails
           try {
-            const byteChars = atob(data.audioBase64)
-            const byteArray = new Uint8Array(byteChars.length)
-            for (let i = 0; i < byteChars.length; i++) {
-              byteArray[i] = byteChars.charCodeAt(i)
-            }
-            const blob = new Blob([byteArray], { type: 'audio/mpeg' })
-            blobUrl = URL.createObjectURL(blob)
-            audioSrc = blobUrl
+            const bin = atob(data.audioBase64)
+            const bytes = new Uint8Array(bin.length)
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+            blobUrl = URL.createObjectURL(new Blob([bytes], { type: 'audio/mpeg' }))
           } catch {
-            audioSrc = `data:audio/mpeg;base64,${data.audioBase64}`
+            // Last resort: data URI directly
+            blobUrl = null
           }
-        } else {
-          audioSrc = `data:audio/mpeg;base64,${data.audioBase64}`
         }
+        if (guideRequestId.current !== thisRequest) return
 
+        const audioSrc = blobUrl || `data:audio/mpeg;base64,${data.audioBase64}`
         const audio = new Audio(audioSrc)
         guideAudioRef.current = audio
         setGuideAudioElement(audio)
