@@ -129,21 +129,15 @@ export function GuidedPlayer({
 
       {/* Center: circular visualizer + title */}
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-6">
-        {/* Circular ring visualizer or loading spinner */}
+        {/* Circular ring visualizer */}
         <div className="mb-10">
-          {isLoading ? (
-            <div className="w-[200px] h-[200px] flex items-center justify-center">
-              <Loader2 className="w-12 h-12 text-white/50 animate-spin" />
-            </div>
-          ) : (
-            <CircularVisualizer
-              analyser={analyser}
-              isPlaying={isPlaying}
-              simulated={!analyser && isPlaying}
-              barCount={64}
-              size={200}
-            />
-          )}
+          <CircularVisualizer
+            analyser={analyser}
+            isPlaying={isPlaying}
+            simulated={!analyser && isPlaying}
+            barCount={64}
+            size={200}
+          />
         </div>
 
         {/* Guide name */}
@@ -221,11 +215,14 @@ export function GuidedPlayer({
         {/* Play/Pause button */}
         <div className="flex justify-center py-2">
           <button
-            aria-label={isPlaying ? 'Pause' : 'Play'}
+            aria-label={isLoading ? 'Loading' : isPlaying ? 'Pause' : 'Play'}
             onClick={onTogglePlay}
-            className="w-16 h-16 rounded-full bg-white flex items-center justify-center transition-transform active:scale-95"
+            disabled={isLoading}
+            className="w-16 h-16 rounded-full bg-white flex items-center justify-center transition-transform active:scale-95 disabled:opacity-80"
           >
-            {isPlaying ? (
+            {isLoading ? (
+              <Loader2 className="w-7 h-7 text-black animate-spin" />
+            ) : isPlaying ? (
               <Pause className="w-7 h-7 text-black" fill="black" />
             ) : (
               <Play className="w-7 h-7 text-black ml-0.5" fill="black" />
