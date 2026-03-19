@@ -17,7 +17,7 @@ const F = `</svg>` // svg footer
 
 // Each guide split into 3 independent layers: shapes, lines, dots
 // Each layer gets its own animation so elements move independently
-const GUIDE_LAYERS: Record<string, { svg: string; cls: string; dur: string }[]> = {
+export const GUIDE_LAYERS: Record<string, { svg: string; cls: string; dur: string }[]> = {
   breathing: [
     { svg: `${H}<g stroke="${S}0.55)" stroke-width="1"><circle cx="80" cy="95" r="95"/><circle cx="80" cy="95" r="85"/><circle cx="80" cy="95" r="75"/></g><g stroke="${S}1)" stroke-width="1.5"><circle cx="80" cy="95" r="65"/><circle cx="80" cy="95" r="52"/><circle cx="80" cy="95" r="40"/><circle cx="80" cy="95" r="28"/><circle cx="80" cy="95" r="18"/></g>${F}`, cls: 'gl-active-breathe', dur: '28s' },
     { svg: `${H}<g stroke="${S}0.85)" stroke-width="1"><line x1="80" y1="0" x2="80" y2="208"/><line x1="0" y1="95" x2="160" y2="95"/><line x1="10" y1="10" x2="150" y2="180"/><line x1="150" y1="10" x2="10" y2="180"/><line x1="0" y1="50" x2="160" y2="140"/><line x1="160" y1="50" x2="0" y2="140"/><line x1="40" y1="0" x2="40" y2="208" opacity="1"/><line x1="120" y1="0" x2="120" y2="208" opacity="1"/><line x1="0" y1="50" x2="160" y2="50" opacity="0.7"/><line x1="0" y1="140" x2="160" y2="140" opacity="0.7"/></g>${F}`, cls: 'gl-active-spin', dur: '50s' },
@@ -62,6 +62,16 @@ const GUIDE_LAYERS: Record<string, { svg: string; cls: string; dur: string }[]> 
     { svg: `${H}<g stroke="${S}1)" stroke-width="1.5"><polyline points="20,180 80,135 140,180"/><polyline points="20,155 80,110 140,155"/><polyline points="25,130 80,88 135,130"/><polyline points="30,108 80,70 130,108" opacity="1"/><polyline points="40,88 80,55 120,88" opacity="0.9"/><polyline points="50,72 80,44 110,72" opacity="1"/><polyline points="58,58 80,36 102,58" opacity="0.7"/></g>${F}`, cls: 'gl-active-breathe', dur: '26s' },
     { svg: `${H}<line x1="80" y1="36" x2="80" y2="10" stroke="${S}1)" stroke-width="2"/><polygon points="74,14 80,2 86,14" fill="${S}1)" stroke="none"/><g stroke="${S}0.65)" stroke-width="1"><line x1="80" y1="0" x2="80" y2="208"/><line x1="0" y1="135" x2="160" y2="135"/><line x1="50" y1="0" x2="50" y2="208" opacity="1"/><line x1="110" y1="0" x2="110" y2="208" opacity="1"/></g>${F}`, cls: 'gl-active-spin', dur: '45s' },
     { svg: `${H}<circle cx="80" cy="100" r="6" stroke="${S}0.95)" stroke-width="1" fill="none"/><circle cx="80" cy="100" r="2.5" fill="${S}1)" stroke="none"/><g fill="${S}0.9)" stroke="none"><circle cx="25" cy="170" r="2"/><circle cx="135" cy="170" r="2"/><circle cx="35" cy="145" r="1.5"/><circle cx="125" cy="145" r="1.5"/></g>${F}`, cls: 'gl-active-float', dur: '18s' },
+  ],
+  emotional_reset: [
+    { svg: `${H}<g stroke="${S}0.9)" stroke-width="1.5"><path d="M0,170 Q40,145 80,170 T160,170" fill="none"/><path d="M0,148 Q40,123 80,148 T160,148" fill="none"/><path d="M0,126 Q40,101 80,126 T160,126" fill="none"/><path d="M0,104 Q40,79 80,104 T160,104" fill="none" opacity="0.85"/><path d="M0,82 Q40,57 80,82 T160,82" fill="none" opacity="0.7"/><path d="M0,60 Q40,35 80,60 T160,60" fill="none" opacity="0.55"/></g><g stroke="${S}0.5)" stroke-width="1"><path d="M0,137 Q50,117 100,137 T160,137" fill="none"/><path d="M0,93 Q50,73 100,93 T160,93" fill="none"/><path d="M0,71 Q50,51 100,71 T160,71" fill="none" opacity="0.7"/></g>${F}`, cls: 'gl-active-wave', dur: '24s' },
+    { svg: `${H}<g stroke="${S}0.85)" stroke-width="1" fill="none"><circle cx="80" cy="90" r="65"/><circle cx="80" cy="90" r="50"/><circle cx="80" cy="90" r="36"/><circle cx="80" cy="90" r="22"/></g><g stroke="${S}0.6)" stroke-width="1" fill="none"><circle cx="45" cy="50" r="28"/><circle cx="115" cy="55" r="25"/><circle cx="50" cy="140" r="22"/><circle cx="120" cy="135" r="20"/></g><circle cx="80" cy="90" r="8" stroke="${S}1)" stroke-width="1.5" fill="none"/>${F}`, cls: 'gl-active-breathe', dur: '20s' },
+    { svg: `${H}<g fill="${S}1)" stroke="none"><circle cx="80" cy="90" r="4"/><circle cx="30" cy="145" r="3"/><circle cx="55" cy="115" r="2.5"/><circle cx="105" cy="125" r="2"/><circle cx="130" cy="95" r="3"/><circle cx="45" cy="55" r="2.5"/><circle cx="115" cy="50" r="2"/><circle cx="70" cy="35" r="1.5"/><circle cx="95" cy="40" r="1.5"/><circle cx="25" cy="80" r="1.5"/><circle cx="140" cy="70" r="1.5"/><circle cx="65" cy="165" r="2"/><circle cx="100" cy="170" r="1.5"/></g><polygon points="77,80 80,70 83,80 80,77" fill="${S}1)" stroke="none"/><polygon points="77,100 80,110 83,100 80,103" fill="${S}1)" stroke="none"/>${F}`, cls: 'gl-active-float', dur: '22s' },
+  ],
+  calm_the_storm: [
+    { svg: `${H}<g stroke="${S}0.7)" stroke-width="1"><line x1="25" y1="0" x2="15" y2="208"/><line x1="55" y1="0" x2="45" y2="208"/><line x1="85" y1="0" x2="75" y2="208"/><line x1="115" y1="0" x2="105" y2="208"/><line x1="145" y1="0" x2="135" y2="208"/></g>${F}`, cls: 'gl-active-wave', dur: '18s' },
+    { svg: `${H}<g stroke="${S}0.85)" stroke-width="1.5" fill="none"><circle cx="80" cy="100" r="22"/><circle cx="80" cy="100" r="45"/><circle cx="80" cy="100" r="70"/></g>${F}`, cls: 'gl-active-expand', dur: '24s' },
+    { svg: `${H}<g fill="${S}1)" stroke="none"><circle cx="80" cy="100" r="4"/><circle cx="40" cy="55" r="1.5"/><circle cx="120" cy="60" r="1.5"/><circle cx="45" cy="150" r="1.5"/><circle cx="115" cy="145" r="1.5"/></g><path d="M60,18 Q80,35 100,18" stroke="${S}0.8)" stroke-width="1.5" fill="none"/>${F}`, cls: 'gl-active-pulse', dur: '14s' },
   ],
 }
 
@@ -111,6 +121,16 @@ const GUIDE_OVERLAY: Record<string, { cls: string; dur: string; style: React.CSS
     cls: 'gl-active-overlay-rise',
     dur: '14s',
     style: { background: 'linear-gradient(0deg, transparent 0%, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.35) 50%, transparent 65%)' },
+  },
+  emotional_reset: {
+    cls: 'gl-active-overlay-ring',
+    dur: '16s',
+    style: { background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 25%, transparent 45%)' },
+  },
+  calm_the_storm: {
+    cls: 'gl-active-overlay-scan',
+    dur: '12s',
+    style: { background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.15) 40%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.15) 60%, transparent 100%)' },
   },
 }
 

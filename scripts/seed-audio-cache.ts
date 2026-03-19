@@ -14,8 +14,9 @@ import { VOICE_SCRIPTS, DAY_TYPE_VOICE_SCRIPTS } from '../lib/daily-guide/voice-
 const prisma = new PrismaClient()
 
 const TONE_VOICES: Record<string, string> = {
-  neutral: 'flHkNRp1BlvT73UL6gyz',
   direct: 'goT3UYdM9bhm0n2lmKQx',
+  calm: 'XB0fDUnXU5powFXDhCwa',
+  // neutral: 'flHkNRp1BlvT73UL6gyz',  // Skip for now
 }
 
 const ELEVENLABS_KEY = process.env.ELEVENLABS_API_KEY
@@ -24,8 +25,8 @@ if (!ELEVENLABS_KEY) {
   process.exit(1)
 }
 
-// Budget: 70k total, split evenly between 2 tones
-const BUDGET_PER_TONE = 35_000
+// Max entries to generate this run
+const MAX_GENERATE = 50
 
 async function generateAudio(text: string, voiceId: string): Promise<{ base64: string; duration: number } | null> {
   try {
@@ -92,12 +93,12 @@ async function seed() {
   for (const [tone, voiceId] of tones) {
     let toneCharsUsed = 0
     console.log(`\n=== Tone: ${tone} (voice: ${voiceId}) ===`)
-    console.log(`Budget: ${BUDGET_PER_TONE} chars\n`)
+    console.log(`Max generate: ${MAX_GENERATE} entries\n`)
 
     for (const { type, index, script } of allScripts) {
-      // Check budget
-      if (toneCharsUsed + script.length > BUDGET_PER_TONE) {
-        console.log(`  BUDGET LIMIT reached for ${tone} (${toneCharsUsed}/${BUDGET_PER_TONE} used). Stopping.`)
+      // Check generation limit
+      if (generated >= MAX_GENERATE) {
+        console.log(`  LIMIT reached (${generated}/${MAX_GENERATE} generated). Stopping.`)
         break
       }
 
@@ -140,7 +141,7 @@ async function seed() {
       await new Promise(r => setTimeout(r, 1500))
     }
 
-    console.log(`\n  ${tone} tone chars used: ${toneCharsUsed}/${BUDGET_PER_TONE}`)
+    console.log(`\n  ${tone} tone: generated ${generated} entries`)
   }
 
   console.log(`\n--- Summary ---`)

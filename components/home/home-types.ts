@@ -1,4 +1,4 @@
-import { Wind, Sparkles, Heart, Moon, Anchor, Leaf, Target, HeartHandshake, Shield } from 'lucide-react'
+import { Wind, Sparkles, Heart, Moon, Anchor, Leaf, Target, HeartHandshake, Shield, CloudRain, Flame } from 'lucide-react'
 
 // --- Shared types ---
 
@@ -49,6 +49,8 @@ export const VOICE_GUIDES = [
   { id: 'focus_meditation', name: 'Focus', tagline: 'Sharpen your mind', icon: Target, color: 'from-blue-500/40 to-cyan-500/40' },
   { id: 'self_compassion', name: 'Self-Love', tagline: 'Be kind to yourself', icon: HeartHandshake, color: 'from-rose-500/40 to-pink-500/40' },
   { id: 'confidence', name: 'Confidence', tagline: 'Stand in your power', icon: Shield, color: 'from-yellow-500/40 to-amber-500/40' },
+  { id: 'emotional_reset', name: 'Emotional Reset', tagline: 'When the weight feels heavy', icon: Flame, color: 'from-orange-500/40 to-amber-500/40' },
+  { id: 'calm_the_storm', name: 'Calm the Storm', tagline: 'Ease anxiety & overwhelm', icon: CloudRain, color: 'from-indigo-500/40 to-blue-500/40' },
 ]
 
 // Centralized valid soundscape IDs — used by smart-session API validation and anywhere else

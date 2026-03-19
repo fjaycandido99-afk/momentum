@@ -16,6 +16,7 @@ import { CoachGreetingBubble } from './CoachGreetingBubble'
 import { trackFeature } from '@/lib/analytics/track'
 import { SoundscapesSection } from './SoundscapesSection'
 import { GuidedSection } from './GuidedSection'
+import { GuidedPlayer } from '@/components/player/GuidedPlayer'
 import { XPBadge } from './XPBadge'
 const MotivationSection = dynamic(() => import('./MotivationSection').then(m => m.MotivationSection), { ssr: false })
 import { MusicTabsSection } from './MusicTabsSection'
@@ -207,6 +208,8 @@ export function ImmersiveHome() {
 
   // Overlays
   const [showMorningFlow, setShowMorningFlow] = useState(false)
+  const [showGuidedPlayer, setShowGuidedPlayer] = useState(false)
+  const [activeGuideId, setActiveGuideId] = useState<string | null>(null)
 
   const guideRequestId = useRef(0)
 
@@ -245,6 +248,8 @@ export function ImmersiveHome() {
   const handlePlayGuide = async (guideId: string, guideName: string) => {
     haptic('light')
     trackFeature('guided', 'use')
+    setActiveGuideId(guideId)
+    setShowGuidedPlayer(true)
     // Stop any existing guide audio
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
@@ -990,7 +995,7 @@ export function ImmersiveHome() {
     <div className="isolate min-h-screen">
     <div
       ref={scrollRef}
-      className={`relative min-h-screen text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer ? 'overflow-hidden max-h-screen' : ''}`}
+      className={`relative min-h-screen text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer || showGuidedPlayer ? 'overflow-hidden max-h-screen' : ''}`}
     >
       {/* --- Fullscreen overlays --- */}
 
@@ -1043,6 +1048,21 @@ export function ImmersiveHome() {
           onSwitchSound={(id, label, subtitle, youtubeId) => {
             dispatch({ type: 'SWITCH_SOUNDSCAPE', soundscape: { soundId: id, label, subtitle, youtubeId } })
             createSoundscapePlayer(youtubeId)
+          }}
+        />
+      )}
+
+      {/* Guided Player */}
+      {audioState.guideLabel && showGuidedPlayer && (
+        <GuidedPlayer
+          guideId={activeGuideId || ''}
+          guideName={audioState.guideLabel}
+          isPlaying={audioState.guideIsPlaying}
+          audioElement={guideAudioRef.current}
+          onTogglePlay={toggleGuidePlay}
+          onClose={() => setShowGuidedPlayer(false)}
+          onSwitchGuide={(id, name) => {
+            handlePlayGuide(id, name)
           }}
         />
       )}
@@ -1465,7 +1485,7 @@ export function ImmersiveHome() {
             }
             return
           }
-          if (audioState.guideLabel) return
+          if (audioState.guideLabel) { setShowGuidedPlayer(true); return }
           if (audioState.activeSoundscape) {
             dispatch({ type: 'SHOW_SOUNDSCAPE_PLAYER' })
           } else {
@@ -1487,6 +1507,7 @@ export function ImmersiveHome() {
             ? `${audioState.currentPlaylist.index + 1} of ${audioState.currentPlaylist.videos.length}`
             : undefined
         }
+        audioElement={audioState.guideLabel ? guideAudioRef.current : null}
       />
 
 

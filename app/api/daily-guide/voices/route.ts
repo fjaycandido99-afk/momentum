@@ -19,7 +19,7 @@ function getGroq() {
 }
 
 // Voice guide types
-type VoiceGuideType = 'breathing' | 'affirmation' | 'gratitude' | 'sleep' | 'grounding' | 'stress_relief' | 'focus_meditation' | 'self_compassion' | 'confidence' | 'bedtime_story' | 'midday_reset' | 'wind_down'
+type VoiceGuideType = 'breathing' | 'affirmation' | 'gratitude' | 'sleep' | 'grounding' | 'stress_relief' | 'focus_meditation' | 'self_compassion' | 'confidence' | 'bedtime_story' | 'midday_reset' | 'wind_down' | 'emotional_reset' | 'calm_the_storm'
 
 // Day-type specific voice types
 type DayTypeVoiceType = 'work_prime' | 'off_prime' | 'recovery_prime' | 'work_close' | 'off_close' | 'recovery_close'
@@ -136,6 +136,8 @@ async function generatePersonalizedText(
       bedtime_story: 'Write a motivational bedtime story (~6-8 minutes, 900-1100 words). Use vivid calming imagery, weave in themes of resilience and self-belief, and gradually slow pace toward the end.',
       midday_reset: 'Write a 2-minute midday reset script. Help the listener pause, take a breath, reaffirm their goals, and recharge their energy for the rest of the day. Include a brief breathing moment and positive affirmation. About 200-250 words.',
       wind_down: 'Write a 2-minute evening wind-down script. Guide the listener to release the day\'s tension, reflect on what went well, practice gratitude, and prepare for restful sleep. About 200-250 words.',
+      emotional_reset: 'Write a 3-minute emotional reset script for someone feeling depressed or emotionally heavy. Acknowledge their pain without toxic positivity, gently guide them toward self-compassion and small moments of hope. Remind them they have survived hard days before. About 300-350 words.',
+      calm_the_storm: 'Write a 3-minute anxiety relief script for someone experiencing racing thoughts, chest tightness, or overwhelm. Include breathing techniques, grounding exercises, and reassurance that the feeling will pass. About 300-350 words.',
     }
 
     const DAY_TYPE_PROMPTS: Record<DayTypeVoiceType, string> = {
@@ -184,7 +186,7 @@ async function getUserTone(userId: string): Promise<string> {
 }
 
 // All valid voice types
-const VALID_VOICE_TYPES = ['breathing', 'affirmation', 'gratitude', 'sleep', 'grounding', 'stress_relief', 'focus_meditation', 'self_compassion', 'confidence', 'bedtime_story', 'midday_reset', 'wind_down']
+const VALID_VOICE_TYPES = ['breathing', 'affirmation', 'gratitude', 'sleep', 'grounding', 'stress_relief', 'focus_meditation', 'self_compassion', 'confidence', 'bedtime_story', 'midday_reset', 'wind_down', 'emotional_reset', 'calm_the_storm']
 const VALID_DAY_TYPE_VOICES = ['work_prime', 'off_prime', 'recovery_prime', 'work_close', 'off_close', 'recovery_close']
 
 // GET - Fetch today's voices (library-first, no on-demand ElevenLabs)
@@ -278,7 +280,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Return all voice data status
-    const voiceTypes: VoiceGuideType[] = ['breathing', 'affirmation', 'gratitude', 'sleep', 'grounding', 'stress_relief', 'focus_meditation', 'self_compassion', 'confidence', 'bedtime_story']
+    const voiceTypes: VoiceGuideType[] = ['breathing', 'affirmation', 'gratitude', 'sleep', 'grounding', 'stress_relief', 'focus_meditation', 'self_compassion', 'confidence', 'bedtime_story', 'emotional_reset', 'calm_the_storm']
     const voices = voiceTypes.map(t => ({
       type: t,
       hasScript: !!guide?.[`${t}_script` as keyof typeof guide],
