@@ -325,26 +325,40 @@ export function ImmersiveHome() {
         guideAudioRef.current = audio
         setGuideAudioElement(audio)
 
-        audio.oncanplaythrough = () => {
+        let playAttempted = false
+        const tryPlay = () => {
+          if (playAttempted) return
+          playAttempted = true
           if (guideRequestId.current !== thisRequest) {
             audio.pause(); audio.src = ''
             if (blobUrl) URL.revokeObjectURL(blobUrl)
             return
           }
           audio.play()
-            .then(() => dispatch({ type: 'GUIDE_PLAY_STARTED' }))
+            .then(() => {
+              setGuideAudioElement(audio)
+              dispatch({ type: 'GUIDE_PLAY_STARTED' })
+            })
             .catch(err => {
               console.error('Guide play error:', err)
+              playAttempted = false // allow retry
               // Retry once on native (autoplay policies)
               if (isNativePlatform) {
                 setTimeout(() => {
+                  playAttempted = true
                   audio.play()
-                    .then(() => dispatch({ type: 'GUIDE_PLAY_STARTED' }))
+                    .then(() => {
+                      setGuideAudioElement(audio)
+                      dispatch({ type: 'GUIDE_PLAY_STARTED' })
+                    })
                     .catch(() => dispatch({ type: 'GUIDE_ERROR' }))
                 }, 500)
               }
             })
         }
+        // Use both events — oncanplay fires earlier and more reliably on native
+        audio.oncanplay = tryPlay
+        audio.oncanplaythrough = tryPlay
         audio.onended = () => {
           if (guideRequestId.current !== thisRequest) return
           dispatch({ type: 'GUIDE_ENDED' })
