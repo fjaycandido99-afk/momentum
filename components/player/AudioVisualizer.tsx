@@ -50,9 +50,9 @@ function AudioVisualizerInner({
     }
   }, [])
 
-  // Connect audio element to analyser (skip on native — causes audio distortion)
+  // Connect audio element to analyser for real frequency data
   useEffect(() => {
-    if (!audioElement || IS_NATIVE) {
+    if (!audioElement) {
       analyserRef.current = null
       return
     }

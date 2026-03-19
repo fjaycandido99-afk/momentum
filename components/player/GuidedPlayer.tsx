@@ -49,9 +49,8 @@ export function GuidedPlayer({
   useBodyScrollLock()
 
   // Connect audio element to Web Audio analyser for CircularVisualizer
-  // Skip on native — createMediaElementSource causes audio distortion in WKWebView
   useEffect(() => {
-    if (!audioElement || IS_NATIVE) { setAnalyser(null); return }
+    if (!audioElement) { setAnalyser(null); return }
     try {
       let audioCtx = contextCache.get(audioElement)
       let source = sourceCache.get(audioElement)
