@@ -210,6 +210,7 @@ export function ImmersiveHome() {
   const [showMorningFlow, setShowMorningFlow] = useState(false)
   const [showGuidedPlayer, setShowGuidedPlayer] = useState(false)
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null)
+  const [guideAudioElement, setGuideAudioElement] = useState<HTMLAudioElement | null>(null)
 
   const guideRequestId = useRef(0)
 
@@ -256,6 +257,7 @@ export function ImmersiveHome() {
       guideAudioRef.current.src = ''
       guideAudioRef.current = null
     }
+    setGuideAudioElement(null)
     const thisRequest = ++guideRequestId.current
 
     if (isPlaying) setIsPlaying(false)
@@ -320,6 +322,7 @@ export function ImmersiveHome() {
 
         const audio = new Audio(audioSrc)
         guideAudioRef.current = audio
+        setGuideAudioElement(audio)
 
         audio.oncanplaythrough = () => {
           if (guideRequestId.current !== thisRequest) {
@@ -1064,7 +1067,7 @@ export function ImmersiveHome() {
           guideName={audioState.guideLabel}
           isPlaying={audioState.guideIsPlaying}
           isLoading={!!audioState.loadingGuide}
-          audioElement={guideAudioRef.current}
+          audioElement={guideAudioElement}
           onTogglePlay={toggleGuidePlay}
           onClose={() => setShowGuidedPlayer(false)}
           onSwitchGuide={(id, name) => {
@@ -1513,7 +1516,7 @@ export function ImmersiveHome() {
             ? `${audioState.currentPlaylist.index + 1} of ${audioState.currentPlaylist.videos.length}`
             : undefined
         }
-        audioElement={audioState.guideLabel ? guideAudioRef.current : null}
+        audioElement={audioState.guideLabel ? guideAudioElement : null}
       />
 
 
