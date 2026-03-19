@@ -28,6 +28,7 @@ function AudioVisualizerInner({
   const animFrameRef = useRef<number>(0)
   const smoothedRef = useRef<Float32Array | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
+  const timeRef = useRef(0)
   const prefersReducedMotion = useRef(false)
 
   // Inline mode defaults
@@ -153,6 +154,16 @@ function AudioVisualizerInner({
         // Smooth with linear interpolation
         const lerpFactor = 0.25
         smoothed[i] = smoothed[i] + (normalized - smoothed[i]) * lerpFactor
+      }
+    } else if (isPlaying && !analyser && !prefersReducedMotion.current) {
+      // Simulated animation for native (no Web Audio) — organic sine wave movement
+      timeRef.current += 0.03
+      const t = timeRef.current
+      for (let i = 0; i < effectiveBarCount; i++) {
+        const target = 0.15 + 0.35 * Math.abs(Math.sin(t * 1.2 + i * 0.5))
+          + 0.2 * Math.abs(Math.sin(t * 2.1 + i * 0.8))
+          + 0.1 * Math.abs(Math.sin(t * 3.3 + i * 1.3))
+        smoothed[i] = smoothed[i] + (target - smoothed[i]) * 0.15
       }
     } else {
       // Decay to minimum when not playing
