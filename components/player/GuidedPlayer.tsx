@@ -48,9 +48,9 @@ export function GuidedPlayer({
 
   useBodyScrollLock()
 
-  // Connect audio element to Web Audio analyser (skip on native — causes distortion)
+  // Connect audio element to Web Audio analyser for real audio-reactive visualization
   useEffect(() => {
-    if (!audioElement || IS_NATIVE) { setAnalyser(null); return }
+    if (!audioElement) { setAnalyser(null); return }
     try {
       let audioCtx = contextCache.get(audioElement)
       let source = sourceCache.get(audioElement)

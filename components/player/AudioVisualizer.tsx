@@ -51,9 +51,9 @@ function AudioVisualizerInner({
     }
   }, [])
 
-  // Connect audio element to analyser (skip on native — causes audio distortion in WKWebView)
+  // Connect audio element to analyser for real audio-reactive visualization
   useEffect(() => {
-    if (!audioElement || IS_NATIVE) {
+    if (!audioElement) {
       analyserRef.current = null
       return
     }
