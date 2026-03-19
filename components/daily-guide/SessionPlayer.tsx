@@ -352,7 +352,7 @@ export function SessionPlayer({
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="absolute pointer-events-none" style={{ width: '320px', height: '320px', borderRadius: '50%', background: 'radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 70%)', filter: 'blur(40px)', opacity: isPlaying ? 1 : 0, transition: 'opacity 1.5s ease-in-out' }} />
         <div style={{ opacity: isPlaying ? 0.85 : 0.15, transition: 'opacity 1s ease-in-out' }}>
-          <CircularVisualizer analyser={analyser} isPlaying={isPlaying} barCount={80} size={300} />
+          <CircularVisualizer analyser={analyser} isPlaying={isPlaying} simulated={!analyser && isPlaying} barCount={80} size={300} />
         </div>
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none" />
       </div>
