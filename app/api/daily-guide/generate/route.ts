@@ -87,6 +87,18 @@ export async function POST(request: NextRequest) {
 
     // If guide exists and not forcing regeneration, return existing
     if (existingGuide && !forceRegenerate) {
+      // Auto-reset stale completion flags: if only bedtime is done (carried over from
+      // last night's late completion), reset it so today starts fresh
+      if (existingGuide.bedtime_story_done &&
+          !existingGuide.morning_prime_done &&
+          !existingGuide.midday_reset_done &&
+          !existingGuide.wind_down_done) {
+        await prisma.dailyGuide.update({
+          where: { id: existingGuide.id },
+          data: { bedtime_story_done: false },
+        })
+        existingGuide.bedtime_story_done = false
+      }
       return NextResponse.json({
         success: true,
         data: existingGuide,
