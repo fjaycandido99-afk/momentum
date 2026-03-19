@@ -287,6 +287,11 @@ export function ImmersiveHome() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: mappedType, ...(guestTone && { tone: guestTone }) }),
       })
+      if (!response.ok) {
+        console.error('[Guide] Voices API error:', response.status)
+        dispatch({ type: 'GUIDE_ERROR' })
+        return
+      }
       const data = await response.json()
 
       if (guideRequestId.current !== thisRequest) return

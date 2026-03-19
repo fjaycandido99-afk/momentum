@@ -337,9 +337,11 @@ export async function POST(request: NextRequest) {
     const scriptField = `${type}_script` as keyof typeof guide
     const audioField = `${type}_audio` as keyof typeof guide
     const durationField = `${type}_duration` as keyof typeof guide
+    // Check if this type has DB columns (some types like emotional_reset only use library cache)
+    const hasDbColumns = scriptField in guide
 
-    // 1. Check if already saved to this user's daily guide (skip for textOnly)
-    if (!textOnly && guide[scriptField] && guide[audioField]) {
+    // 1. Check if already saved to this user's daily guide (skip for textOnly and types without DB columns)
+    if (!textOnly && hasDbColumns && guide[scriptField] && guide[audioField]) {
       return NextResponse.json({
         type,
         script: guide[scriptField],
@@ -369,7 +371,7 @@ export async function POST(request: NextRequest) {
 
     // If textOnly, return script without audio
     if (textOnly) {
-      if (!guide[scriptField]) {
+      if (hasDbColumns && !guide[scriptField]) {
         await prisma.dailyGuide.update({
           where: { id: guide.id },
           data: { [scriptField]: displayScript },
@@ -398,8 +400,8 @@ export async function POST(request: NextRequest) {
       duration = libraryHit.duration
     }
 
-    // Save to user's daily guide DB record
-    if (audioBase64) {
+    // Save to user's daily guide DB record (only if type has DB columns)
+    if (hasDbColumns && audioBase64) {
       await prisma.dailyGuide.update({
         where: { id: guide.id },
         data: {
@@ -408,7 +410,7 @@ export async function POST(request: NextRequest) {
           [durationField]: duration,
         },
       })
-    } else if (!guide[scriptField]) {
+    } else if (hasDbColumns && !guide[scriptField]) {
       // Save script even without audio
       await prisma.dailyGuide.update({
         where: { id: guide.id },
