@@ -50,7 +50,8 @@ function useWebPlayer(audioBase64: string | null, onComplete: () => void) {
 
   const setupAnalyser = useCallback(() => {
     // Skip Web Audio on native — createMediaElementSource causes audio distortion in WKWebView
-    if (setupDone.current || !audioRef.current || IS_NATIVE) return
+    // On native with native plugin, the NativeAnalyserAdapter provides frequency data instead
+    if (setupDone.current || !audioRef.current || (IS_NATIVE && HAS_NATIVE_AUDIO_PLUGIN)) return
     setupDone.current = true
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
@@ -288,11 +289,13 @@ export function SessionPlayer({
     onComplete()
   }, [onComplete])
 
-  // Always use web player for daily guide sessions — native plugin can crash on large audio
-  // (base64 strings passed through Capacitor bridge cause memory pressure on iOS)
-  const webPlayer = useWebPlayer(audioBase64, handleComplete)
-  const nativePlayer = useNativePlayer(null, handleComplete)
-  const player = webPlayer
+  // Use native plugin on native for real audio-reactive visualizer
+  // Fall back to web player for bedtime stories (large audio can crash the bridge)
+  const isBedtime = session === 'bedtime_story'
+  const useNative = HAS_NATIVE_AUDIO_PLUGIN && !isBedtime
+  const webPlayer = useWebPlayer(useNative ? null : audioBase64, handleComplete)
+  const nativePlayer = useNativePlayer(useNative ? audioBase64 : null, handleComplete)
+  const player = useNative ? nativePlayer : webPlayer
 
   const { analyser, isPlaying, currentTime, audioDuration, isLoaded, play, pause, seek, restart } = player
 
