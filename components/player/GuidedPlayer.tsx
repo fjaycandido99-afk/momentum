@@ -8,7 +8,7 @@ import { sourceCache, contextCache, analyserCache, type AudioAnalyserLike } from
 import { VOICE_GUIDES } from '@/components/home/home-types'
 import { GUIDE_LAYERS } from '@/components/home/GuidedSection'
 
-const IS_NATIVE = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.()
+const IS_NATIVE = typeof window !== 'undefined' && !!(window as any).Capacitor
 
 interface GuidedPlayerProps {
   guideId: string

@@ -14,7 +14,7 @@ interface AudioVisualizerProps {
 
 import { sourceCache, contextCache, analyserCache } from './audio-analyser-cache'
 
-const IS_NATIVE = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.()
+const IS_NATIVE = typeof window !== 'undefined' && !!(window as any).Capacitor
 
 function AudioVisualizerInner({
   audioElement,
