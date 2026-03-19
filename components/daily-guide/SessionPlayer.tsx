@@ -50,8 +50,7 @@ function useWebPlayer(audioBase64: string | null, onComplete: () => void) {
 
   const setupAnalyser = useCallback(() => {
     // Skip Web Audio on native — createMediaElementSource causes audio distortion in WKWebView
-    // On native with native plugin, the NativeAnalyserAdapter provides frequency data instead
-    if (setupDone.current || !audioRef.current || (IS_NATIVE && HAS_NATIVE_AUDIO_PLUGIN)) return
+    if (setupDone.current || !audioRef.current || IS_NATIVE) return
     setupDone.current = true
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
@@ -289,13 +288,11 @@ export function SessionPlayer({
     onComplete()
   }, [onComplete])
 
-  // Use native plugin on native for real audio-reactive visualizer
-  // Fall back to web player for bedtime stories (large audio can crash the bridge)
-  const isBedtime = session === 'bedtime_story'
-  const useNative = HAS_NATIVE_AUDIO_PLUGIN && !isBedtime
-  const webPlayer = useWebPlayer(useNative ? null : audioBase64, handleComplete)
-  const nativePlayer = useNativePlayer(useNative ? audioBase64 : null, handleComplete)
-  const player = useNative ? nativePlayer : webPlayer
+  // Always use web player for daily guide sessions — native plugin can crash on large audio
+  // (base64 strings passed through Capacitor bridge cause memory pressure on iOS)
+  const webPlayer = useWebPlayer(audioBase64, handleComplete)
+  const nativePlayer = useNativePlayer(null, handleComplete)
+  const player = webPlayer
 
   const { analyser, isPlaying, currentTime, audioDuration, isLoaded, play, pause, seek, restart } = player
 
@@ -355,7 +352,7 @@ export function SessionPlayer({
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="absolute pointer-events-none" style={{ width: '320px', height: '320px', borderRadius: '50%', background: 'radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 70%)', filter: 'blur(40px)', opacity: isPlaying ? 1 : 0, transition: 'opacity 1.5s ease-in-out' }} />
         <div style={{ opacity: isPlaying ? 0.85 : 0.15, transition: 'opacity 1s ease-in-out' }}>
-          <CircularVisualizer analyser={analyser} isPlaying={isPlaying} simulated={!analyser && isPlaying} barCount={80} size={300} />
+          <CircularVisualizer analyser={analyser} isPlaying={isPlaying} barCount={80} size={300} />
         </div>
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none" />
       </div>
