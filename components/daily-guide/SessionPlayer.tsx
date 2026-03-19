@@ -49,8 +49,7 @@ function useWebPlayer(audioBase64: string | null, onComplete: () => void) {
   const [isLoaded, setIsLoaded] = useState(false)
 
   const setupAnalyser = useCallback(() => {
-    // Skip Web Audio on native — native AudioAnalyzer plugin provides frequency data instead
-    if (setupDone.current || !audioRef.current || IS_NATIVE) return
+    if (setupDone.current || !audioRef.current) return
     setupDone.current = true
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
@@ -288,12 +287,11 @@ export function SessionPlayer({
     onComplete()
   }, [onComplete])
 
-  // Use native AudioAnalyzer plugin on native for real audio-reactive visualizer
-  // Fall back to web player on web or when native plugin isn't available
-  const useNativeAudio = HAS_NATIVE_AUDIO_PLUGIN
-  const webPlayer = useWebPlayer(useNativeAudio ? null : audioBase64, handleComplete)
-  const nativePlayer = useNativePlayer(useNativeAudio ? audioBase64 : null, handleComplete)
-  const player = useNativeAudio ? nativePlayer : webPlayer
+  // Use web player with Web Audio analyser for real audio-reactive visualizer
+  // Native plugin crashes on large base64 strings through Capacitor bridge
+  const webPlayer = useWebPlayer(audioBase64, handleComplete)
+  const nativePlayer = useNativePlayer(null, handleComplete)
+  const player = webPlayer
 
   const { analyser, isPlaying, currentTime, audioDuration, isLoaded, play, pause, seek, restart } = player
 
