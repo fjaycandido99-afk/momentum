@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Play, Pause, ChevronDown } from 'lucide-react'
+import { Play, Pause, ChevronDown, Loader2 } from 'lucide-react'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { CircularVisualizer } from './CircularVisualizer'
 import { sourceCache, contextCache, analyserCache, type AudioAnalyserLike } from './audio-analyser-cache'
@@ -12,6 +12,7 @@ interface GuidedPlayerProps {
   guideId: string
   guideName: string
   isPlaying: boolean
+  isLoading: boolean
   audioElement: HTMLAudioElement | null
   onTogglePlay: () => void
   onClose: () => void
@@ -32,6 +33,7 @@ export function GuidedPlayer({
   guideId,
   guideName,
   isPlaying,
+  isLoading,
   audioElement,
   onTogglePlay,
   onClose,
@@ -127,15 +129,21 @@ export function GuidedPlayer({
 
       {/* Center: circular visualizer + title */}
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-6">
-        {/* Circular ring visualizer */}
+        {/* Circular ring visualizer or loading spinner */}
         <div className="mb-10">
-          <CircularVisualizer
-            analyser={analyser}
-            isPlaying={isPlaying}
-            simulated={!analyser && isPlaying}
-            barCount={64}
-            size={200}
-          />
+          {isLoading ? (
+            <div className="w-[200px] h-[200px] flex items-center justify-center">
+              <Loader2 className="w-12 h-12 text-white/50 animate-spin" />
+            </div>
+          ) : (
+            <CircularVisualizer
+              analyser={analyser}
+              isPlaying={isPlaying}
+              simulated={!analyser && isPlaying}
+              barCount={64}
+              size={200}
+            />
+          )}
         </div>
 
         {/* Guide name */}

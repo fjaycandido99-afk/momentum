@@ -1063,6 +1063,7 @@ export function ImmersiveHome() {
           guideId={activeGuideId || ''}
           guideName={audioState.guideLabel}
           isPlaying={audioState.guideIsPlaying}
+          isLoading={!!audioState.loadingGuide}
           audioElement={guideAudioRef.current}
           onTogglePlay={toggleGuidePlay}
           onClose={() => setShowGuidedPlayer(false)}
