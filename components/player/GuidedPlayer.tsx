@@ -8,6 +8,8 @@ import { sourceCache, contextCache, analyserCache, type AudioAnalyserLike } from
 import { VOICE_GUIDES } from '@/components/home/home-types'
 import { GUIDE_LAYERS } from '@/components/home/GuidedSection'
 
+const IS_NATIVE = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.()
+
 interface GuidedPlayerProps {
   guideId: string
   guideName: string
@@ -47,8 +49,9 @@ export function GuidedPlayer({
   useBodyScrollLock()
 
   // Connect audio element to Web Audio analyser for CircularVisualizer
+  // Skip on native — createMediaElementSource causes audio distortion in WKWebView
   useEffect(() => {
-    if (!audioElement) { setAnalyser(null); return }
+    if (!audioElement || IS_NATIVE) { setAnalyser(null); return }
     try {
       let audioCtx = contextCache.get(audioElement)
       let source = sourceCache.get(audioElement)

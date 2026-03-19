@@ -14,6 +14,8 @@ interface AudioVisualizerProps {
 
 import { sourceCache, contextCache, analyserCache } from './audio-analyser-cache'
 
+const IS_NATIVE = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.()
+
 function AudioVisualizerInner({
   audioElement,
   isPlaying,
@@ -48,9 +50,9 @@ function AudioVisualizerInner({
     }
   }, [])
 
-  // Connect audio element to analyser
+  // Connect audio element to analyser (skip on native — causes audio distortion)
   useEffect(() => {
-    if (!audioElement) {
+    if (!audioElement || IS_NATIVE) {
       analyserRef.current = null
       return
     }
