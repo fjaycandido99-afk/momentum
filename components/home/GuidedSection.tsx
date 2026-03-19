@@ -2,6 +2,7 @@
 
 import { Loader2 } from 'lucide-react'
 import { EqBars } from '@/components/ui/EqBars'
+import { AudioVisualizer } from '@/components/player/AudioVisualizer'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { VOICE_GUIDES } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
@@ -140,9 +141,10 @@ interface GuidedSectionProps {
   loadingGuide: string | null
   isContentFree: (type: FreemiumContentType, id: number | string) => boolean
   onPlay: (guideId: string, name: string, isLocked: boolean) => void
+  audioElement?: HTMLAudioElement | null
 }
 
-export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isContentFree, onPlay }: GuidedSectionProps) {
+export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isContentFree, onPlay, audioElement }: GuidedSectionProps) {
   return (
     <div className="mb-10 liquid-reveal section-fade-bg">
       <div className="flex items-center justify-between px-6 mb-5">
@@ -207,9 +209,16 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
                 )}
 
                 <div className="relative z-10 flex-1 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full border-2 border-white/40 bg-black flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full border-2 border-white/40 bg-black flex items-center justify-center overflow-hidden">
                     {isLoading ? (
                       <Loader2 className="w-7 h-7 text-white animate-spin" />
+                    ) : isGuideActive && audioElement ? (
+                      <AudioVisualizer
+                        audioElement={audioElement}
+                        isPlaying={true}
+                        barCount={12}
+                        height={24}
+                      />
                     ) : isGuideActive ? (
                       <EqBars />
                     ) : (

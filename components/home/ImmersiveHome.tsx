@@ -1281,6 +1281,7 @@ export function ImmersiveHome() {
                   loadingGuide={audioState.loadingGuide}
                   isContentFree={(type, id) => isContentFree(type, id)}
                   onPlay={handleGuidePlay}
+                  audioElement={guideAudioElement}
                 />
               </div>
             )
