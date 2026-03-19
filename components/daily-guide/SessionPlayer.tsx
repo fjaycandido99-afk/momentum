@@ -49,7 +49,8 @@ function useWebPlayer(audioBase64: string | null, onComplete: () => void) {
   const [isLoaded, setIsLoaded] = useState(false)
 
   const setupAnalyser = useCallback(() => {
-    if (setupDone.current || !audioRef.current) return
+    // Skip Web Audio on native — createMediaElementSource causes audio distortion in WKWebView
+    if (setupDone.current || !audioRef.current || IS_NATIVE) return
     setupDone.current = true
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
