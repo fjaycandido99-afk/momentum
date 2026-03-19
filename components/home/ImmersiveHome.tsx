@@ -345,10 +345,12 @@ export function ImmersiveHome() {
             })
         }
         audio.onended = () => {
+          if (guideRequestId.current !== thisRequest) return
           dispatch({ type: 'GUIDE_ENDED' })
           if (blobUrl) URL.revokeObjectURL(blobUrl)
         }
         audio.onerror = () => {
+          if (guideRequestId.current !== thisRequest) return
           dispatch({ type: 'GUIDE_ERROR' })
           if (blobUrl) URL.revokeObjectURL(blobUrl)
         }
