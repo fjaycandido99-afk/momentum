@@ -400,7 +400,8 @@ export async function POST(request: NextRequest) {
       duration = libraryHit.duration
     }
 
-    // Save to user's daily guide DB record (only if type has DB columns)
+    // Save to user's daily guide DB record (only if type has DB columns AND audio exists)
+    // Never save script without audio — it creates a stuck state that blocks library lookup
     if (hasDbColumns && audioBase64) {
       await prisma.dailyGuide.update({
         where: { id: guide.id },
@@ -410,12 +411,6 @@ export async function POST(request: NextRequest) {
           [durationField]: duration,
         },
       })
-    } else if (hasDbColumns && !guide[scriptField]) {
-      // Save script even without audio
-      await prisma.dailyGuide.update({
-        where: { id: guide.id },
-        data: { [scriptField]: displayScript },
-      }).catch(() => {})
     }
 
     return NextResponse.json({
