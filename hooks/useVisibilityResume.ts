@@ -3,7 +3,7 @@
 import { useEffect, useRef, type MutableRefObject } from 'react'
 import type { YTPlayer } from '@/lib/youtube-types'
 import type { AudioState } from './useAudioStateMachine'
-import { isNativePlatform, resumeGuideNative } from '@/lib/guide-audio-native'
+import { isNativePlatform } from '@/lib/guide-audio-native'
 
 interface UseVisibilityResumeOptions {
   state: AudioState
@@ -66,13 +66,7 @@ export function useVisibilityResume({
 
       // Resume guide audio - only if user didn't manually pause
       if (s.guideLabel && !s.userPausedGuide) {
-        if (isNativePlatform) {
-          resumeGuideNative(guideNativeLoadedRef)
-          // Also resume muted web audio for visualizer sync
-          if (guideAudioRef.current?.paused) {
-            guideAudioRef.current.play().catch(() => {})
-          }
-        } else if (guideAudioRef.current?.paused) {
+        if (guideAudioRef.current?.paused) {
           guideAudioRef.current.play().catch(() => {})
         }
       }
