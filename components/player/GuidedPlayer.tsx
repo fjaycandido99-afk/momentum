@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Play, Pause, ChevronDown, Loader2, Lock } from 'lucide-react'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { CircularVisualizer } from './CircularVisualizer'
-import { sourceCache, contextCache, analyserCache, type AudioAnalyserLike } from './audio-analyser-cache'
+import { sourceCache, contextCache, analyserCache, BufferAnalyser, type AudioAnalyserLike } from './audio-analyser-cache'
 import { VOICE_GUIDES } from '@/components/home/home-types'
 import { GUIDE_LAYERS } from '@/components/home/GuidedSection'
 import { isContentFree } from '@/lib/subscription-constants'
@@ -56,9 +56,31 @@ export function GuidedPlayer({
 
   // Keepalive handled by useAudioSideEffects at the provider level — no duplicate needed here
 
-  // Connect audio element to Web Audio analyser for real audio-reactive visualization
+  // Connect audio element to analyser for real audio-reactive visualization
+  // On native (Capacitor WKWebView), createMediaElementSource silently fails,
+  // so we use BufferAnalyser which reads amplitude from the decoded AudioBuffer
   useEffect(() => {
     if (!audioElement) { setAnalyser(null); return }
+
+    if (IS_NATIVE) {
+      // Native: decode audio src into AudioBuffer for BufferAnalyser
+      const setupBufferAnalyser = async () => {
+        try {
+          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+          const response = await fetch(audioElement.src)
+          const arrayBuffer = await response.arrayBuffer()
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+          setAnalyser(new BufferAnalyser(audioBuffer, audioElement, 64))
+        } catch {
+          // Fall through to simulated mode
+          setAnalyser(null)
+        }
+      }
+      setupBufferAnalyser()
+      return
+    }
+
+    // Web: use Web Audio API createMediaElementSource
     try {
       let audioCtx = contextCache.get(audioElement)
       let source = sourceCache.get(audioElement)

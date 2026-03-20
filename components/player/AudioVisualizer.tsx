@@ -12,7 +12,7 @@ interface AudioVisualizerProps {
   inline?: boolean
 }
 
-import { sourceCache, contextCache, analyserCache } from './audio-analyser-cache'
+import { sourceCache, contextCache, analyserCache, BufferAnalyser, type AudioAnalyserLike } from './audio-analyser-cache'
 
 const IS_NATIVE = typeof window !== 'undefined' && !!(window as any).Capacitor
 
@@ -27,7 +27,7 @@ function AudioVisualizerInner({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animFrameRef = useRef<number>(0)
   const smoothedRef = useRef<Float32Array | null>(null)
-  const analyserRef = useRef<AnalyserNode | null>(null)
+  const analyserRef = useRef<AnalyserNode | AudioAnalyserLike | null>(null)
   const timeRef = useRef(0)
   const prefersReducedMotion = useRef(false)
 
@@ -52,14 +52,34 @@ function AudioVisualizerInner({
   }, [])
 
   // Connect audio element to analyser for real audio-reactive visualization
+  // On native (Capacitor WKWebView), createMediaElementSource silently fails,
+  // so we use BufferAnalyser which reads amplitude from the decoded AudioBuffer
   useEffect(() => {
     if (!audioElement) {
       analyserRef.current = null
       return
     }
 
+    if (IS_NATIVE) {
+      // Native: decode audio src into AudioBuffer for BufferAnalyser
+      const setupBufferAnalyser = async () => {
+        try {
+          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+          const response = await fetch(audioElement.src)
+          const arrayBuffer = await response.arrayBuffer()
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+          analyserRef.current = new BufferAnalyser(audioBuffer, audioElement, 64)
+        } catch {
+          // Fall through to simulated mode
+          analyserRef.current = null
+        }
+      }
+      setupBufferAnalyser()
+      return
+    }
+
+    // Web: use Web Audio API createMediaElementSource
     try {
-      // Reuse existing AudioContext and source for this element
       let audioCtx = contextCache.get(audioElement)
       let source = sourceCache.get(audioElement)
       let analyser = analyserCache.get(audioElement)
@@ -76,24 +96,19 @@ function AudioVisualizerInner({
 
       if (!analyser) {
         analyser = audioCtx.createAnalyser()
-        analyser.fftSize = 128 // 64 frequency bins
+        analyser.fftSize = 128
         analyser.smoothingTimeConstant = 0.75
         analyserCache.set(audioElement, analyser)
-
-        // Connect: source -> analyser -> destination
         source.connect(analyser)
         analyser.connect(audioCtx.destination)
       }
 
       analyserRef.current = analyser
 
-      // Resume context if suspended (browser autoplay policy)
       if (audioCtx.state === 'suspended') {
         audioCtx.resume().catch(() => {})
       }
     } catch (err) {
-      // "already connected" or other errors — the source may already be wired up
-      // Try to get the cached analyser anyway
       const cachedAnalyser = analyserCache.get(audioElement)
       if (cachedAnalyser) {
         analyserRef.current = cachedAnalyser
