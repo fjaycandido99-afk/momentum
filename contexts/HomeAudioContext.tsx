@@ -9,6 +9,7 @@ import { useAudioSideEffects } from '@/hooks/useAudioSideEffects'
 import { useVisibilityResume } from '@/hooks/useVisibilityResume'
 import { useMediaSession } from '@/hooks/useMediaSession'
 import { useAudioOptional } from '@/contexts/AudioContext'
+import { isNativePlatform, stopGuideNative } from '@/lib/guide-audio-native'
 
 // --- Context shape ---
 
@@ -109,6 +110,9 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
 
   // Stop all audio helper
   const stopAllHomeAudio = useCallback(() => {
+    if (isNativePlatform) {
+      stopGuideNative(guideNativeLoadedRef)
+    }
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''

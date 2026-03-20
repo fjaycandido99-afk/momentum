@@ -2,7 +2,7 @@
 
 import { useEffect, type MutableRefObject, type Dispatch } from 'react'
 import type { AudioState, AudioAction } from './useAudioStateMachine'
-import { isNativePlatform } from '@/lib/guide-audio-native'
+import { isNativePlatform, pauseGuideNative, resumeGuideNative } from '@/lib/guide-audio-native'
 
 interface UseMediaSessionOptions {
   state: AudioState
@@ -37,8 +37,14 @@ export function useMediaSession({ state, dispatch, guideAudioRef, guideNativeLoa
         dispatch({ type: 'RESUME_MUSIC' })
       } else if (state.activeSoundscape) {
         dispatch({ type: 'RESUME_SOUNDSCAPE' })
-      } else if (guideAudioRef.current) {
-        guideAudioRef.current.play().then(() => dispatch({ type: 'RESUME_GUIDE' })).catch(() => {})
+      } else if (state.guideLabel) {
+        if (isNativePlatform) {
+          resumeGuideNative(guideNativeLoadedRef)
+        }
+        if (guideAudioRef.current) {
+          guideAudioRef.current.play().catch(() => {})
+        }
+        dispatch({ type: 'RESUME_GUIDE' })
       }
     })
 
@@ -48,6 +54,9 @@ export function useMediaSession({ state, dispatch, guideAudioRef, guideNativeLoa
       } else if (state.activeSoundscape) {
         dispatch({ type: 'PAUSE_SOUNDSCAPE' })
       } else if (state.guideLabel) {
+        if (isNativePlatform) {
+          pauseGuideNative(guideNativeLoadedRef)
+        }
         if (guideAudioRef.current) guideAudioRef.current.pause()
         dispatch({ type: 'PAUSE_GUIDE' })
       }

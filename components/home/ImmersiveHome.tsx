@@ -54,7 +54,7 @@ import { getAdaptiveSectionOrder, type FeedSection } from '@/lib/smart-home-feed
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 import { haptic } from '@/lib/haptics'
-import { isNativePlatform } from '@/lib/guide-audio-native'
+import { isNativePlatform, playGuideNative, pauseGuideNative, resumeGuideNative, stopGuideNative } from '@/lib/guide-audio-native'
 import { AudioVisualizer } from '@/components/player/AudioVisualizer'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { useFeatureTooltip, type FeatureId } from '@/components/premium/FeatureTooltip'
@@ -252,6 +252,9 @@ export function ImmersiveHome() {
     setActiveGuideId(guideId)
     setShowGuidedPlayer(true)
     // Stop any existing guide audio
+    if (isNativePlatform) {
+      stopGuideNative(guideNativeLoadedRef)
+    }
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
       guideAudioRef.current.src = ''
@@ -302,72 +305,98 @@ export function ImmersiveHome() {
         // Convert base64 to blob URL on all platforms for consistent playback
         let blobUrl: string | null = null
         try {
-          // Try fetch(data:URI) first — efficient and avoids atob memory spikes
           const res = await fetch(`data:audio/mpeg;base64,${data.audioBase64}`)
           const blob = await res.blob()
           blobUrl = URL.createObjectURL(blob)
         } catch {
-          // Fallback: atob for environments where fetch(data:URI) fails
           try {
             const bin = atob(data.audioBase64)
             const bytes = new Uint8Array(bin.length)
             for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
             blobUrl = URL.createObjectURL(new Blob([bytes], { type: 'audio/mpeg' }))
           } catch {
-            // Last resort: data URI directly
             blobUrl = null
           }
         }
         if (guideRequestId.current !== thisRequest) return
 
         const audioSrc = blobUrl || `data:audio/mpeg;base64,${data.audioBase64}`
-        const audio = new Audio(audioSrc)
-        guideAudioRef.current = audio
-        setGuideAudioElement(audio)
 
-        let playAttempted = false
-        const tryPlay = () => {
-          if (playAttempted) return
-          playAttempted = true
+        if (isNativePlatform) {
+          // Native: use NativeAudio for background playback (survives app backgrounding)
+          // Also create a muted web audio element for visualizer data
+          await stopGuideNative(guideNativeLoadedRef)
+          const nativeOk = await playGuideNative(data.audioBase64, guideNativeLoadedRef)
           if (guideRequestId.current !== thisRequest) {
-            audio.pause(); audio.src = ''
+            await stopGuideNative(guideNativeLoadedRef)
             if (blobUrl) URL.revokeObjectURL(blobUrl)
             return
           }
-          audio.play()
-            .then(() => {
-              setGuideAudioElement(audio)
-              dispatch({ type: 'GUIDE_PLAY_STARTED' })
-            })
-            .catch(err => {
-              console.error('Guide play error:', err)
-              playAttempted = false // allow retry
-              // Retry once on native (autoplay policies)
-              if (isNativePlatform) {
-                setTimeout(() => {
-                  playAttempted = true
-                  audio.play()
-                    .then(() => {
-                      setGuideAudioElement(audio)
-                      dispatch({ type: 'GUIDE_PLAY_STARTED' })
-                    })
-                    .catch(() => dispatch({ type: 'GUIDE_ERROR' }))
-                }, 500)
-              }
-            })
-        }
-        // Use both events — oncanplay fires earlier and more reliably on native
-        audio.oncanplay = tryPlay
-        audio.oncanplaythrough = tryPlay
-        audio.onended = () => {
-          if (guideRequestId.current !== thisRequest) return
-          dispatch({ type: 'GUIDE_ENDED' })
-          if (blobUrl) URL.revokeObjectURL(blobUrl)
-        }
-        audio.onerror = () => {
-          if (guideRequestId.current !== thisRequest) return
-          dispatch({ type: 'GUIDE_ERROR' })
-          if (blobUrl) URL.revokeObjectURL(blobUrl)
+          if (nativeOk) {
+            // Create muted web audio element for visualizer only
+            const audio = new Audio(audioSrc)
+            audio.muted = true
+            audio.play().catch(() => {})
+            guideAudioRef.current = audio
+            setGuideAudioElement(audio)
+            dispatch({ type: 'GUIDE_PLAY_STARTED' })
+
+            // Listen for native audio completion via duration estimate
+            const estimatedDuration = data.duration || Math.ceil((data.script?.length || 250) / 5 / 150 * 60)
+            const endTimer = setTimeout(() => {
+              if (guideRequestId.current !== thisRequest) return
+              dispatch({ type: 'GUIDE_ENDED' })
+              stopGuideNative(guideNativeLoadedRef)
+              if (blobUrl) URL.revokeObjectURL(blobUrl)
+            }, estimatedDuration * 1000)
+            // Store cleanup ref
+            audio.onended = () => {
+              clearTimeout(endTimer)
+              if (guideRequestId.current !== thisRequest) return
+              dispatch({ type: 'GUIDE_ENDED' })
+              stopGuideNative(guideNativeLoadedRef)
+              if (blobUrl) URL.revokeObjectURL(blobUrl)
+            }
+          } else {
+            dispatch({ type: 'GUIDE_ERROR' })
+          }
+        } else {
+          // Web: use HTMLAudioElement directly
+          const audio = new Audio(audioSrc)
+          guideAudioRef.current = audio
+          setGuideAudioElement(audio)
+
+          let playAttempted = false
+          const tryPlay = () => {
+            if (playAttempted) return
+            playAttempted = true
+            if (guideRequestId.current !== thisRequest) {
+              audio.pause(); audio.src = ''
+              if (blobUrl) URL.revokeObjectURL(blobUrl)
+              return
+            }
+            audio.play()
+              .then(() => {
+                setGuideAudioElement(audio)
+                dispatch({ type: 'GUIDE_PLAY_STARTED' })
+              })
+              .catch(err => {
+                console.error('Guide play error:', err)
+                playAttempted = false
+              })
+          }
+          audio.oncanplay = tryPlay
+          audio.oncanplaythrough = tryPlay
+          audio.onended = () => {
+            if (guideRequestId.current !== thisRequest) return
+            dispatch({ type: 'GUIDE_ENDED' })
+            if (blobUrl) URL.revokeObjectURL(blobUrl)
+          }
+          audio.onerror = () => {
+            if (guideRequestId.current !== thisRequest) return
+            dispatch({ type: 'GUIDE_ERROR' })
+            if (blobUrl) URL.revokeObjectURL(blobUrl)
+          }
         }
       } else {
         // No audio available — show error instead of browser TTS fallback
@@ -388,10 +417,18 @@ export function ImmersiveHome() {
   const toggleGuidePlay = () => {
     haptic('light')
     if (audioState.guideIsPlaying) {
-      if (guideAudioRef.current) guideAudioRef.current.pause()
+      if (isNativePlatform) {
+        pauseGuideNative(guideNativeLoadedRef)
+        if (guideAudioRef.current) guideAudioRef.current.pause()
+      } else {
+        if (guideAudioRef.current) guideAudioRef.current.pause()
+      }
       dispatch({ type: 'PAUSE_GUIDE' })
     } else {
-      if (guideAudioRef.current) {
+      if (isNativePlatform) {
+        resumeGuideNative(guideNativeLoadedRef)
+        if (guideAudioRef.current) guideAudioRef.current.play().catch(() => {})
+      } else if (guideAudioRef.current) {
         guideAudioRef.current.play()
           .then(() => dispatch({ type: 'RESUME_GUIDE' }))
           .catch(console.error)
