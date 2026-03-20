@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Play, Pause, ChevronDown, Loader2 } from 'lucide-react'
+import { Play, Pause, ChevronDown, Loader2, Lock } from 'lucide-react'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { CircularVisualizer } from './CircularVisualizer'
 import { sourceCache, contextCache, analyserCache, type AudioAnalyserLike } from './audio-analyser-cache'
 import { VOICE_GUIDES } from '@/components/home/home-types'
 import { GUIDE_LAYERS } from '@/components/home/GuidedSection'
+import { isContentFree } from '@/lib/subscription-constants'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 
 const IS_NATIVE = typeof window !== 'undefined' && !!(window as any).Capacitor
 
@@ -19,6 +21,7 @@ interface GuidedPlayerProps {
   onTogglePlay: () => void
   onClose: () => void
   onSwitchGuide: (guideId: string, guideName: string) => void
+  onLockedGuide?: (guideId: string, guideName: string) => void
 }
 
 function formatTime(s: number) {
@@ -40,11 +43,14 @@ export function GuidedPlayer({
   onTogglePlay,
   onClose,
   onSwitchGuide,
+  onLockedGuide,
 }: GuidedPlayerProps) {
   const selectorRef = useRef<HTMLDivElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [analyser, setAnalyser] = useState<AudioAnalyserLike | null>(null)
+  const subscription = useSubscriptionOptional()
+  const isPremium = subscription?.isPremium ?? false
 
   useBodyScrollLock()
 
@@ -173,13 +179,19 @@ export function GuidedPlayer({
         <div ref={selectorRef} className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6">
           {VOICE_GUIDES.map((guide) => {
             const isActive = guide.id === guideId
+            const isLocked = !isContentFree('voiceGuide', guide.id, isPremium)
             const layers = GUIDE_LAYERS[guide.id] || GUIDE_LAYERS['anxiety']
             return (
               <button
                 key={guide.id}
                 data-guide-id={guide.id}
                 onClick={() => {
-                  if (guide.id !== guideId) onSwitchGuide(guide.id, guide.name)
+                  if (guide.id === guideId) return
+                  if (isLocked) {
+                    onLockedGuide?.(guide.id, guide.name)
+                  } else {
+                    onSwitchGuide(guide.id, guide.name)
+                  }
                 }}
                 className="flex flex-col items-center gap-1.5 shrink-0"
               >
@@ -188,6 +200,12 @@ export function GuidedPlayer({
                     ? 'border-2 border-white bg-black'
                     : 'border border-white/15 bg-black'
                 }`}>
+                  {/* Lock badge */}
+                  {isLocked && !isActive && (
+                    <div className="absolute top-1 right-1 z-20">
+                      <Lock className="w-2.5 h-2.5 text-white/70" />
+                    </div>
+                  )}
                   {/* SVG pattern layers */}
                   {layers.map((layer, i) => (
                     <div

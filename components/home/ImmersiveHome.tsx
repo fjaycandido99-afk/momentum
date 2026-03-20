@@ -1090,6 +1090,9 @@ export function ImmersiveHome() {
           onSwitchGuide={(id, name) => {
             handlePlayGuide(id, name)
           }}
+          onLockedGuide={(id, name) => {
+            handleGuidePlay(id, name, true)
+          }}
         />
       )}
 
