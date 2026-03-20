@@ -54,20 +54,7 @@ export function GuidedPlayer({
 
   useBodyScrollLock()
 
-  // Silent keepalive to prevent iOS WKWebView from suspending audio in background
-  useEffect(() => {
-    if (!isPlaying) return
-    let keepalive: HTMLAudioElement | null = null
-    try {
-      keepalive = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==')
-      keepalive.loop = true
-      keepalive.volume = 0.01
-      keepalive.play().catch(() => {})
-    } catch {}
-    return () => {
-      if (keepalive) { keepalive.pause(); keepalive.src = '' }
-    }
-  }, [isPlaying])
+  // Keepalive handled by useAudioSideEffects at the provider level — no duplicate needed here
 
   // Connect audio element to Web Audio analyser for real audio-reactive visualization
   useEffect(() => {
