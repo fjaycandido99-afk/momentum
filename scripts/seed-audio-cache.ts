@@ -14,7 +14,7 @@ import { VOICE_SCRIPTS, DAY_TYPE_VOICE_SCRIPTS } from '../lib/daily-guide/voice-
 const prisma = new PrismaClient()
 
 const TONE_VOICES: Record<string, string> = {
-  calm: 'LxoMo9qIEciklO2VEvzv',
+  calm: 'jguI6DAHl2kb9EpGEjEx',
   // neutral: 'flHkNRp1BlvT73UL6gyz',
   // direct: 'goT3UYdM9bhm0n2lmKQx',
 }
@@ -26,7 +26,7 @@ if (!ELEVENLABS_KEY) {
 }
 
 // Max entries to generate this run
-const MAX_GENERATE = 15
+const MAX_GENERATE = 110
 
 async function generateAudio(text: string, voiceId: string): Promise<{ base64: string; duration: number } | null> {
   try {
@@ -41,8 +41,9 @@ async function generateAudio(text: string, voiceId: string): Promise<{ base64: s
         text,
         model_id: 'eleven_turbo_v2_5',
         voice_settings: {
-          stability: 0.6,
-          similarity_boost: 0.75,
+          stability: 0.65,
+          similarity_boost: 0.80,
+          speed: 0.9,
         },
       }),
     })
@@ -73,7 +74,9 @@ async function seed() {
   // Collect all scripts: guided voice types + day-type voice scripts
   const allScripts: { type: string; index: number; script: string }[] = []
 
+  const SKIP_TYPES = ['bedtime_story'] // Skip expensive long-form types
   for (const [type, scripts] of Object.entries(VOICE_SCRIPTS)) {
+    if (SKIP_TYPES.includes(type)) continue
     scripts.forEach((script, index) => {
       allScripts.push({ type, index, script })
     })

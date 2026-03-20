@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 
 // Voice ID mapping by guide tone
 export const TONE_VOICES: Record<string, string> = {
-  calm: 'LxoMo9qIEciklO2VEvzv',     // Charlotte - calm and soothing
+  calm: 'jguI6DAHl2kb9EpGEjEx',     // Calm and soothing voice
   neutral: 'flHkNRp1BlvT73UL6gyz',   // Balanced neutral tone
   direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
 }
@@ -95,8 +95,9 @@ export async function generateAudio(script: string, tone: string = 'calm'): Prom
           text: script,
           model_id: 'eleven_turbo_v2_5',
           voice_settings: {
-            stability: 0.6,
-            similarity_boost: 0.75,
+            stability: 0.65,
+            similarity_boost: 0.80,
+            speed: 0.9,
           },
         }),
       }
