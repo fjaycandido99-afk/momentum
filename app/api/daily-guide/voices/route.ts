@@ -59,15 +59,15 @@ function getLibraryCacheKey(type: string, index: number, tone: string): string {
   return `library-${type}-s${index}-${tone}`
 }
 
-// Try user's tone first, then fall back to neutral (most seeded)
+// Try user's tone first, then fall back to calm (default tone)
 async function findCachedAudio(type: string, index: number, tone: string) {
   const primaryKey = getLibraryCacheKey(type, index, tone)
   const hit = await getSharedCached(primaryKey)
   if (hit) return { ...hit, cacheKey: primaryKey, fallback: false }
 
-  // If tone isn't neutral, try neutral as fallback
-  if (tone !== 'neutral') {
-    const fallbackKey = getLibraryCacheKey(type, index, 'neutral')
+  // If tone isn't calm, try calm as fallback (default tone)
+  if (tone !== 'calm') {
+    const fallbackKey = getLibraryCacheKey(type, index, 'calm')
     const fallbackHit = await getSharedCached(fallbackKey)
     if (fallbackHit) return { ...fallbackHit, cacheKey: fallbackKey, fallback: true }
   }

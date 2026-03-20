@@ -123,10 +123,10 @@ export async function POST(request: NextRequest) {
         const alt = await getCachedAudio(`calm-${type}-${tone}-v${i}`)
         if (alt) { cached = alt; break }
       }
-      // Also check old date-based cache keys that may still exist
+      // Also check old date-based cache keys that may still exist (scoped to user's tone)
       if (!cached) {
         const oldKeys = await prisma.audioCache.findFirst({
-          where: { cache_key: { startsWith: `calm-${type}-` } },
+          where: { cache_key: { startsWith: `calm-${type}-${tone}-` } },
           select: { audio: true },
         })
         if (oldKeys) cached = { script: '', audioBase64: oldKeys.audio }

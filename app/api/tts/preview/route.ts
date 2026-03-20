@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid tone' }, { status: 400 })
     }
 
-    const cacheKey = `tone-preview-v1-${tone}`
+    const cacheKey = `tone-preview-v2-${tone}`
 
     // Check DB cache first
     const cached = await getSharedCached(cacheKey)

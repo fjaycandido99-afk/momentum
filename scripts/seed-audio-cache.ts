@@ -26,7 +26,7 @@ if (!ELEVENLABS_KEY) {
 }
 
 // Max entries to generate this run
-const MAX_GENERATE = 110
+const MAX_GENERATE = 30
 
 async function generateAudio(text: string, voiceId: string): Promise<{ base64: string; duration: number } | null> {
   try {
