@@ -14,9 +14,9 @@ import { VOICE_SCRIPTS, DAY_TYPE_VOICE_SCRIPTS } from '../lib/daily-guide/voice-
 const prisma = new PrismaClient()
 
 const TONE_VOICES: Record<string, string> = {
-  direct: 'goT3UYdM9bhm0n2lmKQx',
-  calm: 'XB0fDUnXU5powFXDhCwa',
-  // neutral: 'flHkNRp1BlvT73UL6gyz',  // Skip for now
+  calm: 'LxoMo9qIEciklO2VEvzv',
+  // neutral: 'flHkNRp1BlvT73UL6gyz',
+  // direct: 'goT3UYdM9bhm0n2lmKQx',
 }
 
 const ELEVENLABS_KEY = process.env.ELEVENLABS_API_KEY
@@ -26,7 +26,7 @@ if (!ELEVENLABS_KEY) {
 }
 
 // Max entries to generate this run
-const MAX_GENERATE = 50
+const MAX_GENERATE = 15
 
 async function generateAudio(text: string, voiceId: string): Promise<{ base64: string; duration: number } | null> {
   try {

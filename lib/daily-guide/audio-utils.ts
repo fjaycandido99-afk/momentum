@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 
 // Voice ID mapping by guide tone
 export const TONE_VOICES: Record<string, string> = {
-  calm: 'XB0fDUnXU5powFXDhCwa',     // Charlotte - calm and soothing
+  calm: 'LxoMo9qIEciklO2VEvzv',     // Charlotte - calm and soothing
   neutral: 'flHkNRp1BlvT73UL6gyz',   // Balanced neutral tone
   direct: 'goT3UYdM9bhm0n2lmKQx',   // Direct voice
 }
