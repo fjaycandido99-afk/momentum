@@ -2,7 +2,6 @@
 
 import { Share2 } from 'lucide-react'
 import { EqBars } from '@/components/ui/EqBars'
-import { AudioVisualizer } from '@/components/player/AudioVisualizer'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { useShareCard } from '@/hooks/useShareCard'
 import { generateListeningCard } from '@/hooks/useShareCardTemplates'
@@ -46,16 +45,7 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
         {/* Left: sound visualizer + text */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="w-10 h-10 shrink-0 rounded-full border border-white/25 flex items-center justify-center overflow-hidden">
-            {audioElement ? (
-              <AudioVisualizer
-                audioElement={audioElement}
-                isPlaying={isPlaying}
-                barCount={8}
-                height={16}
-              />
-            ) : (
-              <EqBars height={16} barWidth={2.5} gap={2} barCount={4} color="rgba(255,255,255,0.7)" paused={!isPlaying} />
-            )}
+            <EqBars height={16} barWidth={2.5} gap={2} barCount={4} color="rgba(255,255,255,0.7)" paused={!isPlaying} />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

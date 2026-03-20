@@ -2,7 +2,6 @@
 
 import { Loader2 } from 'lucide-react'
 import { EqBars } from '@/components/ui/EqBars'
-import { AudioVisualizer } from '@/components/player/AudioVisualizer'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { VOICE_GUIDES } from './home-types'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
@@ -212,15 +211,8 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
                   <div className="w-16 h-16 rounded-full border-2 border-white/40 bg-black flex items-center justify-center overflow-hidden">
                     {isLoading ? (
                       <Loader2 className="w-7 h-7 text-white animate-spin" />
-                    ) : isGuideActive && audioElement ? (
-                      <AudioVisualizer
-                        audioElement={audioElement}
-                        isPlaying={true}
-                        barCount={12}
-                        height={24}
-                      />
                     ) : isGuideActive ? (
-                      <EqBars />
+                      <EqBars barCount={5} height={24} barWidth={2.5} gap={2} />
                     ) : (
                       <Icon className="w-7 h-7 text-white" strokeWidth={1.5} />
                     )}
