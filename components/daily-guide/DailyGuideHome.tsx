@@ -264,8 +264,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
     try {
       // Map session types to voices API types
+      // morning_prime uses affirmation audio as placeholder until dedicated audio is seeded
       const voiceTypeMap: Record<SessionType, string> = {
-        morning_prime: 'work_prime',
+        morning_prime: 'affirmation',
         midday_reset: 'midday_reset',
         wind_down: 'wind_down',
         bedtime_story: 'bedtime_story',
