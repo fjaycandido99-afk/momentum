@@ -40,14 +40,15 @@ function getFallbackScript(type: VoiceGuideType): { script: string; index: numbe
 }
 
 // Get fallback day-type script
-function getFallbackDayTypeScript(type: DayTypeVoiceType): { script: string; index: number } {
+function getFallbackDayTypeScript(type: DayTypeVoiceType): { script: string; index: number } | null {
   const scripts = DAY_TYPE_VOICE_SCRIPTS[type]
+  if (!scripts || scripts.length === 0) return null
   const index = getDayOfYear() % scripts.length
   return { script: scripts[index], index }
 }
 
 // Get the script and its pool index for a given type
-function getScriptForType(type: AllVoiceType, isRegularVoice: boolean): { script: string; index: number } {
+function getScriptForType(type: AllVoiceType, isRegularVoice: boolean): { script: string; index: number } | null {
   if (isRegularVoice) {
     return getFallbackScript(type as VoiceGuideType)
   }
@@ -352,7 +353,12 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Get the pre-written script and its pool index
-    const { script: baseScript, index } = getScriptForType(type, isRegularVoice)
+    const scriptResult = getScriptForType(type, isRegularVoice)
+
+    // If no pre-written scripts available (e.g. day-type voices with empty script pool),
+    // try personalized text generation, otherwise return text-only
+    const baseScript = scriptResult?.script || ''
+    const index = scriptResult?.index ?? 0
 
     // 3. Check for personalization (Groq text only, no ElevenLabs)
     const isPrimeType = type.endsWith('_prime')
@@ -369,9 +375,9 @@ export async function POST(request: NextRequest) {
     // The script shown to the user: personalized if available, otherwise base
     const displayScript = personalizedText || baseScript
 
-    // If textOnly, return script without audio
-    if (textOnly) {
-      if (hasDbColumns && !guide[scriptField]) {
+    // If textOnly or no scripts available, return script without audio
+    if (textOnly || !scriptResult) {
+      if (hasDbColumns && displayScript && !guide[scriptField]) {
         await prisma.dailyGuide.update({
           where: { id: guide.id },
           data: { [scriptField]: displayScript },
