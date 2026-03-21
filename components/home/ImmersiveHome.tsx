@@ -1232,7 +1232,7 @@ export function ImmersiveHome() {
 
         // Slide 2: Mindset Wisdom
         slides.push(
-          <WisdomSection key="wisdom-hero" />
+          <WisdomSection key="wisdom-hero" embedded />
         )
 
         // Slide 3: Daily Feature Tip

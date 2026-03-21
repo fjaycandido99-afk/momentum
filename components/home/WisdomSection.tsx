@@ -15,7 +15,7 @@ function dateSeed(dateStr: string): number {
   return Math.abs(hash)
 }
 
-export function WisdomSection() {
+export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
   const mindsetCtx = useMindsetOptional()
   const [expanded, setExpanded] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -106,10 +106,10 @@ export function WisdomSection() {
   if (!dailyQuote) return null
 
   return (
-    <div className="px-5 mt-6">
-      <div className="glass-refined rounded-2xl overflow-hidden">
+    <div className={embedded ? '' : 'px-5 mt-6'}>
+      <div className={`glass-refined rounded-2xl overflow-hidden ${embedded ? 'h-full flex flex-col' : ''}`}>
         {/* Quote Card */}
-        <div className="p-4">
+        <div className={embedded ? 'p-4 flex-1 flex flex-col justify-center' : 'p-4'}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-sm">{config?.icon || '💡'}</span>
@@ -138,8 +138,8 @@ export function WisdomSection() {
           </p>
         </div>
 
-        {/* Expand toggle for reflection */}
-        {dailyQuestion && (
+        {/* Expand toggle for reflection — hidden in embedded/carousel mode */}
+        {!embedded && dailyQuestion && (
           <>
             <button
               onClick={() => setExpanded(!expanded)}
@@ -192,6 +192,13 @@ export function WisdomSection() {
               </div>
             )}
           </>
+        )}
+
+        {/* Compact reflection link in embedded mode */}
+        {embedded && dailyQuestion && (
+          <div className="px-4 pb-3 border-t border-white/[0.06]">
+            <span className="text-[11px] text-white/50 font-medium">Daily Reflection</span>
+          </div>
         )}
       </div>
     </div>
