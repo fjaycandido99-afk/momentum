@@ -141,8 +141,10 @@ export function DailyGuideOnboarding() {
   const [previewingTone, setPreviewingTone] = useState<GuideTone | null>(null)
   const [loadingTone, setLoadingTone] = useState<GuideTone | null>(null)
   const toneAudioRef = useRef<HTMLAudioElement | null>(null)
+  const toneRequestId = useRef(0)
 
   const stopTonePreview = useCallback(() => {
+    toneRequestId.current++
     if (toneAudioRef.current) {
       toneAudioRef.current.pause()
       toneAudioRef.current.src = ''
@@ -161,13 +163,16 @@ export function DailyGuideOnboarding() {
 
     // Stop any existing preview
     stopTonePreview()
+    const thisRequest = ++toneRequestId.current
     setLoadingTone(tone)
 
     try {
       const res = await authFetch(`/api/tts/preview?tone=${tone}`)
+      if (toneRequestId.current !== thisRequest) return
       if (!res.ok) throw new Error('Preview failed')
 
       const blob = await res.blob()
+      if (toneRequestId.current !== thisRequest) return
       const url = URL.createObjectURL(blob)
       const audio = new Audio(url)
 
@@ -178,15 +183,30 @@ export function DailyGuideOnboarding() {
 
       audio.addEventListener('error', () => {
         URL.revokeObjectURL(url)
-        stopTonePreview()
+        if (toneRequestId.current === thisRequest) {
+          stopTonePreview()
+        }
       })
+
+      if (toneRequestId.current !== thisRequest) {
+        URL.revokeObjectURL(url)
+        return
+      }
 
       toneAudioRef.current = audio
       await audio.play()
+      if (toneRequestId.current !== thisRequest) {
+        audio.pause()
+        audio.src = ''
+        URL.revokeObjectURL(url)
+        return
+      }
       setPreviewingTone(tone)
       setLoadingTone(null)
     } catch {
-      setLoadingTone(null)
+      if (toneRequestId.current === thisRequest) {
+        setLoadingTone(null)
+      }
     }
   }, [previewingTone, stopTonePreview])
 
