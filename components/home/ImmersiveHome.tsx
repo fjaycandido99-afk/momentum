@@ -1230,15 +1230,9 @@ export function ImmersiveHome() {
           </button>,
         ]
 
-        // Slide 2: Daily Wellness
+        // Slide 2: Mindset Wisdom
         slides.push(
-          <WellnessWidget
-            key="wellness"
-            journalMood={journalMood}
-            streak={streak}
-            modulesCompletedToday={modulesCompletedToday}
-            hasJournaledToday={hasJournaledToday}
-          />
+          <WisdomSection key="wisdom-hero" />
         )
 
         // Slide 3: Daily Feature Tip
@@ -1382,8 +1376,13 @@ export function ImmersiveHome() {
             )
           case 'wisdom':
             return (
-              <div key="wisdom" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
-                <WisdomSection />
+              <div key="wellness" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
+                <WellnessWidget
+                  journalMood={journalMood}
+                  streak={streak}
+                  modulesCompletedToday={modulesCompletedToday}
+                  hasJournaledToday={hasJournaledToday}
+                />
               </div>
             )
           default:
