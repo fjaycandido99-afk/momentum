@@ -1235,6 +1235,7 @@ export function ImmersiveHome() {
           <WisdomSection key="wisdom-hero" embedded />
         )
 
+
         // Slide 3: Daily Feature Tip
         slides.push(<DailyFeatureTip key="feature-tip" />)
 

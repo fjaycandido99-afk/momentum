@@ -5,54 +5,33 @@ import { FeatureHint } from '@/components/ui/FeatureHint'
 
 interface HeroCarouselProps {
   children: ReactNode[]
-  /** Auto-advance interval in ms (default 5000) */
+  /** Auto-advance interval in ms (default 6000) */
   autoPlayMs?: number
 }
 
-export function HeroCarousel({ children, autoPlayMs = 5000 }: HeroCarouselProps) {
-  const scrollRef = useRef<HTMLDivElement>(null)
+export function HeroCarousel({ children, autoPlayMs = 6000 }: HeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const count = children.length
   const pausedUntilRef = useRef(0)
   const activeIndexRef = useRef(0)
 
-  // Keep ref in sync for the interval callback
   activeIndexRef.current = activeIndex
 
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current
-    if (!el) return
-    const index = Math.round(el.scrollLeft / el.offsetWidth)
-    setActiveIndex(Math.max(0, Math.min(index, count - 1)))
-  }, [count])
-
-  useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-    el.addEventListener('scroll', handleScroll, { passive: true })
-    return () => el.removeEventListener('scroll', handleScroll)
-  }, [handleScroll])
-
-  const scrollTo = useCallback((index: number) => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollTo({ left: index * el.offsetWidth, behavior: 'smooth' })
+  const goTo = useCallback((index: number) => {
+    setActiveIndex(index)
   }, [])
 
-  // Pause auto-play for a duration after user interaction
-  const pauseAutoPlay = useCallback((durationMs: number = 10000) => {
+  // Pause auto-play when user interacts
+  const pauseAutoPlay = useCallback((durationMs: number = 15000) => {
     pausedUntilRef.current = Date.now() + durationMs
   }, [])
 
-  // Auto-advance with single stable interval
+  // Auto-advance
   useEffect(() => {
     if (count <= 1) return
     const interval = setInterval(() => {
       if (Date.now() < pausedUntilRef.current) return
-      const el = scrollRef.current
-      if (!el) return
-      const next = (activeIndexRef.current + 1) % count
-      el.scrollTo({ left: next * el.offsetWidth, behavior: 'smooth' })
+      setActiveIndex(prev => (prev + 1) % count)
     }, autoPlayMs)
     return () => clearInterval(interval)
   }, [count, autoPlayMs])
@@ -62,18 +41,22 @@ export function HeroCarousel({ children, autoPlayMs = 5000 }: HeroCarouselProps)
 
   return (
     <div className="mt-4 mb-8 liquid-reveal section-fade-bg">
+      {/* Slideshow container — renders all slides stacked, only active is visible */}
       <div
-        ref={scrollRef}
-        className="flex overflow-x-auto scrollbar-hide"
-        style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
-        onTouchStart={() => pauseAutoPlay(10000)}
-        onMouseDown={() => pauseAutoPlay(10000)}
+        className="relative px-6"
+        onTouchStart={() => pauseAutoPlay(15000)}
+        onClick={() => pauseAutoPlay(15000)}
+        onFocus={() => pauseAutoPlay(30000)}
       >
         {children.map((child, i) => (
           <div
             key={i}
-            className="w-full flex-shrink-0 px-6 card-enter h-[11rem]"
-            style={{ scrollSnapAlign: 'center', animationDelay: `${i * 0.1}s` }}
+            className={`transition-all duration-500 ease-in-out ${
+              i === activeIndex
+                ? 'opacity-100 relative'
+                : 'opacity-0 absolute inset-0 px-6 pointer-events-none'
+            }`}
+            aria-hidden={i !== activeIndex}
           >
             {child}
           </div>
@@ -86,7 +69,7 @@ export function HeroCarousel({ children, autoPlayMs = 5000 }: HeroCarouselProps)
           <button
             key={i}
             aria-label={`Go to slide ${i + 1}`}
-            onClick={() => { pauseAutoPlay(10000); scrollTo(i) }}
+            onClick={() => { pauseAutoPlay(15000); goTo(i) }}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <span className={`block rounded-full transition-all duration-300 ${
@@ -97,7 +80,7 @@ export function HeroCarousel({ children, autoPlayMs = 5000 }: HeroCarouselProps)
           </button>
         ))}
       </div>
-      <div className="px-6"><FeatureHint id="home-hero-swipe" text="Swipe for your Daily Guide, Path, Week & Quote" mode="once" /></div>
+      <div className="px-6"><FeatureHint id="home-hero-swipe" text="Tap dots to switch slides" mode="once" /></div>
     </div>
   )
 }
