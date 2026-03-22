@@ -1,11 +1,18 @@
 import { ImageResponse } from 'next/og'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 export const alt = 'Voxu - Your AI Audio Coach'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
 export default async function Image() {
+  // Read the background image and convert to base64 data URI
+  const bgPath = join(process.cwd(), 'public', 'og-bg.jpg')
+  const bgBuffer = await readFile(bgPath)
+  const bgBase64 = `data:image/jpeg;base64,${bgBuffer.toString('base64')}`
+
   return new ImageResponse(
     (
       <div
@@ -22,7 +29,7 @@ export default async function Image() {
       >
         {/* Background image */}
         <img
-          src={`${process.env.NEXT_PUBLIC_APP_URL || 'https://voxu.app'}/og-bg.jpg`}
+          src={bgBase64}
           style={{
             position: 'absolute',
             top: 0,
