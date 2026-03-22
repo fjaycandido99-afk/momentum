@@ -1,13 +1,11 @@
 <svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="192" height="192" rx="40" fill="#0a0a0f"/>
-  <!-- Outer ring - solid, bold -->
-  <circle cx="96" cy="96" r="70" stroke="rgba(255,255,255,0.9)" stroke-width="4.5" fill="none"/>
-  <!-- Middle ring -->
-  <circle cx="96" cy="96" r="50" stroke="rgba(255,255,255,0.92)" stroke-width="5" fill="none"/>
-  <!-- Inner ring -->
-  <circle cx="96" cy="96" r="30" stroke="rgba(255,255,255,0.95)" stroke-width="5.5" fill="none"/>
-  <!-- Center dot with glow -->
-  <circle cx="96" cy="96" r="10" fill="white"/>
-  <circle cx="96" cy="96" r="14" fill="rgba(255,255,255,0.15)"/>
+  <!-- Outer ring - dashed -->
+  <circle cx="96" cy="96" r="68" stroke="rgba(255,255,255,0.8)" stroke-width="2.5" fill="none" stroke-dasharray="10 5"/>
+  <!-- Middle ring - dotted -->
+  <circle cx="96" cy="96" r="52" stroke="rgba(255,255,255,0.9)" stroke-width="2.5" fill="none" stroke-dasharray="3 5"/>
+  <!-- Inner ring - dashed -->
+  <circle cx="96" cy="96" r="36" stroke="rgba(255,255,255,0.85)" stroke-width="2.5" fill="none" stroke-dasharray="8 4"/>
+  <!-- Center dot -->
   <circle cx="96" cy="96" r="10" fill="white"/>
 </svg>

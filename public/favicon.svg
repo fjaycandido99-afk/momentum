@@ -1,7 +1,9 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="32" height="32" rx="6" fill="#0a0a0f"/>
-  <!-- Two visible rings + bold center for tiny size -->
-  <circle cx="16" cy="16" r="12" stroke="rgba(255,255,255,0.9)" stroke-width="1.8" fill="none"/>
-  <circle cx="16" cy="16" r="7.5" stroke="rgba(255,255,255,0.95)" stroke-width="2" fill="none"/>
+  <!-- Outer ring - dashed -->
+  <circle cx="16" cy="16" r="12" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" fill="none" stroke-dasharray="3 2"/>
+  <!-- Inner ring - dotted -->
+  <circle cx="16" cy="16" r="7.5" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" fill="none" stroke-dasharray="1.5 2"/>
+  <!-- Center dot -->
   <circle cx="16" cy="16" r="3" fill="white"/>
 </svg>
