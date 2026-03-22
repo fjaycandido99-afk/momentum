@@ -4,7 +4,6 @@ import { Wind, Sparkles, Heart, Moon, Anchor, Leaf, Target, HeartHandshake, Shie
 
 export type Mode = 'focus' | 'relax' | 'sleep' | 'energy'
 
-export type { ExtendedMood } from '@/lib/mood-recommendations'
 
 export interface VideoItem {
   id: string
