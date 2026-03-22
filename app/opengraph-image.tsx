@@ -83,7 +83,7 @@ export default async function Image() {
                 width: 70,
                 height: 70,
                 borderRadius: '50%',
-                border: '3px dotted rgba(255,255,255,0.5)',
+                border: '3px dashed rgba(255,255,255,0.5)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
