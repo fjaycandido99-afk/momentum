@@ -7,7 +7,7 @@ const TIPS = [
   { icon: Bot, title: 'AI Coach', description: 'Get personalized coaching and accountability check-ins', href: '/coach', accent: 'bg-violet-400/20 text-violet-300' },
   { icon: PenLine, title: 'Journal', description: 'Reflect daily with guided, free, dream & chat modes', href: '/journal', accent: 'bg-emerald-400/20 text-emerald-300' },
   { icon: BarChart3, title: 'Progress', description: 'Track your streaks, XP, achievements & wellness score', href: '/progress', accent: 'bg-sky-400/20 text-sky-300' },
-  { icon: Headphones, title: 'Soundscapes', description: 'Layer ambient sounds for focus and relaxation', href: '/focus', accent: 'bg-teal-400/20 text-teal-300' },
+  { icon: Headphones, title: 'Soundscapes', description: 'Layer ambient sounds for focus and relaxation', href: '/', accent: 'bg-teal-400/20 text-teal-300' },
   { icon: Bookmark, title: 'Saved Content', description: 'Revisit your saved quotes, reflections & favorites', href: '/saved', accent: 'bg-amber-400/20 text-amber-300' },
   { icon: Compass, title: 'Mindset Path', description: 'Explore your philosophical mindset and its wisdom', href: '/mindset-selection', accent: 'bg-rose-400/20 text-rose-300' },
   { icon: Settings, title: 'Settings', description: 'Customize your schedule, tone, and daily flow', href: '/settings', accent: 'bg-slate-400/20 text-slate-300' },
