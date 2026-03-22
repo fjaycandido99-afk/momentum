@@ -143,15 +143,42 @@ export default function CoachPage() {
 
   const coachName = getCoachName(mindsetCtx?.mindset)
   const defaultGreeting = `Hey! I'm **${coachName}**, your Voxu mentor. How are you feeling today? I can help with motivation, goal-setting, stress, or just be here to listen.`
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: mindsetCtx ? (COACH_GREETINGS[mindsetCtx.mindset] || defaultGreeting) : defaultGreeting,
-      timestamp: Date.now(),
-    }
-  ])
 
-  // Update greeting once mindset loads (it may load after initial render)
+  // Persist coach conversation for the whole day via localStorage
+  const todayKey = new Date().toISOString().split('T')[0]
+  const storageKey = `voxu_coach_convo_${todayKey}`
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const saved = localStorage.getItem(storageKey)
+      if (saved) {
+        const parsed = JSON.parse(saved) as Message[]
+        if (parsed.length > 0) return parsed
+      }
+    } catch {}
+    const greeting = mindsetCtx ? (COACH_GREETINGS[mindsetCtx.mindset] || defaultGreeting) : defaultGreeting
+    return [{ role: 'assistant', content: greeting, timestamp: Date.now() }]
+  })
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify(messages)) } catch {}
+  }, [messages, storageKey])
+
+  // Clean up old days' conversations (keep only today)
+  useEffect(() => {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key?.startsWith('voxu_coach_convo_') && key !== storageKey) {
+          localStorage.removeItem(key)
+        }
+      }
+    } catch {}
+  }, [storageKey])
+
+  // Update greeting once mindset loads (only if still on initial greeting)
   useEffect(() => {
     if (!mindsetCtx) return
     setMessages(prev => {
@@ -467,11 +494,16 @@ export default function CoachPage() {
             onChange={(e) => {
               setInput(e.target.value)
               setEmotionWithDecay(e.target.value.length > 0 ? 'listening' : 'idle')
+              // Auto-grow
+              const el = e.target
+              el.style.height = 'auto'
+              el.style.height = Math.min(el.scrollHeight, 128) + 'px'
             }}
             onKeyDown={handleKeyDown}
             placeholder={chatMode === 'accountability' ? 'Share your progress...' : 'Ask your coach...'}
-            className="flex-1 p-3 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-amber-500/20 resize-none max-h-32 transition-all"
+            className="flex-1 p-3 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-amber-500/20 resize-none transition-all"
             rows={1}
+            style={{ maxHeight: '128px' }}
           />
           <button
             aria-label={isLoading ? 'Sending...' : 'Send message'}

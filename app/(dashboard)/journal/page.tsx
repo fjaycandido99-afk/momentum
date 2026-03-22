@@ -859,21 +859,32 @@ function JournalContent() {
               </div>
 
               {/* Pinned input at bottom of card */}
-              <div className="flex gap-2 p-3 border-t border-white/15">
-                <input
-                  type="text"
+              <div className="flex items-end gap-2 p-3 border-t border-white/15">
+                <textarea
                   value={chatInput}
-                  onChange={e => setChatInput(e.target.value)}
+                  onChange={e => {
+                    setChatInput(e.target.value)
+                    // Auto-grow textarea
+                    const el = e.target
+                    el.style.height = 'auto'
+                    el.style.height = Math.min(el.scrollHeight, 120) + 'px'
+                  }}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage() } }}
                   placeholder="What's on your mind..."
                   autoCapitalize="sentences"
                   enterKeyHint="send"
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white text-sm placeholder-white/60 focus:outline-none focus:border-white/60 focus-visible:ring-1 focus-visible:ring-white/20"
+                  rows={1}
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/15 text-white text-sm placeholder-white/50 focus:outline-none focus:border-violet-500/40 focus:bg-white/[0.08] focus-visible:ring-1 focus-visible:ring-violet-500/20 resize-none transition-all"
+                  style={{ maxHeight: '120px' }}
                 />
                 <button
                   onClick={sendChatMessage}
                   disabled={!chatInput.trim() || chatLoading}
-                  className="p-3 rounded-xl bg-violet-500/20 text-violet-300 hover:bg-violet-500/30 transition-colors disabled:opacity-30"
+                  className={`p-3 rounded-xl transition-all ${
+                    chatInput.trim() && !chatLoading
+                      ? 'bg-violet-500/25 border border-violet-500/30 text-violet-300 hover:bg-violet-500/35'
+                      : 'bg-white/5 text-white/30'
+                  }`}
                 >
                   <Send className="w-4 h-4" />
                 </button>
