@@ -101,7 +101,6 @@ export async function sendAPNsNotification(
       },
       badge: payload.badge ?? 1,
       sound: payload.sound ?? 'default',
-      'mutable-content': 1,
     },
     ...payload.data,
   })
