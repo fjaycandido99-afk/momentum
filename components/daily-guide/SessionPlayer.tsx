@@ -300,20 +300,7 @@ export function SessionPlayer({
     audioContext?.pauseMusic()
   }, [])
 
-  // Silent keepalive to prevent iOS WKWebView from suspending audio in background
-  useEffect(() => {
-    if (!isPlaying) return
-    let keepalive: HTMLAudioElement | null = null
-    try {
-      keepalive = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==')
-      keepalive.loop = true
-      keepalive.volume = 0.01
-      keepalive.play().catch(() => {})
-    } catch {}
-    return () => {
-      if (keepalive) { keepalive.pause(); keepalive.src = '' }
-    }
-  }, [isPlaying])
+  // Keepalive removed — iOS AVAudioSession .playback category handles background audio
 
   // Set up Media Session for lock screen / background playback controls
   useEffect(() => {

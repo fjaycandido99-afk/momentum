@@ -108,27 +108,11 @@ export function useAudioSideEffects({ state, refs, audioContext, dispatch }: Use
         ).catch(() => {})
       }
 
-      // Silent keepalive
-      if (!keepaliveRef.current) {
-        try {
-          const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==')
-          audio.loop = true
-          audio.volume = 0.01
-          audio.play().catch(() => {})
-          keepaliveRef.current = audio
-        } catch {}
-      }
+      // Keepalive removed — iOS AVAudioSession .playback category handles background audio
     } else {
       // Notify AudioContext
       if (audioContext) {
         audioContext.setSessionActive(false)
-      }
-
-      // Stop keepalive
-      if (keepaliveRef.current) {
-        keepaliveRef.current.pause()
-        keepaliveRef.current.src = ''
-        keepaliveRef.current = null
       }
       if (wakeLockRef.current) {
         try { wakeLockRef.current.release() } catch {}
