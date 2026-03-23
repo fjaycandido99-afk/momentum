@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Play, Pause, ChevronDown, Loader2, Lock } from 'lucide-react'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { CircularVisualizer } from './CircularVisualizer'
-import { sourceCache, contextCache, analyserCache, type AudioAnalyserLike } from './audio-analyser-cache'
+import { sourceCache, contextCache, analyserCache, BufferAnalyser, type AudioAnalyserLike } from './audio-analyser-cache'
 import { VOICE_GUIDES } from '@/components/home/home-types'
 import { GUIDE_LAYERS } from '@/components/home/GuidedSection'
 import { isContentFree } from '@/lib/subscription-constants'
@@ -56,9 +56,30 @@ export function GuidedPlayer({
 
   // Keepalive handled by useAudioSideEffects at the provider level — no duplicate needed here
 
-  // Connect audio element to Web Audio analyser for real audio-reactive visualization
+  // Connect audio element to analyser for real audio-reactive visualization
+  // On native: use BufferAnalyser (no createMediaElementSource = no audio artifacts)
+  // On web: use Web Audio API createMediaElementSource for true FFT data
   useEffect(() => {
     if (!audioElement) { setAnalyser(null); return }
+
+    if (IS_NATIVE) {
+      // Decode audio into AudioBuffer for BufferAnalyser — audio-reactive without Web Audio routing
+      const setup = async () => {
+        try {
+          const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+          const response = await fetch(audioElement.src)
+          const arrayBuffer = await response.arrayBuffer()
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+          setAnalyser(new BufferAnalyser(audioBuffer, audioElement, 64))
+          audioCtx.close().catch(() => {})
+        } catch {
+          setAnalyser(null)
+        }
+      }
+      setup()
+      return
+    }
+
     try {
       let audioCtx = contextCache.get(audioElement)
       let source = sourceCache.get(audioElement)

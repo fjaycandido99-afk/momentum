@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { ChevronDown, Play, Pause, RotateCcw, Check } from 'lucide-react'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { CircularVisualizer } from '@/components/player/CircularVisualizer'
-import type { AudioAnalyserLike } from '@/components/player/audio-analyser-cache'
+import { BufferAnalyser, type AudioAnalyserLike } from '@/components/player/audio-analyser-cache'
 import type { SessionType } from '@/lib/daily-guide/decision-tree'
 
 const SESSION_META: Record<SessionType, { label: string; subtitle: string }> = {
@@ -51,6 +51,26 @@ function useWebPlayer(audioBase64: string | null, onComplete: () => void) {
   const setupAnalyser = useCallback(() => {
     if (setupDone.current || !audioRef.current) return
     setupDone.current = true
+
+    if (IS_NATIVE) {
+      // Use BufferAnalyser on native — audio-reactive without createMediaElementSource artifacts
+      const audio = audioRef.current
+      const setup = async () => {
+        try {
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+          const response = await fetch(audio.src)
+          const arrayBuffer = await response.arrayBuffer()
+          const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
+          setAnalyser(new BufferAnalyser(audioBuffer, audio, 64))
+          ctx.close().catch(() => {})
+        } catch {
+          // Falls through to simulated mode
+        }
+      }
+      setup()
+      return
+    }
+
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
       if (ctx.state === 'suspended') ctx.resume().catch(() => {})
