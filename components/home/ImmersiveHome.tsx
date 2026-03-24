@@ -856,6 +856,10 @@ export function ImmersiveHome() {
     const nextVideo = pl.videos[nextIndex]
     if (!nextVideo) return
 
+    // Block skip to locked content
+    const contentType = pl.type === 'motivation' ? 'motivation' : 'music'
+    if (!isContentFree(contentType, nextIndex)) return
+
     let bg: string | undefined
     if (pl.type === 'motivation') {
       const bgs = getTodaysBackgrounds()
@@ -877,7 +881,7 @@ export function ImmersiveHome() {
     } else {
       audioContext?.setLastPlayed({ type: 'music', genreId: pl.genreId, genreWord: pl.genreWord, videoId: nextVideo.youtubeId, label: pl.genreWord || '', playlistIndex: nextIndex })
     }
-  }, [audioState.currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer, audioContext, dispatch])
+  }, [audioState.currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer, audioContext, dispatch, isContentFree])
 
   const handleSkipPrevious = useCallback(() => {
     const pl = audioState.currentPlaylist
@@ -885,6 +889,10 @@ export function ImmersiveHome() {
     const prevIndex = pl.index - 1
     const prevVideo = pl.videos[prevIndex]
     if (!prevVideo) return
+
+    // Block skip to locked content
+    const contentType = pl.type === 'motivation' ? 'motivation' : 'music'
+    if (!isContentFree(contentType, prevIndex)) return
 
     let bg: string | undefined
     if (pl.type === 'motivation') {
@@ -907,7 +915,7 @@ export function ImmersiveHome() {
     } else {
       audioContext?.setLastPlayed({ type: 'music', genreId: pl.genreId, genreWord: pl.genreWord, videoId: prevVideo.youtubeId, label: pl.genreWord || '', playlistIndex: prevIndex })
     }
-  }, [audioState.currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer, audioContext, dispatch])
+  }, [audioState.currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer, audioContext, dispatch, isContentFree])
 
   // Keep autoSkipNextRef in sync
   useEffect(() => {

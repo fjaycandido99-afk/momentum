@@ -253,7 +253,9 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
     trackFeature('daily_guide', 'use')
     setLoadingSession(session)
 
-    const isTextOnly = subscription && !subscription.isPremium && !subscription.checkAccess('ai_voice')
+    // Free users get audio for morning_prime only, other sessions are text-only
+    const isFreeUser = subscription && !subscription.isPremium && !subscription.checkAccess('ai_voice')
+    const isTextOnly = isFreeUser && session !== 'morning_prime'
 
     // Guest tone preference
     let guestTone: string | undefined
@@ -496,7 +498,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
             onPlay={() => playSession(activeSession)}
             onComplete={() => completeSession(activeSession)}
             audioBase64={sessionAudio[activeSession]?.audioBase64}
-            textOnly={!!(subscription && !subscription.isPremium && !subscription.checkAccess('ai_voice'))}
+            textOnly={!!(subscription && !subscription.isPremium && !subscription.checkAccess('ai_voice') && activeSession !== 'morning_prime')}
           />
 
           {/* Smart Nudge */}
@@ -554,7 +556,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 onPlay={() => playSession(s.session.id)}
                 onComplete={() => completeSession(s.session.id)}
                 audioBase64={sessionAudio[s.session.id]?.audioBase64}
-                textOnly={!!(subscription && !subscription.isPremium && !subscription.checkAccess('ai_voice'))}
+                textOnly={!!(subscription && !subscription.isPremium && !subscription.checkAccess('ai_voice') && s.session.id !== 'morning_prime')}
               />
             ))}
         </div>
