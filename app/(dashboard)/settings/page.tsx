@@ -395,7 +395,8 @@ function SettingsContent() {
         >
           {/* User Type */}
           <div>
-            <p className="text-sm text-white/85 mb-3">I am a</p>
+            <p className="text-sm text-white/85 mb-1">I am a</p>
+            <p className="text-[11px] text-white/40 mb-3">Personalizes your daily guide content</p>
             <div className="grid grid-cols-3 gap-2">
               {USER_TYPES.map((type) => {
                 const Icon = type.icon
@@ -421,7 +422,8 @@ function SettingsContent() {
           {/* Work Days (for professional/hybrid) */}
           {(userType === 'professional' || userType === 'hybrid') && (
             <div>
-              <p className="text-sm text-white/85 mb-3">Work Days</p>
+              <p className="text-sm text-white/85 mb-1">Work Days</p>
+              <p className="text-[11px] text-white/40 mb-3">Off days get a lighter, rest-focused guide</p>
               <div className="grid grid-cols-7 gap-1.5">
                 {DAYS.map((day) => (
                   <button
@@ -445,7 +447,8 @@ function SettingsContent() {
           {/* Class Days (for student/hybrid) */}
           {(userType === 'student' || userType === 'hybrid') && (
             <div>
-              <p className="text-sm text-white/85 mb-3">Class Days</p>
+              <p className="text-sm text-white/85 mb-1">Class Days</p>
+              <p className="text-[11px] text-white/40 mb-3">Study-focused modules on class days</p>
               <div className="grid grid-cols-7 gap-1.5">
                 {DAYS.map((day) => (
                   <button
@@ -469,7 +472,8 @@ function SettingsContent() {
           {/* Schedule Times */}
           <div className="space-y-3">
             <div>
-              <label htmlFor="wake-time" className="block text-sm text-white/70 mb-1.5">Wake time</label>
+              <label htmlFor="wake-time" className="block text-sm text-white/70 mb-0.5">Wake time</label>
+              <p className="text-[11px] text-white/40 mb-1.5">Sets your morning reminder & bedtime</p>
               <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                 <input
                   id="wake-time"
@@ -497,7 +501,8 @@ function SettingsContent() {
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <label htmlFor="work-end-time" className="block text-sm text-white/70 mb-1.5">Work ends</label>
+                  <label htmlFor="work-end-time" className="block text-sm text-white/70 mb-0.5">Work ends</label>
+                  <p className="text-[11px] text-white/40 mb-1.5">Evening wind-down reminder</p>
                   <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                     <input
                       id="work-end-time"
