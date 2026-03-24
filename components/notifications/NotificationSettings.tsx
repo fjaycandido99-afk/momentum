@@ -21,6 +21,7 @@ import {
   cancelReminder,
   cancelAllReminders,
   getPendingReminders,
+  updateRemindersFromPreferences,
   NOTIFICATION_IDS,
 } from '@/lib/notifications'
 
@@ -196,30 +197,34 @@ export function NotificationSettings() {
         } else {
           const granted = await initNotifications()
           if (granted) {
-            let morningHour = 7, morningMin = 0
-            let eveningHour = 18, eveningMin = 0
-
             try {
               const prefsRes = await fetch('/api/daily-guide/preferences')
               if (prefsRes.ok) {
                 const prefsData = await prefsRes.json()
-                if (prefsData.wake_time) {
-                  const [h, m] = prefsData.wake_time.split(':').map(Number)
-                  const totalMin = h * 60 + (m || 0) + 15
-                  morningHour = Math.floor(totalMin / 60)
-                  morningMin = totalMin % 60
-                }
-                if (prefsData.work_end_time) {
-                  const [h, m] = prefsData.work_end_time.split(':').map(Number)
-                  eveningHour = h
-                  eveningMin = m || 0
-                }
+                await updateRemindersFromPreferences({
+                  daily_reminder: true,
+                  reminder_time: prefsData.reminder_time || '07:00',
+                  work_end_time: prefsData.work_end_time,
+                  wake_time: prefsData.wake_time,
+                  bedtime_reminder_enabled: prefsData.bedtime_reminder_enabled ?? true,
+                })
+              } else {
+                // Fallback defaults
+                await updateRemindersFromPreferences({
+                  daily_reminder: true,
+                  reminder_time: '07:00',
+                  wake_time: '07:00',
+                  bedtime_reminder_enabled: true,
+                })
               }
-            } catch {}
-
-            await scheduleMorningReminder(morningHour, morningMin)
-            await scheduleEveningReminder(eveningHour, eveningMin)
-            await scheduleWeeklyReviewReminder(10, 0)
+            } catch {
+              await updateRemindersFromPreferences({
+                daily_reminder: true,
+                reminder_time: '07:00',
+                wake_time: '07:00',
+                bedtime_reminder_enabled: true,
+              })
+            }
             setIsSubscribed(true)
             setPermission('granted')
           } else {
