@@ -471,20 +471,6 @@ function SettingsContent() {
 
           {/* Schedule Times */}
           <div className="space-y-3">
-            <div>
-              <label htmlFor="wake-time" className="block text-sm text-white/70 mb-0.5">Wake time</label>
-              <p className="text-[11px] text-white/40 mb-1.5">Sets your morning reminder & bedtime</p>
-              <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-                <input
-                  id="wake-time"
-                  type="time"
-                  value={wakeTime}
-                  onChange={(e) => setWakeTime(e.target.value)}
-                  className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                  style={{ colorScheme: 'dark' }}
-                />
-              </div>
-            </div>
             {(userType === 'professional' || userType === 'hybrid') && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="min-w-0">
@@ -777,18 +763,20 @@ function SettingsContent() {
                   />
                 </button>
               </div>
-              {dailyReminder && (
-                <div className="mt-3 h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
+              <div className="mt-3">
+                <label htmlFor="wake-time-notif" className="block text-[11px] text-white/40 mb-1.5">Wake time</label>
+                <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                   <input
+                    id="wake-time-notif"
                     type="time"
-                    value={reminderTime}
-                    onChange={(e) => setReminderTime(e.target.value)}
-                    aria-label="Reminder time"
+                    value={wakeTime}
+                    onChange={(e) => { setWakeTime(e.target.value); setReminderTime(e.target.value) }}
+                    aria-label="Wake time"
                     className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
                     style={{ colorScheme: 'dark' }}
                   />
                 </div>
-              )}
+              </div>
             </div>
 
             <div>
