@@ -153,7 +153,7 @@ export async function scheduleMorningReminder(hour: number, minute: number): Pro
     hour,
     minute,
     actionTypeId: 'DAILY_REMINDER',
-    extra: { route: '/guide', action: 'morning' },
+    extra: { route: '/daily-guide', action: 'morning' },
   })
 }
 
@@ -166,7 +166,7 @@ export async function scheduleEveningReminder(hour: number, minute: number): Pro
     hour,
     minute,
     actionTypeId: 'JOURNAL_REMINDER',
-    extra: { route: '/guide', action: 'evening' },
+    extra: { route: '/daily-guide', action: 'evening' },
   })
 }
 
@@ -190,7 +190,7 @@ export async function scheduleCheckpointReminder(
     hour,
     minute,
     actionTypeId: 'DAILY_REMINDER',
-    extra: { route: '/guide', action: `checkpoint_${checkpointNumber}` },
+    extra: { route: '/daily-guide', action: `checkpoint_${checkpointNumber}` },
   })
 }
 
@@ -204,7 +204,7 @@ export async function scheduleWeeklyReviewReminder(hour: number, minute: number)
     minute,
     weekday: 1, // Sunday
     actionTypeId: 'JOURNAL_REMINDER',
-    extra: { route: '/guide', action: 'weekly_review' },
+    extra: { route: '/progress', action: 'weekly_review' },
   })
 }
 
@@ -217,7 +217,7 @@ export async function scheduleStreakReminder(hour: number, minute: number): Prom
     hour,
     minute,
     actionTypeId: 'DAILY_REMINDER',
-    extra: { route: '/guide', action: 'streak' },
+    extra: { route: '/daily-guide', action: 'streak' },
   })
 }
 
@@ -230,7 +230,7 @@ export async function scheduleBedtimeReminder(hour: number, minute: number): Pro
     hour,
     minute,
     actionTypeId: 'DAILY_REMINDER',
-    extra: { route: '/guide', action: 'bedtime' },
+    extra: { route: '/daily-guide', action: 'bedtime' },
   })
 }
 
@@ -348,7 +348,7 @@ export async function updateSmartReminders(nudgeType?: string): Promise<void> {
       minute: 0,
       repeats: false,
       actionTypeId: 'DAILY_REMINDER',
-      extra: { route: '/guide', action: 'streak' },
+      extra: { route: '/daily-guide', action: 'streak' },
     })
     console.log('[Notifications] Smart streak reminder scheduled')
   }
