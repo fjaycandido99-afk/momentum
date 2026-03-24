@@ -487,8 +487,7 @@ function SettingsContent() {
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <label htmlFor="work-end-time" className="block text-sm text-white/70 mb-0.5">Work ends</label>
-                  <p className="text-[11px] text-white/40 mb-1.5">Evening wind-down reminder</p>
+                  <label htmlFor="work-end-time" className="block text-sm text-white/70 mb-1.5">Work ends</label>
                   <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                     <input
                       id="work-end-time"
