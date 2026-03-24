@@ -932,14 +932,12 @@ export function ImmersiveHome() {
     haptic('light')
     trackFeature('soundscapes', 'use')
     if (isLocked) {
-      // Show educational tooltip first (once per session), then proceed
       if (featureTooltipCtx?.showFeatureTooltip('all_content')) return
       stopPreview()
       setPaywallContentName(item.label)
-      setPreviewUnlockCallback(() => () => {
-        createSoundscapePlayer(item.youtubeId)
-        dispatch({ type: 'SHOW_SOUNDSCAPE_PLAYER' })
-      })
+      setPreviewUnlockCallback(() => () => handleSoundscapePlay(item, false))
+      startPreview()
+      return
     }
 
     // Stop guide audio imperatively
@@ -961,8 +959,6 @@ export function ImmersiveHome() {
     createSoundscapePlayer(item.youtubeId)
 
     audioContext?.setLastPlayed({ type: 'soundscape', soundscapeId: item.id, label: item.label })
-
-    if (isLocked) startPreview()
   }, [isPlaying, createSoundscapePlayer, stopPreview, startPreview, audioContext, dispatch])
 
   const handleSoundscapeReopen = useCallback(() => {
@@ -988,11 +984,10 @@ export function ImmersiveHome() {
       stopPreview()
       setPaywallContentName(video.title)
       setPreviewUnlockCallback(() => () => handlePlayMotivation(video, index, topic))
-      handlePlayMotivation(video, index, topic)
       startPreview()
-    } else {
-      handlePlayMotivation(video, index, topic)
+      return
     }
+    handlePlayMotivation(video, index, topic)
   }, [stopPreview, startPreview, topicName, motivationByTopic, motivationVideos, backgrounds, createBgMusicPlayer, audioContext, dispatch])
 
   const handleMusicGenrePlay = useCallback((video: VideoItem, index: number, genreId: string, genreWord: string, isLocked: boolean) => {
@@ -1001,11 +996,10 @@ export function ImmersiveHome() {
       stopPreview()
       setPaywallContentName(video.title)
       setPreviewUnlockCallback(() => () => handlePlayMusic(video, index, genreId, genreWord))
-      handlePlayMusic(video, index, genreId, genreWord)
       startPreview()
-    } else {
-      handlePlayMusic(video, index, genreId, genreWord)
+      return
     }
+    handlePlayMusic(video, index, genreId, genreWord)
   }, [stopPreview, startPreview, genreVideos, genreBackgrounds, backgrounds, createBgMusicPlayer, audioContext, dispatch])
 
   return (
