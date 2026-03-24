@@ -348,7 +348,7 @@ export async function updateSmartReminders(nudgeType?: string): Promise<void> {
       minute: 0,
       repeats: false,
       actionTypeId: 'DAILY_REMINDER',
-      extra: { route: '/daily-guide', action: 'streak' },
+      extra: { route: '/', action: 'streak' },
     })
     console.log('[Notifications] Smart streak reminder scheduled')
   }
