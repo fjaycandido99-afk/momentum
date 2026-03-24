@@ -52,8 +52,8 @@ export function useNativePush() {
         if (route) {
           router.push(routeMap[route] || route)
         } else {
-          // Default: open daily guide for morning/evening notifications
-          router.push('/daily-guide')
+          // Default: open home
+          router.push('/')
         }
       }
     )

@@ -190,7 +190,7 @@ export async function scheduleCheckpointReminder(
     hour,
     minute,
     actionTypeId: 'DAILY_REMINDER',
-    extra: { route: '/daily-guide', action: `checkpoint_${checkpointNumber}` },
+    extra: { route: '/', action: `checkpoint_${checkpointNumber}` },
   })
 }
 
@@ -217,7 +217,7 @@ export async function scheduleStreakReminder(hour: number, minute: number): Prom
     hour,
     minute,
     actionTypeId: 'DAILY_REMINDER',
-    extra: { route: '/daily-guide', action: 'streak' },
+    extra: { route: '/', action: 'streak' },
   })
 }
 
