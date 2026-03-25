@@ -141,11 +141,11 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
                 key={item.id}
                 data-sound-id={item.id}
                 onClick={() => {
-                  if (item.id !== soundId) {
-                    onSwitchSound(item.id, item.label, item.subtitle, item.youtubeId)
-                  }
+                  if (item.id === soundId) return
+                  if (isLocked) return // Block locked soundscapes
+                  onSwitchSound(item.id, item.label, item.subtitle, item.youtubeId)
                 }}
-                className="flex flex-col items-center gap-1.5 shrink-0"
+                className={`flex flex-col items-center gap-1.5 shrink-0 ${isLocked && !isActive ? 'opacity-50' : ''}`}
               >
                 <div className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${
                   isActive
