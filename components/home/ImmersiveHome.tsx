@@ -518,6 +518,9 @@ export function ImmersiveHome() {
     restoreStartSecondsRef.current = lastPlayed.currentTime
 
     if (lastPlayed.type === 'music' && lastPlayed.genreId && lastPlayed.videoId) {
+      // Block restore of locked music
+      const playlistIndex = lastPlayed.playlistIndex ?? 0
+      if (!isContentFree('music', playlistIndex)) return
       const genre = MUSIC_GENRES.find(g => g.id === lastPlayed.genreId)
       if (genre) {
         dispatch({
@@ -531,6 +534,9 @@ export function ImmersiveHome() {
         })
       }
     } else if (lastPlayed.type === 'motivation' && lastPlayed.videoId) {
+      // Block restore of locked motivation
+      const playlistIndex = lastPlayed.playlistIndex ?? 0
+      if (!isContentFree('motivation', playlistIndex)) return
       dispatch({
         type: 'RESTORE_LAST_PLAYED',
         partial: {
@@ -541,6 +547,8 @@ export function ImmersiveHome() {
         },
       })
     } else if (lastPlayed.type === 'soundscape' && lastPlayed.soundscapeId) {
+      // Block restore of locked soundscape
+      if (!isContentFree('soundscape', lastPlayed.soundscapeId)) return
       const item = SOUNDSCAPE_ITEMS.find(i => i.id === lastPlayed.soundscapeId)
       if (item) {
         dispatch({
@@ -971,11 +979,10 @@ export function ImmersiveHome() {
       stopPreview()
       setPaywallContentName(name)
       setPreviewUnlockCallback(() => () => handlePlayGuide(guideId, name))
-      handlePlayGuide(guideId, name)
       startPreview()
-    } else {
-      handlePlayGuide(guideId, name)
+      return
     }
+    handlePlayGuide(guideId, name)
   }, [stopPreview, startPreview])
 
   const handleMotivationPlay = useCallback((video: VideoItem, index: number, isLocked: boolean, topic?: string) => {
