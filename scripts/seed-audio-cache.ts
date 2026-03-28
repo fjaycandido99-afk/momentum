@@ -10,6 +10,7 @@
 import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import { VOICE_SCRIPTS, DAY_TYPE_VOICE_SCRIPTS } from '../lib/daily-guide/voice-scripts'
+import { CALM_VOICE_SCRIPTS } from '../lib/calm-voice-scripts'
 
 const prisma = new PrismaClient()
 
@@ -26,7 +27,7 @@ if (!ELEVENLABS_KEY) {
 }
 
 // Max entries to generate this run
-const MAX_GENERATE = 30
+const MAX_GENERATE = 60
 
 async function generateAudio(text: string, voiceId: string): Promise<{ base64: string; duration: number } | null> {
   try {
@@ -85,6 +86,14 @@ async function seed() {
   for (const [type, scripts] of Object.entries(DAY_TYPE_VOICE_SCRIPTS)) {
     scripts.forEach((script, index) => {
       allScripts.push({ type, index, script })
+    })
+  }
+
+  // Add calm voice scripts (anxiety, meditation, etc.)
+  for (const [type, scripts] of Object.entries(CALM_VOICE_SCRIPTS)) {
+    const calmType = `calm_${type}` // prefix to avoid key collision
+    scripts.forEach((script, index) => {
+      allScripts.push({ type: calmType, index, script })
     })
   }
 

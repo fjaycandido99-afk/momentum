@@ -166,6 +166,13 @@ function JournalContent() {
     }
   }, [])
 
+  // Cleanup: restore body overflow if component unmounts while in focus mode
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+
   // Auto-exit focus mode when keyboard closes (300ms delay to avoid glitches)
   useEffect(() => {
     if (!focusMode) return

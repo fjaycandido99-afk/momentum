@@ -94,16 +94,22 @@ export function useAudioSideEffects({ state, refs, audioContext, dispatch }: Use
         }).catch(() => {})
       }
 
-      // Web Locks API
+      // Web Locks API — keep lock while audio is active
       if ('locks' in navigator) {
-        (navigator as any).locks.request('voxu-audio-playback', () =>
+        const lockInterval = { current: null as NodeJS.Timeout | null }
+        ;(navigator as any).locks.request('voxu-audio-playback', () =>
           new Promise<void>((resolve) => {
-            const check = setInterval(() => {
+            lockInterval.current = setInterval(() => {
               if (!state.homeAudioActive) {
-                clearInterval(check)
+                if (lockInterval.current) clearInterval(lockInterval.current)
                 resolve()
               }
             }, 2000)
+            // Safety timeout — release lock after 2 hours max
+            setTimeout(() => {
+              if (lockInterval.current) clearInterval(lockInterval.current)
+              resolve()
+            }, 7200000)
           })
         ).catch(() => {})
       }
