@@ -61,21 +61,17 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
               style={{ animationDelay: `${index * 80}ms` }}
             >
               <div className="relative grid place-items-center" style={{ width: 64, height: 64 }}>
-                {/* Texture fill — circle-masked + edge-faded so it reads as
-                    atmosphere behind the icon. Kept in color: the monochrome
-                    aura ring frames it, so the imagery stays the pop of color. */}
+                {/* Full-color image inside the monochrome ring — the imagery is
+                    the pop of color. A soft center scrim keeps the icon legible. */}
                 {(() => {
                   const bg = getSoundscapeBackground(item.id)
                   return bg ? (
-                    <div
-                      className="absolute rounded-full overflow-hidden"
-                      style={{
-                        width: 50, height: 50,
-                        WebkitMaskImage: 'radial-gradient(circle, #000 56%, transparent 100%)',
-                        maskImage: 'radial-gradient(circle, #000 56%, transparent 100%)',
-                      }}
-                    >
-                      <img src={bg} alt="" className="w-full h-full object-cover" style={{ opacity: 0.9 }} />
+                    <div className="absolute rounded-full overflow-hidden" style={{ width: 56, height: 56 }}>
+                      <img src={bg} alt="" className="w-full h-full object-cover" />
+                      <div
+                        className="absolute inset-0"
+                        style={{ background: 'radial-gradient(circle, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.12) 55%, transparent 100%)' }}
+                      />
                     </div>
                   ) : null
                 })()}
