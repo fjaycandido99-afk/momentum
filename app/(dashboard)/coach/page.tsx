@@ -106,6 +106,21 @@ function detectEmotion(text: string): CoachEmotion {
   return 'idle'
 }
 
+// Proactive openers — when a recent pattern (from /api/daily-guide/smart-nudge)
+// flags something, the coach opens about it instead of the generic greeting.
+// Coach-voiced + inviting, so it reads as "the coach noticed," not a banner.
+const COACH_OPENERS: Record<string, string> = {
+  mood_dip: "I noticed your mood's dipped a little this week. I'm here — want to talk through what's been weighing on you?",
+  mood_trend: "Your mood's been trending up lately — that's worth pausing on. What's been working for you?",
+  streak_risk: "You haven't checked in yet today. No pressure — but I'm here if you want a quick moment for yourself.",
+  streak_recovery: "Welcome back. Streaks come and go — what matters is you showed up. How are you feeling today?",
+  inactive: "It's been a little while, and I'm genuinely glad you're back. How have you been?",
+  journal_reminder: "You've been reflecting consistently — that's a real habit taking root. Anything on your mind today?",
+  goal_reminder: "You've got a goal in motion. Want to check in on how it's going?",
+  energy_pattern: "I've noticed your energy runs higher in the mornings. Want to build a plan around that?",
+  completion_pattern: "You've been in a steady rhythm lately. Sometimes a small change keeps it alive — want to try something new?",
+}
+
 export default function CoachPage() {
   const subscription = useSubscriptionOptional()
   const mindsetCtx = useMindsetOptional()
@@ -161,6 +176,10 @@ export default function CoachPage() {
     return [{ role: 'assistant', content: greeting, timestamp: Date.now() }]
   })
 
+  // Set once the proactive opener replaces the greeting, so the mindset-greeting
+  // effect below doesn't clobber it.
+  const proactiveOpenerRef = useRef(false)
+
   // Save messages to localStorage whenever they change
   useEffect(() => {
     try { localStorage.setItem(storageKey, JSON.stringify(messages)) } catch {}
@@ -178,9 +197,10 @@ export default function CoachPage() {
     } catch {}
   }, [storageKey])
 
-  // Update greeting once mindset loads (only if still on initial greeting)
+  // Update greeting once mindset loads (only if still on initial greeting,
+  // and not after a proactive opener has taken over).
   useEffect(() => {
-    if (!mindsetCtx) return
+    if (!mindsetCtx || proactiveOpenerRef.current) return
     setMessages(prev => {
       if (prev.length === 1 && prev[0].role === 'assistant') {
         return [{ ...prev[0], content: COACH_GREETINGS[mindsetCtx.mindset] || defaultGreeting }]
@@ -188,6 +208,32 @@ export default function CoachPage() {
       return prev
     })
   }, [mindsetCtx?.mindset])
+
+  // Proactive opener — if recent patterns flag something (mood dip, streak
+  // risk, inactivity, goal in motion…), the coach opens about it instead of
+  // the generic greeting. Only while still on the initial greeting, so it
+  // never overrides an in-progress conversation. Reuses the existing
+  // smart-nudge detection engine.
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/daily-guide/smart-nudge')
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (cancelled) return
+        const type = data?.nudge?.type as string | undefined
+        const opener = type ? COACH_OPENERS[type] : undefined
+        if (!opener) return
+        setMessages(prev => {
+          if (prev.length === 1 && prev[0].role === 'assistant') {
+            proactiveOpenerRef.current = true
+            return [{ ...prev[0], content: opener }]
+          }
+          return prev
+        })
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showQuickReplies, setShowQuickReplies] = useState(true)
