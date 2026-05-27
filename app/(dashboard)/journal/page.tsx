@@ -155,6 +155,25 @@ function JournalContent() {
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
 
+  // Which modes are offered for the viewed date. Today → all four. Past dates →
+  // Free always (you can still jot a note), plus only the modes that already
+  // have a saved entry to review. Chat & Dream are live AI flows you can't
+  // create retroactively, so they only appear on past days that actually used them.
+  const availableModes = useMemo<JournalMode[]>(() => {
+    if (isToday) return ['guided', 'freewrite', 'conversational', 'dream']
+    const modes: JournalMode[] = []
+    if (win || gratitude || intention) modes.push('guided')
+    modes.push('freewrite')
+    if (conversation.length > 0) modes.push('conversational')
+    if (dreamText) modes.push('dream')
+    return modes
+  }, [isToday, win, gratitude, intention, conversation, dreamText])
+
+  // If the active mode isn't offered for the viewed date, fall back to Free.
+  useEffect(() => {
+    if (!isLoading && !availableModes.includes(mode)) setMode('freewrite')
+  }, [availableModes, mode, isLoading])
+
   // Focus mode helpers
   const enterFocusMode = useCallback((field: typeof focusField) => {
     if (mode === 'conversational') return // Chat mode has its own layout
@@ -776,7 +795,7 @@ function JournalContent() {
             { id: 'freewrite' as JournalMode, label: 'Free', icon: <PenLine className="w-3.5 h-3.5" /> },
             { id: 'conversational' as JournalMode, label: 'Chat', icon: <MessageCircle className="w-3.5 h-3.5" /> },
             { id: 'dream' as JournalMode, label: 'Dream', icon: <Moon className="w-3.5 h-3.5" /> },
-          ]).map(tab => (
+          ]).filter(tab => availableModes.includes(tab.id)).map(tab => (
             <button
               key={tab.id}
               onClick={() => setMode(tab.id)}
@@ -801,7 +820,7 @@ function JournalContent() {
           onSelect={(m) => { setMood(m); setIsSaved(false) }}
           moodHistory={allEntries}
         />
-        <FeatureHint id="journal-modes-v2" text="Try Chat for a guided AI conversation, or Dream to decode your dreams" mode="once" />
+        {isToday && <FeatureHint id="journal-modes-v2" text="Try Chat for a guided AI conversation, or Dream to decode your dreams" mode="once" />}
       </div>
 
       <TierBanner page="journal" />
