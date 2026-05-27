@@ -15,6 +15,7 @@ import { trackFeature } from '@/lib/analytics/track'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 import { MoodSelector, type MoodValue } from '@/components/journal/MoodSelector'
+import { JournalInsights } from '@/components/journal/JournalInsights'
 import { VoiceInput } from '@/components/journal/VoiceInput'
 import { calculateJournalStats, type JournalStatsData } from '@/components/journal/JournalStats'
 import { HeatMapStrip } from '@/components/journal/HeatMapStrip'
@@ -1331,6 +1332,9 @@ function JournalContent() {
 
       {showHistory && (
       <>
+      {/* What your journal reveals — AI patterns across recent entries */}
+      <JournalInsights />
+
       {/* 30-Day HeatMap */}
       <div className="px-6 mt-4">
         <HeatMapStrip entries={allEntries} />
