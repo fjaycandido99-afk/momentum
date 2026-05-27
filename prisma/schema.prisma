@@ -493,6 +493,18 @@ model PushSubscription {
   @@index([platform])
 }
 
+// Per-send log powering the notification send-gate (daily cap + dedupe).
+// Relation-less + written fire-and-forget; the gate reads it to throttle so
+// a user never gets bombarded across the 12 notification types.
+model NotificationSendLog {
+  id      String   @id @default(cuid())
+  user_id String
+  type    String
+  sent_at DateTime @default(now())
+
+  @@index([user_id, sent_at])
+}
+
 model Goal {
   id      String @id @default(cuid())
   user_id String

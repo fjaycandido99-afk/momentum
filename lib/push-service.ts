@@ -18,6 +18,8 @@ import { isPremiumUser } from './subscription-check'
 import { isLocalHour } from './timezone-utils'
 
 // Notification types that can be sent
+import { shouldSendNotification, logNotificationSent } from './notification-gate'
+
 export type NotificationType =
   | 'morning_reminder'
   | 'checkpoint'
@@ -265,6 +267,13 @@ coach_checkin: 'coach_checkin_alerts',
     return { success: false, sent: 0, failed: 0 }
   }
 
+  // Send gate — quiet hours, dedupe, and a daily cap so a user is never
+  // bombarded across the 12 notification types (high-priority bypasses cap).
+  const gate = await shouldSendNotification(userId, type)
+  if (!gate.allow) {
+    return { success: false, sent: 0, failed: 0 }
+  }
+
   // Build notification payload
   const template = NOTIFICATION_TEMPLATES[type]
   const payload: NotificationPayload = {
@@ -370,6 +379,9 @@ coach_checkin: 'coach_checkin_alerts',
       }
     }
   }
+
+  // Record the send so the gate can throttle subsequent pushes today.
+  if (sent > 0) logNotificationSent(userId, type)
 
   return {
     success: sent > 0,
