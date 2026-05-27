@@ -21,6 +21,7 @@ import { MonthlyRetrospective } from '@/components/progress/MonthlyRetrospective
 import { MindsetEvolution } from '@/components/progress/MindsetEvolution'
 import { LetterToSelf } from '@/components/progress/LetterToSelf'
 import { GoalTracker } from '@/components/daily-guide/GoalTracker'
+import { JourneyCard } from '@/components/progress/JourneyCard'
 import { migrateLocalXP } from '@/lib/gamification'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
@@ -104,6 +105,9 @@ export default function ProgressPage() {
         </div>
       ) : (
         <div className="px-6 space-y-4">
+          {/* Journey — the felt arc (Day N of becoming more ___), ahead of the raw numbers */}
+          <JourneyCard day={gamification?.streak ?? data.streak} />
+
           {/* Streak + XP Row */}
           <div className="flex gap-3">
             <div className="glass-refined rounded-2xl p-4 flex items-center gap-3 flex-1 relative overflow-hidden">
