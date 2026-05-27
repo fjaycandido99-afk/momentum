@@ -6,6 +6,8 @@ import {
   Sunrise,
   Sun,
   Moon,
+  Sparkles,
+  ChevronRight,
 } from 'lucide-react'
 import { SessionCard, SessionTimeline } from './SessionCard'
 import { QuoteCard } from './QuoteCard'
@@ -21,6 +23,8 @@ import { CosmicInsightCard } from './CosmicInsightCard'
 import { getFormattedDate, getDateString } from '@/lib/daily-guide/day-type'
 import { getCurrentSession, getAllSessionsStatus, SESSION_DURATIONS } from '@/lib/daily-guide/decision-tree'
 import type { SessionType, SessionStatus } from '@/lib/daily-guide/decision-tree'
+import { getAdaptiveRecommendation } from '@/lib/daily-guide/adaptive'
+import { useReset } from '@/contexts/ResetContext'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { trackFeature } from '@/lib/analytics/track'
 import { useAudioOptional } from '@/contexts/AudioContext'
@@ -91,6 +95,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const audioContext = useAudioOptional()
   const mindsetCtx = useMindsetOptional()
   const achievementCtx = useAchievementOptional()
+  const { openReset } = useReset()
 
   // Core state
   const [guide, setGuide] = useState<Record<string, any> | null>(null)
@@ -126,6 +131,17 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
 
   // Get session statuses for timeline
   const sessionStatuses = getAllSessionsStatus(completedSessions, today, wakeTime)
+
+  // Adaptive recommendation from the user's current state. `today` is the
+  // client's local Date (this is a 'use client' component), so the session
+  // window + "right now" are in the user's local time. Returns null unless
+  // there's a real signal worth surfacing (see lib/daily-guide/adaptive).
+  const adaptiveRec = getAdaptiveRecommendation({
+    mood: moodAfter || moodBefore,
+    energy: (guide?.energy_level as string | undefined) || null,
+    currentSession: getCurrentSession(today, wakeTime),
+    completedSessions,
+  })
 
   // Fetch guide data
   const fetchData = useCallback(async () => {
@@ -434,6 +450,29 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
                 <p className="text-xs text-white/70">Sign in to save your progress and unlock all features</p>
               </div>
             </div>
+          )}
+
+          {/* Adaptive recommendation — only appears when mood/energy signals
+              something worth adapting to (low mood → grounding reset, low
+              energy → recharge, high evening energy → wind down). */}
+          {adaptiveRec && (
+            <button
+              onClick={() => {
+                if (adaptiveRec.kind === 'reset') openReset()
+                else if (adaptiveRec.session) setActiveSession(adaptiveRec.session)
+              }}
+              className="w-full text-left rounded-2xl border border-white/15 bg-white/[0.05] p-4 press-scale"
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-white/60" />
+                <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">Recommended right now</span>
+              </div>
+              <p className="text-sm text-white/85 leading-relaxed">{adaptiveRec.reason}</p>
+              <div className="flex items-center gap-1 mt-2.5 text-sm font-medium text-white">
+                {adaptiveRec.cta}
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </button>
           )}
 
           {/* Morning Mood Check-In */}
