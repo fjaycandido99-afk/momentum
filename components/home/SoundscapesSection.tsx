@@ -75,7 +75,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
                         maskImage: 'radial-gradient(circle, #000 56%, transparent 100%)',
                       }}
                     >
-                      <img src={bg} alt="" className="w-full h-full object-cover" style={{ opacity: 0.6 }} />
+                      <img src={bg} alt="" className="w-full h-full object-cover" style={{ opacity: 0.9 }} />
                     </div>
                   ) : null
                 })()}
