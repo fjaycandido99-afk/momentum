@@ -236,6 +236,27 @@ function initWebPush() {
 /**
  * Send a push notification to a specific user
  */
+// Default deep-link per type — points each push at its most relevant screen
+// instead of the home feed. A per-send customPayload.data.url still overrides.
+const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
+  morning_reminder: '/daily-guide',
+  checkpoint: '/daily-guide',
+  evening_reminder: '/daily-guide',
+  bedtime_reminder: '/daily-guide',
+  streak_at_risk: '/daily-guide',
+  weekly_review: '/progress',
+  insight: '/progress',
+  daily_quote: '/',
+  daily_affirmation: '/daily-guide',
+  motivational_nudge: '/',
+  daily_motivation: '/',
+  coach_checkin: '/coach',
+  coach_accountability: '/coach',
+  win_back: '/',
+  feature_discovery: '/',
+  custom: '/',
+}
+
 export async function sendPushToUser(
   userId: string,
   type: NotificationType,
@@ -295,7 +316,7 @@ coach_checkin: 'coach_checkin_alerts',
     ...customPayload,
     data: {
       type,
-      url: '/',
+      url: DEFAULT_URL_BY_TYPE[type] || '/',
       ...customPayload?.data,
     },
   }
