@@ -390,7 +390,28 @@ export function SessionPlayer({
         <div className="absolute pointer-events-none">
           <AuraRing size={344} state={isPlaying ? 'active' : 'idle'} stroke={2} />
         </div>
-        <div style={{ opacity: isPlaying ? 0.85 : 0.15, transition: 'opacity 1s ease-in-out' }}>
+        {/* Portal texture inside the ring (Whisk asset). Circle-masked + edge-faded
+            so it blends into the black; hidden gracefully until the file exists. */}
+        <div
+          className="absolute z-0 overflow-hidden rounded-full pointer-events-none"
+          style={{
+            width: 320, height: 320,
+            opacity: isPlaying ? 0.55 : 0.3,
+            transition: 'opacity 1.2s ease-in-out',
+            WebkitMaskImage: 'radial-gradient(circle, #000 58%, transparent 100%)',
+            maskImage: 'radial-gradient(circle, #000 58%, transparent 100%)',
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/textures/focus-portal.jpg"
+            alt=""
+            aria-hidden
+            onError={(e) => { const p = e.currentTarget.parentElement; if (p) p.style.display = 'none' }}
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="relative z-10" style={{ opacity: isPlaying ? 0.85 : 0.15, transition: 'opacity 1s ease-in-out' }}>
           <CircularVisualizer analyser={analyser} isPlaying={isPlaying} barCount={80} size={300} />
         </div>
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none" />
