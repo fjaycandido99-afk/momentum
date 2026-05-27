@@ -1,8 +1,16 @@
-import { Capacitor } from '@capacitor/core'
+import { Capacitor, registerPlugin } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { getJourney } from '@/lib/journey'
 import type { MindsetId } from '@/lib/mindset/types'
+
+// Native bridge (WidgetBridgePlugin.swift) — refreshes the home-screen widget
+// immediately after new data is written. Absent until the native rebuild; calls
+// are wrapped in try/catch so it's a safe no-op until then.
+interface WidgetBridgePlugin {
+  reload(): Promise<void>
+}
+const WidgetBridge = registerPlugin<WidgetBridgePlugin>('WidgetBridge')
 
 // Pushes the values the iOS home-screen widget reads (streak + journey stage)
 // into shared storage. No-op on web. On native it writes via
@@ -16,6 +24,8 @@ export async function syncWidgetData(streak: number, mindset?: MindsetId): Promi
     const j = getJourney(mindset, name, streak)
     await Preferences.set({ key: 'widget_streak', value: String(Math.max(0, streak || 0)) })
     await Preferences.set({ key: 'widget_stage', value: j.isBeginning ? '' : j.stage })
+    // Refresh the widget now rather than waiting for its timeline policy.
+    try { await WidgetBridge.reload() } catch { /* bridge not in this build yet */ }
   } catch {
     /* widget data is best-effort — never block the app on it */
   }

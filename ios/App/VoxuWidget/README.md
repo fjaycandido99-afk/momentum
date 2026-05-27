@@ -68,9 +68,12 @@ and widget share data via an App Group.
    ```ts
    plugins: { Preferences: { group: 'group.com.voxu.app' } }
    ```
-5. `npx cap sync ios`, rebuild via Codemagic. The widget reloads streak/journey
-   within a few hours (or immediately if you add a
-   `WidgetCenter.shared.reloadAllTimelines()` call to a small native bridge).
+5. `npx cap sync ios`, rebuild via Codemagic. The widget refreshes streak/journey
+   **immediately** on change — the reload bridge is already wired
+   (`WidgetBridgePlugin.swift` + `WidgetBridge.reload()` in `lib/widget-sync.ts`,
+   registered in `codemagic.yaml`). Just make sure `WidgetBridgePlugin.swift` is
+   added to the **App** target in Xcode (same as `AudioAnalyzerPlugin.swift`):
+   select the file → File Inspector → Target Membership → check **App**.
 
 ### Keys the widget reads (App Group `group.com.voxu.app`)
 | Key | Example | Source |
