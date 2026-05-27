@@ -32,10 +32,10 @@ const QUICK_REPLIES = [
 ]
 
 const CHECK_IN_TYPES = [
-  { id: 'morning', label: 'Morning', icon: Sun, color: 'text-amber-400' },
-  { id: 'midday', label: 'Midday', icon: Clock, color: 'text-blue-400' },
-  { id: 'evening', label: 'Evening', icon: Moon, color: 'text-purple-400' },
-  { id: 'goal-review', label: 'Goals', icon: BarChart3, color: 'text-green-400' },
+  { id: 'morning', label: 'Morning', icon: Sun, color: 'text-white' },
+  { id: 'midday', label: 'Midday', icon: Clock, color: 'text-white' },
+  { id: 'evening', label: 'Evening', icon: Moon, color: 'text-white' },
+  { id: 'goal-review', label: 'Goals', icon: BarChart3, color: 'text-white' },
 ]
 
 const CHECK_IN_PROMPTS: Record<string, string> = {
@@ -371,8 +371,8 @@ export default function CoachPage() {
         ) : (
           <div key="chat" className="flex-1 flex flex-col items-center justify-center p-6 animate-fade-in">
             <div className="bg-black rounded-2xl border border-white/10 p-8 text-center">
-              <div className="p-4 rounded-full bg-amber-500/20 mb-4 mx-auto w-fit">
-                <Crown className="w-8 h-8 text-amber-400" />
+              <div className="p-4 rounded-full bg-white/20 mb-4 mx-auto w-fit">
+                <Crown className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-xl font-medium text-white mb-2">Premium Feature</h2>
               <p className="text-white/70 mb-6 max-w-xs">
@@ -380,7 +380,7 @@ export default function CoachPage() {
               </p>
               <button
                 onClick={() => subscription?.openUpgradeModal()}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all press-scale mx-auto"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black font-medium hover:bg-white/90 transition-all press-scale mx-auto"
               >
                 <Sparkles className="w-5 h-5" />
                 Upgrade to Premium
@@ -398,7 +398,7 @@ export default function CoachPage() {
       <div className="sticky top-0 z-50 relative px-6 pt-12 pb-4 mb-4 flex items-center gap-3 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         {/* Subtle gradient glow behind header */}
-        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.06] to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none" />
         <Link href="/" aria-label="Back to home" className="relative p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
           <ChevronLeft className="w-5 h-5 text-white/70" />
         </Link>
@@ -406,11 +406,11 @@ export default function CoachPage() {
           {/* Coach presence — the signature AI orb, reacting to what it's doing */}
           <div className="relative">
             <AIOrb size={46} state={orbState} />
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#08080c]" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-white rounded-full border-2 border-[#08080c]" />
           </div>
           <div>
             <h1 className="text-lg font-medium shimmer-text">{coachName}</h1>
-            <p className="text-xs text-emerald-400/80">Online</p>
+            <p className="text-xs text-white/80">Online</p>
           </div>
           {mindsetCtx && (
             <div className="ml-auto flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
@@ -436,7 +436,7 @@ export default function CoachPage() {
       {activeTab === 'chat' && activePlanBanner && (
         <button
           onClick={() => setActiveTab('plans')}
-          className="mx-6 mt-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 text-left hover:bg-amber-500/15 transition-colors"
+          className="mx-6 mt-2 px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-xs text-white text-left hover:bg-white/15 transition-colors"
         >
           {activePlanBanner} →
         </button>
@@ -454,7 +454,7 @@ export default function CoachPage() {
           onClick={() => setChatMode('coach')}
           className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
             chatMode === 'coach'
-              ? 'bg-black border border-amber-500/30 text-amber-400'
+              ? 'bg-black border border-white/30 text-white'
               : 'bg-black border border-white/[0.08] text-white/60'
           }`}
         >
@@ -464,7 +464,7 @@ export default function CoachPage() {
           onClick={() => setChatMode('accountability')}
           className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
             chatMode === 'accountability'
-              ? 'bg-black border border-emerald-500/30 text-emerald-400'
+              ? 'bg-black border border-white/30 text-white'
               : 'bg-black border border-white/[0.08] text-white/60'
           }`}
         >
@@ -529,9 +529,9 @@ export default function CoachPage() {
             <CoachAvatar mindsetId={mindsetCtx?.mindset} size="md" className="mr-2 mt-1" emotion="thinking" />
             <div className="p-3.5 bg-black rounded-2xl rounded-bl-md border border-white/10">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-                <span className="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
-                <span className="w-2 h-2 bg-amber-400/50 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
+                <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
+                <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
               </div>
             </div>
           </div>
@@ -566,7 +566,7 @@ export default function CoachPage() {
             onClick={handleVoiceToggle}
             className={`p-3 rounded-xl transition-all shrink-0 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
               voice.voiceMode
-                ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                ? 'bg-white/20 border border-white/40 text-white'
                 : 'bg-white/5 border border-white/15 text-white/60 hover:text-white/90'
             }`}
           >
@@ -586,7 +586,7 @@ export default function CoachPage() {
             }}
             onKeyDown={handleKeyDown}
             placeholder={chatMode === 'accountability' ? 'Share your progress...' : 'Ask your coach...'}
-            className="flex-1 p-3 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-amber-500/30 focus:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-amber-500/20 resize-none transition-all"
+            className="flex-1 p-3 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-white/50 focus:outline-none focus:border-white/30 focus:bg-white/[0.07] focus-visible:ring-1 focus-visible:ring-white/20 resize-none transition-all"
             rows={1}
             style={{ maxHeight: '128px' }}
           />
@@ -596,7 +596,7 @@ export default function CoachPage() {
             disabled={!input.trim() || isLoading}
             className={`p-3 rounded-xl transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
               input.trim() && !isLoading
-                ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-400'
+                ? 'bg-white/15 border border-white/30 hover:bg-white/25 text-white'
                 : 'bg-white/5 text-white/40'
             }`}
           >

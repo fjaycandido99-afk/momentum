@@ -49,7 +49,7 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
         <div className="flex items-center gap-3">
           <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-400 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-white/60 to-white transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -72,11 +72,11 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
                 {/* Day number / check */}
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                   isDone
-                    ? 'bg-emerald-500/20 border border-emerald-500/30'
+                    ? 'bg-white/20 border border-white/30'
                     : 'bg-white/10 border border-white/15'
                 }`}>
                   {isDone ? (
-                    <Check className="w-4 h-4 text-emerald-400" />
+                    <Check className="w-4 h-4 text-white" />
                   ) : (
                     <span className="text-xs font-medium text-white/75">{day.day}</span>
                   )}
@@ -99,19 +99,19 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
                 <div className="px-4 pb-4 space-y-3 animate-fade-in-up">
                   <div className="space-y-2.5">
                     <div className="p-3 rounded-xl bg-white/[0.04]">
-                      <p className="text-[10px] uppercase tracking-wider text-amber-400/70 mb-1">Morning</p>
+                      <p className="text-[10px] uppercase tracking-wider text-white/70 mb-1">Morning</p>
                       <p className="text-sm text-white/80 leading-relaxed">{day.morning}</p>
                     </div>
                     <div className="p-3 rounded-xl bg-white/[0.04]">
-                      <p className="text-[10px] uppercase tracking-wider text-blue-400/70 mb-1">Afternoon</p>
+                      <p className="text-[10px] uppercase tracking-wider text-white/70 mb-1">Afternoon</p>
                       <p className="text-sm text-white/80 leading-relaxed">{day.afternoon}</p>
                     </div>
                     <div className="p-3 rounded-xl bg-white/[0.04]">
-                      <p className="text-[10px] uppercase tracking-wider text-purple-400/70 mb-1">Evening</p>
+                      <p className="text-[10px] uppercase tracking-wider text-white/70 mb-1">Evening</p>
                       <p className="text-sm text-white/80 leading-relaxed">{day.evening}</p>
                     </div>
                     <div className="p-3 rounded-xl bg-white/[0.04] border border-white/15">
-                      <p className="text-[10px] uppercase tracking-wider text-emerald-400/70 mb-1">Reflection</p>
+                      <p className="text-[10px] uppercase tracking-wider text-white/70 mb-1">Reflection</p>
                       <p className="text-sm text-white/80 leading-relaxed italic">{day.reflection}</p>
                     </div>
                   </div>
@@ -119,7 +119,7 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
                   {!isDone && (
                     <button
                       onClick={() => handleMarkDone(day.day)}
-                      className="w-full py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-sm font-medium hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1.5 press-scale"
+                      className="w-full py-2.5 rounded-xl bg-white/15 border border-white/20 text-white text-sm font-medium hover:bg-white/25 transition-all flex items-center justify-center gap-1.5 press-scale"
                     >
                       <Check className="w-4 h-4" />
                       Mark Day {day.day} Done

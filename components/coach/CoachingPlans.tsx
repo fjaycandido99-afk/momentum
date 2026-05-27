@@ -65,7 +65,7 @@ export function CoachingPlans() {
                 {completedDays > 0 && (
                   <span className={`text-[10px] px-2 py-0.5 rounded-full ${
                     isActive
-                      ? 'bg-emerald-500/20 text-emerald-400'
+                      ? 'bg-white/20 text-white'
                       : 'bg-white/10 text-white/75'
                   }`}>
                     {completedDays}/7
