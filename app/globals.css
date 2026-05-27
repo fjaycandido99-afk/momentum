@@ -2536,6 +2536,71 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   }
 }
 
+/* ============================================================
+   Ambient atmosphere — the app-wide "living" background.
+   A fixed layer of huge, very-low-opacity monochrome radial glows
+   that drift on slow GPU-cheap transform loops. Deliberately:
+     • NO animated filter:blur (softness baked into the gradient)
+     • NO JS, NO particles, NO color (stays monochrome)
+     • translate3d → promoted to its own compositor layer
+   Sits behind all content; honors prefers-reduced-motion.
+   ============================================================ */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* deepen the corners so the center reads as the "light" you sit in */
+  background: radial-gradient(120% 90% at 50% 12%, transparent 55%, rgba(0,0,0,0.55) 100%);
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 9999px;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.ambient-orb--a {
+  width: 62vmax; height: 62vmax;
+  top: -22vmax; left: -16vmax;
+  background: radial-gradient(circle, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 42%, transparent 70%);
+  animation: ambient-drift-a 48s ease-in-out infinite;
+}
+
+.ambient-orb--b {
+  width: 52vmax; height: 52vmax;
+  bottom: -20vmax; right: -14vmax;
+  background: radial-gradient(circle, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.015) 46%, transparent 72%);
+  animation: ambient-drift-b 62s ease-in-out infinite;
+}
+
+.ambient-orb--c {
+  width: 44vmax; height: 44vmax;
+  top: 34%; left: 32%;
+  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 66%);
+  animation: ambient-drift-c 78s ease-in-out infinite;
+}
+
+@keyframes ambient-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(5vmax, 4vmax, 0) scale(1.08); }
+  66%      { transform: translate3d(-4vmax, 6vmax, 0) scale(0.95); }
+}
+
+@keyframes ambient-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  30%      { transform: translate3d(-6vmax, -4vmax, 0) scale(1.06); }
+  70%      { transform: translate3d(3vmax, -7vmax, 0) scale(0.96); }
+}
+
+@keyframes ambient-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  40%      { transform: translate3d(7vmax, -5vmax, 0) scale(1.1); }
+  75%      { transform: translate3d(-5vmax, 4vmax, 0) scale(0.92); }
+}
+
 /* ========== Accessibility ========== */
 
 /* Reduced motion — tone down animations but keep functional ones */
@@ -2555,6 +2620,11 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   .skeleton-shimmer {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  /* Ambient atmosphere — freeze the drift, keep the still glow */
+  .ambient-orb {
+    animation: none !important;
   }
 }
 
