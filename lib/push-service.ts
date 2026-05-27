@@ -939,13 +939,49 @@ export async function sendWeeklyInsights(): Promise<void> {
  * Send daily quote notifications to all subscribed users
  * Same quote for everyone (deterministic by day of year)
  */
-// The user's local date ("YYYY-MM-DD") for picking their daily quote, matching
+// The user's local date ("YYYY-MM-DD") for a given moment, matching
 // getDateString's format so the push lines up with the in-app selection.
-function localDateForTz(tz: string | null): string {
+function localDateForTz(tz: string | null, date: Date = new Date()): string {
   try {
-    if (tz) return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+    if (tz) return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
   } catch { /* bad tz — fall through */ }
-  return getDateString(new Date())
+  return getDateString(date)
+}
+
+// Moods (from the in-app mood pickers) that warrant a gentle "fresh start" nudge.
+const LOW_MOODS = new Set(['awful', 'low'])
+
+// Build a continuity nudge from yesterday's entry — the "coach remembers you"
+// follow-up, delivered as the morning push. Returns null when there's nothing
+// to follow up on, so the caller falls back to the daily quote.
+function buildYesterdayNudge(guide: {
+  daily_intention?: string | null
+  journal_intention?: string | null
+  journal_mood?: string | null
+  journal_freetext?: string | null
+  journal_win?: string | null
+  journal_gratitude?: string | null
+  journal_conversation?: string | null
+  journal_dream?: string | null
+} | null): { title: string; body: string } | null {
+  if (!guide) return null
+
+  const intention = (guide.daily_intention || guide.journal_intention || '').trim()
+  if (intention) {
+    const short = intention.length > 70 ? intention.slice(0, 67).trimEnd() + '…' : intention
+    return { title: 'Yesterday’s intention', body: `You set out to “${short}.” How did it go?` }
+  }
+
+  if (guide.journal_mood && LOW_MOODS.has(guide.journal_mood)) {
+    return { title: 'A fresh start', body: 'Yesterday felt heavy. Two minutes to reset and start today clear?' }
+  }
+
+  const reflected = !!(guide.journal_freetext || guide.journal_win || guide.journal_gratitude || guide.journal_conversation || guide.journal_dream)
+  if (reflected) {
+    return { title: 'Pick up where you left off', body: 'You reflected yesterday — want to keep the thread going today?' }
+  }
+
+  return null
 }
 
 export async function sendDailyQuotes(): Promise<void> {
@@ -970,17 +1006,48 @@ export async function sendDailyQuotes(): Promise<void> {
   let totalSent = 0
   let totalFailed = 0
 
+  // Pull yesterday's entry per user for the "coach remembers you" follow-up.
+  type YesterdayGuide = NonNullable<Parameters<typeof buildYesterdayNudge>[0]>
+  const yMap = new Map<string, YesterdayGuide>()
+  await Promise.all(eligibleUserIds.map(async (user_id) => {
+    const tz = prefMap.get(user_id)?.timezone || null
+    const yDate = localDateForTz(tz, new Date(Date.now() - 86400000))
+    try {
+      const guide = await prisma.dailyGuide.findUnique({
+        where: { user_id_date: { user_id, date: yDate } },
+        select: {
+          daily_intention: true, journal_intention: true, journal_mood: true,
+          journal_freetext: true, journal_win: true, journal_gratitude: true,
+          journal_conversation: true, journal_dream: true,
+        },
+      })
+      if (guide) yMap.set(user_id, guide)
+    } catch { /* no yesterday entry — falls back to the quote */ }
+  }))
+
+  let nudged = 0
   for (const user_id of eligibleUserIds) {
     const p = prefMap.get(user_id)
-    const dateStr = localDateForTz(p?.timezone || null)
-    const quote = getDailyMindsetQuote((p?.mindset as MindsetId) || 'stoic', dateStr) || getDayOfYearQuote()
-    const body = `"${quote.text}" — ${quote.author}`
-    const result = await sendPushToUser(user_id, 'daily_quote', { body })
+
+    // Lead with a continuity follow-up; fall back to the daily quote.
+    const nudge = buildYesterdayNudge(yMap.get(user_id) || null)
+    let payload: { title?: string; body: string }
+    if (nudge) {
+      payload = { title: nudge.title, body: nudge.body }
+      nudged++
+    } else {
+      const dateStr = localDateForTz(p?.timezone || null)
+      const quote = getDailyMindsetQuote((p?.mindset as MindsetId) || 'stoic', dateStr) || getDayOfYearQuote()
+      payload = { body: `"${quote.text}" — ${quote.author}` }
+    }
+
+    // daily_quote already deep-links to '/' (home), where the follow-up card lives.
+    const result = await sendPushToUser(user_id, 'daily_quote', payload)
     totalSent += result.sent
     totalFailed += result.failed
   }
 
-  console.log(`Daily quotes: ${totalSent} sent, ${totalFailed} failed (${eligibleUserIds.length} in 8AM window, per-mindset)`)
+  console.log(`Daily quotes: ${totalSent} sent, ${totalFailed} failed (${eligibleUserIds.length} in 8AM window; ${nudged} continuity follow-ups)`)
 }
 
 /**
