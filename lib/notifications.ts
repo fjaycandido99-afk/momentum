@@ -418,38 +418,60 @@ export async function updateRemindersFromPreferences(preferences: {
 }
 
 // Initialize push notifications (for server-sent notifications)
+// Current native platform ('ios' | 'android' | 'web').
+export function getNativePlatform(): string {
+  return Capacitor.getPlatform()
+}
+
+// Register with APNs/FCM and resolve the device token (with a safety timeout
+// so the promise can't hang if no registration event ever fires).
+async function registerAndGetToken(): Promise<string | null> {
+  await PushNotifications.register()
+  return new Promise((resolve) => {
+    let done = false
+    const finish = (v: string | null) => { if (!done) { done = true; resolve(v) } }
+    PushNotifications.addListener('registration', (token) => {
+      console.log('[PushNotifications] Token:', token.value)
+      finish(token.value)
+    })
+    PushNotifications.addListener('registrationError', (error) => {
+      console.error('[PushNotifications] Registration error:', error)
+      finish(null)
+    })
+    setTimeout(() => finish(null), 6000)
+  })
+}
+
+// Prompting registration — use when the user explicitly opts in (e.g. Settings).
 export async function initPushNotifications(): Promise<string | null> {
   if (!isNative) return null
 
   try {
-    // Request permission
-    const permStatus = await PushNotifications.checkPermissions()
-
-    if (permStatus.receive === 'prompt') {
-      const result = await PushNotifications.requestPermissions()
-      if (result.receive !== 'granted') {
-        console.log('[PushNotifications] Permission denied')
-        return null
-      }
+    let perm = await PushNotifications.checkPermissions()
+    if (perm.receive !== 'granted') {
+      perm = await PushNotifications.requestPermissions()
     }
-
-    // Register with APNs/FCM
-    await PushNotifications.register()
-
-    // Get the token
-    return new Promise((resolve) => {
-      PushNotifications.addListener('registration', (token) => {
-        console.log('[PushNotifications] Token:', token.value)
-        resolve(token.value)
-      })
-
-      PushNotifications.addListener('registrationError', (error) => {
-        console.error('[PushNotifications] Registration error:', error)
-        resolve(null)
-      })
-    })
+    if (perm.receive !== 'granted') {
+      console.log('[PushNotifications] Permission not granted')
+      return null
+    }
+    return await registerAndGetToken()
   } catch (error) {
     console.error('[PushNotifications] Init error:', error)
+    return null
+  }
+}
+
+// Non-prompting registration — only registers if permission is ALREADY granted.
+// Safe to call on app startup; it never surfaces a permission prompt.
+export async function getPushTokenIfGranted(): Promise<string | null> {
+  if (!isNative) return null
+  try {
+    const perm = await PushNotifications.checkPermissions()
+    if (perm.receive !== 'granted') return null
+    return await registerAndGetToken()
+  } catch (error) {
+    console.error('[PushNotifications] Token check error:', error)
     return null
   }
 }

@@ -22,6 +22,8 @@ import {
   cancelAllReminders,
   getPendingReminders,
   updateRemindersFromPreferences,
+  initPushNotifications,
+  getNativePlatform,
   NOTIFICATION_IDS,
 } from '@/lib/notifications'
 
@@ -227,6 +229,21 @@ export function NotificationSettings() {
             }
             setIsSubscribed(true)
             setPermission('granted')
+
+            // Also register for REMOTE push so server-sent notifications (daily
+            // quote, coach check-ins, win-back, insights…) reach the device —
+            // not just the on-device local reminders. Permission is already
+            // granted above, so this won't surface a second prompt.
+            try {
+              const token = await initPushNotifications()
+              if (token) {
+                await fetch('/api/notifications/subscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ nativeToken: token, platform: getNativePlatform() }),
+                })
+              }
+            } catch { /* local reminders still work */ }
           } else {
             setPermission('denied')
           }

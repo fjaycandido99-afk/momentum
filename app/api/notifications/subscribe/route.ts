@@ -42,13 +42,15 @@ export async function POST(request: NextRequest) {
         where: {
           endpoint,
         },
+        // On re-register (e.g. token refresh on every app open) only update the
+        // token — do NOT reset preferences, or we'd wipe the user's choices.
         update: {
           user_id: user.id,
           native_token: nativeToken,
           platform,
           updated_at: new Date(),
-          ...defaultPreferences,
         },
+        // Defaults (all on, incl. daily_quote_alerts) apply only to a brand-new sub.
         create: {
           user_id: user.id,
           endpoint,
