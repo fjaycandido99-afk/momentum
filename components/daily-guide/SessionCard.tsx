@@ -24,6 +24,7 @@ const SESSION_CONFIG: Record<SessionType, {
   iconColor: string
   iconBg: string
   defaultPreview: string
+  image?: string
 }> = {
   morning_prime: {
     icon: Sunrise,
@@ -51,6 +52,7 @@ const SESSION_CONFIG: Record<SessionType, {
     iconColor: 'text-purple-400',
     iconBg: 'bg-purple-500/15',
     defaultPreview: '"The day is done. Let go of what you couldn\'t control. You showed up."',
+    image: '/sessions/wind_down.jpg',
   },
   bedtime_story: {
     icon: BookOpen,
@@ -139,12 +141,25 @@ export function SessionCard({
             ? 'rounded-2xl border-emerald-500/20 bg-black'
             : 'rounded-2xl border-white/10 bg-black opacity-60'
       }`}>
-        {/* Cinematic backdrop placeholder (hero only) — atmospheric depth now,
-            your curated art drops straight in here later. */}
+        {/* Cinematic backdrop (hero only). With curated art: full-bleed image
+            + readability gradients (dark on the left where text sits + along
+            the bottom for the button, letting the subject breathe on the
+            right). Without art: the atmospheric gradient placeholder. */}
         {isCurrent && !isCompleted && (
           <div className="absolute inset-0 pointer-events-none" aria-hidden>
-            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.06] via-transparent to-transparent" />
-            <div className="absolute -top-16 -right-8 w-48 h-48 rounded-full bg-white/[0.05] blur-3xl" />
+            {config.image ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={config.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/25" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+              </>
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.06] via-transparent to-transparent" />
+                <div className="absolute -top-16 -right-8 w-48 h-48 rounded-full bg-white/[0.05] blur-3xl" />
+              </>
+            )}
           </div>
         )}
         {/* Content */}
