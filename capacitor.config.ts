@@ -28,14 +28,17 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: 'automatic',
-    backgroundColor: '#0a0a0f',
+    // Pure black to match the web UI's bg-black. The previous #0a0a0f was a
+    // cooler near-black that the iPhone's rounded screen corners revealed
+    // behind the WebView — reading as teal-tinted corners against the header.
+    backgroundColor: '#000000',
     // Background audio mode will be configured in Xcode:
     // 1. Enable "Audio, AirPlay, and Picture in Picture" in Background Modes
     // 2. Enable Push Notifications capability
     // 3. Add your APNs key to Apple Developer account
   },
   android: {
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#000000',
     allowMixedContent: true,
     // Background audio handled via foreground service
   },
