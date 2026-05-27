@@ -12,6 +12,7 @@ import {
   sendEveningReminders,
   sendCoachCheckins,
   sendCoachAccountability,
+  sendWinBackReminders,
 } from '@/lib/push-service'
 import { cleanupExpiredAudioCache } from '@/lib/daily-guide/cache-cleanup'
 
@@ -103,6 +104,10 @@ export async function GET(request: NextRequest) {
         await sendCoachAccountability()
         return NextResponse.json({ success: true, type: 'coach_accountability' })
 
+      case 'winback':
+        await sendWinBackReminders()
+        return NextResponse.json({ success: true, type: 'winback' })
+
       case 'all':
         // Send all types (for testing)
         await sendMorningReminders()
@@ -117,6 +122,7 @@ export async function GET(request: NextRequest) {
         await sendEveningReminders()
         await sendCoachCheckins()
         await sendCoachAccountability()
+        await sendWinBackReminders()
         return NextResponse.json({ success: true, type: 'all' })
 
       default:

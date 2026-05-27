@@ -35,6 +35,7 @@ export type NotificationType =
 
   | 'coach_checkin'
   | 'coach_accountability'
+  | 'win_back'
   | 'custom'
 
 // Notification payload structure
@@ -58,6 +59,11 @@ export interface NotificationPayload {
 
 // Pre-defined notification templates
 export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationPayload, 'data'>> = {
+  win_back: {
+    title: 'Your space is still here',
+    body: 'A quiet moment is waiting whenever you are.',
+    tag: 'win_back',
+  },
   morning_reminder: {
     title: 'Good Morning!',
     body: 'Start your day with your morning flow',
@@ -245,6 +251,7 @@ export async function sendPushToUser(
     evening_reminder: 'evening_reminder',
     bedtime_reminder: 'evening_reminder', // Uses evening_reminder preference
     streak_at_risk: 'streak_alerts',
+    win_back: 'streak_alerts',
     weekly_review: 'weekly_review',
     insight: 'insight_alerts',
     daily_quote: 'daily_quote_alerts',
@@ -627,6 +634,55 @@ export async function sendStreakAtRiskReminders(): Promise<void> {
  * Send personalized weekly review notifications
  * Includes stats from the past 7 days
  */
+// Win-back ladder — re-engage lapsed users at day 3 / 7 / 14 / 30 of absence.
+// Warm, escalating, no-guilt copy; each rung fires once (keyed off the exact
+// number of days since last_active_date). Delivered ~6pm local via
+// filterUsersByLocalHour; the send gate handles quiet hours + dedupe, and
+// win_back is high-priority so the daily cap won't suppress it. Run hourly
+// (the function self-filters to the user's local hour).
+const WIN_BACK_RUNGS: Record<number, { title: string; body: string; url: string }> = {
+  3: { title: 'Your streak is paused, not gone', body: 'A 2-minute reset is all it takes to pick back up.', url: '/' },
+  7: { title: 'Your spot is still here', body: 'One small win today? Start with a quick Morning Prime.', url: '/' },
+  14: { title: 'Your mind deserves a moment', body: 'Come breathe with us — even a minute counts.', url: '/' },
+  30: { title: "Still here whenever you're ready", body: 'Your space is exactly as you left it.', url: '/' },
+}
+
+export async function sendWinBackReminders(): Promise<void> {
+  const now = Date.now()
+  const dayMs = 24 * 60 * 60 * 1000
+  const oldest = new Date(now - 31 * dayMs)
+  const newest = new Date(now - 3 * dayMs)
+
+  const lapsed = await prisma.userPreferences.findMany({
+    where: { last_active_date: { gte: oldest, lte: newest } },
+    select: { user_id: true, last_active_date: true },
+  })
+
+  // Deliver around 6pm local — same pattern the other timed sends use.
+  const eligible = new Set(await filterUsersByLocalHour(lapsed.map(u => u.user_id), 18))
+
+  let totalSent = 0
+  let totalFailed = 0
+  let matched = 0
+
+  for (const u of lapsed) {
+    if (!eligible.has(u.user_id) || !u.last_active_date) continue
+    const daysSince = Math.floor((now - u.last_active_date.getTime()) / dayMs)
+    const rung = WIN_BACK_RUNGS[daysSince]
+    if (!rung) continue // only fire ON a rung day (3 / 7 / 14 / 30)
+    matched++
+    const result = await sendPushToUser(u.user_id, 'win_back', {
+      title: rung.title,
+      body: rung.body,
+      data: { type: 'win_back', url: rung.url },
+    })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Win-back: ${matched} on a rung, ${totalSent} sent, ${totalFailed} failed`)
+}
+
 export async function sendWeeklyReviewReminders(): Promise<void> {
   const subscriptions = await prisma.pushSubscription.findMany({
     select: { user_id: true },

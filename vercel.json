@@ -53,6 +53,10 @@
       "schedule": "0 * * * *"
     },
     {
+      "path": "/api/cron/notifications?type=winback",
+      "schedule": "0 * * * *"
+    },
+    {
       "path": "/api/cron/alerts",
       "schedule": "*/5 * * * *"
     }
