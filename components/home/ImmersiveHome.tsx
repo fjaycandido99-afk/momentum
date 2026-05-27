@@ -49,6 +49,7 @@ import { DailyFeatureTip } from './DailyFeatureTip'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
 import { YesterdayFollowUp } from './YesterdayFollowUp'
+import { FirstMomentOverlay } from './FirstMomentOverlay'
 import { DailyProgressRing } from './DailyProgressRing'
 import { useToast } from '@/contexts/ToastContext'
 import { usePreferences, useJournalMood, useMotivationVideos, useFavorites, useWelcomeStatus, useGamificationStatus } from '@/hooks/useHomeSWR'
@@ -1022,6 +1023,7 @@ export function ImmersiveHome() {
 
   return (
     <div className="isolate min-h-screen">
+    <FirstMomentOverlay />
     <div
       ref={scrollRef}
       className={`relative min-h-screen text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer || showGuidedPlayer ? 'overflow-hidden max-h-screen' : ''}`}
