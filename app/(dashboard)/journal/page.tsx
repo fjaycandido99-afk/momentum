@@ -711,23 +711,21 @@ function JournalContent() {
       <div className="sticky top-0 z-50 px-6 pt-12 pb-3 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         {/* Row 1: Title + actions */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-500/20">
-              <PenLine className="w-5 h-5 text-amber-400" />
-            </div>
-            <h1 className="text-2xl font-light shimmer-text">Journal</h1>
+        <div className="flex items-start justify-between mb-2.5">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight shimmer-text">Journal</h1>
+            <p className="text-xs text-white/55 mt-1">Your space to reflect, express &amp; grow.</p>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0 mt-1">
+            {journalStats.currentStreak > 0 && (
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/[0.12]">
+                <span className="text-xs">🔥</span>
+                <span className="text-xs font-semibold text-white">{journalStats.currentStreak}</span>
+              </div>
+            )}
             {mindsetCtx && (
               <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/5">
                 <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/75" />
-              </div>
-            )}
-            {journalStats.currentStreak > 0 && (
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/20">
-                <span className="text-sm">🔥</span>
-                <span className="text-xs font-semibold text-orange-400">{journalStats.currentStreak}</span>
               </div>
             )}
             {hasJournalHistory && recentEntries.length > 0 && (
@@ -764,7 +762,7 @@ function JournalContent() {
       </div>
 
       {/* ── Mode tabs + mood (stacked for mobile) ── */}
-      <div className="px-6 pt-2 pb-3 mb-2 border-b border-white/15 space-y-2.5">
+      <div className="px-6 pt-2 pb-3 mb-2 space-y-2.5">
         {/* Mode tabs — full width */}
         <div className="flex gap-1 p-0.5 rounded-lg bg-white/10">
           {([
