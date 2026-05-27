@@ -1,15 +1,9 @@
-import Groq from 'groq-sdk'
 import type { MindsetId } from '../mindset/types'
 import { buildMindsetSystemPrompt } from '../mindset/prompt-builder'
-
-// Lazy initialization to avoid build-time errors
-let groq: Groq | null = null
-function getGroq() {
-  if (!groq) {
-    groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
-  }
-  return groq
-}
+// Shared resilient Groq client (retry → fallback model → caller's canned
+// content, with fire-and-forget usage logging). Replaces the per-file
+// groq-sdk singleton so this path gets the same reliability + telemetry.
+import { getGroq } from '../groq'
 
 export type SegmentType = 'activation' | 'breathing' | 'micro_lesson' | 'cooldown'
 
@@ -83,7 +77,7 @@ Always respond with valid JSON only. No markdown, no code blocks, just raw JSON.
       temperature: 0.8,
       max_tokens: 2000,
       response_format: { type: 'json_object' },
-    })
+    }, { endpoint: `session-content:${activityType}` })
 
     const content = response.choices[0]?.message?.content
     if (!content) {

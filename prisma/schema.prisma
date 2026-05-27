@@ -540,6 +540,29 @@ model TtsUsage {
   @@index([month_key])
 }
 
+// Per-call Groq telemetry. Relation-less + written fire-and-forget so it
+// can never block or break a request. The point: surface when AI silently
+// degraded (outcome=failed → caller used canned content) or fell back to
+// the cheap model (fell_back=true), plus per-endpoint token/latency.
+model AiCallLog {
+  id                String   @id @default(cuid())
+  endpoint          String // which feature/route made the call (e.g. "journal-insights")
+  requested_model   String // model originally asked for
+  model             String // model that actually served (or last tried on failure)
+  fell_back         Boolean  @default(false) // served by the fallback model, not the requested one
+  outcome           String // "ok" | "failed"
+  prompt_tokens     Int      @default(0)
+  completion_tokens Int      @default(0)
+  latency_ms        Int      @default(0)
+  user_id           String? // optional; no FK on purpose
+  error             String? // truncated error message on failure
+  created_at        DateTime @default(now())
+
+  @@index([created_at])
+  @@index([endpoint, created_at])
+  @@index([outcome, created_at])
+}
+
 // Cache for YouTube video search results (persists across Vercel cold starts)
 model VideoCache {
   id        String   @id @default(cuid())
