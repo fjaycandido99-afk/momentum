@@ -50,6 +50,10 @@ The widget ships as its own bundle, so it needs its own profile.
 The quote works without this. To show **"Day 12 · Building Momentum"**, the app
 and widget share data via an App Group.
 
+**The web side is already done** — `@capacitor/preferences` is installed and
+`lib/widget-sync.ts` writes `widget_streak` + `widget_stage` from the home screen
+(`syncWidgetData` in `ImmersiveHome`). Only the native App Group wiring remains:
+
 1. Apple Developer → **App Groups** → create **`group.com.voxu.app`**.
 2. Enable the **App Groups** capability for **both** `com.voxu.app` and
    `com.voxu.app.VoxuWidget`, adding `group.com.voxu.app` to each. Regenerate the
@@ -60,23 +64,13 @@ and widget share data via an App Group.
    <array><string>group.com.voxu.app</string></array>
    ```
    (The widget's `VoxuWidget.entitlements` already has it.)
-4. Install the Preferences plugin so the web app can write to the group:
-   ```
-   npm i @capacitor/preferences
-   ```
-   and configure the group in `capacitor.config.ts`:
+4. Point Preferences at the group in `capacitor.config.ts`:
    ```ts
    plugins: { Preferences: { group: 'group.com.voxu.app' } }
    ```
-5. From the web app, write the values the widget reads (e.g. on home load):
-   ```ts
-   import { Preferences } from '@capacitor/preferences'
-   await Preferences.set({ key: 'widget_streak', value: String(streak) })
-   await Preferences.set({ key: 'widget_stage',  value: journeyStage })   // from lib/journey.ts
-   ```
-6. `npx cap sync ios`, rebuild. The widget will reload streak/journey within a
-   few hours (or immediately via `WidgetCenter.shared.reloadAllTimelines()` if
-   you add a tiny native call).
+5. `npx cap sync ios`, rebuild via Codemagic. The widget reloads streak/journey
+   within a few hours (or immediately if you add a
+   `WidgetCenter.shared.reloadAllTimelines()` call to a small native bridge).
 
 ### Keys the widget reads (App Group `group.com.voxu.app`)
 | Key | Example | Source |

@@ -33,6 +33,7 @@ import {
 import { getDateString } from '@/lib/daily-guide/day-type'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { syncWidgetData } from '@/lib/widget-sync'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { FREEMIUM_LIMITS } from '@/lib/subscription-constants'
@@ -436,6 +437,11 @@ export function ImmersiveHome() {
 
   // SWR: Gamification status (for bonus, freezes)
   const { dailyBonusClaimed, streakFreezes } = useGamificationStatus()
+
+  // Keep the iOS home-screen widget's streak + journey in sync (native-only no-op on web)
+  useEffect(() => {
+    if (typeof streak === 'number') syncWidgetData(streak, mindsetCtx?.mindset)
+  }, [streak, mindsetCtx?.mindset])
 
   // Adjust mode based on journal mood
   useEffect(() => {
