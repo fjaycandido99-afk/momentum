@@ -1,6 +1,7 @@
 'use client'
 
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
+import { AuraRing } from '@/components/ui/Aura'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
 import { getSoundscapeBackground } from './home-types'
@@ -59,14 +60,29 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
               className="flex flex-col items-center gap-1.5 shrink-0 press-scale snap-card card-stagger"
               style={{ animationDelay: `${index * 80}ms` }}
             >
-              <div className={`relative w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center transition-all duration-200 card-surface ${isActive ? 'card-now-playing breathing-glow' : ''}`}>
+              <div className="relative grid place-items-center" style={{ width: 64, height: 64 }}>
+                {/* Monochrome texture fill — circle-masked + faded to black so it
+                    reads as atmosphere behind the icon (grayscale keeps it on-brand) */}
                 {(() => {
                   const bg = getSoundscapeBackground(item.id)
                   return bg ? (
-                    <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                    <div
+                      className="absolute rounded-full overflow-hidden"
+                      style={{
+                        width: 50, height: 50,
+                        WebkitMaskImage: 'radial-gradient(circle, #000 56%, transparent 100%)',
+                        maskImage: 'radial-gradient(circle, #000 56%, transparent 100%)',
+                      }}
+                    >
+                      <img src={bg} alt="" className="w-full h-full object-cover grayscale" style={{ opacity: 0.4 }} />
+                    </div>
                   ) : null
                 })()}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20" />
+                {/* Signature aura ring — energetic when playing, a calm steady glow otherwise */}
+                <div className="absolute inset-0 grid place-items-center">
+                  <AuraRing size={64} stroke={1.5} state={isActive ? 'active' : 'idle'} breathe={isActive} />
+                </div>
+                {/* Center icon / playing bars */}
                 <div className="relative z-10">
                   {isActive ? (
                     <EqBars />
