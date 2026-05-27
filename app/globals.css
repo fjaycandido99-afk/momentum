@@ -1663,6 +1663,13 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   transition: transform 0.1s linear;
 }
 
+/* Reset/SOS breathing pulse — ~4s in, ~4s out */
+@keyframes breathe {
+  0%, 100% { transform: scale(0.72); opacity: 0.5; }
+  50% { transform: scale(1); opacity: 0.95; }
+}
+.animate-breathe { animation: breathe 8s ease-in-out infinite; }
+
 /* Icon morph - smooth play/pause transitions */
 @keyframes icon-morph-in {
   0% {

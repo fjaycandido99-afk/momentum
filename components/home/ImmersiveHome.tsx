@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind } from 'lucide-react'
+import { useReset } from '@/contexts/ResetContext'
 import { CoachAvatar } from '@/components/coach/CoachAvatar'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -85,6 +86,7 @@ export function ImmersiveHome() {
   const [mounted, setMounted] = useState(false)
   const audioContext = useAudioOptional()
   const mindsetCtx = useMindsetOptional()
+  const { openReset } = useReset()
   const hasRestoredRef = useRef(false)
   const isRestorePendingRef = useRef(!!audioContext?.lastPlayed)
 
@@ -1138,6 +1140,13 @@ export function ImmersiveHome() {
               />
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={openReset}
+                aria-label="Reset — a calm grounding moment"
+                className="flex items-center justify-center p-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] transition-colors press-scale"
+              >
+                <Wind className="w-4 h-4 text-white/75" />
+              </button>
               {mindsetCtx && (
                 <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
                   <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/75" />

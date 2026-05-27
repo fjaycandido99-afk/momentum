@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { EqBars } from '@/components/ui/EqBars'
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
-import { Home, Pause } from 'lucide-react'
+import { Home, Pause, Wind } from 'lucide-react'
+import { useReset } from '@/contexts/ResetContext'
 import { useHomeAudioOptional } from '@/contexts/HomeAudioContext'
 
 const PAGE_LABELS: Record<string, string> = {
@@ -20,6 +21,7 @@ export function MinimalNav() {
   const router = useRouter()
   const pageLabel = PAGE_LABELS[pathname] || ''
   const homeAudio = useHomeAudioOptional()
+  const { openReset } = useReset()
   const isDailyGuide = pathname === '/daily-guide'
 
   const isPlaying = homeAudio && !isDailyGuide && (
@@ -72,6 +74,16 @@ export function MinimalNav() {
           </button>
         </div>
       )}
+
+      {/* Reset / SOS capsule */}
+      <button
+        onClick={openReset}
+        aria-label="Reset — a calm grounding moment"
+        className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+      >
+        <Wind className="w-4 h-4 text-white" strokeWidth={1.5} aria-hidden="true" />
+        <span className="text-sm text-white">Reset</span>
+      </button>
 
       {/* Home capsule */}
       <Link

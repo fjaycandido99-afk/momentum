@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { MinimalNav } from '@/components/navigation/MinimalNav'
 import { PageTransition } from '@/components/ui/PageTransition'
 import { Providers } from './providers'
+import { ResetProvider } from '@/contexts/ResetContext'
 
 export default function DashboardLayout({
   children,
@@ -18,12 +19,14 @@ export default function DashboardLayout({
 
   return (
     <Providers>
-      <div className="isolate min-h-screen bg-black">
-        <main id="main-content" key={pathname} className={`min-h-screen page-enter ${isHome ? '' : 'pb-16'}`}>
-          {children}
-        </main>
-        {!isHome && !hideChrome && <MinimalNav />}
-      </div>
+      <ResetProvider>
+        <div className="isolate min-h-screen bg-black">
+          <main id="main-content" key={pathname} className={`min-h-screen page-enter ${isHome ? '' : 'pb-16'}`}>
+            {children}
+          </main>
+          {!isHome && !hideChrome && <MinimalNav />}
+        </div>
+      </ResetProvider>
     </Providers>
   )
 }
