@@ -795,16 +795,12 @@ function JournalContent() {
             </button>
           ))}
         </div>
-        {/* Mood selector — full width */}
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] text-white/50 uppercase tracking-wider font-medium">Mood</span>
-          <MoodSelector
-            mood={mood}
-            onSelect={(m) => { setMood(m); setIsSaved(false) }}
-            moodHistory={allEntries}
-            compact
-          />
-        </div>
+        {/* Mood check-in — prominent, full width */}
+        <MoodSelector
+          mood={mood}
+          onSelect={(m) => { setMood(m); setIsSaved(false) }}
+          moodHistory={allEntries}
+        />
         <FeatureHint id="journal-modes-v2" text="Try Chat for a guided AI conversation, or Dream to decode your dreams" mode="once" />
       </div>
 
@@ -1216,6 +1212,13 @@ function JournalContent() {
                 {wordCount > 0 && <>{wordCount} words today</>}
                 {wordCount > 0 && streak > 0 && ' | '}
                 {streak > 0 && <>{streak}-day streak</>}
+              </p>
+            )}
+            {/* Reassurance — private-by-default warmth before saving */}
+            {!isSaved && (
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-white/40">
+                <Lock className="w-3 h-3" />
+                Your thoughts are safe here
               </p>
             )}
           </div>

@@ -3,11 +3,11 @@
 import { useMemo } from 'react'
 
 const MOODS = [
-  { value: 'awful', emoji: '😞', label: 'Awful', color: 'ring-red-400' },
-  { value: 'low', emoji: '😔', label: 'Low', color: 'ring-orange-400' },
-  { value: 'okay', emoji: '😐', label: 'Okay', color: 'ring-yellow-400' },
-  { value: 'good', emoji: '😊', label: 'Good', color: 'ring-emerald-400' },
-  { value: 'great', emoji: '😄', label: 'Great', color: 'ring-green-400' },
+  { value: 'awful', emoji: '😞', label: 'Awful' },
+  { value: 'low', emoji: '😔', label: 'Low' },
+  { value: 'okay', emoji: '😐', label: 'Okay' },
+  { value: 'good', emoji: '😊', label: 'Good' },
+  { value: 'great', emoji: '😄', label: 'Great' },
 ] as const
 
 export type MoodValue = typeof MOODS[number]['value']
@@ -82,44 +82,51 @@ export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: M
     )
   }
 
+  // Prominent, full-width, monochrome mood check-in. Unselected faces
+  // desaturate to grayscale + fade so only the chosen mood reads in color —
+  // a calm, on-brand way to make the daily ritual feel deliberate.
   return (
-    <div className="p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)]">
-      <p className="text-xs text-white uppercase tracking-wider mb-3 font-medium">How are you feeling?</p>
-      <div className="flex items-center justify-between gap-1">
+    <div className="space-y-2.5">
+      <p className="text-[11px] text-white/50 uppercase tracking-wider font-medium">How are you feeling?</p>
+      <div className="flex items-stretch gap-1.5">
         {MOODS.map((m) => {
           const isSelected = mood === m.value
           return (
             <button
               key={m.value}
               onClick={() => onSelect(m.value)}
-              className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-all flex-1 ${
+              aria-pressed={isSelected}
+              aria-label={m.label}
+              className={`flex-1 flex flex-col items-center gap-1.5 py-2.5 rounded-2xl border transition-all press-scale ${
                 isSelected
-                  ? `ring-2 ${m.color} bg-white/10 scale-105`
-                  : 'hover:bg-white/5'
+                  ? 'bg-white/[0.12] border-white/30 scale-[1.03]'
+                  : 'bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06]'
               }`}
             >
               <span
-                className={`text-2xl transition-opacity ${isSelected ? '' : 'opacity-40'}`}
+                className={`text-2xl leading-none transition-all ${isSelected ? 'opacity-100' : 'opacity-40 grayscale'}`}
               >
                 {m.emoji}
               </span>
-              <span className={`text-[10px] font-medium ${isSelected ? 'text-white' : 'text-white/50'}`}>{m.label}</span>
+              <span className={`text-[10px] font-medium transition-colors ${isSelected ? 'text-white' : 'text-white/45'}`}>
+                {m.label}
+              </span>
             </button>
           )
         })}
       </div>
 
-      {/* Mini sparkline */}
+      {/* 14-day trend — monochrome sparkline */}
       {sparklinePoints && (
-        <div className="mt-3 flex justify-center">
-          <svg width={120} height={28} viewBox="0 0 120 28" className="opacity-80">
+        <div className="flex items-center gap-2 px-0.5 pt-0.5">
+          <span className="text-[10px] text-white/40 shrink-0">14-day trend</span>
+          <svg width={120} height={28} viewBox="0 0 120 28" className="text-white/60">
             <polyline
               fill="none"
               stroke="currentColor"
               strokeWidth={1.5}
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-amber-400"
               points={sparklinePoints.map(p => `${p.x},${p.y + 2}`).join(' ')}
             />
             {sparklinePoints.map((p, i) => (
@@ -128,7 +135,7 @@ export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: M
                 cx={p.x}
                 cy={p.y + 2}
                 r={1.5}
-                className="fill-amber-400"
+                className="fill-white/70"
               />
             ))}
           </svg>

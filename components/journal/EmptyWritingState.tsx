@@ -1,7 +1,11 @@
 'use client'
 
 import { useMemo } from 'react'
-import { PenLine } from 'lucide-react'
+import { PenLine, Sparkles, Heart, Sun, Feather } from 'lucide-react'
+
+// Monochrome leading icons for the quick-start chips — cycled by position so
+// each prompt reads as a distinct, inviting starting point (not a wall of text).
+const CHIP_ICONS = [Sparkles, Heart, Sun, Feather] as const
 import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
 import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
 import type { MindsetId } from '@/lib/mindset/types'
@@ -82,15 +86,19 @@ export function EmptyWritingState({ mindsetId, onStartWriting, visible }: EmptyW
 
       {/* Quick-start prompt chips */}
       <div className="flex flex-wrap justify-center gap-2 max-w-sm px-4">
-        {chips.map((chip, i) => (
-          <button
-            key={i}
-            onClick={() => onStartWriting(chip + ' ')}
-            className="px-3 py-1.5 rounded-full bg-black border border-white/15 text-xs text-white hover:bg-black/80 transition-all press-scale"
-          >
-            {chip}
-          </button>
-        ))}
+        {chips.map((chip, i) => {
+          const Icon = CHIP_ICONS[i % CHIP_ICONS.length]
+          return (
+            <button
+              key={i}
+              onClick={() => onStartWriting(chip + ' ')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black border border-white/15 text-xs text-white hover:bg-black/80 transition-all press-scale"
+            >
+              <Icon className="w-3.5 h-3.5 text-white/50 shrink-0" strokeWidth={1.75} />
+              {chip}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
