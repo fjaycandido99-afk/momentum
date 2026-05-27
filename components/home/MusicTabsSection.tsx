@@ -80,7 +80,7 @@ export function MusicTabsSection({
       : undefined
 
   return (
-    <div>
+    <div className="mb-10">
       {/* Header */}
       <div className="flex items-center justify-between px-6 mb-5">
         <div className="flex items-center gap-2.5 section-header">
@@ -105,8 +105,8 @@ export function MusicTabsSection({
               onClick={() => setSelectedGenreId(g.id)}
               className={`shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors ${
                 isActive
-                  ? 'bg-white text-black font-medium'
-                  : 'bg-black border border-white/15 text-white/70'
+                  ? 'bg-white text-black font-semibold'
+                  : 'text-white/45 hover:text-white/80'
               }`}
             >
               {g.word}

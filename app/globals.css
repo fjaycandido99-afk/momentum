@@ -843,29 +843,35 @@ input:focus:not(:focus-visible), select:focus:not(:focus-visible), textarea:focu
   transition: border-color 0.2s ease;
 }
 
-/* Section header accent bar */
+/* Section header accent bar — scaled to sit beside the larger title */
 .section-header::before {
   content: '';
   width: 2px;
-  height: 16px;
-  background: rgba(255, 255, 255, 0.3);
+  height: 22px;
+  background: rgba(255, 255, 255, 0.22);
   border-radius: 1px;
   flex-shrink: 0;
-  margin-top: 3px;
+  margin-top: 4px;
 }
 
+/* Larger, more cinematic section titles. Bigger size + stronger weight +
+   tighter tracking = a "breathing" hierarchy instead of the old compressed
+   18px. One change here upgrades every home section that uses the class. */
 .section-header-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: white;
-  line-height: 1.3;
+  line-height: 1.15;
 }
 
+/* Softer + slightly larger subtitle. Lower opacity widens the contrast
+   gap with the title so the hierarchy reads at a glance. */
 .section-header-subtitle {
-  font-size: 0.6875rem;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 2px;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 4px;
+  letter-spacing: 0.005em;
 }
 
 /* Endel-style clean cards */
