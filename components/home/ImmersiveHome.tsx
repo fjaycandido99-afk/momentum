@@ -47,6 +47,7 @@ import { WellnessWidget } from './WellnessWidget'
 import { DailyFeatureTip } from './DailyFeatureTip'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
+import { YesterdayFollowUp } from './YesterdayFollowUp'
 import { DailyProgressRing } from './DailyProgressRing'
 import { useToast } from '@/contexts/ToastContext'
 import { usePreferences, useJournalMood, useMotivationVideos, useFavorites, useWelcomeStatus, useGamificationStatus } from '@/hooks/useHomeSWR'
@@ -1205,6 +1206,9 @@ export function ImmersiveHome() {
           onDismiss={() => setShowWelcomeBack(false)}
         />
       )}
+
+      {/* "Coach remembers you" — follows up on yesterday's intention / mood / reflection */}
+      <YesterdayFollowUp />
 
       {/* Hero Carousel: Daily Guide + Path + Featured */}
       {(() => {
