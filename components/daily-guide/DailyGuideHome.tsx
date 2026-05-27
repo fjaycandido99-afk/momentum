@@ -376,24 +376,12 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
 
         {/* Greeting */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            {(() => {
-              const GreetingIcon = greeting.icon
-              return (
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-white/10">
-                    <GreetingIcon className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <span className="text-sm text-white">{greeting.text}</span>
-                    <p className="text-[11px] text-white/70">{getFormattedDate(today)}</p>
-                  </div>
-                </div>
-              )
-            })()}
+        <div className="flex items-start justify-between mb-5">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-white tracking-tight leading-tight truncate">{greeting.text}</h1>
+            <p className="text-xs text-white/55 mt-1">{getFormattedDate(today)}</p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 mt-1">
             <StreakBadge streak={streak} />
             {mindsetCtx && (
               <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">

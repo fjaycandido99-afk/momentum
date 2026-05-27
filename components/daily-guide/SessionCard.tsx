@@ -132,15 +132,23 @@ export function SessionCard({
 
   return (
     <>
-      <div className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
+      <div className={`relative overflow-hidden border transition-all duration-300 ${
         isCurrent && !isCompleted
-          ? 'border-white/20 bg-black'
+          ? 'rounded-3xl border-white/15 bg-black'
           : isCompleted
-            ? 'border-emerald-500/20 bg-black'
-            : 'border-white/10 bg-black opacity-60'
+            ? 'rounded-2xl border-emerald-500/20 bg-black'
+            : 'rounded-2xl border-white/10 bg-black opacity-60'
       }`}>
+        {/* Cinematic backdrop placeholder (hero only) — atmospheric depth now,
+            your curated art drops straight in here later. */}
+        {isCurrent && !isCompleted && (
+          <div className="absolute inset-0 pointer-events-none" aria-hidden>
+            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.06] via-transparent to-transparent" />
+            <div className="absolute -top-16 -right-8 w-48 h-48 rounded-full bg-white/[0.05] blur-3xl" />
+          </div>
+        )}
         {/* Content */}
-        <div className="relative z-10 p-5">
+        <div className={`relative z-10 ${isCurrent && !isCompleted ? 'p-6' : 'p-5'}`}>
           {/* Header */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -157,9 +165,9 @@ export function SessionCard({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-white text-base">{config.label}</h3>
+                  <h3 className={`font-bold text-white ${isCurrent && !isCompleted ? 'text-xl' : 'text-base'}`}>{config.label}</h3>
                   {isCurrent && !isCompleted && (
-                    <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-white/10 text-white/70 rounded-full">
+                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-white text-black rounded-full">
                       Now
                     </span>
                   )}
@@ -172,7 +180,7 @@ export function SessionCard({
           </div>
 
           {/* Preview text */}
-          <p className="text-sm text-white/60 leading-relaxed mb-4 line-clamp-2">
+          <p className={`text-white/60 leading-relaxed mb-4 ${isCurrent && !isCompleted ? 'text-[15px] italic text-white/75 line-clamp-3' : 'text-sm line-clamp-2'}`}>
             {extractPreview(script, config.defaultPreview)}
           </p>
 
@@ -181,10 +189,10 @@ export function SessionCard({
             <button
               onClick={handlePlay}
               disabled={isLoading}
-              className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium text-sm transition-all ${
+              className={`w-full flex items-center justify-center gap-2 py-3 px-4 font-semibold text-sm transition-all ${
                 isCurrent
-                  ? 'bg-white/10 hover:bg-white/15 text-white backdrop-blur-sm'
-                  : 'bg-white/5 hover:bg-white/10 text-white/70'
+                  ? 'rounded-full bg-white/[0.12] hover:bg-white/20 text-white'
+                  : 'rounded-xl bg-white/5 hover:bg-white/10 text-white/70'
               }`}
             >
               {isLoading ? (
