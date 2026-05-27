@@ -27,7 +27,7 @@ export function XPBadge() {
         {/* Mini progress bar */}
         <div className="w-8 h-1.5 rounded-full bg-white/10 overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-400 transition-all duration-500"
+            className="h-full rounded-full bg-white/70 transition-all duration-500"
             style={{ width: `${Math.round(progress * 100)}%` }}
           />
         </div>
@@ -44,7 +44,7 @@ export function XPBadge() {
             <>
               <div className="w-full h-2 rounded-full bg-white/10 mb-1.5">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-400 transition-all duration-500"
+                  className="h-full rounded-full bg-white/70 transition-all duration-500"
                   style={{ width: `${Math.round(progress * 100)}%` }}
                 />
               </div>
@@ -54,7 +54,7 @@ export function XPBadge() {
             </>
           )}
           {!next && (
-            <p className="text-[10px] text-amber-400/80">Max level reached!</p>
+            <p className="text-[10px] text-white/55">Max level reached!</p>
           )}
         </div>
       )}

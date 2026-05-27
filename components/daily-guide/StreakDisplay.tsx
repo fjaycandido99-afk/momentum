@@ -264,18 +264,20 @@ export function StreakBadge({ streak, freezeCount }: { streak: number; freezeCou
   }
 
   return (
-    <div className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r ${
-      currentMilestone ? currentMilestone.bg : 'from-amber-500/20 to-orange-500/20'
-    } border ${currentMilestone ? currentMilestone.border : 'border-amber-500/30'}`}>
+    <div className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${
+      currentMilestone
+        ? `bg-gradient-to-r ${currentMilestone.bg} ${currentMilestone.border}`
+        : 'bg-white/[0.06] border-white/[0.12]'
+    }`}>
       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
         <StreakFlame streak={streak} size="sm" />
       </div>
-      <Flame className={`w-3.5 h-3.5 ${currentMilestone?.color || 'text-amber-400'}`} />
-      <span className={`text-xs font-bold ${currentMilestone?.color || 'text-amber-400'}`}>
+      <Flame className={`w-3.5 h-3.5 ${currentMilestone?.color || 'text-amber-400/90'}`} />
+      <span className={`text-xs font-bold ${currentMilestone?.color || 'text-white'}`}>
         {streak}
       </span>
       {typeof freezeCount === 'number' && freezeCount > 0 && (
-        <span className="text-[10px] text-cyan-400/70" title={`${freezeCount} streak freeze${freezeCount !== 1 ? 's' : ''}`}>
+        <span className="text-[10px] text-white/45" title={`${freezeCount} streak freeze${freezeCount !== 1 ? 's' : ''}`}>
           ❄{freezeCount}
         </span>
       )}

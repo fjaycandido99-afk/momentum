@@ -1123,7 +1123,7 @@ export function ImmersiveHome() {
           {/* Bottom blur fade */}
           <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2.5 min-w-0">
               <h1 className={`font-bold shimmer-text transition-all duration-300 shrink-0 tracking-tight ${headerScrolled ? 'text-xl' : 'text-2xl'}`}>Explore</h1>
               <StreakBadge streak={streak} freezeCount={streakFreezes} />
               <XPBadge />
