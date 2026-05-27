@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { ChevronDown, Heart, Send } from 'lucide-react'
+import { ChevronDown, Heart, Send, Share2 } from 'lucide-react'
+import { useShareCard } from '@/hooks/useShareCard'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
 import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
@@ -52,6 +53,13 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
     const idx = dateSeed(today + '_q') % questions.length
     return questions[idx]
   }, [mindsetId, today])
+
+  const { shareAsImage, isGenerating: isSharing } = useShareCard()
+
+  const handleShareQuote = useCallback(() => {
+    if (!dailyQuote) return
+    shareAsImage(dailyQuote.text, 'quote', dailyQuote.author)
+  }, [dailyQuote, shareAsImage])
 
   const handleSaveQuote = useCallback(async () => {
     if (saved || !dailyQuote) return
@@ -117,17 +125,27 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
                 {config?.name || 'Daily'} Wisdom
               </h3>
             </div>
-            <button
-              onClick={handleSaveQuote}
-              className="p-1.5 rounded-full hover:bg-white/5 transition-colors"
-              aria-label="Save quote"
-            >
-              <Heart
-                className={`w-4 h-4 transition-colors ${
-                  saved ? 'text-rose-400 fill-rose-400' : saveError ? 'text-red-400 animate-pulse' : 'text-white/40'
-                }`}
-              />
-            </button>
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={handleShareQuote}
+                disabled={isSharing}
+                className="p-1.5 rounded-full hover:bg-white/5 transition-colors disabled:opacity-50"
+                aria-label="Share quote"
+              >
+                <Share2 className="w-4 h-4 text-white/40" />
+              </button>
+              <button
+                onClick={handleSaveQuote}
+                className="p-1.5 rounded-full hover:bg-white/5 transition-colors"
+                aria-label="Save quote"
+              >
+                <Heart
+                  className={`w-4 h-4 transition-colors ${
+                    saved ? 'text-rose-400 fill-rose-400' : saveError ? 'text-red-400 animate-pulse' : 'text-white/40'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
           <blockquote className="text-sm text-white/90 leading-relaxed italic">
