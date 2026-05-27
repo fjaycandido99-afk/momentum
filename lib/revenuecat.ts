@@ -32,6 +32,12 @@ export interface RevenueCatCustomerInfo {
 
 // Initialize RevenueCat (call this on app startup)
 export async function initRevenueCat(userId: string): Promise<void> {
+  // RevenueCat's plugin is native-only (iOS/Android). On the web, purchases
+  // go through Stripe — so skip init entirely instead of letting configure()
+  // throw "Web not supported in this plugin" and log a misleading error.
+  const { Capacitor } = await import('@capacitor/core')
+  if (!Capacitor.isNativePlatform()) return
+
   // Dynamically import to avoid SSR issues
   const { Purchases } = await import('@revenuecat/purchases-capacitor')
 
