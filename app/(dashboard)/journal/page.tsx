@@ -70,7 +70,6 @@ function JournalContent() {
   const hasJournalHistory = checkAccess('journal_history')
 
   // Existing state
-  const [sparkPrompt, setSparkPrompt] = useState<string | null>(null)
   const [win, setWin] = useState('')
   const [gratitude, setGratitude] = useState('')
   const [intention, setIntention] = useState('')
@@ -110,6 +109,7 @@ function JournalContent() {
 
   // Writing state for empty state fade-out
   const [writingActive, setWritingActive] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
 
   // Milestone celebration
   const [milestoneStreak, setMilestoneStreak] = useState<number | null>(null)
@@ -137,10 +137,15 @@ function JournalContent() {
   useAutoResizeTextarea(intentionRef, intention, { focusMode: focusMode && focusField === 'intention' })
   useAutoResizeTextarea(dreamRef, dreamText, { focusMode: focusMode && focusField === 'dream' })
 
-  // Read spark prompt from URL
+  // A ?spark= deep-link seeds the free-write area directly, instead of a
+  // separate prompt card competing with the in-form prompts.
   useEffect(() => {
     const spark = searchParams.get('spark')
-    if (spark) setSparkPrompt(spark)
+    if (spark) {
+      setMode('freewrite')
+      setFreeText(prev => prev || spark + ' ')
+      setWritingActive(true)
+    }
   }, [searchParams])
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
@@ -800,25 +805,6 @@ function JournalContent() {
 
       <TierBanner page="journal" />
 
-      {/* Spark Prompt */}
-      {sparkPrompt && (
-        <div className="px-6 mb-3 animate-fade-in">
-          <div className="relative p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
-            <button
-              aria-label="Dismiss prompt"
-              onClick={() => setSparkPrompt(null)}
-              className="absolute top-2 right-2 p-1 rounded-full hover:bg-white/10 transition-colors"
-            >
-              <X className="w-3 h-3 text-white/75" />
-            </button>
-            <div className="flex items-start gap-2 pr-6">
-              <Sparkles className="w-3.5 h-3.5 text-violet-300 mt-0.5 shrink-0" />
-              <p className="text-sm text-white/90 leading-relaxed italic">&ldquo;{sparkPrompt}&rdquo;</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Journal Form */}
       <div className="px-6">
         {isLoading ? (
@@ -1265,10 +1251,23 @@ function JournalContent() {
         )}
       </div>
 
-      {/* ── Below the fold: activity + history ── */}
-
-      {/* 30-Day HeatMap */}
+      {/* ── Below the fold: activity + history — tucked behind a toggle so
+           the screen stays write-first ── */}
       <div className="px-6 mt-8">
+        <button
+          onClick={() => setShowHistory(v => !v)}
+          aria-expanded={showHistory}
+          className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-white/55 hover:text-white/80 transition-colors press-scale"
+        >
+          {showHistory ? 'Hide past entries' : 'Past entries & activity'}
+          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showHistory ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
+
+      {showHistory && (
+      <>
+      {/* 30-Day HeatMap */}
+      <div className="px-6 mt-4">
         <HeatMapStrip entries={allEntries} />
       </div>
 
@@ -1468,6 +1467,8 @@ function JournalContent() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Focus Mode Overlay */}
       {focusMode && focusField && (
