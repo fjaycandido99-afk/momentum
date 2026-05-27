@@ -110,6 +110,7 @@ function JournalContent() {
   // Writing state for empty state fade-out
   const [writingActive, setWritingActive] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [promptImgError, setPromptImgError] = useState(false)
 
   // Milestone celebration
   const [milestoneStreak, setMilestoneStreak] = useState<number | null>(null)
@@ -1092,19 +1093,34 @@ function JournalContent() {
         ) : (
           /* Free Write Mode */
           <div>
-            {/* Rotating prompt */}
-            <div className="flex items-start gap-3 px-4 py-3 rounded-2xl bg-black border border-white/15">
+            {/* Rotating prompt — cinematic backdrop. onError hides the image
+                if it hasn't been generated yet, so the card stays clean. */}
+            <div className="relative overflow-hidden flex items-start gap-3 px-4 py-4 rounded-2xl bg-black border border-white/15">
+              {!promptImgError && (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/journal/prompt.jpg"
+                    alt=""
+                    aria-hidden
+                    onError={() => setPromptImgError(true)}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ objectPosition: '72% 50%' }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/45" />
+                </>
+              )}
               <button
                 type="button"
                 onClick={handleShuffle}
                 aria-label="Shuffle prompt"
-                className="shrink-0 mt-0.5"
+                className="relative z-10 shrink-0 mt-0.5"
               >
                 <Shuffle
                   className="w-4 h-4 text-white/60 cursor-pointer hover:text-white transition-colors"
                 />
               </button>
-              <p className="text-sm text-white leading-relaxed">
+              <p className="relative z-10 text-sm text-white leading-relaxed">
                 {displayPrompt.prompt.text}
               </p>
             </div>
