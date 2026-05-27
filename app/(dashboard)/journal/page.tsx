@@ -80,6 +80,7 @@ function JournalContent() {
   const [showWeeklyReview, setShowWeeklyReview] = useState(false)
   const [streak, setStreak] = useState(0)
   const [reflection, setReflection] = useState<string | null>(null)
+  const [reflectionLocked, setReflectionLocked] = useState(false)
 
   // New state
   const [mode, setMode] = useState<JournalMode>('freewrite')
@@ -248,6 +249,7 @@ function JournalContent() {
       setIsLoading(true)
       setIsSaved(false)
       setReflection(null)
+      setReflectionLocked(false)
       setDreamText('')
       setDreamInterpretation(null)
       setDreamSaved(false)
@@ -418,6 +420,7 @@ function JournalContent() {
         if (data.data?.journal_ai_reflection) {
           setReflection(data.data.journal_ai_reflection)
         }
+        setReflectionLocked(!!data.data?.reflectionLocked)
         if (data.data?.journal_tags?.length) {
           setJournalTags(data.data.journal_tags)
         }
@@ -590,6 +593,7 @@ function JournalContent() {
         if (data.data?.journal_ai_reflection) {
           setReflection(data.data.journal_ai_reflection)
         }
+        setReflectionLocked(!!data.data?.reflectionLocked)
         if (data.data?.journal_tags?.length) {
           setJournalTags(data.data.journal_tags)
         }
@@ -1290,6 +1294,25 @@ function JournalContent() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Free reflection budget used up — the taste is over, invite the upgrade */}
+        {reflectionLocked && !reflection && isSaved && (
+          <button
+            onClick={openUpgradeModal}
+            className="mt-4 w-full text-left p-4 rounded-2xl bg-white/[0.04] border border-white/15 hover:bg-white/[0.07] transition-colors press-scale animate-fade-in"
+          >
+            <div className="flex items-start gap-2.5">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.12] shrink-0">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-white font-medium">Want your reflection back?</p>
+                <p className="text-xs text-white/60 mt-0.5 leading-snug">You&rsquo;ve used your free AI reflections. Upgrade to get a personal insight on every entry — plus the patterns across your whole journal.</p>
+                <span className="inline-flex items-center gap-1 text-xs text-white font-medium mt-2">Unlock reflections <ChevronRight className="w-3.5 h-3.5" /></span>
+              </div>
+            </div>
+          </button>
         )}
       </div>
 

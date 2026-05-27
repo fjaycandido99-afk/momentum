@@ -208,13 +208,28 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // AI Reflection: generate for premium users
+    // AI Reflection — free users get a taste (their first FREE_REFLECTION_LIMIT
+    // entries), premium gets it on every entry. The "you were seen" payoff is the
+    // hook that builds the journaling habit, so it can't be fully paywalled.
+    const FREE_REFLECTION_LIMIT = 5
     let reflection: string | null = null
     let journalTags: string[] = []
+    let reflectionLocked = false
     try {
       const isPremium = await isPremiumUser(user.id)
+      const hasContent = !!(journal_win || journal_gratitude || journal_learned || journal_freetext)
 
-      if (isPremium && (journal_win || journal_gratitude || journal_learned || journal_freetext)) {
+      let eligible = isPremium && hasContent
+      if (hasContent && !isPremium) {
+        // Count entries that already earned a reflection — the free taste budget.
+        const priorReflections = await prisma.dailyGuide.count({
+          where: { user_id: user.id, journal_ai_reflection: { not: null } },
+        })
+        if (priorReflections < FREE_REFLECTION_LIMIT) eligible = true
+        else reflectionLocked = true
+      }
+
+      if (eligible) {
         // Fetch last 7 days of journals for pattern detection
         const weekAgo = new Date()
         weekAgo.setDate(weekAgo.getDate() - 7)
@@ -360,6 +375,7 @@ export async function POST(request: NextRequest) {
         journal_prompt: guide.journal_prompt,
         journal_ai_reflection: reflection,
         journal_tags: journalTags,
+        reflectionLocked,
       },
     })
   } catch (error) {
