@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { ChevronLeft, Send, Loader2, Sparkles, Crown, MessageSquare, ClipboardList, Sun, Clock, Moon, BarChart3 } from 'lucide-react'
+import { ChevronLeft, Send, Loader2, Sparkles, Crown, MessageSquare, ClipboardList, Sun, Clock, Moon, BarChart3, Mic } from 'lucide-react'
+import { useVoiceCoach } from '@/hooks/useVoiceCoach'
 import Link from 'next/link'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
@@ -239,6 +240,7 @@ export default function CoachPage() {
   const [showQuickReplies, setShowQuickReplies] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const speakRef = useRef<(text: string) => void>(() => {})
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -281,6 +283,7 @@ export default function CoachPage() {
         const data = await response.json()
         setMessages(prev => [...prev, { role: 'assistant', content: data.reply, timestamp: Date.now() }])
         setEmotionWithDecay(detectEmotion(data.reply))
+        speakRef.current(data.reply) // speaks aloud only when voice mode is on
 
         // Award XP on first accountability check-in per session
         if (chatMode === 'accountability' && !hasLoggedCheckInXP) {
@@ -313,6 +316,23 @@ export default function CoachPage() {
       e.preventDefault()
       sendMessage()
     }
+  }
+
+  // Voice coach — hands-free loop (speak → coach replies aloud via ElevenLabs
+  // → re-listen). speakRef lets sendMessage's reply handler trigger speech.
+  const voice = useVoiceCoach({ onTranscript: (t) => sendMessage(t) })
+  useEffect(() => { speakRef.current = voice.speak }, [voice.speak])
+
+  const handleVoiceToggle = () => {
+    if (!voice.supported) {
+      setMessages(prev => [...prev, { role: 'assistant', content: "Voice mode isn't supported in this browser — try Chrome, Safari, or the app.", timestamp: Date.now() }])
+      return
+    }
+    if (!voice.voiceMode && !(subscription?.checkAccess('ai_voice'))) {
+      setMessages(prev => [...prev, { role: 'assistant', content: `Voice mode is a Premium feature — upgrade to talk with ${coachName} out loud.`, timestamp: Date.now() }])
+      return
+    }
+    voice.toggle()
   }
 
   // Non-premium view — plans are free, chat is premium
@@ -533,6 +553,17 @@ export default function CoachPage() {
       <div className="px-6 pb-8 pt-4 border-t border-white/15 bg-black/80 backdrop-blur-xl">
         <FeatureHint id="coach-intro" text={`Ask anything — ${coachName} adapts to your mindset`} mode="once" />
         <div className="flex items-end gap-2">
+          <button
+            aria-label={voice.voiceMode ? 'Turn off voice' : 'Talk to your coach'}
+            onClick={handleVoiceToggle}
+            className={`p-3 rounded-xl transition-all shrink-0 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+              voice.voiceMode
+                ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                : 'bg-white/5 border border-white/15 text-white/60 hover:text-white/90'
+            }`}
+          >
+            <Mic className={`w-5 h-5 ${voice.isListening ? 'animate-pulse' : ''}`} />
+          </button>
           <textarea
             ref={inputRef}
             aria-label={chatMode === 'accountability' ? 'Share your progress...' : 'Ask your coach...'}
