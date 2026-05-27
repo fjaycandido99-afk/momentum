@@ -243,6 +243,7 @@ export function SessionCard({
           script={script || config.defaultPreview}
           audioBase64={audioBase64 || null}
           duration={duration}
+          backgroundImage={config.image}
           onClose={() => setShowPlayer(false)}
           onComplete={() => {
             setShowPlayer(false)

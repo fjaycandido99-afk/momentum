@@ -32,6 +32,7 @@ interface SessionPlayerProps {
   duration: number
   onClose: () => void
   onComplete: () => void
+  backgroundImage?: string
 }
 
 // ─── Web-only player (uses HTMLAudioElement + createMediaElementSource) ───
@@ -297,6 +298,7 @@ export function SessionPlayer({
   duration,
   onClose,
   onComplete,
+  backgroundImage,
 }: SessionPlayerProps) {
   const audioContext = useAudioOptional()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -370,6 +372,17 @@ export function SessionPlayer({
 
   return (
     <div ref={containerRef} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 60, overflow: 'hidden', backgroundColor: '#000000' }}>
+      {/* Cinematic session backdrop — the same art as the card, so tapping
+          Play feels like stepping INTO the scene rather than a black void.
+          Darkened with a scrim (visualizer + controls stay crisp) and biased
+          toward the focal side since a landscape image crops into portrait. */}
+      {backgroundImage && (
+        <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '62% 50%' }} />
+          <div className="absolute inset-0 bg-black/55" />
+        </div>
+      )}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="absolute pointer-events-none" style={{ width: '320px', height: '320px', borderRadius: '50%', background: 'radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 70%)', filter: 'blur(40px)', opacity: isPlaying ? 1 : 0, transition: 'opacity 1.5s ease-in-out' }} />
         <div style={{ opacity: isPlaying ? 0.85 : 0.15, transition: 'opacity 1s ease-in-out' }}>
