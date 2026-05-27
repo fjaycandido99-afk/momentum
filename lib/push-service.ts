@@ -36,6 +36,7 @@ export type NotificationType =
   | 'coach_checkin'
   | 'coach_accountability'
   | 'win_back'
+  | 'feature_discovery'
   | 'custom'
 
 // Notification payload structure
@@ -63,6 +64,11 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
     title: 'Your space is still here',
     body: 'A quiet moment is waiting whenever you are.',
     tag: 'win_back',
+  },
+  feature_discovery: {
+    title: 'Something new to try',
+    body: 'There\'s a corner of Voxu you haven\'t explored yet.',
+    tag: 'feature_discovery',
   },
   morning_reminder: {
     title: 'Good Morning!',
@@ -252,6 +258,7 @@ export async function sendPushToUser(
     bedtime_reminder: 'evening_reminder', // Uses evening_reminder preference
     streak_at_risk: 'streak_alerts',
     win_back: 'streak_alerts',
+    feature_discovery: 'motivational_nudge_alerts',
     weekly_review: 'weekly_review',
     insight: 'insight_alerts',
     daily_quote: 'daily_quote_alerts',
@@ -681,6 +688,89 @@ export async function sendWinBackReminders(): Promise<void> {
   }
 
   console.log(`Win-back: ${matched} on a rung, ${totalSent} sent, ${totalFailed} failed`)
+}
+
+// Feature-discovery pushes — the outside-app twin of the in-app Discover
+// spotlight. For ACTIVE users (engaged in the last 7 days; lapsed users get
+// win-back instead), surface ONE feature they haven't used yet, at most once
+// a week. Low-priority (yields to everything via the gate). The weekly cadence
+// is enforced from the send log, so this only runs once db:push exists — it
+// fails CLOSED rather than risk spamming without cadence control.
+const DISCOVERY_COOLDOWN_DAYS = 7
+const DISCOVERY_FEATURES: Array<{ feature: string; title: string; body: string; url: string }> = [
+  { feature: 'coach', title: 'Meet your AI Coach', body: 'Personalized check-ins to keep you on track. Say hello.', url: '/coach' },
+  { feature: 'journal', title: 'Try journaling', body: 'Reflect in seconds — guided, free, or just chat it out.', url: '/journal' },
+  { feature: 'soundscapes', title: 'Mix a soundscape', body: 'Layer ambient sounds for deep focus and calm.', url: '/' },
+  { feature: 'guided', title: 'A voice-led session', body: 'Breathing and focus sessions, guided start to finish.', url: '/' },
+  { feature: 'saved_content', title: 'Save what resonates', body: 'Keep your favorite quotes & reflections in one place.', url: '/saved' },
+  { feature: 'music', title: 'Focus music', body: 'Set the mood with lo-fi, piano, ambient and more.', url: '/' },
+]
+
+export async function sendFeatureDiscovery(): Promise<void> {
+  const now = Date.now()
+  const dayMs = 24 * 60 * 60 * 1000
+
+  // Active users only (engaged in the last 7 days).
+  const active = await prisma.userPreferences.findMany({
+    where: { last_active_date: { gte: new Date(now - 7 * dayMs) } },
+    select: { user_id: true },
+  })
+  if (active.length === 0) return
+
+  // Deliver around noon local.
+  const eligibleHourIds = await filterUsersByLocalHour(active.map(u => u.user_id), 12)
+  if (eligibleHourIds.length === 0) return
+
+  // Weekly cadence — exclude anyone nudged within the cooldown. Needs the send
+  // log; if it's unavailable (pre-db:push) SKIP entirely rather than spam.
+  let recentlyNudged: Set<string>
+  try {
+    const recent = await prisma.notificationSendLog.findMany({
+      where: {
+        user_id: { in: eligibleHourIds },
+        type: 'feature_discovery',
+        sent_at: { gte: new Date(now - DISCOVERY_COOLDOWN_DAYS * dayMs) },
+      },
+      select: { user_id: true },
+    })
+    recentlyNudged = new Set(recent.map(r => r.user_id))
+  } catch {
+    return // no send log yet — don't run without cadence control
+  }
+
+  const candidates = eligibleHourIds.filter(id => !recentlyNudged.has(id))
+  if (candidates.length === 0) return
+
+  // What each candidate has already used.
+  const events = await prisma.featureEvent.findMany({
+    where: { user_id: { in: candidates } },
+    select: { user_id: true, feature: true },
+  })
+  const usedByUser = new Map<string, Set<string>>()
+  for (const e of events) {
+    if (!usedByUser.has(e.user_id)) usedByUser.set(e.user_id, new Set())
+    usedByUser.get(e.user_id)!.add(e.feature)
+  }
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const userId of candidates) {
+    const used = usedByUser.get(userId) || new Set<string>()
+    const unused = DISCOVERY_FEATURES.filter(f => !used.has(f.feature))
+    if (unused.length === 0) continue // tried everything — nothing to promote
+    // Stable within a day, varies by user.
+    const pick = unused[(Math.floor(now / dayMs) + userId.length) % unused.length]
+    const result = await sendPushToUser(userId, 'feature_discovery', {
+      title: pick.title,
+      body: pick.body,
+      data: { type: 'feature_discovery', url: pick.url },
+    })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`Feature discovery: ${candidates.length} candidates, ${totalSent} sent, ${totalFailed} failed`)
 }
 
 export async function sendWeeklyReviewReminders(): Promise<void> {

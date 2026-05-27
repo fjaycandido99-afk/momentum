@@ -19,6 +19,7 @@ type Priority = 'high' | 'normal' | 'low'
 const PRIORITY: Record<NotificationType, Priority> = {
   streak_at_risk: 'high',
   win_back: 'high',
+  feature_discovery: 'low',
   morning_reminder: 'normal',
   evening_reminder: 'normal',
   bedtime_reminder: 'normal',
