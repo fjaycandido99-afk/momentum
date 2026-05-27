@@ -149,6 +149,11 @@ function JournalContent() {
     }
   }, [searchParams])
 
+  // A ?review=1 deep-link opens the Weekly Review (from home / notifications).
+  useEffect(() => {
+    if (searchParams.get('review')) setShowWeeklyReview(true)
+  }, [searchParams])
+
   const isToday = selectedDate.toDateString() === new Date().toDateString()
 
   // Focus mode helpers

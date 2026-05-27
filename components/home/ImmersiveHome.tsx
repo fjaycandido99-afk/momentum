@@ -1259,6 +1259,34 @@ export function ImmersiveHome() {
         // Slide 3: Daily Feature Tip
         slides.push(<DailyFeatureTip key="feature-tip" />)
 
+        // Weekend: surface the Week in Review (otherwise buried in the journal).
+        const dow = new Date().getDay() // 0 = Sun, 6 = Sat
+        if (dow === 0 || dow === 6) {
+          slides.push(
+            <Link
+              key="weekly-review"
+              href="/journal?review=1"
+              className="block w-full h-full text-left group"
+            >
+              <div className="relative p-5 card-surface-lg press-scale h-full flex flex-col justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
+                    <BarChart3 className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-medium text-white">Your Week in Review</h2>
+                    <p className="text-xs text-white/90">Patterns, wins &amp; a fresh focus</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-auto pt-2">
+                  <p className="text-sm text-white/90">Tap to reflect on your week</p>
+                  <ChevronRight className="w-5 h-5 text-white/90" />
+                </div>
+              </div>
+            </Link>
+          )
+        }
+
         return <HeroCarousel>{slides}</HeroCarousel>
       })()}
 
