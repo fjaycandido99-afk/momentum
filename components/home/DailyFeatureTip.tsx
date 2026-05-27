@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Bot, PenLine, BarChart3, Headphones, Bookmark, Compass, Sparkles, ChevronRight } from 'lucide-react'
+import { Bot, PenLine, BarChart3, Headphones, Bookmark, Compass, Sparkles, ChevronRight, Target } from 'lucide-react'
 
 // Core capabilities worth surfacing. Deliberately the engaging destinations
 // (not Settings) — this card's job is to teach breadth, not utility.
@@ -12,6 +12,7 @@ const FEATURES = [
   { icon: Headphones, title: 'Soundscapes', description: 'Layer ambient sounds for deep focus and calm', href: '/' },
   { icon: BarChart3, title: 'Progress', description: 'Streaks, XP, achievements & your wellness score', href: '/progress' },
   { icon: Compass, title: 'Mindset Path', description: 'Explore your philosophy and its daily wisdom', href: '/mindset-selection' },
+  { icon: Target, title: 'Goals', description: 'Set a goal and let AI break it into doable steps', href: '/progress' },
   { icon: Bookmark, title: 'Saved', description: 'Revisit your favorite quotes & reflections', href: '/saved' },
 ] as const
 

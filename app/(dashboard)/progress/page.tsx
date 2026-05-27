@@ -20,6 +20,7 @@ import { WellnessScore } from '@/components/progress/WellnessScore'
 import { MonthlyRetrospective } from '@/components/progress/MonthlyRetrospective'
 import { MindsetEvolution } from '@/components/progress/MindsetEvolution'
 import { LetterToSelf } from '@/components/progress/LetterToSelf'
+import { GoalTracker } from '@/components/daily-guide/GoalTracker'
 import { migrateLocalXP } from '@/lib/gamification'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
@@ -159,6 +160,9 @@ export default function ProgressPage() {
 
           {/* Wellness Score — surfaced early for visibility */}
           <WellnessScore />
+
+          {/* Goals — relocated here from the journal so it's actually findable */}
+          <GoalTracker />
 
           {/* Daily Challenges */}
           {gamification?.dailyChallenges && (

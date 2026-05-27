@@ -9,7 +9,6 @@ import {
 } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
-import { GoalTracker } from '@/components/daily-guide/GoalTracker'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { trackFeature } from '@/lib/analytics/track'
@@ -1482,7 +1481,6 @@ function JournalContent() {
         </button>
         {showMore && (
           <div className="space-y-6 mt-4 animate-fade-in-up">
-            <GoalTracker />
             <WeeklyReviewPrompt onOpen={() => setShowWeeklyReview(true)} />
             <CalendarView currentStreak={streak} />
           </div>
