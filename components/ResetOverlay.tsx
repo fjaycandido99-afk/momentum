@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { useAudioOptional } from '@/contexts/AudioContext'
+import { AuraRing } from '@/components/ui/Aura'
 
 interface ResetOverlayProps {
   open: boolean
@@ -73,12 +74,21 @@ export function ResetOverlay({ open, onClose }: ResetOverlayProps) {
         <X className="w-6 h-6 text-white/70" />
       </button>
 
-      {/* Breathing pulse — the instant, dependency-free grounding */}
-      <div className="relative flex items-center justify-center mb-12" style={{ width: 256, height: 256 }}>
-        <div className="absolute w-64 h-64 rounded-full bg-white/[0.06] blur-2xl animate-breathe" aria-hidden />
-        <div className="w-44 h-44 rounded-full border border-white/20 bg-white/[0.04] animate-breathe flex items-center justify-center">
+      {/* Breathing pulse — the signature aura ring, scaled by the paced breath
+          (4s in / 4s out). The halo stays steady so the ring's own rhythm
+          doesn't fight the guidance; the wrapper does the inhale/exhale. */}
+      <div
+        className="relative flex items-center justify-center mb-12 ease-in-out"
+        style={{
+          width: 256,
+          height: 256,
+          transform: phase === 'in' ? 'scale(1.08)' : 'scale(0.84)',
+          transition: 'transform 4000ms ease-in-out',
+        }}
+      >
+        <AuraRing size={224} state="idle" breathe={false}>
           <span className="text-white/85 text-lg font-light tracking-wide">{phase === 'in' ? 'Breathe in' : 'Breathe out'}</span>
-        </div>
+        </AuraRing>
       </div>
 
       <p className="text-white/55 text-sm text-center max-w-xs px-8 leading-relaxed">

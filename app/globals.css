@@ -2601,6 +2601,32 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   75%      { transform: translate3d(-5vmax, 4vmax, 0) scale(0.92); }
 }
 
+/* ============================================================
+   Signature aura — reusable glowing ring + AI orb (monochrome).
+   The app's iconic visual anchor. Pure CSS/SVG light: a conic-gradient
+   arc orbits a ring, a radial halo breathes, an orb body floats +
+   shimmers. Only transform/opacity animate (GPU-cheap); softness comes
+   from gradients, not animated blur. Speed/intensity is driven per
+   "state" from the components. Honors prefers-reduced-motion.
+   ============================================================ */
+@keyframes aura-spin { to { transform: rotate(360deg); } }
+
+@keyframes aura-breathe {
+  0%, 100% { transform: scale(1);    opacity: var(--aura-glow-min, 0.45); }
+  50%      { transform: scale(1.08); opacity: var(--aura-glow-max, 0.85); }
+}
+
+@keyframes aura-orb-float {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(5%, -4%, 0) scale(1.05); }
+  66%      { transform: translate3d(-4%, 5%, 0) scale(0.96); }
+}
+
+@keyframes aura-orb-shimmer {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
 /* ========== Accessibility ========== */
 
 /* Reduced motion — tone down animations but keep functional ones */
@@ -2624,6 +2650,12 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 
   /* Ambient atmosphere — freeze the drift, keep the still glow */
   .ambient-orb {
+    animation: none !important;
+  }
+
+  /* Signature aura — freeze ring/orb motion, keep the still glow */
+  .aura-ring *,
+  .ai-orb * {
     animation: none !important;
   }
 }
