@@ -110,9 +110,9 @@ export default function ProgressPage() {
               <div className="absolute -top-2 left-2">
                 <StreakFlame streak={gamification?.streak ?? data.streak} size="md" />
               </div>
-              <Flame className="w-6 h-6 text-amber-400 relative z-10" />
+              <Flame className="w-6 h-6 text-white relative z-10" />
               <div className="relative z-10">
-                <p className="text-2xl font-bold text-amber-400">{gamification?.streak ?? data.streak}</p>
+                <p className="text-2xl font-bold text-white">{gamification?.streak ?? data.streak}</p>
                 <p className="text-xs text-white/70">day streak</p>
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function ProgressPage() {
               <div className="glass-refined rounded-2xl p-4 flex items-center gap-3 flex-1">
                 <div className="text-lg">⚡</div>
                 <div>
-                  <p className="text-2xl font-bold text-cyan-400">{gamification.xp.today}</p>
+                  <p className="text-2xl font-bold text-white">{gamification.xp.today}</p>
                   <p className="text-xs text-white/70">XP today</p>
                 </div>
               </div>
@@ -138,16 +138,16 @@ export default function ProgressPage() {
                 onClick={() => {
                   document.getElementById('letter-to-self')?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="w-full p-4 rounded-2xl bg-gradient-to-r from-pink-500/10 to-amber-500/10 border border-pink-500/20 flex items-center gap-3 hover:from-pink-500/15 hover:to-amber-500/15 transition-all"
+                className="w-full p-4 rounded-2xl bg-white/[0.06] border border-white/15 flex items-center gap-3 hover:bg-white/[0.1] transition-all"
               >
-                <div className="p-2 rounded-xl bg-pink-500/20 shrink-0">
-                  <Mail className="w-5 h-5 text-pink-400" />
+                <div className="p-2 rounded-xl bg-white/10 shrink-0">
+                  <Mail className="w-5 h-5 text-white/80" />
                 </div>
                 <div className="text-left flex-1">
                   <p className="text-sm font-medium text-white">{streak}-day milestone!</p>
                   <p className="text-[10px] text-white/75">Read a letter from your future self</p>
                 </div>
-                <span className="text-xs text-pink-400 font-medium shrink-0">View</span>
+                <span className="text-xs text-white font-medium shrink-0">View</span>
               </button>
             )
           })()}
