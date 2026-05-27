@@ -769,12 +769,8 @@ function JournalContent() {
             <ChevronRight className="w-4 h-4 text-white/75" />
           </button>
         </div>
-      </div>
-
-      {/* ── Mode tabs + mood (stacked for mobile) ── */}
-      <div className="px-6 pt-2 pb-3 mb-2 space-y-2.5">
-        {/* Mode tabs — full width */}
-        <div className="flex gap-1 p-0.5 rounded-lg bg-white/10">
+        {/* Row 3: Mode tabs — pinned with the header so they stay reachable while writing */}
+        <div className="flex gap-1 p-0.5 mt-3 rounded-lg bg-white/10">
           {([
             { id: 'guided' as JournalMode, label: 'Guided', icon: <BookOpen className="w-3.5 h-3.5" /> },
             { id: 'freewrite' as JournalMode, label: 'Free', icon: <PenLine className="w-3.5 h-3.5" /> },
@@ -795,6 +791,10 @@ function JournalContent() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* ── Mood check-in + hint (scrolls under the pinned header) ── */}
+      <div className="px-6 pt-3 pb-3 mb-2 space-y-2.5">
         {/* Mood check-in — prominent, full width */}
         <MoodSelector
           mood={mood}
