@@ -34,6 +34,7 @@ const SESSION_CONFIG: Record<SessionType, {
     iconColor: 'text-amber-400',
     iconBg: 'bg-amber-500/15',
     defaultPreview: '"A new day, a fresh start. You don\'t need to feel ready... you just need to begin."',
+    image: '/sessions/morning_prime.jpg',
   },
   midday_reset: {
     icon: Sun,
@@ -43,6 +44,7 @@ const SESSION_CONFIG: Record<SessionType, {
     iconColor: 'text-sky-400',
     iconBg: 'bg-sky-500/15',
     defaultPreview: '"Pause. Breathe. You\'re halfway through. Reset and keep going."',
+    image: '/sessions/midday_reset.jpg',
   },
   wind_down: {
     icon: Sunset,
@@ -62,6 +64,7 @@ const SESSION_CONFIG: Record<SessionType, {
     iconColor: 'text-violet-400',
     iconBg: 'bg-violet-500/15',
     defaultPreview: '"Once upon a time... in a land where the earth was perfectly flat..."',
+    image: '/sessions/bedtime_story.jpg',
   },
 }
 
