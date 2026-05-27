@@ -6,6 +6,23 @@ export interface MindsetQuote {
   category?: string
 }
 
+// Deterministic daily quote for a mindset — the SAME selection the in-app
+// WisdomSection uses (dateSeed % length), so a daily-quote push matches what
+// the user sees in the app. dateStr = the user's LOCAL date ("YYYY-MM-DD").
+function quoteDateSeed(dateStr: string): number {
+  let hash = 0
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) - hash + dateStr.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash)
+}
+
+export function getDailyMindsetQuote(mindsetId: MindsetId, dateStr: string): MindsetQuote | null {
+  const quotes = MINDSET_QUOTES[mindsetId]
+  if (!quotes || quotes.length === 0) return null
+  return quotes[quoteDateSeed(dateStr) % quotes.length]
+}
+
 export const MINDSET_QUOTES: Record<MindsetId, MindsetQuote[]> = {
   stoic: [
     { text: 'You have power over your mind — not outside events. Realize this, and you will find strength.', author: 'Marcus Aurelius', category: 'resilience' },

@@ -8,6 +8,9 @@ import { prisma } from './prisma'
 import { sendAPNsNotification, isAPNsConfigured } from './apns'
 import { sendFCMNotification, isFCMConfigured } from './fcm'
 import { getDayOfYearQuote } from './quotes'
+import { getDailyMindsetQuote } from '@/lib/mindset/quotes'
+import type { MindsetId } from '@/lib/mindset/types'
+import { getDateString } from '@/lib/daily-guide/day-type'
 import { getGroq, GROQ_MODEL } from './groq'
 import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
@@ -936,10 +939,16 @@ export async function sendWeeklyInsights(): Promise<void> {
  * Send daily quote notifications to all subscribed users
  * Same quote for everyone (deterministic by day of year)
  */
-export async function sendDailyQuotes(): Promise<void> {
-  const quote = getDayOfYearQuote()
-  const body = `"${quote.text}" — ${quote.author}`
+// The user's local date ("YYYY-MM-DD") for picking their daily quote, matching
+// getDateString's format so the push lines up with the in-app selection.
+function localDateForTz(tz: string | null): string {
+  try {
+    if (tz) return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+  } catch { /* bad tz — fall through */ }
+  return getDateString(new Date())
+}
 
+export async function sendDailyQuotes(): Promise<void> {
   const subscriptions = await prisma.pushSubscription.findMany({
     where: { daily_quote_alerts: true },
     select: { user_id: true },
@@ -949,17 +958,29 @@ export async function sendDailyQuotes(): Promise<void> {
   // Filter to users whose local time is 8 AM
   const allUserIds = subscriptions.map(s => s.user_id)
   const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 8)
+  if (eligibleUserIds.length === 0) return
+
+  // Per-user mindset + timezone so the pushed quote matches their in-app one.
+  const prefs = await prisma.userPreferences.findMany({
+    where: { user_id: { in: eligibleUserIds } },
+    select: { user_id: true, mindset: true, timezone: true },
+  })
+  const prefMap = new Map(prefs.map(p => [p.user_id, p]))
 
   let totalSent = 0
   let totalFailed = 0
 
   for (const user_id of eligibleUserIds) {
+    const p = prefMap.get(user_id)
+    const dateStr = localDateForTz(p?.timezone || null)
+    const quote = getDailyMindsetQuote((p?.mindset as MindsetId) || 'stoic', dateStr) || getDayOfYearQuote()
+    const body = `"${quote.text}" — ${quote.author}`
     const result = await sendPushToUser(user_id, 'daily_quote', { body })
     totalSent += result.sent
     totalFailed += result.failed
   }
 
-  console.log(`Daily quotes: ${totalSent} sent, ${totalFailed} failed (${allUserIds.length} total, ${eligibleUserIds.length} in 8AM window)`)
+  console.log(`Daily quotes: ${totalSent} sent, ${totalFailed} failed (${eligibleUserIds.length} in 8AM window, per-mindset)`)
 }
 
 /**
