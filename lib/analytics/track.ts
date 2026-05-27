@@ -15,7 +15,6 @@ export type FeatureName =
   | 'saved_content'
   | 'settings'
   | 'dream_interpretation'
-  | 'meditation_gen'
   | 'smart_session'
   | 'morning_briefing'
   | 'letter_to_self'

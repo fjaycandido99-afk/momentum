@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 const VALID_FEATURES = new Set<FeatureName>([
   'focus_timer', 'soundscapes', 'music', 'motivation', 'guided',
   'journal', 'coach', 'daily_guide', 'saved_content', 'settings',
-  'dream_interpretation', 'meditation_gen', 'smart_session',
+  'dream_interpretation', 'smart_session',
   'morning_briefing', 'letter_to_self', 'wellness_score',
 ])
 
