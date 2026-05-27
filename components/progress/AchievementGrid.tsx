@@ -52,7 +52,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
-          <Trophy className="w-4 h-4 text-amber-400" />
+          <Trophy className="w-4 h-4 text-white" />
           <div>
             <h3 className="text-sm font-semibold text-white">Achievements</h3>
             <p className="text-[10px] text-white/70">{unlockedCount} of {totalCount} unlocked</p>
@@ -61,11 +61,11 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
         <div className="flex items-center gap-2">
           <div className="h-1.5 w-20 rounded-full bg-white/10 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-400 transition-all duration-700"
+              className="h-full rounded-full bg-gradient-to-r from-white/60 to-white transition-all duration-700"
               style={{ width: `${pct}%` }}
             />
           </div>
-          <span className="text-[11px] font-medium text-amber-400">{pct}%</span>
+          <span className="text-[11px] font-medium text-white">{pct}%</span>
         </div>
       </div>
 
@@ -114,7 +114,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                         <span className={`text-[8px] font-semibold uppercase tracking-wider ${RARITY_TEXT[a.rarity]}`}>
                           {a.rarity}
                         </span>
-                        <span className="text-[8px] text-amber-400/70">+{a.xpReward}</span>
+                        <span className="text-[8px] text-white/70">+{a.xpReward}</span>
                       </div>
                     ) : (
                       <span className="text-[8px] text-white/15">Locked</span>

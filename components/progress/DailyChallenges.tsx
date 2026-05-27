@@ -32,7 +32,7 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
               <div
                 key={i}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  i < completedCount ? 'bg-emerald-400' : 'bg-white/10'
+                  i < completedCount ? 'bg-white' : 'bg-white/10'
                 }`}
               />
             ))}
@@ -47,7 +47,7 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
             key={c.id}
             className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
               c.completed
-                ? 'bg-emerald-500/10 border border-emerald-500/20'
+                ? 'bg-white/10 border border-white/20'
                 : 'bg-white/[0.03] border border-white/5'
             }`}
           >
@@ -55,7 +55,7 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className={`text-xs font-medium ${c.completed ? 'text-emerald-400' : 'text-white'}`}>
+                <p className={`text-xs font-medium ${c.completed ? 'text-white' : 'text-white'}`}>
                   {c.title}
                 </p>
                 {c.mindsetTag && (
@@ -68,10 +68,10 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[10px] text-amber-400/70">+{c.xpReward}</span>
+              <span className="text-[10px] text-white/70">+{c.xpReward}</span>
               {c.completed ? (
-                <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <Check className="w-3 h-3 text-emerald-400" />
+                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
                 </div>
               ) : (
                 <div className="w-5 h-5 rounded-full bg-white/5 border border-white/15" />
@@ -83,7 +83,7 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
 
       {completedCount === 3 && (
         <div className="mt-3 text-center">
-          <p className="text-xs text-emerald-400 font-medium">All challenges complete! Come back tomorrow</p>
+          <p className="text-xs text-white font-medium">All challenges complete! Come back tomorrow</p>
         </div>
       )}
     </div>

@@ -13,7 +13,7 @@ export function ModulesCompleted({ count, activeDays }: ModulesCompletedProps) {
       <h3 className="text-sm font-medium text-white mb-3">Modules Completed</h3>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-emerald-400" />
+          <CheckCircle className="w-5 h-5 text-white" />
           <div>
             <p className="text-2xl font-bold text-white">{count}</p>
             <p className="text-[10px] text-white/60">modules</p>

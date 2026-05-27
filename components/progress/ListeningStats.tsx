@@ -14,10 +14,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  workout: 'bg-amber-400',
-  morning: 'bg-cyan-400',
-  commute: 'bg-violet-400',
-  evening: 'bg-indigo-400',
+  workout: 'bg-white',
+  morning: 'bg-white',
+  commute: 'bg-white',
+  evening: 'bg-white',
   other: 'bg-white/50',
 }
 

@@ -166,20 +166,20 @@ export function GoalTracker() {
           className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors group"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-purple-500/20 relative">
-              <Target className="w-4 h-4 text-purple-400" />
+            <div className="p-2 rounded-xl bg-white/20 relative">
+              <Target className="w-4 h-4 text-white" />
               <Lock className="absolute -top-1 -right-1 w-3 h-3 text-white" />
             </div>
             <div className="text-left">
               <h3 className="font-medium text-white flex items-center gap-2">
                 Goals
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">PRO</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-medium">PRO</span>
               </h3>
               <p className="text-xs text-white/50">Track habits & achieve more</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Crown className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+            <Crown className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
           </div>
         </button>
       </div>
@@ -196,8 +196,8 @@ export function GoalTracker() {
         className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-purple-500/20">
-            <Target className="w-4 h-4 text-purple-400" />
+          <div className="p-2 rounded-xl bg-white/20">
+            <Target className="w-4 h-4 text-white" />
           </div>
           <div className="text-left">
             <h3 className="font-medium text-white">Goals</h3>
@@ -245,7 +245,7 @@ export function GoalTracker() {
                   <div className="flex-1">
                     <div className="h-2 rounded-full bg-white/10 overflow-hidden" role="progressbar" aria-valuenow={goal.current_count} aria-valuemin={0} aria-valuemax={goal.target_count} aria-label={`${goal.title} progress`}>
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300"
+                        className="h-full rounded-full bg-gradient-to-r from-white/60 to-white transition-all duration-300"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -253,14 +253,14 @@ export function GoalTracker() {
                       <span className="text-[10px] text-white/50">
                         {goal.current_count}/{goal.target_count} {goal.frequency}
                       </span>
-                      <span className="text-[10px] text-purple-400">{Math.round(progress)}%</span>
+                      <span className="text-[10px] text-white">{Math.round(progress)}%</span>
                     </div>
                   </div>
                   <button
                     onClick={() => handleIncrement(goal.id)}
                     disabled={incrementingId === goal.id}
                     aria-label={`Increment ${goal.title}`}
-                    className="px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-xs font-medium transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                    className="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                   >
                     {incrementingId === goal.id ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
@@ -274,7 +274,7 @@ export function GoalTracker() {
                 <button
                   onClick={() => handleDecompose(goal.id)}
                   disabled={decomposingId === goal.id}
-                  className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-[10px] font-medium transition-colors disabled:opacity-40"
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium transition-colors disabled:opacity-40"
                 >
                   {decomposingId === goal.id ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -308,9 +308,9 @@ export function GoalTracker() {
 
           {/* Completed Goals */}
           {completedGoals.map(goal => (
-            <div key={goal.id} className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 opacity-60">
+            <div key={goal.id} className="p-3 rounded-xl bg-white/5 border border-white/10 opacity-60">
               <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <Check className="w-3.5 h-3.5 text-white" />
                 <span className="text-sm text-white/50 line-through">{goal.title}</span>
               </div>
             </div>
@@ -363,7 +363,7 @@ export function GoalTracker() {
                   onClick={handleCreate}
                   disabled={!newTitle.trim() || isSubmitting}
                   aria-busy={isSubmitting}
-                  className="flex-1 py-2 rounded-lg bg-purple-500/20 text-purple-400 text-xs font-medium hover:bg-purple-500/30 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  className="flex-1 py-2 rounded-lg bg-white/20 text-white text-xs font-medium hover:bg-white/30 transition-colors disabled:opacity-40 flex items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   {isSubmitting ? (
                     <Loader2 className="w-3 h-3 animate-spin" />

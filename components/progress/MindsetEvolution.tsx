@@ -36,10 +36,10 @@ export function MindsetEvolution() {
   if (!data || dismissed) return null
 
   return (
-    <div className="glass-refined rounded-2xl p-5 border border-violet-500/20 animate-fade-in">
+    <div className="glass-refined rounded-2xl p-5 border border-white/20 animate-fade-in">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Compass className="w-4 h-4 text-violet-400" />
+          <Compass className="w-4 h-4 text-white" />
           <h3 className="text-sm font-medium text-white">Mindset Evolution</h3>
         </div>
         <button
@@ -61,15 +61,15 @@ export function MindsetEvolution() {
         </p>
       )}
 
-      <div className="p-3 rounded-xl bg-violet-500/10 mb-3">
-        <p className="text-xs text-violet-300 leading-relaxed">
+      <div className="p-3 rounded-xl bg-white/10 mb-3">
+        <p className="text-xs text-white leading-relaxed">
           {data.transitionInsight}
         </p>
       </div>
 
       <button
         onClick={() => router.push('/mindset-selection')}
-        className="press-scale w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 text-xs font-medium transition-colors"
+        className="press-scale w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-medium transition-colors"
       >
         Explore {MINDSET_LABELS[data.suggestedMindset] || data.suggestedMindset}
         <ArrowRight className="w-3.5 h-3.5" />

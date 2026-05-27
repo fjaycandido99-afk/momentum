@@ -27,9 +27,9 @@ function getMoodLabel(score: number): string {
 }
 
 function getMoodColor(score: number): string {
-  if (score >= 4) return 'text-emerald-400'
-  if (score >= 3) return 'text-amber-400'
-  return 'text-red-400'
+  if (score >= 4) return 'text-white'
+  if (score >= 3) return 'text-white'
+  return 'text-white'
 }
 
 export function MoodInsights({ insights }: MoodInsightsProps) {
@@ -49,9 +49,9 @@ export function MoodInsights({ insights }: MoodInsightsProps) {
     : Minus
 
   const trendColor = insights.improvementPercent > 0
-    ? 'text-emerald-400'
+    ? 'text-white'
     : insights.improvementPercent < 0
-    ? 'text-red-400'
+    ? 'text-white'
     : 'text-white/60'
 
   return (
@@ -77,7 +77,7 @@ export function MoodInsights({ insights }: MoodInsightsProps) {
           <p className="text-[9px] text-white/60">30d Trend</p>
         </div>
         <div className="p-2 rounded-xl bg-white/[0.03] text-center">
-          <p className="text-lg font-bold text-blue-400">{insights.totalEntries}</p>
+          <p className="text-lg font-bold text-white">{insights.totalEntries}</p>
           <p className="text-[9px] text-white/60">Entries</p>
         </div>
       </div>
@@ -86,7 +86,7 @@ export function MoodInsights({ insights }: MoodInsightsProps) {
       <div className="space-y-2">
         {insights.bestDay && (
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.02]">
-            <Calendar className="w-3.5 h-3.5 text-blue-400/60 shrink-0" />
+            <Calendar className="w-3.5 h-3.5 text-white/60 shrink-0" />
             <p className="text-[11px] text-white/75">
               Your best day is <span className="text-white font-medium">{insights.bestDay}</span>
             </p>
@@ -94,9 +94,9 @@ export function MoodInsights({ insights }: MoodInsightsProps) {
         )}
         {insights.journalCorrelation && (
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.02]">
-            <BookOpen className="w-3.5 h-3.5 text-emerald-400/60 shrink-0" />
+            <BookOpen className="w-3.5 h-3.5 text-white/60 shrink-0" />
             <p className="text-[11px] text-white/75">
-              Your mood is <span className="text-emerald-400 font-medium">higher</span> on days you journal
+              Your mood is <span className="text-white font-medium">higher</span> on days you journal
             </p>
           </div>
         )}

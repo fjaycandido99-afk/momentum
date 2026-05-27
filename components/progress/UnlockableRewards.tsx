@@ -19,15 +19,15 @@ export function UnlockableRewards({ unlockedRewards, nextReward, currentLevel }:
 
       {/* Next unlock highlight */}
       {nextReward && (
-        <div className="mb-3 p-3 rounded-xl bg-amber-400/5 border border-amber-400/15">
+        <div className="mb-3 p-3 rounded-xl bg-white/5 border border-white/15">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-400/10 flex items-center justify-center">
-              <Lock className="w-4 h-4 text-amber-400/50" />
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+              <Lock className="w-4 h-4 text-white/50" />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-medium text-amber-400">Next: {nextReward.title}</p>
+              <p className="text-xs font-medium text-white">Next: {nextReward.title}</p>
               <p className="text-[10px] text-white/60">{nextReward.description}</p>
-              <p className="text-[10px] text-amber-400/60 mt-0.5">Unlocks at Level {nextReward.requiredLevel}</p>
+              <p className="text-[10px] text-white/60 mt-0.5">Unlocks at Level {nextReward.requiredLevel}</p>
             </div>
           </div>
         </div>

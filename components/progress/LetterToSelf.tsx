@@ -58,8 +58,8 @@ export function LetterToSelf() {
         className="w-full p-5 flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-pink-500/15">
-            <Mail className="w-5 h-5 text-pink-400" />
+          <div className="p-2 rounded-xl bg-white/15">
+            <Mail className="w-5 h-5 text-white" />
           </div>
           <div className="text-left">
             <h3 className="text-sm font-medium text-white">Letter to Self</h3>
@@ -81,7 +81,7 @@ export function LetterToSelf() {
               disabled={loading}
               className={`press-scale flex-1 py-3 text-xs font-medium rounded-lg transition-all ${
                 letterType === 'future'
-                  ? 'bg-pink-500/20 text-pink-300'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/5 text-white/75 hover:text-white/80'
               }`}
             >
@@ -92,7 +92,7 @@ export function LetterToSelf() {
               disabled={loading}
               className={`press-scale flex-1 py-3 text-xs font-medium rounded-lg transition-all ${
                 letterType === 'past'
-                  ? 'bg-pink-500/20 text-pink-300'
+                  ? 'bg-white/20 text-white'
                   : 'bg-white/5 text-white/75 hover:text-white/80'
               }`}
             >
@@ -102,12 +102,12 @@ export function LetterToSelf() {
 
           {loading ? (
             <div className="flex items-center justify-center py-8 gap-2">
-              <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />
+              <Sparkles className="w-4 h-4 text-white animate-pulse" />
               <span className="text-xs text-white/70">Writing your letter...</span>
             </div>
           ) : letter ? (
             <>
-              <div className="p-4 rounded-xl bg-white/5 border border-pink-500/10">
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                 <p className="text-sm text-white/90 leading-relaxed whitespace-pre-line font-serif italic">
                   {letter}
                 </p>

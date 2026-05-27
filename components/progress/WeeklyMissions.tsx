@@ -36,23 +36,23 @@ export function WeeklyMissions({ missions }: WeeklyMissionsProps) {
             key={m.id}
             className={`p-3 rounded-xl transition-all ${
               m.completed
-                ? 'bg-emerald-500/10 border border-emerald-500/20'
+                ? 'bg-white/10 border border-white/20'
                 : 'bg-white/[0.03] border border-white/5'
             }`}
           >
             <div className="flex items-center gap-3 mb-2">
               <span className="text-lg shrink-0">{m.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className={`text-xs font-medium ${m.completed ? 'text-emerald-400' : 'text-white'}`}>
+                <p className={`text-xs font-medium ${m.completed ? 'text-white' : 'text-white'}`}>
                   {m.title}
                 </p>
                 <p className="text-[10px] text-white/60 truncate">{m.description}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[10px] text-amber-400/70">+{m.xpReward}</span>
+                <span className="text-[10px] text-white/70">+{m.xpReward}</span>
                 {m.completed && (
-                  <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <Check className="w-3 h-3 text-emerald-400" />
+                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
                   </div>
                 )}
               </div>
@@ -64,8 +64,8 @@ export function WeeklyMissions({ missions }: WeeklyMissionsProps) {
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
                     m.completed
-                      ? 'bg-emerald-400'
-                      : 'bg-gradient-to-r from-blue-400 to-cyan-400'
+                      ? 'bg-white'
+                      : 'bg-gradient-to-r from-white/50 to-white/80'
                   }`}
                   style={{ width: `${(m.progress / m.target) * 100}%` }}
                 />

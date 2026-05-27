@@ -48,14 +48,14 @@ export function MoodTrends({ moodData }: MoodTrendsProps) {
           <line key={v} x1={padding} x2={chartW - padding} y1={yScale(v)} y2={yScale(v)} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
         ))}
 
-        {/* Before line (blue) */}
+        {/* Before line — dim (the starting point) */}
         {buildPath('before') && (
-          <path d={buildPath('before')} fill="none" stroke="rgba(96,165,250,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d={buildPath('before')} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         )}
 
-        {/* After line (green) */}
+        {/* After line — bright (where you landed) */}
         {buildPath('after') && (
-          <path d={buildPath('after')} fill="none" stroke="rgba(74,222,128,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d={buildPath('after')} fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         )}
 
         {/* Y-axis labels */}
@@ -65,11 +65,11 @@ export function MoodTrends({ moodData }: MoodTrendsProps) {
       </svg>
       <div className="flex items-center gap-4 mt-2">
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-0.5 rounded-full bg-blue-400" />
+          <div className="w-2.5 h-0.5 rounded-full bg-white/40" />
           <span className="text-[10px] text-white/60">Before</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-0.5 rounded-full bg-green-400" />
+          <div className="w-2.5 h-0.5 rounded-full bg-white" />
           <span className="text-[10px] text-white/60">After</span>
         </div>
       </div>
