@@ -2,6 +2,7 @@
 
 import { PenLine, Flame, CheckCircle2, TrendingUp } from 'lucide-react'
 import { calculateClientWellness, getWellnessZone } from '@/lib/smart-home-feed'
+import { AuraRing } from '@/components/ui/Aura'
 
 interface WellnessWidgetProps {
   journalMood?: string | null
@@ -43,19 +44,10 @@ export function WellnessWidget({ journalMood, streak, modulesCompletedToday, has
           <h2 className="text-base font-medium text-white">Daily Wellness</h2>
           <p className="text-[10px] text-white/80">{zone.label}</p>
         </div>
-        <div className="relative w-10 h-10 shrink-0">
-          <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="15" fill="none" stroke="white" strokeOpacity="0.15" strokeWidth="2.5" />
-            <circle
-              cx="18" cy="18" r="15" fill="none"
-              strokeWidth="2.5" strokeLinecap="round"
-              stroke="white"
-              strokeDasharray={`${(wellness.score / 100) * 94} 94`}
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
+        <div className="relative w-10 h-10 shrink-0 grid place-items-center">
+          <AuraRing size={40} stroke={2.5} progress={wellness.score / 100} breathe={false}>
             <span className="text-xs font-bold text-white">{wellness.score}</span>
-          </div>
+          </AuraRing>
         </div>
       </div>
 

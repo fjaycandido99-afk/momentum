@@ -42,14 +42,26 @@ interface AuraRingProps {
    * rhythms don't fight — the halo stays a steady glow while you scale it.
    */
   breathe?: boolean
+  /**
+   * 0–1 data fill. When set, the ring shows a glowing progress arc (a score,
+   * completion) instead of the decorative orbiting light — turning the portal
+   * into a data ring while keeping the same aura.
+   */
+  progress?: number
   className?: string
   /** Centered content — timer, number, image, etc. */
   children?: ReactNode
 }
 
-export function AuraRing({ size = 240, state = 'idle', stroke = 2, breathe = true, className = '', children }: AuraRingProps) {
+export function AuraRing({ size = 240, state = 'idle', stroke = 2, breathe = true, progress, className = '', children }: AuraRingProps) {
   const t = RING_TUNING[state]
   const ringMask = `radial-gradient(farthest-side, transparent calc(100% - ${stroke}px), #000 calc(100% - ${stroke}px))`
+
+  // Progress-arc geometry (viewBox units), used only when `progress` is set.
+  const pw = Math.max(1.5, (stroke / size) * 100)
+  const pr = 50 - pw / 2
+  const circ = 2 * Math.PI * pr
+  const fill = Math.max(0, Math.min(1, progress ?? 0))
 
   const glowStyle: CSSVars = {
     background:
@@ -80,8 +92,20 @@ export function AuraRing({ size = 240, state = 'idle', stroke = 2, breathe = tru
       <div className="absolute inset-[-18%] rounded-full pointer-events-none" style={glowStyle} />
       {/* Base ring */}
       <div className="absolute inset-0 rounded-full border border-white/15" />
-      {/* Orbiting light arc */}
-      <div className="absolute inset-0 rounded-full" style={arcStyle} />
+      {progress != null ? (
+        /* Glowing progress arc (data) — starts at 12 o'clock */
+        <svg className="absolute inset-0 -rotate-90" viewBox="0 0 100 100" aria-hidden>
+          <circle
+            cx="50" cy="50" r={pr} fill="none" stroke="white" strokeOpacity="0.9"
+            strokeWidth={pw} strokeLinecap="round"
+            strokeDasharray={`${fill * circ} ${circ}`}
+            style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.45))', transition: 'stroke-dasharray 600ms ease-out' }}
+          />
+        </svg>
+      ) : (
+        /* Orbiting light arc (decorative) */
+        <div className="absolute inset-0 rounded-full" style={arcStyle} />
+      )}
       {/* Inner faint ring for depth */}
       <div className="absolute inset-[7%] rounded-full border border-white/[0.06]" />
       {/* Center content */}
