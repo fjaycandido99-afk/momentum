@@ -1,48 +1,87 @@
 'use client'
 
 import Link from 'next/link'
-import { Bot, PenLine, BarChart3, Headphones, Bookmark, Compass, Settings, ChevronRight } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Bot, PenLine, BarChart3, Headphones, Bookmark, Compass, Sparkles, ChevronRight } from 'lucide-react'
 
-const TIPS = [
-  { icon: Bot, title: 'AI Coach', description: 'Get personalized coaching and accountability check-ins', href: '/coach', accent: 'bg-violet-400/20 text-violet-300' },
-  { icon: PenLine, title: 'Journal', description: 'Reflect daily with guided, free, dream & chat modes', href: '/journal', accent: 'bg-emerald-400/20 text-emerald-300' },
-  { icon: BarChart3, title: 'Progress', description: 'Track your streaks, XP, achievements & wellness score', href: '/progress', accent: 'bg-sky-400/20 text-sky-300' },
-  { icon: Headphones, title: 'Soundscapes', description: 'Layer ambient sounds for focus and relaxation', href: '/', accent: 'bg-teal-400/20 text-teal-300' },
-  { icon: Bookmark, title: 'Saved Content', description: 'Revisit your saved quotes, reflections & favorites', href: '/saved', accent: 'bg-amber-400/20 text-amber-300' },
-  { icon: Compass, title: 'Mindset Path', description: 'Explore your philosophical mindset and its wisdom', href: '/mindset-selection', accent: 'bg-rose-400/20 text-rose-300' },
-  { icon: Settings, title: 'Settings', description: 'Customize your schedule, tone, and daily flow', href: '/settings', accent: 'bg-slate-400/20 text-slate-300' },
+// Core capabilities worth surfacing. Deliberately the engaging destinations
+// (not Settings) — this card's job is to teach breadth, not utility.
+const FEATURES = [
+  { icon: Bot, title: 'AI Coach', description: 'Personalized coaching and accountability check-ins', href: '/coach' },
+  { icon: PenLine, title: 'Journal', description: 'Reflect daily — guided, free, dream & chat modes', href: '/journal' },
+  { icon: Headphones, title: 'Soundscapes', description: 'Layer ambient sounds for deep focus and calm', href: '/' },
+  { icon: BarChart3, title: 'Progress', description: 'Streaks, XP, achievements & your wellness score', href: '/progress' },
+  { icon: Compass, title: 'Mindset Path', description: 'Explore your philosophy and its daily wisdom', href: '/mindset-selection' },
+  { icon: Bookmark, title: 'Saved', description: 'Revisit your favorite quotes & reflections', href: '/saved' },
 ] as const
 
-function getTodaysTip() {
-  const now = new Date()
-  const start = new Date(now.getFullYear(), 0, 0)
-  const dayOfYear = Math.floor((now.getTime() - start.getTime()) / 86400000)
-  return TIPS[dayOfYear % TIPS.length]
-}
+const ROTATE_MS = 4500
 
+// Discover spotlight — an auto-rotating feature promoter. The old version
+// showed one fixed tip per day (slow discovery for an app this feature-rich).
+// This cycles through capabilities so a user sees several in one sitting,
+// each tappable to deep-link straight into it.
 export function DailyFeatureTip() {
-  const tip = getTodaysTip()
-  const Icon = tip.icon
-  const [iconColor, textColor] = tip.accent.split(' ')
+  // Start at a per-open offset so it isn't always the same feature first.
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * FEATURES.length))
+  // Pause rotation the moment the user reaches to tap, so the link lands on
+  // exactly the feature they saw (not whatever it rotated to mid-tap).
+  const [paused, setPaused] = useState(false)
 
-  const content = (
-    <div className="p-5 card-surface-lg h-full flex flex-col justify-between">
-      <div>
-        <div className="flex items-center gap-2">
-          <div className={`flex items-center justify-center w-7 h-7 rounded-full ${iconColor}`}>
-            <Icon className={`w-3.5 h-3.5 ${textColor}`} />
+  useEffect(() => {
+    if (paused) return
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const t = setInterval(() => setIndex(i => (i + 1) % FEATURES.length), ROTATE_MS)
+    return () => clearInterval(t)
+  }, [paused])
+
+  const f = FEATURES[index]
+  const Icon = f.icon
+
+  return (
+    <Link
+      href={f.href}
+      className="block h-full"
+      onPointerDown={() => setPaused(true)}
+      aria-label={`Discover ${f.title}: ${f.description}`}
+    >
+      <div className="relative p-5 card-surface-lg h-full flex flex-col justify-between overflow-hidden">
+        {/* Soft ambient glow — atmospheric depth, monochrome */}
+        <div className="absolute -top-16 -right-10 w-40 h-40 rounded-full bg-white/[0.05] blur-3xl pointer-events-none" aria-hidden />
+
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-white/60" />
+            <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">Discover</span>
           </div>
-          <span className="text-[10px] uppercase tracking-wider text-white/50 font-medium">Daily Tip</span>
-        </div>
-        <h3 className="text-lg font-semibold text-white mt-2.5">{tip.title}</h3>
-        <p className="text-sm text-white/85 mt-0.5 leading-snug">{tip.description}</p>
-      </div>
-      <div className="flex items-center justify-between mt-auto pt-2">
-        <span className={`text-sm font-medium ${textColor}`}>Try it</span>
-        <ChevronRight className={`w-4 h-4 ${textColor}`} />
-      </div>
-    </div>
-  )
 
-  return <Link href={tip.href} className="block h-full">{content}</Link>
+          {/* key={index} re-triggers the fade on each rotation */}
+          <div key={index} className="mt-3 animate-fade-in">
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/[0.08] border border-white/[0.1]">
+                <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-lg font-bold text-white tracking-tight">{f.title}</h3>
+            </div>
+            <p className="text-sm text-white/70 mt-2 leading-snug">{f.description}</p>
+          </div>
+        </div>
+
+        <div className="relative flex items-center justify-between mt-auto pt-3">
+          {/* Rotation indicator — the active feature's dot stretches */}
+          <div className="flex items-center gap-1.5">
+            {FEATURES.map((_, i) => (
+              <span
+                key={i}
+                className={`h-1 rounded-full transition-all duration-300 ${i === index ? 'w-4 bg-white/80' : 'w-1 bg-white/25'}`}
+              />
+            ))}
+          </div>
+          <span className="inline-flex items-center gap-1 text-sm font-medium text-white">
+            Try it <ChevronRight className="w-4 h-4" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
 }
