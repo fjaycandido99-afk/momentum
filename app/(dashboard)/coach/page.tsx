@@ -9,7 +9,6 @@ import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { CoachingPlans } from '@/components/coach/CoachingPlans'
 import { CoachAvatar, type CoachEmotion } from '@/components/coach/CoachAvatar'
-import { AIOrb, type AIOrbState } from '@/components/ui/Aura'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { MINDSET_CONFIGS, getCoachName } from '@/lib/mindset/configs'
@@ -336,13 +335,6 @@ export default function CoachPage() {
     voice.toggle()
   }
 
-  // Drive the signature AI orb from what the coach is actually doing.
-  const orbState: AIOrbState =
-    voice.isSpeaking ? 'speaking'
-    : voice.isListening ? 'listening'
-    : (isLoading || coachEmotion === 'thinking') ? 'thinking'
-    : 'idle'
-
   // Non-premium view — plans are free, chat is premium
   if (subscription && !subscription.isPremium) {
     return (
@@ -403,9 +395,9 @@ export default function CoachPage() {
           <ChevronLeft className="w-5 h-5 text-white/70" />
         </Link>
         <div className="relative flex items-center gap-3 flex-1">
-          {/* Coach presence — the signature AI orb, reacting to what it's doing */}
+          {/* Coach avatar */}
           <div className="relative">
-            <AIOrb size={46} state={orbState} />
+            <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" emotion={coachEmotion} />
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-white rounded-full border-2 border-[#08080c]" />
           </div>
           <div>
