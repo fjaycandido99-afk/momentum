@@ -171,10 +171,10 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
 
   if (isLoading) {
     return (
-      <div className={`overflow-hidden p-4 ${isCosmic ? 'card-cosmic rounded-2xl' : 'rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20'}`}>
+      <div className={`overflow-hidden p-4 ${isCosmic ? 'card-cosmic rounded-2xl' : 'rounded-2xl bg-gradient-to-br from-white/10 to-white/10 border border-white/20'}`}>
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 animate-pulse">
-            <Star className="w-5 h-5 text-indigo-400" />
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-white/20 to-white/20 animate-pulse">
+            <Star className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
             <div className="h-4 w-32 bg-white/10 rounded animate-pulse mb-2" />
@@ -194,23 +194,23 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
           ? 'card-cosmic rounded-2xl'
           : isCompleted
             ? 'rounded-2xl bg-white/[0.03] border border-white/15'
-            : 'rounded-2xl bg-gradient-to-br from-indigo-500/[0.08] to-purple-500/[0.08] border border-indigo-500/20 shadow-[0_0_15px_rgba(139,92,246,0.08)] card-hover'
+            : 'rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.08] border border-white/20 shadow-[0_0_15px_rgba(139,92,246,0.08)] card-hover'
       }`}
     >
       {/* Header */}
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-medium tracking-widest text-indigo-400/80 uppercase">
+          <span className="text-[10px] font-medium tracking-widest text-white/80 uppercase">
             Cosmic Insight
           </span>
           {zodiacSign && (
-            <span className="text-sm text-indigo-300/80">
+            <span className="text-sm text-white/80">
               {ZODIAC_SYMBOLS[zodiacSign] || ''}
             </span>
           )}
         </div>
         {isCompleted && (
-          <div className="flex items-center gap-1.5 text-emerald-400/80">
+          <div className="flex items-center gap-1.5 text-white/80">
             <Check className="w-3.5 h-3.5" />
             <span className="text-xs">Done</span>
           </div>
@@ -223,9 +223,9 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
           <div className={`p-2.5 rounded-xl shrink-0 ${
             isCompleted
               ? 'bg-white/5'
-              : 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20'
+              : 'bg-gradient-to-br from-white/20 to-white/20'
           }`}>
-            <Sparkles className={`w-5 h-5 ${isCompleted ? 'text-white/85' : 'text-indigo-400'}`} />
+            <Sparkles className={`w-5 h-5 ${isCompleted ? 'text-white/85' : 'text-white'}`} />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -239,8 +239,8 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
               <div className="mt-3 space-y-3">
                 {/* Planetary influence */}
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                  <span className={`text-xs ${isCompleted ? 'text-white/70' : 'text-indigo-300/80'}`}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                  <span className={`text-xs ${isCompleted ? 'text-white/70' : 'text-white/80'}`}>
                     {insight.influence}
                   </span>
                 </div>
@@ -256,10 +256,10 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
                 <div className={`p-3 rounded-xl ${
                   isCompleted
                     ? 'bg-white/5'
-                    : 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20'
+                    : 'bg-gradient-to-r from-white/10 to-white/10 border border-white/20'
                 }`}>
                   <p className={`text-xs uppercase tracking-wider mb-1 ${
-                    isCompleted ? 'text-white/60' : 'text-indigo-400/70'
+                    isCompleted ? 'text-white/60' : 'text-white/70'
                   }`}>
                     Today&apos;s Affirmation
                   </p>
@@ -280,7 +280,7 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
                       className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       <Heart className={`w-3.5 h-3.5 transition-colors ${
-                        isFavorited ? 'text-pink-400 fill-pink-400' : favoriteError ? 'text-red-400 animate-pulse' : isCompleted ? 'text-white/70' : 'text-white/85 hover:text-pink-400'
+                        isFavorited ? 'text-white fill-white' : favoriteError ? 'text-white animate-pulse' : isCompleted ? 'text-white/70' : 'text-white/85 hover:text-white'
                       }`} />
                     </button>
                     <button
@@ -296,7 +296,7 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
                   {!isCompleted && (
                     <button
                       onClick={handleDone}
-                      className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-300 text-sm font-medium hover:from-indigo-500/30 hover:to-purple-500/30 transition-all flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                      className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-white/20 to-white/20 border border-white/30 text-white text-sm font-medium hover:from-white/30 hover:to-white/30 transition-all flex items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       <Check className="w-3.5 h-3.5" />
                       Done
@@ -307,7 +307,7 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
             ) : (
               <button
                 onClick={handleReveal}
-                className="mt-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500/15 to-purple-500/15 hover:from-indigo-500/25 hover:to-purple-500/25 border border-indigo-500/20 transition-all text-sm text-indigo-300 flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                className="mt-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-white/15 to-white/15 hover:from-white/25 hover:to-white/25 border border-white/20 transition-all text-sm text-white flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
               >
                 <Star className="w-4 h-4" />
                 Reveal Today&apos;s Cosmic Insight
@@ -320,9 +320,9 @@ export function CosmicInsightCard({ isCompleted, onComplete, zodiacSign, dayType
       {/* Copied toast */}
       {showCopied && (
         <div className="px-4 pb-3">
-          <div role="status" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
-            <Check className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-xs text-emerald-400 font-medium">Copied!</span>
+          <div role="status" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 border border-white/30">
+            <Check className="w-3.5 h-3.5 text-white" />
+            <span className="text-xs text-white font-medium">Copied!</span>
           </div>
         </div>
       )}

@@ -21,15 +21,15 @@ const ICON_MAP: Record<string, typeof Flame> = {
 }
 
 const COLOR_MAP: Record<string, { bg: string; border: string; text: string }> = {
-  streak_recovery: { bg: 'from-amber-500/10 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-  streak_risk: { bg: 'from-amber-500/10 to-orange-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-  journal_reminder: { bg: 'from-blue-500/10 to-indigo-500/10', border: 'border-blue-500/20', text: 'text-blue-400' },
-  mood_trend: { bg: 'from-emerald-500/10 to-teal-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
-  inactive: { bg: 'from-pink-500/10 to-rose-500/10', border: 'border-pink-500/20', text: 'text-pink-400' },
-  energy_pattern: { bg: 'from-yellow-500/10 to-amber-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400' },
-  mood_dip: { bg: 'from-cyan-500/10 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
-  goal_reminder: { bg: 'from-violet-500/10 to-purple-500/10', border: 'border-violet-500/20', text: 'text-violet-400' },
-  completion_pattern: { bg: 'from-teal-500/10 to-emerald-500/10', border: 'border-teal-500/20', text: 'text-teal-400' },
+  streak_recovery: { bg: 'from-white/10 to-white/10', border: 'border-white/20', text: 'text-white' },
+  streak_risk: { bg: 'from-white/10 to-white/10', border: 'border-white/20', text: 'text-white' },
+  journal_reminder: { bg: 'from-white/10 to-white/10', border: 'border-white/20', text: 'text-white' },
+  mood_trend: { bg: 'from-white/10 to-white/10', border: 'border-white/20', text: 'text-white' },
+  inactive: { bg: 'from-white/10 to-white/10', border: 'border-white/20', text: 'text-white' },
+  energy_pattern: { bg: 'from-white/10 to-white/10', border: 'border-white/20', text: 'text-white' },
+  mood_dip: { bg: 'from-white/10 to-white/10', border: 'border-white/20', text: 'text-white' },
+  goal_reminder: { bg: 'from-white/10 to-white/10', border: 'border-white/20', text: 'text-white' },
+  completion_pattern: { bg: 'from-white/10 to-white/10', border: 'border-white/20', text: 'text-white' },
 }
 
 function getTodayDismissKey() {

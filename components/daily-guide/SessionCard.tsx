@@ -31,8 +31,8 @@ const SESSION_CONFIG: Record<SessionType, {
     label: 'Morning Prime',
     tagline: 'Wake up, set intention, energy',
     theme: 'MORNING',
-    iconColor: 'text-amber-400',
-    iconBg: 'bg-amber-500/15',
+    iconColor: 'text-white',
+    iconBg: 'bg-white/15',
     defaultPreview: '"A new day, a fresh start. You don\'t need to feel ready... you just need to begin."',
     image: '/sessions/morning_prime.jpg',
   },
@@ -41,8 +41,8 @@ const SESSION_CONFIG: Record<SessionType, {
     label: 'Midday Reset',
     tagline: 'Recharge, affirm, refocus',
     theme: 'MIDDAY',
-    iconColor: 'text-sky-400',
-    iconBg: 'bg-sky-500/15',
+    iconColor: 'text-white',
+    iconBg: 'bg-white/15',
     defaultPreview: '"Pause. Breathe. You\'re halfway through. Reset and keep going."',
     image: '/sessions/midday_reset.jpg',
   },
@@ -51,8 +51,8 @@ const SESSION_CONFIG: Record<SessionType, {
     label: 'Wind Down',
     tagline: 'Reflect, release, ground',
     theme: 'EVENING',
-    iconColor: 'text-purple-400',
-    iconBg: 'bg-purple-500/15',
+    iconColor: 'text-white',
+    iconBg: 'bg-white/15',
     defaultPreview: '"The day is done. Let go of what you couldn\'t control. You showed up."',
     image: '/sessions/wind_down.jpg',
   },
@@ -61,8 +61,8 @@ const SESSION_CONFIG: Record<SessionType, {
     label: 'Bedtime Story',
     tagline: 'Motivational sleep story',
     theme: 'NIGHT',
-    iconColor: 'text-violet-400',
-    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-white',
+    iconBg: 'bg-white/15',
     defaultPreview: '"Once upon a time... in a land where the earth was perfectly flat..."',
     image: '/sessions/bedtime_story.jpg',
   },
@@ -141,7 +141,7 @@ export function SessionCard({
         isCurrent && !isCompleted
           ? 'rounded-3xl border-white/15 bg-black'
           : isCompleted
-            ? 'rounded-2xl border-emerald-500/20 bg-black'
+            ? 'rounded-2xl border-white/20 bg-black'
             : 'rounded-2xl border-white/10 bg-black opacity-60'
       }`}>
         {/* Cinematic backdrop (hero only). With curated art: full-bleed image
@@ -172,11 +172,11 @@ export function SessionCard({
             <div className="flex items-center gap-3">
               <div className={`p-2.5 rounded-xl ${
                 isCompleted
-                  ? 'bg-emerald-500/15'
+                  ? 'bg-white/15'
                   : config.iconBg
               }`}>
                 {isCompleted ? (
-                  <Check className="w-5 h-5 text-emerald-400" />
+                  <Check className="w-5 h-5 text-white" />
                 ) : (
                   <Icon className={`w-5 h-5 ${config.iconColor}`} />
                 )}
@@ -228,7 +228,7 @@ export function SessionCard({
           )}
 
           {isCompleted && (
-            <div className="flex items-center gap-2 text-emerald-400 text-sm">
+            <div className="flex items-center gap-2 text-white text-sm">
               <Check className="w-4 h-4" />
               <span>Completed</span>
             </div>
@@ -285,7 +285,7 @@ export function SessionTimeline({ sessions, onSelect, activeSession }: SessionTi
             >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                 s.status === 'completed'
-                  ? 'bg-emerald-500/20 ring-2 ring-emerald-500/40'
+                  ? 'bg-white/20 ring-2 ring-white/40'
                   : s.status === 'current'
                     ? 'bg-white/15 ring-2 ring-white/30'
                     : s.status === 'missed'
@@ -293,7 +293,7 @@ export function SessionTimeline({ sessions, onSelect, activeSession }: SessionTi
                       : 'bg-white/5 ring-1 ring-white/10'
               }`}>
                 {s.status === 'completed' ? (
-                  <Check className="w-4 h-4 text-emerald-400" />
+                  <Check className="w-4 h-4 text-white" />
                 ) : (
                   <Icon className={`w-4 h-4 ${s.status === 'current' ? 'text-white' : 'text-white/50'}`} />
                 )}
@@ -308,7 +308,7 @@ export function SessionTimeline({ sessions, onSelect, activeSession }: SessionTi
             {/* Connector line */}
             {!isLast && (
               <div className={`flex-1 h-px mx-1 ${
-                s.status === 'completed' ? 'bg-emerald-500/30' : 'bg-white/10'
+                s.status === 'completed' ? 'bg-white/30' : 'bg-white/10'
               }`} />
             )}
           </div>

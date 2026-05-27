@@ -61,7 +61,7 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
     return (
       <div className="rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-4">
         <div className="flex items-center gap-3">
-          <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+          <Loader2 className="w-4 h-4 text-white animate-spin" />
           <span className="text-sm text-white/85">Preparing your morning briefing...</span>
         </div>
       </div>
@@ -73,8 +73,8 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
       <div className="rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-500/20">
-              <Sun className="w-5 h-5 text-amber-400" />
+            <div className="p-2 rounded-xl bg-white/20">
+              <Sun className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-sm text-white/85">Couldn&apos;t load your briefing</p>
@@ -95,7 +95,7 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
   if (!script) return null
 
   return (
-    <div className="rounded-2xl bg-black border border-amber-500/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] overflow-hidden">
+    <div className="rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] overflow-hidden">
       {audioSrc && (
         <audio
           ref={audioRef}
@@ -108,8 +108,8 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
       <div className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-500/20">
-              <Sun className="w-5 h-5 text-amber-400" />
+            <div className="p-2 rounded-xl bg-white/20">
+              <Sun className="w-5 h-5 text-white" />
             </div>
             <div>
               <h3 className="text-sm font-medium text-white">Morning Briefing</h3>
@@ -120,13 +120,13 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
           {audioSrc && (
             <button
               onClick={togglePlay}
-              className="p-3 rounded-full bg-amber-500/20 hover:bg-amber-500/30 transition-colors"
+              className="p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
               aria-label={playing ? 'Pause' : 'Play'}
             >
               {playing ? (
-                <Pause className="w-5 h-5 text-amber-400" />
+                <Pause className="w-5 h-5 text-white" />
               ) : (
-                <Play className="w-5 h-5 text-amber-400 ml-0.5" />
+                <Play className="w-5 h-5 text-white ml-0.5" />
               )}
             </button>
           )}
@@ -156,7 +156,7 @@ export function MorningBriefing({ onComplete }: MorningBriefingProps) {
             {onComplete && (
               <button
                 onClick={onComplete}
-                className="mt-3 px-4 py-1.5 rounded-full bg-amber-500/20 text-xs text-amber-400 hover:bg-amber-500/30 transition-colors"
+                className="mt-3 px-4 py-1.5 rounded-full bg-white/20 text-xs text-white hover:bg-white/30 transition-colors"
               >
                 Mark done
               </button>

@@ -23,7 +23,7 @@ export function XPReward({ xp, show }: XPRewardProps) {
   return (
     <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
       <div className="animate-xp-float text-center">
-        <span className="text-lg font-bold text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
+        <span className="text-lg font-bold text-white drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
           +{xp} XP
         </span>
       </div>

@@ -177,13 +177,13 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
           ${isFuture ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}
           ${isToday ? 'ring-2 ring-white/30' : ''}
           ${isSelected ? 'bg-white/20' : ''}
-          ${completionLevel >= 4 ? 'bg-emerald-500/20' : completionLevel >= 2 ? 'bg-amber-500/10' : ''}
+          ${completionLevel >= 4 ? 'bg-white/20' : completionLevel >= 2 ? 'bg-white/10' : ''}
         `}
       >
         <span className={`text-sm ${
           isToday ? 'font-bold text-white' :
-          completionLevel >= 4 ? 'text-emerald-400' :
-          completionLevel >= 2 ? 'text-amber-400' :
+          completionLevel >= 4 ? 'text-white' :
+          completionLevel >= 2 ? 'text-white' :
           isFuture ? 'text-white/40' : 'text-white/70'
         }`}>
           {day}
@@ -193,10 +193,10 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
         {completionLevel > 0 && (
           <div className="flex gap-0.5 mt-0.5">
             {completionLevel >= 4 ? (
-              <Check className="w-3 h-3 text-emerald-400" />
+              <Check className="w-3 h-3 text-white" />
             ) : (
               [...Array(Math.min(completionLevel, 4))].map((_, i) => (
-                <Circle key={i} className="w-1.5 h-1.5 fill-amber-400 text-amber-400" />
+                <Circle key={i} className="w-1.5 h-1.5 fill-white text-white" />
               ))
             )}
           </div>
@@ -204,7 +204,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
 
         {/* Journal indicator */}
         {hasJournal && (
-          <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-400" />
+          <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-white" />
         )}
       </button>
     )
@@ -227,9 +227,9 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-semibold text-white">Your Progress</h2>
           {currentStreak > 0 && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/20 border border-amber-500/30">
-              <Flame className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-xs font-bold text-amber-400">{currentStreak}</span>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/20 border border-white/30">
+              <Flame className="w-3.5 h-3.5 text-white" />
+              <span className="text-xs font-bold text-white">{currentStreak}</span>
             </div>
           )}
         </div>
@@ -294,17 +294,17 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
       {/* Stats */}
       <div className="px-4 pb-4">
         <div className="grid grid-cols-3 gap-2">
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-            <p className="text-lg font-bold text-emerald-400">{stats.completedDays}</p>
-            <p className="text-[10px] text-emerald-400/70 uppercase tracking-wide">Complete</p>
+          <div className="p-3 rounded-xl bg-white/10 border border-white/20 text-center">
+            <p className="text-lg font-bold text-white">{stats.completedDays}</p>
+            <p className="text-[10px] text-white/70 uppercase tracking-wide">Complete</p>
           </div>
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-            <p className="text-lg font-bold text-amber-400">{stats.partialDays}</p>
-            <p className="text-[10px] text-amber-400/70 uppercase tracking-wide">Partial</p>
+          <div className="p-3 rounded-xl bg-white/10 border border-white/20 text-center">
+            <p className="text-lg font-bold text-white">{stats.partialDays}</p>
+            <p className="text-[10px] text-white/70 uppercase tracking-wide">Partial</p>
           </div>
-          <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
-            <p className="text-lg font-bold text-blue-400">{stats.journalDays}</p>
-            <p className="text-[10px] text-blue-400/70 uppercase tracking-wide">Journals</p>
+          <div className="p-3 rounded-xl bg-white/10 border border-white/20 text-center">
+            <p className="text-lg font-bold text-white">{stats.journalDays}</p>
+            <p className="text-[10px] text-white/70 uppercase tracking-wide">Journals</p>
           </div>
         </div>
       </div>
@@ -312,15 +312,15 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
       {/* Legend */}
       <div className="px-4 pb-4 flex items-center justify-center gap-4 text-[10px] text-white/50">
         <div className="flex items-center gap-1">
-          <Check className="w-3 h-3 text-emerald-400" />
+          <Check className="w-3 h-3 text-white" />
           <span>Complete</span>
         </div>
         <div className="flex items-center gap-1">
-          <Circle className="w-2 h-2 fill-amber-400 text-amber-400" />
+          <Circle className="w-2 h-2 fill-white text-white" />
           <span>Partial</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-blue-400" />
+          <div className="w-2 h-2 rounded-full bg-white" />
           <span>Journal</span>
         </div>
       </div>
@@ -350,11 +350,11 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   {getCompletionLevel(selectedDayData) >= 4 ? (
-                    <span className="text-xs text-emerald-400 flex items-center gap-1">
+                    <span className="text-xs text-white flex items-center gap-1">
                       <Check className="w-3 h-3" /> Complete
                     </span>
                   ) : getCompletionLevel(selectedDayData) > 0 ? (
-                    <span className="text-xs text-amber-400">
+                    <span className="text-xs text-white">
                       {getCompletionLevel(selectedDayData)}/4 sessions
                     </span>
                   ) : (
@@ -377,7 +377,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                 <div className="space-y-3 max-h-[50vh] overflow-y-auto">
                   {selectedDayData.journal_win && (
                     <div>
-                      <div className="flex items-center gap-2 text-blue-400 mb-1.5">
+                      <div className="flex items-center gap-2 text-white mb-1.5">
                         <BookOpen className="w-4 h-4" />
                         <span className="text-sm font-medium">What I learned</span>
                       </div>
@@ -388,7 +388,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                   )}
                   {selectedDayData.journal_gratitude && (
                     <div>
-                      <div className="flex items-center gap-2 text-pink-400 mb-1.5">
+                      <div className="flex items-center gap-2 text-white mb-1.5">
                         <Heart className="w-4 h-4" />
                         <span className="text-sm font-medium">Grateful for</span>
                       </div>
@@ -399,7 +399,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                   )}
                   {selectedDayData.journal_intention && (
                     <div>
-                      <div className="flex items-center gap-2 text-purple-400 mb-1.5">
+                      <div className="flex items-center gap-2 text-white mb-1.5">
                         <Target className="w-4 h-4" />
                         <span className="text-sm font-medium">Intention</span>
                       </div>
@@ -410,7 +410,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                   )}
                   {selectedDayData.journal_learned && (
                     <div>
-                      <div className="flex items-center gap-2 text-cyan-400 mb-1.5">
+                      <div className="flex items-center gap-2 text-white mb-1.5">
                         <Lightbulb className="w-4 h-4" />
                         <span className="text-sm font-medium">Insight</span>
                       </div>
@@ -432,7 +432,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                   )}
                   {selectedDayData.journal_dream && (
                     <div>
-                      <div className="flex items-center gap-2 text-indigo-400 mb-1.5">
+                      <div className="flex items-center gap-2 text-white mb-1.5">
                         <Moon className="w-4 h-4" />
                         <span className="text-sm font-medium">Dream journal</span>
                       </div>
@@ -443,7 +443,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
                   )}
                   {selectedDayData.journal_conversation && (
                     <div>
-                      <div className="flex items-center gap-2 text-green-400 mb-1.5">
+                      <div className="flex items-center gap-2 text-white mb-1.5">
                         <MessageCircle className="w-4 h-4" />
                         <span className="text-sm font-medium">Conversation</span>
                       </div>

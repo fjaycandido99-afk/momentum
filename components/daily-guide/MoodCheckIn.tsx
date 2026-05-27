@@ -11,10 +11,12 @@ interface MoodCheckInProps {
   selected?: MoodLevel | null
 }
 
+// Monochrome, graded by intensity (dim → bright) so the row reads as
+// "mood rising" without color — matching the journal mood selector.
 const MOOD_OPTIONS: { value: MoodLevel; label: string; icon: typeof Frown; color: string; bgColor: string }[] = [
-  { value: 'low', label: 'Low', icon: Frown, color: 'text-blue-400', bgColor: 'bg-blue-500/20 border-blue-500/30' },
-  { value: 'medium', label: 'Okay', icon: Meh, color: 'text-amber-400', bgColor: 'bg-amber-500/20 border-amber-500/30' },
-  { value: 'high', label: 'Great', icon: Smile, color: 'text-emerald-400', bgColor: 'bg-emerald-500/20 border-emerald-500/30' },
+  { value: 'low', label: 'Low', icon: Frown, color: 'text-white/55', bgColor: 'bg-white/[0.04] border-white/10' },
+  { value: 'medium', label: 'Okay', icon: Meh, color: 'text-white/80', bgColor: 'bg-white/[0.07] border-white/15' },
+  { value: 'high', label: 'Great', icon: Smile, color: 'text-white', bgColor: 'bg-white/[0.12] border-white/20' },
 ]
 
 export function MoodCheckIn({ type, onSelect, selected }: MoodCheckInProps) {

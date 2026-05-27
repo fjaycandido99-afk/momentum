@@ -426,8 +426,8 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
       {/* Error state */}
       {generationError && (
         <div className="px-6 mb-4">
-          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-            <p className="text-sm text-red-400 mb-3">{generationError}</p>
+          <div className="p-4 rounded-xl bg-white/10 border border-white/20">
+            <p className="text-sm text-white mb-3">{generationError}</p>
             <button
               onClick={() => { setGenerationError(null); generateGuide() }}
               className="text-sm text-white/85 hover:text-white underline"

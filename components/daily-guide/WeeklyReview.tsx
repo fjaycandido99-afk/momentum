@@ -246,8 +246,8 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
       {/* Header */}
       <div className="p-4 border-b border-white/15 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
-            <CalendarDays className="w-5 h-5 text-purple-400" />
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-white/20 to-white/20 border border-white/30">
+            <CalendarDays className="w-5 h-5 text-white" />
           </div>
           <div>
             <h2 className="font-semibold text-white">Weekly Review</h2>
@@ -273,10 +273,10 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         <>
           {/* Weekly Insights Card */}
           <div className="p-4 pb-2">
-            <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/20">
               <div className="flex items-center gap-2 mb-3">
-                <BarChart3 className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-medium text-indigo-300">Weekly Insights</h3>
+                <BarChart3 className="w-4 h-4 text-white" />
+                <h3 className="text-sm font-medium text-white">Weekly Insights</h3>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {/* Energy Distribution */}
@@ -286,15 +286,15 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                     <>
                       <div className="flex gap-1.5 mt-1">
                         <div className="flex items-center gap-0.5">
-                          <div className="w-2 h-2 rounded-full bg-blue-400/60" />
+                          <div className="w-2 h-2 rounded-full bg-white/60" />
                           <span className="text-[10px] text-white/50">Low {stats.energyDistribution.low}</span>
                         </div>
                         <div className="flex items-center gap-0.5">
-                          <div className="w-2 h-2 rounded-full bg-amber-400/60" />
+                          <div className="w-2 h-2 rounded-full bg-white/60" />
                           <span className="text-[10px] text-white/50">Normal {stats.energyDistribution.normal}</span>
                         </div>
                         <div className="flex items-center gap-0.5">
-                          <div className="w-2 h-2 rounded-full bg-emerald-400/60" />
+                          <div className="w-2 h-2 rounded-full bg-white/60" />
                           <span className="text-[10px] text-white/50">High {stats.energyDistribution.high}</span>
                         </div>
                       </div>
@@ -323,11 +323,11 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                   <p className="text-[10px] text-white/50 uppercase tracking-wide mb-1.5">Mood Shift</p>
                   {stats && stats.moodImprovedPercent > 0 ? (
                     <>
-                      <p className="text-lg font-bold text-emerald-400">
+                      <p className="text-lg font-bold text-white">
                         {stats.moodImprovedPercent}%
                       </p>
                       <div className="flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3 text-emerald-400/60" />
+                        <TrendingUp className="w-3 h-3 text-white/60" />
                         <span className="text-[10px] text-white/50">improved</span>
                       </div>
                     </>
@@ -342,10 +342,10 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           {/* AI Weekly Summary */}
           {(aiSummary || aiSummaryLoading) && (
             <div className="px-4 pb-2">
-              <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/20">
                 <div className="flex items-center gap-2 mb-3">
-                  <Brain className="w-4 h-4 text-purple-400" />
-                  <h3 className="text-sm font-medium text-purple-300">Weekly Reflection</h3>
+                  <Brain className="w-4 h-4 text-white" />
+                  <h3 className="text-sm font-medium text-white">Weekly Reflection</h3>
                 </div>
                 {aiSummaryLoading ? (
                   <div className="space-y-2">
@@ -364,40 +364,40 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
 
           {/* Stats Grid */}
           <div className="p-4 grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <div className="p-4 rounded-xl bg-white/10 border border-white/20">
               <div className="flex items-center gap-2 mb-2">
-                <Trophy className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs text-emerald-400/70 uppercase tracking-wide">Complete Days</span>
+                <Trophy className="w-4 h-4 text-white" />
+                <span className="text-xs text-white/70 uppercase tracking-wide">Complete Days</span>
               </div>
-              <p className="text-2xl font-bold text-emerald-400">{stats?.completedDays || 0}</p>
-              <p className="text-xs text-emerald-400/50">out of 7</p>
+              <p className="text-2xl font-bold text-white">{stats?.completedDays || 0}</p>
+              <p className="text-xs text-white/50">out of 7</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <div className="p-4 rounded-xl bg-white/10 border border-white/20">
               <div className="flex items-center gap-2 mb-2">
-                <Flame className="w-4 h-4 text-amber-400" />
-                <span className="text-xs text-amber-400/70 uppercase tracking-wide">Modules Done</span>
+                <Flame className="w-4 h-4 text-white" />
+                <span className="text-xs text-white/70 uppercase tracking-wide">Modules Done</span>
               </div>
-              <p className="text-2xl font-bold text-amber-400">{stats?.totalModules || 0}</p>
-              <p className="text-xs text-amber-400/50">completed</p>
+              <p className="text-2xl font-bold text-white">{stats?.totalModules || 0}</p>
+              <p className="text-xs text-white/50">completed</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+            <div className="p-4 rounded-xl bg-white/10 border border-white/20">
               <div className="flex items-center gap-2 mb-2">
-                <PenLine className="w-4 h-4 text-blue-400" />
-                <span className="text-xs text-blue-400/70 uppercase tracking-wide">Journals</span>
+                <PenLine className="w-4 h-4 text-white" />
+                <span className="text-xs text-white/70 uppercase tracking-wide">Journals</span>
               </div>
-              <p className="text-2xl font-bold text-blue-400">{stats?.journalEntries || 0}</p>
-              <p className="text-xs text-blue-400/50">entries</p>
+              <p className="text-2xl font-bold text-white">{stats?.journalEntries || 0}</p>
+              <p className="text-xs text-white/50">entries</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+            <div className="p-4 rounded-xl bg-white/10 border border-white/20">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-4 h-4 text-purple-400" />
-                <span className="text-xs text-purple-400/70 uppercase tracking-wide">Partial</span>
+                <Sparkles className="w-4 h-4 text-white" />
+                <span className="text-xs text-white/70 uppercase tracking-wide">Partial</span>
               </div>
-              <p className="text-2xl font-bold text-purple-400">{stats?.partialDays || 0}</p>
-              <p className="text-xs text-purple-400/50">days started</p>
+              <p className="text-2xl font-bold text-white">{stats?.partialDays || 0}</p>
+              <p className="text-xs text-white/50">days started</p>
             </div>
           </div>
 
@@ -406,12 +406,12 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
             <div className="px-4 pb-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-white flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-amber-400" />
+                  <Trophy className="w-4 h-4 text-white" />
                   What You Learned This Week
                 </h3>
                 <button
                   onClick={() => setShowFullJournal(true)}
-                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded"
+                  className="text-xs text-white hover:text-white transition-colors flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded"
                 >
                   View All
                   <ChevronRight className="w-3 h-3" />
@@ -438,13 +438,13 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
           {/* Weekly Intention */}
           <div className="p-4 border-t border-white/15">
             <div className="flex items-center gap-2 mb-3">
-              <Target className="w-4 h-4 text-purple-400" />
+              <Target className="w-4 h-4 text-white" />
               <h3 className="text-sm font-medium text-white">This Week's Intention</h3>
             </div>
 
             {existingIntention && isSaved ? (
-              <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <div className="flex items-center gap-2 text-purple-400 mb-2">
+              <div className="p-4 rounded-xl bg-white/10 border border-white/20">
+                <div className="flex items-center gap-2 text-white mb-2">
                   <Check className="w-4 h-4" />
                   <span className="text-xs font-medium">Set for this week</span>
                 </div>
@@ -453,7 +453,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                   onClick={() => {
                     setIsSaved(false)
                   }}
-                  className="mt-3 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                  className="mt-3 text-xs text-white hover:text-white transition-colors"
                 >
                   Edit intention
                 </button>
@@ -480,7 +480,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                     aria-busy={isSaving}
                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                       intention.trim()
-                        ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30'
+                        ? 'bg-white/20 hover:bg-white/30 text-white border border-white/30'
                         : 'bg-white/5 text-white/40 cursor-not-allowed'
                     }`}
                   >
@@ -490,7 +490,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                         Saving...
                       </>
                     ) : saveError ? (
-                      <span className="text-red-400">Failed — retry</span>
+                      <span className="text-white">Failed — retry</span>
                     ) : (
                       'Set Intention'
                     )}
@@ -520,8 +520,8 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         {/* Header */}
         <div className="p-4 border-b border-white/15 flex items-center justify-between sticky top-0 bg-black">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-500/20">
-              <PenLine className="w-5 h-5 text-blue-400" />
+            <div className="p-2 rounded-xl bg-white/20">
+              <PenLine className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="font-semibold text-white">Week's Journal</h2>
@@ -553,12 +553,12 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
               <div className="p-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center ${
-                    day.moduleCount >= 4 ? 'bg-emerald-500/20' :
-                    day.moduleCount > 0 ? 'bg-amber-500/20' : 'bg-white/5'
+                    day.moduleCount >= 4 ? 'bg-white/20' :
+                    day.moduleCount > 0 ? 'bg-white/20' : 'bg-white/5'
                   }`}>
                     <span className={`text-xs font-medium ${
-                      day.moduleCount >= 4 ? 'text-emerald-400' :
-                      day.moduleCount > 0 ? 'text-amber-400' : 'text-white/50'
+                      day.moduleCount >= 4 ? 'text-white' :
+                      day.moduleCount > 0 ? 'text-white' : 'text-white/50'
                     }`}>
                       {day.date.getDate()}
                     </span>
@@ -585,22 +585,22 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
               {expandedDay === index && (day.journal_win || day.journal_gratitude || day.journal_intention) && (
                 <div className="px-3 pb-3 space-y-2">
                   {day.journal_win && (
-                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                      <p className="text-xs text-blue-400 mb-1">What I learned:</p>
+                    <div className="p-3 rounded-lg bg-white/10 border border-white/20">
+                      <p className="text-xs text-white mb-1">What I learned:</p>
                       <p className="text-sm text-white/70 leading-relaxed">{day.journal_win}</p>
                     </div>
                   )}
                   {day.journal_gratitude && (
-                    <div className="p-3 rounded-lg bg-pink-500/10 border border-pink-500/20">
-                      <p className="text-xs text-pink-400 mb-1 flex items-center gap-1">
+                    <div className="p-3 rounded-lg bg-white/10 border border-white/20">
+                      <p className="text-xs text-white mb-1 flex items-center gap-1">
                         <Heart className="w-3 h-3" /> Grateful for:
                       </p>
                       <p className="text-sm text-white/70 leading-relaxed">{day.journal_gratitude}</p>
                     </div>
                   )}
                   {day.journal_intention && (
-                    <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                      <p className="text-xs text-purple-400 mb-1 flex items-center gap-1">
+                    <div className="p-3 rounded-lg bg-white/10 border border-white/20">
+                      <p className="text-xs text-white mb-1 flex items-center gap-1">
                         <Target className="w-3 h-3" /> Intention:
                       </p>
                       <p className="text-sm text-white/70 leading-relaxed">{day.journal_intention}</p>
@@ -616,7 +616,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         <div className="p-4 border-t border-white/15 bg-white/[0.02]">
           <div className="flex items-center justify-between text-sm">
             <span className="text-white/70">Total journal entries</span>
-            <span className="text-blue-400 font-medium">{stats.journalEntries} / 7 days</span>
+            <span className="text-white font-medium">{stats.journalEntries} / 7 days</span>
           </div>
         </div>
       </div>
@@ -659,8 +659,8 @@ export function WeeklyReviewPrompt({ onOpen }: { onOpen: () => void }) {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">
-            <CalendarDays className="w-5 h-5 text-purple-400" />
+          <div className="p-2.5 rounded-xl bg-white/20 group-hover:bg-white/30 transition-colors">
+            <CalendarDays className="w-5 h-5 text-white" />
           </div>
           <div className="text-left">
             <h3 className="font-medium text-white">Weekly Review</h3>

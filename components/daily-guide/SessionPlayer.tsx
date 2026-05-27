@@ -429,8 +429,8 @@ export function SessionPlayer({
 
         {isCompleted && (
           <div className="flex flex-col items-center gap-2 mb-4 animate-fade-in">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center"><Check className="w-7 h-7 text-emerald-400" /></div>
-            <p className="text-sm text-emerald-400 font-medium">Session Complete</p>
+            <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center"><Check className="w-7 h-7 text-white" /></div>
+            <p className="text-sm text-white font-medium">Session Complete</p>
           </div>
         )}
 

@@ -101,7 +101,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
       <div className="pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-xl bg-white/10">
-            <PenLine className="w-4 h-4 text-amber-400" />
+            <PenLine className="w-4 h-4 text-white" />
           </div>
           <div>
             <h3 className="font-medium text-white">Daily Reflection</h3>
@@ -124,12 +124,12 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
             </button>
           )}
           {isSaved && !showAsModal && (
-            <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 text-emerald-400">
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 text-white">
               <Check className="w-3 h-3" /> Saved
             </span>
           )}
           {saveError && (
-            <span className="px-3 py-1.5 rounded-full text-xs font-medium text-red-400">
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium text-white">
               Failed to save
             </span>
           )}
@@ -153,20 +153,20 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
           </div>
         ) : isSaved && !showAsModal ? (
           <div className="py-4 space-y-3">
-            <div className="flex items-center gap-2 text-emerald-400 mb-3">
+            <div className="flex items-center gap-2 text-white mb-3">
               <Check className="w-4 h-4" />
               <span className="text-sm font-medium">Saved</span>
             </div>
             {win && <p className="text-white/70 text-sm italic">&quot;{win}&quot;</p>}
             {gratitude && (
               <div className="flex items-start gap-2">
-                <Heart className="w-3.5 h-3.5 text-pink-400 mt-0.5 shrink-0" />
+                <Heart className="w-3.5 h-3.5 text-white mt-0.5 shrink-0" />
                 <p className="text-white/70 text-sm italic">{gratitude}</p>
               </div>
             )}
             {intention && (
               <div className="flex items-start gap-2">
-                <Target className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+                <Target className="w-3.5 h-3.5 text-white mt-0.5 shrink-0" />
                 <p className="text-white/70 text-sm italic">{intention}</p>
               </div>
             )}
@@ -176,7 +176,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
             {/* Prompt 1 */}
             <div>
               <label className="text-sm text-white flex items-center gap-2 mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <Sparkles className="w-3.5 h-3.5 text-white" />
                 {prompts.prompt1.label}
               </label>
               <textarea
@@ -193,7 +193,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
             {/* Prompt 2 */}
             <div>
               <label className="text-sm text-white flex items-center gap-2 mb-2">
-                <Heart className="w-3.5 h-3.5 text-pink-400" />
+                <Heart className="w-3.5 h-3.5 text-white" />
                 {prompts.prompt2.label}
               </label>
               <textarea
@@ -210,7 +210,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
             {/* Prompt 3 */}
             <div>
               <label className="text-sm text-white flex items-center gap-2 mb-2">
-                <Target className="w-3.5 h-3.5 text-purple-400" />
+                <Target className="w-3.5 h-3.5 text-white" />
                 {prompts.prompt3.label}
               </label>
               <textarea
@@ -226,11 +226,11 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
 
             {/* Mindset Insight — gated behind ai_reflections */}
             {reflection && canSeeReflections && (
-              <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-white/10 border border-white/20">
                 <div className="flex items-start gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" />
+                  <Sparkles className="w-3.5 h-3.5 text-white mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-[10px] font-medium tracking-wider text-indigo-400/70 uppercase mb-1">Reflection</p>
+                    <p className="text-[10px] font-medium tracking-wider text-white/70 uppercase mb-1">Reflection</p>
                     <p className="text-sm text-white/70 leading-relaxed italic">{reflection}</p>
                   </div>
                 </div>
@@ -239,7 +239,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
             {reflection && !canSeeReflections && (
               <div className="p-3 rounded-xl bg-white/5 border border-white/15">
                 <div className="flex items-center gap-2">
-                  <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <Crown className="w-3.5 h-3.5 text-white shrink-0" />
                   <p className="text-xs text-white/70">Upgrade for personalized reflections on your journal entries</p>
                 </div>
               </div>
@@ -268,11 +268,11 @@ export function JournalPrompt({ onOpen }: { onOpen: () => void }) {
     <button
       onClick={onOpen}
       aria-label="Open daily reflection"
-      className="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all group focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+      className="w-full p-4 rounded-2xl bg-gradient-to-r from-white/10 to-white/10 border border-white/20 hover:border-white/40 transition-all group focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
     >
       <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-amber-500/20 group-hover:bg-amber-500/30 transition-colors">
-          <PenLine className="w-5 h-5 text-amber-400" />
+        <div className="p-2.5 rounded-xl bg-white/20 group-hover:bg-white/30 transition-colors">
+          <PenLine className="w-5 h-5 text-white" />
         </div>
         <div className="text-left">
           <h3 className="font-medium text-white">Reflect on your day</h3>

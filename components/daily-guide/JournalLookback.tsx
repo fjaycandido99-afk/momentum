@@ -52,7 +52,7 @@ export function JournalLookback() {
     <div className="rounded-2xl bg-white/[0.03] border border-white/15 overflow-hidden">
       <div className="px-4 pt-4 pb-2 flex items-center gap-2">
         <div className="p-2 rounded-xl bg-white/10">
-          <Clock className="w-4 h-4 text-blue-400" />
+          <Clock className="w-4 h-4 text-white" />
         </div>
         <div>
           <h3 className="font-medium text-white text-sm">This Time Last Week</h3>
@@ -62,19 +62,19 @@ export function JournalLookback() {
       <div className="p-4 space-y-2">
         {lookbackEntry.journal_win && (
           <div className="flex items-start gap-2">
-            <BookOpen className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
+            <BookOpen className="w-3.5 h-3.5 text-white mt-0.5 shrink-0" />
             <p className="text-sm text-white/70 italic">&quot;{lookbackEntry.journal_win}&quot;</p>
           </div>
         )}
         {lookbackEntry.journal_gratitude && (
           <div className="flex items-start gap-2">
-            <span className="text-pink-400 text-xs mt-0.5 shrink-0">&#9829;</span>
+            <span className="text-white text-xs mt-0.5 shrink-0">&#9829;</span>
             <p className="text-sm text-white/70 italic">{lookbackEntry.journal_gratitude}</p>
           </div>
         )}
         {lookbackEntry.journal_intention && (
           <div className="flex items-start gap-2">
-            <span className="text-purple-400 text-xs mt-0.5 shrink-0">&#9678;</span>
+            <span className="text-white text-xs mt-0.5 shrink-0">&#9678;</span>
             <p className="text-sm text-white/70 italic">{lookbackEntry.journal_intention}</p>
           </div>
         )}

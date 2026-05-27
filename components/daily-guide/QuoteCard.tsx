@@ -204,7 +204,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
           </span>
         </div>
         {isCompleted && (
-          <div className="flex items-center gap-1.5 text-emerald-400/80">
+          <div className="flex items-center gap-1.5 text-white/80">
             <Check className="w-3.5 h-3.5" />
             <span className="text-xs">Done</span>
           </div>
@@ -217,7 +217,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
           <div className={`p-2.5 rounded-xl shrink-0 ${
             isCompleted ? 'bg-white/5' : 'bg-white/10'
           }`}>
-            <Sparkles className={`w-5 h-5 ${isCompleted ? 'text-white/50' : 'text-amber-300'}`} />
+            <Sparkles className={`w-5 h-5 ${isCompleted ? 'text-white/50' : 'text-white'}`} />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -247,7 +247,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                       className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       <Heart className={`w-3.5 h-3.5 transition-colors ${
-                        isFavorited ? 'text-pink-400 fill-pink-400' : favoriteError ? 'text-red-400 animate-pulse' : isCompleted ? 'text-white/50' : 'text-white/70 hover:text-pink-400'
+                        isFavorited ? 'text-white fill-white' : favoriteError ? 'text-white animate-pulse' : isCompleted ? 'text-white/50' : 'text-white/70 hover:text-white'
                       }`} />
                     </button>
                     <button
@@ -292,7 +292,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                 {!isCompleted && (
                   <button
                     onClick={handleDone}
-                    className="mt-3 w-full py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-sm font-medium hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                    className="mt-3 w-full py-2 rounded-xl bg-white/15 border border-white/20 text-white text-sm font-medium hover:bg-white/25 transition-all flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                   >
                     <Check className="w-3.5 h-3.5" />
                     Done
@@ -315,9 +315,9 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
       {/* Copied toast */}
       {showCopied && (
         <div className="px-4 pb-3">
-          <div role="status" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
-            <Check className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-xs text-emerald-400 font-medium">Copied!</span>
+          <div role="status" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 border border-white/30">
+            <Check className="w-3.5 h-3.5 text-white" />
+            <span className="text-xs text-white font-medium">Copied!</span>
           </div>
         </div>
       )}

@@ -15,14 +15,14 @@ interface StreakDisplayProps {
 
 // Milestone thresholds and their rewards
 const MILESTONES = [
-  { days: 7, label: '1 Week', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/20 to-cyan-500/20', border: 'border-blue-500/30', message: "You're building a habit!", confettiCount: 20 },
-  { days: 14, label: '2 Weeks', icon: Zap, color: 'text-purple-400', bg: 'from-purple-500/20 to-pink-500/20', border: 'border-purple-500/30', message: 'Two weeks strong! Consistency is your superpower.', confettiCount: 30 },
-  { days: 21, label: '3 Weeks', icon: Sparkles, color: 'text-emerald-400', bg: 'from-emerald-500/20 to-teal-500/20', border: 'border-emerald-500/30', message: '21 days — they say this is where habits stick!', confettiCount: 40 },
-  { days: 30, label: '1 Month', icon: Trophy, color: 'text-amber-400', bg: 'from-amber-500/20 to-orange-500/20', border: 'border-amber-500/30', message: 'A full month! You are a force of nature.', confettiCount: 50 },
-  { days: 60, label: '2 Months', icon: Crown, color: 'text-rose-400', bg: 'from-rose-500/20 to-red-500/20', border: 'border-rose-500/30', message: '60 days of dedication. Truly remarkable.', confettiCount: 60 },
-  { days: 90, label: '3 Months', icon: Crown, color: 'text-yellow-400', bg: 'from-yellow-500/20 to-amber-500/20', border: 'border-yellow-500/30', message: 'A quarter year! This is who you are now.', confettiCount: 70 },
+  { days: 7, label: '1 Week', icon: Star, color: 'text-white', bg: 'from-white/20 to-white/20', border: 'border-white/30', message: "You're building a habit!", confettiCount: 20 },
+  { days: 14, label: '2 Weeks', icon: Zap, color: 'text-white', bg: 'from-white/20 to-white/20', border: 'border-white/30', message: 'Two weeks strong! Consistency is your superpower.', confettiCount: 30 },
+  { days: 21, label: '3 Weeks', icon: Sparkles, color: 'text-white', bg: 'from-white/20 to-white/20', border: 'border-white/30', message: '21 days — they say this is where habits stick!', confettiCount: 40 },
+  { days: 30, label: '1 Month', icon: Trophy, color: 'text-white', bg: 'from-white/20 to-white/20', border: 'border-white/30', message: 'A full month! You are a force of nature.', confettiCount: 50 },
+  { days: 60, label: '2 Months', icon: Crown, color: 'text-white', bg: 'from-white/20 to-white/20', border: 'border-white/30', message: '60 days of dedication. Truly remarkable.', confettiCount: 60 },
+  { days: 90, label: '3 Months', icon: Crown, color: 'text-white', bg: 'from-white/20 to-white/20', border: 'border-white/30', message: 'A quarter year! This is who you are now.', confettiCount: 70 },
   { days: 100, label: 'Century', icon: Crown, color: 'text-white', bg: 'from-white/20 to-white/10', border: 'border-white/40', message: 'Legendary! 100 days of transformation.', confettiCount: 80 },
-  { days: 365, label: '1 Year', icon: Crown, color: 'text-yellow-300', bg: 'from-yellow-400/30 to-amber-500/30', border: 'border-yellow-400/50', message: 'One full year. You are unstoppable.', confettiCount: 80 },
+  { days: 365, label: '1 Year', icon: Crown, color: 'text-white', bg: 'from-white/30 to-white/30', border: 'border-white/50', message: 'One full year. You are unstoppable.', confettiCount: 80 },
 ]
 
 // Get current milestone info
@@ -86,8 +86,8 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
       <div>
       <div
         className={`relative flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r ${
-          currentMilestone ? currentMilestone.bg : 'from-amber-500/20 to-orange-500/20'
-        } border ${currentMilestone ? currentMilestone.border : 'border-amber-500/30'} ${
+          currentMilestone ? currentMilestone.bg : 'from-white/20 to-white/20'
+        } border ${currentMilestone ? currentMilestone.border : 'border-white/30'} ${
           isMilestone ? 'animate-pulse' : ''
         }`}
       >
@@ -108,7 +108,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
                 <circle cx="16" cy="16" r={radius} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2.5" />
                 <circle
                   cx="16" cy="16" r={radius} fill="none"
-                  stroke={currentMilestone?.color === 'text-amber-400' ? '#fbbf24' : currentMilestone?.color === 'text-blue-400' ? '#60a5fa' : currentMilestone?.color === 'text-purple-400' ? '#c084fc' : '#fbbf24'}
+                  stroke={currentMilestone?.color === 'text-white' ? '#fbbf24' : currentMilestone?.color === 'text-white' ? '#60a5fa' : currentMilestone?.color === 'text-white' ? '#c084fc' : '#fbbf24'}
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
@@ -118,14 +118,14 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
               </svg>
             )
           })()}
-          <Flame className={`w-4 h-4 ${currentMilestone?.color || 'text-amber-400'} relative z-10`} />
+          <Flame className={`w-4 h-4 ${currentMilestone?.color || 'text-white'} relative z-10`} />
         </div>
         <div className="flex flex-col">
           <div className="flex items-baseline gap-1">
-            <span className={`text-lg font-bold ${currentMilestone?.color || 'text-amber-400'}`}>
+            <span className={`text-lg font-bold ${currentMilestone?.color || 'text-white'}`}>
               {streak}
             </span>
-            <span className={`text-xs ${currentMilestone?.color || 'text-amber-400'} opacity-70`}>
+            <span className={`text-xs ${currentMilestone?.color || 'text-white'} opacity-70`}>
               day{streak !== 1 ? 's' : ''}
             </span>
           </div>
@@ -272,7 +272,7 @@ export function StreakBadge({ streak, freezeCount }: { streak: number; freezeCou
       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
         <StreakFlame streak={streak} size="sm" />
       </div>
-      <Flame className={`w-3.5 h-3.5 ${currentMilestone?.color || 'text-amber-400/90'}`} />
+      <Flame className={`w-3.5 h-3.5 ${currentMilestone?.color || 'text-white/90'}`} />
       <span className={`text-xs font-bold ${currentMilestone?.color || 'text-white'}`}>
         {streak}
       </span>
