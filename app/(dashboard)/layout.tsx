@@ -42,10 +42,11 @@ export default function DashboardLayout({
             key={pathname}
             className={`relative z-10 min-h-screen page-enter ${isHome ? '' : 'pb-16 lg:pb-0'} ${!hideChrome ? 'lg:pl-60' : ''}`}
           >
-            {/* Section pages cap at a reading-comfortable width and center.
-                Home stays full-bleed (sidebar-offset only) so the immersive
-                visuals can breathe to the edge of a wide monitor. */}
-            <div className={!hideChrome && !isHome ? 'lg:max-w-5xl lg:mx-auto lg:px-8' : ''}>
+            {/* Desktop fills the full post-sidebar width — no max-width cap.
+                Only a comfortable side gutter so content doesn't kiss the
+                right edge on a wide monitor. Home gets no gutter either (its
+                immersive visuals own the entire width). */}
+            <div className={!hideChrome && !isHome ? 'lg:px-8' : ''}>
               {children}
             </div>
           </main>
