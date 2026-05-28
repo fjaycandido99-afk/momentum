@@ -13,6 +13,16 @@ interface StatsData {
   actionBreakdown: { feature: string; action: string; count: number }[]
   userCounts: { feature: string; users: number }[]
   dailyTrend: { day: string; events: number; users: number }[]
+  funnel: { active: number; mindsetSelected: number; journalCompleted: number; talkedToCoach: number }
+  retention: { cohort: number; d1: number; d7: number }
+  notifications: { total: number; byType: { type: string; count: number }[] }
+  aiCost: {
+    calls: number
+    promptTokens: number
+    completionTokens: number
+    failures: number
+    byEndpoint: { endpoint: string; calls: number; tokens: number }[]
+  }
 }
 
 const PERIODS = ['7d', '14d', '30d'] as const
@@ -124,6 +134,50 @@ function DevAnalyticsContent() {
               </div>
             </div>
 
+            {/* Activation Funnel — of users active in this period, how many hit each milestone */}
+            <div className="bg-white/5 rounded-xl p-4 space-y-3">
+              <h2 className="text-sm font-semibold text-white/70">Activation Funnel ({period})</h2>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: 'Active', n: data.funnel.active },
+                  { label: 'Mindset', n: data.funnel.mindsetSelected },
+                  { label: 'Journaled', n: data.funnel.journalCompleted },
+                  { label: 'Coach', n: data.funnel.talkedToCoach },
+                ].map(s => (
+                  <div key={s.label} className="bg-white/[0.03] rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-white">{s.n}</div>
+                    <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">{s.label}</div>
+                    {data.funnel.active > 0 && (
+                      <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-white/40 rounded-full" style={{ width: `${(s.n / data.funnel.active) * 100}%` }} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Retention — D1/D7 for new users in the last 30 days */}
+            <div className="bg-white/5 rounded-xl p-4 space-y-2">
+              <h2 className="text-sm font-semibold text-white/70">Retention (new users, last 30d)</h2>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white/[0.03] rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-white">{data.retention.cohort}</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">Cohort</div>
+                </div>
+                <div className="bg-white/[0.03] rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-white">{data.retention.cohort ? Math.round((data.retention.d1 / data.retention.cohort) * 100) : 0}%</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">D1</div>
+                  <div className="text-[10px] text-white/30 mt-0.5">{data.retention.d1}/{data.retention.cohort}</div>
+                </div>
+                <div className="bg-white/[0.03] rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-white">{data.retention.cohort ? Math.round((data.retention.d7 / data.retention.cohort) * 100) : 0}%</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">D7</div>
+                  <div className="text-[10px] text-white/30 mt-0.5">{data.retention.d7}/{data.retention.cohort}</div>
+                </div>
+              </div>
+            </div>
+
             {/* Feature ranking */}
             <div className="bg-white/5 rounded-xl p-4 space-y-3">
               <h2 className="text-sm font-semibold text-white/70 flex items-center gap-2">
@@ -197,6 +251,50 @@ function DevAnalyticsContent() {
                     <span className="text-white/50">{r.count.toLocaleString()}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Notifications — sends in period + by type */}
+            <div className="bg-white/5 rounded-xl p-4 space-y-2">
+              <h2 className="text-sm font-semibold text-white/70">
+                Notifications ({period}) — <span className="text-white">{data.notifications.total.toLocaleString()}</span> sent
+              </h2>
+              <div className="divide-y divide-white/5">
+                {data.notifications.byType.map(r => (
+                  <div key={r.type} className="flex justify-between py-2 text-sm">
+                    <span>{formatFeature(r.type)}</span>
+                    <span className="text-white/50">{r.count.toLocaleString()}</span>
+                  </div>
+                ))}
+                {!data.notifications.byType.length && <p className="text-white/30 text-sm py-1">No sends yet</p>}
+              </div>
+            </div>
+
+            {/* AI Cost — calls, tokens, failures, top endpoints */}
+            <div className="bg-white/5 rounded-xl p-4 space-y-3">
+              <h2 className="text-sm font-semibold text-white/70">AI Cost ({period})</h2>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white/[0.03] rounded-lg p-3 text-center">
+                  <div className="text-xl font-bold text-white">{data.aiCost.calls.toLocaleString()}</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">Calls</div>
+                </div>
+                <div className="bg-white/[0.03] rounded-lg p-3 text-center">
+                  <div className="text-xl font-bold text-white">{Math.round((data.aiCost.promptTokens + data.aiCost.completionTokens) / 1000).toLocaleString()}k</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">Tokens</div>
+                </div>
+                <div className="bg-white/[0.03] rounded-lg p-3 text-center">
+                  <div className="text-xl font-bold text-white">{data.aiCost.calls ? Math.round((data.aiCost.failures / data.aiCost.calls) * 100) : 0}%</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">Failed</div>
+                </div>
+              </div>
+              <div className="divide-y divide-white/5">
+                {data.aiCost.byEndpoint.map(r => (
+                  <div key={r.endpoint} className="flex justify-between py-2 text-xs">
+                    <span className="text-white/70">{r.endpoint}</span>
+                    <span className="text-white/40">{r.calls.toLocaleString()} · {Math.round(r.tokens / 1000).toLocaleString()}k tok</span>
+                  </div>
+                ))}
+                {!data.aiCost.byEndpoint.length && <p className="text-white/30 text-sm py-1">No AI calls yet</p>}
               </div>
             </div>
           </>

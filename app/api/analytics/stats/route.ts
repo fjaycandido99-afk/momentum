@@ -67,6 +67,95 @@ export async function GET(request: NextRequest) {
       WHERE created_at >= ${since}
     `
 
+    // ──────────────── Funnel (period-aligned) ────────────────
+    // Of users active in this window, how many have hit each life-stage milestone?
+    const activeUsersCount = Number(totalUsersResult[0]?.count ?? 0)
+
+    const mindsetCountResult = await prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*) as count
+      FROM "UserPreferences" up
+      INNER JOIN (SELECT DISTINCT user_id FROM "FeatureEvent" WHERE created_at >= ${since}) ae
+        ON ae.user_id = up.user_id
+      WHERE up.mindset_selected_at IS NOT NULL
+    `
+    const journalCompleters = await prisma.featureEvent.findMany({
+      where: { feature: 'journal', action: 'complete', created_at: { gte: since } },
+      select: { user_id: true }, distinct: ['user_id'],
+    })
+    const coachUsers = await prisma.featureEvent.findMany({
+      where: { feature: 'coach', created_at: { gte: since } },
+      select: { user_id: true }, distinct: ['user_id'],
+    })
+
+    const funnel = {
+      active: activeUsersCount,
+      mindsetSelected: Number(mindsetCountResult[0]?.count ?? 0),
+      journalCompleted: journalCompleters.length,
+      talkedToCoach: coachUsers.length,
+    }
+
+    // ──────────────── Retention (D1 / D7 for new users last 30 days) ────────────────
+    const since30 = new Date(); since30.setDate(since30.getDate() - 30)
+    const retentionResult = await prisma.$queryRaw<{ cohort: bigint; d1: bigint; d7: bigint }[]>`
+      WITH first_seen AS (
+        SELECT user_id, MIN(created_at)::date AS first_day
+        FROM "FeatureEvent"
+        GROUP BY user_id
+      ),
+      cohort AS (
+        SELECT user_id, first_day FROM first_seen
+        WHERE first_day >= ${since30}::date AND first_day <= (CURRENT_DATE - INTERVAL '1 day')::date
+      ),
+      activity AS (
+        SELECT DISTINCT user_id, created_at::date AS day
+        FROM "FeatureEvent"
+        WHERE created_at >= ${since30}::date
+      )
+      SELECT
+        COUNT(DISTINCT c.user_id) AS cohort,
+        COUNT(DISTINCT CASE WHEN a.day = c.first_day + INTERVAL '1 day' THEN c.user_id END) AS d1,
+        COUNT(DISTINCT CASE WHEN a.day BETWEEN c.first_day + INTERVAL '6 days' AND c.first_day + INTERVAL '8 days' THEN c.user_id END) AS d7
+      FROM cohort c LEFT JOIN activity a ON a.user_id = c.user_id
+    `
+    const retention = {
+      cohort: Number(retentionResult[0]?.cohort ?? 0),
+      d1: Number(retentionResult[0]?.d1 ?? 0),
+      d7: Number(retentionResult[0]?.d7 ?? 0),
+    }
+
+    // ──────────────── Notifications ────────────────
+    const notifTotal = await prisma.notificationSendLog.count({ where: { sent_at: { gte: since } } })
+    const notifByType = await prisma.notificationSendLog.groupBy({
+      by: ['type'], _count: { id: true },
+      where: { sent_at: { gte: since } },
+      orderBy: { _count: { id: 'desc' } }, take: 8,
+    })
+
+    // ──────────────── AI cost ────────────────
+    const aiAgg = await prisma.aiCallLog.aggregate({
+      _count: { id: true },
+      _sum: { prompt_tokens: true, completion_tokens: true },
+      where: { created_at: { gte: since } },
+    })
+    const aiFailures = await prisma.aiCallLog.count({ where: { created_at: { gte: since }, outcome: 'failed' } })
+    const aiByEndpoint = await prisma.aiCallLog.groupBy({
+      by: ['endpoint'], _count: { id: true },
+      _sum: { prompt_tokens: true, completion_tokens: true },
+      where: { created_at: { gte: since } },
+      orderBy: { _count: { id: 'desc' } }, take: 8,
+    })
+    const aiCost = {
+      calls: aiAgg._count.id,
+      promptTokens: aiAgg._sum.prompt_tokens ?? 0,
+      completionTokens: aiAgg._sum.completion_tokens ?? 0,
+      failures: aiFailures,
+      byEndpoint: aiByEndpoint.map(r => ({
+        endpoint: r.endpoint,
+        calls: r._count.id,
+        tokens: (r._sum.prompt_tokens ?? 0) + (r._sum.completion_tokens ?? 0),
+      })),
+    }
+
     return NextResponse.json({
       period,
       days,
@@ -90,6 +179,13 @@ export async function GET(request: NextRequest) {
         events: Number(r.events),
         users: Number(r.users),
       })),
+      funnel,
+      retention,
+      notifications: {
+        total: notifTotal,
+        byType: notifByType.map(r => ({ type: r.type, count: r._count.id })),
+      },
+      aiCost,
     })
   } catch (error) {
     console.error('[analytics/stats] error:', error)
