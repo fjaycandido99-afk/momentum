@@ -740,15 +740,17 @@ function JournalContent() {
 
   const visibleEntries = showAllRecent ? filteredEntries : filteredEntries.slice(0, 7)
 
-  // Desktop layout:
-  // - lg (1024–1280): widen to max-w-5xl, centered. No rail at this
-  //   breakpoint, so the column owns the screen instead of floating
-  //   narrow in the middle.
-  // - xl+ (1280+): cap back to max-w-3xl (writing-comfortable) but
-  //   shift LEFT and reserve right space for the JournalRightRail —
-  //   journal + rail fill the canvas together.
+  // Desktop layout — progressive widening so the journal column
+  // actually scales with the viewport instead of sitting narrow in
+  // a sea of empty space:
+  // - lg (1024–1280): max-w-5xl centered, no rail.
+  // - xl (1280–1536): max-w-4xl shifted LEFT with right space reserved
+  //   for the JournalRightRail.
+  // - 2xl (1536+): max-w-5xl, still shifted left with rail — column
+  //   keeps growing on wider monitors so the gap to the rail stays
+  //   tight instead of opening into empty middle space.
   return (
-    <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto xl:max-w-3xl xl:mx-0 xl:ml-12 xl:mr-[336px]">
+    <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto xl:max-w-4xl xl:mx-0 xl:ml-12 xl:mr-[336px] 2xl:max-w-5xl">
       {/* Desktop sidebar — fixed-positioned, fills the empty space to the
           right of the centered journal column at xl+. Skips lg (1024–1280)
           where the column already takes most of the width. */}
