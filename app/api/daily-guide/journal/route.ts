@@ -5,6 +5,7 @@ import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
+import { queueCallback } from '@/lib/contextual-callbacks'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -207,6 +208,20 @@ export async function POST(request: NextRequest) {
         journal_dream_interpretation,
       },
     })
+
+    // Queue a next-morning AI callback push referencing what they just
+    // wrote — Coach-memory pattern. Best-effort, never blocks the save.
+    // Picks the most substantive field as the summary so the AI has
+    // something concrete to call back to. Skipped when there's nothing
+    // textual (e.g. mood-only save).
+    const summarySource =
+      journal_win || journal_freetext || journal_intention || journal_dream || journal_gratitude || ''
+    if (typeof summarySource === 'string' && summarySource.trim().length > 0) {
+      void queueCallback(user.id, 'journal_callback', {
+        summary: `Wrote a journal entry: "${summarySource.trim().slice(0, 280)}"`,
+        refId: guide.id,
+      })
+    }
 
     // AI Reflection — free users get a taste (their first FREE_REFLECTION_LIMIT
     // entries), premium gets it on every entry. The "you were seen" payoff is the

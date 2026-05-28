@@ -48,6 +48,7 @@ const ALERT_TO_NOTIFICATION_MAP: Record<string, NotificationType> = {
   daily_motivation: 'daily_motivation',
   coach_checkin: 'coach_checkin',
   coach_accountability: 'coach_accountability',
+  ai_callback: 'coach_checkin', // AI-generated next-morning callback referencing recent activity
 }
 
 export function mapAlertTypeToNotificationType(alertTypeId: string): NotificationType {
