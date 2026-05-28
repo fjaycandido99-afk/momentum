@@ -218,23 +218,36 @@ coach_checkin: {
   },
 }
 
-// Initialize web push with VAPID keys
-function initWebPush() {
-  const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
-  const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
+// Initialize web push with VAPID keys.
+// Must never throw — if the keys are malformed, web push is disabled but
+// native (APNs/FCM) push must still work. A bad VAPID key used to take down
+// the entire pipeline: setVapidDetails threw → sendPushToUser died → iOS
+// pushes silently dropped despite APNs being perfectly configured.
+function initWebPush(): boolean {
+  const rawPub = process.env.VAPID_PUBLIC_KEY
+  const rawPriv = process.env.VAPID_PRIVATE_KEY
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://voxu.app'
 
-  if (!vapidPublicKey || !vapidPrivateKey) {
-    console.warn('VAPID keys not configured. Web push notifications will not work.')
+  if (!rawPub || !rawPriv) {
+    console.warn('[Web push] VAPID keys not configured — web push disabled (native unaffected).')
     return false
   }
 
-  webPush.setVapidDetails(
-    `mailto:support@${new URL(appUrl).hostname}`,
-    vapidPublicKey,
-    vapidPrivateKey
-  )
-  return true
+  // web-push requires URL-safe base64 WITHOUT padding. Sanitize any common
+  // pasting mistakes (= padding, + and / from standard base64).
+  const sanitize = (s: string) => s.trim().replace(/=+$/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+
+  try {
+    webPush.setVapidDetails(
+      `mailto:support@${new URL(appUrl).hostname}`,
+      sanitize(rawPub),
+      sanitize(rawPriv),
+    )
+    return true
+  } catch (e) {
+    console.error('[Web push] VAPID setup failed — web push disabled, native push continues:', (e as Error).message)
+    return false
+  }
 }
 
 /**
