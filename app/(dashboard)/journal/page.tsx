@@ -26,6 +26,7 @@ import { useJournalAutosave } from '@/hooks/useJournalAutosave'
 import { FocusModeToolbar } from '@/components/journal/FocusModeToolbar'
 import { EmptyWritingState } from '@/components/journal/EmptyWritingState'
 import { JournalMilestoneCelebration } from '@/components/journal/JournalMilestoneCelebration'
+import { JournalRightRail } from '@/components/journal/JournalRightRail'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 
@@ -745,6 +746,25 @@ function JournalContent() {
   // on a wide monitor every component pulls apart into airy bars.
   return (
     <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
+      {/* Desktop sidebar — fixed-positioned, fills the empty space to the
+          right of the centered journal column at xl+. Skips lg (1024–1280)
+          where the column already takes most of the width. */}
+      <JournalRightRail
+        currentStreak={journalStats.currentStreak}
+        longestStreak={journalStats.longestStreak}
+        totalEntries={journalStats.totalEntries}
+        recentEntries={recentEntries}
+        selectedDate={selectedDate.toISOString().split('T')[0]}
+        onSelectEntry={(dateStr) => {
+          // YYYY-MM-DD → Date in local time (so the day doesn't shift)
+          const [y, m, d] = dateStr.split('-').map(Number)
+          if (y && m && d) {
+            setSelectedDate(new Date(y, m - 1, d))
+            setIsSaved(false)
+          }
+        }}
+      />
+
       {/* ── Header: title + inline date nav ── */}
       <div className="sticky top-0 z-50 px-6 pt-12 pb-3 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
