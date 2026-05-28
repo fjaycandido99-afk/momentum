@@ -12,10 +12,12 @@ import {
   Loader2,
 } from 'lucide-react'
 import type { SessionType } from '@/lib/daily-guide/decision-tree'
+import { getSessionImage } from '@/lib/daily-guide/session-art'
 import { SessionPlayer } from './SessionPlayer'
 
 
-// Session visual config
+// Session visual config. `image` is resolved per-day by getSessionImage()
+// — see SESSION_VARIANTS in lib/daily-guide/session-art.ts.
 const SESSION_CONFIG: Record<SessionType, {
   icon: typeof Sunrise
   label: string
@@ -24,7 +26,6 @@ const SESSION_CONFIG: Record<SessionType, {
   iconColor: string
   iconBg: string
   defaultPreview: string
-  image?: string
 }> = {
   morning_prime: {
     icon: Sunrise,
@@ -34,7 +35,6 @@ const SESSION_CONFIG: Record<SessionType, {
     iconColor: 'text-white',
     iconBg: 'bg-white/15',
     defaultPreview: '"A new day, a fresh start. You don\'t need to feel ready... you just need to begin."',
-    image: '/sessions/morning_prime.jpg',
   },
   midday_reset: {
     icon: Sun,
@@ -44,7 +44,6 @@ const SESSION_CONFIG: Record<SessionType, {
     iconColor: 'text-white',
     iconBg: 'bg-white/15',
     defaultPreview: '"Pause. Breathe. You\'re halfway through. Reset and keep going."',
-    image: '/sessions/midday_reset.jpg',
   },
   wind_down: {
     icon: Sunset,
@@ -54,7 +53,6 @@ const SESSION_CONFIG: Record<SessionType, {
     iconColor: 'text-white',
     iconBg: 'bg-white/15',
     defaultPreview: '"The day is done. Let go of what you couldn\'t control. You showed up."',
-    image: '/sessions/wind_down.jpg',
   },
   bedtime_story: {
     icon: BookOpen,
@@ -64,7 +62,6 @@ const SESSION_CONFIG: Record<SessionType, {
     iconColor: 'text-white',
     iconBg: 'bg-white/15',
     defaultPreview: '"Once upon a time... in a land where the earth was perfectly flat..."',
-    image: '/sessions/bedtime_story.jpg',
   },
 }
 
@@ -111,6 +108,9 @@ export function SessionCard({
 }: SessionCardProps) {
   const config = SESSION_CONFIG[session]
   const Icon = config.icon
+  // Date-seeded variant — stable for the whole day, rotates tomorrow.
+  // Computed once per render; same image on the card and the player.
+  const image = getSessionImage(session)
   const [showPlayer, setShowPlayer] = useState(false)
   const waitingForAudioRef = useRef(false)
 
@@ -150,10 +150,10 @@ export function SessionCard({
             right). Without art: the atmospheric gradient placeholder. */}
         {isCurrent && !isCompleted && (
           <div className="absolute inset-0 pointer-events-none" aria-hidden>
-            {config.image ? (
+            {image ? (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={config.image} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '72% 45%' }} />
+                <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '72% 45%' }} />
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/25" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
               </>
@@ -243,7 +243,7 @@ export function SessionCard({
           script={script || config.defaultPreview}
           audioBase64={audioBase64 || null}
           duration={duration}
-          backgroundImage={config.image}
+          backgroundImage={image}
           onClose={() => setShowPlayer(false)}
           onComplete={() => {
             setShowPlayer(false)
