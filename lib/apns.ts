@@ -111,16 +111,44 @@ export interface APNsResult {
   reason?: string
 }
 
+// Reasons Apple returns when the token's environment doesn't match the host we
+// hit. Triggers our auto-retry against the other environment.
+const ENV_MISMATCH_REASONS = new Set(['BadDeviceToken', 'BadEnvironmentKeyInToken', 'BadCertificateEnvironment'])
+
 /**
- * Send a push notification to an iOS device via APNs HTTP/2
+ * Send a push notification to an iOS device via APNs HTTP/2.
+ *
+ * Auto-retries against the OTHER environment (sandbox ↔ production) when Apple
+ * returns an env-mismatch reason. This means pushes work regardless of whether
+ * the user installed the App Store / TestFlight build (production tokens) or a
+ * direct Codemagic Ad-Hoc / Development install (sandbox tokens) — without
+ * needing per-build env flips.
  */
 export async function sendAPNsNotification(
   deviceToken: string,
   payload: APNsPayload
 ): Promise<APNsResult> {
+  const primary = getAPNsHost()
+  const fallback = primary === APNS_HOST_PRODUCTION ? APNS_HOST_SANDBOX : APNS_HOST_PRODUCTION
+
+  const first = await sendToHost(deviceToken, payload, primary)
+  if (first.success) return first
+
+  if (first.reason && ENV_MISMATCH_REASONS.has(first.reason)) {
+    console.warn(`[APNs] ${first.reason} on ${primary === APNS_HOST_PRODUCTION ? 'production' : 'sandbox'} — retrying on the other environment`)
+    const second = await sendToHost(deviceToken, payload, fallback)
+    if (second.success) {
+      console.log(`[APNs] Push succeeded on ${fallback === APNS_HOST_PRODUCTION ? 'production' : 'sandbox'} (device token was for that env)`)
+    }
+    return second
+  }
+
+  return first
+}
+
+async function sendToHost(deviceToken: string, payload: APNsPayload, host: string): Promise<APNsResult> {
   const jwt = getAPNsJWT()
   const bundleId = process.env.APNS_BUNDLE_ID!
-  const host = getAPNsHost()
 
   const apnsPayload = JSON.stringify({
     aps: {
