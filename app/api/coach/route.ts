@@ -92,16 +92,29 @@ export async function POST(request: NextRequest) {
     weekAgo.setDate(weekAgo.getDate() - 7)
     weekAgo.setHours(0, 0, 0, 0)
 
+    // Pull the full range of journal content the user has actually written —
+    // not just `journal_win`. Free writes, intentions, and dreams are often the
+    // most revealing signals; including them lets the coach reference what the
+    // user *actually said* instead of feeling generic.
     const recentJournals = await prisma.dailyGuide.findMany({
       where: {
         user_id: user.id,
         date: { gte: weekAgo },
-        journal_win: { not: null },
+        OR: [
+          { journal_win: { not: null } },
+          { journal_gratitude: { not: null } },
+          { journal_intention: { not: null } },
+          { journal_freetext: { not: null } },
+          { journal_dream: { not: null } },
+        ],
       },
       select: {
         date: true,
         journal_win: true,
         journal_gratitude: true,
+        journal_intention: true,
+        journal_freetext: true,
+        journal_dream: true,
         morning_prime_done: true,
         bedtime_story_done: true,
       },
@@ -189,9 +202,21 @@ RULES:
 
       maxTokens = 250
     } else {
-      // Coach mode (default)
+      // Coach mode (default) — build a richer recent-journal context so the coach
+      // can speak to what the user has actually been writing about (not just wins).
       const journalContext = recentJournals
-        .map(j => `${new Date(j.date).toLocaleDateString()}: "${j.journal_win}"${j.journal_gratitude ? ` (grateful for: ${j.journal_gratitude})` : ''}`)
+        .map(j => {
+          const parts: string[] = []
+          if (j.journal_win) parts.push(`learned: "${j.journal_win.slice(0, 140)}"`)
+          if (j.journal_gratitude) parts.push(`grateful: "${j.journal_gratitude.slice(0, 140)}"`)
+          if (j.journal_intention) parts.push(`intention: "${j.journal_intention.slice(0, 140)}"`)
+          if (j.journal_freetext) parts.push(`wrote: "${j.journal_freetext.slice(0, 180)}"`)
+          if (j.journal_dream) parts.push(`dream: "${j.journal_dream.slice(0, 120)}"`)
+          if (!parts.length) return null
+          return `${new Date(j.date).toLocaleDateString()}: ${parts.join('; ')}`
+        })
+        .filter(Boolean)
+        .slice(0, 7)
         .join('\n')
 
       // Build time-of-day coaching approach
@@ -219,7 +244,7 @@ CONTEXT:
 - Energy level: ${guide?.energy_level || 'unknown'}
 - Morning mood: ${guide?.mood_before || 'not recorded'}
 - Evening mood: ${guide?.mood_after || 'not recorded'}
-${journalContext ? `- Recent journal entries:\n${journalContext}` : ''}
+${journalContext ? `- RECENT JOURNAL (their actual words from the past week — reference NATURALLY if relevant, e.g. "you wrote about X — has it shifted?"; don't quote verbatim, don't list back; just let it inform you):\n${journalContext}` : ''}
 ${goalsContext}
 
 TIME-OF-DAY APPROACH:
