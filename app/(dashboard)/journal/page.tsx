@@ -821,8 +821,10 @@ function JournalContent() {
         </div>
       </div>
 
-      {/* ── Mood check-in + hint (scrolls under the pinned header) ── */}
-      <div className="px-6 pt-3 pb-3 mb-2 space-y-2.5">
+      {/* ── Mood check-in + hint (scrolls under the pinned header) ──
+          Tightened vertical rhythm on desktop so the page reads as one
+          composition instead of widely-spaced phone sections. */}
+      <div className="px-6 pt-3 pb-3 mb-2 lg:pt-2 lg:pb-2 lg:mb-1 space-y-2.5">
         {/* Mood check-in — prominent, full width */}
         <MoodSelector
           mood={mood}

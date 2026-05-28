@@ -25,22 +25,24 @@ export default function DashboardLayout({
         <div className="isolate min-h-screen bg-black">
           <AmbientBackground />
 
-          {/* Desktop chrome: a floating bottom dock instead of a sidebar.
-              Sidebars push the app toward "productivity software" — Voxu's
-              identity is cinematic / immersive, so the dock keeps the
-              canvas open and matches MinimalNav's glass language. */}
-          {!hideChrome && <DesktopDock />}
-
           {/* Main content. Full-bleed on every breakpoint — no sidebar
-              offset, no max-width cap. The dock floats above the canvas
-              instead of consuming layout space. Bottom padding leaves
-              clear room under the dock / mobile capsules. */}
+              offset, no max-width cap. The dock floats inside main (below)
+              instead of as a sibling, so fullscreen player overlays
+              (z-55+) inside main correctly paint OVER the dock (z-40)
+              within main's own stacking context. Bottom padding leaves
+              clear room under the floating dock + mobile capsules. */}
           <main
             id="main-content"
             key={pathname}
-            className={`relative z-10 min-h-screen page-enter ${isHome ? '' : 'pb-16'} ${!hideChrome ? 'lg:pb-28' : ''}`}
+            className={`relative z-10 min-h-screen page-enter ${isHome ? '' : 'pb-16'} ${!hideChrome ? 'lg:pb-40' : ''}`}
           >
             {children}
+
+            {/* Desktop chrome: a floating bottom dock instead of a sidebar.
+                Mounted INSIDE main so its z-40 is scoped to main's
+                stacking context — overlays (player, modal) at z-55+ stay
+                on top of the dock when active. */}
+            {!hideChrome && <DesktopDock />}
           </main>
 
           {/* Mobile chrome — hidden on desktop where the dock takes over */}

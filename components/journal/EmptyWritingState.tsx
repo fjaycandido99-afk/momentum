@@ -61,17 +61,20 @@ export function EmptyWritingState({ mindsetId, onStartWriting, visible }: EmptyW
 
   return (
     <div
-      className={`flex flex-col items-center justify-center py-8 transition-all duration-300 ${
+      className={`flex flex-col items-center justify-center py-8 lg:py-5 transition-all duration-300 ${
         visible ? 'opacity-100' : 'opacity-0 pointer-events-none h-0 overflow-hidden'
       }`}
     >
-      {/* Quote */}
+      {/* Quote — wrapped in a subtle glass card on desktop so it reads as
+          an anchored "today's reflection" surface, not text floating in
+          empty space. On mobile (narrow column) the bare quote already
+          feels right, so the card surround only kicks in at lg+. */}
       {quote && (
-        <div className="max-w-xs text-center mb-6 px-4">
-          <p className="text-lg italic text-white leading-relaxed [text-shadow:0_1px_8px_rgba(0,0,0,0.9)]">
+        <div className="w-full max-w-xs lg:max-w-md text-center mb-6 lg:mb-5 lg:rounded-2xl lg:bg-white/[0.04] lg:border lg:border-white/[0.08] lg:px-7 lg:py-7 lg:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+          <p className="text-lg lg:text-xl italic text-white leading-relaxed [text-shadow:0_1px_8px_rgba(0,0,0,0.9)]">
             &ldquo;{quote.text}&rdquo;
           </p>
-          <p className="text-xs text-white/50 mt-2 [text-shadow:0_1px_4px_rgba(0,0,0,0.8)]">&mdash; {quote.author}</p>
+          <p className="text-xs lg:text-sm text-white/50 mt-2 lg:mt-3 [text-shadow:0_1px_4px_rgba(0,0,0,0.8)]">&mdash; {quote.author}</p>
         </div>
       )}
 
