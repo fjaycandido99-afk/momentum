@@ -79,7 +79,7 @@ export function MotivationSection({
           />
         </div>
       ) : (
-      <div className="flex gap-4 overflow-x-auto px-6 pb-3 scrollbar-hide snap-row">
+      <div className="flex gap-4 overflow-x-auto px-6 pb-3 scrollbar-hide snap-row lg:grid lg:grid-cols-3 xl:grid-cols-4 lg:gap-5 lg:overflow-visible lg:pb-6">
         {(
           videos.slice(0, 8).map((video, index) => {
             const isLocked = !isContentFree('motivation', index)

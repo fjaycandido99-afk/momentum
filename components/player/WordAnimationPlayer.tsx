@@ -182,19 +182,33 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
 
   return (
     <>
-      {/* Back layer — always opacity 1, shows the NEXT image during crossfade */}
+      {/* Desktop blur-fill backdrop — same image scaled up and blurred so
+          object-contain (below, lg+) has a beautiful tinted surround
+          instead of black letterbox bars. Hidden on mobile (portrait
+          viewport + portrait source = object-cover already works). */}
+      <img
+        src={frontSrc}
+        alt=""
+        aria-hidden
+        className="hidden lg:block absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60 pointer-events-none"
+        style={{ zIndex: -1 }}
+      />
+      {/* Back layer — always opacity 1, shows the NEXT image during crossfade.
+          object-cover on mobile (portrait artwork fits portrait viewport),
+          object-contain on desktop so wide viewports see the FULL artwork
+          centered against the blurred backdrop instead of zoom-cropping. */}
       <img
         ref={backRef}
         src={backSrc}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover lg:object-contain"
         style={{ zIndex: 0 }}
       />
       {/* Front layer — fades OUT from 1→0 to reveal back layer, then snaps back */}
       <img
         src={frontSrc}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover lg:object-contain"
         style={{
           zIndex: 1,
           opacity: fading ? 0 : 1,

@@ -31,14 +31,19 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
   const displayLabel = label || MODE_LABELS[mode]
   const { shareFromHTML, isGenerating } = useShareCard()
 
+  // Mobile: edge-to-edge bottom capsule (touch-first).
+  // Desktop: floats centered ABOVE the DesktopDock as a constrained
+  // pill so the two chrome layers stack instead of colliding. The
+  // dock lives at bottom-6 + ~52px tall — bottom-28 on lg+ leaves
+  // comfortable clearance between the two.
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 safe-area-pb">
+    <div className="fixed bottom-0 left-0 right-0 z-30 safe-area-pb lg:bottom-28 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 lg:w-[460px] lg:max-w-[calc(100vw-3rem)] lg:safe-area-pb-0">
       {/* Main bar */}
       <div
         role="button"
         tabIndex={0}
         aria-label={`Now playing: ${displayLabel}. ${isPlaying ? 'Playing' : 'Paused'}. Tap to open player.`}
-        className="mx-4 mb-2 flex items-center justify-between px-4 py-3 rounded-full glass-refined glass-elevated cursor-pointer focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+        className="mx-4 mb-2 lg:mx-0 lg:mb-0 flex items-center justify-between px-4 py-3 rounded-full glass-refined glass-elevated cursor-pointer focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none lg:shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
         onClick={onOpenPlayer}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenPlayer() } }}
       >
