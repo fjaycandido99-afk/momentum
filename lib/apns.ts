@@ -20,14 +20,38 @@ function getAPNsHost(): string {
 }
 
 /**
- * Check whether APNs env vars are configured
+ * Resolve the APNs auth key (the .p8) from env. Accepts BOTH common conventions:
+ *   - APNS_AUTH_KEY  or  APNS_KEY  (whichever is set)
+ *   - raw PEM (multi-line, with BEGIN/END)  or  base64-encoded .p8 contents
+ *
+ * This forgiveness matters because the "wrong format" bug is invisible: the
+ * server quietly skips every iOS push and NotificationSendLog stays empty.
+ */
+function getAuthKey(): string {
+  const raw = (process.env.APNS_AUTH_KEY || process.env.APNS_KEY || '').trim()
+  if (!raw) return ''
+  // Raw PEM — normalize any escaped \n that some env stores write literally.
+  if (raw.includes('BEGIN PRIVATE KEY') || raw.includes('BEGIN EC PRIVATE KEY')) {
+    return raw.replace(/\\n/g, '\n')
+  }
+  // Otherwise treat as base64-encoded .p8.
+  try {
+    const decoded = Buffer.from(raw, 'base64').toString('utf8')
+    return decoded.includes('BEGIN') ? decoded : ''
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * Check whether APNs env vars are configured (including a usable auth key).
  */
 export function isAPNsConfigured(): boolean {
   return !!(
     process.env.APNS_KEY_ID &&
     process.env.APNS_TEAM_ID &&
-    process.env.APNS_AUTH_KEY &&
-    process.env.APNS_BUNDLE_ID
+    process.env.APNS_BUNDLE_ID &&
+    getAuthKey()
   )
 }
 
@@ -44,10 +68,10 @@ function getAPNsJWT(): string {
 
   const keyId = process.env.APNS_KEY_ID!
   const teamId = process.env.APNS_TEAM_ID!
-  const authKeyBase64 = process.env.APNS_AUTH_KEY!
-
-  // Decode the base64-encoded .p8 key contents
-  const authKey = Buffer.from(authKeyBase64, 'base64').toString('utf8')
+  const authKey = getAuthKey()
+  if (!authKey) {
+    throw new Error('[APNs] No auth key configured. Set APNS_AUTH_KEY (or APNS_KEY) to the .p8 contents — raw PEM or base64.')
+  }
 
   // JWT header + payload
   const header = Buffer.from(JSON.stringify({ alg: 'ES256', kid: keyId })).toString('base64url')
@@ -55,17 +79,22 @@ function getAPNsJWT(): string {
   const signingInput = `${header}.${payload}`
 
   // Sign with ES256 (ECDSA P-256 + SHA-256)
-  const sign = crypto.createSign('SHA256')
-  sign.update(signingInput)
-  const signatureDER = sign.sign({ key: authKey, dsaEncoding: 'ieee-p1363' })
-  const signature = signatureDER.toString('base64url')
+  try {
+    const sign = crypto.createSign('SHA256')
+    sign.update(signingInput)
+    const signatureDER = sign.sign({ key: authKey, dsaEncoding: 'ieee-p1363' })
+    const signature = signatureDER.toString('base64url')
 
-  const token = `${signingInput}.${signature}`
+    const token = `${signingInput}.${signature}`
 
-  // Cache for 55 minutes (APNs allows up to 60)
-  cachedJWT = { token, expires: now + 55 * 60 }
+    // Cache for 55 minutes (APNs allows up to 60)
+    cachedJWT = { token, expires: now + 55 * 60 }
 
-  return token
+    return token
+  } catch (e) {
+    console.error('[APNs] JWT signing failed — verify APNS_AUTH_KEY is the .p8 contents (raw PEM with newlines, or base64 of the .p8 file):', (e as Error).message)
+    throw e
+  }
 }
 
 export interface APNsPayload {
