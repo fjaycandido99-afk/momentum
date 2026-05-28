@@ -44,7 +44,7 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
         role="button"
         tabIndex={0}
         aria-label={`Now playing: ${displayLabel}. ${isPlaying ? 'Playing' : 'Paused'}. Tap to open player.`}
-        className="mx-4 mb-2 lg:mx-0 lg:mb-0 flex items-center justify-between px-4 py-3 rounded-full glass-refined glass-elevated cursor-pointer focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none lg:shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+        className="mx-4 mb-2 lg:mx-0 lg:mb-0 flex items-center justify-between px-4 py-3 rounded-full glass-refined glass-elevated cursor-pointer focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none lg:!bg-white/[0.05] lg:!border-white/10 lg:backdrop-blur-xl lg:shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
         onClick={onOpenPlayer}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenPlayer() } }}
       >
