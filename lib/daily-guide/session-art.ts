@@ -30,7 +30,10 @@ const SESSION_VARIANTS: Record<SessionType, string[]> = {
     '/sessions/morning_prime_04.jpg',
   ],
   midday_reset: [],
-  wind_down: [],
+  wind_down: [
+    '/sessions/wind_down_02.jpg',
+    '/sessions/wind_down_03.jpg',
+  ],
   bedtime_story: [],
 }
 
