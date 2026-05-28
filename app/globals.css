@@ -2631,27 +2631,41 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
 }
 
 /* ============================================================
-   Ken Burns — a barely-perceptible slow pan + zoom on session
-   background images. Turns a static photo into a living scene
-   without ever catching the eye. Pure transform (GPU-cheap,
-   reliable in the iOS WebView). Held at a minimum scale of 1.04
-   so the translate never reveals the image's edges.
+   Ken Burns — slow pan + zoom on session background images.
+   Turns a static photo into a living scene. iOS WKWebView quirks
+   addressed in this version:
+   - Longhand animation-* properties (shorthand sometimes silently
+     no-ops in WKWebView when combined with negative delays).
+   - animation-fill-mode: both so the initial keyframe state
+     applies even before the first tick.
+   - NO negative animation-delay (unreliable on iOS) — instead the
+     keyframe is written so 0% is already mid-motion (scale 1.14)
+     and the animation visibly drifts from frame one.
+   - Three keyframe stops (mid → far → near → mid) so the loop
+     seam is at the same scale and the playback feels continuous.
    ============================================================ */
 @keyframes ken-burns {
-  0%   { transform: scale(1.06) translate3d(0%, 0%, 0); }
-  50%  { transform: scale(1.20) translate3d(-3.5%, -2.8%, 0); }
-  100% { transform: scale(1.06) translate3d(0%, 0%, 0); }
+  0%   { transform: scale(1.14) translate3d(-1.8%, -1.4%, 0); }
+  33%  { transform: scale(1.20) translate3d(-3.5%, -2.8%, 0); }
+  66%  { transform: scale(1.06) translate3d(0%, 0%, 0); }
+  100% { transform: scale(1.14) translate3d(-1.8%, -1.4%, 0); }
 }
 .ken-burns {
-  /* Linear timing so motion is perceptually constant — ease-in-out hides
-     the drift in the first few seconds when users actually look. A bigger
-     scale range (1.06→1.20) so even slow motion is unmistakable, and a
-     negative delay so the first frame on screen is already mid-cycle
-     (you see movement immediately, never a "is it animating?" moment). */
-  animation: ken-burns 45s linear infinite;
-  animation-delay: -11s;
+  animation-name: ken-burns;
+  animation-duration: 45s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  -webkit-animation-name: ken-burns;
+  -webkit-animation-duration: 45s;
+  -webkit-animation-timing-function: linear;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-fill-mode: both;
   will-change: transform;
   transform-origin: center center;
+  /* Backstop transform — if the keyframe somehow never fires on this
+     device, the image is still scaled up so it doesn't snap from 1.0. */
+  transform: scale(1.14) translate3d(-1.8%, -1.4%, 0);
 }
 
 /* ========== Accessibility ========== */

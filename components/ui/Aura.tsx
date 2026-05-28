@@ -63,13 +63,24 @@ export function AuraRing({ size = 240, state = 'idle', stroke = 2, breathe = tru
   // doesn't need to read CSS vars (iOS WebKit can't animate var() values).
   const a1 = (0.22 * t.glow * 1.6).toFixed(3)
   const a2 = (0.06 * t.glow * 1.6).toFixed(3)
-  const glowStyle: CSSProperties = {
-    background: `radial-gradient(circle, rgba(255,255,255,${a1}) 0%, rgba(255,255,255,${a2}) 38%, transparent 68%)`,
-    willChange: 'transform, opacity',
-    ...(breathe
-      ? { animation: `aura-breathe ${t.breathe} ease-in-out infinite` }
-      : { opacity: 0.85 }),
-  }
+  // Longhand animation properties (NOT the `animation` shorthand) + fill-mode
+  // `both`. The shorthand silently no-ops in some iOS WKWebView versions when
+  // applied from inline style; longhand always sticks.
+  const glowStyle: CSSProperties = breathe
+    ? {
+        background: `radial-gradient(circle, rgba(255,255,255,${a1}) 0%, rgba(255,255,255,${a2}) 38%, transparent 68%)`,
+        willChange: 'transform, opacity',
+        animationName: 'aura-breathe',
+        animationDuration: t.breathe,
+        animationTimingFunction: 'ease-in-out',
+        animationIterationCount: 'infinite',
+        animationFillMode: 'both',
+      }
+    : {
+        background: `radial-gradient(circle, rgba(255,255,255,${a1}) 0%, rgba(255,255,255,${a2}) 38%, transparent 68%)`,
+        willChange: 'transform, opacity',
+        opacity: 0.85,
+      }
 
   return (
     <div
@@ -94,13 +105,18 @@ export function AuraRing({ size = 240, state = 'idle', stroke = 2, breathe = tru
       ) : (
         /* Orbiting light arc (decorative). SVG + CSS rotation — reliable on iOS,
            unlike conic-gradient + mask + rotate (the previous approach went
-           static in the Capacitor WebView). */
+           static in the Capacitor WebView). Longhand animation-* properties
+           same as the breathing halo above (see iOS-shorthand comment). */
         <svg
           className="absolute inset-0"
           viewBox="0 0 100 100"
           aria-hidden
           style={{
-            animation: `aura-spin ${t.spin} linear infinite`,
+            animationName: 'aura-spin',
+            animationDuration: t.spin,
+            animationTimingFunction: 'linear',
+            animationIterationCount: 'infinite',
+            animationFillMode: 'both',
             willChange: 'transform',
           }}
         >
@@ -145,9 +161,16 @@ export function AIOrb({ size = 120, state = 'idle', className = '' }: AIOrbProps
   // Bake per-state intensity into the gradient — see AuraRing comment for why.
   const a1 = (0.2 * t.glow * 1.6).toFixed(3)
   const a2 = (0.05 * t.glow * 1.6).toFixed(3)
+  // Longhand animation-* properties everywhere — iOS WKWebView sometimes
+  // silently no-ops the `animation` shorthand from inline style. See the
+  // AuraRing comment above for the same pattern.
   const haloStyle: CSSProperties = {
     background: `radial-gradient(circle, rgba(255,255,255,${a1}) 0%, rgba(255,255,255,${a2}) 42%, transparent 70%)`,
-    animation: `aura-breathe ${t.shimmer} ease-in-out infinite`,
+    animationName: 'aura-breathe',
+    animationDuration: t.shimmer,
+    animationTimingFunction: 'ease-in-out',
+    animationIterationCount: 'infinite',
+    animationFillMode: 'both',
     willChange: 'transform, opacity',
   }
 
@@ -165,7 +188,14 @@ export function AIOrb({ size = 120, state = 'idle', className = '' }: AIOrbProps
         className="absolute inset-0"
         viewBox="0 0 100 100"
         aria-hidden
-        style={{ animation: `aura-spin ${t.ring} linear infinite`, willChange: 'transform' }}
+        style={{
+          animationName: 'aura-spin',
+          animationDuration: t.ring,
+          animationTimingFunction: 'linear',
+          animationIterationCount: 'infinite',
+          animationFillMode: 'both',
+          willChange: 'transform',
+        }}
       >
         <circle
           cx="50" cy="50" r="49.25"
@@ -184,7 +214,11 @@ export function AIOrb({ size = 120, state = 'idle', className = '' }: AIOrbProps
           background:
             'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95) 0%, rgba(220,222,232,0.5) 45%, rgba(120,122,140,0.16) 70%, rgba(0,0,0,0) 100%)',
           boxShadow: 'inset 0 0 22px rgba(255,255,255,0.22), 0 0 34px rgba(255,255,255,0.15)',
-          animation: `aura-orb-float ${t.float} ease-in-out infinite`,
+          animationName: 'aura-orb-float',
+          animationDuration: t.float,
+          animationTimingFunction: 'ease-in-out',
+          animationIterationCount: 'infinite',
+          animationFillMode: 'both',
         }}
       >
         {/* Inner counter-highlight shimmer */}
@@ -192,7 +226,11 @@ export function AIOrb({ size = 120, state = 'idle', className = '' }: AIOrbProps
           className="absolute inset-0 rounded-full"
           style={{
             background: 'radial-gradient(circle at 68% 72%, rgba(255,255,255,0.45) 0%, transparent 50%)',
-            animation: `aura-orb-shimmer ${t.shimmer} ease-in-out infinite`,
+            animationName: 'aura-orb-shimmer',
+            animationDuration: t.shimmer,
+            animationTimingFunction: 'ease-in-out',
+            animationIterationCount: 'infinite',
+            animationFillMode: 'both',
           }}
         />
       </div>

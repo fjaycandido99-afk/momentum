@@ -80,9 +80,11 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
                     </div>
                   ) : null
                 })()}
-                {/* Signature aura ring — energetic when playing, a calm steady glow otherwise */}
+                {/* Signature aura ring — always breathes so the grid reads
+                    as a row of living portals, not stickers. Idle = slow +
+                    subtle, active = energetic + faster orbit. */}
                 <div className="absolute inset-0 grid place-items-center">
-                  <AuraRing size={64} stroke={1.5} state={isActive ? 'active' : 'idle'} breathe={isActive} />
+                  <AuraRing size={64} stroke={1.5} state={isActive ? 'active' : 'idle'} breathe />
                 </div>
                 {/* Center icon / playing bars */}
                 <div className="relative z-10">
