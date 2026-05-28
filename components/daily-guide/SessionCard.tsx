@@ -153,7 +153,7 @@ export function SessionCard({
             {config.image ? (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={config.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <img src={config.image} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '72% 45%' }} />
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/25" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
               </>
