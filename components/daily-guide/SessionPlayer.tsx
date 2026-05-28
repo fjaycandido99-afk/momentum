@@ -390,13 +390,16 @@ export function SessionPlayer({
         <div className="absolute pointer-events-none">
           <AuraRing size={344} state={isPlaying ? 'active' : 'idle'} stroke={2} />
         </div>
-        {/* Portal texture inside the ring (Whisk asset). Circle-masked + edge-faded
-            so it blends into the black; hidden gracefully until the file exists. */}
+        {/* Portal texture inside the ring (Whisk asset). When the session has
+            its OWN backgroundImage (a cinematic landscape) the portal stays
+            very subtle — the landscape is doing the atmosphere, the ring just
+            anchors the focus. Without a session bg, the portal is more present
+            so the ring isn't centered on flat black. */}
         <div
           className="absolute z-0 overflow-hidden rounded-full pointer-events-none"
           style={{
             width: 320, height: 320,
-            opacity: isPlaying ? 0.55 : 0.3,
+            opacity: backgroundImage ? (isPlaying ? 0.18 : 0.1) : (isPlaying ? 0.55 : 0.3),
             transition: 'opacity 1.2s ease-in-out',
             WebkitMaskImage: 'radial-gradient(circle, #000 58%, transparent 100%)',
             maskImage: 'radial-gradient(circle, #000 58%, transparent 100%)',
@@ -411,7 +414,7 @@ export function SessionPlayer({
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="relative z-10" style={{ opacity: isPlaying ? 0.85 : 0.15, transition: 'opacity 1s ease-in-out' }}>
+        <div className="relative z-10" style={{ opacity: isPlaying ? 0.7 : 0.12, transition: 'opacity 1s ease-in-out' }}>
           <CircularVisualizer analyser={analyser} isPlaying={isPlaying} barCount={80} size={300} />
         </div>
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none" />
