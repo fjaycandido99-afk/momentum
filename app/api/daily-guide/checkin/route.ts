@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getDateString } from '@/lib/daily-guide/day-type'
+import { queueCallback } from '@/lib/contextual-callbacks'
+
+// Moods that trigger a supportive next-morning callback. Anything
+// above this (okay / good / great) doesn't need a follow-up.
+const HEAVY_MOODS = new Set(['awful', 'low', 'sad', 'anxious', 'angry'])
+
+// Pretty labels for callback summary so the AI has something natural
+// to riff on instead of the internal segment name.
+const SEGMENT_LABEL: Record<string, string> = {
+  morning_prime: 'Morning Prime',
+  midday_reset: 'Midday Reset',
+  wind_down: 'Wind Down',
+  bedtime_story: 'Bedtime Story',
+}
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -68,6 +82,16 @@ export async function POST(request: NextRequest) {
         },
         data: moodUpdate,
       })
+
+      // If today's mood reads as heavy, queue a supportive next-morning
+      // callback. Quietly skips on normal/good moods — no need to nag.
+      const heavyMood = [mood_before, mood_after].find(m => m && HEAVY_MOODS.has(String(m).toLowerCase()))
+      if (heavyMood) {
+        void queueCallback(user.id, 'mood_callback', {
+          summary: `Logged a heavy mood today: "${heavyMood}"`,
+          intensity: 'low',
+        })
+      }
 
       return NextResponse.json({ success: true, mood: moodUpdate })
     }
@@ -165,6 +189,26 @@ export async function POST(request: NextRequest) {
       wind_down_done: guide.wind_down_done,
       bedtime_story_done: guide.bedtime_story_done,
     })
+
+    // Queue a next-morning callback when one of the named sessions
+    // completes — AI follows up on what carried forward. Other segment
+    // values (checkpoints, legacy names, cosmic_insight) skip the
+    // callback to avoid noise. Dedupe in queueCallback handles users
+    // who complete multiple sessions in one day.
+    if (SEGMENT_LABEL[segment]) {
+      void queueCallback(user.id, 'session_callback', {
+        summary: `Completed ${SEGMENT_LABEL[segment]} session today`,
+        refId: guide.id,
+      })
+    }
+    // Also catch heavy mood from a session-tagged checkin.
+    const heavyMood = [mood_before, mood_after].find(m => m && HEAVY_MOODS.has(String(m).toLowerCase()))
+    if (heavyMood) {
+      void queueCallback(user.id, 'mood_callback', {
+        summary: `Logged a heavy mood with the ${SEGMENT_LABEL[segment] || segment} session: "${heavyMood}"`,
+        intensity: 'low',
+      })
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { queueCallback } from '@/lib/contextual-callbacks'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,6 +71,23 @@ export async function POST(request: NextRequest) {
         thumbnail,
       },
     })
+
+    // Queue an AI next-morning callback referencing what they saved.
+    // Only for "quote-like" content (skip favorited music tracks etc.
+    // where a re-surface notif feels off). Best-effort, never blocks.
+    if (typeof content_text === 'string' && content_text.trim().length > 0) {
+      const quoteLike = ['quote', 'affirmation', 'wisdom', 'motivation'].some(k =>
+        (content_type || '').toLowerCase().includes(k),
+      )
+      if (quoteLike) {
+        void queueCallback(user.id, 'quote_callback', {
+          summary: `Saved ${content_type}: "${content_text.trim().slice(0, 240)}"${
+            content_title ? ` — ${content_title}` : ''
+          }`,
+          refId: favorite.id,
+        })
+      }
+    }
 
     return NextResponse.json({ favorite })
   } catch (error) {
