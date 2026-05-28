@@ -379,7 +379,7 @@ export function SessionPlayer({
       {backgroundImage && (
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: '62% 50%' }} />
+          <img src={backgroundImage} alt="" className="absolute inset-0 w-full h-full object-cover ken-burns" style={{ objectPosition: '62% 50%' }} />
           <div className="absolute inset-0 bg-black/55" />
         </div>
       )}

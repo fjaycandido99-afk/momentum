@@ -2630,6 +2630,22 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   50%      { opacity: 1; }
 }
 
+/* ============================================================
+   Ken Burns — a barely-perceptible slow pan + zoom on session
+   background images. Turns a static photo into a living scene
+   without ever catching the eye. Pure transform (GPU-cheap,
+   reliable in the iOS WebView). Held at a minimum scale of 1.04
+   so the translate never reveals the image's edges.
+   ============================================================ */
+@keyframes ken-burns {
+  0%, 100% { transform: scale(1.04) translate3d(0%, 0%, 0); }
+  50%      { transform: scale(1.08) translate3d(-1.5%, -1.2%, 0); }
+}
+.ken-burns {
+  animation: ken-burns 90s ease-in-out infinite;
+  will-change: transform;
+}
+
 /* ========== Accessibility ========== */
 
 /* Reduced motion — tone down animations but keep functional ones */
@@ -2660,6 +2676,12 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   .aura-ring *,
   .ai-orb * {
     animation: none !important;
+  }
+
+  /* Ken Burns — freeze to a slight static zoom (no jarring jump to 1.0) */
+  .ken-burns {
+    animation: none !important;
+    transform: scale(1.04) !important;
   }
 }
 
