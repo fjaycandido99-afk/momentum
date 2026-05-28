@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { ChevronDown, Play, Pause, RotateCcw, Check } from 'lucide-react'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { CircularVisualizer } from '@/components/player/CircularVisualizer'
-import { AuraRing } from '@/components/ui/Aura'
 import { BufferAnalyser, type AudioAnalyserLike } from '@/components/player/audio-analyser-cache'
 import type { SessionType } from '@/lib/daily-guide/decision-tree'
 
@@ -386,35 +385,7 @@ export function SessionPlayer({
       )}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="absolute pointer-events-none" style={{ width: '320px', height: '320px', borderRadius: '50%', background: 'radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 70%)', filter: 'blur(40px)', opacity: isPlaying ? 1 : 0, transition: 'opacity 1.5s ease-in-out' }} />
-        {/* Signature aura ring framing the visualizer — picks up energy while playing */}
-        <div className="absolute pointer-events-none">
-          <AuraRing size={344} state={isPlaying ? 'active' : 'idle'} stroke={2} />
-        </div>
-        {/* Portal texture inside the ring (Whisk asset). When the session has
-            its OWN backgroundImage (a cinematic landscape) the portal stays
-            very subtle — the landscape is doing the atmosphere, the ring just
-            anchors the focus. Without a session bg, the portal is more present
-            so the ring isn't centered on flat black. */}
-        <div
-          className="absolute z-0 overflow-hidden rounded-full pointer-events-none"
-          style={{
-            width: 320, height: 320,
-            opacity: backgroundImage ? (isPlaying ? 0.18 : 0.1) : (isPlaying ? 0.55 : 0.3),
-            transition: 'opacity 1.2s ease-in-out',
-            WebkitMaskImage: 'radial-gradient(circle, #000 58%, transparent 100%)',
-            maskImage: 'radial-gradient(circle, #000 58%, transparent 100%)',
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/textures/focus-portal.jpg"
-            alt=""
-            aria-hidden
-            onError={(e) => { const p = e.currentTarget.parentElement; if (p) p.style.display = 'none' }}
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="relative z-10" style={{ opacity: isPlaying ? 0.7 : 0.12, transition: 'opacity 1s ease-in-out' }}>
+        <div style={{ opacity: isPlaying ? 0.85 : 0.15, transition: 'opacity 1s ease-in-out' }}>
           <CircularVisualizer analyser={analyser} isPlaying={isPlaying} barCount={80} size={300} />
         </div>
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none" />
