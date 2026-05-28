@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { ChevronDown, Heart, Send, Share2 } from 'lucide-react'
 import { useShareCard } from '@/hooks/useShareCard'
+import { ShareVideoButton } from '@/components/sharing/ShareVideoButton'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
 import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
@@ -126,6 +127,8 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
               </h3>
             </div>
             <div className="flex items-center gap-0.5">
+              {/* Appears only once the daily audiogram has been rendered */}
+              <ShareVideoButton mindset={mindsetId} date={today} />
               <button
                 onClick={handleShareQuote}
                 disabled={isSharing}
