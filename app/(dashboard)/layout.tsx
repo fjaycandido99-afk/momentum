@@ -42,15 +42,11 @@ export default function DashboardLayout({
             key={pathname}
             className={`relative z-10 min-h-screen page-enter ${isHome ? '' : 'pb-16 lg:pb-0'} ${!hideChrome ? 'lg:pl-60' : ''}`}
           >
-            {/* Reading-comfortable content column on desktop (max-w-4xl
-                ≈ 896px, the width Linear / Notion / Anthropic Console use).
-                Mobile-first components are mostly w-full — without a cap on
-                desktop they stretch into pulled-apart tab bars and giant
-                Save buttons. Home stays full-bleed for its immersive
-                visuals. Per-page surfaces that want more horizontal real
-                estate (a wide dashboard table, gallery) can wrap themselves
-                in `lg:!max-w-none -mx-8 lg:px-8` to escape. */}
-            <div className={!hideChrome && !isHome ? 'lg:max-w-4xl lg:mx-auto lg:px-8' : ''}>
+            {/* Desktop content fills the full post-sidebar width — no cap.
+                Only a side gutter so it doesn't kiss the right edge. Each
+                page is responsible for capping its own internal form/tab
+                clusters so mobile w-full components don't pull apart. */}
+            <div className={!hideChrome && !isHome ? 'lg:px-8' : ''}>
               {children}
             </div>
           </main>

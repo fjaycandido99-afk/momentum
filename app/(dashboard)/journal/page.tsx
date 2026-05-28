@@ -740,7 +740,11 @@ function JournalContent() {
   const visibleEntries = showAllRecent ? filteredEntries : filteredEntries.slice(0, 7)
 
   return (
-    <div className="min-h-screen text-white pb-24">
+    {/* Desktop: page caps itself at a writing-comfortable column.
+        The dashboard layout is full-bleed; the journal is form-heavy
+        (w-full inputs, tab bars, mood pills), so without a cap on a
+        wide monitor every component pulls apart into airy bars. */}
+    <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
       {/* ── Header: title + inline date nav ── */}
       <div className="sticky top-0 z-50 px-6 pt-12 pb-3 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
