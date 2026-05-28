@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Bookmark, Loader2, Trash2, Sparkles } from 'lucide-react'
+import { Bookmark, Loader2, Trash2, Sparkles, X } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { trackFeature } from '@/lib/analytics/track'
 
@@ -21,6 +21,7 @@ export default function SavedPage() {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<SavedFilter>('all')
+  const [expanded, setExpanded] = useState<FavoriteItem | null>(null)
 
   useEffect(() => {
     trackFeature('saved_content', 'open')
@@ -146,7 +147,13 @@ export default function SavedPage() {
             {/* Featured — "Memory resurfaced": the cinematic hero that turns the
                 list into an archive. Monochrome aura + editorial serif. */}
             {showFeatured && featured && (
-              <div className="relative overflow-hidden rounded-3xl card-surface-lg p-6">
+              <div
+                onClick={() => setExpanded(featured)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter') setExpanded(featured) }}
+                className="relative overflow-hidden rounded-3xl card-surface-lg p-6 cursor-pointer press-scale"
+              >
                 <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-white/[0.07] blur-3xl pointer-events-none animate-breathe" aria-hidden />
                 <div className="relative">
                   <div className="flex items-center gap-2">
@@ -170,7 +177,11 @@ export default function SavedPage() {
             {listItems.map(item => (
               <div
                 key={item.id}
-                className="p-4 rounded-2xl group bg-white/[0.03] border border-white/[0.08]"
+                onClick={() => setExpanded(item)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter') setExpanded(item) }}
+                className="p-4 rounded-2xl group bg-white/[0.03] border border-white/[0.08] cursor-pointer hover:bg-white/[0.05] transition-colors"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
@@ -202,7 +213,7 @@ export default function SavedPage() {
                     )}
                   </div>
                   <button
-                    onClick={() => handleDelete(item.id)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(item.id) }}
                     className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 transition-colors opacity-0 group-hover:opacity-100"
                     title="Remove"
                   >
@@ -214,6 +225,63 @@ export default function SavedPage() {
           </div>
         )}
       </div>
+
+      {/* Interactive memory expansion — tap a memory and it opens: the page
+          blurs away, the atmosphere deepens, the words enlarge. Like opening it. */}
+      {expanded && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center p-6 animate-fade-in"
+          style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', background: 'rgba(0,0,0,0.72)' }}
+          onClick={() => setExpanded(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* deepened atmosphere — a large breathing aura behind the memory */}
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[28rem] h-[28rem] rounded-full bg-white/[0.08] blur-3xl pointer-events-none animate-breathe" aria-hidden />
+
+          <div
+            className="relative w-full max-w-md card-surface-lg rounded-3xl p-8 animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setExpanded(null)}
+              aria-label="Close"
+              className="absolute top-4 right-4 p-1.5 rounded-full text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-white/70 capitalize">{expanded.content_type}</span>
+              <span className="text-[10px] text-white/45">
+                {new Date(expanded.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+              </span>
+            </div>
+
+            {expanded.content_type === 'reflection' && parseReflection(expanded.content_text) ? (
+              <div className="mt-5 space-y-3">
+                <p className="text-base text-white/55 italic leading-relaxed">&ldquo;{parseReflection(expanded.content_text)!.question}&rdquo;</p>
+                <p className="text-xl text-white leading-relaxed pl-3 border-l-2 border-white/20" style={{ fontFamily: 'Georgia, serif' }}>
+                  {parseReflection(expanded.content_text)!.answer}
+                </p>
+              </div>
+            ) : (
+              <p className="mt-5 text-2xl text-white leading-snug" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+                &ldquo;{expanded.content_text}&rdquo;
+              </p>
+            )}
+
+            <div className="mt-8 flex items-center justify-end">
+              <button
+                onClick={() => { handleDelete(expanded.id); setExpanded(null) }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/15 text-white/60 hover:text-red-400 hover:bg-red-500/10 transition-colors text-xs press-scale"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
