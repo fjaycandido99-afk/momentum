@@ -2639,14 +2639,17 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
    ============================================================ */
 @keyframes ken-burns {
   0%   { transform: scale(1.06) translate3d(0%, 0%, 0); }
-  50%  { transform: scale(1.18) translate3d(-3%, -2.5%, 0); }
+  50%  { transform: scale(1.20) translate3d(-3.5%, -2.8%, 0); }
   100% { transform: scale(1.06) translate3d(0%, 0%, 0); }
 }
 .ken-burns {
-  /* 50s is slow enough to read as ambient, fast enough that you can SEE
-     the drift within a few seconds of watching. The previous 90s + 4%
-     scale was technically animating but invisible to the eye. */
-  animation: ken-burns 50s ease-in-out infinite;
+  /* Linear timing so motion is perceptually constant — ease-in-out hides
+     the drift in the first few seconds when users actually look. A bigger
+     scale range (1.06→1.20) so even slow motion is unmistakable, and a
+     negative delay so the first frame on screen is already mid-cycle
+     (you see movement immediately, never a "is it animating?" moment). */
+  animation: ken-burns 45s linear infinite;
+  animation-delay: -11s;
   will-change: transform;
   transform-origin: center center;
 }
