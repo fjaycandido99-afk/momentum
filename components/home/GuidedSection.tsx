@@ -155,7 +155,9 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
         </div>
       </div>
       <div className="px-6"><FeatureHint id="home-guided" text="Voice-guided sessions for breathing, gratitude & sleep" mode="once" /></div>
-      <div className="flex gap-4 overflow-x-auto px-6 pb-3 scrollbar-hide snap-row">
+      {/* Desktop: more breathing room so the row of portals reads as
+          gateways on a wide canvas. Mobile spacing untouched. */}
+      <div className="flex gap-4 lg:gap-7 overflow-x-auto px-6 pb-3 lg:pb-5 scrollbar-hide snap-row">
         {VOICE_GUIDES.map((guide, index) => {
           const Icon = guide.icon
           const isLoading = loadingGuide === guide.id

@@ -40,7 +40,10 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
         </div>
       </div>
       <div className="px-6"><FeatureHint id="home-soundscapes" text="Tap to play ambient sounds — they continue in the background" mode="once" /></div>
-      <div className="flex gap-4 overflow-x-auto px-6 pt-1 pb-3 scrollbar-hide snap-row">
+      {/* Desktop: more breathing room between portals + a touch of vertical
+          space so the row reads as a row of "gateways," not a tight strip.
+          Mobile spacing is untouched. */}
+      <div className="flex gap-4 lg:gap-7 overflow-x-auto px-6 pt-1 lg:pt-3 pb-3 lg:pb-5 scrollbar-hide snap-row">
         {SOUNDSCAPE_ITEMS.map((item, index) => {
           const Icon = item.icon
           const isActive = activeSoundscape?.soundId === item.id && soundscapeIsPlaying

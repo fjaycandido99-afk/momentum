@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { MinimalNav } from '@/components/navigation/MinimalNav'
-import { DesktopSidebar } from '@/components/navigation/DesktopSidebar'
+import { DesktopDock } from '@/components/navigation/DesktopDock'
 import { PageTransition } from '@/components/ui/PageTransition'
 import { AmbientBackground } from '@/components/ui/AmbientBackground'
 import { Providers } from './providers'
@@ -25,33 +25,25 @@ export default function DashboardLayout({
         <div className="isolate min-h-screen bg-black">
           <AmbientBackground />
 
-          {/* Desktop sidebar (lg+ only — hidden lg:flex internally).
-              Renders alongside the existing mobile chrome so phones see
-              the exact same UI as before. */}
-          {!hideChrome && <DesktopSidebar />}
+          {/* Desktop chrome: a floating bottom dock instead of a sidebar.
+              Sidebars push the app toward "productivity software" — Voxu's
+              identity is cinematic / immersive, so the dock keeps the
+              canvas open and matches MinimalNav's glass language. */}
+          {!hideChrome && <DesktopDock />}
 
-          {/* Main content.
-              - Mobile: full width, bottom padding for the floating capsules.
-              - Desktop: shifted right of the sidebar (lg:pl-60) and capped at
-                a comfortable reading width (lg:max-w-5xl) so the layout
-                doesn't stretch edge-to-edge on a 16" MacBook. Full-bleed
-                surfaces (the SessionPlayer, ResetOverlay) escape via fixed
-                positioning so the max-width doesn't fight them. */}
+          {/* Main content. Full-bleed on every breakpoint — no sidebar
+              offset, no max-width cap. The dock floats above the canvas
+              instead of consuming layout space. Bottom padding leaves
+              clear room under the dock / mobile capsules. */}
           <main
             id="main-content"
             key={pathname}
-            className={`relative z-10 min-h-screen page-enter ${isHome ? '' : 'pb-16 lg:pb-0'} ${!hideChrome ? 'lg:pl-60' : ''}`}
+            className={`relative z-10 min-h-screen page-enter ${isHome ? '' : 'pb-16'} ${!hideChrome ? 'lg:pb-28' : ''}`}
           >
-            {/* Desktop content fills the full post-sidebar width — no cap.
-                Only a side gutter so it doesn't kiss the right edge. Each
-                page is responsible for capping its own internal form/tab
-                clusters so mobile w-full components don't pull apart. */}
-            <div className={!hideChrome && !isHome ? 'lg:px-8' : ''}>
-              {children}
-            </div>
+            {children}
           </main>
 
-          {/* Mobile chrome — hidden on desktop where the sidebar takes over */}
+          {/* Mobile chrome — hidden on desktop where the dock takes over */}
           {!isHome && !hideChrome && (
             <div className="lg:hidden">
               <MinimalNav />
