@@ -31,13 +31,20 @@ export const QuoteShareCard = forwardRef<HTMLDivElement, QuoteShareCardProps>(
           </p>
         )}
 
-        {/* Footer */}
+        {/* Footer — audio-forward: invites the viewer to *hear* it in the app */}
         <div className="mt-6 pt-4 border-t border-white/15 flex items-center justify-between" style={{ fontFamily: 'Inter, sans-serif' }}>
-          <span className="text-white/50 text-xs">voxu.app</span>
+          <span className="inline-flex items-center gap-1.5 text-white/75 text-xs font-medium">
+            {/* play glyph (explicit fill so html2canvas rasterizes it reliably) */}
+            <svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7z" fill="rgba(255,255,255,0.75)" />
+            </svg>
+            Listen on Voxu
+          </span>
           {mindset && (
             <span className="text-white/20 text-[10px] uppercase tracking-wider">{mindset}</span>
           )}
         </div>
+        <p className="text-white/30 text-[10px] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>voxu.app</p>
       </div>
     )
   }

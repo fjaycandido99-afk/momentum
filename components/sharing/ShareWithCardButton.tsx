@@ -71,7 +71,9 @@ export function ShareWithCardButton({
 
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
-          await navigator.share({ title, text, files: [file] })
+          // Include the deep link so it travels with the share — drives viewers
+          // to open the app and *listen*, not just see the image.
+          await navigator.share({ title, text, url: getShareUrl(), files: [file] })
           return
         } catch (err) {
           if ((err as Error).name === 'AbortError') return
