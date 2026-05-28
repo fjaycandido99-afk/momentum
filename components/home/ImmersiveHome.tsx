@@ -24,6 +24,7 @@ import { MusicTabsSection } from './MusicTabsSection'
 import { WelcomeBackCard } from './WelcomeBackCard'
 import { WisdomSection } from './WisdomSection'
 import { HeroCarousel } from './HeroCarousel'
+import { ImmersiveHero, getCurrentSession } from './ImmersiveHero'
 import { SavedMotivationSection } from './SavedMotivationSection'
 import {
   Mode, VideoItem, MUSIC_GENRES, getGenreBackgrounds,
@@ -1202,6 +1203,28 @@ export function ImmersiveHome() {
           </div>
         </>
       )}
+
+      {/* Immersive Hero — desktop-only cinematic intro at the top of the
+          canvas. `hidden lg:flex` internally so mobile is byte-identical.
+          Reads the current session by time-of-day and pulls the day-rotated
+          art via getSessionImage. Tapping Begin opens the same Daily Guide
+          flow as the carousel slide below. */}
+      {(() => {
+        const heroSession = getCurrentSession()
+        const sessionDone = !!(
+          (heroSession === 'morning_prime' && journalData?.morning_prime_done) ||
+          (heroSession === 'midday_reset' && journalData?.midday_reset_done) ||
+          (heroSession === 'wind_down' && journalData?.wind_down_done) ||
+          (heroSession === 'bedtime_story' && journalData?.bedtime_story_done)
+        )
+        return (
+          <ImmersiveHero
+            session={heroSession}
+            isCompleted={sessionDone}
+            onBegin={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
+          />
+        )
+      })()}
 
       {/* Tier-aware instruction banner */}
       <TierBanner page="home" />
