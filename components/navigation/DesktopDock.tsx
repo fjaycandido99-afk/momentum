@@ -15,10 +15,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, BookOpen, MessageCircle, Bookmark, TrendingUp, Settings, Sparkles } from 'lucide-react'
-// Reset + now-playing chip removed from the desktop dock — the chip
-// duplicated BottomPlayerBar (which is now positioned beside the dock),
-// and Reset is parked for now per user request.
+import { Home, BookOpen, MessageCircle, Bookmark, TrendingUp, Settings, Sparkles, Pause, Play } from 'lucide-react'
+import { useHomeAudioOptional } from '@/contexts/HomeAudioContext'
+// Reset capsule removed (parked). The now-playing TEXT chip was also
+// removed (duplicated BottomPlayerBar), but a minimal play/pause TOGGLE
+// stays on the dock so audio can be paused from any page (BottomPlayerBar
+// only mounts on home).
 
 interface NavItem {
   href: string
@@ -39,6 +41,39 @@ const NAV: NavItem[] = [
 
 export function DesktopDock() {
   const pathname = usePathname()
+  const homeAudio = useHomeAudioOptional()
+
+  const isPlaying = homeAudio && (
+    homeAudio.audioState.musicPlaying ||
+    homeAudio.audioState.guideIsPlaying ||
+    homeAudio.audioState.soundscapeIsPlaying
+  )
+  const hasActiveTrack = homeAudio && !!(
+    homeAudio.audioState.backgroundMusic
+    || homeAudio.audioState.guideLabel
+    || homeAudio.audioState.activeSoundscape
+  )
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    if (!homeAudio) return
+    const { audioState, dispatch, refs } = homeAudio
+    if (isPlaying) {
+      if (audioState.musicPlaying) dispatch({ type: 'PAUSE_MUSIC' })
+      else if (audioState.guideIsPlaying && refs.guideAudioRef.current) {
+        refs.guideAudioRef.current.pause()
+        dispatch({ type: 'PAUSE_GUIDE' })
+      } else if (audioState.soundscapeIsPlaying) dispatch({ type: 'PAUSE_SOUNDSCAPE' })
+    } else {
+      // Resume whichever channel has an active track.
+      if (audioState.backgroundMusic) dispatch({ type: 'RESUME_MUSIC' })
+      else if (audioState.guideLabel && refs.guideAudioRef.current) {
+        refs.guideAudioRef.current.play().catch(() => {})
+        dispatch({ type: 'RESUME_GUIDE' })
+      } else if (audioState.activeSoundscape) dispatch({ type: 'RESUME_SOUNDSCAPE' })
+    }
+  }
 
   const isActive = (item: NavItem) => {
     if (item.href === '/') return pathname === '/'
@@ -51,13 +86,35 @@ export function DesktopDock() {
       role="navigation"
       className="hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40 items-center gap-2 pointer-events-none"
     >
-      {/* Main dock — section nav. Icon-only with label-on-hover via the
-          native `title` attribute (clean + accessible; no custom tooltip
-          system to maintain). Active section gets a glowing pill ring. */}
+      {/* Main dock — section nav + an optional play/pause toggle on the
+          LEFT when audio is active. Icon-only with label-on-hover via the
+          native `title` attribute. Active section gets a glowing pill. */}
       <nav
         aria-label="Sections"
         className="pointer-events-auto flex items-center gap-1 px-2 py-2 rounded-full bg-white/[0.05] backdrop-blur-xl border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
       >
+        {/* Audio toggle — only mounts on non-home pages where the full
+            BottomPlayerBar isn't rendering. On home, BottomPlayerBar
+            sits to the LEFT of the dock and handles pause/play, so
+            showing this here would duplicate it AND change dock width
+            (breaking BottomPlayerBar's offset math). Pause/Play icon
+            only — no track text. */}
+        {hasActiveTrack && pathname !== '/' && (
+          <button
+            onClick={togglePlay}
+            title={isPlaying ? 'Pause' : 'Resume'}
+            aria-label={isPlaying ? 'Pause audio' : 'Resume audio'}
+            className={`relative w-11 h-11 flex items-center justify-center rounded-full transition-all ${
+              isPlaying
+                ? 'bg-white text-black shadow-[0_0_18px_rgba(255,255,255,0.25)]'
+                : 'bg-white/[0.10] text-white hover:bg-white/[0.18]'
+            }`}
+          >
+            {isPlaying
+              ? <Pause className="w-[14px] h-[14px]" fill="currentColor" />
+              : <Play className="w-[14px] h-[14px] ml-0.5" fill="currentColor" />}
+          </button>
+        )}
         {NAV.map((item) => {
           const Icon = item.icon
           const active = isActive(item)

@@ -38,6 +38,20 @@ export default function DashboardLayout({
           >
             {children}
 
+            {/* Bottom scrim — fades page content to black behind the
+                floating dock so the dock's translucent pill never has
+                scroll content (music tiles, card rows) peeking around or
+                through it. z-20 so it sits ABOVE default page content
+                (z-0) and main's relative z-10 children, but BELOW the
+                BottomPlayerBar (z-30) and dock (z-40) so neither is
+                covered. Desktop only — mobile uses opaque chrome. */}
+            {!hideChrome && (
+              <div
+                aria-hidden
+                className="hidden lg:block fixed bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black via-black/85 to-transparent z-20 pointer-events-none"
+              />
+            )}
+
             {/* Desktop chrome: a floating bottom dock instead of a sidebar.
                 Mounted INSIDE main so its z-40 is scoped to main's
                 stacking context — overlays (player, modal) at z-55+ stay

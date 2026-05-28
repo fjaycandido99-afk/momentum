@@ -32,13 +32,13 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
   const { shareFromHTML, isGenerating } = useShareCard()
 
   // Mobile: edge-to-edge bottom capsule (touch-first).
-  // Desktop: sits BESIDE the DesktopDock at the same vertical level —
-  // anchored to viewport center then offset left by half-dock-width
-  // + gap + half-player-width so the player + dock + (future) right
-  // slot read as one cohesive bottom row. The dock has 7 icons in a
-  // pill ≈ 350px wide → offset of 250px clears it with a comfortable gap.
+  // Desktop: sits BESIDE the DesktopDock at the same vertical level.
+  // Dock (no Reset, no chip) is ~348px wide → spans ±174px from
+  // center. Player is 360px wide; for its right edge to clear the
+  // dock with a 16px gap, its center must sit 370px left of viewport
+  // center (174 dock-half + 16 gap + 180 player-half).
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 safe-area-pb lg:bottom-6 lg:left-1/2 lg:right-auto lg:w-[400px] lg:max-w-[calc(100vw-3rem)] lg:-translate-x-[calc(50%+220px)] lg:safe-area-pb-0">
+    <div className="fixed bottom-0 left-0 right-0 z-30 safe-area-pb lg:bottom-6 lg:left-1/2 lg:right-auto lg:w-[360px] lg:max-w-[calc(100vw-3rem)] lg:-translate-x-[calc(50%+370px)] lg:safe-area-pb-0">
       {/* Main bar */}
       <div
         role="button"
