@@ -370,13 +370,13 @@ function SettingsContent() {
             </span>
           )}
           {saveStatus === 'saved' && (
-            <span className="flex items-center gap-1.5 text-green-400 text-sm">
+            <span className="flex items-center gap-1.5 text-white text-sm">
               <Check className="w-3.5 h-3.5" />
               Saved
             </span>
           )}
           {saveStatus === 'error' && (
-            <span role="alert" className="text-red-400 text-sm">Failed to save</span>
+            <span role="alert" className="text-white text-sm">Failed to save</span>
           )}
         </div>
         <p className="text-white/70 text-sm mt-1">Customize your Daily Guide</p>
@@ -668,8 +668,8 @@ function SettingsContent() {
           <SettingsCategory
             id="cosmic"
             icon={Star}
-            iconColor="text-indigo-400"
-            iconBg="bg-gradient-to-br from-indigo-500/20 to-purple-500/20"
+            iconColor="text-white"
+            iconBg="bg-gradient-to-br from-white/20 to-white/20"
             title="Cosmic"
             description="Astrology mode, zodiac sign"
           >
@@ -685,7 +685,7 @@ function SettingsContent() {
                   aria-checked={astrologyEnabled}
                   aria-label="Astrology mode"
                   className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    astrologyEnabled ? 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.3)]' : 'bg-white/10'
+                    astrologyEnabled ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.25)]' : 'bg-white/10'
                   }`}
                 >
                   <div
@@ -707,7 +707,7 @@ function SettingsContent() {
                         aria-pressed={zodiacSign === sign.id}
                         className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                           zodiacSign === sign.id
-                            ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 shadow-[inset_0_0_12px_rgba(139,92,246,0.15)]'
+                            ? 'bg-white/20 border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.15)]'
                             : 'bg-white/5 border border-transparent hover:bg-white/10'
                         }`}
                       >
@@ -718,9 +718,9 @@ function SettingsContent() {
                     ))}
                   </div>
                   {zodiacSign && (
-                    <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-white/10 to-white/10 border border-white/20">
                       <p className="text-sm text-white/80">
-                        <span className="text-indigo-400 font-medium">{ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}</span> selected.
+                        <span className="text-white font-medium">{ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}</span> selected.
                         You&apos;ll receive cosmic insights tailored to your sign in your Morning Flow.
                       </p>
                     </div>
@@ -843,8 +843,8 @@ function SettingsContent() {
         <SettingsCategory
           id="account"
           icon={Crown}
-          iconColor="text-amber-400"
-          iconBg="bg-amber-500/20"
+          iconColor="text-white"
+          iconBg="bg-white/20"
           title="Account"
           description="Subscription, sign in/out"
         >
@@ -857,19 +857,19 @@ function SettingsContent() {
 
             {/* Subscription message */}
             {subscriptionMessage && (
-              <div role="status" className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+              <div role="status" className="mb-4 p-3 rounded-xl bg-white/10 border border-white/20 text-white text-sm">
                 {subscriptionMessage}
               </div>
             )}
 
             {subscription?.isPremium ? (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+                <div className="p-4 rounded-xl bg-gradient-to-r from-white/10 to-white/10 border border-white/20">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-white font-medium">
                       {subscription.isTrialing ? 'Premium Trial' : 'Premium Plan'}
                     </span>
-                    <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400">
+                    <span className="text-xs px-2 py-1 rounded-full bg-white/20 text-white">
                       Active
                     </span>
                   </div>
@@ -962,7 +962,7 @@ function SettingsContent() {
 
                 <button
                   onClick={() => subscription?.openUpgradeModal()}
-                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-400 hover:to-orange-400 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none shimmer-cta"
+                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white text-black font-medium hover:bg-white/90 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none shimmer-cta"
                 >
                   <Sparkles className="w-5 h-5" />
                   Upgrade to Premium - $6.99/mo
@@ -1002,7 +1002,7 @@ function SettingsContent() {
               <>
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/15 text-red-400 hover:bg-red-500/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/15 text-white hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   <LogOut className="w-5 h-5" />
                   Sign Out
@@ -1012,14 +1012,14 @@ function SettingsContent() {
                 {!deleteConfirmOpen ? (
                   <button
                     onClick={() => setDeleteConfirmOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl text-red-400/60 text-sm hover:text-red-400 hover:bg-red-500/10 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl text-white/60 text-sm hover:text-white hover:bg-white/10 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete Account
                   </button>
                 ) : (
-                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 space-y-3">
-                    <p className="text-red-400 text-sm font-medium">Are you sure?</p>
+                  <div className="p-4 rounded-xl bg-white/10 border border-white/20 space-y-3">
+                    <p className="text-white text-sm font-medium">Are you sure?</p>
                     <p className="text-white/60 text-xs">
                       This will permanently delete your account and all your data. This action cannot be undone.
                     </p>
@@ -1034,7 +1034,7 @@ function SettingsContent() {
                       <button
                         onClick={handleDeleteAccount}
                         disabled={isDeleting}
-                        className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-sm hover:bg-red-500/30 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                        className="p-3 rounded-xl bg-white/20 border border-white/30 text-white text-sm hover:bg-white/30 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                       >
                         {isDeleting ? (
                           <span className="flex items-center justify-center gap-2">

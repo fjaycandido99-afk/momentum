@@ -783,7 +783,7 @@ function JournalContent() {
             <ChevronLeft className="w-4 h-4 text-white/75" />
           </button>
           <span className="text-sm font-medium text-white">{dateLabel}</span>
-          {isToday && <span className="text-[10px] text-amber-400 font-medium">Today</span>}
+          {isToday && <span className="text-[10px] text-white font-medium">Today</span>}
           <button
             aria-label="Next day"
             onClick={() => goDay(1)}
@@ -845,7 +845,7 @@ function JournalContent() {
               <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 p-4">
                 {conversation.length === 0 && (
                   <div className="text-center py-6">
-                    <MessageCircle className="w-8 h-8 text-violet-400/50 mx-auto mb-2" />
+                    <MessageCircle className="w-8 h-8 text-white/50 mx-auto mb-2" />
                     <p className="text-sm text-white/85">Start a journaling conversation</p>
                     <p className="text-xs text-white/70 mt-1">Share what&apos;s on your mind and I&apos;ll help you explore it</p>
                   </div>
@@ -857,7 +857,7 @@ function JournalContent() {
                   >
                     <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${
                       msg.role === 'user'
-                        ? 'bg-violet-500/20 text-white rounded-br-md'
+                        ? 'bg-white/20 text-white rounded-br-md'
                         : 'bg-white/10 text-white/90 rounded-bl-md'
                     }`}>
                       {msg.content}
@@ -890,7 +890,7 @@ function JournalContent() {
                   autoCapitalize="sentences"
                   enterKeyHint="send"
                   rows={1}
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/15 text-white text-sm placeholder-white/50 focus:outline-none focus:border-violet-500/40 focus:bg-white/[0.08] focus-visible:ring-1 focus-visible:ring-violet-500/20 resize-none transition-all"
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/15 text-white text-sm placeholder-white/50 focus:outline-none focus:border-white/40 focus:bg-white/[0.08] focus-visible:ring-1 focus-visible:ring-white/20 resize-none transition-all"
                   style={{ maxHeight: '120px' }}
                 />
                 <button
@@ -898,7 +898,7 @@ function JournalContent() {
                   disabled={!chatInput.trim() || chatLoading}
                   className={`p-3 rounded-xl transition-all ${
                     chatInput.trim() && !chatLoading
-                      ? 'bg-violet-500/25 border border-violet-500/30 text-violet-300 hover:bg-violet-500/35'
+                      ? 'bg-white/25 border border-white/30 text-white hover:bg-white/35'
                       : 'bg-white/5 text-white/30'
                   }`}
                 >
@@ -913,7 +913,7 @@ function JournalContent() {
                 onClick={saveConversation}
                 disabled={isSaving || isSaved}
                 className={`w-full py-3 rounded-2xl bg-black border border-white/25 text-sm font-medium transition-all press-scale flex items-center justify-center gap-2 ${
-                  isSaved ? 'text-emerald-400' : 'text-white'
+                  isSaved ? 'text-white' : 'text-white'
                 }`}
               >
                 {isSaving ? (
@@ -930,7 +930,7 @@ function JournalContent() {
             {journalTags.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {journalTags.map((tag, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/20 text-[10px] text-violet-300">
+                  <span key={i} className="px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-[10px] text-white">
                     {tag}
                   </span>
                 ))}
@@ -942,7 +942,7 @@ function JournalContent() {
           <div className="space-y-4">
             <div className="p-4 rounded-2xl bg-black border border-white/15">
               <label htmlFor="dream-text" className="text-sm text-white flex items-center gap-2 mb-2">
-                <Moon className="w-4 h-4 text-indigo-400" />
+                <Moon className="w-4 h-4 text-white" />
                 Describe your dream
               </label>
               <textarea
@@ -956,7 +956,7 @@ function JournalContent() {
                 autoComplete="off"
                 spellCheck
                 enterKeyHint="enter"
-                className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
+                className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-white px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                 rows={6}
                 maxLength={3000}
               />
@@ -968,7 +968,7 @@ function JournalContent() {
               onClick={submitDream}
               disabled={!dreamText.trim() || dreamLoading || dreamSaved}
               className={`w-full py-3 rounded-2xl bg-black border border-white/25 text-sm font-medium transition-all press-scale flex items-center justify-center gap-2 ${
-                dreamSaved ? 'text-emerald-400' : dreamText.trim() ? 'text-white' : 'text-white/85 cursor-not-allowed'
+                dreamSaved ? 'text-white' : dreamText.trim() ? 'text-white' : 'text-white/85 cursor-not-allowed'
               }`}
             >
               {dreamLoading ? (
@@ -982,15 +982,15 @@ function JournalContent() {
 
             {/* Dream interpretation — consolidated card */}
             {dreamInterpretation && (
-              <div className="p-4 rounded-2xl bg-black border border-indigo-500/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] space-y-3 animate-fade-in">
+              <div className="p-4 rounded-2xl bg-black border border-white/20 shadow-[0_2px_20px_rgba(255,255,255,0.08)] space-y-3 animate-fade-in">
                 {/* Symbols */}
                 {dreamInterpretation.symbols.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider mb-2">Key Symbols</p>
+                    <p className="text-[10px] font-semibold text-white uppercase tracking-wider mb-2">Key Symbols</p>
                     <div className="space-y-1.5">
                       {dreamInterpretation.symbols.map((s, i) => (
                         <div key={i} className="flex items-start gap-2">
-                          <span className="text-indigo-300 text-sm font-medium shrink-0">{s.symbol}</span>
+                          <span className="text-white text-sm font-medium shrink-0">{s.symbol}</span>
                           <span className="text-white/85 text-xs">{s.meaning}</span>
                         </div>
                       ))}
@@ -1001,7 +1001,7 @@ function JournalContent() {
                 {/* Emotional theme */}
                 {dreamInterpretation.emotionalTheme && (
                   <div className="border-t border-white/15 pt-3">
-                    <p className="text-[10px] font-semibold text-violet-400 uppercase tracking-wider mb-1">Emotional Theme</p>
+                    <p className="text-[10px] font-semibold text-white uppercase tracking-wider mb-1">Emotional Theme</p>
                     <p className="text-sm text-white/90 leading-relaxed">{dreamInterpretation.emotionalTheme}</p>
                   </div>
                 )}
@@ -1009,7 +1009,7 @@ function JournalContent() {
                 {/* Connection to life */}
                 {dreamInterpretation.connectionToLife && (
                   <div className="border-t border-white/15 pt-3">
-                    <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider mb-1">Life Connection</p>
+                    <p className="text-[10px] font-semibold text-white uppercase tracking-wider mb-1">Life Connection</p>
                     <p className="text-sm text-white/90 leading-relaxed">{dreamInterpretation.connectionToLife}</p>
                   </div>
                 )}
@@ -1017,7 +1017,7 @@ function JournalContent() {
                 {/* Mindset reflection */}
                 {dreamInterpretation.mindsetReflection && (
                   <div className="border-t border-white/15 pt-3">
-                    <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-1">Reflection</p>
+                    <p className="text-[10px] font-semibold text-white uppercase tracking-wider mb-1">Reflection</p>
                     <p className="text-sm text-white/90 leading-relaxed italic">{dreamInterpretation.mindsetReflection}</p>
                   </div>
                 )}
@@ -1033,7 +1033,7 @@ function JournalContent() {
                 <>
                 <div className="p-4 rounded-2xl bg-black border border-white/15">
                   <label htmlFor="journal-win" className="text-sm text-white flex items-center gap-2 mb-2">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <Sparkles className="w-4 h-4 text-white" />
                     {mp?.prompt1.label || 'What did you learn today?'}
                   </label>
                   <textarea
@@ -1047,7 +1047,7 @@ function JournalContent() {
                     autoComplete="off"
                     spellCheck
                     enterKeyHint="enter"
-                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
+                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-white px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                     rows={3}
                     maxLength={500}
                   />
@@ -1056,7 +1056,7 @@ function JournalContent() {
 
                 <div className="p-4 rounded-2xl bg-black border border-white/15">
                   <label htmlFor="journal-gratitude" className="text-sm text-white flex items-center gap-2 mb-2">
-                    <Heart className="w-4 h-4 text-pink-400" />
+                    <Heart className="w-4 h-4 text-white" />
                     {mp?.prompt2.label || 'What are you grateful for?'}
                   </label>
                   <textarea
@@ -1070,7 +1070,7 @@ function JournalContent() {
                     autoComplete="off"
                     spellCheck
                     enterKeyHint="enter"
-                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
+                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-white px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                     rows={3}
                     maxLength={500}
                   />
@@ -1079,7 +1079,7 @@ function JournalContent() {
 
                 <div className="p-4 rounded-2xl bg-black border border-white/15">
                   <label htmlFor="journal-intention" className="text-sm text-white flex items-center gap-2 mb-2">
-                    <Target className="w-4 h-4 text-purple-400" />
+                    <Target className="w-4 h-4 text-white" />
                     {mp?.prompt3.label || "Tomorrow\u0027s intention"}
                   </label>
                   <textarea
@@ -1093,7 +1093,7 @@ function JournalContent() {
                     autoComplete="off"
                     spellCheck
                     enterKeyHint="enter"
-                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-amber-400 px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
+                    className="w-full bg-transparent text-base leading-relaxed text-white placeholder-white/50 caret-white px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                     rows={2}
                     maxLength={300}
                   />
@@ -1184,7 +1184,7 @@ function JournalContent() {
                   autoComplete="off"
                   spellCheck
                   enterKeyHint="enter"
-                  className="w-full bg-transparent text-lg leading-loose text-white placeholder-white/30 caret-amber-400 px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
+                  className="w-full bg-transparent text-lg leading-loose text-white placeholder-white/30 caret-white px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
                   rows={8}
                   maxLength={5000}
                 />
@@ -1206,7 +1206,7 @@ function JournalContent() {
                 disabled={!hasContent && !mood || isSaving || isSaved}
                 className={`flex-1 py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-sm font-medium transition-all press-scale flex items-center justify-center gap-2 ${
                   isSaved
-                    ? 'text-emerald-400'
+                    ? 'text-white'
                     : hasContent || mood
                     ? 'text-white'
                     : 'text-white/85 cursor-not-allowed'
@@ -1223,7 +1223,7 @@ function JournalContent() {
               {isSaved && (
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="px-3 py-3 rounded-xl bg-white/5 hover:bg-red-500/15 text-white/40 hover:text-red-400 transition-all"
+                  className="px-3 py-3 rounded-xl bg-white/5 hover:bg-white/15 text-white/40 hover:text-white transition-all"
                   aria-label="Delete entry"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -1250,13 +1250,13 @@ function JournalContent() {
 
         {/* Delete Confirmation */}
         {showDeleteConfirm && (
-          <div className="mt-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 animate-fade-in">
+          <div className="mt-3 p-4 rounded-xl bg-white/10 border border-white/20 animate-fade-in">
             <p className="text-sm text-white/90 mb-3">Delete this journal entry? This can't be undone.</p>
             <div className="flex gap-2">
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 py-2.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {isDeleting ? (
                   <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Deleting...</>
@@ -1278,9 +1278,9 @@ function JournalContent() {
         {reflection && (
           <div className="mt-4 p-4 rounded-2xl bg-black border border-white/[0.08] animate-fade-in">
             <div className="flex items-start gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
+              <Sparkles className="w-4 h-4 text-white mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] font-medium tracking-wider text-indigo-400 uppercase mb-1">{mindsetCtx?.config?.insightName || 'Reflection'}</p>
+                <p className="text-[10px] font-medium tracking-wider text-white uppercase mb-1">{mindsetCtx?.config?.insightName || 'Reflection'}</p>
                 <p className="text-sm text-white leading-relaxed italic">{reflection}</p>
               </div>
             </div>
@@ -1288,7 +1288,7 @@ function JournalContent() {
             {journalTags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3 pl-6">
                 {journalTags.map((tag, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/20 text-[10px] text-indigo-300">
+                  <span key={i} className="px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-[10px] text-white">
                     {tag}
                   </span>
                 ))}
@@ -1348,7 +1348,7 @@ function JournalContent() {
             <h2 className="text-sm font-medium text-white/90 uppercase tracking-wider">Recent Entries</h2>
           </div>
           {!hasJournalHistory && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">PRO</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-medium">PRO</span>
           )}
         </div>
 
@@ -1359,17 +1359,17 @@ function JournalContent() {
           >
             <div className="flex flex-col items-center gap-3">
               <div className="relative">
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                  <Calendar className="w-6 h-6 text-amber-400" />
+                <div className="p-3 rounded-xl bg-white/10 border border-white/20">
+                  <Calendar className="w-6 h-6 text-white" />
                 </div>
-                <div className="absolute -top-1 -right-1 p-1 rounded-full bg-amber-500/30">
-                  <Lock className="w-3 h-3 text-amber-400" />
+                <div className="absolute -top-1 -right-1 p-1 rounded-full bg-white/30">
+                  <Lock className="w-3 h-3 text-white" />
                 </div>
               </div>
               <div className="text-center">
                 <p className="text-sm text-white font-medium mb-1">Unlock Journal History</p>
                 <p className="text-xs text-white/80 mb-3">Look back on your growth journey</p>
-                <div className="flex items-center justify-center gap-1.5 text-amber-400 text-xs font-medium group-hover:scale-105 transition-transform">
+                <div className="flex items-center justify-center gap-1.5 text-white text-xs font-medium group-hover:scale-105 transition-transform">
                   <Crown className="w-3.5 h-3.5" />
                   Upgrade to Pro
                 </div>
@@ -1396,7 +1396,7 @@ function JournalContent() {
                 placeholder="Search entries..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 text-sm text-white placeholder-white/50 bg-black border border-white/25 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/40"
+                className="w-full pl-9 pr-3 py-2.5 text-sm text-white placeholder-white/50 bg-black border border-white/25 rounded-xl focus:outline-none focus:ring-1 focus:ring-white/40"
               />
               {searchQuery && (
                 <button
@@ -1433,12 +1433,12 @@ function JournalContent() {
                         onClick={() => setSelectedDate(entryDate)}
                         className={`w-full text-left p-4 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] transition-all ${
                           isSelected
-                            ? 'ring-1 ring-amber-500/40'
+                            ? 'ring-1 ring-white/40'
                             : 'hover:bg-white/5'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1.5">
-                          <p className={`text-xs ${isSelected ? 'text-amber-400' : 'text-white/90'}`}>
+                          <p className={`text-xs ${isSelected ? 'text-white' : 'text-white/90'}`}>
                             {label}
                           </p>
                           <div className="flex items-center gap-2">
@@ -1446,7 +1446,7 @@ function JournalContent() {
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); setDeleteConfirmDate(isConfirmingDelete ? null : entryDateStr) }}
-                              className="p-1 -mr-1 rounded-lg hover:bg-red-500/15 text-white/25 hover:text-red-400 transition-colors"
+                              className="p-1 -mr-1 rounded-lg hover:bg-white/15 text-white/25 hover:text-white transition-colors"
                               aria-label="Delete entry"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1461,15 +1461,15 @@ function JournalContent() {
                           <p className="text-sm text-white line-clamp-2 italic">{entry.journal_gratitude}</p>
                         ) : null}
                         <div className="flex items-center gap-2 mt-2">
-                          {entry.journal_freetext && <span className="text-[10px] text-cyan-400">✎ Free Write</span>}
-                          {entry.journal_win && <span className="text-[10px] text-amber-400">✦ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt1.tag : 'Learned'}</span>}
-                          {entry.journal_gratitude && <span className="text-[10px] text-pink-400">♥ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt2.tag : 'Grateful'}</span>}
-                          {entry.journal_intention && <span className="text-[10px] text-purple-400">◎ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt3.tag : 'Intention'}</span>}
+                          {entry.journal_freetext && <span className="text-[10px] text-white">✎ Free Write</span>}
+                          {entry.journal_win && <span className="text-[10px] text-white">✦ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt1.tag : 'Learned'}</span>}
+                          {entry.journal_gratitude && <span className="text-[10px] text-white">♥ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt2.tag : 'Grateful'}</span>}
+                          {entry.journal_intention && <span className="text-[10px] text-white">◎ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt3.tag : 'Intention'}</span>}
                         </div>
                         {entry.journal_tags && entry.journal_tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
                             {entry.journal_tags.map((tag, ti) => (
-                              <span key={ti} className="px-1.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/20 text-[9px] text-indigo-300">
+                              <span key={ti} className="px-1.5 py-0.5 rounded-full bg-white/15 border border-white/20 text-[9px] text-white">
                                 {tag}
                               </span>
                             ))}
@@ -1482,7 +1482,7 @@ function JournalContent() {
                           <button
                             onClick={() => handleDeleteEntry(entryDate)}
                             disabled={isDeleting}
-                            className="flex-1 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
+                            className="flex-1 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
                           >
                             {isDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                             Delete
@@ -1574,7 +1574,7 @@ function JournalContent() {
               autoComplete="off"
               spellCheck
               enterKeyHint="enter"
-              className="flex-1 w-full bg-transparent text-white text-lg leading-loose placeholder-white/30 caret-amber-400 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
+              className="flex-1 w-full bg-transparent text-white text-lg leading-loose placeholder-white/30 caret-white focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
             />
           </div>
 
