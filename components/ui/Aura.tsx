@@ -17,9 +17,6 @@ import type { CSSProperties, ReactNode } from 'react'
    `state` — speed + glow intensity scale up from calm to active.
    ============================================================================ */
 
-// Custom-property style helper (TS doesn't allow `--vars` on CSSProperties).
-type CSSVars = CSSProperties & Record<`--${string}`, string | number>
-
 // ── Aura ring ───────────────────────────────────────────────────────────────
 
 export type AuraRingState = 'idle' | 'active' | 'pulse'
@@ -55,31 +52,23 @@ interface AuraRingProps {
 
 export function AuraRing({ size = 240, state = 'idle', stroke = 2, breathe = true, progress, className = '', children }: AuraRingProps) {
   const t = RING_TUNING[state]
-  const ringMask = `radial-gradient(farthest-side, transparent calc(100% - ${stroke}px), #000 calc(100% - ${stroke}px))`
 
-  // Progress-arc geometry (viewBox units), used only when `progress` is set.
+  // Progress / decorative-arc geometry (viewBox units).
   const pw = Math.max(1.5, (stroke / size) * 100)
   const pr = 50 - pw / 2
   const circ = 2 * Math.PI * pr
   const fill = Math.max(0, Math.min(1, progress ?? 0))
 
-  const glowStyle: CSSVars = {
-    background:
-      'radial-gradient(circle, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.06) 38%, transparent 68%)',
+  // Per-state glow alpha baked into the gradient so the breathing keyframe
+  // doesn't need to read CSS vars (iOS WebKit can't animate var() values).
+  const a1 = (0.22 * t.glow * 1.6).toFixed(3)
+  const a2 = (0.06 * t.glow * 1.6).toFixed(3)
+  const glowStyle: CSSProperties = {
+    background: `radial-gradient(circle, rgba(255,255,255,${a1}) 0%, rgba(255,255,255,${a2}) 38%, transparent 68%)`,
+    willChange: 'transform, opacity',
     ...(breathe
-      ? {
-          animation: `aura-breathe ${t.breathe} ease-in-out infinite`,
-          '--aura-glow-max': t.glow,
-          '--aura-glow-min': t.glow * 0.55,
-        }
-      : { opacity: t.glow }),
-  }
-
-  const arcStyle: CSSProperties = {
-    background: `conic-gradient(from 0deg, transparent 160deg, rgba(255,255,255,${t.arc}) 320deg, transparent 360deg)`,
-    mask: ringMask,
-    WebkitMask: ringMask,
-    animation: `aura-spin ${t.spin} linear infinite`,
+      ? { animation: `aura-breathe ${t.breathe} ease-in-out infinite` }
+      : { opacity: 0.85 }),
   }
 
   return (
@@ -103,8 +92,26 @@ export function AuraRing({ size = 240, state = 'idle', stroke = 2, breathe = tru
           />
         </svg>
       ) : (
-        /* Orbiting light arc (decorative) */
-        <div className="absolute inset-0 rounded-full" style={arcStyle} />
+        /* Orbiting light arc (decorative). SVG + CSS rotation — reliable on iOS,
+           unlike conic-gradient + mask + rotate (the previous approach went
+           static in the Capacitor WebView). */
+        <svg
+          className="absolute inset-0"
+          viewBox="0 0 100 100"
+          aria-hidden
+          style={{
+            animation: `aura-spin ${t.spin} linear infinite`,
+            willChange: 'transform',
+          }}
+        >
+          <circle
+            cx="50" cy="50" r={pr}
+            fill="none" stroke="white" strokeOpacity={t.arc}
+            strokeWidth={pw} strokeLinecap="round"
+            pathLength={100}
+            strokeDasharray="22 78"
+          />
+        </svg>
       )}
       {/* Inner faint ring for depth */}
       <div className="absolute inset-[7%] rounded-full border border-white/[0.06]" />
@@ -134,14 +141,14 @@ interface AIOrbProps {
 
 export function AIOrb({ size = 120, state = 'idle', className = '' }: AIOrbProps) {
   const t = ORB_TUNING[state]
-  const ringMask = 'radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px))'
 
-  const haloStyle: CSSVars = {
-    background:
-      'radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 42%, transparent 70%)',
+  // Bake per-state intensity into the gradient — see AuraRing comment for why.
+  const a1 = (0.2 * t.glow * 1.6).toFixed(3)
+  const a2 = (0.05 * t.glow * 1.6).toFixed(3)
+  const haloStyle: CSSProperties = {
+    background: `radial-gradient(circle, rgba(255,255,255,${a1}) 0%, rgba(255,255,255,${a2}) 42%, transparent 70%)`,
     animation: `aura-breathe ${t.shimmer} ease-in-out infinite`,
-    '--aura-glow-max': t.glow,
-    '--aura-glow-min': t.glow * 0.5,
+    willChange: 'transform, opacity',
   }
 
   return (
@@ -153,16 +160,21 @@ export function AIOrb({ size = 120, state = 'idle', className = '' }: AIOrbProps
     >
       {/* Breathing halo */}
       <div className="absolute inset-[-28%] rounded-full pointer-events-none" style={haloStyle} />
-      {/* Orbiting ring */}
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: 'conic-gradient(from 0deg, transparent 170deg, rgba(255,255,255,0.7) 320deg, transparent 360deg)',
-          mask: ringMask,
-          WebkitMask: ringMask,
-          animation: `aura-spin ${t.ring} linear infinite`,
-        }}
-      />
+      {/* Orbiting ring — SVG (reliable on iOS WebKit; conic+mask+rotate goes static there) */}
+      <svg
+        className="absolute inset-0"
+        viewBox="0 0 100 100"
+        aria-hidden
+        style={{ animation: `aura-spin ${t.ring} linear infinite`, willChange: 'transform' }}
+      >
+        <circle
+          cx="50" cy="50" r="49.25"
+          fill="none" stroke="white" strokeOpacity="0.7"
+          strokeWidth="1.5" strokeLinecap="round"
+          pathLength={100}
+          strokeDasharray="22 78"
+        />
+      </svg>
       {/* Orb body — luminous plasma sphere */}
       <div
         className="relative rounded-full"

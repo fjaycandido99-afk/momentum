@@ -2611,9 +2611,12 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
    ============================================================ */
 @keyframes aura-spin { to { transform: rotate(360deg); } }
 
+/* iOS WebKit can't animate var() values inside keyframes (the animation
+   silently goes static), so hardcode the range. Per-state intensity is
+   baked into the element's radial-gradient alpha at build time. */
 @keyframes aura-breathe {
-  0%, 100% { transform: scale(1);    opacity: var(--aura-glow-min, 0.45); }
-  50%      { transform: scale(1.08); opacity: var(--aura-glow-max, 0.85); }
+  0%, 100% { transform: scale(1);   opacity: 0.5; }
+  50%      { transform: scale(1.1); opacity: 1; }
 }
 
 @keyframes aura-orb-float {
