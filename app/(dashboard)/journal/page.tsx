@@ -739,11 +739,11 @@ function JournalContent() {
 
   const visibleEntries = showAllRecent ? filteredEntries : filteredEntries.slice(0, 7)
 
+  // Desktop: the page caps itself at a writing-comfortable column
+  // (lg:max-w-3xl). The dashboard layout is full-bleed, and the journal
+  // is form-heavy (w-full inputs, tab bars, mood pills) — without a cap
+  // on a wide monitor every component pulls apart into airy bars.
   return (
-    {/* Desktop: page caps itself at a writing-comfortable column.
-        The dashboard layout is full-bleed; the journal is form-heavy
-        (w-full inputs, tab bars, mood pills), so without a cap on a
-        wide monitor every component pulls apart into airy bars. */}
     <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
       {/* ── Header: title + inline date nav ── */}
       <div className="sticky top-0 z-50 px-6 pt-12 pb-3 bg-black">
