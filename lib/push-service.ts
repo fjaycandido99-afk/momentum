@@ -16,7 +16,8 @@ import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 import { getDailyAffirmation } from '@/lib/mindset/affirmations'
-import { getCoachName } from '@/lib/mindset/configs'
+import { getCoachName, MINDSET_CONFIGS } from '@/lib/mindset/configs'
+import { getJourney } from '@/lib/journey'
 import { isPremiumUser } from './subscription-check'
 import { isLocalHour } from './timezone-utils'
 
@@ -639,6 +640,7 @@ export async function sendStreakAtRiskReminders(): Promise<void> {
     select: {
       user_id: true,
       current_streak: true,
+      mindset: true,
     },
   })
 
@@ -652,13 +654,25 @@ export async function sendStreakAtRiskReminders(): Promise<void> {
 
   for (const user of atRiskUsers) {
     if (!eligibleSet.has(user.user_id)) continue
-    const body = `You're on a ${user.current_streak}-day streak! Don't break it.`
-    const result = await sendPushToUser(user.user_id, 'streak_at_risk', { body })
+
+    // Frame it as the journey arc (matches the Progress page), not a bare count.
+    const mindset = (user.mindset as MindsetId) || undefined
+    const j = getJourney(mindset, mindset ? MINDSET_CONFIGS[mindset]?.name : undefined, user.current_streak)
+    let body = `Day ${user.current_streak} · ${j.stage}. Keep it alive — even one small moment tonight counts.`
+    if (j.nextStage && j.daysToNext != null && j.daysToNext <= 2) {
+      body = `Day ${user.current_streak} — you're ${j.daysToNext === 1 ? '1 day' : `${j.daysToNext} days`} from ${j.nextStage}. Don't stop now.`
+    }
+
+    const result = await sendPushToUser(user.user_id, 'streak_at_risk', {
+      title: 'Your streak is at risk',
+      body,
+      data: { type: 'streak_at_risk', url: '/progress' },
+    })
     totalSent += result.sent
     totalFailed += result.failed
   }
 
-  console.log(`Streak reminders: ${totalSent} sent, ${totalFailed} failed`)
+  console.log(`Streak reminders: ${totalSent} sent, ${totalFailed} failed (journey-framed)`)
 }
 
 /**
