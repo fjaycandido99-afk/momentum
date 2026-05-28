@@ -11,10 +11,9 @@
    single primary CTA. The visual is the focal point; everything below it
    (carousel, sections) flows underneath.
 
-   Desktop-only for the first pass — `hidden lg:flex` on the root. Mobile
-   already has a working hero carousel and a smaller screen where a giant
-   aura would crowd the rest of the page. Promote to mobile once the
-   pattern is validated on desktop.
+   Renders on every breakpoint — sized down on mobile (smaller aura, less
+   padding, tighter type) so the cinematic intro lands as the first thing
+   above the rest of the home flow without crowding the small screen.
    ============================================================================ */
 
 import { AuraRing } from '@/components/ui/Aura'
@@ -84,7 +83,7 @@ export function ImmersiveHero({ session, isCompleted, onBegin }: ImmersiveHeroPr
   return (
     <section
       aria-label="Now"
-      className="hidden lg:flex relative flex-col items-center text-center pt-14 pb-10 px-8"
+      className="relative flex flex-col items-center text-center pt-8 pb-6 px-5 lg:pt-14 lg:pb-10 lg:px-8"
     >
       {/* Eyebrow — small uppercase context line so the big title doesn't
           stand alone without a frame. Reads like a chapter heading. */}

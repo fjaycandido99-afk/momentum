@@ -182,33 +182,32 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
 
   return (
     <>
-      {/* Desktop blur-fill backdrop — same image scaled up and blurred so
-          object-contain (below, lg+) has a beautiful tinted surround
-          instead of black letterbox bars. Hidden on mobile (portrait
-          viewport + portrait source = object-cover already works). */}
+      {/* Desktop blur-fill backdrop — full-bleed blurred copy of the same
+          image so the area around the centered album cover (below) reads
+          as tinted atmosphere instead of black void. Hidden on mobile —
+          mobile shows the image full-bleed already. */}
       <img
         src={frontSrc}
         alt=""
         aria-hidden
-        className="hidden lg:block absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60 pointer-events-none"
+        className="hidden lg:block absolute inset-0 w-full h-full object-cover scale-110 blur-3xl opacity-50 pointer-events-none"
         style={{ zIndex: -1 }}
       />
-      {/* Back layer — always opacity 1, shows the NEXT image during crossfade.
-          object-cover on mobile (portrait artwork fits portrait viewport),
-          object-contain on desktop so wide viewports see the FULL artwork
-          centered against the blurred backdrop instead of zoom-cropping. */}
+
+      {/* MOBILE: full-bleed back/front layers — current behavior. Portrait
+          viewport + portrait source already crops well; no album treatment
+          needed (would feel cramped on a phone). */}
       <img
         ref={backRef}
         src={backSrc}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover lg:object-contain"
+        className="lg:hidden absolute inset-0 w-full h-full object-cover"
         style={{ zIndex: 0 }}
       />
-      {/* Front layer — fades OUT from 1→0 to reveal back layer, then snaps back */}
       <img
         src={frontSrc}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover lg:object-contain"
+        className="lg:hidden absolute inset-0 w-full h-full object-cover"
         style={{
           zIndex: 1,
           opacity: fading ? 0 : 1,
@@ -216,6 +215,38 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
         }}
         onTransitionEnd={handleTransitionEnd}
       />
+
+      {/* DESKTOP: centered "album cover" — a square card with rounded
+          corners, soft shadow, and the back/front crossfade layers inside.
+          Sits on top of the blurred backdrop. Size is capped by both
+          viewport width and height so it never crowds the controls below
+          or the word overlay above. Same Apple Music / Spotify desktop
+          pattern. */}
+      <div
+        className="hidden lg:flex absolute inset-0 items-center justify-center pointer-events-none"
+        style={{ zIndex: 0 }}
+      >
+        <div
+          className="relative aspect-square rounded-2xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.6)] ring-1 ring-white/10"
+          style={{ width: 'min(520px, 60vh)' }}
+        >
+          <img
+            src={backSrc}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <img
+            src={frontSrc}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{
+              opacity: fading ? 0 : 1,
+              transition: fading ? 'opacity 2s ease-in-out' : 'none',
+            }}
+            onTransitionEnd={handleTransitionEnd}
+          />
+        </div>
+      </div>
       {/* Centered word overlay — scales down for longer words so it never overflows */}
       {currentWord && (
         <div className="absolute inset-0 flex items-center justify-center z-[2] pointer-events-none px-4">
