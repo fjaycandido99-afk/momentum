@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Bookmark, Loader2, Trash2 } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Bookmark, Loader2, Trash2, Sparkles } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { trackFeature } from '@/lib/analytics/track'
 
@@ -61,6 +61,30 @@ export default function SavedPage() {
     ? textOnly
     : textOnly.filter(f => f.content_type === filter)
 
+  // "Memory resurfaced" — a weekly-stable featured pick (prefers quotes) that
+  // reframes Saved from a list into a personal archive. Needs a few saves first.
+  const featured = useMemo(() => {
+    const text = favorites.filter(f => f.content_type !== 'music' && f.content_type !== 'motivation')
+    const quotes = text.filter(f => f.content_type === 'quote')
+    const pool = quotes.length ? quotes : text
+    if (text.length < 3 || !pool.length) return null
+    const weekSeed = Math.floor(Date.now() / (7 * 24 * 3600 * 1000))
+    return pool[weekSeed % pool.length]
+  }, [favorites])
+  const showFeatured = filter === 'all' && !!featured
+
+  const featuredText = (item: FavoriteItem): string => {
+    let t = item.content_text
+    if (item.content_type === 'reflection') {
+      const r = parseReflection(item.content_text)
+      if (r) t = r.answer
+    }
+    return t.length > 200 ? t.slice(0, 197).trimEnd() + '…' : t
+  }
+
+  // Don't repeat the featured memory in the list below it.
+  const listItems = showFeatured && featured ? filtered.filter(f => f.id !== featured.id) : filtered
+
   const filters: { id: SavedFilter; label: string }[] = [
     { id: 'all', label: 'All' },
     { id: 'quote', label: 'Quotes' },
@@ -119,21 +143,39 @@ export default function SavedPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map(item => (
+            {/* Featured — "Memory resurfaced": the cinematic hero that turns the
+                list into an archive. Monochrome aura + editorial serif. */}
+            {showFeatured && featured && (
+              <div className="relative overflow-hidden rounded-3xl card-surface-lg p-6">
+                <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-white/[0.07] blur-3xl pointer-events-none animate-breathe" aria-hidden />
+                <div className="relative">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-white/60" />
+                    <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">Memory resurfaced</span>
+                  </div>
+                  <p className="mt-4 text-2xl leading-snug text-white" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+                    &ldquo;{featuredText(featured)}&rdquo;
+                  </p>
+                  <p className="mt-3 text-xs text-white/45">
+                    Saved {new Date(featured.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {showFeatured && listItems.length > 0 && (
+              <h2 className="text-[11px] font-medium text-white/45 uppercase tracking-wider pt-3 pb-0.5">Recent reflections</h2>
+            )}
+
+            {listItems.map(item => (
               <div
                 key={item.id}
-                className="p-4 rounded-2xl group bg-black border border-white/[0.08]"
+                className="p-4 rounded-2xl group bg-white/[0.03] border border-white/[0.08]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                        item.content_type === 'quote' ? 'bg-amber-500/20 text-amber-400' :
-                        item.content_type === 'breathing' ? 'bg-blue-500/20 text-blue-400' :
-                        item.content_type === 'affirmation' ? 'bg-indigo-500/20 text-indigo-400' :
-                        item.content_type === 'reflection' ? 'bg-violet-500/20 text-violet-400' :
-                        'bg-purple-500/20 text-purple-400'
-                      }`}>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-white/70 capitalize">
                         {item.content_type}
                       </span>
                       <span className="text-[10px] text-white/50">
@@ -145,10 +187,14 @@ export default function SavedPage() {
                         <p className="text-sm text-white/70 italic leading-relaxed">
                           &ldquo;{parseReflection(item.content_text)!.question}&rdquo;
                         </p>
-                        <p className="text-sm text-white/70 leading-relaxed pl-3 border-l-2 border-violet-500/30">
+                        <p className="text-sm text-white/70 leading-relaxed pl-3 border-l-2 border-white/20">
                           {parseReflection(item.content_text)!.answer}
                         </p>
                       </div>
+                    ) : item.content_type === 'quote' ? (
+                      <p className="text-base text-white/85 leading-relaxed" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
+                        {item.content_text}
+                      </p>
                     ) : (
                       <p className="text-sm text-white/70 leading-relaxed">
                         {item.content_text}
