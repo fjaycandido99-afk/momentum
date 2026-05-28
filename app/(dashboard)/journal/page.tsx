@@ -740,12 +740,15 @@ function JournalContent() {
 
   const visibleEntries = showAllRecent ? filteredEntries : filteredEntries.slice(0, 7)
 
-  // Desktop: the page caps itself at a writing-comfortable column
-  // (lg:max-w-3xl). The dashboard layout is full-bleed, and the journal
-  // is form-heavy (w-full inputs, tab bars, mood pills) — without a cap
-  // on a wide monitor every component pulls apart into airy bars.
+  // Desktop layout:
+  // - lg (1024–1280): widen to max-w-5xl, centered. No rail at this
+  //   breakpoint, so the column owns the screen instead of floating
+  //   narrow in the middle.
+  // - xl+ (1280+): cap back to max-w-3xl (writing-comfortable) but
+  //   shift LEFT and reserve right space for the JournalRightRail —
+  //   journal + rail fill the canvas together.
   return (
-    <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
+    <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto xl:max-w-3xl xl:mx-0 xl:ml-12 xl:mr-[336px]">
       {/* Desktop sidebar — fixed-positioned, fills the empty space to the
           right of the centered journal column at xl+. Skips lg (1024–1280)
           where the column already takes most of the width. */}
