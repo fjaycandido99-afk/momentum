@@ -1,0 +1,109 @@
+/**
+ * Test trigger for the Coach Memory contextual-callback system.
+ *
+ * Runs the FULL pipeline end-to-end against the authenticated user:
+ * generates an AI callback message → queues a ScheduledAlert →
+ * immediately fires it via sendPushToUser → returns the generated
+ * title/body plus the push-service delivery result.
+ *
+ * Auth: standard Supabase session — any signed-in user can fire one
+ *       at THEMSELVES. No admin gate, no cross-user delivery.
+ *
+ * Usage:
+ *   GET /api/notifications/test-callback?type=journal_callback
+ *     &summary=Wrote+about+my+morning+walk
+ *
+ *   type    — journal_callback | quote_callback | session_callback | mood_callback
+ *             (defaults to journal_callback)
+ *   summary — optional custom summary; sensible default per type
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
+import { queueCallback, type CallbackType } from '@/lib/contextual-callbacks'
+import { sendPushToUser } from '@/lib/push-service'
+import { mapAlertTypeToNotificationType } from '@/lib/alert-service'
+
+export const dynamic = 'force-dynamic'
+
+const DEFAULT_SUMMARIES: Record<CallbackType, string> = {
+  journal_callback: 'Wrote a journal entry: "Today I want to be more intentional about how I spend my evening."',
+  quote_callback: 'Saved quote: "The obstacle is the way." — Marcus Aurelius',
+  session_callback: 'Completed Morning Prime session today',
+  mood_callback: 'Logged a heavy mood today: "low"',
+}
+
+const VALID_TYPES: CallbackType[] = ['journal_callback', 'quote_callback', 'session_callback', 'mood_callback']
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const url = new URL(request.url)
+    const typeParam = (url.searchParams.get('type') || 'journal_callback') as CallbackType
+    const type: CallbackType = VALID_TYPES.includes(typeParam) ? typeParam : 'journal_callback'
+    const summary = url.searchParams.get('summary') || DEFAULT_SUMMARIES[type]
+
+    // 1) Queue the callback — this generates the AI message, dedupes
+    //    any existing one, creates a ScheduledAlert. We let it
+    //    schedule for the normal next-morning slot.
+    await queueCallback(user.id, type, {
+      summary,
+      intensity: type === 'mood_callback' ? 'low' : 'normal',
+    })
+
+    // 2) Grab the just-queued alert (most recent ai_callback for this
+    //    user) so we can read the AI-generated title/body.
+    const alert = await prisma.scheduledAlert.findFirst({
+      where: { user_id: user.id, alert_type_id: 'ai_callback' },
+      orderBy: { created_at: 'desc' },
+    })
+    if (!alert) {
+      return NextResponse.json(
+        { error: 'queueCallback did not produce an alert — check server logs' },
+        { status: 500 },
+      )
+    }
+
+    // 3) Fire it RIGHT NOW via the push service. Bypasses the cron
+    //    + scheduled_at + quiet-hours check by design (this is a test
+    //    trigger). Mark the alert as sent so the cron doesn't deliver
+    //    a duplicate in the morning.
+    const notificationType = mapAlertTypeToNotificationType('ai_callback')
+    const result = await sendPushToUser(user.id, notificationType, {
+      title: alert.title,
+      body: alert.body,
+      data: { type: notificationType, ...(alert.data as object) },
+    })
+
+    await prisma.scheduledAlert.update({
+      where: { id: alert.id },
+      data: {
+        status: result.success ? 'sent' : 'failed',
+        processed_at: new Date(),
+        attempts: { increment: 1 },
+        last_error: result.success ? null : 'Test trigger push failed',
+      },
+    })
+
+    return NextResponse.json({
+      ok: result.success,
+      type,
+      summary,
+      generated: { title: alert.title, body: alert.body },
+      scheduled_for: alert.scheduled_at,
+      push_result: result,
+    })
+  } catch (err) {
+    console.error('[test-callback] error:', err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'unknown' },
+      { status: 500 },
+    )
+  }
+}
