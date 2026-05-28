@@ -2638,12 +2638,17 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
    so the translate never reveals the image's edges.
    ============================================================ */
 @keyframes ken-burns {
-  0%, 100% { transform: scale(1.04) translate3d(0%, 0%, 0); }
-  50%      { transform: scale(1.08) translate3d(-1.5%, -1.2%, 0); }
+  0%   { transform: scale(1.06) translate3d(0%, 0%, 0); }
+  50%  { transform: scale(1.18) translate3d(-3%, -2.5%, 0); }
+  100% { transform: scale(1.06) translate3d(0%, 0%, 0); }
 }
 .ken-burns {
-  animation: ken-burns 90s ease-in-out infinite;
+  /* 50s is slow enough to read as ambient, fast enough that you can SEE
+     the drift within a few seconds of watching. The previous 90s + 4%
+     scale was technically animating but invisible to the eye. */
+  animation: ken-burns 50s ease-in-out infinite;
   will-change: transform;
+  transform-origin: center center;
 }
 
 /* ========== Accessibility ========== */
@@ -2681,7 +2686,7 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   /* Ken Burns — freeze to a slight static zoom (no jarring jump to 1.0) */
   .ken-burns {
     animation: none !important;
-    transform: scale(1.04) !important;
+    transform: scale(1.06) !important;
   }
 }
 
