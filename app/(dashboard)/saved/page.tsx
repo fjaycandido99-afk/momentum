@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Bookmark, Loader2, Trash2, Sparkles, X } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
+import { MoodTimeline } from '@/components/saved/MoodTimeline'
 import { trackFeature } from '@/lib/analytics/track'
 
 type SavedFilter = 'all' | 'quote' | 'journal' | 'affirmation' | 'reflection'
@@ -224,6 +225,9 @@ export default function SavedPage() {
             ))}
           </div>
         )}
+
+        {/* Mood Timeline — closes the memory-vault layout (self-gates on data) */}
+        {filter === 'all' && !isLoading && <MoodTimeline />}
       </div>
 
       {/* Interactive memory expansion — tap a memory and it opens: the page
