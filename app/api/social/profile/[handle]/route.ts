@@ -119,6 +119,8 @@ export async function GET(
         echo_attribution: p.echo_attribution,
         lesson_title: p.lesson_title,
         lesson_body: p.lesson_body,
+        voice_url: p.voice_url,
+        voice_duration_sec: p.voice_duration_sec,
         mindset_id: p.mindset_id,
         source_entry_id: p.source_entry_id,
         anonymous: p.anonymous,

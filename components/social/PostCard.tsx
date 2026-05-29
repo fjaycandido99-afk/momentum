@@ -8,7 +8,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, BookOpen, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Eye, Ban } from 'lucide-react'
+import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, BookOpen, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Eye, Ban, Play, Pause, Mic } from 'lucide-react'
 import { crisisResourceForLevel, type CrisisRegion } from '@/lib/social/crisis-detect'
 import { getMindsetStyle, getMoodTint } from '@/lib/social/mindset-style'
 
@@ -29,6 +29,11 @@ interface PostShape {
   /// crystallized punchline + one-line elaboration.
   lesson_title?: string | null
   lesson_body?: string | null
+  /// VOICE REFLECTION — when present, render an inline audio player
+  /// above the body. body still holds the Whisper transcript for
+  /// readability + search.
+  voice_url?: string | null
+  voice_duration_sec?: number | null
   mindset_id: string | null
   anonymous: boolean
   created_at: string
@@ -110,6 +115,28 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
   // the input but doesn't auto-send.
   const [suggestions, setSuggestions] = useState<string[]>([])
   const suggestionsLoadedRef = useRef(false)
+
+  // Audio player state — only used when post.voice_url is set.
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioPlaying, setAudioPlaying] = useState(false)
+  const [audioProgress, setAudioProgress] = useState(0) // 0–1
+  const toggleVoice = () => {
+    if (!post.voice_url) return
+    if (!audioRef.current) {
+      const audio = new Audio(post.voice_url)
+      audio.preload = 'metadata'
+      audio.onplay = () => setAudioPlaying(true)
+      audio.onpause = () => setAudioPlaying(false)
+      audio.onended = () => { setAudioPlaying(false); setAudioProgress(0) }
+      audio.ontimeupdate = () => {
+        if (audio.duration > 0) setAudioProgress(audio.currentTime / audio.duration)
+      }
+      audioRef.current = audio
+    }
+    if (audioRef.current.paused) audioRef.current.play().catch(() => {})
+    else audioRef.current.pause()
+  }
+  useEffect(() => () => { audioRef.current?.pause() }, [])
 
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarkBusy, setBookmarkBusy] = useState(false)
@@ -452,6 +479,38 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
           </div>
           <p className="text-[12.5px] text-white/70 leading-snug line-clamp-2 italic">&ldquo;{post.reply_to.excerpt}&rdquo;</p>
         </Link>
+      )}
+
+      {/* Voice reflection player — shown when the post was recorded as
+          audio. Plays inline; the transcript below acts as the
+          readable + searchable record of what was said. */}
+      {post.voice_url && (
+        <div className="mb-3 p-3 rounded-xl bg-white/[0.05] border border-white/[0.10] flex items-center gap-3">
+          <button
+            onClick={toggleVoice}
+            aria-label={audioPlaying ? 'Pause voice reflection' : 'Play voice reflection'}
+            className="w-10 h-10 rounded-full bg-white text-black grid place-items-center shrink-0 hover:bg-white/95 press-scale"
+          >
+            {audioPlaying ? <Pause className="w-4 h-4" fill="black" /> : <Play className="w-4 h-4 ml-0.5" fill="black" />}
+          </button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-white/55 mb-1.5">
+              <Mic className="w-3 h-3" />
+              <span>Voice reflection</span>
+              {post.voice_duration_sec ? (
+                <span className="text-white/40 normal-case tracking-normal">
+                  · {Math.floor(post.voice_duration_sec / 60)}:{String(post.voice_duration_sec % 60).padStart(2, '0')}
+                </span>
+              ) : null}
+            </div>
+            <div className="h-1 rounded-full bg-white/[0.08] overflow-hidden">
+              <div
+                className="h-full bg-white/70 transition-all duration-200"
+                style={{ width: `${Math.round(audioProgress * 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Essence — the AI-extracted most-resonant sentence, rendered

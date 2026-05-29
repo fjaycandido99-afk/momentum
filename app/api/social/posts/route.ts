@@ -92,6 +92,20 @@ export async function POST(request: NextRequest) {
     const mindsetForAI = body.mindsetId || null
     const enrichment = await enrichPost(text, mindsetForAI)
 
+    // Optional voice fields — set by the composer after uploading
+    // audio via /api/social/voice-upload. Validate the URL belongs
+    // to our storage host so people can't shove arbitrary URLs in.
+    let voiceUrl: string | null = null
+    let voiceDurationSec: number | null = null
+    if (typeof body.voiceUrl === 'string' && body.voiceUrl.startsWith('http')) {
+      const supaHost = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '')
+      if (supaHost && body.voiceUrl.startsWith(supaHost + '/storage/v1/object/public/voice-reflections/')) {
+        voiceUrl = body.voiceUrl
+        const d = Number(body.voiceDurationSec)
+        if (Number.isFinite(d) && d > 0 && d < 3600) voiceDurationSec = Math.round(d)
+      }
+    }
+
     const post = await prisma.socialPost.create({
       data: {
         user_id: user.id,
@@ -108,6 +122,8 @@ export async function POST(request: NextRequest) {
         echo_attribution: enrichment.echo_attribution,
         lesson_title: enrichment.lesson_title,
         lesson_body: enrichment.lesson_body,
+        voice_url: voiceUrl,
+        voice_duration_sec: voiceDurationSec,
       },
     })
 

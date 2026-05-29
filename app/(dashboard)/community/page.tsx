@@ -10,9 +10,10 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Loader2, Sparkles, Send, EyeOff, RefreshCw, FileText } from 'lucide-react'
+import { Loader2, Sparkles, Send, EyeOff, RefreshCw, FileText, Mic } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
 import { CommunityPulse } from '@/components/social/CommunityPulse'
+import { VoiceRecorder } from '@/components/social/VoiceRecorder'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import type { MindsetId } from '@/lib/mindset/types'
 import { useGuidelinesGate } from '@/components/social/GuidelinesGate'
@@ -59,6 +60,10 @@ export default function CommunityPage() {
   const [anonymous, setAnonymous] = useState(false)
   const [composeMood, setComposeMood] = useState<string | null>(null)
   const [isPosting, setIsPosting] = useState(false)
+  // Voice-mode state — set when the user records, attached to the
+  // POST alongside body (which holds the transcript).
+  const [voiceMode, setVoiceMode] = useState(false)
+  const [voicePayload, setVoicePayload] = useState<{ audio_url: string; duration_sec: number } | null>(null)
 
   const guidelinesGate = useGuidelinesGate()
 
@@ -92,11 +97,19 @@ export default function CommunityPage() {
         const res = await fetch('/api/social/posts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ body, anonymous, mood: composeMood || undefined }),
+          body: JSON.stringify({
+            body,
+            anonymous,
+            mood: composeMood || undefined,
+            voiceUrl: voicePayload?.audio_url,
+            voiceDurationSec: voicePayload?.duration_sec,
+          }),
         })
         if (!res.ok) throw new Error('post failed')
         setDraft('')
         setComposeMood(null)
+        setVoiceMode(false)
+        setVoicePayload(null)
         await loadFeed(scope, mood)
       } catch (err) {
         console.error('[community] post failed:', err)
@@ -197,10 +210,26 @@ export default function CommunityPage() {
       {/* Composer */}
       <div className="px-6 pt-4">
         <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+          {/* Voice recorder — opens above the textarea. On `ready` it
+              prefills the body with the Whisper transcript and stores
+              the audio_url + duration so the eventual POST attaches
+              both. Discarding clears voice state and returns to text. */}
+          {voiceMode && (
+            <div className="mb-3">
+              <VoiceRecorder
+                maxSeconds={30}
+                onReady={(v) => {
+                  setVoicePayload({ audio_url: v.audio_url, duration_sec: v.duration_sec })
+                  if (v.transcript && !draft.trim()) setDraft(v.transcript)
+                }}
+                onDiscard={() => { setVoiceMode(false); setVoicePayload(null) }}
+              />
+            </div>
+          )}
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Share what's been on your mind…"
+            placeholder={voicePayload ? 'Your voice transcript — edit if you like' : "Share what's been on your mind…"}
             rows={3}
             maxLength={1200}
             className="w-full bg-transparent text-[15px] text-white placeholder-white/40 caret-white focus:outline-none resize-none"
@@ -220,16 +249,34 @@ export default function CommunityPage() {
             ))}
           </div>
           <div className="mt-2 flex items-center justify-between">
-            <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={anonymous}
-                onChange={(e) => setAnonymous(e.target.checked)}
-                className="accent-white"
-              />
-              <EyeOff className="w-3.5 h-3.5" />
-              Post anonymously
-            </label>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={anonymous}
+                  onChange={(e) => setAnonymous(e.target.checked)}
+                  className="accent-white"
+                />
+                <EyeOff className="w-3.5 h-3.5" />
+                Post anonymously
+              </label>
+              {!voiceMode && !voicePayload && (
+                <button
+                  onClick={() => setVoiceMode(true)}
+                  aria-label="Record voice reflection"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-white/80 transition-colors"
+                >
+                  <Mic className="w-3 h-3" />
+                  Voice
+                </button>
+              )}
+              {voicePayload && (
+                <span className="inline-flex items-center gap-1 text-[11px] text-white/70">
+                  <Mic className="w-3 h-3 text-red-300" />
+                  Voice attached
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-3">
               <span className="text-[10px] text-white/40">{draft.length}/1200</span>
               <button

@@ -149,6 +149,14 @@ model SocialPost {
   /// raw words. Not verbatim — this is the AI's synthesis.
   lesson_title    String?  @db.VarChar(80)
   lesson_body     String?  @db.VarChar(200)
+  /// VOICE REFLECTION — audio version of the post. body still holds
+  /// the Whisper transcript (so search + AI enrichment still work),
+  /// but if voice_url is set the PostCard renders an inline audio
+  /// player at the top instead of plain text-only treatment. Stored
+  /// in Supabase Storage at the bucket `voice-reflections`; rotating
+  /// filenames so URLs aren't guessable.
+  voice_url       String?
+  voice_duration_sec Int?
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
