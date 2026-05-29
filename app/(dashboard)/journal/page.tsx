@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target,
   Sparkles, BookOpen, Calendar, X, Crown, Lock, Shuffle, ChevronDown,
-  MessageCircle, Moon, Send, Save, Search, Download, Trash2,
+  MessageCircle, Moon, Send, Save, Search, Download, Trash2, Mic,
 } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
@@ -28,6 +28,7 @@ import { FocusModeToolbar } from '@/components/journal/FocusModeToolbar'
 import { EmptyWritingState } from '@/components/journal/EmptyWritingState'
 import { JournalMilestoneCelebration } from '@/components/journal/JournalMilestoneCelebration'
 import { JournalRightRail } from '@/components/journal/JournalRightRail'
+import { VoiceJournalMode } from '@/components/journal/VoiceJournalMode'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 
@@ -43,7 +44,7 @@ interface JournalEntry {
   journal_tags?: string[]
 }
 
-type JournalMode = 'guided' | 'freewrite' | 'conversational' | 'dream'
+type JournalMode = 'guided' | 'freewrite' | 'conversational' | 'dream' | 'voice'
 
 interface ConversationMessage {
   role: 'user' | 'assistant'
@@ -175,7 +176,7 @@ function JournalContent() {
   // have a saved entry to review. Chat & Dream are live AI flows you can't
   // create retroactively, so they only appear on past days that actually used them.
   const availableModes = useMemo<JournalMode[]>(() => {
-    if (isToday) return ['guided', 'freewrite', 'conversational', 'dream']
+    if (isToday) return ['guided', 'freewrite', 'voice', 'conversational', 'dream']
     const modes: JournalMode[] = []
     if (win || gratitude || intention) modes.push('guided')
     modes.push('freewrite')
@@ -847,6 +848,7 @@ function JournalContent() {
           {([
             { id: 'guided' as JournalMode, label: 'Guided', icon: <BookOpen className="w-3.5 h-3.5" /> },
             { id: 'freewrite' as JournalMode, label: 'Free', icon: <PenLine className="w-3.5 h-3.5" /> },
+            { id: 'voice' as JournalMode, label: 'Voice', icon: <Mic className="w-3.5 h-3.5" /> },
             { id: 'conversational' as JournalMode, label: 'Chat', icon: <MessageCircle className="w-3.5 h-3.5" /> },
             { id: 'dream' as JournalMode, label: 'Dream', icon: <Moon className="w-3.5 h-3.5" /> },
           ]).filter(tab => availableModes.includes(tab.id)).map(tab => (
@@ -887,6 +889,20 @@ function JournalContent() {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-5 h-5 text-white/90 animate-spin" />
           </div>
+        ) : mode === 'voice' ? (
+          /* Voice Journal Mode — talk-to-Arlo. Records via MediaRecorder,
+             transcribes via Whisper, saves as journal_freetext (which
+             triggers the existing AI reflection auto-generation), then
+             plays the reflection back in Arlo's warm voice via
+             ElevenLabs. Self-contained component. */
+          <VoiceJournalMode
+            dateISO={selectedDate.toISOString()}
+            onSaved={() => {
+              // Refresh the day's data so the new entry + reflection
+              // appear in the right rail / history.
+              setIsSaved(true)
+            }}
+          />
         ) : mode === 'conversational' ? (
           /* Conversational Journal Mode */
           <div className="space-y-3">
