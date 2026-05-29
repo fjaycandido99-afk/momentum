@@ -59,14 +59,21 @@ export default function DashboardLayout({
                 stacking context — overlays (player, modal) at z-55+ stay
                 on top of the dock when active. */}
             {!hideChrome && <DesktopDock />}
-          </main>
 
-          {/* Mobile chrome — hidden on desktop where the dock takes over */}
-          {!isHome && !hideChrome && (
-            <div className="lg:hidden">
-              <MinimalNav />
-            </div>
-          )}
+            {/* Mobile chrome — also INSIDE main for the same stacking-
+                context reason. Mounted outside the lg:hidden wrapper
+                used to keep the Home pill visible above the modal
+                backdrop (sibling of main → root context → above
+                main's z-10), which then bled THROUGH the community
+                share modal. Inside main, MinimalNav's z-30 is
+                scoped to main and the z-50 share modal correctly
+                covers it. */}
+            {!isHome && !hideChrome && (
+              <div className="lg:hidden">
+                <MinimalNav />
+              </div>
+            )}
+          </main>
         </div>
         </ShareSheetProvider>
       </ResetProvider>
