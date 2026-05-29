@@ -104,7 +104,13 @@ workflows:
       - name: Set version and build number
         script: |
           cd ios/App
-          agvtool new-marketing-version 1.2.0
+          # NOTE: marketing version must be HIGHER than any approved
+          # App Store version. Apple rejects re-uploads under an
+          # already-approved version even with a new build number.
+          # Bump this whenever you push a release to App Store; for
+          # TestFlight-only re-spins you can keep it and just increment
+          # the build #.
+          agvtool new-marketing-version 1.2.1
           agvtool new-version -all $(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0) + 1))
 
       - name: Build iOS
