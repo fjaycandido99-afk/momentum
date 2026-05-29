@@ -67,11 +67,13 @@ function pickSlideshowImages(pool: string[], youtubeId: string, count = 10): str
 // layer causes a flash. Instead we use a z-index stack where both layers are
 // always at full opacity. The FRONT layer fades OUT to reveal the BACK layer
 // (which already has the next image visible and decoded).
-function BackgroundSlideshow({ images, words, playing, youtubeId }: {
+function BackgroundSlideshow({ images, words, playing, youtubeId, onTogglePlay }: {
   images: string[]
   words: string[]
   playing: boolean
   youtubeId: string
+  /** Tap the desktop album cover to pause/play. */
+  onTogglePlay?: () => void
 }) {
   const slides = useRef<string[]>([])
   const indexRef = useRef(0)
@@ -226,26 +228,45 @@ function BackgroundSlideshow({ images, words, playing, youtubeId }: {
         className="hidden lg:flex absolute inset-0 items-center justify-center pointer-events-none"
         style={{ zIndex: 0 }}
       >
-        <div
-          className="relative aspect-square rounded-2xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.6)] ring-1 ring-white/10"
+        <button
+          type="button"
+          onClick={onTogglePlay}
+          aria-label={playing ? 'Pause' : 'Play'}
+          disabled={!onTogglePlay}
+          className="pointer-events-auto relative aspect-square rounded-2xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.6)] ring-1 ring-white/10 cursor-pointer group disabled:cursor-default focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none"
           style={{ width: 'min(520px, 60vh)' }}
         >
           <img
             src={backSrc}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-[1.02]"
           />
           <img
             src={frontSrc}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-[1.02]"
             style={{
               opacity: fading ? 0 : 1,
               transition: fading ? 'opacity 2s ease-in-out' : 'none',
             }}
             onTransitionEnd={handleTransitionEnd}
           />
-        </div>
+          {/* Play/pause overlay — full white icon centered. Solid when paused
+              so users see the affordance; only on hover when playing. */}
+          {onTogglePlay && (
+            <div
+              className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity ${
+                playing ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
+              }`}
+            >
+              {playing ? (
+                <Pause className="w-16 h-16 text-white drop-shadow-2xl" fill="white" />
+              ) : (
+                <Play className="w-16 h-16 text-white drop-shadow-2xl ml-2" fill="white" />
+              )}
+            </div>
+          )}
+        </button>
       </div>
       {/* Centered word overlay — scales down for longer words so it never overflows */}
       {currentWord && (
@@ -722,16 +743,60 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
                 words={slideshowWords}
                 playing={isPlaying}
                 youtubeId={youtubeId}
+                onTogglePlay={togglePlay}
               />
             ) : backgroundImage ? (
-              <img
-                src={backgroundImage}
-                alt={word}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).style.display = 'none'
-                }}
-              />
+              <>
+                {/* Desktop blur-fill backdrop — see BackgroundSlideshow
+                    above for the same pattern. Apple Music desktop look. */}
+                <img
+                  src={backgroundImage}
+                  alt=""
+                  aria-hidden
+                  className="hidden lg:block absolute inset-0 w-full h-full object-cover scale-110 blur-3xl opacity-50 pointer-events-none"
+                  style={{ zIndex: -1 }}
+                />
+                {/* MOBILE: full-bleed (portrait viewport + portrait source) */}
+                <img
+                  src={backgroundImage}
+                  alt={word}
+                  className="lg:hidden absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    ;(e.target as HTMLImageElement).style.display = 'none'
+                  }}
+                />
+                {/* DESKTOP: centered album cover — same as BackgroundSlideshow.
+                    Wrapper has pointer-events-none so other UI underneath
+                    stays interactive; the inner album has pointer-events-auto
+                    so a click on it toggles play. */}
+                <div className="hidden lg:flex absolute inset-0 items-center justify-center pointer-events-none">
+                  <button
+                    type="button"
+                    onClick={togglePlay}
+                    aria-label={isPlaying ? 'Pause' : 'Play'}
+                    className="pointer-events-auto relative aspect-square rounded-2xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.6)] ring-1 ring-white/10 cursor-pointer group focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none"
+                    style={{ width: 'min(520px, 60vh)' }}
+                  >
+                    <img
+                      src={backgroundImage}
+                      alt={word}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-[1.02]"
+                    />
+                    {/* Play/Pause overlay icon — shows on hover/pause */}
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity ${
+                        isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
+                      }`}
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-16 h-16 text-white drop-shadow-2xl" fill="white" />
+                      ) : (
+                        <Play className="w-16 h-16 text-white drop-shadow-2xl ml-2" fill="white" />
+                      )}
+                    </div>
+                  </button>
+                </div>
+              </>
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/[0.02]" />
             )}
