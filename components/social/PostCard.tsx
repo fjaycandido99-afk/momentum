@@ -8,7 +8,7 @@
 
 import Link from 'next/link'
 import { useState, useCallback } from 'react'
-import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle } from 'lucide-react'
+import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, BookOpen, Bookmark, BookmarkCheck } from 'lucide-react'
 import { crisisResourceForLevel } from '@/lib/social/crisis-detect'
 
 interface Author { handle: string; display_name: string }
@@ -21,6 +21,9 @@ interface PostShape {
   reaction_count: number
   comment_count: number
   crisis_level?: string | null
+  /// When set, this post came from a real journal entry — drives the
+  /// "Journal entry" context badge so readers see it's a real reflection.
+  source_entry_id?: string | null
   is_own: boolean
   author: Author | null
   my_reactions: string[]
@@ -34,10 +37,14 @@ interface CommentShape {
   author: Author
 }
 
-const REACTION_KINDS: { kind: 'heart' | 'felt' | 'strength'; emoji: string; label: string }[] = [
-  { kind: 'heart',    emoji: '❤️', label: 'Heart' },
-  { kind: 'felt',     emoji: '🫶', label: 'Felt this' },
-  { kind: 'strength', emoji: '💪', label: 'Strength' },
+// Reactions reframed for journal-sharing: heart for general care, relate
+// for "I've been there", learn for "I took something from this." Matches
+// how people actually engage with someone else's reflection vs a generic
+// "post."
+const REACTION_KINDS: { kind: 'heart' | 'relate' | 'learn'; emoji: string; label: string }[] = [
+  { kind: 'heart',  emoji: '❤️', label: 'Heart' },
+  { kind: 'relate', emoji: '🪞', label: 'I relate' },
+  { kind: 'learn',  emoji: '🌱', label: 'I learned from this' },
 ]
 
 const REPORT_REASONS: { value: string; label: string }[] = [
@@ -76,10 +83,38 @@ export function PostCard({ post: initial }: { post: PostShape }) {
   const [reportNotes, setReportNotes] = useState('')
   const [reportSent, setReportSent] = useState(false)
 
+  const [bookmarked, setBookmarked] = useState(false)
+  const [bookmarkBusy, setBookmarkBusy] = useState(false)
+
+  const saveReflection = async () => {
+    if (post.is_own || bookmarked || bookmarkBusy) return
+    setBookmarkBusy(true)
+    // Optimistic flip — keeps UI snappy even if the favorites API is slow.
+    setBookmarked(true)
+    try {
+      const who = post.author?.display_name || (post.anonymous ? 'Anonymous' : 'Someone')
+      const res = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content_type: 'reflection',
+          content_text: post.body,
+          content_id: `social:${post.id}`,
+          content_title: `Reflection from ${who}`,
+        }),
+      })
+      if (!res.ok) setBookmarked(false)
+    } catch {
+      setBookmarked(false)
+    } finally {
+      setBookmarkBusy(false)
+    }
+  }
+
   const crisisResource = crisisResourceForLevel((post.crisis_level as 'urgent' | 'concern' | null) || null)
   const commentsLocked = post.crisis_level === 'urgent'
 
-  const react = async (kind: 'heart' | 'felt' | 'strength') => {
+  const react = async (kind: 'heart' | 'relate' | 'learn') => {
     const has = post.my_reactions.includes(kind)
     setPost(p => ({
       ...p,
@@ -237,6 +272,22 @@ export function PostCard({ post: initial }: { post: PostShape }) {
         </div>
       )}
 
+      {/* Journal-entry context badge — shown when the post was shared
+          from a real journal entry (vs a freeform community post). The
+          mindset chip on the right tells readers what philosophical
+          frame the reflection came from. */}
+      {post.source_entry_id && (
+        <div className="flex items-center gap-2 mb-2 text-[10.5px] text-white/55">
+          <BookOpen className="w-3 h-3" />
+          <span className="uppercase tracking-wider">Shared journal entry</span>
+          {post.mindset_id && (
+            <span className="ml-auto px-2 py-0.5 rounded-full bg-white/[0.06] uppercase tracking-wider text-white/65">
+              {post.mindset_id}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Body */}
       <p className="text-[15px] text-white/90 leading-relaxed whitespace-pre-wrap">{post.body}</p>
 
@@ -272,6 +323,19 @@ export function PostCard({ post: initial }: { post: PostShape }) {
           <MessageCircle className="w-3 h-3" />
           {post.comment_count}
         </button>
+        {!post.is_own && (
+          <button
+            onClick={() => void saveReflection()}
+            disabled={bookmarked || bookmarkBusy}
+            aria-label={bookmarked ? 'Saved' : 'Save reflection'}
+            title={bookmarked ? 'Saved to your library' : 'Save reflection to my library'}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors ${
+              bookmarked ? 'text-white bg-white/[0.10]' : 'text-white/55 hover:text-white hover:bg-white/[0.08]'
+            }`}
+          >
+            {bookmarked ? <BookmarkCheck className="w-3 h-3" /> : <Bookmark className="w-3 h-3" />}
+          </button>
+        )}
       </div>
 
       {/* Comments section */}

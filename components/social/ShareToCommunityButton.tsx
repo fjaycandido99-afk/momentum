@@ -16,9 +16,15 @@ import Link from 'next/link'
 interface Props {
   /** Pre-filled body. The editor lets the user trim before posting. */
   body: string
+  /** Optional ID of the journal entry being shared — surfaces the
+   *  "Shared journal entry" badge + mindset chip on the post. */
+  sourceEntryId?: string | null
+  /** Optional mindset tag — shown alongside the badge so readers see
+   *  what frame the reflection came from. */
+  mindsetId?: string | null
 }
 
-export function ShareToCommunityButton({ body }: Props) {
+export function ShareToCommunityButton({ body, sourceEntryId, mindsetId }: Props) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(body)
   const [anonymous, setAnonymous] = useState(false)
@@ -33,7 +39,12 @@ export function ShareToCommunityButton({ body }: Props) {
       const res = await fetch('/api/social/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: trimmed, anonymous }),
+        body: JSON.stringify({
+          body: trimmed,
+          anonymous,
+          sourceEntryId: sourceEntryId || undefined,
+          mindsetId: mindsetId || undefined,
+        }),
       })
       if (!res.ok) throw new Error('share failed')
       const data = await res.json()

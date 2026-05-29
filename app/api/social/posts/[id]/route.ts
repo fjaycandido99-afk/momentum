@@ -37,6 +37,7 @@ export async function GET(
         id: p.id,
         body: p.body,
         mindset_id: p.mindset_id,
+        source_entry_id: p.source_entry_id,
         anonymous: p.anonymous,
         created_at: p.created_at,
         reaction_count: p.reaction_count,

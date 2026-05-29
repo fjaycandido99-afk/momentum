@@ -89,10 +89,12 @@ export async function GET(
         id: p.id,
         body: p.body,
         mindset_id: p.mindset_id,
+        source_entry_id: p.source_entry_id,
         anonymous: p.anonymous,
         created_at: p.created_at,
         reaction_count: p.reaction_count,
         comment_count: p.comment_count,
+        crisis_level: p.crisis_level,
         is_own: isOwn,
         // On a profile page, the author is obvious — but honor the
         // anonymous flag by skipping the author chip on anonymous posts

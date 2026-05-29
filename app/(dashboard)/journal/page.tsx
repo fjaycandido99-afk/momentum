@@ -1342,10 +1342,13 @@ function JournalContent() {
                 {streak > 0 && <>{streak}-day streak</>}
               </p>
             )}
-            {/* Share to community — appears AFTER save, opt-in. Default private. */}
+            {/* Share to community — appears AFTER save, opt-in. Default
+                private. Passes the mindset so the post carries the
+                "Shared journal entry · <mindset>" badge. */}
             {isSaved && (mode === 'freewrite' || mode === 'guided') && (
               <ShareToCommunityButton
                 body={[freeText, win, gratitude, intention].filter(Boolean).join('\n\n').trim()}
+                mindsetId={mindsetCtx?.mindset || null}
               />
             )}
             {/* Reassurance — private-by-default warmth before saving */}

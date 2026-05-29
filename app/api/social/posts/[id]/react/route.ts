@@ -16,12 +16,12 @@ import { sendPushToUser } from '@/lib/push-service'
 
 export const dynamic = 'force-dynamic'
 
-const VALID_KINDS = new Set(['heart', 'felt', 'strength'])
+const VALID_KINDS = new Set(['heart', 'relate', 'learn'])
 
 const REACTION_LABEL: Record<string, string> = {
   heart:    'sent you a ❤️',
-  felt:     'felt this 🫶',
-  strength: 'sent strength 💪',
+  relate:   "said 'I relate' 🪞",
+  learn:    'learned from your entry 🌱',
 }
 
 // Tiny helper to keep the inline use site clean. Bypasses the per-type
