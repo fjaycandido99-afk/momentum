@@ -127,6 +127,11 @@ model SocialPost {
   /// validation line ("18 related") so the feed doesn't have to
   /// count reactions by kind on every read.
   relate_count    Int      @default(0)
+  /// AI-extracted "essence line" — the single most resonant sentence
+  /// from the body, pulled by Groq at post create time. Rendered as
+  /// a large italic pulled quote at the top of the card when present;
+  /// the body below becomes the supporting context.
+  essence         String?  @db.Text
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 

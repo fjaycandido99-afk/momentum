@@ -113,9 +113,13 @@ export async function GET(
       posts: posts.map(p => ({
         id: p.id,
         body: p.body,
+        essence: p.essence,
         mindset_id: p.mindset_id,
         source_entry_id: p.source_entry_id,
         anonymous: p.anonymous,
+        mood: p.mood,
+        view_count: p.view_count,
+        relate_count: p.relate_count,
         created_at: p.created_at,
         reaction_count: p.reaction_count,
         comment_count: p.comment_count,

@@ -10,12 +10,16 @@ import Link from 'next/link'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, BookOpen, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Eye, Ban } from 'lucide-react'
 import { crisisResourceForLevel, type CrisisRegion } from '@/lib/social/crisis-detect'
+import { getMindsetStyle, getMoodTint } from '@/lib/social/mindset-style'
 
 interface Author { handle: string; display_name: string }
 interface ReplyParent { id: string; excerpt: string; author: Author | null }
 interface PostShape {
   id: string
   body: string
+  /// AI-extracted most-resonant sentence — rendered as the pulled
+  /// quote at the top of the card when present.
+  essence?: string | null
   mindset_id: string | null
   anonymous: boolean
   created_at: string
@@ -167,6 +171,18 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
   }
 
   const crisisResource = crisisResourceForLevel((post.crisis_level as 'urgent' | 'concern' | null) || null, crisisRegion)
+  // Visual signature derived from the post's mindset + mood — gives each
+  // card a distinctive feel so the feed reads as a varied tapestry, not a
+  // wall of identical text blocks. See lib/social/mindset-style.ts.
+  const mindsetStyle = getMindsetStyle(post.mindset_id)
+  const moodTint = getMoodTint(post.mood)
+  // Strip the essence sentence out of the body so we don't render it
+  // twice (once as pulled quote, once buried in the body). Falls back
+  // gracefully when there's no essence or it's not found in the body.
+  const essence = post.essence?.trim() || null
+  const bodyWithoutEssence = essence
+    ? post.body.replace(essence, '').replace(/\s+/g, ' ').replace(/^[\s.,—–-]+|[\s.,—–-]+$/g, '').trim()
+    : post.body
   const commentsLocked = post.crisis_level === 'urgent'
 
   const react = async (kind: 'heart' | 'relate' | 'learn') => {
@@ -280,14 +296,21 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
   if (hidden) return null
 
   return (
-    <article className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] relative">
+    <article
+      className={`relative p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] overflow-hidden ${mindsetStyle.borderClass}`}
+      style={{
+        // Stack the mindset glow (top-left) + mood tint (top-right) +
+        // base card background. Z-order: tints behind content.
+        backgroundImage: `${mindsetStyle.glowGradient}, ${moodTint}`,
+      }}
+    >
       {/* Author row */}
       <div className="flex items-center gap-2 mb-2">
         {post.author ? (
           <>
             <Link
               href={`/user/${post.author.handle}`}
-              className="w-7 h-7 rounded-full bg-white/10 grid place-items-center text-[11px] font-semibold text-white/80 hover:bg-white/15 transition-colors"
+              className={`w-7 h-7 rounded-full bg-white/10 grid place-items-center text-[11px] font-semibold text-white/80 hover:bg-white/15 transition-colors ring-2 ring-offset-0 ${mindsetStyle.avatarRing}`}
             >
               {post.author.display_name.charAt(0).toUpperCase()}
             </Link>
@@ -364,9 +387,12 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
           {post.mindset_id && (
             <Link
               href={`/community/${post.mindset_id}`}
-              className="ml-auto px-2 py-0.5 rounded-full bg-white/[0.06] uppercase tracking-wider text-white/65 hover:text-white hover:bg-white/[0.10] transition-colors"
+              className={`ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full border uppercase tracking-wider hover:brightness-125 transition-all ${mindsetStyle.chipClass}`}
             >
-              {post.mindset_id}
+              <span>{post.mindset_id}</span>
+              {mindsetStyle.vibe && (
+                <span className="hidden lg:inline text-[8.5px] opacity-60 normal-case tracking-normal">· {mindsetStyle.vibe}</span>
+              )}
             </Link>
           )}
         </div>
@@ -387,8 +413,22 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
         </Link>
       )}
 
-      {/* Body */}
-      <p className="text-[15px] text-white/90 leading-relaxed whitespace-pre-wrap">{post.body}</p>
+      {/* Essence — the AI-extracted most-resonant sentence, rendered
+          big and italic as a pulled quote. Sets the emotional tone of
+          the card; the supporting body below is the context that led
+          to it. */}
+      {essence ? (
+        <>
+          <p className="text-[17px] lg:text-[19px] leading-snug text-white font-medium italic mb-2">
+            &ldquo;{essence}&rdquo;
+          </p>
+          {bodyWithoutEssence && (
+            <p className="text-[13.5px] text-white/65 leading-relaxed whitespace-pre-wrap">{bodyWithoutEssence}</p>
+          )}
+        </>
+      ) : (
+        <p className="text-[15px] text-white/90 leading-relaxed whitespace-pre-wrap">{post.body}</p>
+      )}
 
       {/* Soft-validation footer — "247 read · 18 related". Author-only
           counts (we never show "X people viewed your post" to others —

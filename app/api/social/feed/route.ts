@@ -142,6 +142,7 @@ export async function GET(request: NextRequest) {
       return {
         id: p.id,
         body: p.body,
+        essence: p.essence,
         mindset_id: p.mindset_id,
         source_entry_id: p.source_entry_id,
         anonymous: p.anonymous,

@@ -49,6 +49,7 @@ export async function GET(
       post: {
         id: p.id,
         body: p.body,
+        essence: p.essence,
         mindset_id: p.mindset_id,
         source_entry_id: p.source_entry_id,
         anonymous: p.anonymous,
