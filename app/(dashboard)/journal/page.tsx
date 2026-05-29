@@ -804,15 +804,11 @@ function JournalContent() {
 
   const visibleEntries = showAllRecent ? filteredEntries : filteredEntries.slice(0, 7)
 
-  // Desktop layout — progressive widening so the journal column
-  // actually scales with the viewport instead of sitting narrow in
-  // a sea of empty space:
-  // - lg (1024–1280): max-w-5xl centered, no rail.
-  // - xl (1280–1536): max-w-4xl shifted LEFT with right space reserved
-  //   for the JournalRightRail.
-  // - 2xl (1536+): max-w-5xl, still shifted left with rail — column
-  //   keeps growing on wider monitors so the gap to the rail stays
-  //   tight instead of opening into empty middle space.
+  // Desktop layout — widened from max-w-3xl to max-w-5xl per user
+  // feedback ("needs to fill screen"). Page is full-bleed; inner
+  // wrappers cap the writing column so textareas + mood pills don't
+  // stretch absurdly wide on ultrawide monitors but the page no
+  // longer sits narrow in a sea of empty space.
   return (
     <div className="min-h-screen text-white pb-24">
       {/* Desktop sidebar — fixed-positioned, fills the empty space to the
@@ -828,7 +824,7 @@ function JournalContent() {
             interactive content is column-constrained) ── */}
       <div className="sticky top-0 z-50 px-6 pt-12 pb-3 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
-        <div className="lg:max-w-3xl lg:mx-auto">{/* writing-column wrapper for header rows */}
+        <div className="lg:max-w-5xl lg:mx-auto">{/* writing-column wrapper for header rows */}
         {/* Row 1: Title + actions */}
         <div className="flex items-start justify-between mb-2.5">
           <div className="min-w-0">
@@ -915,7 +911,7 @@ function JournalContent() {
       {/* ── Mood check-in + hint (scrolls under the pinned header) ──
           Inner content wrapped in writing-column on desktop so mood
           pills don't pull apart edge-to-edge. */}
-      <div className="px-6 pt-3 pb-3 mb-2 lg:pt-2 lg:pb-2 lg:mb-1 space-y-2.5 lg:max-w-3xl lg:mx-auto">
+      <div className="px-6 pt-3 pb-3 mb-2 lg:pt-2 lg:pb-2 lg:mb-1 space-y-2.5 lg:max-w-5xl lg:mx-auto">
         {/* Mood check-in — prominent, full width */}
         <MoodSelector
           mood={mood}
@@ -930,7 +926,7 @@ function JournalContent() {
       {/* Journal Form — cap the writing column on desktop so textareas,
           tab content, save button don't stretch absurdly wide. Page
           itself remains full-bleed. */}
-      <div className="px-6 lg:max-w-3xl lg:mx-auto">
+      <div className="px-6 lg:max-w-5xl lg:mx-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-5 h-5 text-white/90 animate-spin" />
