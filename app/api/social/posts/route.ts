@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { ensureProfile } from '@/lib/social/handle'
 import { detectCrisisLevel } from '@/lib/social/crisis-detect'
-import { extractEssence } from '@/lib/social/essence'
+import { enrichPost } from '@/lib/social/post-enrichment'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,10 +86,11 @@ export async function POST(request: NextRequest) {
       if (parent && !parent.hidden) replyToPostId = parent.id
     }
 
-    // Extract the most resonant sentence via AI before the create so
-    // it's available immediately on first render. Falls back to null
-    // (no essence shown) on any failure — never blocks the post.
-    const essence = await extractEssence(text)
+    // Single Groq call extracts essence + themes + echo so the card
+    // has its full enrichment available on first render. All fields
+    // nullable / fallback safely — failure here never blocks the post.
+    const mindsetForAI = body.mindsetId || null
+    const enrichment = await enrichPost(text, mindsetForAI)
 
     const post = await prisma.socialPost.create({
       data: {
@@ -97,11 +98,14 @@ export async function POST(request: NextRequest) {
         body: text,
         source_entry_id: body.sourceEntryId || null,
         anonymous: !!body.anonymous,
-        mindset_id: body.mindsetId || null,
+        mindset_id: mindsetForAI,
         mood: typeof body.mood === 'string' && body.mood.trim() ? body.mood.trim().toLowerCase().slice(0, 24) : null,
         reply_to_post_id: replyToPostId,
         crisis_level: crisisLevel,
-        essence,
+        essence: enrichment.essence,
+        themes: enrichment.themes,
+        echo_quote: enrichment.echo_quote,
+        echo_attribution: enrichment.echo_attribution,
       },
     })
 

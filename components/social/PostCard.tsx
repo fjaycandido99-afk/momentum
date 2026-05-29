@@ -20,6 +20,11 @@ interface PostShape {
   /// AI-extracted most-resonant sentence — rendered as the pulled
   /// quote at the top of the card when present.
   essence?: string | null
+  /// AI theme chips (gratitude / growth / doubt / …).
+  themes?: string[]
+  /// AI-surfaced related quote from a real thinker.
+  echo_quote?: string | null
+  echo_attribution?: string | null
   mindset_id: string | null
   anonymous: boolean
   created_at: string
@@ -95,6 +100,12 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
   const [reportReason, setReportReason] = useState('abuse')
   const [reportNotes, setReportNotes] = useState('')
   const [reportSent, setReportSent] = useState(false)
+
+  // AI-suggested comment openers — fetched once when the comments
+  // section opens, cached for the session. Tapping a chip populates
+  // the input but doesn't auto-send.
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const suggestionsLoadedRef = useRef(false)
 
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarkBusy, setBookmarkBusy] = useState(false)
@@ -224,10 +235,24 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
     }
   }, [post.id])
 
+  const loadSuggestions = useCallback(async () => {
+    if (suggestionsLoadedRef.current || post.is_own) return
+    suggestionsLoadedRef.current = true
+    try {
+      const res = await fetch(`/api/social/posts/${post.id}/comment-suggestions`)
+      if (res.ok) {
+        const data = await res.json()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setSuggestions((data.suggestions || []).map((s: any) => s.text).filter(Boolean))
+      }
+    } catch { /* silent — fallbacks are server-side */ }
+  }, [post.id, post.is_own])
+
   const toggleComments = () => {
     setCommentsOpen(o => {
       const next = !o
       if (next && comments.length === 0) void loadComments()
+      if (next) void loadSuggestions()
       return next
     })
   }
@@ -384,6 +409,11 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
               feeling {post.mood}
             </span>
           )}
+          {(post.themes || []).slice(0, 2).map(t => (
+            <span key={t} className="px-2 py-0.5 rounded-full bg-white/[0.04] text-white/55 lowercase">
+              #{t}
+            </span>
+          ))}
           {post.mindset_id && (
             <Link
               href={`/community/${post.mindset_id}`}
@@ -445,6 +475,22 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
           {(post.relate_count ?? 0) > 0 && (
             <span className="inline-flex items-center gap-1">🪞 {post.relate_count} related</span>
           )}
+        </div>
+      )}
+
+      {/* AI Echo — a real-thinker quote that resonates with this post.
+          Rendered as a subtle "Echoes" companion line so it reads as a
+          gentle "this reminds me of…" rather than an authoritative
+          interjection. */}
+      {post.echo_quote && post.echo_attribution && (
+        <div className="mt-3 pt-3 border-t border-white/[0.05] flex gap-2 items-start">
+          <span className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-0.5 shrink-0">Echoes</span>
+          <div className="min-w-0">
+            <p className="text-[13px] text-white/65 italic leading-snug">
+              &ldquo;{post.echo_quote}&rdquo;
+            </p>
+            <p className="text-[11px] text-white/40 mt-0.5">— {post.echo_attribution}</p>
+          </div>
         </div>
       )}
 
@@ -585,6 +631,23 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
               </div>
             </div>
           ))}
+          {/* AI-suggested compassionate openers — tap to populate input.
+              Hidden once the user starts typing or sends their first
+              comment so we don't crowd the conversation. */}
+          {!commentsLocked && suggestions.length > 0 && !commentDraft.trim() && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {suggestions.map((s, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCommentDraft(s)}
+                  className="px-2.5 py-1 rounded-full bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.08] text-[11.5px] text-white/70 hover:text-white transition-colors text-left max-w-full"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Composer */}
           {!commentsLocked && (
             <div className="flex items-end gap-2 pt-1">

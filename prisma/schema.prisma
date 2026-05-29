@@ -132,6 +132,15 @@ model SocialPost {
   /// a large italic pulled quote at the top of the card when present;
   /// the body below becomes the supporting context.
   essence         String?  @db.Text
+  /// AI-extracted theme tags (1-2 from a fixed vocabulary like
+  /// "gratitude", "doubt", "growth"). Powers small chips on the card
+  /// next to the mood + becomes filterable in a future revision.
+  themes          String[]
+  /// AI-suggested "echo" — a related quote from a real thinker that
+  /// resonates with the post. Stored together so a single Groq call
+  /// at post creation produces essence + themes + echo.
+  echo_quote      String?  @db.Text
+  echo_attribution String?
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 

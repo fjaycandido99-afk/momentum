@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
-import { extractEssence } from '@/lib/social/essence'
+import { enrichPost } from '@/lib/social/post-enrichment'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,33 +37,42 @@ export async function POST(request: NextRequest) {
 
     const posts = await prisma.socialPost.findMany({
       where: { essence: null, hidden: false },
-      select: { id: true, body: true },
+      select: { id: true, body: true, mindset_id: true },
       orderBy: { created_at: 'desc' },
       take: limit,
     })
 
     let updated = 0
     let skipped = 0
-    const samples: { id: string; essence: string }[] = []
+    const samples: { id: string; essence: string | null; themes: string[]; echo_attribution: string | null }[] = []
 
     for (const p of posts) {
-      const essence = await extractEssence(p.body)
-      if (essence) {
-        await prisma.socialPost.update({ where: { id: p.id }, data: { essence } })
+      const enrichment = await enrichPost(p.body, p.mindset_id)
+      // Update only if we got something useful — otherwise leave the
+      // post alone so a future re-run can take another shot.
+      if (enrichment.essence || enrichment.themes.length > 0 || enrichment.echo_quote) {
+        await prisma.socialPost.update({
+          where: { id: p.id },
+          data: {
+            essence: enrichment.essence,
+            themes: enrichment.themes,
+            echo_quote: enrichment.echo_quote,
+            echo_attribution: enrichment.echo_attribution,
+          },
+        })
         updated++
-        if (samples.length < 8) samples.push({ id: p.id.slice(0, 8), essence })
+        if (samples.length < 8) samples.push({
+          id: p.id.slice(0, 8),
+          essence: enrichment.essence,
+          themes: enrichment.themes,
+          echo_attribution: enrichment.echo_attribution,
+        })
       } else {
         skipped++
       }
     }
 
-    return NextResponse.json({
-      ok: true,
-      processed: posts.length,
-      updated,
-      skipped,
-      samples,
-    })
+    return NextResponse.json({ ok: true, processed: posts.length, updated, skipped, samples })
   } catch (err) {
     console.error('[backfill-essence] error:', err)
     return NextResponse.json(
