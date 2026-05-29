@@ -70,6 +70,21 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Diagnostic: how many push subscriptions does this user have?
+    // Helps us tell "no push arrived" apart from "push sent but device
+    // didn't receive" — if subs is 0, the device never registered.
+    const subs = await prisma.pushSubscription.findMany({
+      where: { user_id: user.id },
+      select: { id: true, platform: true, native_token: true, endpoint: true, coach_checkin_alerts: true, motivational_nudge_alerts: true },
+    })
+    const subSummary = subs.map(s => ({
+      id: s.id.slice(0, 8),
+      platform: s.platform,
+      has_native_token: !!s.native_token,
+      has_web_endpoint: !!s.endpoint,
+      coach_checkin_alerts: s.coach_checkin_alerts,
+    }))
+
     // 3) Fire it RIGHT NOW via the push service. Bypasses the cron
     //    + scheduled_at + quiet-hours check by design (this is a test
     //    trigger). Mark the alert as sent so the cron doesn't deliver
@@ -97,6 +112,8 @@ export async function GET(request: NextRequest) {
       summary,
       generated: { title: alert.title, body: alert.body },
       scheduled_for: alert.scheduled_at,
+      mapped_notification_type: notificationType,
+      subscriptions: subSummary,
       push_result: result,
     })
   } catch (err) {

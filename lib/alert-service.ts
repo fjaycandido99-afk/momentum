@@ -48,7 +48,13 @@ const ALERT_TO_NOTIFICATION_MAP: Record<string, NotificationType> = {
   daily_motivation: 'daily_motivation',
   coach_checkin: 'coach_checkin',
   coach_accountability: 'coach_accountability',
-  ai_callback: 'coach_checkin', // AI-generated next-morning callback referencing recent activity
+  // AI-generated next-morning callback referencing recent activity.
+  // Routes via 'custom' (not 'coach_checkin') so it bypasses the
+  // per-type PushSubscription filter — older subscriptions registered
+  // before the coach_checkin_alerts column existed default to false
+  // and silently drop the push. 'custom' always sends. When we add an
+  // explicit ai_callback enable toggle in Settings, switch this back.
+  ai_callback: 'custom',
 }
 
 export function mapAlertTypeToNotificationType(alertTypeId: string): NotificationType {
