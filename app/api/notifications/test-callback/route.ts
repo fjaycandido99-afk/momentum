@@ -24,6 +24,7 @@ import { prisma } from '@/lib/prisma'
 import { queueCallback, type CallbackType } from '@/lib/contextual-callbacks'
 import { sendPushToUser } from '@/lib/push-service'
 import { mapAlertTypeToNotificationType } from '@/lib/alert-service'
+import { sendAPNsNotification, isAPNsConfigured } from '@/lib/apns'
 
 export const dynamic = 'force-dynamic'
 
@@ -106,6 +107,42 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    // 4) Direct APNs probe — fires the same notification straight at
+    //    every iOS native token, returning the raw APNs status code +
+    //    reason for each. This is what tells us WHY the push above
+    //    failed (BadDeviceToken / TooManyRequests / BadCertificate /
+    //    DeviceTokenNotForTopic etc.) — sendPushToUser only returns
+    //    counts. Run only when sendPushToUser reported a failure so
+    //    we don't double-deliver when things are healthy.
+    let apnsProbe: Array<{ token_prefix: string; status: number; reason?: string }> | undefined
+    if (!result.success) {
+      apnsProbe = []
+      if (!isAPNsConfigured()) {
+        apnsProbe.push({ token_prefix: '(none)', status: -1, reason: 'APNs not configured (env vars missing)' })
+      } else {
+        for (const sub of subs) {
+          if (sub.platform !== 'ios' || !sub.native_token) continue
+          try {
+            const apnsResult = await sendAPNsNotification(sub.native_token, {
+              title: alert.title,
+              body: alert.body,
+            })
+            apnsProbe.push({
+              token_prefix: sub.native_token.slice(0, 12) + '…',
+              status: apnsResult.statusCode,
+              reason: apnsResult.reason,
+            })
+          } catch (err) {
+            apnsProbe.push({
+              token_prefix: sub.native_token.slice(0, 12) + '…',
+              status: -1,
+              reason: err instanceof Error ? err.message : 'unknown',
+            })
+          }
+        }
+      }
+    }
+
     return NextResponse.json({
       ok: result.success,
       type,
@@ -115,6 +152,7 @@ export async function GET(request: NextRequest) {
       mapped_notification_type: notificationType,
       subscriptions: subSummary,
       push_result: result,
+      apns_probe: apnsProbe,
     })
   } catch (err) {
     console.error('[test-callback] error:', err)
