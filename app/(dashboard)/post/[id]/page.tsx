@@ -20,10 +20,12 @@ interface RouteContext { params: Promise<{ id: string }> }
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '').trim() || 'https://voxu.app'
 
-function buildOgPreviewUrl(title: string): string {
-  // No bespoke OG-image renderer yet — fall back to the app's static
-  // social card. Swap to a /api/og?title=... endpoint when ready.
-  return `${APP_URL}/og-default.png`
+function buildOgPreviewUrl(postId: string): string {
+  // Per-post bespoke OG card rendered by the edge endpoint — body
+  // excerpt + author handle + mindset chip on a Voxu-branded surface.
+  // Falls back gracefully to a generic safety card if the post is
+  // hidden / crisis-urgent (gate lives inside the route).
+  return `${APP_URL}/api/og/post?id=${encodeURIComponent(postId)}`
 }
 
 export async function generateMetadata({ params }: RouteContext): Promise<Metadata> {
@@ -53,6 +55,7 @@ export async function generateMetadata({ params }: RouteContext): Promise<Metada
     const excerpt = post.body.slice(0, 180) + (post.body.length > 180 ? '…' : '')
     const title = `${author} on Voxu Community`
     const url = `${APP_URL}/post/${id}`
+    const ogUrl = buildOgPreviewUrl(id)
     return {
       title,
       description: excerpt,
@@ -62,13 +65,13 @@ export async function generateMetadata({ params }: RouteContext): Promise<Metada
         title,
         description: excerpt,
         siteName: 'Voxu',
-        images: [{ url: buildOgPreviewUrl(title) }],
+        images: [{ url: ogUrl, width: 1200, height: 630 }],
       },
       twitter: {
         card: 'summary_large_image',
         title,
         description: excerpt,
-        images: [buildOgPreviewUrl(title)],
+        images: [ogUrl],
       },
       alternates: { canonical: url },
     }
