@@ -146,6 +146,8 @@ export async function GET(request: NextRequest) {
         themes: p.themes,
         echo_quote: p.echo_quote,
         echo_attribution: p.echo_attribution,
+        lesson_title: p.lesson_title,
+        lesson_body: p.lesson_body,
         mindset_id: p.mindset_id,
         source_entry_id: p.source_entry_id,
         anonymous: p.anonymous,

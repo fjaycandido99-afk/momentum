@@ -141,6 +141,14 @@ model SocialPost {
   /// at post creation produces essence + themes + echo.
   echo_quote      String?  @db.Text
   echo_attribution String?
+  /// AI-extracted META-LESSON — the crystallized insight underneath
+  /// the surface story. Title is the punchline ("Rest isn't quitting"),
+  /// body is the one-line elaboration ("It's strategic recovery.").
+  /// Rendered as a distinct card-within-the-card under the body so
+  /// each post has visual variety + adds shareable value beyond the
+  /// raw words. Not verbatim — this is the AI's synthesis.
+  lesson_title    String?  @db.VarChar(80)
+  lesson_body     String?  @db.VarChar(200)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 

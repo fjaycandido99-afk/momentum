@@ -25,6 +25,10 @@ interface PostShape {
   /// AI-surfaced related quote from a real thinker.
   echo_quote?: string | null
   echo_attribution?: string | null
+  /// AI-synthesized meta-lesson — distinct from essence (verbatim). The
+  /// crystallized punchline + one-line elaboration.
+  lesson_title?: string | null
+  lesson_body?: string | null
   mindset_id: string | null
   anonymous: boolean
   created_at: string
@@ -323,12 +327,19 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
   return (
     <article
       className={`relative p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] overflow-hidden ${mindsetStyle.borderClass}`}
-      style={{
-        // Stack the mindset glow (top-left) + mood tint (top-right) +
-        // base card background. Z-order: tints behind content.
-        backgroundImage: `${mindsetStyle.glowGradient}, ${moodTint}`,
-      }}
     >
+      {/* Aura layer — mindset glow (top-left) stacked on mood tint
+          (top-right), pulled into its own absolute layer so the breath
+          animation modulates ONLY the atmosphere, not the text + buttons
+          above. pointer-events-none so it never eats clicks. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none post-aura-breathe"
+        style={{
+          backgroundImage: `${mindsetStyle.glowGradient}, ${moodTint}`,
+        }}
+      />
+      <div className="relative">{/* z-stack content above the aura */}
       {/* Author row */}
       <div className="flex items-center gap-2 mb-2">
         {post.author ? (
@@ -475,6 +486,30 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
           {(post.relate_count ?? 0) > 0 && (
             <span className="inline-flex items-center gap-1">🪞 {post.relate_count} related</span>
           )}
+        </div>
+      )}
+
+      {/* AI Lesson — synthesized crystallization of the post's meta-insight.
+          Distinct visual treatment (gradient bg + sparkle eyebrow) so each
+          post gets a different shape, breaking the wall-of-text feeling. */}
+      {post.lesson_title && post.lesson_body && (
+        <div
+          className="mt-3 p-3.5 rounded-xl border border-white/[0.12] relative overflow-hidden"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+          }}
+        >
+          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-white/55 mb-1.5">
+            <span>✦</span>
+            <span>Lesson</span>
+          </div>
+          <p className="text-[15px] font-medium text-white leading-snug">
+            {post.lesson_title}.
+          </p>
+          <p className="text-[13px] text-white/70 leading-relaxed mt-1">
+            {post.lesson_body}
+          </p>
         </div>
       )}
 
@@ -747,6 +782,7 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
           </div>
         </div>
       )}
+      </div>{/* end content z-stack above the aura */}
     </article>
   )
 }

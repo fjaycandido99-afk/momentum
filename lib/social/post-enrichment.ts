@@ -22,9 +22,21 @@ export interface PostEnrichment {
   themes: string[]
   echo_quote: string | null
   echo_attribution: string | null
+  /// META-LESSON — AI's synthesized crystallization of what the post is
+  /// REALLY about. Punchline + one-line elaboration. Adds visual variety
+  /// + shareable value beyond the raw post text.
+  lesson_title: string | null
+  lesson_body: string | null
 }
 
-const EMPTY: PostEnrichment = { essence: null, themes: [], echo_quote: null, echo_attribution: null }
+const EMPTY: PostEnrichment = {
+  essence: null,
+  themes: [],
+  echo_quote: null,
+  echo_attribution: null,
+  lesson_title: null,
+  lesson_body: null,
+}
 
 const THEMES_VOCAB = [
   'gratitude', 'growth', 'doubt', 'accountability', 'courage', 'surrender',
@@ -44,10 +56,14 @@ Return ONLY valid JSON with this exact shape:
   "essence": "the single most emotionally resonant sentence pulled VERBATIM from the text — must appear character-for-character, no paraphrasing. null if the text is too short or has no clear standout line.",
   "themes": ["1-2 themes from this vocabulary, lowercase: ${THEMES_VOCAB.join(', ')}"],
   "echo_quote": "a short (under 160 chars) related quote from a real thinker, philosopher, writer, athlete, or public figure that genuinely resonates with this reflection. Prefer non-obvious choices over the most-quoted ones. Must be a real quote you're confident is attributed correctly.",
-  "echo_attribution": "the name of that thinker"
+  "echo_attribution": "the name of that thinker",
+  "lesson_title": "the crystallized meta-insight underneath the surface story, max 36 chars, no period. Think 'Rest isn't quitting' for someone burned out, or 'Acceptance is the unlock' for someone in conflict. Punchline only.",
+  "lesson_body": "one sentence elaboration of the lesson, max 110 chars. Like 'It's strategic recovery.' or 'You can't outrun what you won't face.'"
 }
 
-If you can't find a real attributable quote you're sure about, return null for both echo_quote AND echo_attribution. Never invent quotes.`
+If you can't find a real attributable quote you're sure about, return null for both echo_quote AND echo_attribution. Never invent quotes.
+
+For the lesson: this IS your synthesis (unlike essence, which must be verbatim). Pull the underlying truth, not the surface complaint. If the story is too thin to crystallize, return null for both lesson_title AND lesson_body.`
 
   const user = `Reflection ${mindsetId ? `(${mindsetId} mindset)` : ''}:\n\n${text.slice(0, 1800)}`
 
@@ -99,6 +115,19 @@ If you can't find a real attributable quote you're sure about, return null for b
       if (q.length >= 8 && q.length <= 220 && a.length >= 2 && a.length <= 60) {
         out.echo_quote = q
         out.echo_attribution = a
+      }
+    }
+
+    // Lesson — both title and body must be present + reasonable.
+    if (
+      typeof parsed.lesson_title === 'string' &&
+      typeof parsed.lesson_body === 'string'
+    ) {
+      const lt = parsed.lesson_title.replace(/[.!?]+$/g, '').trim()
+      const lb = parsed.lesson_body.trim()
+      if (lt.length >= 6 && lt.length <= 60 && lb.length >= 10 && lb.length <= 180) {
+        out.lesson_title = lt
+        out.lesson_body = lb
       }
     }
 

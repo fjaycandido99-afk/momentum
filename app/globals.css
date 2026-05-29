@@ -2619,6 +2619,19 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   50%      { transform: scale(1.1); opacity: 1; }
 }
 
+/* Slow background-opacity breath for community post cards — the
+   mindset + mood gradients on the card already exist; this keyframe
+   subtly modulates their intensity so the feed feels alive, not flat.
+   ~7s cycle so it's ambient, not distracting. */
+@keyframes post-aura-breathe {
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 1; }
+}
+.post-aura-breathe {
+  animation: post-aura-breathe 7s ease-in-out infinite;
+  will-change: opacity;
+}
+
 @keyframes aura-orb-float {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   33%      { transform: translate3d(5%, -4%, 0) scale(1.05); }

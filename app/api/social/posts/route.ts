@@ -106,6 +106,8 @@ export async function POST(request: NextRequest) {
         themes: enrichment.themes,
         echo_quote: enrichment.echo_quote,
         echo_attribution: enrichment.echo_attribution,
+        lesson_title: enrichment.lesson_title,
+        lesson_body: enrichment.lesson_body,
       },
     })
 

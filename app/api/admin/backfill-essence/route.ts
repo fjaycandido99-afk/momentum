@@ -50,7 +50,12 @@ export async function POST(request: NextRequest) {
       const enrichment = await enrichPost(p.body, p.mindset_id)
       // Update only if we got something useful — otherwise leave the
       // post alone so a future re-run can take another shot.
-      if (enrichment.essence || enrichment.themes.length > 0 || enrichment.echo_quote) {
+      if (
+        enrichment.essence ||
+        enrichment.themes.length > 0 ||
+        enrichment.echo_quote ||
+        enrichment.lesson_title
+      ) {
         await prisma.socialPost.update({
           where: { id: p.id },
           data: {
@@ -58,6 +63,8 @@ export async function POST(request: NextRequest) {
             themes: enrichment.themes,
             echo_quote: enrichment.echo_quote,
             echo_attribution: enrichment.echo_attribution,
+            lesson_title: enrichment.lesson_title,
+            lesson_body: enrichment.lesson_body,
           },
         })
         updated++

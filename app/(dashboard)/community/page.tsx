@@ -12,6 +12,7 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Loader2, Sparkles, Send, EyeOff, RefreshCw, FileText } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
+import { CommunityPulse } from '@/components/social/CommunityPulse'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import type { MindsetId } from '@/lib/mindset/types'
 import { useGuidelinesGate } from '@/components/social/GuidelinesGate'
@@ -188,6 +189,10 @@ export default function CommunityPage() {
           })}
         </div>
       </div>
+
+      {/* Live mood pulse — top-of-feed glance at how the community
+          feels right now. Hides itself if there are no posts. */}
+      <CommunityPulse />
 
       {/* Composer */}
       <div className="px-6 pt-4">
