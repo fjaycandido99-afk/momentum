@@ -7,11 +7,12 @@
    ============================================================================ */
 
 import Link from 'next/link'
-import { useState, useCallback } from 'react'
-import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, BookOpen, Bookmark, BookmarkCheck } from 'lucide-react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, BookOpen, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Eye } from 'lucide-react'
 import { crisisResourceForLevel } from '@/lib/social/crisis-detect'
 
 interface Author { handle: string; display_name: string }
+interface ReplyParent { id: string; excerpt: string; author: Author | null }
 interface PostShape {
   id: string
   body: string
@@ -21,9 +22,14 @@ interface PostShape {
   reaction_count: number
   comment_count: number
   crisis_level?: string | null
-  /// When set, this post came from a real journal entry — drives the
-  /// "Journal entry" context badge so readers see it's a real reflection.
   source_entry_id?: string | null
+  /// Mood the user was in — drives the mood chip on the card.
+  mood?: string | null
+  /// Soft-validation footer counts.
+  view_count?: number
+  relate_count?: number
+  /// Quote-reply parent payload — body excerpt + author chip.
+  reply_to?: ReplyParent | null
   is_own: boolean
   author: Author | null
   my_reactions: string[]
@@ -85,6 +91,52 @@ export function PostCard({ post: initial }: { post: PostShape }) {
 
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarkBusy, setBookmarkBusy] = useState(false)
+
+  // Reply-with-my-own composer state.
+  const [replyOpen, setReplyOpen] = useState(false)
+  const [replyDraft, setReplyDraft] = useState('')
+  const [replyAnon, setReplyAnon] = useState(false)
+  const [replyPosting, setReplyPosting] = useState(false)
+  const [replySent, setReplySent] = useState(false)
+
+  // View tracking — fires once per (post, session). sessionStorage
+  // keys it so refreshing or navigating away+back doesn't double-count.
+  const viewFiredRef = useRef(false)
+  useEffect(() => {
+    if (post.is_own || viewFiredRef.current) return
+    if (typeof window === 'undefined') return
+    const key = `voxu.viewed.${post.id}`
+    try {
+      if (sessionStorage.getItem(key)) return
+      sessionStorage.setItem(key, '1')
+    } catch { /* private mode */ }
+    viewFiredRef.current = true
+    // Fire-and-forget — server enforces "not own" too.
+    void fetch(`/api/social/posts/${post.id}/view`, { method: 'POST' }).catch(() => {})
+  }, [post.id, post.is_own])
+
+  const submitReply = async () => {
+    const text = replyDraft.trim()
+    if (!text || replyPosting) return
+    setReplyPosting(true)
+    try {
+      const res = await fetch('/api/social/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          body: text,
+          anonymous: replyAnon,
+          replyToPostId: post.id,
+        }),
+      })
+      if (res.ok) {
+        setReplySent(true)
+        setTimeout(() => { setReplyOpen(false); setReplyDraft(''); setReplySent(false); setReplyAnon(false) }, 1400)
+      }
+    } finally {
+      setReplyPosting(false)
+    }
+  }
 
   const saveReflection = async () => {
     if (post.is_own || bookmarked || bookmarkBusy) return
@@ -272,24 +324,67 @@ export function PostCard({ post: initial }: { post: PostShape }) {
         </div>
       )}
 
-      {/* Journal-entry context badge — shown when the post was shared
-          from a real journal entry (vs a freeform community post). The
-          mindset chip on the right tells readers what philosophical
-          frame the reflection came from. */}
-      {post.source_entry_id && (
-        <div className="flex items-center gap-2 mb-2 text-[10.5px] text-white/55">
-          <BookOpen className="w-3 h-3" />
-          <span className="uppercase tracking-wider">Shared journal entry</span>
-          {post.mindset_id && (
-            <span className="ml-auto px-2 py-0.5 rounded-full bg-white/[0.06] uppercase tracking-wider text-white/65">
-              {post.mindset_id}
+      {/* Context row — surfaces the post's frame (journal source, mood,
+          mindset) so readers can scan the kind of reflection at a glance. */}
+      {(post.source_entry_id || post.mood || post.mindset_id) && (
+        <div className="flex items-center flex-wrap gap-2 mb-2 text-[10.5px]">
+          {post.source_entry_id && (
+            <span className="inline-flex items-center gap-1 text-white/55">
+              <BookOpen className="w-3 h-3" />
+              <span className="uppercase tracking-wider">Journal entry</span>
             </span>
+          )}
+          {post.mood && (
+            <span className="px-2 py-0.5 rounded-full bg-white/[0.05] text-white/65 capitalize">
+              feeling {post.mood}
+            </span>
+          )}
+          {post.mindset_id && (
+            <Link
+              href={`/community/${post.mindset_id}`}
+              className="ml-auto px-2 py-0.5 rounded-full bg-white/[0.06] uppercase tracking-wider text-white/65 hover:text-white hover:bg-white/[0.10] transition-colors"
+            >
+              {post.mindset_id}
+            </Link>
           )}
         </div>
       )}
 
+      {/* Quote-reply parent — shown when this post replies to another.
+          Tap to jump to the source post for full context. */}
+      {post.reply_to && (
+        <Link
+          href={`/post/${post.reply_to.id}`}
+          className="block mb-2 p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.06] transition-colors"
+        >
+          <div className="flex items-center gap-1.5 text-[10.5px] text-white/55 mb-1">
+            <Quote className="w-3 h-3" />
+            <span>Replying to {post.reply_to.author ? `@${post.reply_to.author.handle}` : 'Anonymous'}</span>
+          </div>
+          <p className="text-[12.5px] text-white/70 leading-snug line-clamp-2 italic">&ldquo;{post.reply_to.excerpt}&rdquo;</p>
+        </Link>
+      )}
+
       {/* Body */}
       <p className="text-[15px] text-white/90 leading-relaxed whitespace-pre-wrap">{post.body}</p>
+
+      {/* Soft-validation footer — "247 read · 18 related". Author-only
+          counts (we never show "X people viewed your post" to others —
+          that's stalker-vibe energy). Comment count lives in the action
+          row below. */}
+      {post.is_own && ((post.view_count ?? 0) > 0 || (post.relate_count ?? 0) > 0) && (
+        <div className="mt-2 flex items-center gap-3 text-[11px] text-white/45">
+          {(post.view_count ?? 0) > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <Eye className="w-3 h-3" />
+              {post.view_count} read
+            </span>
+          )}
+          {(post.relate_count ?? 0) > 0 && (
+            <span className="inline-flex items-center gap-1">🪞 {post.relate_count} related</span>
+          )}
+        </div>
+      )}
 
       {/* Reactions + comment toggle */}
       <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center gap-1">
@@ -324,19 +419,81 @@ export function PostCard({ post: initial }: { post: PostShape }) {
           {post.comment_count}
         </button>
         {!post.is_own && (
-          <button
-            onClick={() => void saveReflection()}
-            disabled={bookmarked || bookmarkBusy}
-            aria-label={bookmarked ? 'Saved' : 'Save reflection'}
-            title={bookmarked ? 'Saved to your library' : 'Save reflection to my library'}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors ${
-              bookmarked ? 'text-white bg-white/[0.10]' : 'text-white/55 hover:text-white hover:bg-white/[0.08]'
-            }`}
-          >
-            {bookmarked ? <BookmarkCheck className="w-3 h-3" /> : <Bookmark className="w-3 h-3" />}
-          </button>
+          <>
+            <button
+              onClick={() => setReplyOpen(o => !o)}
+              aria-label="Reply with my reflection"
+              title="Reply with my own reflection"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-white/55 hover:text-white hover:bg-white/[0.08] transition-colors"
+            >
+              <CornerUpLeft className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => void saveReflection()}
+              disabled={bookmarked || bookmarkBusy}
+              aria-label={bookmarked ? 'Saved' : 'Save reflection'}
+              title={bookmarked ? 'Saved to your library' : 'Save reflection to my library'}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors ${
+                bookmarked ? 'text-white bg-white/[0.10]' : 'text-white/55 hover:text-white hover:bg-white/[0.08]'
+              }`}
+            >
+              {bookmarked ? <BookmarkCheck className="w-3 h-3" /> : <Bookmark className="w-3 h-3" />}
+            </button>
+          </>
         )}
       </div>
+
+      {/* Reply composer — appears when ↩ tapped. Posts as a new SocialPost
+          with reply_to_post_id set, so it shows in the feed as a quote-reply. */}
+      {replyOpen && (
+        <div className="mt-3 pt-3 border-t border-white/[0.06]">
+          {replySent ? (
+            <p className="text-xs text-white/70 italic">Posted. ✨</p>
+          ) : (
+            <>
+              <div className="flex items-center gap-1.5 text-[10.5px] text-white/55 mb-1.5">
+                <Quote className="w-3 h-3" />
+                Reply with your own reflection
+              </div>
+              <textarea
+                value={replyDraft}
+                onChange={(e) => setReplyDraft(e.target.value)}
+                rows={3}
+                maxLength={1200}
+                placeholder="What did this bring up for you?"
+                className="w-full bg-white/[0.05] border border-white/15 rounded-lg px-3 py-2 text-[13.5px] text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/40 resize-none"
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={replyAnon}
+                    onChange={(e) => setReplyAnon(e.target.checked)}
+                    className="accent-white"
+                  />
+                  Anonymously
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setReplyOpen(false)}
+                    className="px-3 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-white/80"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => void submitReply()}
+                    disabled={!replyDraft.trim() || replyPosting}
+                    className="inline-flex items-center gap-1 px-4 py-1 rounded-full bg-white text-black text-xs font-semibold disabled:opacity-40 hover:bg-white/95"
+                  >
+                    {replyPosting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                    Post reply
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Comments section */}
       {commentsOpen && (

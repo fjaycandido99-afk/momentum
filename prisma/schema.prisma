@@ -108,6 +108,23 @@ model SocialPost {
   /// Posts at "urgent" level surface crisis resources inline and have
   /// comments disabled until reviewed.
   crisis_level    String?
+  /// Mood the user was in when they wrote — powers the mood filter
+  /// ("Show me people who felt anxious and got through it"). Pulled
+  /// from the journal entry if shared from one; user-selectable on
+  /// freeform community composes.
+  mood            String?
+  /// Quote-reply chain — when this post was written as a reply to
+  /// another post, link to that post here. UI renders the parent
+  /// quoted inline.
+  reply_to_post_id String?
+  /// View counter — debounced client-side to one view per user per
+  /// session per post, fired by POST /api/social/posts/:id/view.
+  /// Surfaces "247 read" soft-validation on the card footer.
+  view_count      Int      @default(0)
+  /// Cached count of distinct "relate" reactions for the soft-
+  /// validation line ("18 related") so the feed doesn't have to
+  /// count reactions by kind on every read.
+  relate_count    Int      @default(0)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
@@ -116,6 +133,8 @@ model SocialPost {
 
   @@index([user_id])
   @@index([hidden, created_at(sort: Desc)])
+  @@index([mindset_id])
+  @@index([mood])
 }
 
 // A comment on a post. Flat for v1 (parent_id reserved for threading

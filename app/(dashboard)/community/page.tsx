@@ -2,22 +2,34 @@
 
 /* ============================================================================
    /community — the public feed.
-   Phase 2: For You / Following tabs + per-post profile links via PostCard.
+   Phase 4 additions:
+   - Mood filter chips ("show me people who felt anxious and got through it")
+   - Mindset jump-chips → /community/[mindset]
+   - PostCard now carries the journal source / mood / mindset / view counts
    ============================================================================ */
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import { Loader2, Sparkles, Send, EyeOff, RefreshCw } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
+import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
+import type { MindsetId } from '@/lib/mindset/types'
 
 interface Author { handle: string; display_name: string }
 interface FeedPost {
   id: string
   body: string
   mindset_id: string | null
+  source_entry_id: string | null
   anonymous: boolean
+  mood?: string | null
+  view_count?: number
+  relate_count?: number
+  reply_to?: { id: string; excerpt: string; author: Author | null } | null
   created_at: string
   reaction_count: number
   comment_count: number
+  crisis_level?: string | null
   is_own: boolean
   author: Author | null
   my_reactions: string[]
@@ -25,18 +37,32 @@ interface FeedPost {
 
 type Scope = 'all' | 'following'
 
+const MOODS = [
+  { id: 'anxious',     label: 'Anxious',     emoji: '😟' },
+  { id: 'overwhelmed', label: 'Overwhelmed', emoji: '😵‍💫' },
+  { id: 'stuck',       label: 'Stuck',       emoji: '🌀' },
+  { id: 'hopeful',     label: 'Hopeful',     emoji: '🌱' },
+  { id: 'grateful',    label: 'Grateful',    emoji: '🙏' },
+  { id: 'lost',        label: 'Lost',        emoji: '🧭' },
+]
+
 export default function CommunityPage() {
   const [scope, setScope] = useState<Scope>('all')
+  const [mood, setMood] = useState<string | null>(null)
   const [posts, setPosts] = useState<FeedPost[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
   const [draft, setDraft] = useState('')
   const [anonymous, setAnonymous] = useState(false)
+  const [composeMood, setComposeMood] = useState<string | null>(null)
   const [isPosting, setIsPosting] = useState(false)
 
-  const loadFeed = useCallback(async (s: Scope) => {
+  const loadFeed = useCallback(async (s: Scope, m: string | null) => {
     setIsLoading(true)
     try {
-      const res = await fetch(`/api/social/feed?limit=30&scope=${s}`)
+      const params = new URLSearchParams({ limit: '30', scope: s })
+      if (m) params.set('mood', m)
+      const res = await fetch(`/api/social/feed?${params.toString()}`)
       if (!res.ok) throw new Error('feed fetch failed')
       const data = await res.json()
       setPosts(data.posts || [])
@@ -47,7 +73,7 @@ export default function CommunityPage() {
     }
   }, [])
 
-  useEffect(() => { void loadFeed(scope) }, [loadFeed, scope])
+  useEffect(() => { void loadFeed(scope, mood) }, [loadFeed, scope, mood])
 
   const submit = async () => {
     const body = draft.trim()
@@ -57,17 +83,21 @@ export default function CommunityPage() {
       const res = await fetch('/api/social/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body, anonymous }),
+        body: JSON.stringify({ body, anonymous, mood: composeMood || undefined }),
       })
       if (!res.ok) throw new Error('post failed')
       setDraft('')
-      await loadFeed(scope)
+      setComposeMood(null)
+      await loadFeed(scope, mood)
     } catch (err) {
       console.error('[community] post failed:', err)
     } finally {
       setIsPosting(false)
     }
   }
+
+  // The 8 mindsets — chip strip pointing at the per-mindset feeds.
+  const MINDSET_IDS: MindsetId[] = ['stoic', 'existentialist', 'cynic', 'hedonist', 'samurai', 'scholar', 'manifestor', 'hustler']
 
   return (
     <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
@@ -76,7 +106,7 @@ export default function CommunityPage() {
         <div className="flex items-center justify-between mb-1.5">
           <h1 className="text-2xl font-bold tracking-tight">Community</h1>
           <button
-            onClick={() => void loadFeed(scope)}
+            onClick={() => void loadFeed(scope, mood)}
             aria-label="Refresh"
             className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
           >
@@ -85,7 +115,7 @@ export default function CommunityPage() {
         </div>
         <p className="text-xs text-white/55 mb-3">Share a reflection. Read others. Send strength.</p>
 
-        {/* Feed scope tabs */}
+        {/* Scope tabs */}
         <div className="flex gap-1 p-0.5 rounded-lg bg-white/[0.06]">
           {[
             { id: 'all' as Scope, label: 'For You' },
@@ -102,6 +132,47 @@ export default function CommunityPage() {
             </button>
           ))}
         </div>
+
+        {/* Mood filter chips — "show me people who felt X" */}
+        <div className="mt-3 flex gap-1.5 overflow-x-auto scrollbar-hide -mx-6 px-6 pb-1">
+          <button
+            onClick={() => setMood(null)}
+            className={`shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-colors ${
+              mood === null ? 'bg-white text-black' : 'bg-white/[0.06] text-white/65 hover:text-white'
+            }`}
+          >
+            All moods
+          </button>
+          {MOODS.map(m => (
+            <button
+              key={m.id}
+              onClick={() => setMood(mood === m.id ? null : m.id)}
+              className={`shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium transition-colors ${
+                mood === m.id ? 'bg-white text-black' : 'bg-white/[0.06] text-white/65 hover:text-white'
+              }`}
+            >
+              <span>{m.emoji}</span>
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Mindset jump-chips */}
+        <div className="mt-2 flex gap-1.5 overflow-x-auto scrollbar-hide -mx-6 px-6 pb-1">
+          {MINDSET_IDS.map(id => {
+            const c = MINDSET_CONFIGS[id]
+            return (
+              <Link
+                key={id}
+                href={`/community/${id}`}
+                className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.04] text-[11px] text-white/55 hover:text-white hover:bg-white/[0.08] transition-colors uppercase tracking-wider"
+              >
+                <span>{c.icon}</span>
+                {c.name}
+              </Link>
+            )
+          })}
+        </div>
       </div>
 
       {/* Composer */}
@@ -115,6 +186,20 @@ export default function CommunityPage() {
             maxLength={1200}
             className="w-full bg-transparent text-[15px] text-white placeholder-white/40 caret-white focus:outline-none resize-none"
           />
+          {/* Mood selector for the new post */}
+          <div className="mt-2 flex items-center flex-wrap gap-1.5">
+            {MOODS.map(m => (
+              <button
+                key={m.id}
+                onClick={() => setComposeMood(composeMood === m.id ? null : m.id)}
+                className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10.5px] transition-colors ${
+                  composeMood === m.id ? 'bg-white text-black' : 'bg-white/[0.05] text-white/55 hover:text-white'
+                }`}
+              >
+                <span>{m.emoji}</span>{m.label}
+              </button>
+            ))}
+          </div>
           <div className="mt-2 flex items-center justify-between">
             <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer select-none">
               <input
@@ -153,7 +238,11 @@ export default function CommunityPage() {
           <div className="text-center py-16">
             <Sparkles className="w-8 h-8 text-white/30 mx-auto mb-3" />
             <p className="text-sm text-white/70">
-              {scope === 'following' ? 'Follow some people to see their posts here.' : 'No posts yet. Be the first.'}
+              {scope === 'following'
+                ? 'Follow some people to see their posts here.'
+                : mood
+                  ? `No posts tagged "${mood}" yet.`
+                  : 'No posts yet. Be the first.'}
             </p>
           </div>
         )}

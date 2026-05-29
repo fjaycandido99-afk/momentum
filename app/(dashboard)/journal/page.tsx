@@ -414,6 +414,17 @@ function JournalContent() {
   }, [streak])
 
   // Internal save function used by both manual save and autosave
+  // "Save & Share" toggle — sticky preference so a user who wants to
+  // share-by-default doesn't have to re-tick on every save. Stored in
+  // localStorage; default OFF (private by default).
+  const [saveAndShare, setSaveAndShare] = useState(false)
+  const [saveAndShareAnon, setSaveAndShareAnon] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setSaveAndShare(localStorage.getItem('voxu.journal.shareOnSave') === '1')
+    setSaveAndShareAnon(localStorage.getItem('voxu.journal.shareOnSaveAnon') === '1')
+  }, [])
+
   const handleSaveInternal = useCallback(async () => {
     const guidedContent = win.trim() || gratitude.trim() || intention.trim()
     const freeContent = freeText.trim()
@@ -486,13 +497,37 @@ function JournalContent() {
             prevStreakRef.current = newStreak
           }
         } catch {}
+
+        // One-tap share-on-save — if the user pre-ticked the box, fire
+        // a community post in the same flow so the entry lands in /community
+        // immediately. Best-effort: a share failure doesn't undo the save.
+        if (saveAndShare) {
+          const shareBody = [freeText, win, gratitude, intention].filter(Boolean).join('\n\n').trim()
+          if (shareBody) {
+            try {
+              await fetch('/api/social/posts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  body: shareBody,
+                  anonymous: saveAndShareAnon,
+                  sourceEntryId: data.data?.guide?.id || data.data?.id || undefined,
+                  mindsetId: mindsetCtx?.mindset || undefined,
+                  mood: mood || undefined,
+                }),
+              })
+            } catch (err) {
+              console.warn('[save&share] community post failed:', err)
+            }
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to save journal:', error)
     } finally {
       setIsSaving(false)
     }
-  }, [win, gratitude, intention, freeText, dreamText, mood, mode, selectedDate])
+  }, [win, gratitude, intention, freeText, dreamText, mood, mode, selectedDate, saveAndShare, saveAndShareAnon, mindsetCtx])
   handleSaveRef.current = handleSaveInternal
 
   const handleSave = handleSaveInternal
@@ -1304,6 +1339,40 @@ function JournalContent() {
         {/* Save + Delete — only for guided and freewrite modes */}
         {!isLoading && (mode === 'guided' || mode === 'freewrite') && (
           <div className="mt-4 space-y-2">
+            {/* Save & Share — one-tap opt-in to ALSO post to Community on
+                save. Preference sticks across sessions (localStorage). */}
+            {!isSaved && (
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs">
+                <label className="flex items-center gap-2 text-white/80 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={saveAndShare}
+                    onChange={(e) => {
+                      const v = e.target.checked
+                      setSaveAndShare(v)
+                      try { localStorage.setItem('voxu.journal.shareOnSave', v ? '1' : '0') } catch {}
+                    }}
+                    className="accent-white"
+                  />
+                  Also share to Community
+                </label>
+                {saveAndShare && (
+                  <label className="flex items-center gap-1.5 text-white/65 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={saveAndShareAnon}
+                      onChange={(e) => {
+                        const v = e.target.checked
+                        setSaveAndShareAnon(v)
+                        try { localStorage.setItem('voxu.journal.shareOnSaveAnon', v ? '1' : '0') } catch {}
+                      }}
+                      className="accent-white"
+                    />
+                    Anonymously
+                  </label>
+                )}
+              </div>
+            )}
             <div className="flex gap-2">
               <button
                 onClick={handleSave}

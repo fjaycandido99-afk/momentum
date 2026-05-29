@@ -35,6 +35,16 @@ export async function POST(request: NextRequest) {
     // itself — silencing someone in crisis is the opposite of helpful.
     const crisisLevel = detectCrisisLevel(text)
 
+    // Validate optional reply target — must exist + not be hidden.
+    let replyToPostId: string | null = null
+    if (body.replyToPostId) {
+      const parent = await prisma.socialPost.findUnique({
+        where: { id: body.replyToPostId },
+        select: { id: true, hidden: true },
+      })
+      if (parent && !parent.hidden) replyToPostId = parent.id
+    }
+
     const post = await prisma.socialPost.create({
       data: {
         user_id: user.id,
@@ -42,6 +52,8 @@ export async function POST(request: NextRequest) {
         source_entry_id: body.sourceEntryId || null,
         anonymous: !!body.anonymous,
         mindset_id: body.mindsetId || null,
+        mood: typeof body.mood === 'string' && body.mood.trim() ? body.mood.trim().toLowerCase().slice(0, 24) : null,
+        reply_to_post_id: replyToPostId,
         crisis_level: crisisLevel,
       },
     })

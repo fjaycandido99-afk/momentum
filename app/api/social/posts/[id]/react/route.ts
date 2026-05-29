@@ -68,23 +68,34 @@ export async function POST(
     }).catch(() => null)
 
     if (existing) {
-      // Toggle off
+      // Toggle off — also decrement relate_count if this was a relate.
       await prisma.socialReaction.delete({ where: { id: existing.id } })
       const updated = await prisma.socialPost.update({
         where: { id: postId },
-        data: { reaction_count: { decrement: 1 } },
-        select: { reaction_count: true },
+        data: {
+          reaction_count: { decrement: 1 },
+          ...(kind === 'relate' ? { relate_count: { decrement: 1 } } : {}),
+        },
+        select: { reaction_count: true, relate_count: true },
       })
-      return NextResponse.json({ active: false, reaction_count: Math.max(0, updated.reaction_count) })
+      return NextResponse.json({
+        active: false,
+        reaction_count: Math.max(0, updated.reaction_count),
+        relate_count: Math.max(0, updated.relate_count),
+      })
     } else {
-      // Toggle on
+      // Toggle on — increment relate_count too if this is a relate
+      // reaction (for the "X related" soft-validation footer).
       await prisma.socialReaction.create({
         data: { post_id: postId, user_id: user.id, kind },
       })
       const updated = await prisma.socialPost.update({
         where: { id: postId },
-        data: { reaction_count: { increment: 1 } },
-        select: { reaction_count: true },
+        data: {
+          reaction_count: { increment: 1 },
+          ...(kind === 'relate' ? { relate_count: { increment: 1 } } : {}),
+        },
+        select: { reaction_count: true, relate_count: true },
       })
 
       // Fire-and-forget notification to the post author (unless they
@@ -97,7 +108,11 @@ export async function POST(
         )
       }
 
-      return NextResponse.json({ active: true, reaction_count: updated.reaction_count })
+      return NextResponse.json({
+        active: true,
+        reaction_count: updated.reaction_count,
+        relate_count: updated.relate_count,
+      })
     }
   } catch (err) {
     console.error('[social/react] error:', err)

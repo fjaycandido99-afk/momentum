@@ -34,6 +34,8 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit') || 20)))
     const cursor = url.searchParams.get('cursor')
     const scope = url.searchParams.get('scope') || 'all'
+    const moodFilter = url.searchParams.get('mood') || null
+    const mindsetFilter = url.searchParams.get('mindset') || null
 
     // Following-scope: limit to authors the caller follows (+ self,
     // so a user's own posts always show on their Following feed too).
@@ -55,6 +57,8 @@ export async function GET(request: NextRequest) {
       where: {
         hidden: false,
         ...(userIdsFilter ? { user_id: { in: userIdsFilter } } : {}),
+        ...(moodFilter ? { mood: moodFilter } : {}),
+        ...(mindsetFilter ? { mindset_id: mindsetFilter } : {}),
       },
       orderBy: { created_at: 'desc' },
       take: limit,
@@ -92,15 +96,52 @@ export async function GET(request: NextRequest) {
       reactedKindsByPost.set(r.post_id, set)
     }
 
+    // Hydrate quote-parent posts for replies in one extra query.
+    const replyTargetIds = Array.from(new Set(
+      rawPosts.map(p => p.reply_to_post_id).filter(Boolean),
+    )) as string[]
+    const parentPosts = replyTargetIds.length > 0
+      ? await prisma.socialPost.findMany({
+          where: { id: { in: replyTargetIds } },
+          select: { id: true, body: true, anonymous: true, user_id: true },
+        })
+      : []
+    const parentById = new Map(parentPosts.map(pp => [pp.id, pp]))
+    const parentAuthorProfiles = parentPosts.length > 0
+      ? await prisma.socialProfile.findMany({
+          where: { user_id: { in: parentPosts.map(pp => pp.user_id) } },
+          select: { user_id: true, handle: true, display_name: true },
+        })
+      : []
+    const parentAuthorByUser = new Map(parentAuthorProfiles.map(p => [p.user_id, p]))
+
     const posts = rawPosts.map(p => {
       const author = profileByUser.get(p.user_id)
       const isOwn = p.user_id === user.id
+      // Build the quote-parent payload (body excerpt + author chip)
+      // when this post is a reply.
+      let replyTo: { id: string; excerpt: string; author: AuthorLite | null } | null = null
+      if (p.reply_to_post_id) {
+        const parent = parentById.get(p.reply_to_post_id)
+        if (parent) {
+          const pa = parentAuthorByUser.get(parent.user_id)
+          replyTo = {
+            id: parent.id,
+            excerpt: parent.body.slice(0, 240),
+            author: parent.anonymous ? null : (pa ? { handle: pa.handle, display_name: pa.display_name } : null),
+          }
+        }
+      }
       return {
         id: p.id,
         body: p.body,
         mindset_id: p.mindset_id,
         source_entry_id: p.source_entry_id,
         anonymous: p.anonymous,
+        mood: p.mood,
+        view_count: p.view_count,
+        relate_count: p.relate_count,
+        reply_to: replyTo,
         created_at: p.created_at,
         reaction_count: p.reaction_count,
         comment_count: p.comment_count,
@@ -119,7 +160,7 @@ export async function GET(request: NextRequest) {
 
     const nextCursor = rawPosts.length === limit ? rawPosts[rawPosts.length - 1].id : null
 
-    return NextResponse.json({ posts, nextCursor, scope })
+    return NextResponse.json({ posts, nextCursor, scope, mood: moodFilter, mindset: mindsetFilter })
   } catch (err) {
     console.error('[social/feed] error:', err)
     return NextResponse.json({ error: 'unknown' }, { status: 500 })
