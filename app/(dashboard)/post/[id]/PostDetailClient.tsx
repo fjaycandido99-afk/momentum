@@ -58,11 +58,11 @@ export function PostDetailClient({ id }: { id: string }) {
           <ChevronLeft className="w-4 h-4" /> Community
         </Link>
       </div>
-      <div className="px-6">
+      <div className="lg:max-w-2xl lg:mx-auto">
         {isLoading && (
           <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 text-white/60 animate-spin" /></div>
         )}
-        {post && <PostCard post={post} crisisRegion={crisisRegion} />}
+        {post && <PostCard post={post} crisisRegion={crisisRegion} variant="detail" />}
       </div>
     </div>
   )

@@ -292,8 +292,11 @@ export default function CommunityPage() {
         </div>
       </div>
 
-      {/* Feed */}
-      <div className="px-6 pt-6 space-y-3">
+      {/* Feed — flat Twitter/Threads-style stack. No outer horizontal
+          padding so each post's hairline divider stretches edge-to-edge
+          within its column (PostCard provides its own px-4). The top
+          border completes the look so the first row has a divider too. */}
+      <div className="pt-6 border-t border-white/[0.06]">
         {isLoading && posts.length === 0 && (
           <div className="flex justify-center py-12">
             <Loader2 className="w-5 h-5 text-white/60 animate-spin" />
@@ -301,7 +304,7 @@ export default function CommunityPage() {
         )}
 
         {!isLoading && posts.length === 0 && (
-          <div className="text-center py-16">
+          <div className="text-center py-16 px-6">
             <Sparkles className="w-8 h-8 text-white/30 mx-auto mb-3" />
             <p className="text-sm text-white/70">
               {scope === 'following'

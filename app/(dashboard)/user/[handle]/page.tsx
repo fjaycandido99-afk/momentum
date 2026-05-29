@@ -336,10 +336,11 @@ export default function ProfilePage({ params }: { params: { handle: string } }) 
         </div>
       </div>
 
-      {/* Posts */}
-      <div className="px-6 pt-6 space-y-3">
+      {/* Posts — Twitter/Threads-style flat stack; PostCard owns its
+          own padding + bottom divider. */}
+      <div className="pt-6 border-t border-white/[0.06]">
         {posts.length === 0 && (
-          <p className="text-sm text-white/55 text-center py-8">No posts yet.</p>
+          <p className="text-sm text-white/55 text-center py-8 px-6">No posts yet.</p>
         )}
         {posts.map(p => <PostCard key={p.id} post={p} />)}
       </div>

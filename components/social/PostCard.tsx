@@ -1,37 +1,46 @@
 'use client'
 
 /* ============================================================================
-   PostCard — single post with reactions, comments, report, crisis banner.
-   Phase 3 additions: inline comment thread, report-flow menu, crisis-
-   resource banner on crisis_level posts.
+   PostCard — Twitter/Threads-style row.
+
+   FEED variant (default):
+     A flat row with the avatar in a fixed-width left column, content in
+     a flex-1 right column, and a thin divider underneath. Body is the
+     focus. Mood + mindset live inline in the byline. Voice + reply-
+     parent stay because they ARE the content. The AI extras (essence
+     pulled-quote, lesson card, echo quote, themes chips) DON'T render
+     in the feed — they only surface on /post/:id detail to keep the
+     scroll feeling like a feed, not a magazine.
+
+   DETAIL variant:
+     Same row, but the AI extras render under the body. Used by
+     PostDetailClient on /post/:id.
+
+   We dropped the per-card rounded background, the per-mindset glow
+   gradient, and the breathing aura — the wall-of-cards feel was the
+   visual problem the user flagged. Mindset still shows as a small
+   inline link in the byline, and the avatar still wears a subtle
+   per-mindset ring, so each post has identity without each post
+   shouting it.
    ============================================================================ */
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, BookOpen, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Eye, Ban, Play, Pause, Mic } from 'lucide-react'
+import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Ban, Play, Pause, Mic } from 'lucide-react'
 import { crisisResourceForLevel, type CrisisRegion } from '@/lib/social/crisis-detect'
-import { getMindsetStyle, getMoodTint } from '@/lib/social/mindset-style'
+import { getMindsetStyle } from '@/lib/social/mindset-style'
 
 interface Author { handle: string; display_name: string }
 interface ReplyParent { id: string; excerpt: string; author: Author | null }
 interface PostShape {
   id: string
   body: string
-  /// AI-extracted most-resonant sentence — rendered as the pulled
-  /// quote at the top of the card when present.
   essence?: string | null
-  /// AI theme chips (gratitude / growth / doubt / …).
   themes?: string[]
-  /// AI-surfaced related quote from a real thinker.
   echo_quote?: string | null
   echo_attribution?: string | null
-  /// AI-synthesized meta-lesson — distinct from essence (verbatim). The
-  /// crystallized punchline + one-line elaboration.
   lesson_title?: string | null
   lesson_body?: string | null
-  /// VOICE REFLECTION — when present, render an inline audio player
-  /// above the body. body still holds the Whisper transcript for
-  /// readability + search.
   voice_url?: string | null
   voice_duration_sec?: number | null
   mindset_id: string | null
@@ -41,12 +50,9 @@ interface PostShape {
   comment_count: number
   crisis_level?: string | null
   source_entry_id?: string | null
-  /// Mood the user was in — drives the mood chip on the card.
   mood?: string | null
-  /// Soft-validation footer counts.
   view_count?: number
   relate_count?: number
-  /// Quote-reply parent payload — body excerpt + author chip.
   reply_to?: ReplyParent | null
   is_own: boolean
   author: Author | null
@@ -61,10 +67,8 @@ interface CommentShape {
   author: Author
 }
 
-// Reactions reframed for journal-sharing: heart for general care, relate
-// for "I've been there", learn for "I took something from this." Matches
-// how people actually engage with someone else's reflection vs a generic
-// "post."
+// 3-reaction system kept (heart / relate / learn) but rendered as a tight
+// inline cluster in the action row, not as big pill buttons.
 const REACTION_KINDS: { kind: 'heart' | 'relate' | 'learn'; emoji: string; label: string }[] = [
   { kind: 'heart',  emoji: '❤️', label: 'Heart' },
   { kind: 'relate', emoji: '🪞', label: 'I relate' },
@@ -82,16 +86,28 @@ function formatRelative(iso: string): string {
   const dt = new Date(iso)
   const diffMs = Date.now() - dt.getTime()
   const min = Math.floor(diffMs / 60_000)
-  if (min < 1) return 'just now'
-  if (min < 60) return `${min}m ago`
+  if (min < 1) return 'now'
+  if (min < 60) return `${min}m`
   const hr = Math.floor(min / 60)
-  if (hr < 24) return `${hr}h ago`
+  if (hr < 24) return `${hr}h`
   const day = Math.floor(hr / 24)
-  if (day < 7) return `${day}d ago`
+  if (day < 7) return `${day}d`
   return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostShape; crisisRegion?: CrisisRegion }) {
+interface Props {
+  post: PostShape
+  crisisRegion?: CrisisRegion
+  /**
+   * 'feed'   → strip AI extras (essence pull-quote, lesson, echo, themes)
+   *            so the row reads like a Twitter/Threads post.
+   * 'detail' → render the full enriched view; used by /post/:id.
+   * Default: 'feed'.
+   */
+  variant?: 'feed' | 'detail'
+}
+
+export function PostCard({ post: initial, crisisRegion = 'US', variant = 'feed' }: Props) {
   const [post, setPost] = useState<PostShape>(initial)
 
   const [commentsOpen, setCommentsOpen] = useState(false)
@@ -103,23 +119,18 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
-  // Locally hide a post when the user blocks its author — feels
-  // immediate, no waiting for a feed refetch.
   const [hidden, setHidden] = useState(false)
   const [reportReason, setReportReason] = useState('abuse')
   const [reportNotes, setReportNotes] = useState('')
   const [reportSent, setReportSent] = useState(false)
 
-  // AI-suggested comment openers — fetched once when the comments
-  // section opens, cached for the session. Tapping a chip populates
-  // the input but doesn't auto-send.
   const [suggestions, setSuggestions] = useState<string[]>([])
   const suggestionsLoadedRef = useRef(false)
 
   // Audio player state — only used when post.voice_url is set.
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [audioPlaying, setAudioPlaying] = useState(false)
-  const [audioProgress, setAudioProgress] = useState(0) // 0–1
+  const [audioProgress, setAudioProgress] = useState(0)
   const toggleVoice = () => {
     if (!post.voice_url) return
     if (!audioRef.current) {
@@ -141,15 +152,13 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarkBusy, setBookmarkBusy] = useState(false)
 
-  // Reply-with-my-own composer state.
   const [replyOpen, setReplyOpen] = useState(false)
   const [replyDraft, setReplyDraft] = useState('')
   const [replyAnon, setReplyAnon] = useState(false)
   const [replyPosting, setReplyPosting] = useState(false)
   const [replySent, setReplySent] = useState(false)
 
-  // View tracking — fires once per (post, session). sessionStorage
-  // keys it so refreshing or navigating away+back doesn't double-count.
+  // View tracking — fires once per (post, session).
   const viewFiredRef = useRef(false)
   useEffect(() => {
     if (post.is_own || viewFiredRef.current) return
@@ -160,7 +169,6 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
       sessionStorage.setItem(key, '1')
     } catch { /* private mode */ }
     viewFiredRef.current = true
-    // Fire-and-forget — server enforces "not own" too.
     void fetch(`/api/social/posts/${post.id}/view`, { method: 'POST' }).catch(() => {})
   }, [post.id, post.is_own])
 
@@ -190,7 +198,6 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
   const saveReflection = async () => {
     if (post.is_own || bookmarked || bookmarkBusy) return
     setBookmarkBusy(true)
-    // Optimistic flip — keeps UI snappy even if the favorites API is slow.
     setBookmarked(true)
     try {
       const who = post.author?.display_name || (post.anonymous ? 'Anonymous' : 'Someone')
@@ -213,19 +220,9 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
   }
 
   const crisisResource = crisisResourceForLevel((post.crisis_level as 'urgent' | 'concern' | null) || null, crisisRegion)
-  // Visual signature derived from the post's mindset + mood — gives each
-  // card a distinctive feel so the feed reads as a varied tapestry, not a
-  // wall of identical text blocks. See lib/social/mindset-style.ts.
   const mindsetStyle = getMindsetStyle(post.mindset_id)
-  const moodTint = getMoodTint(post.mood)
-  // Strip the essence sentence out of the body so we don't render it
-  // twice (once as pulled quote, once buried in the body). Falls back
-  // gracefully when there's no essence or it's not found in the body.
-  const essence = post.essence?.trim() || null
-  const bodyWithoutEssence = essence
-    ? post.body.replace(essence, '').replace(/\s+/g, ' ').replace(/^[\s.,—–-]+|[\s.,—–-]+$/g, '').trim()
-    : post.body
   const commentsLocked = post.crisis_level === 'urgent'
+  const isDetail = variant === 'detail'
 
   const react = async (kind: 'heart' | 'relate' | 'learn') => {
     const has = post.my_reactions.includes(kind)
@@ -276,7 +273,7 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setSuggestions((data.suggestions || []).map((s: any) => s.text).filter(Boolean))
       }
-    } catch { /* silent — fallbacks are server-side */ }
+    } catch { /* silent */ }
   }, [post.id, post.is_own])
 
   const toggleComments = () => {
@@ -336,7 +333,7 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
     if (!post.author) return
     if (!confirm(`Block @${post.author.handle}? You won't see their posts and they won't see yours.`)) return
     setMenuOpen(false)
-    setHidden(true) // optimistic — vanish immediately
+    setHidden(true)
     try {
       await fetch('/api/social/block', {
         method: 'POST',
@@ -344,431 +341,410 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
         body: JSON.stringify({ handle: post.author.handle }),
       })
     } catch {
-      // revert on failure
       setHidden(false)
     }
   }
 
   if (hidden) return null
 
+  // JSX comment trap mitigation: keep this comment OUTSIDE the return.
+  // Article wrapper is a flat row — no rounded bg, no border card, just
+  // a hairline divider under the row, and a subtle hover wash so the
+  // whole thing reads like a Twitter/Threads timeline.
   return (
-    <article
-      className={`relative p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] overflow-hidden ${mindsetStyle.borderClass}`}
-    >
-      {/* Aura layer — mindset glow (top-left) stacked on mood tint
-          (top-right), pulled into its own absolute layer so the breath
-          animation modulates ONLY the atmosphere, not the text + buttons
-          above. pointer-events-none so it never eats clicks. */}
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none post-aura-breathe"
-        style={{
-          backgroundImage: `${mindsetStyle.glowGradient}, ${moodTint}`,
-        }}
-      />
-      <div className="relative">{/* z-stack content above the aura */}
-      {/* Author row */}
-      <div className="flex items-center gap-2 mb-2">
-        {post.author ? (
-          <>
+    <article className="relative px-4 py-3.5 border-b border-white/[0.06] hover:bg-white/[0.015] transition-colors">
+      <div className="flex gap-3">
+        {/* AVATAR COLUMN */}
+        <div className="shrink-0">
+          {post.author ? (
             <Link
               href={`/user/${post.author.handle}`}
-              className={`w-7 h-7 rounded-full bg-white/10 grid place-items-center text-[11px] font-semibold text-white/80 hover:bg-white/15 transition-colors ring-2 ring-offset-0 ${mindsetStyle.avatarRing}`}
+              className={`block w-10 h-10 rounded-full bg-white/10 grid place-items-center text-[13px] font-semibold text-white/85 hover:bg-white/15 transition-colors ring-1 ${mindsetStyle.avatarRing}`}
             >
               {post.author.display_name.charAt(0).toUpperCase()}
             </Link>
-            <Link href={`/user/${post.author.handle}`} className="min-w-0 group">
-              <div className="text-[13px] font-medium text-white leading-tight truncate group-hover:underline">
-                {post.author.display_name}
-                {post.is_own && <span className="ml-1.5 text-[10px] text-white/45">(you)</span>}
-              </div>
-              <div className="text-[11px] text-white/45 leading-tight">@{post.author.handle}</div>
-            </Link>
-          </>
-        ) : (
-          <>
-            <div className="w-7 h-7 rounded-full bg-white/10 grid place-items-center">
-              <EyeOff className="w-3.5 h-3.5 text-white/60" />
-            </div>
-            <div className="text-[13px] font-medium text-white/70">Anonymous</div>
-          </>
-        )}
-        <span className="ml-auto text-[11px] text-white/45">{formatRelative(post.created_at)}</span>
-        {!post.is_own && (
-          <button
-            onClick={() => setMenuOpen(o => !o)}
-            aria-label="More"
-            className="p-1 rounded-full hover:bg-white/10 transition-colors -mr-1"
-          >
-            <MoreHorizontal className="w-3.5 h-3.5 text-white/55" />
-          </button>
-        )}
-      </div>
-
-      {/* Crisis-resource banner — surfaces when crisis_level is set on the post.
-          Pinned at the top of the post body so anyone reading sees support
-          options before reacting. */}
-      {crisisResource && (
-        <div className="mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-400/25">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-200/90">{crisisResource.headline}</span>
-          </div>
-          <p className="text-[13px] text-white/85 leading-relaxed mb-2">{crisisResource.body}</p>
-          <ul className="space-y-1">
-            {crisisResource.resources.map(r => (
-              <li key={r.label}>
-                <a
-                  href={r.href}
-                  target={r.href.startsWith('http') ? '_blank' : undefined}
-                  rel="noopener noreferrer"
-                  className="text-[12px] text-amber-200 hover:text-white underline underline-offset-2"
-                >
-                  {r.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Context row — surfaces the post's frame (journal source, mood,
-          mindset) so readers can scan the kind of reflection at a glance. */}
-      {(post.source_entry_id || post.mood || post.mindset_id) && (
-        <div className="flex items-center flex-wrap gap-2 mb-2 text-[10.5px]">
-          {post.source_entry_id && (
-            <span className="inline-flex items-center gap-1 text-white/55">
-              <BookOpen className="w-3 h-3" />
-              <span className="uppercase tracking-wider">Journal entry</span>
-            </span>
-          )}
-          {post.mood && (
-            <span className="px-2 py-0.5 rounded-full bg-white/[0.05] text-white/65 capitalize">
-              feeling {post.mood}
-            </span>
-          )}
-          {(post.themes || []).slice(0, 2).map(t => (
-            <span key={t} className="px-2 py-0.5 rounded-full bg-white/[0.04] text-white/55 lowercase">
-              #{t}
-            </span>
-          ))}
-          {post.mindset_id && (
-            <Link
-              href={`/community/${post.mindset_id}`}
-              className={`ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full border uppercase tracking-wider hover:brightness-125 transition-all ${mindsetStyle.chipClass}`}
-            >
-              <span>{post.mindset_id}</span>
-              {mindsetStyle.vibe && (
-                <span className="hidden lg:inline text-[8.5px] opacity-60 normal-case tracking-normal">· {mindsetStyle.vibe}</span>
-              )}
-            </Link>
-          )}
-        </div>
-      )}
-
-      {/* Quote-reply parent — shown when this post replies to another.
-          Tap to jump to the source post for full context. */}
-      {post.reply_to && (
-        <Link
-          href={`/post/${post.reply_to.id}`}
-          className="block mb-2 p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.06] transition-colors"
-        >
-          <div className="flex items-center gap-1.5 text-[10.5px] text-white/55 mb-1">
-            <Quote className="w-3 h-3" />
-            <span>Replying to {post.reply_to.author ? `@${post.reply_to.author.handle}` : 'Anonymous'}</span>
-          </div>
-          <p className="text-[12.5px] text-white/70 leading-snug line-clamp-2 italic">&ldquo;{post.reply_to.excerpt}&rdquo;</p>
-        </Link>
-      )}
-
-      {/* Voice reflection player — shown when the post was recorded as
-          audio. Plays inline; the transcript below acts as the
-          readable + searchable record of what was said. */}
-      {post.voice_url && (
-        <div className="mb-3 p-3 rounded-xl bg-white/[0.05] border border-white/[0.10] flex items-center gap-3">
-          <button
-            onClick={toggleVoice}
-            aria-label={audioPlaying ? 'Pause voice reflection' : 'Play voice reflection'}
-            className="w-10 h-10 rounded-full bg-white text-black grid place-items-center shrink-0 hover:bg-white/95 press-scale"
-          >
-            {audioPlaying ? <Pause className="w-4 h-4" fill="black" /> : <Play className="w-4 h-4 ml-0.5" fill="black" />}
-          </button>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-white/55 mb-1.5">
-              <Mic className="w-3 h-3" />
-              <span>Voice reflection</span>
-              {post.voice_duration_sec ? (
-                <span className="text-white/40 normal-case tracking-normal">
-                  · {Math.floor(post.voice_duration_sec / 60)}:{String(post.voice_duration_sec % 60).padStart(2, '0')}
-                </span>
-              ) : null}
-            </div>
-            <div className="h-1 rounded-full bg-white/[0.08] overflow-hidden">
-              <div
-                className="h-full bg-white/70 transition-all duration-200"
-                style={{ width: `${Math.round(audioProgress * 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Essence — the AI-extracted most-resonant sentence, rendered
-          big and italic as a pulled quote. Sets the emotional tone of
-          the card; the supporting body below is the context that led
-          to it. */}
-      {essence ? (
-        <>
-          <p className="text-[17px] lg:text-[19px] leading-snug text-white font-medium italic mb-2">
-            &ldquo;{essence}&rdquo;
-          </p>
-          {bodyWithoutEssence && (
-            <p className="text-[13.5px] text-white/65 leading-relaxed whitespace-pre-wrap">{bodyWithoutEssence}</p>
-          )}
-        </>
-      ) : (
-        <p className="text-[15px] text-white/90 leading-relaxed whitespace-pre-wrap">{post.body}</p>
-      )}
-
-      {/* Soft-validation footer — "247 read · 18 related". Author-only
-          counts (we never show "X people viewed your post" to others —
-          that's stalker-vibe energy). Comment count lives in the action
-          row below. */}
-      {post.is_own && ((post.view_count ?? 0) > 0 || (post.relate_count ?? 0) > 0) && (
-        <div className="mt-2 flex items-center gap-3 text-[11px] text-white/45">
-          {(post.view_count ?? 0) > 0 && (
-            <span className="inline-flex items-center gap-1">
-              <Eye className="w-3 h-3" />
-              {post.view_count} read
-            </span>
-          )}
-          {(post.relate_count ?? 0) > 0 && (
-            <span className="inline-flex items-center gap-1">🪞 {post.relate_count} related</span>
-          )}
-        </div>
-      )}
-
-      {/* AI Lesson — synthesized crystallization of the post's meta-insight.
-          Distinct visual treatment (gradient bg + sparkle eyebrow) so each
-          post gets a different shape, breaking the wall-of-text feeling. */}
-      {post.lesson_title && post.lesson_body && (
-        <div
-          className="mt-3 p-3.5 rounded-xl border border-white/[0.12] relative overflow-hidden"
-          style={{
-            background:
-              'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
-          }}
-        >
-          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-white/55 mb-1.5">
-            <span>✦</span>
-            <span>Lesson</span>
-          </div>
-          <p className="text-[15px] font-medium text-white leading-snug">
-            {post.lesson_title}.
-          </p>
-          <p className="text-[13px] text-white/70 leading-relaxed mt-1">
-            {post.lesson_body}
-          </p>
-        </div>
-      )}
-
-      {/* AI Echo — a real-thinker quote that resonates with this post.
-          Rendered as a subtle "Echoes" companion line so it reads as a
-          gentle "this reminds me of…" rather than an authoritative
-          interjection. */}
-      {post.echo_quote && post.echo_attribution && (
-        <div className="mt-3 pt-3 border-t border-white/[0.05] flex gap-2 items-start">
-          <span className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-0.5 shrink-0">Echoes</span>
-          <div className="min-w-0">
-            <p className="text-[13px] text-white/65 italic leading-snug">
-              &ldquo;{post.echo_quote}&rdquo;
-            </p>
-            <p className="text-[11px] text-white/40 mt-0.5">— {post.echo_attribution}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Reactions + comment toggle */}
-      <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center gap-1">
-        {REACTION_KINDS.map(r => {
-          const active = post.my_reactions.includes(r.kind)
-          return (
-            <button
-              key={r.kind}
-              onClick={() => void react(r.kind)}
-              aria-label={r.label}
-              title={r.label}
-              className={`px-2.5 py-1 rounded-full text-xs transition-colors press-scale ${
-                active ? 'bg-white/[0.14] text-white' : 'text-white/55 hover:text-white hover:bg-white/[0.08]'
-              }`}
-            >
-              {r.emoji}
-            </button>
-          )
-        })}
-        {post.reaction_count > 0 && (
-          <span className="ml-2 text-xs text-white/50 inline-flex items-center gap-1">
-            <Heart className="w-3 h-3" />
-            {post.reaction_count}
-          </span>
-        )}
-        <button
-          onClick={toggleComments}
-          aria-label="Comments"
-          className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-white/55 hover:text-white hover:bg-white/[0.08] transition-colors"
-        >
-          <MessageCircle className="w-3 h-3" />
-          {post.comment_count}
-        </button>
-        {!post.is_own && (
-          <>
-            <button
-              onClick={() => setReplyOpen(o => !o)}
-              aria-label="Reply with my reflection"
-              title="Reply with my own reflection"
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-white/55 hover:text-white hover:bg-white/[0.08] transition-colors"
-            >
-              <CornerUpLeft className="w-3 h-3" />
-            </button>
-            <button
-              onClick={() => void saveReflection()}
-              disabled={bookmarked || bookmarkBusy}
-              aria-label={bookmarked ? 'Saved' : 'Save reflection'}
-              title={bookmarked ? 'Saved to your library' : 'Save reflection to my library'}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors ${
-                bookmarked ? 'text-white bg-white/[0.10]' : 'text-white/55 hover:text-white hover:bg-white/[0.08]'
-              }`}
-            >
-              {bookmarked ? <BookmarkCheck className="w-3 h-3" /> : <Bookmark className="w-3 h-3" />}
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* Reply composer — appears when ↩ tapped. Posts as a new SocialPost
-          with reply_to_post_id set, so it shows in the feed as a quote-reply. */}
-      {replyOpen && (
-        <div className="mt-3 pt-3 border-t border-white/[0.06]">
-          {replySent ? (
-            <p className="text-xs text-white/70 italic">Posted. ✨</p>
           ) : (
-            <>
-              <div className="flex items-center gap-1.5 text-[10.5px] text-white/55 mb-1.5">
-                <Quote className="w-3 h-3" />
-                Reply with your own reflection
-              </div>
-              <textarea
-                value={replyDraft}
-                onChange={(e) => setReplyDraft(e.target.value)}
-                rows={3}
-                maxLength={1200}
-                placeholder="What did this bring up for you?"
-                className="w-full bg-white/[0.05] border border-white/15 rounded-lg px-3 py-2 text-[13.5px] text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/40 resize-none"
-              />
-              <div className="mt-2 flex items-center justify-between">
-                <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={replyAnon}
-                    onChange={(e) => setReplyAnon(e.target.checked)}
-                    className="accent-white"
-                  />
-                  Anonymously
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setReplyOpen(false)}
-                    className="px-3 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-white/80"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => void submitReply()}
-                    disabled={!replyDraft.trim() || replyPosting}
-                    className="inline-flex items-center gap-1 px-4 py-1 rounded-full bg-white text-black text-xs font-semibold disabled:opacity-40 hover:bg-white/95"
-                  >
-                    {replyPosting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-                    Post reply
-                  </button>
-                </div>
-              </div>
-            </>
+            <div className="w-10 h-10 rounded-full bg-white/10 grid place-items-center">
+              <EyeOff className="w-4 h-4 text-white/60" />
+            </div>
           )}
         </div>
-      )}
 
-      {/* Comments section */}
-      {commentsOpen && (
-        <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-3">
-          {commentsLoading && (
-            <div className="flex justify-center py-2"><Loader2 className="w-4 h-4 text-white/60 animate-spin" /></div>
+        {/* CONTENT COLUMN */}
+        <div className="flex-1 min-w-0">
+          {/* BYLINE — name · @handle · time · mood · mindset, all on one
+              wrapping line like Threads. ⋯ menu pulled to the right. */}
+          <div className="flex items-start gap-1 text-[13.5px] leading-tight">
+            <div className="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+              {post.author ? (
+                <>
+                  <Link
+                    href={`/user/${post.author.handle}`}
+                    className="font-semibold text-white hover:underline truncate max-w-[180px]"
+                  >
+                    {post.author.display_name}
+                  </Link>
+                  <Link
+                    href={`/user/${post.author.handle}`}
+                    className="text-white/45 hover:text-white/65 transition-colors truncate"
+                  >
+                    @{post.author.handle}
+                  </Link>
+                </>
+              ) : (
+                <span className="font-semibold text-white/70">Anonymous</span>
+              )}
+              <span className="text-white/40">·</span>
+              <Link
+                href={`/post/${post.id}`}
+                className="text-white/45 hover:underline tabular-nums"
+                title={new Date(post.created_at).toLocaleString()}
+              >
+                {formatRelative(post.created_at)}
+              </Link>
+              {post.is_own && <span className="text-[10.5px] text-white/40">(you)</span>}
+              {post.mood && (
+                <>
+                  <span className="text-white/30">·</span>
+                  <span className="text-[12px] text-white/50 capitalize">{post.mood}</span>
+                </>
+              )}
+              {post.mindset_id && (
+                <>
+                  <span className="text-white/30">·</span>
+                  <Link
+                    href={`/community/${post.mindset_id}`}
+                    className="text-[12px] text-white/55 hover:text-white/85 transition-colors lowercase"
+                  >
+                    {post.mindset_id}
+                  </Link>
+                </>
+              )}
+            </div>
+            {!post.is_own && (
+              <button
+                onClick={() => setMenuOpen(o => !o)}
+                aria-label="More"
+                className="p-1 -mt-1 -mr-1 rounded-full hover:bg-white/10 transition-colors text-white/45 hover:text-white"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* CRISIS BANNER — sits right under the byline, full width of
+              the content column. */}
+          {crisisResource && (
+            <div className="mt-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-400/25">
+              <div className="flex items-center gap-1.5 mb-1">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
+                <span className="text-[10.5px] font-semibold uppercase tracking-wider text-amber-200/90">{crisisResource.headline}</span>
+              </div>
+              <p className="text-[12.5px] text-white/85 leading-relaxed mb-1.5">{crisisResource.body}</p>
+              <ul className="space-y-0.5">
+                {crisisResource.resources.map(r => (
+                  <li key={r.label}>
+                    <a
+                      href={r.href}
+                      target={r.href.startsWith('http') ? '_blank' : undefined}
+                      rel="noopener noreferrer"
+                      className="text-[11.5px] text-amber-200 hover:text-white underline underline-offset-2"
+                    >
+                      {r.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
-          {!commentsLoading && comments.length === 0 && (
-            <p className="text-xs text-white/50 italic text-center py-1">
-              {commentsLocked ? 'Comments are paused while we make sure this post has the right support.' : 'No comments yet.'}
+
+          {/* REPLY-PARENT — compact quoted block when this post is a reply. */}
+          {post.reply_to && (
+            <Link
+              href={`/post/${post.reply_to.id}`}
+              className="mt-1.5 mb-0.5 block p-2 rounded-lg bg-white/[0.025] border border-white/[0.06] hover:bg-white/[0.05] transition-colors"
+            >
+              <div className="flex items-center gap-1 text-[10.5px] text-white/45 mb-0.5">
+                <Quote className="w-3 h-3" />
+                <span>Replying to {post.reply_to.author ? `@${post.reply_to.author.handle}` : 'Anonymous'}</span>
+              </div>
+              <p className="text-[12px] text-white/65 leading-snug line-clamp-2 italic">&ldquo;{post.reply_to.excerpt}&rdquo;</p>
+            </Link>
+          )}
+
+          {/* VOICE PLAYER — voice IS the content; keeps prominence in feed. */}
+          {post.voice_url && (
+            <div className="mt-2 p-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center gap-3">
+              <button
+                onClick={toggleVoice}
+                aria-label={audioPlaying ? 'Pause voice reflection' : 'Play voice reflection'}
+                className="w-9 h-9 rounded-full bg-white text-black grid place-items-center shrink-0 hover:bg-white/95 press-scale"
+              >
+                {audioPlaying ? <Pause className="w-3.5 h-3.5" fill="black" /> : <Play className="w-3.5 h-3.5 ml-0.5" fill="black" />}
+              </button>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-white/55 mb-1">
+                  <Mic className="w-3 h-3" />
+                  <span>Voice</span>
+                  {post.voice_duration_sec ? (
+                    <span className="text-white/40 normal-case tracking-normal">
+                      · {Math.floor(post.voice_duration_sec / 60)}:{String(post.voice_duration_sec % 60).padStart(2, '0')}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="h-1 rounded-full bg-white/[0.08] overflow-hidden">
+                  <div
+                    className="h-full bg-white/70 transition-all duration-200"
+                    style={{ width: `${Math.round(audioProgress * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* BODY — the post itself. Wrapped in a Link so the whole body
+              row navigates to /post/:id like Twitter does (action buttons
+              below stopPropagation by being separate siblings). */}
+          {post.body && (
+            <Link href={`/post/${post.id}`} className="block">
+              <p className="mt-1.5 text-[14.5px] text-white/90 leading-relaxed whitespace-pre-wrap break-words">
+                {post.body}
+              </p>
+            </Link>
+          )}
+
+          {/* DETAIL-ONLY: AI essence pulled-quote, lesson card, echo. These
+              add up to a magazine feel in the feed; on /post/:id they're
+              the whole point of the visit. */}
+          {isDetail && post.essence && (
+            <p className="mt-3 text-[17px] lg:text-[19px] leading-snug text-white font-medium italic">
+              &ldquo;{post.essence.trim()}&rdquo;
             </p>
           )}
-          {comments.map(c => (
-            <div key={c.id} className="flex items-start gap-2">
-              <Link
-                href={`/user/${c.author.handle}`}
-                className="w-6 h-6 rounded-full bg-white/10 grid place-items-center text-[10px] font-semibold text-white/80 shrink-0"
-              >
-                {c.author.display_name.charAt(0).toUpperCase()}
-              </Link>
-              <div className="min-w-0 flex-1">
-                <div className="text-[11px] text-white/55 mb-0.5">
-                  <Link href={`/user/${c.author.handle}`} className="text-white/85 hover:underline">{c.author.display_name}</Link>
-                  <span className="ml-1.5">{formatRelative(c.created_at)}</span>
-                </div>
-                <p className="text-[13.5px] text-white/90 leading-relaxed whitespace-pre-wrap">{c.body}</p>
+          {isDetail && post.lesson_title && post.lesson_body && (
+            <div
+              className="mt-3 p-3.5 rounded-xl border border-white/[0.12] overflow-hidden"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+              }}
+            >
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-white/55 mb-1.5">
+                <span>✦</span>
+                <span>Lesson</span>
+              </div>
+              <p className="text-[15px] font-medium text-white leading-snug">
+                {post.lesson_title}.
+              </p>
+              <p className="text-[13px] text-white/70 leading-relaxed mt-1">
+                {post.lesson_body}
+              </p>
+            </div>
+          )}
+          {isDetail && post.echo_quote && post.echo_attribution && (
+            <div className="mt-3 pt-3 border-t border-white/[0.05] flex gap-2 items-start">
+              <span className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-0.5 shrink-0">Echoes</span>
+              <div className="min-w-0">
+                <p className="text-[13px] text-white/65 italic leading-snug">
+                  &ldquo;{post.echo_quote}&rdquo;
+                </p>
+                <p className="text-[11px] text-white/40 mt-0.5">— {post.echo_attribution}</p>
               </div>
             </div>
-          ))}
-          {/* AI-suggested compassionate openers — tap to populate input.
-              Hidden once the user starts typing or sends their first
-              comment so we don't crowd the conversation. */}
-          {!commentsLocked && suggestions.length > 0 && !commentDraft.trim() && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {suggestions.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCommentDraft(s)}
-                  className="px-2.5 py-1 rounded-full bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.08] text-[11.5px] text-white/70 hover:text-white transition-colors text-left max-w-full"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
           )}
 
-          {/* Composer */}
-          {!commentsLocked && (
-            <div className="flex items-end gap-2 pt-1">
-              <textarea
-                value={commentDraft}
-                onChange={(e) => setCommentDraft(e.target.value)}
-                rows={1}
-                maxLength={600}
-                placeholder="Leave a comment…"
-                className="flex-1 bg-white/[0.05] border border-white/15 rounded-xl px-3 py-2 text-[13px] text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/40 resize-none"
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void submitComment() } }}
-              />
+          {/* ACTION ROW — flat icons + counts, Twitter style. Comment on
+              the left, then the 3 reaction kinds, then reply + bookmark
+              on the right. */}
+          <div className="mt-2.5 -ml-1.5 flex items-center gap-1 max-w-md">
+            <button
+              onClick={toggleComments}
+              aria-label="Comments"
+              className="group inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-white/50 hover:text-sky-300 hover:bg-sky-400/10 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span className="text-xs tabular-nums">{post.comment_count || ''}</span>
+            </button>
+
+            {!post.is_own && (
               <button
-                onClick={() => void submitComment()}
-                disabled={!commentDraft.trim() || commentPosting}
-                className="p-2 rounded-full bg-white text-black disabled:opacity-40 hover:bg-white/95"
-                aria-label="Send"
+                onClick={() => setReplyOpen(o => !o)}
+                aria-label="Reply with your reflection"
+                title="Reply with your own reflection"
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-white/50 hover:text-emerald-300 hover:bg-emerald-400/10 transition-colors"
               >
-                {commentPosting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                <CornerUpLeft className="w-4 h-4" />
               </button>
+            )}
+
+            {/* Reaction cluster — 3 emoji buttons + total count. */}
+            <div className="inline-flex items-center">
+              {REACTION_KINDS.map(r => {
+                const active = post.my_reactions.includes(r.kind)
+                return (
+                  <button
+                    key={r.kind}
+                    onClick={() => void react(r.kind)}
+                    aria-label={r.label}
+                    title={r.label}
+                    className={`px-1.5 py-1 rounded-full text-sm transition-all press-scale ${
+                      active ? 'scale-110' : 'grayscale opacity-55 hover:opacity-100 hover:grayscale-0'
+                    }`}
+                  >
+                    {r.emoji}
+                  </button>
+                )
+              })}
+              {post.reaction_count > 0 && (
+                <span className="ml-1 text-xs text-white/50 tabular-nums">{post.reaction_count}</span>
+              )}
+            </div>
+
+            <div className="ml-auto inline-flex items-center">
+              {!post.is_own && (
+                <button
+                  onClick={() => void saveReflection()}
+                  disabled={bookmarked || bookmarkBusy}
+                  aria-label={bookmarked ? 'Saved' : 'Save reflection'}
+                  title={bookmarked ? 'Saved to your library' : 'Save to my library'}
+                  className={`inline-flex items-center px-2 py-1 rounded-full transition-colors ${
+                    bookmarked ? 'text-white' : 'text-white/50 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  {bookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* OWN-POST FOOTER COUNTS — only the author sees their view/relate counts. */}
+          {post.is_own && ((post.view_count ?? 0) > 0 || (post.relate_count ?? 0) > 0) && (
+            <div className="mt-1.5 flex items-center gap-3 text-[11px] text-white/40">
+              {(post.view_count ?? 0) > 0 && <span>{post.view_count} read</span>}
+              {(post.relate_count ?? 0) > 0 && <span>🪞 {post.relate_count} related</span>}
             </div>
           )}
-          {commentError && <p className="text-[11px] text-red-300">{commentError}</p>}
-        </div>
-      )}
 
-      {/* Action menu */}
+          {/* REPLY COMPOSER — inline, like Threads' inline reply. */}
+          {replyOpen && (
+            <div className="mt-3 pt-3 border-t border-white/[0.06]">
+              {replySent ? (
+                <p className="text-xs text-white/70 italic">Posted. ✨</p>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1.5 text-[10.5px] text-white/55 mb-1.5">
+                    <Quote className="w-3 h-3" />
+                    Reply with your own reflection
+                  </div>
+                  <textarea
+                    value={replyDraft}
+                    onChange={(e) => setReplyDraft(e.target.value)}
+                    rows={3}
+                    maxLength={1200}
+                    placeholder="What did this bring up for you?"
+                    className="w-full bg-white/[0.05] border border-white/15 rounded-lg px-3 py-2 text-[13.5px] text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/40 resize-none"
+                  />
+                  <div className="mt-2 flex items-center justify-between">
+                    <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={replyAnon}
+                        onChange={(e) => setReplyAnon(e.target.checked)}
+                        className="accent-white"
+                      />
+                      Anonymously
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setReplyOpen(false)}
+                        className="px-3 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-white/80"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => void submitReply()}
+                        disabled={!replyDraft.trim() || replyPosting}
+                        className="inline-flex items-center gap-1 px-4 py-1 rounded-full bg-white text-black text-xs font-semibold disabled:opacity-40 hover:bg-white/95"
+                      >
+                        {replyPosting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                        Post reply
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* COMMENTS THREAD — opens inline on tap. */}
+          {commentsOpen && (
+            <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-3">
+              {commentsLoading && (
+                <div className="flex justify-center py-2"><Loader2 className="w-4 h-4 text-white/60 animate-spin" /></div>
+              )}
+              {!commentsLoading && comments.length === 0 && (
+                <p className="text-xs text-white/50 italic text-center py-1">
+                  {commentsLocked ? 'Comments are paused while we make sure this post has the right support.' : 'No comments yet.'}
+                </p>
+              )}
+              {comments.map(c => (
+                <div key={c.id} className="flex items-start gap-2">
+                  <Link
+                    href={`/user/${c.author.handle}`}
+                    className="w-7 h-7 rounded-full bg-white/10 grid place-items-center text-[11px] font-semibold text-white/80 shrink-0"
+                  >
+                    {c.author.display_name.charAt(0).toUpperCase()}
+                  </Link>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] text-white/55 mb-0.5">
+                      <Link href={`/user/${c.author.handle}`} className="text-white/85 hover:underline font-medium">{c.author.display_name}</Link>
+                      <span className="ml-1.5">{formatRelative(c.created_at)}</span>
+                    </div>
+                    <p className="text-[13.5px] text-white/90 leading-relaxed whitespace-pre-wrap">{c.body}</p>
+                  </div>
+                </div>
+              ))}
+              {!commentsLocked && suggestions.length > 0 && !commentDraft.trim() && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCommentDraft(s)}
+                      className="px-2.5 py-1 rounded-full bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.08] text-[11.5px] text-white/70 hover:text-white transition-colors text-left max-w-full"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {!commentsLocked && (
+                <div className="flex items-end gap-2 pt-1">
+                  <textarea
+                    value={commentDraft}
+                    onChange={(e) => setCommentDraft(e.target.value)}
+                    rows={1}
+                    maxLength={600}
+                    placeholder="Reply with care…"
+                    className="flex-1 bg-white/[0.05] border border-white/15 rounded-xl px-3 py-2 text-[13px] text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/40 resize-none"
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void submitComment() } }}
+                  />
+                  <button
+                    onClick={() => void submitComment()}
+                    disabled={!commentDraft.trim() || commentPosting}
+                    className="p-2 rounded-full bg-white text-black disabled:opacity-40 hover:bg-white/95"
+                    aria-label="Send"
+                  >
+                    {commentPosting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              )}
+              {commentError && <p className="text-[11px] text-red-300">{commentError}</p>}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ACTION MENU — anchored to the ⋯ button in the byline. */}
       {menuOpen && (
         <>
           <button
@@ -795,7 +771,7 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
         </>
       )}
 
-      {/* Report modal */}
+      {/* REPORT MODAL */}
       {reportOpen && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <button aria-label="Close" onClick={() => setReportOpen(false)} className="absolute inset-0 bg-black/70 backdrop-blur-md" />
@@ -841,7 +817,6 @@ export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostSha
           </div>
         </div>
       )}
-      </div>{/* end content z-stack above the aura */}
     </article>
   )
 }
