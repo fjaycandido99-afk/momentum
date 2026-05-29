@@ -12,6 +12,7 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Loader2, UserCheck, UserPlus, Pencil, Check, X, Ban, MoreHorizontal } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
+import { InkSpiral } from '@/components/social/InkSpiral'
 
 interface ProfileData {
   user_id: string
@@ -25,7 +26,7 @@ interface ProfileData {
   /// 'by_me' = I blocked them (offer Unblock); 'by_them' = they blocked me.
   block_direction?: 'by_me' | 'by_them' | null
 }
-interface Stats { followers: number; following: number; is_followed_by_me: boolean }
+interface Stats { followers: number; following: number; is_followed_by_me: boolean; entry_count?: number }
 interface Author { handle: string; display_name: string }
 interface ProfilePost {
   id: string
@@ -224,12 +225,25 @@ export default function ProfilePage({ params }: { params: { handle: string } }) 
           {!editing ? (
             <>
               <div className="flex items-start gap-3">
-                <div className="w-14 h-14 rounded-full bg-white/10 grid place-items-center text-lg font-semibold text-white">
-                  {profile.display_name.charAt(0).toUpperCase()}
+                {/* InkSpiral — generative profile fingerprint that grows
+                    from this user's journaling. Replaces the static
+                    letter monogram. */}
+                <div className="w-20 h-20 rounded-full bg-white/[0.04] grid place-items-center shrink-0">
+                  <InkSpiral
+                    seed={profile.user_id || profile.handle}
+                    entryCount={stats.entry_count ?? 0}
+                    size={76}
+                    withFrame
+                  />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h1 className="text-xl font-bold text-white leading-tight">{profile.display_name}</h1>
                   <p className="text-xs text-white/50">@{profile.handle}</p>
+                  {(stats.entry_count ?? 0) > 0 && (
+                    <p className="text-[10.5px] text-white/40 mt-1.5">
+                      {stats.entry_count} {stats.entry_count === 1 ? 'reflection' : 'reflections'} in their spiral
+                    </p>
+                  )}
                 </div>
                 {profile.is_own ? (
                   <button onClick={openEdit} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-xs text-white transition-colors">

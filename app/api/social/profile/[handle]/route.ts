@@ -65,13 +65,26 @@ export async function GET(
     }).catch(() => null)
     const mindsetId = userRow?.preferences?.mindset || null
 
-    // Follow stats.
-    const [followers, following, mineFollowing] = await Promise.all([
+    // Follow stats + journal entry count (drives the InkSpiral growth on
+    // the profile avatar — every entry adds one stroke to their spiral).
+    const [followers, following, mineFollowing, entryCount] = await Promise.all([
       prisma.socialFollow.count({ where: { followee_id: profile.user_id } }),
       prisma.socialFollow.count({ where: { follower_id: profile.user_id } }),
       prisma.socialFollow.findUnique({
         where: { follower_id_followee_id: { follower_id: user.id, followee_id: profile.user_id } },
       }).catch(() => null),
+      prisma.dailyGuide.count({
+        where: {
+          user_id: profile.user_id,
+          OR: [
+            { journal_win: { not: null } },
+            { journal_gratitude: { not: null } },
+            { journal_learned: { not: null } },
+            { journal_intention: { not: null } },
+            { journal_freetext: { not: null } },
+          ],
+        },
+      }).catch(() => 0),
     ])
 
     // Recent posts by this user.
@@ -109,6 +122,7 @@ export async function GET(
         followers,
         following,
         is_followed_by_me: !!mineFollowing,
+        entry_count: entryCount,
       },
       posts: posts.map(p => ({
         id: p.id,
