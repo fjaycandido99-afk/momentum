@@ -54,6 +54,95 @@ model User {
   alertPreferences UserAlertPreference[]
   scheduledAlerts  ScheduledAlert[]
   alertHistory     AlertHistory[]
+
+  // Social (Community feed)
+  profile   SocialProfile?
+  posts     SocialPost[]
+  reactions SocialReaction[]
+  following SocialFollow[]  @relation("follower")
+  followers SocialFollow[]  @relation("followee")
+}
+
+// Per-user public-facing identity for the community feed. Created
+// lazily on first share — handle defaults to a slugified name, can
+// be edited later in Settings. Bio is optional.
+model SocialProfile {
+  id            String   @id @default(cuid())
+  user_id       String   @unique
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  handle        String   @unique
+  display_name  String
+  bio           String?  @db.VarChar(280)
+  /// Whether OTHER users can find and follow this profile (false = posts
+  /// still visible in the public feed but profile isn't searchable).
+  discoverable  Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([handle])
+}
+
+// A shared post — sourced from a journal entry (sourceEntryId) or
+// composed fresh from the /community page. `anonymous: true` hides
+// the author handle/name everywhere it renders.
+model SocialPost {
+  id              String   @id @default(cuid())
+  user_id         String
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  body            String   @db.Text
+  /// Optional link to the original journal entry it was shared from.
+  source_entry_id String?
+  /// True = render with no author handle, just the mindset icon.
+  anonymous       Boolean  @default(false)
+  /// Tag / topic — derived from the entry's mindset or user-selected.
+  mindset_id      String?
+  /// Aggregate counters kept hot for fast feed rendering.
+  reaction_count  Int      @default(0)
+  comment_count   Int      @default(0)
+  /// Soft-hide for moderation — hidden posts stay in DB but never
+  /// surface in the feed. Lets us reverse decisions.
+  hidden          Boolean  @default(false)
+  hidden_reason   String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  reactions SocialReaction[]
+
+  @@index([user_id])
+  @@index([hidden, created_at(sort: Desc)])
+}
+
+// A user's reaction to a post. Single-shot per (user, post, kind) so
+// users can react with multiple kinds but not double-tap one. Kinds
+// are intentionally compassion-leaning ("felt", "strength") not
+// approval-leaning ("like") to nudge community tone.
+model SocialReaction {
+  id         String   @id @default(cuid())
+  post_id    String
+  post       SocialPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  kind       String   // "heart" | "felt" | "strength"
+  created_at DateTime @default(now())
+
+  @@unique([post_id, user_id, kind])
+  @@index([post_id])
+  @@index([user_id])
+}
+
+// Follow relationship for the future "Following" feed filter. Symmetric
+// is a separate concept (mutual = both follow each other) computed on
+// demand, not stored.
+model SocialFollow {
+  id          String   @id @default(cuid())
+  follower_id String
+  follower    User     @relation("follower", fields: [follower_id], references: [id], onDelete: Cascade)
+  followee_id String
+  followee    User     @relation("followee", fields: [followee_id], references: [id], onDelete: Cascade)
+  created_at  DateTime @default(now())
+
+  @@unique([follower_id, followee_id])
+  @@index([followee_id])
 }
 
 model Subscription {
