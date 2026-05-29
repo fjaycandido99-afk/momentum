@@ -9,7 +9,7 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, BookOpen, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Eye, Ban } from 'lucide-react'
-import { crisisResourceForLevel } from '@/lib/social/crisis-detect'
+import { crisisResourceForLevel, type CrisisRegion } from '@/lib/social/crisis-detect'
 
 interface Author { handle: string; display_name: string }
 interface ReplyParent { id: string; excerpt: string; author: Author | null }
@@ -73,7 +73,7 @@ function formatRelative(iso: string): string {
   return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-export function PostCard({ post: initial }: { post: PostShape }) {
+export function PostCard({ post: initial, crisisRegion = 'US' }: { post: PostShape; crisisRegion?: CrisisRegion }) {
   const [post, setPost] = useState<PostShape>(initial)
 
   const [commentsOpen, setCommentsOpen] = useState(false)
@@ -166,7 +166,7 @@ export function PostCard({ post: initial }: { post: PostShape }) {
     }
   }
 
-  const crisisResource = crisisResourceForLevel((post.crisis_level as 'urgent' | 'concern' | null) || null)
+  const crisisResource = crisisResourceForLevel((post.crisis_level as 'urgent' | 'concern' | null) || null, crisisRegion)
   const commentsLocked = post.crisis_level === 'urgent'
 
   const react = async (kind: 'heart' | 'relate' | 'learn') => {

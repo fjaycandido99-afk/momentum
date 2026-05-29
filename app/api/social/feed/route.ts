@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getBlockedUserIds } from '@/lib/social/blocks'
+import { detectRegion } from '@/lib/social/crisis-detect'
 
 export const dynamic = 'force-dynamic'
 
@@ -166,7 +167,16 @@ export async function GET(request: NextRequest) {
 
     const nextCursor = rawPosts.length === limit ? rawPosts[rawPosts.length - 1].id : null
 
-    return NextResponse.json({ posts, nextCursor, scope, mood: moodFilter, mindset: mindsetFilter })
+    // Surface the viewer's crisis region (derived from timezone) so the
+    // client banner can pick localized helplines per-post. Cheap — one
+    // tiny lookup per feed fetch; tied to user's UserPreferences.
+    const prefs = await prisma.userPreferences.findUnique({
+      where: { user_id: user.id },
+      select: { timezone: true },
+    }).catch(() => null)
+    const crisisRegion = detectRegion(prefs?.timezone ?? null)
+
+    return NextResponse.json({ posts, nextCursor, scope, mood: moodFilter, mindset: mindsetFilter, crisis_region: crisisRegion })
   } catch (err) {
     console.error('[social/feed] error:', err)
     return NextResponse.json({ error: 'unknown' }, { status: 500 })

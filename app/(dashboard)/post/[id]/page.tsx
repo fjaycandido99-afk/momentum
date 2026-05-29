@@ -1,65 +1,86 @@
-'use client'
-
 /* ============================================================================
-   /post/[id] — single-post detail page. Shareable link target. Reuses
-   PostCard so all reactions / comments / report / crisis-banner machinery
-   works the same.
+   /post/[id] — server wrapper that generates OG/Twitter metadata for
+   shareable link previews. The interactive body lives in
+   PostDetailClient (client component).
+
+   generateMetadata reads the post directly from the DB (no API hop) so
+   crawlers without cookies still get the right tags. The body itself
+   still requires auth — but the head tags are rendered into the HTML
+   shell regardless, so Twitter / iMessage / Slack previews work.
+
+   For posts that are hidden or crisis-locked, we serve a generic title
+   so we don't accidentally surface concerning content in unfurls.
    ============================================================================ */
 
-import { useEffect, useState, use } from 'react'
-import Link from 'next/link'
-import { ChevronLeft, Loader2 } from 'lucide-react'
-import { PostCard } from '@/components/social/PostCard'
+import type { Metadata } from 'next'
+import { prisma } from '@/lib/prisma'
+import { PostDetailClient } from './PostDetailClient'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Post = any
+interface RouteContext { params: Promise<{ id: string }> }
 
-export default function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
-  const [post, setPost] = useState<Post | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '').trim() || 'https://voxu.app'
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const res = await fetch(`/api/social/posts/${id}`)
-        if (res.status === 404) { if (!cancelled) setNotFound(true); return }
-        if (!res.ok) throw new Error('load failed')
-        const data = await res.json()
-        if (!cancelled) setPost(data.post)
-      } catch (err) {
-        console.error('[post] load failed:', err)
-      } finally {
-        if (!cancelled) setIsLoading(false)
+function buildOgPreviewUrl(title: string): string {
+  // No bespoke OG-image renderer yet — fall back to the app's static
+  // social card. Swap to a /api/og?title=... endpoint when ready.
+  return `${APP_URL}/og-default.png`
+}
+
+export async function generateMetadata({ params }: RouteContext): Promise<Metadata> {
+  const { id } = await params
+  try {
+    const post = await prisma.socialPost.findUnique({
+      where: { id },
+      select: {
+        body: true,
+        anonymous: true,
+        hidden: true,
+        crisis_level: true,
+        user_id: true,
+      },
+    })
+    if (!post || post.hidden || post.crisis_level === 'urgent') {
+      return {
+        title: 'A reflection — Voxu Community',
+        description: 'A shared reflection from the Voxu Community.',
       }
-    })()
-    return () => { cancelled = true }
-  }, [id])
-
-  if (notFound) {
-    return (
-      <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto px-6 pt-16 text-center">
-        <p className="text-lg">Post not found</p>
-        <Link href="/community" className="inline-block mt-4 text-sm text-white/60 hover:text-white">← Back to community</Link>
-      </div>
-    )
+    }
+    const profile = post.anonymous ? null : await prisma.socialProfile.findUnique({
+      where: { user_id: post.user_id },
+      select: { handle: true, display_name: true },
+    })
+    const author = post.anonymous ? 'Anonymous' : (profile?.display_name || 'Someone')
+    const excerpt = post.body.slice(0, 180) + (post.body.length > 180 ? '…' : '')
+    const title = `${author} on Voxu Community`
+    const url = `${APP_URL}/post/${id}`
+    return {
+      title,
+      description: excerpt,
+      openGraph: {
+        type: 'article',
+        url,
+        title,
+        description: excerpt,
+        siteName: 'Voxu',
+        images: [{ url: buildOgPreviewUrl(title) }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description: excerpt,
+        images: [buildOgPreviewUrl(title)],
+      },
+      alternates: { canonical: url },
+    }
+  } catch {
+    return {
+      title: 'Voxu Community',
+      description: 'Reflections from people doing the inner work.',
+    }
   }
+}
 
-  return (
-    <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
-      <div className="px-6 pt-12 pb-3">
-        <Link href="/community" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">
-          <ChevronLeft className="w-4 h-4" /> Community
-        </Link>
-      </div>
-      <div className="px-6">
-        {isLoading && (
-          <div className="flex justify-center py-12"><Loader2 className="w-5 h-5 text-white/60 animate-spin" /></div>
-        )}
-        {post && <PostCard post={post} />}
-      </div>
-    </div>
-  )
+export default async function PostDetailPage({ params }: RouteContext) {
+  const { id } = await params
+  return <PostDetailClient id={id} />
 }

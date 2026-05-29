@@ -26,6 +26,9 @@ import {
   FileText,
   Trash2,
   RefreshCw,
+  Users,
+  Ban,
+  ChevronRight,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -1057,6 +1060,29 @@ function SettingsContent() {
                 Sign In to Save Progress
               </Link>
             )}
+          </div>
+
+          {/* Community settings — Guidelines (re-read) + Blocked users
+              management. Lives just above the legal links since they're
+              the same family of "what governs the social side." */}
+          <div className="space-y-1 pt-2">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 px-1 mb-1">Community</p>
+            <Link
+              href="/community/guidelines"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] transition-colors"
+            >
+              <Users className="w-4 h-4 text-white/70" />
+              <span className="text-sm text-white/85 flex-1">Community Guidelines</span>
+              <ChevronRight className="w-3.5 h-3.5 text-white/40" />
+            </Link>
+            <Link
+              href="/settings/blocks"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] transition-colors"
+            >
+              <Ban className="w-4 h-4 text-white/70" />
+              <span className="text-sm text-white/85 flex-1">Blocked users</span>
+              <ChevronRight className="w-3.5 h-3.5 text-white/40" />
+            </Link>
           </div>
 
           {/* Legal Links */}

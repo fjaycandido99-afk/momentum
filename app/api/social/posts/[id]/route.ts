@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { isBlocked } from '@/lib/social/blocks'
+import { detectRegion } from '@/lib/social/crisis-detect'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,8 +38,14 @@ export async function GET(
     })
 
     const isOwn = p.user_id === user.id
+    const prefs = await prisma.userPreferences.findUnique({
+      where: { user_id: user.id },
+      select: { timezone: true },
+    }).catch(() => null)
+    const crisisRegion = detectRegion(prefs?.timezone ?? null)
 
     return NextResponse.json({
+      crisis_region: crisisRegion,
       post: {
         id: p.id,
         body: p.body,

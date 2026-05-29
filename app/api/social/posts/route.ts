@@ -12,6 +12,11 @@ import { detectCrisisLevel } from '@/lib/social/crisis-detect'
 export const dynamic = 'force-dynamic'
 
 const MAX_BODY = 1200
+// Per-user posting rate limit — deters spam + thread-flooding while
+// staying generous enough that a normal user (multiple journal shares
+// in one day) never hits it. Tuned for "normal" not "expert poster".
+const POST_LIMIT_PER_HOUR = 10
+const POST_LIMIT_PER_DAY = 40
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +42,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'guidelines_required', message: 'Please review the Community Guidelines before posting.' },
         { status: 412 }, // 412 Precondition Failed
+      )
+    }
+
+    // Rate limit — count posts authored in the last hour + day. Both
+    // gates checked so a user can't drip 10 posts every hour all day.
+    const now = new Date()
+    const hourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+    const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    const [hourCount, dayCount] = await Promise.all([
+      prisma.socialPost.count({ where: { user_id: user.id, created_at: { gt: hourAgo } } }),
+      prisma.socialPost.count({ where: { user_id: user.id, created_at: { gt: dayAgo } } }),
+    ])
+    if (hourCount >= POST_LIMIT_PER_HOUR || dayCount >= POST_LIMIT_PER_DAY) {
+      return NextResponse.json(
+        {
+          error: 'rate_limited',
+          message: hourCount >= POST_LIMIT_PER_HOUR
+            ? 'You\'ve posted a lot in the last hour. Take a beat and try again later.'
+            : 'You\'ve hit today\'s posting limit. Tomorrow\'s a fresh start.',
+        },
+        { status: 429 },
       )
     }
 

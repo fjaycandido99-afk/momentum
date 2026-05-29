@@ -51,6 +51,7 @@ export default function CommunityPage() {
   const [scope, setScope] = useState<Scope>('all')
   const [mood, setMood] = useState<string | null>(null)
   const [posts, setPosts] = useState<FeedPost[]>([])
+  const [crisisRegion, setCrisisRegion] = useState<'US' | 'UK' | 'CA' | 'AU' | 'NZ' | 'EU' | 'OTHER'>('US')
   const [isLoading, setIsLoading] = useState(true)
 
   const [draft, setDraft] = useState('')
@@ -69,6 +70,7 @@ export default function CommunityPage() {
       if (!res.ok) throw new Error('feed fetch failed')
       const data = await res.json()
       setPosts(data.posts || [])
+      if (data.crisis_region) setCrisisRegion(data.crisis_region)
     } catch (err) {
       console.error('[community] feed load failed:', err)
     } finally {
@@ -259,7 +261,7 @@ export default function CommunityPage() {
           </div>
         )}
 
-        {posts.map(post => <PostCard key={post.id} post={post} />)}
+        {posts.map(post => <PostCard key={post.id} post={post} crisisRegion={crisisRegion} />)}
       </div>
 
       {/* Guidelines acceptance modal — only mounts when triggered. */}
