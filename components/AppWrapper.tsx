@@ -53,6 +53,25 @@ export function AppWrapper({ children }: AppWrapperProps) {
     })
   }, [])
 
+  // On native (iOS especially): hide the WKWebView keyboard accessory bar
+  // — the ↑↓ "next field" arrows + ✓ Done strip that sits between the
+  // input area and the keyboard. The plugin call only resolves on iOS
+  // (it's a no-op on Android/web), so wrap in a try/catch to silence
+  // the "not implemented" warning on other platforms.
+  useEffect(() => {
+    const isNative = !!(window as any).Capacitor
+    if (!isNative) return
+    ;(async () => {
+      try {
+        const { Keyboard } = await import('@capacitor/keyboard')
+        await Keyboard.setAccessoryBarVisible({ isVisible: false })
+      } catch (err) {
+        // Plugin not available on this platform — fine, ignore.
+        console.debug('[keyboard] accessory bar hide skipped:', err)
+      }
+    })()
+  }, [])
+
   // On native: re-schedule local notifications from user preferences on app start
   // This ensures notifications stay accurate after app updates or timezone changes
   useEffect(() => {

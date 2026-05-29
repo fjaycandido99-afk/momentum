@@ -1955,6 +1955,23 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
   }
 }
 
+/* --- iOS sticky-header reliability fix --------------------------------
+   On iOS WKWebView, `position: sticky` on body-scroll elements stutters
+   or briefly displaces during inertial scroll / overscroll bounce. Most
+   often appears as the page header "moving" / jumping during scroll.
+   Promoting the header to its own compositor layer + an explicit
+   will-change locks it to the viewport top consistently. iOS-only via
+   `@supports (-webkit-touch-callout: none)` so desktop is untouched. */
+@supports (-webkit-touch-callout: none) {
+  .sticky.top-0 {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}
+
 /* --- Focus mode overlay enter --- */
 @keyframes focus-enter {
   from {
