@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="text-sm text-white/50">
-            Last updated: February 22, 2026
+            Last updated: May 28, 2026
           </p>
         </div>
       </section>
@@ -50,6 +50,8 @@ export default function PrivacyPolicyPage() {
             <li>Goals and checkpoint progress</li>
             <li>AI coach conversations</li>
             <li>Mindset and preference selections</li>
+            <li>Voice recordings (Voice Journal) — sent to our transcription provider, transcript stored on our servers, the audio itself is not retained</li>
+            <li>Community posts, comments, reactions, follows, blocks, and your public profile (handle, display name, bio)</li>
           </ul>
 
           <h3 className="text-base font-medium text-white mb-2">
@@ -124,10 +126,68 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
 
-        {/* 5. Your Rights */}
+        {/* 5. Community Features & Public Content */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            5. Your Rights
+            5. Community Features &amp; Public Content
+          </h2>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            Voxu includes a Community where you can share written reflections with other signed-in users, react to and comment on theirs, follow accounts, and curate a public-facing profile. This section covers what becomes visible, what stays private, and the safety machinery we run on it.
+          </p>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            What is public vs private
+          </h3>
+          <ul className="list-disc list-inside text-sm text-white/70 space-y-1 mb-4">
+            <li><strong className="text-white/90">Private by default.</strong> Your journal entries, voice recordings, AI coach conversations, mood logs, and preferences are NEVER published to the Community unless you explicitly tap a Share action or pre-tick &ldquo;Also share to Community&rdquo; before saving.</li>
+            <li><strong className="text-white/90">Public when you share.</strong> Posts you publish to the Community are visible to all signed-in Voxu users. Your public profile (handle, display name, bio, mindset, follower/following counts) is visible to anyone who can find your profile URL.</li>
+            <li><strong className="text-white/90">Anonymous posts.</strong> When you tick the &ldquo;Anonymously&rdquo; toggle, your handle and display name are hidden from other users on that specific post. Your post is still associated with your account internally for moderation and abuse-prevention purposes.</li>
+            <li><strong className="text-white/90">Post visibility on shareable URLs.</strong> Each public post has a shareable URL (e.g. <code className="text-white/60">voxu.app/post/&lt;id&gt;</code>) that may render link-preview cards on third-party platforms (iMessage, X, Slack) that include the post body excerpt and author handle (unless anonymous).</li>
+          </ul>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Crisis detection
+          </h3>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            We run an automated keyword scan on Community posts and comments to detect crisis-level content (self-harm, suicidal ideation). When detected, we pin local crisis-resource phone numbers + helpline links to the post, automatically file the post for human moderation review, and temporarily disable comments on the post until reviewed. The scan runs on our servers at the moment of posting and produces a flag stored alongside the post — it is not used for any other purpose.
+          </p>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Moderation &amp; reports
+          </h3>
+          <ul className="list-disc list-inside text-sm text-white/70 space-y-1 mb-4">
+            <li>You can report any post or comment via the &ldquo;Report&rdquo; menu. Reports include an optional note; the report itself is stored on our servers and reviewed by Voxu staff.</li>
+            <li>Reporter identity is kept confidential and is NOT disclosed to the reported user.</li>
+            <li>Posts and comments removed by moderators are soft-hidden in our database (kept for audit + appeal purposes) and no longer visible in feeds.</li>
+            <li>Repeated violations of our <Link href="/community/guidelines" className="text-amber-400 hover:text-amber-300 transition-colors">Community Guidelines</Link> may result in account suspension.</li>
+          </ul>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Blocking
+          </h3>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            You can block any user from the post action menu or their profile page. Blocking is mutual: blocked users can no longer see your content and cannot react to, comment on, or follow your account. We do not notify the blocked user that they have been blocked. You can manage and unblock users at any time via Settings → Blocked users.
+          </p>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Push notifications about Community activity
+          </h3>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            If you have push notifications enabled, we may send you a notification when another user reacts to your post, comments on it, or follows you. These notifications include the actor&apos;s display name and handle and link back to the relevant post or profile. You can disable push notifications at any time in your device settings.
+          </p>
+
+          <h3 className="text-base font-medium text-white mb-2">
+            Deletion of Community data
+          </h3>
+          <p className="text-sm text-white/70 leading-relaxed">
+            You can delete any individual post or comment from its menu. Deleting your account permanently removes your profile, all your posts, comments, reactions, follows, and blocks (cascaded automatically). Posts you previously shared anonymously are also removed when you delete your account.
+          </p>
+        </section>
+
+        {/* 6. Your Rights */}
+        <section className="py-6 border-t border-white/5">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            6. Your Rights
           </h2>
           <p className="text-sm text-white/70 leading-relaxed mb-4">
             You have the following rights regarding your personal data:
@@ -148,10 +208,10 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
 
-        {/* 6. GDPR (European Users) */}
+        {/* 7. GDPR (European Users) */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            6. GDPR — European Users
+            7. GDPR — European Users
           </h2>
           <p className="text-sm text-white/70 leading-relaxed mb-4">
             If you are located in the European Economic Area (EEA), the United Kingdom, or Switzerland, the following additional provisions apply under the General Data Protection Regulation (GDPR):
@@ -188,10 +248,10 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
 
-        {/* 7. CCPA/CPRA (California Users) */}
+        {/* 8. CCPA/CPRA (California Users) */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            7. CCPA/CPRA — California Users
+            8. CCPA/CPRA — California Users
           </h2>
           <p className="text-sm text-white/70 leading-relaxed mb-4">
             If you are a California resident, the California Consumer Privacy Act (CCPA) and California Privacy Rights Act (CPRA) provide you with additional rights regarding your personal information.
@@ -237,7 +297,7 @@ export default function PrivacyPolicyPage() {
         {/* 8. International Data Transfers */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            8. International Data Transfers
+            9. International Data Transfers
           </h2>
           <p className="text-sm text-white/70 leading-relaxed">
             Your information may be transferred to and processed in countries other than your country of residence, including the United States. These countries may have different data protection laws. When we transfer your data internationally, we ensure appropriate safeguards are in place, including standard contractual clauses approved by relevant authorities, to protect your personal information in accordance with this policy.
@@ -247,7 +307,7 @@ export default function PrivacyPolicyPage() {
         {/* 9. Children's Privacy */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            9. Children&apos;s Privacy
+            10. Children&apos;s Privacy
           </h2>
           <p className="text-sm text-white/70 leading-relaxed">
             Voxu is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that we have collected personal data from a child under 13 without parental consent, we will take steps to delete that information. If you believe we may have collected information from a child under 13, please contact us at{' '}
@@ -260,7 +320,7 @@ export default function PrivacyPolicyPage() {
         {/* 10. Cookies & Local Storage */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            10. Cookies &amp; Local Storage
+            11. Cookies &amp; Local Storage
           </h2>
           <p className="text-sm text-white/70 leading-relaxed mb-4">
             Voxu uses cookies and browser local storage to:
@@ -278,7 +338,7 @@ export default function PrivacyPolicyPage() {
         {/* 11. Changes to This Policy */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            11. Changes to This Policy
+            12. Changes to This Policy
           </h2>
           <p className="text-sm text-white/70 leading-relaxed">
             We may update this Privacy Policy from time to time. When we make changes, we will update the &quot;Last updated&quot; date at the top of this page. We encourage you to review this policy periodically. Continued use of Voxu after changes are posted constitutes your acceptance of the updated policy.
@@ -288,7 +348,7 @@ export default function PrivacyPolicyPage() {
         {/* 12. Contact Us */}
         <section className="py-6 border-t border-white/5">
           <h2 className="text-xl font-semibold text-white mb-4">
-            12. Contact Us
+            13. Contact Us
           </h2>
           <p className="text-sm text-white/70 leading-relaxed">
             If you have any questions about this Privacy Policy or our data practices, please contact us at:

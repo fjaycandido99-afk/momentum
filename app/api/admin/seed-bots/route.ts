@@ -21,9 +21,15 @@ import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
-function isAdmin(userId: string): boolean {
+function isAdmin(userId: string, email: string | undefined): boolean {
   const allow = (process.env.ADMIN_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean)
-  return allow.includes(userId)
+  if (allow.includes(userId)) return true
+  // Owner-email fallback so the project owner can seed without first
+  // having to wrestle ADMIN_USER_IDS into the env. Case-insensitive
+  // match. Skip cleanly if either side is empty.
+  const ownerEmail = (process.env.ADMIN_OWNER_EMAIL || '').trim().toLowerCase()
+  if (ownerEmail && email && email.toLowerCase() === ownerEmail) return true
+  return false
 }
 
 interface BotSpec {
@@ -133,7 +139,7 @@ export async function POST() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    if (!isAdmin(user.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!isAdmin(user.id, user.email)) return NextResponse.json({ error: 'Forbidden', hint: 'Set ADMIN_USER_IDS or ADMIN_OWNER_EMAIL in env to allow yourself.' }, { status: 403 })
 
     let usersCreated = 0
     let usersExisted = 0
@@ -235,7 +241,7 @@ export async function DELETE() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    if (!isAdmin(user.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!isAdmin(user.id, user.email)) return NextResponse.json({ error: 'Forbidden', hint: 'Set ADMIN_USER_IDS or ADMIN_OWNER_EMAIL in env to allow yourself.' }, { status: 403 })
 
     const botProfiles = await prisma.socialProfile.findMany({
       where: { handle: { startsWith: 'voxu.' } },
