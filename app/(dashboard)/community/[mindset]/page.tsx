@@ -5,20 +5,25 @@
    Same UI as /community but pre-filters posts by the URL mindset.
    ============================================================================ */
 
-import { use, useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Loader2, Sparkles, RefreshCw } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import type { MindsetId } from '@/lib/mindset/types'
+import type { CrisisRegion } from '@/lib/social/crisis-detect'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Post = any
 
-export default function MindsetFeedPage({ params }: { params: Promise<{ mindset: string }> }) {
-  const { mindset: raw } = use(params)
+// Next 14.2: params on client components is a plain object, NOT a
+// Promise. The use(params) pattern is for Next 15 forward-compat —
+// here it throws.
+export default function MindsetFeedPage({ params }: { params: { mindset: string } }) {
+  const raw = params.mindset
   const mindsetId = raw.toLowerCase() as MindsetId
   const config = MINDSET_CONFIGS[mindsetId]
+  const [crisisRegion, setCrisisRegion] = useState<CrisisRegion>('US')
 
   const [posts, setPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -30,6 +35,7 @@ export default function MindsetFeedPage({ params }: { params: Promise<{ mindset:
       if (res.ok) {
         const data = await res.json()
         setPosts(data.posts || [])
+        if (data.crisis_region) setCrisisRegion(data.crisis_region)
       }
     } finally {
       setIsLoading(false)
@@ -48,7 +54,7 @@ export default function MindsetFeedPage({ params }: { params: Promise<{ mindset:
   }
 
   return (
-    <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
+    <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto xl:max-w-3xl xl:mx-0 xl:ml-12 xl:mr-[336px]">
       <div className="sticky top-0 z-20 px-6 pt-12 pb-3 bg-black">
         <Link href="/community" className="inline-flex items-center gap-1 text-xs text-white/60 hover:text-white mb-2">
           <ChevronLeft className="w-3 h-3" /> All community
@@ -76,7 +82,7 @@ export default function MindsetFeedPage({ params }: { params: Promise<{ mindset:
             <p className="text-sm text-white/70">No {config.name} reflections yet. Be the first.</p>
           </div>
         )}
-        {posts.map(p => <PostCard key={p.id} post={p} />)}
+        {posts.map(p => <PostCard key={p.id} post={p} crisisRegion={crisisRegion} />)}
       </div>
     </div>
   )

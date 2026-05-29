@@ -109,7 +109,7 @@ export default function CommunityPage() {
   const MINDSET_IDS: MindsetId[] = ['stoic', 'existentialist', 'cynic', 'hedonist', 'samurai', 'scholar', 'manifestor', 'hustler']
 
   return (
-    <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
+    <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto xl:max-w-3xl xl:mx-0 xl:ml-12 xl:mr-[336px]">
       {/* Header */}
       <div className="sticky top-0 z-20 px-6 pt-12 pb-3 bg-black">
         <div className="flex items-center justify-between mb-1.5">

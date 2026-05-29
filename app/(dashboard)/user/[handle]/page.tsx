@@ -8,7 +8,7 @@
    "Edit profile" inline editor.
    ============================================================================ */
 
-import { useEffect, useState, useCallback, use } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Loader2, UserCheck, UserPlus, Pencil, Check, X, Ban, MoreHorizontal } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
@@ -40,8 +40,10 @@ interface ProfilePost {
   my_reactions: string[]
 }
 
-export default function ProfilePage({ params }: { params: Promise<{ handle: string }> }) {
-  const { handle } = use(params)
+// Next 14.2: params on client components is a plain object, not a
+// Promise. use(params) throws.
+export default function ProfilePage({ params }: { params: { handle: string } }) {
+  const handle = params.handle
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [stats, setStats] = useState<Stats>({ followers: 0, following: 0, is_followed_by_me: false })
   const [posts, setPosts] = useState<ProfilePost[]>([])
@@ -174,7 +176,7 @@ export default function ProfilePage({ params }: { params: Promise<{ handle: stri
   if (!isLoading && profile?.blocked) {
     const byMe = profile.block_direction === 'by_me'
     return (
-      <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
+      <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto xl:max-w-3xl xl:mx-0 xl:ml-12 xl:mr-[336px]">
         <div className="px-6 pt-12 pb-3">
           <Link href="/community" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">
             <ChevronLeft className="w-4 h-4" /> Community
@@ -208,7 +210,7 @@ export default function ProfilePage({ params }: { params: Promise<{ handle: stri
   }
 
   return (
-    <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
+    <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto xl:max-w-3xl xl:mx-0 xl:ml-12 xl:mr-[336px]">
       {/* Header / back */}
       <div className="px-6 pt-12 pb-3">
         <Link href="/community" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">
