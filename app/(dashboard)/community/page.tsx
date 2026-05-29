@@ -282,7 +282,7 @@ export default function CommunityPage() {
           <button
             aria-label="Close"
             onClick={() => setComposerOpen(false)}
-            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            className="absolute inset-0 bg-black/95 backdrop-blur-xl"
           />
           <div className="relative w-full lg:max-w-xl bg-black border-t lg:border lg:rounded-2xl border-white/15 shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-black border-b border-white/[0.08]">
