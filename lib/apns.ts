@@ -64,8 +64,11 @@ export function isAPNsConfigured(): boolean {
  */
 function getAPNsJWT(): string {
   const now = Math.floor(Date.now() / 1000)
-  const keyId = process.env.APNS_KEY_ID!
-  const teamId = process.env.APNS_TEAM_ID!
+  // Trim defensively — a trailing newline (from `echo "..." | vercel env add`
+  // vs `printf`) silently makes Apple reject the JWT with InvalidProviderToken.
+  // The .p8 itself is whitespace-tolerant; the kid/iss fields are NOT.
+  const keyId = (process.env.APNS_KEY_ID || '').trim()
+  const teamId = (process.env.APNS_TEAM_ID || '').trim()
 
   // Reuse cached token if still valid AND signed with the current key.
   // Without the keyId/teamId match, a key rotation would silently keep
