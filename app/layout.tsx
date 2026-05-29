@@ -25,13 +25,16 @@ export const metadata: Metadata = {
     siteName: 'Voxu',
     type: 'website',
     locale: 'en_US',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Voxu - Your AI Audio Coach' }],
+    // Site-wide default — rendered on the fly by /api/og/default
+    // (Voxu-branded card with the cinematic aura signature). Pages
+    // that want a bespoke unfurl (e.g. /post/[id]) override locally.
+    images: [{ url: '/api/og/default', width: 1200, height: 630, alt: 'Voxu' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Voxu - Your AI Audio Coach',
     description: 'Motivation, mindfulness, and focus — delivered automatically.',
-    images: ['/og-image.png'],
+    images: ['/api/og/default'],
   },
   robots: {
     index: true,
