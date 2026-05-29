@@ -313,10 +313,10 @@ export default function CommunityPage() {
               <textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder={voicePayload ? 'Your voice transcript — edit if you like' : "What's been on your mind?"}
+                placeholder={voicePayload ? 'Your voice transcript — edit if you like' : "What's been on your mind? (tap to write)"}
                 rows={6}
                 maxLength={1200}
-                autoFocus
+                /* No autoFocus — wait for tap. */
                 className="w-full bg-transparent text-[16px] text-white placeholder-white/40 caret-white focus:outline-none resize-none"
               />
 
@@ -337,16 +337,23 @@ export default function CommunityPage() {
 
               <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <label className="flex items-center gap-2 text-xs text-white/75 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={anonymous}
-                      onChange={(e) => setAnonymous(e.target.checked)}
-                      className="accent-white"
-                    />
+                  {/* Button-style toggle (not a real checkbox <input>) so
+                      iOS doesn't list it as another form field and the
+                      up/down arrows in the keyboard accessory bar don't
+                      light up. */}
+                  <button
+                    type="button"
+                    onClick={() => setAnonymous(a => !a)}
+                    aria-pressed={anonymous}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors ${
+                      anonymous
+                        ? 'bg-white text-black'
+                        : 'bg-white/[0.06] text-white/75 hover:text-white hover:bg-white/[0.10]'
+                    }`}
+                  >
                     <EyeOff className="w-3.5 h-3.5" />
                     Anonymous
-                  </label>
+                  </button>
                   {!voiceMode && !voicePayload && (
                     <button
                       onClick={() => setVoiceMode(true)}

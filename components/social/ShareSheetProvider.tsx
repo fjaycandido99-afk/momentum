@@ -199,11 +199,12 @@ export function ShareSheetProvider({ children }: { children: React.ReactNode }) 
                         ? 'Quote — edit if you want'
                         : payload.kind === 'dream'
                           ? 'Your dream — edit before sharing'
-                          : "What's been on your mind?"
+                          : "What's been on your mind? (tap to write)"
                     }
                     rows={6}
                     maxLength={1200}
-                    autoFocus
+                    /* No autoFocus — wait for the user to tap the field
+                       before opening the keyboard, FB/Threads style. */
                     className="w-full bg-transparent text-[16px] text-white placeholder-white/40 caret-white focus:outline-none resize-none"
                   />
 
@@ -224,16 +225,22 @@ export function ShareSheetProvider({ children }: { children: React.ReactNode }) 
 
                   <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <label className="flex items-center gap-2 text-xs text-white/75 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={anon}
-                          onChange={(e) => setAnon(e.target.checked)}
-                          className="accent-white"
-                        />
+                      {/* Button-style toggle (not a <input> checkbox) so iOS
+                          doesn't count it as another form field and grey
+                          out the keyboard accessory bar's up/down arrows. */}
+                      <button
+                        type="button"
+                        onClick={() => setAnon(a => !a)}
+                        aria-pressed={anon}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors ${
+                          anon
+                            ? 'bg-white text-black'
+                            : 'bg-white/[0.06] text-white/75 hover:text-white hover:bg-white/[0.10]'
+                        }`}
+                      >
                         <EyeOff className="w-3.5 h-3.5" />
                         Anonymous
-                      </label>
+                      </button>
                       {showVoice && !voiceMode && !voicePayload && (
                         <button
                           onClick={() => setVoiceMode(true)}
