@@ -330,6 +330,44 @@ export async function POST(request: NextRequest) {
             },
             data: { journal_ai_reflection: reflection },
           })
+
+          // Auto-bookmark the reflection so users can browse past
+          // Battle Reports from the Saved page. Idempotent — checks
+          // for an existing reflection saved for this same dailyGuide.
+          try {
+            const existing = await prisma.favoriteContent.findFirst({
+              where: {
+                user_id: user.id,
+                content_type: 'reflection',
+                content_id: guide.id,
+              },
+            })
+            if (!existing) {
+              const niceDate = targetDate.toLocaleDateString(undefined, {
+                weekday: 'long', month: 'long', day: 'numeric',
+              })
+              await prisma.favoriteContent.create({
+                data: {
+                  user_id: user.id,
+                  content_type: 'reflection',
+                  content_text: reflection,
+                  content_id: guide.id,
+                  content_title: `Reflection · ${niceDate}`,
+                },
+              })
+            } else if (existing.content_text !== reflection) {
+              // Refresh the saved copy if the entry was edited and
+              // re-reflected — keep the bookmark in sync with truth.
+              await prisma.favoriteContent.update({
+                where: { id: existing.id },
+                data: { content_text: reflection },
+              })
+            }
+          } catch (err) {
+            // Auto-bookmark is best-effort; never block the reflection
+            // itself if FavoriteContent write fails.
+            console.warn('[journal] reflection auto-bookmark failed:', err)
+          }
         }
 
         // F11: Extract journal tags

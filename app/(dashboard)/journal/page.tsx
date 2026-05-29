@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import {
   PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target,
   Sparkles, BookOpen, Calendar, X, Crown, Lock, Shuffle, ChevronDown,
@@ -77,7 +78,18 @@ function JournalContent() {
   const [isSaving, setIsSaving] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(new Date())
+  // Initial selected date — honors ?date=YYYY-MM-DD from the history
+  // page's deep links so tapping an entry there opens it here.
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const param = typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('date')
+      : null
+    if (param) {
+      const [y, m, d] = param.split('-').map(Number)
+      if (y && m && d) return new Date(y, m - 1, d)
+    }
+    return new Date()
+  })
   const [loadingPast, setLoadingPast] = useState(true)
   const [showWeeklyReview, setShowWeeklyReview] = useState(false)
   const [streak, setStreak] = useState(0)
@@ -802,7 +814,9 @@ function JournalContent() {
             )}
           </div>
         </div>
-        {/* Row 2: Inline date picker */}
+        {/* Row 2: Inline date picker + "View all" link to the full
+            history page so past entries aren't only reachable through
+            day-by-day chevrons. */}
         <div className="flex items-center gap-2">
           <button
             aria-label="Previous day"
@@ -821,6 +835,12 @@ function JournalContent() {
           >
             <ChevronRight className="w-4 h-4 text-white/75" />
           </button>
+          <Link
+            href="/journal/history"
+            className="ml-auto text-[11px] text-white/60 hover:text-white transition-colors"
+          >
+            View all →
+          </Link>
         </div>
         {/* Row 3: Mode tabs — pinned with the header so they stay reachable while writing */}
         <div className="flex gap-1 p-0.5 mt-3 rounded-lg bg-white/10">
