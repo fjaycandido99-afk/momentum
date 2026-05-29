@@ -15,7 +15,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, BookOpen, MessageCircle, Bookmark, TrendingUp, Settings, Sparkles, Pause, Play } from 'lucide-react'
+import { Home, BookOpen, Bookmark, TrendingUp, Settings, Sparkles, Pause, Play } from 'lucide-react'
 import { useHomeAudioOptional } from '@/contexts/HomeAudioContext'
 // Reset capsule removed (parked). The now-playing TEXT chip was also
 // removed (duplicated BottomPlayerBar), but a minimal play/pause TOGGLE
@@ -29,10 +29,13 @@ interface NavItem {
   matchPrefix?: boolean
 }
 
+// Coach removed — merged into Journal's Chat mode per user direction.
+// The /coach route still exists but now redirects to /journal?mode=chat,
+// and MessageCircle is no longer in the dock since the chat surface
+// lives inside Journal.
 const NAV: NavItem[] = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/daily-guide', label: 'Daily Guide', icon: Sparkles, matchPrefix: true },
-  { href: '/coach', label: 'Coach', icon: MessageCircle, matchPrefix: true },
   { href: '/journal', label: 'Journal', icon: BookOpen, matchPrefix: true },
   { href: '/saved', label: 'Saved', icon: Bookmark, matchPrefix: true },
   { href: '/progress', label: 'Progress', icon: TrendingUp, matchPrefix: true },

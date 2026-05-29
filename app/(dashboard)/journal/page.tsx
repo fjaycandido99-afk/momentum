@@ -98,7 +98,23 @@ function JournalContent() {
   const [reflectionLocked, setReflectionLocked] = useState(false)
 
   // New state
-  const [mode, setMode] = useState<JournalMode>('freewrite')
+  // Initial mode honors ?mode= on the URL — used by /coach's redirect
+  // (mode=chat lands directly in the conversational surface) and any
+  // future deep-links from notifications.
+  const [mode, setMode] = useState<JournalMode>(() => {
+    if (typeof window === 'undefined') return 'freewrite'
+    const raw = new URLSearchParams(window.location.search).get('mode')
+    const aliasMap: Record<string, JournalMode> = {
+      chat: 'conversational',
+      conversational: 'conversational',
+      guided: 'guided',
+      free: 'freewrite',
+      freewrite: 'freewrite',
+      voice: 'voice',
+      dream: 'dream',
+    }
+    return aliasMap[raw || ''] || 'freewrite'
+  })
   const [freeText, setFreeText] = useState('')
   const [mood, setMood] = useState<MoodValue | null>(null)
   const [currentPromptIndex, setCurrentPromptIndex] = useState(0)
@@ -913,8 +929,28 @@ function JournalContent() {
                 {conversation.length === 0 && (
                   <div className="text-center py-6">
                     <MessageCircle className="w-8 h-8 text-white/50 mx-auto mb-2" />
-                    <p className="text-sm text-white/85">Start a journaling conversation</p>
-                    <p className="text-xs text-white/70 mt-1">Share what&apos;s on your mind and I&apos;ll help you explore it</p>
+                    <p className="text-sm text-white/85">Start a conversation</p>
+                    <p className="text-xs text-white/70 mt-1">Share what&apos;s on your mind — or tap a prompt below to dive in.</p>
+                    {/* Coach-style quick prompts — moved here from the
+                        retired /coach page so the chat home has a
+                        zero-friction starting point. */}
+                    <div className="mt-4 flex flex-wrap justify-center gap-2 max-w-md mx-auto">
+                      {[
+                        { label: "I'm stressed", emoji: '😣', text: "I'm feeling stressed right now. " },
+                        { label: 'Motivate me', emoji: '🔥', text: "I need some motivation. " },
+                        { label: 'Help me focus', emoji: '🎯', text: "Help me focus — my mind is scattered. " },
+                        { label: "I can't sleep", emoji: '🌙', text: "I can't sleep tonight. " },
+                      ].map(p => (
+                        <button
+                          key={p.label}
+                          onClick={() => setChatInput(p.text)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/15 text-xs text-white hover:bg-white/[0.10] transition-colors press-scale"
+                        >
+                          <span>{p.emoji}</span>
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {conversation.map((msg, i) => (
