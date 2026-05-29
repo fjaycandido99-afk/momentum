@@ -56,12 +56,14 @@ model User {
   alertHistory     AlertHistory[]
 
   // Social (Community feed)
-  profile   SocialProfile?
-  posts     SocialPost[]
-  comments  SocialComment[]
-  reactions SocialReaction[]
-  following SocialFollow[]  @relation("follower")
-  followers SocialFollow[]  @relation("followee")
+  profile        SocialProfile?
+  posts          SocialPost[]
+  comments       SocialComment[]
+  reactions      SocialReaction[]
+  following      SocialFollow[]  @relation("follower")
+  followers      SocialFollow[]  @relation("followee")
+  blockedUsers   SocialBlock[]   @relation("blocker")
+  blockedByUsers SocialBlock[]   @relation("blocked")
 }
 
 // Per-user public-facing identity for the community feed. Created
@@ -198,6 +200,23 @@ model SocialReaction {
   @@unique([post_id, user_id, kind])
   @@index([post_id])
   @@index([user_id])
+}
+
+// One-way block. blocker stops seeing blocked's posts/comments AND
+// blocked can no longer react/comment/follow back. Read it bidirectionally
+// via getBlockedUserIds() (see lib/social/blocks.ts) — feed queries
+// exclude users in either direction.
+model SocialBlock {
+  id         String   @id @default(cuid())
+  blocker_id String
+  blocker    User     @relation("blocker", fields: [blocker_id], references: [id], onDelete: Cascade)
+  blocked_id String
+  blocked    User     @relation("blocked", fields: [blocked_id], references: [id], onDelete: Cascade)
+  created_at DateTime @default(now())
+
+  @@unique([blocker_id, blocked_id])
+  @@index([blocker_id])
+  @@index([blocked_id])
 }
 
 // Follow relationship for the future "Following" feed filter. Symmetric

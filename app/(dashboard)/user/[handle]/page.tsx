@@ -10,7 +10,7 @@
 
 import { useEffect, useState, useCallback, use } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, Loader2, UserCheck, UserPlus, Pencil, Check, X } from 'lucide-react'
+import { ChevronLeft, Loader2, UserCheck, UserPlus, Pencil, Check, X, Ban, MoreHorizontal } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
 
 interface ProfileData {
@@ -20,6 +20,10 @@ interface ProfileData {
   bio: string | null
   mindset_id: string | null
   is_own: boolean
+  /// Either party has blocked the other — UI shows a gated state.
+  blocked?: boolean
+  /// 'by_me' = I blocked them (offer Unblock); 'by_them' = they blocked me.
+  block_direction?: 'by_me' | 'by_them' | null
 }
 interface Stats { followers: number; following: number; is_followed_by_me: boolean }
 interface Author { handle: string; display_name: string }
@@ -44,6 +48,23 @@ export default function ProfilePage({ params }: { params: Promise<{ handle: stri
   const [isLoading, setIsLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
+
+  // Block action (and Unblock when block_direction === 'by_me')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const toggleBlock = async () => {
+    if (!profile || profile.is_own) return
+    const isBlockingThem = profile.block_direction === 'by_me'
+    if (!isBlockingThem && !confirm(`Block @${profile.handle}? You won't see their posts and they won't see yours.`)) return
+    setMenuOpen(false)
+    try {
+      await fetch('/api/social/block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ handle: profile.handle }),
+      })
+      await load()
+    } catch {}
+  }
 
   // Edit state (own profile only)
   const [editing, setEditing] = useState(false)
@@ -150,6 +171,34 @@ export default function ProfilePage({ params }: { params: Promise<{ handle: stri
       </div>
     )
   }
+  if (!isLoading && profile?.blocked) {
+    const byMe = profile.block_direction === 'by_me'
+    return (
+      <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
+        <div className="px-6 pt-12 pb-3">
+          <Link href="/community" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">
+            <ChevronLeft className="w-4 h-4" /> Community
+          </Link>
+        </div>
+        <div className="px-6">
+          <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-center">
+            <Ban className="w-8 h-8 text-white/40 mx-auto mb-3" />
+            <p className="text-sm text-white/80">
+              {byMe ? `You blocked @${profile.handle}.` : 'This profile is not available.'}
+            </p>
+            {byMe && (
+              <button
+                onClick={() => void toggleBlock()}
+                className="mt-4 px-4 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-xs text-white"
+              >
+                Unblock
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
   if (isLoading || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -185,17 +234,41 @@ export default function ProfilePage({ params }: { params: Promise<{ handle: stri
                     <Pencil className="w-3 h-3" /> Edit
                   </button>
                 ) : (
-                  <button
-                    onClick={toggleFollow}
-                    disabled={followLoading}
-                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors press-scale ${
-                      stats.is_followed_by_me
-                        ? 'bg-white/[0.08] text-white hover:bg-white/[0.14]'
-                        : 'bg-white text-black hover:bg-white/95'
-                    }`}
-                  >
-                    {stats.is_followed_by_me ? <><UserCheck className="w-3 h-3" /> Following</> : <><UserPlus className="w-3 h-3" /> Follow</>}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={toggleFollow}
+                      disabled={followLoading}
+                      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors press-scale ${
+                        stats.is_followed_by_me
+                          ? 'bg-white/[0.08] text-white hover:bg-white/[0.14]'
+                          : 'bg-white text-black hover:bg-white/95'
+                      }`}
+                    >
+                      {stats.is_followed_by_me ? <><UserCheck className="w-3 h-3" /> Following</> : <><UserPlus className="w-3 h-3" /> Follow</>}
+                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => setMenuOpen(o => !o)}
+                        aria-label="More"
+                        className="p-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12]"
+                      >
+                        <MoreHorizontal className="w-3.5 h-3.5 text-white/70" />
+                      </button>
+                      {menuOpen && (
+                        <>
+                          <button aria-label="Close menu" onClick={() => setMenuOpen(false)} className="fixed inset-0 z-40 cursor-default" />
+                          <div className="absolute right-0 top-9 z-50 min-w-[180px] py-1 rounded-xl bg-black border border-white/15 shadow-xl">
+                            <button
+                              onClick={() => void toggleBlock()}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-300 hover:bg-white/5"
+                            >
+                              <Ban className="w-3 h-3" /> Block @{profile.handle}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
               {profile.bio && (

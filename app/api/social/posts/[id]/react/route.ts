@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendPushToUser } from '@/lib/push-service'
+import { isBlocked } from '@/lib/social/blocks'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,6 +60,14 @@ export async function POST(
 
     const post = await prisma.socialPost.findUnique({ where: { id: postId } })
     if (!post || post.hidden) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+    }
+
+    // Refuse the interaction if either party blocked the other.
+    // 404 (not 403) so we don't leak the block existence to the
+    // blocked user — they just see "Post not found".
+    const block = await isBlocked(user.id, post.user_id)
+    if (block.blocked) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 

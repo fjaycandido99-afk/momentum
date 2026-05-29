@@ -13,6 +13,7 @@ import { prisma } from '@/lib/prisma'
 import { ensureProfile } from '@/lib/social/handle'
 import { detectCrisisLevel } from '@/lib/social/crisis-detect'
 import { sendPushToUser } from '@/lib/push-service'
+import { isBlocked, getBlockedUserIds } from '@/lib/social/blocks'
 
 async function notifyComment(authorId: string, commenterId: string, postId: string) {
   if (authorId === commenterId) return
@@ -43,8 +44,15 @@ export async function GET(
 
     const { id: postId } = await context.params
 
+    // Exclude comments authored by users in either direction of a
+    // block with this viewer.
+    const blockedIds = await getBlockedUserIds(user.id)
     const comments = await prisma.socialComment.findMany({
-      where: { post_id: postId, hidden: false },
+      where: {
+        post_id: postId,
+        hidden: false,
+        ...(blockedIds.length > 0 ? { user_id: { notIn: blockedIds } } : {}),
+      },
       orderBy: { created_at: 'asc' },
       take: 200,
     })
@@ -90,6 +98,12 @@ export async function POST(
 
     const post = await prisma.socialPost.findUnique({ where: { id: postId } })
     if (!post || post.hidden) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+    }
+    // Refuse comment when either party blocked the other. 404, not 403,
+    // so we don't tip off the blocked user that a block exists.
+    const block = await isBlocked(user.id, post.user_id)
+    if (block.blocked) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
     if (post.crisis_level === 'urgent') {

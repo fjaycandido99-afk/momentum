@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { isBlocked } from '@/lib/social/blocks'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,6 +32,30 @@ export async function GET(
     })
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    }
+
+    // Block check — if either party has blocked the other, return a
+    // gated profile shell so the UI can render an "unavailable" state
+    // (or, for self-blocked, an Unblock button). Profile info itself
+    // is suppressed — no posts, no follow stats, no bio.
+    const blockState = await isBlocked(user.id, profile.user_id)
+    if (blockState.blocked) {
+      return NextResponse.json({
+        profile: {
+          user_id: profile.user_id,
+          handle: profile.handle,
+          display_name: profile.display_name,
+          bio: null,
+          mindset_id: null,
+          is_own: false,
+          blocked: true,
+          /// "by_me" = I blocked them (Unblock button); "by_them" = they
+          /// blocked me (no recourse).
+          block_direction: blockState.direction,
+        },
+        stats: { followers: 0, following: 0, is_followed_by_me: false },
+        posts: [],
+      })
     }
 
     // Mindset for the persona chip (best-effort — falls back gracefully).

@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { sendPushToUser } from '@/lib/push-service'
+import { isBlocked } from '@/lib/social/blocks'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +49,12 @@ export async function POST(request: NextRequest) {
     }
     if (followeeId === user.id) {
       return NextResponse.json({ error: 'Cannot follow yourself' }, { status: 400 })
+    }
+
+    // Refuse follow when either side has blocked the other.
+    const block = await isBlocked(user.id, followeeId)
+    if (block.blocked) {
+      return NextResponse.json({ error: 'Profile not available' }, { status: 404 })
     }
 
     const key = { follower_id: user.id, followee_id: followeeId }

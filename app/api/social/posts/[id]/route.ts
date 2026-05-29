@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { isBlocked } from '@/lib/social/blocks'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,11 @@ export async function GET(
     const { id } = await context.params
     const p = await prisma.socialPost.findUnique({ where: { id } })
     if (!p || p.hidden) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+
+    // Block check — 404 either way so the block is opaque to the
+    // blocked party.
+    const block = await isBlocked(user.id, p.user_id)
+    if (block.blocked) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
 
     const author = await prisma.socialProfile.findUnique({
       where: { user_id: p.user_id },

@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { getBlockedUserIds } from '@/lib/social/blocks'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,11 +53,16 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Block-aware filter — exclude posts authored by anyone in EITHER
+    // direction of a block relationship with this user.
+    const blockedIds = await getBlockedUserIds(user.id)
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rawPosts: any[] = await (prisma as any).socialPost.findMany({
       where: {
         hidden: false,
         ...(userIdsFilter ? { user_id: { in: userIdsFilter } } : {}),
+        ...(blockedIds.length > 0 ? { user_id: { notIn: blockedIds } } : {}),
         ...(moodFilter ? { mood: moodFilter } : {}),
         ...(mindsetFilter ? { mindset_id: mindsetFilter } : {}),
       },

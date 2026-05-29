@@ -8,7 +8,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, BookOpen, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Eye } from 'lucide-react'
+import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, BookOpen, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Eye, Ban } from 'lucide-react'
 import { crisisResourceForLevel } from '@/lib/social/crisis-detect'
 
 interface Author { handle: string; display_name: string }
@@ -85,6 +85,9 @@ export function PostCard({ post: initial }: { post: PostShape }) {
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
+  // Locally hide a post when the user blocks its author — feels
+  // immediate, no waiting for a feed refetch.
+  const [hidden, setHidden] = useState(false)
   const [reportReason, setReportReason] = useState('abuse')
   const [reportNotes, setReportNotes] = useState('')
   const [reportSent, setReportSent] = useState(false)
@@ -256,6 +259,25 @@ export function PostCard({ post: initial }: { post: PostShape }) {
       }
     } catch {}
   }
+
+  const blockAuthor = async () => {
+    if (!post.author) return
+    if (!confirm(`Block @${post.author.handle}? You won't see their posts and they won't see yours.`)) return
+    setMenuOpen(false)
+    setHidden(true) // optimistic — vanish immediately
+    try {
+      await fetch('/api/social/block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ handle: post.author.handle }),
+      })
+    } catch {
+      // revert on failure
+      setHidden(false)
+    }
+  }
+
+  if (hidden) return null
 
   return (
     <article className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] relative">
@@ -557,13 +579,21 @@ export function PostCard({ post: initial }: { post: PostShape }) {
             onClick={() => setMenuOpen(false)}
             className="fixed inset-0 z-40 cursor-default"
           />
-          <div className="absolute top-10 right-3 z-50 min-w-[160px] py-1 rounded-xl bg-black border border-white/15 shadow-xl">
+          <div className="absolute top-10 right-3 z-50 min-w-[180px] py-1 rounded-xl bg-black border border-white/15 shadow-xl">
             <button
               onClick={() => { setMenuOpen(false); setReportOpen(true) }}
               className="w-full flex items-center gap-2 px-3 py-2 text-xs text-white/85 hover:bg-white/5"
             >
               <Flag className="w-3 h-3" /> Report
             </button>
+            {post.author && (
+              <button
+                onClick={() => void blockAuthor()}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-300 hover:bg-white/5"
+              >
+                <Ban className="w-3 h-3" /> Block @{post.author.handle}
+              </button>
+            )}
           </div>
         </>
       )}
