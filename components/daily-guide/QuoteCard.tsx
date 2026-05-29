@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Quote, Check, Sparkles, Share2, Heart, Loader2, ChevronDown, Lightbulb } from 'lucide-react'
+import { Quote, Check, Sparkles, Share2, Heart, Loader2, ChevronDown, Lightbulb, Users } from 'lucide-react'
 import { getDayOfYearQuote } from '@/lib/quotes'
 import { useShareCard } from '@/hooks/useShareCard'
+import { useShareSheet } from '@/components/social/ShareSheetProvider'
 
 interface QuoteCardProps {
   isCompleted: boolean
@@ -30,6 +31,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
   const [showExplanation, setShowExplanation] = useState(false)
   const [loadingExplanation, setLoadingExplanation] = useState(false)
   const { shareAsImage, isGenerating: isShareGenerating } = useShareCard()
+  const shareSheet = useShareSheet()
 
   const fetchExplanation = useCallback(async () => {
     if (explanation || loadingExplanation || !quote) return
@@ -121,6 +123,17 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
   const handleShare = async () => {
     if (!quote) return
     await shareAsImage(quote.text, 'quote', quote.author)
+  }
+
+  // Post the quote into Voxu Community via the universal ShareSheet.
+  // Separate from handleShare which renders an image for external apps.
+  const handleShareToCommunity = () => {
+    if (!quote) return
+    shareSheet.open({
+      kind: 'quote',
+      body: quote.text,
+      attribution: quote.author,
+    })
   }
 
   const copyToClipboard = async (text: string) => {
@@ -251,9 +264,18 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                       }`} />
                     </button>
                     <button
+                      onClick={handleShareToCommunity}
+                      aria-label="Share to Voxu Community"
+                      title="Share to Voxu Community"
+                      className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                    >
+                      <Users className={`w-3.5 h-3.5 ${isCompleted ? 'text-white/50' : 'text-white/70'} hover:text-white transition-colors`} />
+                    </button>
+                    <button
                       onClick={handleShare}
                       disabled={isShareGenerating}
                       aria-label="Share quote as image"
+                      title="Share as image (Instagram etc)"
                       className="p-1.5 rounded-lg hover:bg-white/10 transition-colors group/share focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       {isShareGenerating ? (

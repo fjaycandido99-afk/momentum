@@ -26,7 +26,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Ban, Play, Pause, Mic } from 'lucide-react'
+import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Ban, Play, Pause, Mic, PenLine } from 'lucide-react'
 import { crisisResourceForLevel, type CrisisRegion } from '@/lib/social/crisis-detect'
 import { getMindsetStyle } from '@/lib/social/mindset-style'
 
@@ -575,6 +575,20 @@ export function PostCard({ post: initial, crisisRegion = 'US', variant = 'feed' 
               >
                 <CornerUpLeft className="w-4 h-4" />
               </button>
+            )}
+
+            {/* Reflect-on-this — takes the reader to the journal with this
+                post pre-loaded as a seed prompt. The community-to-journal
+                direction; lets a post that resonates become a private write. */}
+            {!post.is_own && (
+              <Link
+                href={`/journal?seed=${post.id}`}
+                aria-label="Reflect on this in your journal"
+                title="Reflect on this in your journal"
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-white/50 hover:text-amber-300 hover:bg-amber-400/10 transition-colors"
+              >
+                <PenLine className="w-4 h-4" />
+              </Link>
             )}
 
             {/* Reaction cluster — 3 emoji buttons + total count. */}

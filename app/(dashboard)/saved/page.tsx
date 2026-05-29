@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Bookmark, Loader2, Trash2, Sparkles, X } from 'lucide-react'
+import { Bookmark, Loader2, Trash2, Sparkles, X, Users } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { MoodTimeline } from '@/components/saved/MoodTimeline'
 import { trackFeature } from '@/lib/analytics/track'
+import { useShareSheet } from '@/components/social/ShareSheetProvider'
 
 type SavedFilter = 'all' | 'quote' | 'journal' | 'affirmation' | 'reflection'
 
@@ -18,11 +19,42 @@ interface FavoriteItem {
   created_at: string
 }
 
+// Saved quotes are stored as `"text" — author`. Parse that back out so
+// the ShareSheet can pass them through as kind=quote (anon-default-on)
+// without double-wrapping.
+function parseSavedQuote(text: string): { text: string; author: string } | null {
+  // Match "text" — author, with dot-matches-newline emulated via [\s\S]+
+  // since the /s flag isn't available on our TS target.
+  const m = text.match(/^[“"]([\s\S]+)["”]\s*[—–-]\s*(.+)$/)
+  if (!m) return null
+  return { text: m[1].trim(), author: m[2].trim() }
+}
+
 export default function SavedPage() {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<SavedFilter>('all')
   const [expanded, setExpanded] = useState<FavoriteItem | null>(null)
+  const shareSheet = useShareSheet()
+
+  const handleShareToCommunity = (item: FavoriteItem) => {
+    if (item.content_type === 'quote') {
+      const parsed = parseSavedQuote(item.content_text)
+      shareSheet.open({
+        kind: 'quote',
+        body: parsed?.text || item.content_text,
+        attribution: parsed?.author,
+      })
+    } else if (item.content_type === 'reflection') {
+      const r = parseReflection(item.content_text)
+      shareSheet.open({
+        kind: 'reflection',
+        body: r ? r.answer : item.content_text,
+      })
+    } else {
+      shareSheet.open({ kind: 'reflection', body: item.content_text })
+    }
+  }
 
   useEffect(() => {
     trackFeature('saved_content', 'open')
@@ -275,7 +307,13 @@ export default function SavedPage() {
               </p>
             )}
 
-            <div className="mt-8 flex items-center justify-end">
+            <div className="mt-8 flex items-center justify-between gap-3">
+              <button
+                onClick={() => handleShareToCommunity(expanded)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/15 text-white/75 hover:text-white hover:bg-white/10 transition-colors text-xs press-scale"
+              >
+                <Users className="w-3.5 h-3.5" /> Share to Community
+              </button>
               <button
                 onClick={() => { handleDelete(expanded.id); setExpanded(null) }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/15 text-white/60 hover:text-red-400 hover:bg-red-500/10 transition-colors text-xs press-scale"

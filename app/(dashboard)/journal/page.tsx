@@ -185,6 +185,33 @@ function JournalContent() {
     if (searchParams.get('review')) setShowWeeklyReview(true)
   }, [searchParams])
 
+  // A ?seed=<postId> deep-link from a community post's "Reflect on this"
+  // button. Fetches the post and prefills the free-write with a gentle
+  // prompt that quotes the post + asks what it brought up.
+  useEffect(() => {
+    const seedId = searchParams.get('seed')
+    if (!seedId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/social/posts/${seedId}`)
+        if (!res.ok) return
+        const data = await res.json()
+        const p = data.post
+        if (cancelled || !p) return
+        const who = p.anonymous || !p.author ? 'Someone' : `@${p.author.handle}`
+        const excerpt = (p.essence || p.body || '').trim().slice(0, 220)
+        const seedText = `${who} wrote: "${excerpt}${(p.body || '').length > 220 ? '…' : ''}"\n\nWhat does this bring up for you?\n\n`
+        setMode('freewrite')
+        setFreeText(prev => prev || seedText)
+        setWritingActive(true)
+      } catch (err) {
+        console.warn('[journal] seed fetch failed:', err)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [searchParams])
+
   const isToday = selectedDate.toDateString() === new Date().toDateString()
 
   // Which modes are offered for the viewed date. Today → all four. Past dates →

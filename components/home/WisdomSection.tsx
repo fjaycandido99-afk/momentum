@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { ChevronDown, Heart, Send, Share2 } from 'lucide-react'
+import { ChevronDown, Heart, Send, Share2, Users } from 'lucide-react'
 import { useShareCard } from '@/hooks/useShareCard'
 import { ShareVideoButton } from '@/components/sharing/ShareVideoButton'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
 import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
 import { getDateString } from '@/lib/daily-guide/day-type'
+import { useShareSheet } from '@/components/social/ShareSheetProvider'
 
 function dateSeed(dateStr: string): number {
   let hash = 0
@@ -56,11 +57,25 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
   }, [mindsetId, today])
 
   const { shareAsImage, isGenerating: isSharing } = useShareCard()
+  const shareSheet = useShareSheet()
 
   const handleShareQuote = useCallback(() => {
     if (!dailyQuote) return
     shareAsImage(dailyQuote.text, 'quote', dailyQuote.author)
   }, [dailyQuote, shareAsImage])
+
+  // Post the quote into Voxu Community via the universal ShareSheet.
+  // Distinct from handleShareQuote which generates an image for external
+  // sharing (Instagram etc).
+  const handleShareToCommunity = useCallback(() => {
+    if (!dailyQuote) return
+    shareSheet.open({
+      kind: 'quote',
+      body: dailyQuote.text,
+      attribution: dailyQuote.author,
+      mindsetId,
+    })
+  }, [dailyQuote, shareSheet, mindsetId])
 
   const handleSaveQuote = useCallback(async () => {
     if (saved || !dailyQuote) return
@@ -130,10 +145,19 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
               {/* Appears only once the daily audiogram has been rendered */}
               <ShareVideoButton mindset={mindsetId} date={today} />
               <button
+                onClick={handleShareToCommunity}
+                className="p-1.5 rounded-full hover:bg-white/5 transition-colors"
+                aria-label="Share to Voxu Community"
+                title="Share to Voxu Community"
+              >
+                <Users className="w-4 h-4 text-white/40" />
+              </button>
+              <button
                 onClick={handleShareQuote}
                 disabled={isSharing}
                 className="p-1.5 rounded-full hover:bg-white/5 transition-colors disabled:opacity-50"
-                aria-label="Share quote"
+                aria-label="Share quote as image"
+                title="Share as image"
               >
                 <Share2 className="w-4 h-4 text-white/40" />
               </button>

@@ -7,6 +7,7 @@ import { PageTransition } from '@/components/ui/PageTransition'
 import { AmbientBackground } from '@/components/ui/AmbientBackground'
 import { Providers } from './providers'
 import { ResetProvider } from '@/contexts/ResetContext'
+import { ShareSheetProvider } from '@/components/social/ShareSheetProvider'
 
 export default function DashboardLayout({
   children,
@@ -22,6 +23,7 @@ export default function DashboardLayout({
   return (
     <Providers>
       <ResetProvider>
+        <ShareSheetProvider>
         <div className="isolate min-h-screen bg-black">
           <AmbientBackground />
 
@@ -66,6 +68,7 @@ export default function DashboardLayout({
             </div>
           )}
         </div>
+        </ShareSheetProvider>
       </ResetProvider>
     </Providers>
   )
