@@ -164,13 +164,17 @@ async function sendToHost(deviceToken: string, payload: APNsPayload, host: strin
   const jwt = getAPNsJWT()
   const bundleId = process.env.APNS_BUNDLE_ID!
 
+  // Default badge to 0 so every push CLEARS the iOS app-icon red dot
+  // instead of stamping it back to "1" indefinitely. Apps that want an
+  // unread indicator can pass badge explicitly. Matches Voxu's
+  // low-anxiety wellness vibe — no nagging "you have 5 unread" pile-up.
   const apnsPayload = JSON.stringify({
     aps: {
       alert: {
         title: payload.title,
         body: payload.body,
       },
-      badge: payload.badge ?? 1,
+      badge: payload.badge ?? 0,
       sound: payload.sound ?? 'default',
     },
     ...payload.data,
