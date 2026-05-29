@@ -24,9 +24,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Mic, Square, Loader2, Sparkles, Play, Pause } from 'lucide-react'
-
-// Same voice ID the Daily Guide uses (warm female, "calm" tone in TONE_VOICES).
-const ARLO_VOICE_ID = 'jguI6DAHl2kb9EpGEjEx'
+import { useMindsetOptional } from '@/contexts/MindsetContext'
+import { getMindsetConfig } from '@/lib/mindset/configs'
+import { getMindsetVoiceId } from '@/lib/mindset/voices'
 
 interface VoiceJournalModeProps {
   /** YYYY-MM-DD of the date the entry should attach to. */
@@ -51,6 +51,15 @@ function formatTime(sec: number): string {
 }
 
 export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
+  // The voice + persona name follow the user's current mindset so
+  // Voice Journal sounds like THEIR coach (The Commander for Hustler,
+  // The Sage for Stoic, etc.) instead of a generic Arlo voice.
+  const mindsetCtx = useMindsetOptional()
+  const mindsetConfig = mindsetCtx ? getMindsetConfig(mindsetCtx.mindset) : null
+  const coachName = mindsetConfig?.coachName || 'Your coach'
+  const reflectionLabel = mindsetConfig?.insightName || 'Reflection'
+  const voiceId = getMindsetVoiceId(mindsetCtx?.mindset)
+
   const [phase, setPhase] = useState<Phase>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [transcript, setTranscript] = useState('')
@@ -173,7 +182,7 @@ export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
       const resp = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voiceId: ARLO_VOICE_ID }),
+        body: JSON.stringify({ text, voiceId }),
       })
       if (!resp.ok) return
       const audioBlob = await resp.blob()
@@ -243,9 +252,9 @@ export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
       {/* === Hint copy === */}
       {phase === 'idle' && (
         <>
-          <p className="mt-6 text-lg text-white/90 font-medium">Talk to Arlo.</p>
+          <p className="mt-6 text-lg text-white/90 font-medium">Talk to {coachName}.</p>
           <p className="mt-1.5 text-sm text-white/55 max-w-xs">
-            Speak whatever&apos;s on your mind. Arlo writes back when you&apos;re done.
+            Speak whatever&apos;s on your mind. {coachName} writes back when you&apos;re done.
           </p>
         </>
       )}
@@ -261,7 +270,7 @@ export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
         <div className="mt-8 flex flex-col items-center gap-3">
           <Loader2 className="w-7 h-7 text-white/70 animate-spin" />
           <p className="text-sm text-white/65">
-            {phase === 'transcribing' ? 'Listening…' : 'Arlo is reflecting…'}
+            {phase === 'transcribing' ? 'Listening…' : `${coachName} is reflecting…`}
           </p>
         </div>
       )}
@@ -282,7 +291,7 @@ export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
           <div className="relative p-5 rounded-2xl bg-white/[0.05] border border-white/[0.10]">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-3.5 h-3.5 text-white/70" />
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white/55">Battle Report</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-white/55">{reflectionLabel}</span>
               <button
                 onClick={togglePlayback}
                 aria-label={isPlaying ? 'Pause reflection' : 'Play reflection'}
