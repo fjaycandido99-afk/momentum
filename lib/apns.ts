@@ -11,7 +11,11 @@ const APNS_HOST_PRODUCTION = 'https://api.push.apple.com'
 const APNS_HOST_SANDBOX = 'https://api.sandbox.push.apple.com'
 
 // JWT cache — APNs tokens are valid for 60 minutes
-let cachedJWT: { token: string; expires: number } | null = null
+// Cache keyed by the (keyId, teamId) pair so an env rotation invalidates
+// the cache automatically — otherwise a warm container would keep returning
+// a JWT signed by the OLD key after we swap APNS_KEY_ID, causing Apple to
+// reject every push with InvalidProviderToken until the container recycled.
+let cachedJWT: { token: string; expires: number; keyId: string; teamId: string } | null = null
 
 function getAPNsHost(): string {
   return process.env.APNS_PRODUCTION === 'true'
@@ -60,14 +64,20 @@ export function isAPNsConfigured(): boolean {
  */
 function getAPNsJWT(): string {
   const now = Math.floor(Date.now() / 1000)
-
-  // Reuse cached token if still valid (refresh 5 min before expiry)
-  if (cachedJWT && cachedJWT.expires > now + 300) {
-    return cachedJWT.token
-  }
-
   const keyId = process.env.APNS_KEY_ID!
   const teamId = process.env.APNS_TEAM_ID!
+
+  // Reuse cached token if still valid AND signed with the current key.
+  // Without the keyId/teamId match, a key rotation would silently keep
+  // using the old JWT until the cached token's 55-min TTL expired.
+  if (
+    cachedJWT
+    && cachedJWT.expires > now + 300
+    && cachedJWT.keyId === keyId
+    && cachedJWT.teamId === teamId
+  ) {
+    return cachedJWT.token
+  }
   const authKey = getAuthKey()
   if (!authKey) {
     throw new Error('[APNs] No auth key configured. Set APNS_AUTH_KEY (or APNS_KEY) to the .p8 contents — raw PEM or base64.')
@@ -87,8 +97,9 @@ function getAPNsJWT(): string {
 
     const token = `${signingInput}.${signature}`
 
-    // Cache for 55 minutes (APNs allows up to 60)
-    cachedJWT = { token, expires: now + 55 * 60 }
+    // Cache for 55 minutes (APNs allows up to 60), keyed by the
+    // (keyId, teamId) pair so env rotation invalidates automatically.
+    cachedJWT = { token, expires: now + 55 * 60, keyId, teamId }
 
     return token
   } catch (e) {

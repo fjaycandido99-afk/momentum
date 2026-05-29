@@ -143,6 +143,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Surface which APNs key/team are actually loaded in the running
+    // serverless container so we can tell if the env update propagated.
+    // Key suffix only — never expose the .p8 itself.
+    const envAuthKey = process.env.APNS_AUTH_KEY || process.env.APNS_KEY || ''
+    const envDiag = {
+      apns_key_id: process.env.APNS_KEY_ID || '(unset)',
+      apns_team_id: process.env.APNS_TEAM_ID || '(unset)',
+      apns_bundle_id: process.env.APNS_BUNDLE_ID || '(unset)',
+      apns_auth_key_length: envAuthKey.length,
+      apns_auth_key_starts_with: envAuthKey.slice(0, 18),
+      apns_production: process.env.APNS_PRODUCTION || '(unset)',
+    }
+
     return NextResponse.json({
       ok: result.success,
       type,
@@ -153,6 +166,7 @@ export async function GET(request: NextRequest) {
       subscriptions: subSummary,
       push_result: result,
       apns_probe: apnsProbe,
+      env_diag: envDiag,
     })
   } catch (err) {
     console.error('[test-callback] error:', err)
