@@ -302,6 +302,9 @@ model UserPreferences {
   daily_guide_enabled   Boolean @default(false)
   guide_onboarding_done Boolean @default(false)
   theme_onboarding_done Boolean @default(false)
+  /// When the user accepted the Community Guidelines. NULL = hasn't
+  /// accepted yet → blocks first share with the acceptance modal.
+  community_guidelines_accepted_at DateTime?
 
   // Student-specific settings
   class_days       Int[]   @default([1, 2, 3, 4, 5]) // Days with classes

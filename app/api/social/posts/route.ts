@@ -26,6 +26,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `body too long (max ${MAX_BODY})` }, { status: 400 })
     }
 
+    // Gate first share on Community Guidelines acceptance. Client
+    // shows the modal before getting here, but enforce server-side
+    // so the guideline acceptance can't be bypassed via raw fetch.
+    const prefs = await prisma.userPreferences.findUnique({
+      where: { user_id: user.id },
+      select: { community_guidelines_accepted_at: true },
+    })
+    if (!prefs?.community_guidelines_accepted_at) {
+      return NextResponse.json(
+        { error: 'guidelines_required', message: 'Please review the Community Guidelines before posting.' },
+        { status: 412 }, // 412 Precondition Failed
+      )
+    }
+
     // Ensure the user has a SocialProfile (handle gets minted lazily).
     await ensureProfile(user.id)
 

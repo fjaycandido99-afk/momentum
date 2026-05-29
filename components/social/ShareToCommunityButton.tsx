@@ -12,6 +12,7 @@
 import { useState } from 'react'
 import { Share2, Loader2, EyeOff, Check, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { useGuidelinesGate } from './GuidelinesGate'
 
 interface Props {
   /** Pre-filled body. The editor lets the user trim before posting. */
@@ -31,35 +32,42 @@ export function ShareToCommunityButton({ body, sourceEntryId, mindsetId }: Props
   const [posting, setPosting] = useState(false)
   const [posted, setPosted] = useState<{ id: string } | null>(null)
 
+  const guidelinesGate = useGuidelinesGate()
+
   const submit = async () => {
     const trimmed = draft.trim()
     if (!trimmed || posting) return
-    setPosting(true)
-    try {
-      const res = await fetch('/api/social/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          body: trimmed,
-          anonymous,
-          sourceEntryId: sourceEntryId || undefined,
-          mindsetId: mindsetId || undefined,
-        }),
-      })
-      if (!res.ok) throw new Error('share failed')
-      const data = await res.json()
-      setPosted({ id: data.post.id })
-      setOpen(false)
-    } catch (err) {
-      console.error('[share] failed:', err)
-    } finally {
-      setPosting(false)
-    }
+    // First-share gate — guidelines modal pops if user hasn't accepted,
+    // and continues with the share after acceptance.
+    await guidelinesGate.run(async () => {
+      setPosting(true)
+      try {
+        const res = await fetch('/api/social/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            body: trimmed,
+            anonymous,
+            sourceEntryId: sourceEntryId || undefined,
+            mindsetId: mindsetId || undefined,
+          }),
+        })
+        if (!res.ok) throw new Error('share failed')
+        const data = await res.json()
+        setPosted({ id: data.post.id })
+        setOpen(false)
+      } catch (err) {
+        console.error('[share] failed:', err)
+      } finally {
+        setPosting(false)
+      }
+    })
   }
 
   // After-shared receipt
   if (posted) {
     return (
+      <>
       <div className="mt-1 p-3 rounded-xl bg-white/[0.05] border border-white/[0.10] flex items-center gap-2">
         <Check className="w-4 h-4 text-white/80 shrink-0" />
         <span className="text-sm text-white/85">Shared to Community.</span>
@@ -70,12 +78,15 @@ export function ShareToCommunityButton({ body, sourceEntryId, mindsetId }: Props
           View <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
+      <guidelinesGate.Modal />
+      </>
     )
   }
 
   // Editor (open)
   if (open) {
     return (
+      <>
       <div className="mt-1 p-3 rounded-2xl bg-white/[0.04] border border-white/[0.10]">
         <p className="text-[11px] uppercase tracking-wider text-white/55 mb-2">Share to Community</p>
         <textarea
@@ -115,11 +126,14 @@ export function ShareToCommunityButton({ body, sourceEntryId, mindsetId }: Props
           </div>
         </div>
       </div>
+      <guidelinesGate.Modal />
+      </>
     )
   }
 
   // Default collapsed button
   return (
+    <>
     <button
       onClick={() => { setDraft(body); setOpen(true) }}
       className="mt-1 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs text-white/70 hover:text-white/95 transition-colors press-scale"
@@ -127,5 +141,7 @@ export function ShareToCommunityButton({ body, sourceEntryId, mindsetId }: Props
       <Share2 className="w-3.5 h-3.5" />
       Share this to Community (private by default)
     </button>
+    <guidelinesGate.Modal />
+    </>
   )
 }

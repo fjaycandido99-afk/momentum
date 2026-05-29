@@ -10,10 +10,11 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Loader2, Sparkles, Send, EyeOff, RefreshCw } from 'lucide-react'
+import { Loader2, Sparkles, Send, EyeOff, RefreshCw, FileText } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import type { MindsetId } from '@/lib/mindset/types'
+import { useGuidelinesGate } from '@/components/social/GuidelinesGate'
 
 interface Author { handle: string; display_name: string }
 interface FeedPost {
@@ -57,6 +58,8 @@ export default function CommunityPage() {
   const [composeMood, setComposeMood] = useState<string | null>(null)
   const [isPosting, setIsPosting] = useState(false)
 
+  const guidelinesGate = useGuidelinesGate()
+
   const loadFeed = useCallback(async (s: Scope, m: string | null) => {
     setIsLoading(true)
     try {
@@ -78,22 +81,26 @@ export default function CommunityPage() {
   const submit = async () => {
     const body = draft.trim()
     if (!body || isPosting) return
-    setIsPosting(true)
-    try {
-      const res = await fetch('/api/social/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body, anonymous, mood: composeMood || undefined }),
-      })
-      if (!res.ok) throw new Error('post failed')
-      setDraft('')
-      setComposeMood(null)
-      await loadFeed(scope, mood)
-    } catch (err) {
-      console.error('[community] post failed:', err)
-    } finally {
-      setIsPosting(false)
-    }
+    // Run through the guidelines gate — opens the acceptance modal if
+    // this user hasn't accepted yet, then continues the post afterwards.
+    await guidelinesGate.run(async () => {
+      setIsPosting(true)
+      try {
+        const res = await fetch('/api/social/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body, anonymous, mood: composeMood || undefined }),
+        })
+        if (!res.ok) throw new Error('post failed')
+        setDraft('')
+        setComposeMood(null)
+        await loadFeed(scope, mood)
+      } catch (err) {
+        console.error('[community] post failed:', err)
+      } finally {
+        setIsPosting(false)
+      }
+    })
   }
 
   // The 8 mindsets — chip strip pointing at the per-mindset feeds.
@@ -113,7 +120,12 @@ export default function CommunityPage() {
             <RefreshCw className="w-4 h-4 text-white/60" />
           </button>
         </div>
-        <p className="text-xs text-white/55 mb-3">Share a reflection. Read others. Send strength.</p>
+        <p className="text-xs text-white/55 mb-3">
+          Share a reflection. Read others. Send strength.{' '}
+          <Link href="/community/guidelines" className="inline-flex items-center gap-1 text-white/70 hover:text-white underline-offset-2 hover:underline ml-1">
+            <FileText className="w-3 h-3" /> Guidelines
+          </Link>
+        </p>
 
         {/* Scope tabs */}
         <div className="flex gap-1 p-0.5 rounded-lg bg-white/[0.06]">
@@ -249,6 +261,9 @@ export default function CommunityPage() {
 
         {posts.map(post => <PostCard key={post.id} post={post} />)}
       </div>
+
+      {/* Guidelines acceptance modal — only mounts when triggered. */}
+      <guidelinesGate.Modal />
     </div>
   )
 }
