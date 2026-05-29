@@ -860,6 +860,53 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
         </div>
       </div>
 
+      {/* === DESKTOP: big floating controls bar — sits just below the
+            centered album cover so prev/play/next are obvious and reachable
+            without scrolling the eye down to the title row. Positioned by
+            `top: calc(50% + half-album + gap)` so it tracks the album
+            regardless of viewport size. Hidden on mobile (covered by the
+            bottom-row controls). === */}
+      {!embedError && (
+        <div
+          className="hidden lg:flex absolute left-1/2 -translate-x-1/2 z-30 items-center gap-7 pointer-events-auto"
+          style={{ top: 'calc(50% + min(260px, 30vh) + 32px)' }}
+        >
+          {/* Previous */}
+          <button
+            aria-label="Previous"
+            onClick={onSkipPrevious}
+            disabled={!hasPrevious}
+            className="w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+          >
+            <SkipBack className="w-7 h-7 text-white" fill="white" />
+          </button>
+
+          {/* Play/Pause — extra-large white circle, the focal control */}
+          <button
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+            onClick={togglePlay}
+            disabled={!activeReady && !externalAudio}
+            className="w-[72px] h-[72px] rounded-full bg-white flex items-center justify-center disabled:opacity-40 hover:scale-105 active:scale-95 transition-transform shadow-[0_8px_30px_rgba(255,255,255,0.25)] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none"
+          >
+            {isPlaying ? (
+              <Pause className="w-8 h-8 text-black" fill="black" />
+            ) : (
+              <Play className="w-8 h-8 text-black ml-0.5" fill="black" />
+            )}
+          </button>
+
+          {/* Next */}
+          <button
+            aria-label="Next"
+            onClick={onSkipNext}
+            disabled={!hasNext}
+            className="w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+          >
+            <SkipForward className="w-7 h-7 text-white" fill="white" />
+          </button>
+        </div>
+      )}
+
       {/* === Bottom controls (overlaid on artwork) === */}
       <div className="absolute bottom-0 left-0 right-0 z-20 px-5 pb-[calc(env(safe-area-inset-bottom)+16px)]">
 
@@ -939,8 +986,9 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
               </div>
             </div>
 
-            {/* Controls row */}
-            <div className="flex items-center justify-center gap-8 py-1">
+            {/* Controls row — MOBILE only. Desktop gets a bigger floating
+                bar positioned just under the album cover (see below). */}
+            <div className="flex items-center justify-center gap-8 py-1 lg:hidden">
               {/* Previous */}
               <button
                 aria-label="Previous"
