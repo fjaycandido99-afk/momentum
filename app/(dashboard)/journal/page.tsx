@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target,
   Sparkles, BookOpen, Calendar, X, Crown, Lock, Shuffle, ChevronDown,
-  MessageCircle, Moon, Send, Save, Search, Download, Trash2, Mic,
+  MessageCircle, Moon, Send, Save, Search, Download, Trash2, Mic, Users,
 } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
@@ -27,7 +27,6 @@ import { useJournalAutosave } from '@/hooks/useJournalAutosave'
 import { FocusModeToolbar } from '@/components/journal/FocusModeToolbar'
 import { EmptyWritingState } from '@/components/journal/EmptyWritingState'
 import { JournalMilestoneCelebration } from '@/components/journal/JournalMilestoneCelebration'
-import { JournalRightRail } from '@/components/journal/JournalRightRail'
 import { VoiceJournalMode } from '@/components/journal/VoiceJournalMode'
 import { ShareToCommunityButton } from '@/components/social/ShareToCommunityButton'
 import { FeatureHint } from '@/components/ui/FeatureHint'
@@ -819,25 +818,17 @@ function JournalContent() {
       {/* Desktop sidebar — fixed-positioned, fills the empty space to the
           right of the centered journal column at xl+. Skips lg (1024–1280)
           where the column already takes most of the width. */}
-      <JournalRightRail
-        currentStreak={journalStats.currentStreak}
-        longestStreak={journalStats.longestStreak}
-        totalEntries={journalStats.totalEntries}
-        recentEntries={recentEntries}
-        selectedDate={selectedDate.toISOString().split('T')[0]}
-        onSelectEntry={(dateStr) => {
-          // YYYY-MM-DD → Date in local time (so the day doesn't shift)
-          const [y, m, d] = dateStr.split('-').map(Number)
-          if (y && m && d) {
-            setSelectedDate(new Date(y, m - 1, d))
-            setIsSaved(false)
-          }
-        }}
-      />
+      {/* Right rail removed — was overlapping the full-bleed journal
+          column. Streak shows in the header pill, recent entries live
+          at /journal/history. */}
 
-      {/* ── Header: title + inline date nav ── */}
+      {/* ── Header: title + inline date nav ── (cap the inner contents
+            on desktop so the mode-tab row doesn't pull apart edge to
+            edge on a wide monitor — page stays full-bleed, only the
+            interactive content is column-constrained) ── */}
       <div className="sticky top-0 z-50 px-6 pt-12 pb-3 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
+        <div className="lg:max-w-3xl lg:mx-auto">{/* writing-column wrapper for header rows */}
         {/* Row 1: Title + actions */}
         <div className="flex items-start justify-between mb-2.5">
           <div className="min-w-0">
@@ -918,12 +909,13 @@ function JournalContent() {
             </button>
           ))}
         </div>
+        </div>{/* end writing-column wrapper */}
       </div>
 
       {/* ── Mood check-in + hint (scrolls under the pinned header) ──
-          Tightened vertical rhythm on desktop so the page reads as one
-          composition instead of widely-spaced phone sections. */}
-      <div className="px-6 pt-3 pb-3 mb-2 lg:pt-2 lg:pb-2 lg:mb-1 space-y-2.5">
+          Inner content wrapped in writing-column on desktop so mood
+          pills don't pull apart edge-to-edge. */}
+      <div className="px-6 pt-3 pb-3 mb-2 lg:pt-2 lg:pb-2 lg:mb-1 space-y-2.5 lg:max-w-3xl lg:mx-auto">
         {/* Mood check-in — prominent, full width */}
         <MoodSelector
           mood={mood}
@@ -935,8 +927,10 @@ function JournalContent() {
 
       <TierBanner page="journal" />
 
-      {/* Journal Form */}
-      <div className="px-6">
+      {/* Journal Form — cap the writing column on desktop so textareas,
+          tab content, save button don't stretch absurdly wide. Page
+          itself remains full-bleed. */}
+      <div className="px-6 lg:max-w-3xl lg:mx-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-5 h-5 text-white/90 animate-spin" />
@@ -1339,11 +1333,17 @@ function JournalContent() {
         {/* Save + Delete — only for guided and freewrite modes */}
         {!isLoading && (mode === 'guided' || mode === 'freewrite') && (
           <div className="mt-4 space-y-2">
-            {/* Save & Share — one-tap opt-in to ALSO post to Community on
-                save. Preference sticks across sessions (localStorage). */}
+            {/* Save & Share — one-tap opt-in to ALSO post to Community
+                on save. Highlighted with a Users icon + gradient bg when
+                active so users actually notice it. Preference sticks
+                across sessions (localStorage). */}
             {!isSaved && (
-              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs">
-                <label className="flex items-center gap-2 text-white/80 cursor-pointer select-none">
+              <div className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all ${
+                saveAndShare
+                  ? 'bg-white/[0.10] border border-white/20 shadow-[0_0_24px_rgba(255,255,255,0.08)]'
+                  : 'bg-white/[0.04] border border-white/[0.08]'
+              }`}>
+                <label className="flex items-center gap-2 text-white cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={saveAndShare}
@@ -1354,10 +1354,13 @@ function JournalContent() {
                     }}
                     className="accent-white"
                   />
-                  Also share to Community
+                  <Users className="w-3.5 h-3.5 text-white/75" />
+                  <span className={saveAndShare ? 'font-medium' : 'text-white/80'}>
+                    Also share to Community
+                  </span>
                 </label>
                 {saveAndShare && (
-                  <label className="flex items-center gap-1.5 text-white/65 cursor-pointer select-none">
+                  <label className="flex items-center gap-1.5 text-white/75 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={saveAndShareAnon}
