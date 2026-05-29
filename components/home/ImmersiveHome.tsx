@@ -1150,13 +1150,8 @@ export function ImmersiveHome() {
               />
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={openReset}
-                aria-label="Reset — a calm grounding moment"
-                className="flex items-center justify-center p-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] transition-colors press-scale"
-              >
-                <Wind className="w-4 h-4 text-white/75" />
-              </button>
+              {/* Reset wind button — parked per user request. Infra
+                  stays mounted; re-add this block to bring it back. */}
               {mindsetCtx && (
                 <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
                   <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/75" />

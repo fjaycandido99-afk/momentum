@@ -453,13 +453,12 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
           )}
 
           {/* Adaptive recommendation — only appears when mood/energy signals
-              something worth adapting to (low mood → grounding reset, low
-              energy → recharge, high evening energy → wind down). */}
-          {adaptiveRec && (
+              something worth adapting to. Reset kind is suppressed for now
+              (Reset feature parked) — only session recommendations show. */}
+          {adaptiveRec && adaptiveRec.kind !== 'reset' && (
             <button
               onClick={() => {
-                if (adaptiveRec.kind === 'reset') openReset()
-                else if (adaptiveRec.session) setActiveSession(adaptiveRec.session)
+                if (adaptiveRec.session) setActiveSession(adaptiveRec.session)
               }}
               className="w-full text-left rounded-2xl border border-white/15 bg-white/[0.05] p-4 press-scale"
             >

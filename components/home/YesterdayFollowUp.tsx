@@ -116,14 +116,15 @@ export function YesterdayFollowUp() {
           ) : followUp.kind === 'mood' ? (
             <>
               <p className="mt-3 text-[15px] text-white/90 leading-snug">
-                You were feeling <span className="text-white font-medium">{followUp.moodLabel}</span> yesterday. Want to start today with a clear head?
+                You were feeling <span className="text-white font-medium">{followUp.moodLabel}</span> yesterday. Want to journal about today?
               </p>
-              <button
-                onClick={() => { dismiss(); openReset() }}
+              <Link
+                href="/journal"
+                onClick={dismiss}
                 className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.08] border border-white/15 text-white text-sm font-medium press-scale"
               >
-                <Wind className="w-4 h-4" /> Take a 2-minute reset
-              </button>
+                Open journal
+              </Link>
             </>
           ) : (
             <>

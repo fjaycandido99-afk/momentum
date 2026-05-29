@@ -75,15 +75,9 @@ export function MinimalNav() {
         </div>
       )}
 
-      {/* Reset / SOS capsule */}
-      <button
-        onClick={openReset}
-        aria-label="Reset — a calm grounding moment"
-        className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-      >
-        <Wind className="w-4 h-4 text-white" strokeWidth={1.5} aria-hidden="true" />
-        <span className="text-sm text-white">Reset</span>
-      </button>
+      {/* Reset / SOS capsule — parked for now per user request. The
+          ResetContext infra stays mounted so re-adding the entry point
+          later is one block. */}
 
       {/* Home capsule */}
       <Link
