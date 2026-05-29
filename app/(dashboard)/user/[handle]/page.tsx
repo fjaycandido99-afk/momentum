@@ -165,7 +165,7 @@ export default function ProfilePage({ params }: { params: { handle: string } }) 
 
   if (notFound) {
     return (
-      <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto px-6 pt-16 text-center">
+      <div className="min-h-screen text-white pb-24 px-6 pt-16 text-center">
         <p className="text-lg">Profile not found</p>
         <Link href="/community" className="inline-block mt-4 text-sm text-white/60 hover:text-white">
           ← Back to community
@@ -176,7 +176,7 @@ export default function ProfilePage({ params }: { params: { handle: string } }) 
   if (!isLoading && profile?.blocked) {
     const byMe = profile.block_direction === 'by_me'
     return (
-      <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto xl:max-w-3xl xl:mx-0 xl:ml-12 xl:mr-[336px]">
+      <div className="min-h-screen text-white pb-24">
         <div className="px-6 pt-12 pb-3">
           <Link href="/community" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">
             <ChevronLeft className="w-4 h-4" /> Community
@@ -210,7 +210,7 @@ export default function ProfilePage({ params }: { params: { handle: string } }) 
   }
 
   return (
-    <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto xl:max-w-3xl xl:mx-0 xl:ml-12 xl:mr-[336px]">
+    <div className="min-h-screen text-white pb-24">
       {/* Header / back */}
       <div className="px-6 pt-12 pb-3">
         <Link href="/community" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">

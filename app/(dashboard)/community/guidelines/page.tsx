@@ -66,7 +66,7 @@ const NOT_ALLOWED = [
 
 export default function CommunityGuidelinesPage() {
   return (
-    <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto">
+    <div className="min-h-screen text-white pb-24">
       <div className="px-6 pt-12 pb-3">
         <Link href="/community" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">
           <ChevronLeft className="w-4 h-4" /> Community

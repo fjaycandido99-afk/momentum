@@ -815,7 +815,7 @@ function JournalContent() {
   //   keeps growing on wider monitors so the gap to the rail stays
   //   tight instead of opening into empty middle space.
   return (
-    <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto xl:max-w-4xl xl:mx-0 xl:ml-12 xl:mr-[336px] 2xl:max-w-5xl">
+    <div className="min-h-screen text-white pb-24">
       {/* Desktop sidebar — fixed-positioned, fills the empty space to the
           right of the centered journal column at xl+. Skips lg (1024–1280)
           where the column already takes most of the width. */}
