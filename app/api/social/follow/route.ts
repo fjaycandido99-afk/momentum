@@ -9,8 +9,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { sendPushToUser } from '@/lib/push-service'
 
 export const dynamic = 'force-dynamic'
+
+async function notifyFollow(followeeId: string, followerId: string) {
+  const follower = await prisma.socialProfile.findUnique({
+    where: { user_id: followerId },
+    select: { display_name: true, handle: true },
+  })
+  if (!follower) return
+  await sendPushToUser(followeeId, 'custom', {
+    title: `${follower.display_name} followed you`,
+    body: `Open Community to see their posts.`,
+    data: { type: 'custom', event: 'social_follow', url: `/user/${follower.handle}` },
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,6 +62,8 @@ export async function POST(request: NextRequest) {
     } else {
       await prisma.socialFollow.create({ data: key })
       active = true
+      // Fire-and-forget follow notification (only on new follow, not unfollow).
+      void notifyFollow(followeeId, user.id).catch(err => console.warn('[follow] notify failed:', err))
     }
 
     const followers = await prisma.socialFollow.count({ where: { followee_id: followeeId } })

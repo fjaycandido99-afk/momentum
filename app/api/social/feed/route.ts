@@ -103,6 +103,7 @@ export async function GET(request: NextRequest) {
         created_at: p.created_at,
         reaction_count: p.reaction_count,
         comment_count: p.comment_count,
+        crisis_level: p.crisis_level,
         is_own: isOwn,
         // Anonymous posts hide author info from everyone EXCEPT the
         // author themselves (who needs to see their own posts in the

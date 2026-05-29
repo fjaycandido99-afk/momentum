@@ -58,6 +58,7 @@ model User {
   // Social (Community feed)
   profile   SocialProfile?
   posts     SocialPost[]
+  comments  SocialComment[]
   reactions SocialReaction[]
   following SocialFollow[]  @relation("follower")
   followers SocialFollow[]  @relation("followee")
@@ -103,13 +104,63 @@ model SocialPost {
   /// surface in the feed. Lets us reverse decisions.
   hidden          Boolean  @default(false)
   hidden_reason   String?
+  /// Auto-flagged by crisis-keyword detection ("urgent" or "concern").
+  /// Posts at "urgent" level surface crisis resources inline and have
+  /// comments disabled until reviewed.
+  crisis_level    String?
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
   reactions SocialReaction[]
+  comments  SocialComment[]
 
   @@index([user_id])
   @@index([hidden, created_at(sort: Desc)])
+}
+
+// A comment on a post. Flat for v1 (parent_id reserved for threading
+// later). Comments carry their own moderation flags + reaction count.
+model SocialComment {
+  id             String   @id @default(cuid())
+  post_id        String
+  post           SocialPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user_id        String
+  user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  body           String   @db.Text
+  /// Reserved for future threading. NULL = top-level comment.
+  parent_id      String?
+  reaction_count Int      @default(0)
+  /// Soft-hide for moderation. Hidden comments stay in the DB for audit.
+  hidden         Boolean  @default(false)
+  hidden_reason  String?
+  /// Auto-flagged by crisis-keyword detection ("urgent" or "concern").
+  crisis_level   String?  // NULL | "concern" | "urgent"
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@index([post_id, created_at])
+  @@index([user_id])
+}
+
+// Moderation report. Either a user-submitted abuse report or an
+// auto-generated crisis flag. Admin queue at /admin/social reads
+// status=pending rows.
+model SocialReport {
+  id          String   @id @default(cuid())
+  target_type String   // "post" | "comment"
+  target_id   String
+  reporter_id String?  // NULL when auto-generated (e.g. crisis detector)
+  reason      String   // "abuse" | "spam" | "off_topic" | "self_harm_concern" | "auto_crisis"
+  notes       String?  @db.VarChar(500)
+  status      String   @default("pending") // "pending" | "resolved" | "dismissed"
+  resolution  String?  // moderator's action summary
+  /// Moderator who resolved it.
+  resolved_by String?
+  resolved_at DateTime?
+  created_at  DateTime @default(now())
+
+  @@index([status, created_at])
+  @@index([target_type, target_id])
 }
 
 // A user's reaction to a post. Single-shot per (user, post, kind) so
