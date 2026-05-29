@@ -24,6 +24,9 @@ export const dynamic = 'force-dynamic'
 interface AuthorLite {
   handle: string
   display_name: string
+  /// Number of journal entries this user has written — drives their
+  /// InkSpiral avatar's growth. Omitted on anonymous post slots.
+  entry_count?: number
 }
 
 export async function GET(request: NextRequest) {
@@ -84,9 +87,37 @@ export async function GET(request: NextRequest) {
       where: { user_id: { in: authorIds } },
       select: { user_id: true, handle: true, display_name: true },
     })
+
+    // Batch journal-entry counts for InkSpiral avatars on the byline.
+    // groupBy returns one row per user_id with a _count — one DB call
+    // for the whole feed page instead of N. Defaults to 0 for users
+    // who haven't journaled (so their spiral renders as just the
+    // center dot, the "day 0" state).
+    const entryCounts = await prisma.dailyGuide.groupBy({
+      by: ['user_id'],
+      where: {
+        user_id: { in: authorIds },
+        OR: [
+          { journal_win: { not: null } },
+          { journal_gratitude: { not: null } },
+          { journal_learned: { not: null } },
+          { journal_intention: { not: null } },
+          { journal_freetext: { not: null } },
+        ],
+      },
+      _count: { _all: true },
+    }).catch(() => [] as { user_id: string; _count: { _all: number } }[])
+    const countByUser = new Map<string, number>(
+      entryCounts.map(c => [c.user_id, c._count._all]),
+    )
+
     const profileByUser = new Map<string, AuthorLite>(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      profiles.map((p: any) => [p.user_id, { handle: p.handle, display_name: p.display_name }]),
+      profiles.map((p: any) => [p.user_id, {
+        handle: p.handle,
+        display_name: p.display_name,
+        entry_count: countByUser.get(p.user_id) ?? 0,
+      }]),
     )
 
     // Pull the CURRENT user's reactions on this page so the UI can

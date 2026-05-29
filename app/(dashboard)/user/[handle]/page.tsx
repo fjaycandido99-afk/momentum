@@ -230,7 +230,10 @@ export default function ProfilePage({ params }: { params: { handle: string } }) 
                     letter monogram. */}
                 <div className="w-20 h-20 rounded-full bg-white/[0.04] grid place-items-center shrink-0">
                   <InkSpiral
-                    seed={profile.user_id || profile.handle}
+                    /* Seed from handle (public + stable) so the spiral
+                       matches whatever renders in feed bylines — same
+                       user → same spiral everywhere. */
+                    seed={profile.handle}
                     entryCount={stats.entry_count ?? 0}
                     size={76}
                     withFrame

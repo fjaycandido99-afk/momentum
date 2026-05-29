@@ -32,6 +32,20 @@ export async function GET(
       select: { handle: true, display_name: true },
     })
 
+    // Author's journal entry count for the byline InkSpiral.
+    const authorEntryCount = await prisma.dailyGuide.count({
+      where: {
+        user_id: p.user_id,
+        OR: [
+          { journal_win: { not: null } },
+          { journal_gratitude: { not: null } },
+          { journal_learned: { not: null } },
+          { journal_intention: { not: null } },
+          { journal_freetext: { not: null } },
+        ],
+      },
+    }).catch(() => 0)
+
     const myReactions = await prisma.socialReaction.findMany({
       where: { user_id: user.id, post_id: id },
       select: { kind: true },
@@ -65,7 +79,11 @@ export async function GET(
         comment_count: p.comment_count,
         crisis_level: p.crisis_level,
         is_own: isOwn,
-        author: p.anonymous && !isOwn ? null : (author || { handle: 'user', display_name: 'Someone' }),
+        author: p.anonymous && !isOwn
+          ? null
+          : (author
+              ? { ...author, entry_count: authorEntryCount }
+              : { handle: 'user', display_name: 'Someone', entry_count: 0 }),
         my_reactions: myReactions.map(r => r.kind),
       },
     })

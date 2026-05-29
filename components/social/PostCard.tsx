@@ -29,8 +29,16 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { EyeOff, Heart, MessageCircle, MoreHorizontal, Flag, Loader2, Send, AlertTriangle, Bookmark, BookmarkCheck, Quote, CornerUpLeft, Ban, Play, Pause, Mic, PenLine } from 'lucide-react'
 import { crisisResourceForLevel, type CrisisRegion } from '@/lib/social/crisis-detect'
 import { getMindsetStyle } from '@/lib/social/mindset-style'
+import { InkSpiral } from '@/components/social/InkSpiral'
 
-interface Author { handle: string; display_name: string }
+interface Author {
+  handle: string
+  display_name: string
+  /// Author's journal entry count — drives the InkSpiral avatar's
+  /// growth. Optional for backwards compat with anything still
+  /// passing the lighter shape.
+  entry_count?: number
+}
 interface ReplyParent { id: string; excerpt: string; author: Author | null }
 interface PostShape {
   id: string
@@ -354,14 +362,23 @@ export function PostCard({ post: initial, crisisRegion = 'US', variant = 'feed' 
   return (
     <article className="relative px-4 py-3.5 border-b border-white/[0.06] hover:bg-white/[0.015] transition-colors">
       <div className="flex gap-3">
-        {/* AVATAR COLUMN */}
+        {/* AVATAR COLUMN — InkSpiral fingerprint (or EyeOff for anonymous).
+            Seeded from the public handle so we don't leak user_ids through
+            the feed payload. Spiral grows with the author's journal
+            entry count → power-journalers get woven mandalas, new users
+            get a single center dot. */}
         <div className="shrink-0">
           {post.author ? (
             <Link
               href={`/user/${post.author.handle}`}
-              className={`block w-10 h-10 rounded-full bg-white/10 grid place-items-center text-[13px] font-semibold text-white/85 hover:bg-white/15 transition-colors ring-1 ${mindsetStyle.avatarRing}`}
+              aria-label={`${post.author.display_name}'s profile`}
+              className={`block w-10 h-10 rounded-full bg-white/[0.04] grid place-items-center hover:bg-white/[0.08] transition-colors ring-1 ${mindsetStyle.avatarRing}`}
             >
-              {post.author.display_name.charAt(0).toUpperCase()}
+              <InkSpiral
+                seed={post.author.handle}
+                entryCount={post.author.entry_count ?? 0}
+                size={36}
+              />
             </Link>
           ) : (
             <div className="w-10 h-10 rounded-full bg-white/10 grid place-items-center">
