@@ -1,17 +1,20 @@
 /**
- * Per-mindset visual signatures for community posts.
+ * Per-mindset visual signatures for community posts — MONOCHROME.
  *
- * Each mindset gets:
- *   - An accent color (drives left-edge stripe, mindset chip, avatar ring,
- *     subtle glow). All translucent so the dark canvas stays primary.
- *   - A radial gradient hint (subtle wash on the top-left of the card)
- *     that maps to the mindset's philosophical "world" — fire for Hustler,
- *     cosmic indigo for Manifestor, marble grey for Stoic, etc.
+ * Voxu's visual identity is white/silver light on black — the colored
+ * mindset accents (amber Hustler, violet Manifestor, etc.) fought
+ * that direction and felt off-brand. This version keeps the visual
+ * variety BUT through monochrome treatments: different white/silver
+ * intensities, different glow positions, and breath rhythms — no
+ * chroma.
  *
- * The goal isn't to color-code aggressively — it's to break up the
- * "wall of identical cards" feeling so a Stoic reflection FEELS
- * different from a Hustler reflection at a glance, without making
- * either one look like a notification.
+ * Variety still happens through:
+ *   - The mindset CHIP TEXT (each mindset has a distinct word/vibe)
+ *   - The breath animation on the aura layer
+ *   - The essence quote, lesson card, echo quote per post
+ *   - The mood tints (which carry actual mood information)
+ *
+ * That's enough differentiation without bringing color back in.
  */
 
 import type { MindsetId } from '@/lib/mindset/types'
@@ -29,70 +32,74 @@ export interface MindsetStyle {
   vibe: string
 }
 
+// All monochrome — borders are white with subtle alpha variation,
+// glows vary in INTENSITY (0.08–0.12 alpha) and POSITION (top-left
+// vs top-center) rather than hue. Keeps each mindset visually distinct
+// while staying in Voxu's cinematic palette.
 const STYLES: Record<MindsetId, MindsetStyle> = {
   stoic: {
-    borderClass: 'border-l-2 border-l-slate-400/40',
-    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(148, 163, 184, 0.10) 0%, transparent 55%)',
-    chipClass: 'text-slate-300/85 bg-slate-400/10 border-slate-400/20',
-    avatarRing: 'ring-slate-400/30',
+    borderClass: 'border-l border-l-white/15',
+    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.06) 0%, transparent 50%)',
+    chipClass: 'text-white/75 bg-white/[0.04] border-white/10',
+    avatarRing: 'ring-white/15',
     vibe: 'measured',
   },
   existentialist: {
-    borderClass: 'border-l-2 border-l-indigo-400/40',
-    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(129, 140, 248, 0.12) 0%, transparent 55%)',
-    chipClass: 'text-indigo-300/90 bg-indigo-400/10 border-indigo-400/20',
-    avatarRing: 'ring-indigo-400/30',
+    borderClass: 'border-l border-l-white/15',
+    glowGradient: 'radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 60%)',
+    chipClass: 'text-white/75 bg-white/[0.05] border-white/12',
+    avatarRing: 'ring-white/15',
     vibe: 'searching',
   },
   cynic: {
-    borderClass: 'border-l-2 border-l-orange-400/40',
-    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(251, 146, 60, 0.10) 0%, transparent 55%)',
-    chipClass: 'text-orange-300/85 bg-orange-400/10 border-orange-400/20',
-    avatarRing: 'ring-orange-400/30',
+    borderClass: 'border-l border-l-white/20',
+    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.07) 0%, transparent 55%)',
+    chipClass: 'text-white/80 bg-white/[0.05] border-white/12',
+    avatarRing: 'ring-white/20',
     vibe: 'unfiltered',
   },
   hedonist: {
-    borderClass: 'border-l-2 border-l-emerald-400/40',
-    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(52, 211, 153, 0.10) 0%, transparent 55%)',
-    chipClass: 'text-emerald-300/85 bg-emerald-400/10 border-emerald-400/20',
-    avatarRing: 'ring-emerald-400/30',
+    borderClass: 'border-l border-l-white/15',
+    glowGradient: 'radial-gradient(circle at 5% 5%, rgba(255, 255, 255, 0.06) 0%, transparent 55%)',
+    chipClass: 'text-white/75 bg-white/[0.04] border-white/10',
+    avatarRing: 'ring-white/15',
     vibe: 'savoring',
   },
   samurai: {
-    borderClass: 'border-l-2 border-l-rose-400/45',
-    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(251, 113, 133, 0.10) 0%, transparent 55%)',
-    chipClass: 'text-rose-300/90 bg-rose-400/10 border-rose-400/20',
-    avatarRing: 'ring-rose-400/35',
+    borderClass: 'border-l border-l-white/20',
+    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 50%)',
+    chipClass: 'text-white/80 bg-white/[0.05] border-white/15',
+    avatarRing: 'ring-white/20',
     vibe: 'disciplined',
   },
   scholar: {
-    borderClass: 'border-l-2 border-l-sky-400/40',
-    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.10) 0%, transparent 55%)',
-    chipClass: 'text-sky-300/85 bg-sky-400/10 border-sky-400/20',
-    avatarRing: 'ring-sky-400/30',
+    borderClass: 'border-l border-l-white/15',
+    glowGradient: 'radial-gradient(circle at 5% 0%, rgba(255, 255, 255, 0.07) 0%, transparent 55%)',
+    chipClass: 'text-white/75 bg-white/[0.04] border-white/10',
+    avatarRing: 'ring-white/15',
     vibe: 'curious',
   },
   manifestor: {
-    borderClass: 'border-l-2 border-l-violet-400/45',
-    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(167, 139, 250, 0.12) 0%, transparent 55%)',
-    chipClass: 'text-violet-300/90 bg-violet-400/10 border-violet-400/20',
-    avatarRing: 'ring-violet-400/35',
+    borderClass: 'border-l border-l-white/18',
+    glowGradient: 'radial-gradient(circle at 10% 5%, rgba(255, 255, 255, 0.09) 0%, transparent 60%)',
+    chipClass: 'text-white/80 bg-white/[0.05] border-white/12',
+    avatarRing: 'ring-white/18',
     vibe: 'becoming',
   },
   hustler: {
-    borderClass: 'border-l-2 border-l-amber-400/45',
-    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(251, 191, 36, 0.10) 0%, transparent 55%)',
-    chipClass: 'text-amber-300/90 bg-amber-400/10 border-amber-400/20',
-    avatarRing: 'ring-amber-400/35',
+    borderClass: 'border-l border-l-white/22',
+    glowGradient: 'radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.09) 0%, transparent 50%)',
+    chipClass: 'text-white/85 bg-white/[0.06] border-white/15',
+    avatarRing: 'ring-white/22',
     vibe: 'relentless',
   },
 }
 
 const DEFAULT_STYLE: MindsetStyle = {
-  borderClass: 'border-l-2 border-l-white/15',
+  borderClass: 'border-l border-l-white/12',
   glowGradient: 'radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 55%)',
-  chipClass: 'text-white/65 bg-white/[0.06] border-white/10',
-  avatarRing: 'ring-white/15',
+  chipClass: 'text-white/65 bg-white/[0.04] border-white/8',
+  avatarRing: 'ring-white/12',
   vibe: '',
 }
 
@@ -102,18 +109,18 @@ export function getMindsetStyle(mindsetId: string | null | undefined): MindsetSt
 }
 
 /**
- * Mood → subtle background tint (radial gradient applied to the
- * top-right of the card). Independent of mindset so a Stoic feeling
- * anxious and a Hustler feeling anxious both pick up the same cool
- * blue wash. Optional — `null` returns transparent.
+ * Mood → subtle background tint. KEPT colored (very lightly) because
+ * mood is genuine information — knowing at a glance whether a post is
+ * "anxious" vs "hopeful" matters. Pulled down to ~6% alpha so the
+ * color reads more as warmth/coolness than as a hue.
  */
 const MOOD_TINTS: Record<string, string> = {
-  anxious:     'radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.10) 0%, transparent 50%)',
-  overwhelmed: 'radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.10) 0%, transparent 50%)',
-  stuck:       'radial-gradient(circle at 100% 0%, rgba(100, 116, 139, 0.10) 0%, transparent 50%)',
-  hopeful:     'radial-gradient(circle at 100% 0%, rgba(251, 191, 36, 0.09) 0%, transparent 50%)',
-  grateful:    'radial-gradient(circle at 100% 0%, rgba(52, 211, 153, 0.09) 0%, transparent 50%)',
-  lost:        'radial-gradient(circle at 100% 0%, rgba(244, 114, 182, 0.09) 0%, transparent 50%)',
+  anxious:     'radial-gradient(circle at 100% 0%, rgba(180, 180, 220, 0.07) 0%, transparent 55%)',
+  overwhelmed: 'radial-gradient(circle at 100% 0%, rgba(190, 180, 220, 0.07) 0%, transparent 55%)',
+  stuck:       'radial-gradient(circle at 100% 0%, rgba(180, 185, 200, 0.06) 0%, transparent 55%)',
+  hopeful:     'radial-gradient(circle at 100% 0%, rgba(220, 210, 180, 0.07) 0%, transparent 55%)',
+  grateful:    'radial-gradient(circle at 100% 0%, rgba(200, 215, 195, 0.07) 0%, transparent 55%)',
+  lost:        'radial-gradient(circle at 100% 0%, rgba(215, 195, 210, 0.06) 0%, transparent 55%)',
 }
 
 export function getMoodTint(mood: string | null | undefined): string {
