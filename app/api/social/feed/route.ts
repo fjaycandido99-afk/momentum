@@ -33,10 +33,29 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit') || 20)))
     const cursor = url.searchParams.get('cursor')
+    const scope = url.searchParams.get('scope') || 'all'
+
+    // Following-scope: limit to authors the caller follows (+ self,
+    // so a user's own posts always show on their Following feed too).
+    let userIdsFilter: string[] | null = null
+    if (scope === 'following') {
+      const follows = await prisma.socialFollow.findMany({
+        where: { follower_id: user.id },
+        select: { followee_id: true },
+      })
+      userIdsFilter = [...follows.map(f => f.followee_id), user.id]
+      // Empty following set → return empty feed instead of "everyone".
+      if (userIdsFilter.length === 1 && follows.length === 0) {
+        return NextResponse.json({ posts: [], nextCursor: null, scope })
+      }
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rawPosts: any[] = await (prisma as any).socialPost.findMany({
-      where: { hidden: false },
+      where: {
+        hidden: false,
+        ...(userIdsFilter ? { user_id: { in: userIdsFilter } } : {}),
+      },
       orderBy: { created_at: 'desc' },
       take: limit,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
@@ -98,7 +117,7 @@ export async function GET(request: NextRequest) {
 
     const nextCursor = rawPosts.length === limit ? rawPosts[rawPosts.length - 1].id : null
 
-    return NextResponse.json({ posts, nextCursor })
+    return NextResponse.json({ posts, nextCursor, scope })
   } catch (err) {
     console.error('[social/feed] error:', err)
     return NextResponse.json({ error: 'unknown' }, { status: 500 })

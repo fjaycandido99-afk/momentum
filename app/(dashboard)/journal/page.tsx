@@ -29,6 +29,7 @@ import { EmptyWritingState } from '@/components/journal/EmptyWritingState'
 import { JournalMilestoneCelebration } from '@/components/journal/JournalMilestoneCelebration'
 import { JournalRightRail } from '@/components/journal/JournalRightRail'
 import { VoiceJournalMode } from '@/components/journal/VoiceJournalMode'
+import { ShareToCommunityButton } from '@/components/social/ShareToCommunityButton'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 
@@ -1340,6 +1341,12 @@ function JournalContent() {
                 {wordCount > 0 && streak > 0 && ' | '}
                 {streak > 0 && <>{streak}-day streak</>}
               </p>
+            )}
+            {/* Share to community — appears AFTER save, opt-in. Default private. */}
+            {isSaved && (mode === 'freewrite' || mode === 'guided') && (
+              <ShareToCommunityButton
+                body={[freeText, win, gratitude, intention].filter(Boolean).join('\n\n').trim()}
+              />
             )}
             {/* Reassurance — private-by-default warmth before saving */}
             {!isSaved && (
