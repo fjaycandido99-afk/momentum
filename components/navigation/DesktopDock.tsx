@@ -15,7 +15,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, BookOpen, Bookmark, TrendingUp, Settings, Sparkles, Pause, Play } from 'lucide-react'
+import { Home, BookOpen, Bookmark, TrendingUp, Settings, Sparkles, Pause, Play, Users } from 'lucide-react'
 import { useHomeAudioOptional } from '@/contexts/HomeAudioContext'
 // Reset capsule removed (parked). The now-playing TEXT chip was also
 // removed (duplicated BottomPlayerBar), but a minimal play/pause TOGGLE
@@ -37,6 +37,7 @@ const NAV: NavItem[] = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/daily-guide', label: 'Daily Guide', icon: Sparkles, matchPrefix: true },
   { href: '/journal', label: 'Journal', icon: BookOpen, matchPrefix: true },
+  { href: '/community', label: 'Community', icon: Users, matchPrefix: true },
   { href: '/saved', label: 'Saved', icon: Bookmark, matchPrefix: true },
   { href: '/progress', label: 'Progress', icon: TrendingUp, matchPrefix: true },
   { href: '/settings', label: 'Settings', icon: Settings, matchPrefix: true },
