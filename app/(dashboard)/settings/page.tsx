@@ -355,7 +355,7 @@ function SettingsContent() {
   }
 
   return (
-    <div className="min-h-screen text-white pb-[calc(env(safe-area-inset-bottom)+6rem)]">
+    <div className="min-h-screen text-white pb-[calc(env(safe-area-inset-bottom)+6rem)] lg:max-w-5xl lg:mx-auto">
       {/* Header */}
       <div className="sticky top-0 z-50 px-6 pt-[max(3rem,env(safe-area-inset-top))] pb-4 mb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />

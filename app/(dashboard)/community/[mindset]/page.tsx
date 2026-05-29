@@ -46,7 +46,7 @@ export default function MindsetFeedPage({ params }: { params: { mindset: string 
 
   if (!config) {
     return (
-      <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto px-6 pt-16 text-center">
+      <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto px-6 pt-16 text-center">
         <p className="text-lg">Unknown mindset: {raw}</p>
         <Link href="/community" className="inline-block mt-4 text-sm text-white/60 hover:text-white">← Back</Link>
       </div>

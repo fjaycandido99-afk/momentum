@@ -89,7 +89,7 @@ export default function AdminSocialPage() {
   }
 
   return (
-    <div className="min-h-screen text-white pb-24 lg:max-w-3xl lg:mx-auto">
+    <div className="min-h-screen text-white pb-24 lg:max-w-5xl lg:mx-auto">
       <div className="px-6 pt-12 pb-3">
         <h1 className="text-2xl font-bold">Moderation queue</h1>
         <p className="text-xs text-white/55 mt-1">
