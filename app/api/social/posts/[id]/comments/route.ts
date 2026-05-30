@@ -62,9 +62,36 @@ export async function GET(
     const authorIds = Array.from(new Set(comments.map(c => c.user_id)))
     const profiles = await prisma.socialProfile.findMany({
       where: { user_id: { in: authorIds } },
-      select: { user_id: true, handle: true, display_name: true },
+      select: { user_id: true, handle: true, display_name: true, spiral_name: true },
     })
-    const byUser = new Map(profiles.map(p => [p.user_id, { handle: p.handle, display_name: p.display_name }]))
+
+    // Batch entry-count fetch for all commenter avatars — same shape as
+    // the feed route so the InkSpiral on a comment chip renders with the
+    // commenter's actual journaling depth.
+    const entryCounts = await prisma.dailyGuide.groupBy({
+      by: ['user_id'],
+      where: {
+        user_id: { in: authorIds },
+        OR: [
+          { journal_win: { not: null } },
+          { journal_gratitude: { not: null } },
+          { journal_learned: { not: null } },
+          { journal_intention: { not: null } },
+          { journal_freetext: { not: null } },
+        ],
+      },
+      _count: { _all: true },
+    }).catch(() => [] as { user_id: string; _count: { _all: number } }[])
+    const countByUser = new Map<string, number>(
+      entryCounts.map(c => [c.user_id, c._count._all]),
+    )
+
+    const byUser = new Map(profiles.map(p => [p.user_id, {
+      handle: p.handle,
+      display_name: p.display_name,
+      spiral_name: p.spiral_name ?? null,
+      entry_count: countByUser.get(p.user_id) ?? 0,
+    }]))
 
     return NextResponse.json({
       comments: comments.map(c => ({
@@ -72,7 +99,7 @@ export async function GET(
         body: c.body,
         created_at: c.created_at,
         is_own: c.user_id === user.id,
-        author: byUser.get(c.user_id) || { handle: 'user', display_name: 'Someone' },
+        author: byUser.get(c.user_id) || { handle: 'user', display_name: 'Someone', entry_count: 0, spiral_name: null },
       })),
     })
   } catch (err) {

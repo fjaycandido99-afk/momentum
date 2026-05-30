@@ -30,6 +30,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 import { Loader2, Send, EyeOff, Mic, X, Quote as QuoteIcon, Sparkles } from 'lucide-react'
 import { VoiceRecorder } from './VoiceRecorder'
 import { useGuidelinesGate } from './GuidelinesGate'
+import { InkSpiral } from './InkSpiral'
 
 type ShareKind = 'reflection' | 'quote' | 'dream'
 
@@ -69,6 +70,13 @@ function buildInitialBody(p: SharePayload): string {
   return p.body
 }
 
+interface MeProfile {
+  handle: string
+  display_name: string
+  spiral_name?: string | null
+  entry_count?: number
+}
+
 export function ShareSheetProvider({ children }: { children: React.ReactNode }) {
   const [payload, setPayload] = useState<SharePayload | null>(null)
   const [draft, setDraft] = useState('')
@@ -78,6 +86,40 @@ export function ShareSheetProvider({ children }: { children: React.ReactNode }) 
   const [voicePayload, setVoicePayload] = useState<{ audio_url: string; duration_sec: number } | null>(null)
   const [posting, setPosting] = useState(false)
   const [posted, setPosted] = useState(false)
+
+  // Caller's own profile — fetched once on first share so the modal
+  // shows a "posting as" preview with their actual InkSpiral + handle
+  // + spiral name. Cached for the session; refreshed when they re-record
+  // their voice or rename their spiral elsewhere (best-effort).
+  const [me, setMe] = useState<MeProfile | null>(null)
+
+  const ensureMe = useCallback(async () => {
+    if (me) return
+    try {
+      // Pull both the profile (handle + display_name + spiral_name) and
+      // the wall stats (entry_count) using the public per-handle endpoint
+      // so we get exactly the same shape that bylines elsewhere render.
+      const meRes = await fetch('/api/social/profile/me')
+      if (!meRes.ok) return
+      const meData = await meRes.json()
+      const baseHandle = meData?.profile?.handle
+      if (!baseHandle) return
+      const fullRes = await fetch(`/api/social/profile/${baseHandle}`)
+      if (!fullRes.ok) {
+        setMe({ handle: baseHandle, display_name: meData.profile.display_name || baseHandle })
+        return
+      }
+      const fullData = await fullRes.json()
+      setMe({
+        handle: fullData.profile.handle,
+        display_name: fullData.profile.display_name,
+        spiral_name: fullData.profile.spiral_name ?? null,
+        entry_count: fullData.stats?.entry_count ?? 0,
+      })
+    } catch (err) {
+      console.debug('[ShareSheet] me lookup skipped:', err)
+    }
+  }, [me])
 
   const guidelinesGate = useGuidelinesGate()
 
@@ -92,7 +134,9 @@ export function ShareSheetProvider({ children }: { children: React.ReactNode }) 
     setVoicePayload(null)
     setPosting(false)
     setPosted(false)
-  }, [])
+    // Kick off the "posting as" preview lookup if we haven't yet.
+    void ensureMe()
+  }, [ensureMe])
 
   const close = useCallback(() => {
     setPayload(null)
@@ -172,6 +216,47 @@ export function ShareSheetProvider({ children }: { children: React.ReactNode }) 
                 </div>
               ) : (
                 <>
+                  {/* "Posting as" preview — shows the caller's actual
+                      InkSpiral + display name + spiral name so they see
+                      what their byline will look like before they share.
+                      Flips to an Anonymous chip when the Anonymous toggle
+                      is on. Suppressed if profile lookup hasn't returned
+                      yet (skeleton would just be noise on a fast network). */}
+                  {me && (
+                    <div className="mb-3 flex items-center gap-2.5 px-2 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                      {anon ? (
+                        <>
+                          <div className="w-8 h-8 rounded-full bg-white/10 grid place-items-center shrink-0">
+                            <EyeOff className="w-3.5 h-3.5 text-white/55" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[12px] text-white/65 leading-tight">Posting as <span className="text-white/85 font-medium">Anonymous</span></div>
+                            <div className="text-[10.5px] text-white/40 leading-tight">Your name + spiral won&apos;t be shown</div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-8 h-8 rounded-full bg-white/[0.04] grid place-items-center shrink-0">
+                            <InkSpiral
+                              seed={me.handle}
+                              entryCount={me.entry_count ?? 0}
+                              size={28}
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[12px] text-white/65 leading-tight">
+                              Posting as <span className="text-white/90 font-medium">{me.display_name}</span>
+                              <span className="text-white/40"> · @{me.handle}</span>
+                            </div>
+                            {me.spiral_name && (
+                              <div className="text-[10.5px] text-white/45 leading-tight italic">{me.spiral_name}</div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   {showVoice && voiceMode && (
                     <div className="mb-3">
                       <VoiceRecorder

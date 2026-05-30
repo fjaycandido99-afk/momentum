@@ -76,6 +76,9 @@ interface CommentShape {
   body: string
   created_at: string
   is_own: boolean
+  /// Author includes the optional entry_count + spiral_name so the
+  /// comment chip can render the commenter's InkSpiral, same as the
+  /// post byline. Backend hydrates these in the comments route.
   author: Author
 }
 
@@ -736,16 +739,27 @@ export function PostCard({ post: initial, crisisRegion = 'US', variant = 'feed' 
               )}
               {comments.map(c => (
                 <div key={c.id} className="flex items-start gap-2">
+                  {/* Commenter avatar — their InkSpiral at 24px, seeded
+                      from handle so it matches their feed byline + profile
+                      page exactly. */}
                   <Link
                     href={`/user/${c.author.handle}`}
-                    className="w-7 h-7 rounded-full bg-white/10 grid place-items-center text-[11px] font-semibold text-white/80 shrink-0"
+                    aria-label={`${c.author.display_name}'s profile`}
+                    className="w-7 h-7 rounded-full bg-white/[0.04] grid place-items-center shrink-0 hover:bg-white/[0.08] transition-colors"
                   >
-                    {c.author.display_name.charAt(0).toUpperCase()}
+                    <InkSpiral
+                      seed={c.author.handle}
+                      entryCount={c.author.entry_count ?? 0}
+                      size={24}
+                    />
                   </Link>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[11px] text-white/55 mb-0.5">
+                    <div className="text-[11px] text-white/55 mb-0.5 flex items-baseline gap-1.5 flex-wrap">
                       <Link href={`/user/${c.author.handle}`} className="text-white/85 hover:underline font-medium">{c.author.display_name}</Link>
-                      <span className="ml-1.5">{formatRelative(c.created_at)}</span>
+                      <span>{formatRelative(c.created_at)}</span>
+                      {c.author.spiral_name && (
+                        <span className="text-[10.5px] text-white/45 italic">· {c.author.spiral_name}</span>
+                      )}
                     </div>
                     <p className="text-[13.5px] text-white/90 leading-relaxed whitespace-pre-wrap">{c.body}</p>
                   </div>
