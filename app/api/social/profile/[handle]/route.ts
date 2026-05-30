@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { isBlocked } from '@/lib/social/blocks'
+import { loadProfileWallStats } from '@/lib/social/profile-stats'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,16 @@ export async function GET(
 
     const profile = await prisma.socialProfile.findUnique({
       where: { handle },
-      select: { user_id: true, handle: true, display_name: true, bio: true, created_at: true },
+      select: {
+        user_id: true,
+        handle: true,
+        display_name: true,
+        bio: true,
+        created_at: true,
+        voice_essence_url: true,
+        voice_essence_duration_sec: true,
+        spiral_name: true,
+      },
     })
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
@@ -65,26 +75,16 @@ export async function GET(
     }).catch(() => null)
     const mindsetId = userRow?.preferences?.mindset || null
 
-    // Follow stats + journal entry count (drives the InkSpiral growth on
-    // the profile avatar — every entry adds one stroke to their spiral).
-    const [followers, following, mineFollowing, entryCount] = await Promise.all([
+    // Follow stats + the wall stats bundle (entry_count + streak +
+    // mood_spark in one shared helper so /me and any future widget
+    // stay consistent).
+    const [followers, following, mineFollowing, wallStats] = await Promise.all([
       prisma.socialFollow.count({ where: { followee_id: profile.user_id } }),
       prisma.socialFollow.count({ where: { follower_id: profile.user_id } }),
       prisma.socialFollow.findUnique({
         where: { follower_id_followee_id: { follower_id: user.id, followee_id: profile.user_id } },
       }).catch(() => null),
-      prisma.dailyGuide.count({
-        where: {
-          user_id: profile.user_id,
-          OR: [
-            { journal_win: { not: null } },
-            { journal_gratitude: { not: null } },
-            { journal_learned: { not: null } },
-            { journal_intention: { not: null } },
-            { journal_freetext: { not: null } },
-          ],
-        },
-      }).catch(() => 0),
+      loadProfileWallStats(prisma, profile.user_id),
     ])
 
     // Recent posts by this user.
@@ -122,7 +122,9 @@ export async function GET(
         followers,
         following,
         is_followed_by_me: !!mineFollowing,
-        entry_count: entryCount,
+        entry_count: wallStats.entry_count,
+        streak_days: wallStats.streak_days,
+        mood_spark: wallStats.mood_spark,
       },
       posts: posts.map(p => ({
         id: p.id,

@@ -79,6 +79,19 @@ model SocialProfile {
   /// Whether OTHER users can find and follow this profile (false = posts
   /// still visible in the public feed but profile isn't searchable).
   discoverable  Boolean  @default(true)
+
+  /// Phase-2 "wall" additions:
+  ///   - voice_essence_url: one-time-recorded "Who are you right now?"
+  ///     clip stored in Supabase Storage (max ~6 seconds). Tappable on
+  ///     the profile spiral; makes Voxu profiles audible.
+  ///   - spiral_name: AI-generated 2-3 word name for the user's
+  ///     InkSpiral ("Quiet Returns", "Steady Bloom", …). Regenerated
+  ///     on demand; _at lets us throttle.
+  voice_essence_url            String?
+  voice_essence_duration_sec   Int?
+  spiral_name                  String?  @db.VarChar(60)
+  spiral_name_at               DateTime?
+
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 

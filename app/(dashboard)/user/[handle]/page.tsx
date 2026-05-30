@@ -8,11 +8,16 @@
    "Edit profile" inline editor.
    ============================================================================ */
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Loader2, UserCheck, UserPlus, Pencil, Check, X, Ban, MoreHorizontal } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
 import { InkSpiral } from '@/components/social/InkSpiral'
+import { MoodSpark } from '@/components/social/MoodSpark'
+import { VoiceRecorder } from '@/components/social/VoiceRecorder'
+import { Flame, Play, Pause, Mic, Sparkles, RefreshCw } from 'lucide-react'
+
+type MoodLevel = 'awful' | 'low' | 'okay' | 'good' | 'great'
 
 interface ProfileData {
   user_id: string
@@ -21,12 +26,23 @@ interface ProfileData {
   bio: string | null
   mindset_id: string | null
   is_own: boolean
+  /// Phase-2 wall additions:
+  voice_essence_url?: string | null
+  voice_essence_duration_sec?: number | null
+  spiral_name?: string | null
   /// Either party has blocked the other — UI shows a gated state.
   blocked?: boolean
   /// 'by_me' = I blocked them (offer Unblock); 'by_them' = they blocked me.
   block_direction?: 'by_me' | 'by_them' | null
 }
-interface Stats { followers: number; following: number; is_followed_by_me: boolean; entry_count?: number }
+interface Stats {
+  followers: number
+  following: number
+  is_followed_by_me: boolean
+  entry_count?: number
+  streak_days?: number
+  mood_spark?: (MoodLevel | null)[]
+}
 interface Author { handle: string; display_name: string }
 interface ProfilePost {
   id: string
@@ -76,6 +92,43 @@ export default function ProfilePage({ params }: { params: { handle: string } }) 
   const [editHandle, setEditHandle] = useState('')
   const [editError, setEditError] = useState('')
   const [editSaving, setEditSaving] = useState(false)
+
+  // ── Wall: voice essence playback ──────────────────────────────────────
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null)
+  const [voicePlaying, setVoicePlaying] = useState(false)
+  const toggleVoiceEssence = () => {
+    const url = profile?.voice_essence_url
+    if (!url) return
+    if (!voiceAudioRef.current) {
+      const a = new Audio(url)
+      a.onplay = () => setVoicePlaying(true)
+      a.onpause = () => setVoicePlaying(false)
+      a.onended = () => setVoicePlaying(false)
+      voiceAudioRef.current = a
+    }
+    if (voiceAudioRef.current.paused) voiceAudioRef.current.play().catch(() => {})
+    else voiceAudioRef.current.pause()
+  }
+  useEffect(() => () => { voiceAudioRef.current?.pause() }, [])
+
+  // ── Wall: voice essence recording (own profile only) ──────────────────
+  const [recordingVoice, setRecordingVoice] = useState(false)
+
+  // ── Wall: spiral name regenerate (own profile only) ───────────────────
+  const [namingSpiral, setNamingSpiral] = useState(false)
+  const regenSpiralName = async () => {
+    if (namingSpiral) return
+    setNamingSpiral(true)
+    try {
+      const res = await fetch('/api/social/profile/me/spiral-name', { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        setProfile(p => p ? { ...p, spiral_name: data.spiral_name } : p)
+      }
+    } finally {
+      setNamingSpiral(false)
+    }
+  }
 
   const load = useCallback(async () => {
     setIsLoading(true)
@@ -228,24 +281,60 @@ export default function ProfilePage({ params }: { params: { handle: string } }) 
                 {/* InkSpiral — generative profile fingerprint that grows
                     from this user's journaling. Replaces the static
                     letter monogram. */}
-                <div className="w-20 h-20 rounded-full bg-white/[0.04] grid place-items-center shrink-0">
+                {/* Spiral avatar — tappable when a voice essence is set,
+                    so the spiral becomes an audible Voxu signature. */}
+                <button
+                  type="button"
+                  onClick={profile.voice_essence_url ? toggleVoiceEssence : undefined}
+                  aria-label={
+                    profile.voice_essence_url
+                      ? (voicePlaying ? 'Pause voice essence' : 'Play voice essence')
+                      : 'Profile spiral'
+                  }
+                  className={`relative w-20 h-20 rounded-full bg-white/[0.04] grid place-items-center shrink-0 ${profile.voice_essence_url ? 'cursor-pointer hover:bg-white/[0.07] transition-colors' : 'cursor-default'}`}
+                >
                   <InkSpiral
-                    /* Seed from handle (public + stable) so the spiral
-                       matches whatever renders in feed bylines — same
-                       user → same spiral everywhere. */
                     seed={profile.handle}
                     entryCount={stats.entry_count ?? 0}
                     size={76}
                     withFrame
                   />
-                </div>
+                  {profile.voice_essence_url && (
+                    <span className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-white text-black grid place-items-center shadow-md ring-2 ring-black">
+                      {voicePlaying
+                        ? <Pause className="w-3 h-3" fill="black" />
+                        : <Play className="w-3 h-3 ml-0.5" fill="black" />}
+                    </span>
+                  )}
+                </button>
                 <div className="min-w-0 flex-1">
                   <h1 className="text-xl font-bold text-white leading-tight">{profile.display_name}</h1>
                   <p className="text-xs text-white/50">@{profile.handle}</p>
-                  {(stats.entry_count ?? 0) > 0 && (
-                    <p className="text-[10.5px] text-white/40 mt-1.5">
-                      {stats.entry_count} {stats.entry_count === 1 ? 'reflection' : 'reflections'} in their spiral
+                  {profile.spiral_name && (
+                    <p className="text-[11px] text-white/65 mt-1 italic flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5 text-white/45" />
+                      {profile.spiral_name}
+                      {profile.is_own && (
+                        <button
+                          onClick={() => void regenSpiralName()}
+                          disabled={namingSpiral}
+                          aria-label="Regenerate spiral name"
+                          className="ml-0.5 p-0.5 rounded-full hover:bg-white/10 text-white/45 hover:text-white/80 transition-colors disabled:opacity-40"
+                        >
+                          <RefreshCw className={`w-2.5 h-2.5 ${namingSpiral ? 'animate-spin' : ''}`} />
+                        </button>
+                      )}
                     </p>
+                  )}
+                  {profile.is_own && !profile.spiral_name && (
+                    <button
+                      onClick={() => void regenSpiralName()}
+                      disabled={namingSpiral}
+                      className="mt-1 inline-flex items-center gap-1 text-[10.5px] text-white/45 hover:text-white/80 transition-colors disabled:opacity-40"
+                    >
+                      <Sparkles className="w-2.5 h-2.5" />
+                      {namingSpiral ? 'Naming your spiral…' : 'Name my spiral'}
+                    </button>
                   )}
                 </div>
                 {profile.is_own ? (
@@ -302,6 +391,87 @@ export default function ProfilePage({ params }: { params: { handle: string } }) 
                   </span>
                 )}
               </div>
+
+              {/* WALL — entry count + streak + 7-day mood spark + voice
+                  essence record (own profile). Renders only what the user
+                  has earned so far so a fresh profile doesn't look loud. */}
+              <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center flex-wrap gap-x-4 gap-y-2">
+                {(stats.entry_count ?? 0) > 0 && (
+                  <span className="inline-flex items-center gap-1 text-[11.5px] text-white/65">
+                    <span className="text-white font-semibold tabular-nums">{stats.entry_count}</span>
+                    {stats.entry_count === 1 ? 'reflection' : 'reflections'}
+                  </span>
+                )}
+                {(stats.streak_days ?? 0) > 0 && (
+                  <span className="inline-flex items-center gap-1 text-[11.5px] text-white/65">
+                    <Flame className="w-3 h-3 text-white/80" />
+                    <span className="text-white font-semibold tabular-nums">{stats.streak_days}</span>
+                    day streak
+                  </span>
+                )}
+                {stats.mood_spark && stats.mood_spark.some(v => v !== null) && (
+                  <span className="inline-flex items-center gap-1.5 text-[10.5px] text-white/55">
+                    <span>this week</span>
+                    <MoodSpark values={stats.mood_spark} height={20} />
+                  </span>
+                )}
+                {profile.is_own && !profile.voice_essence_url && !recordingVoice && (
+                  <button
+                    onClick={() => setRecordingVoice(true)}
+                    className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-[11px] text-white/80 transition-colors"
+                  >
+                    <Mic className="w-3 h-3" />
+                    Add voice essence
+                  </button>
+                )}
+                {profile.is_own && profile.voice_essence_url && (
+                  <button
+                    onClick={() => setRecordingVoice(true)}
+                    className="ml-auto text-[10.5px] text-white/45 hover:text-white/80 transition-colors"
+                  >
+                    Re-record voice
+                  </button>
+                )}
+              </div>
+
+              {/* Voice-essence recorder — appears when the user taps Add
+                  / Re-record. Reuses the community VoiceRecorder; on ready
+                  we PATCH the profile so the URL persists. */}
+              {profile.is_own && recordingVoice && (
+                <div className="mt-3">
+                  <VoiceRecorder
+                    maxSeconds={6}
+                    onReady={async (v) => {
+                      try {
+                        const res = await fetch('/api/social/profile/me', {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            voice_essence_url: v.audio_url,
+                            voice_essence_duration_sec: v.duration_sec,
+                          }),
+                        })
+                        if (res.ok) {
+                          setProfile(p => p ? {
+                            ...p,
+                            voice_essence_url: v.audio_url,
+                            voice_essence_duration_sec: v.duration_sec,
+                          } : p)
+                          // Reset the audio element so the next play uses the new URL.
+                          voiceAudioRef.current?.pause()
+                          voiceAudioRef.current = null
+                          setVoicePlaying(false)
+                        }
+                      } catch (err) {
+                        console.warn('[voice-essence] persist failed:', err)
+                      } finally {
+                        setRecordingVoice(false)
+                      }
+                    }}
+                    onDiscard={() => setRecordingVoice(false)}
+                  />
+                </div>
+              )}
             </>
           ) : (
             <div className="space-y-3">

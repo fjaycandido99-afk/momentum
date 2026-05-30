@@ -32,7 +32,7 @@ export async function PATCH(request: NextRequest) {
     await ensureProfile(user.id)
     const body = await request.json()
 
-    const update: Record<string, string | boolean> = {}
+    const update: Record<string, string | boolean | number | null> = {}
     if (typeof body.display_name === 'string') {
       const dn = body.display_name.trim()
       if (dn.length > 0 && dn.length <= 60) update.display_name = dn
@@ -44,6 +44,17 @@ export async function PATCH(request: NextRequest) {
     if (typeof body.discoverable === 'boolean') {
       update.discoverable = body.discoverable
     }
+    // Voice essence — pass URL + duration to attach; pass null on either
+    // to clear (Re-record / Remove flow).
+    if (body.voice_essence_url === null) {
+      update.voice_essence_url = null
+      update.voice_essence_duration_sec = null
+    } else if (typeof body.voice_essence_url === 'string' && body.voice_essence_url.length > 0) {
+      update.voice_essence_url = body.voice_essence_url
+      const d = Number(body.voice_essence_duration_sec)
+      if (Number.isFinite(d) && d > 0 && d < 60) update.voice_essence_duration_sec = Math.round(d)
+    }
+
     if (typeof body.handle === 'string') {
       const newHandle = body.handle.trim().toLowerCase().replace(/^@/, '')
       if (!isValidHandle(newHandle)) {
