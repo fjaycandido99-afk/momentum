@@ -29,7 +29,7 @@ export async function GET(
 
     const author = await prisma.socialProfile.findUnique({
       where: { user_id: p.user_id },
-      select: { handle: true, display_name: true },
+      select: { handle: true, display_name: true, spiral_name: true },
     })
 
     // Author's journal entry count for the byline InkSpiral.

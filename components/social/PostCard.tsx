@@ -38,6 +38,10 @@ interface Author {
   /// growth. Optional for backwards compat with anything still
   /// passing the lighter shape.
   entry_count?: number
+  /// AI 2-3 word name for the author's spiral — surfaces as a quiet
+  /// italic line under the byline so the identity travels with every
+  /// post.
+  spiral_name?: string | null
 }
 interface ReplyParent { id: string; excerpt: string; author: Author | null }
 interface PostShape {
@@ -435,6 +439,18 @@ export function PostCard({ post: initial, crisisRegion = 'US', variant = 'feed' 
                   >
                     {post.mindset_id}
                   </Link>
+                </>
+              )}
+              {/* Spiral name — italic eyebrow inline so it wraps with the
+                  byline on narrow widths but reads as a poetic flourish,
+                  not metadata. Suppressed on anonymous posts since the
+                  author identity is hidden anyway. */}
+              {post.author && post.author.spiral_name && (
+                <>
+                  <span className="text-white/30">·</span>
+                  <span className="text-[11.5px] text-white/55 italic">
+                    {post.author.spiral_name}
+                  </span>
                 </>
               )}
             </div>

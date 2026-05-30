@@ -15,6 +15,7 @@
 
 import { ImageResponse } from 'next/og'
 import { prisma } from '@/lib/prisma'
+import { InkSpiral } from '@/components/social/InkSpiral'
 
 export const runtime = 'nodejs' // needs prisma — edge wouldn't bundle it cleanly
 export const dynamic = 'force-dynamic'
@@ -83,12 +84,29 @@ export async function GET(request: Request) {
 
     const profile = post.anonymous ? null : await prisma.socialProfile.findUnique({
       where: { user_id: post.user_id },
-      select: { handle: true, display_name: true },
+      select: { handle: true, display_name: true, spiral_name: true },
     })
+
+    // Author's journal-entry count drives the OG avatar InkSpiral —
+    // power-journalers get a denser mandala on their shared links.
+    const entryCount = post.anonymous
+      ? 0
+      : await prisma.dailyGuide.count({
+          where: {
+            user_id: post.user_id,
+            OR: [
+              { journal_win: { not: null } },
+              { journal_gratitude: { not: null } },
+              { journal_learned: { not: null } },
+              { journal_intention: { not: null } },
+              { journal_freetext: { not: null } },
+            ],
+          },
+        }).catch(() => 0)
 
     const author = post.anonymous ? 'Anonymous' : (profile?.display_name || 'Someone')
     const handle = post.anonymous ? null : (profile?.handle || null)
-    const initial = (author || 'A').charAt(0).toUpperCase()
+    const spiralName = post.anonymous ? null : (profile?.spiral_name || null)
     const excerpt = clampExcerpt(post.body, 260)
 
     return new ImageResponse(
@@ -154,21 +172,33 @@ export async function GET(request: Request) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 56,
-                height: 56,
+                width: 64,
+                height: 64,
                 borderRadius: 999,
-                background: 'rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.06)',
                 border: '1px solid rgba(255,255,255,0.12)',
-                fontSize: 24,
+                fontSize: 28,
                 fontWeight: 600,
               }}
             >
-              {post.anonymous ? '·' : initial}
+              {post.anonymous || !handle
+                ? '·'
+                : <InkSpiral seed={handle} entryCount={entryCount} size={60} />}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ fontSize: 26, fontWeight: 600 }}>{author}</div>
               {handle && (
-                <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.50)' }}>@{handle}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 18 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.50)' }}>@{handle}</span>
+                  {spiralName && (
+                    <>
+                      <span style={{ color: 'rgba(255,255,255,0.28)' }}>·</span>
+                      <span style={{ color: 'rgba(255,255,255,0.55)', fontStyle: 'italic' }}>
+                        {spiralName}
+                      </span>
+                    </>
+                  )}
+                </div>
               )}
             </div>
             {post.mindset_id && (

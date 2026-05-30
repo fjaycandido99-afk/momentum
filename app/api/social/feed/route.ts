@@ -27,6 +27,10 @@ interface AuthorLite {
   /// Number of journal entries this user has written — drives their
   /// InkSpiral avatar's growth. Omitted on anonymous post slots.
   entry_count?: number
+  /// AI 2-3 word evocative name for the author's spiral ("Quiet Returns").
+  /// Shown as a quiet italic eyebrow under the byline — same identity
+  /// signal as the spiral itself, just in words.
+  spiral_name?: string | null
 }
 
 export async function GET(request: NextRequest) {
@@ -85,7 +89,7 @@ export async function GET(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profiles = await (prisma as any).socialProfile.findMany({
       where: { user_id: { in: authorIds } },
-      select: { user_id: true, handle: true, display_name: true },
+      select: { user_id: true, handle: true, display_name: true, spiral_name: true },
     })
 
     // Batch journal-entry counts for InkSpiral avatars on the byline.
@@ -117,6 +121,7 @@ export async function GET(request: NextRequest) {
         handle: p.handle,
         display_name: p.display_name,
         entry_count: countByUser.get(p.user_id) ?? 0,
+        spiral_name: p.spiral_name ?? null,
       }]),
     )
 
