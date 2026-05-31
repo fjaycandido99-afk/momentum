@@ -17,6 +17,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, BookOpen, Bookmark, TrendingUp, Settings, Sparkles, Pause, Play, Users } from 'lucide-react'
 import { useHomeAudioOptional } from '@/contexts/HomeAudioContext'
+import { useCommunityAccess } from '@/hooks/useCommunityAccess'
 // Reset capsule removed (parked). The now-playing TEXT chip was also
 // removed (duplicated BottomPlayerBar), but a minimal play/pause TOGGLE
 // stays on the dock so audio can be paused from any page (BottomPlayerBar
@@ -33,6 +34,9 @@ interface NavItem {
 // The /coach route still exists but now redirects to /journal?mode=chat,
 // and MessageCircle is no longer in the dock since the chat surface
 // lives inside Journal.
+// Community is staged behind an allow-list (see lib/social/access.ts).
+// We filter it out of the dock at runtime for non-allowed users so it
+// truly doesn't render — not just disabled — until the feature is GA.
 const NAV: NavItem[] = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/daily-guide', label: 'Daily Guide', icon: Sparkles, matchPrefix: true },
@@ -46,6 +50,10 @@ const NAV: NavItem[] = [
 export function DesktopDock() {
   const pathname = usePathname()
   const homeAudio = useHomeAudioOptional()
+  const communityAccess = useCommunityAccess()
+  // null while loading → hide the chip so it doesn't flash in for
+  // disallowed users; false → permanently hide. true → show.
+  const visibleNav = NAV.filter(item => item.href !== '/community' || communityAccess === true)
 
   const isPlaying = homeAudio && (
     homeAudio.audioState.musicPlaying ||
@@ -119,7 +127,7 @@ export function DesktopDock() {
               : <Play className="w-[14px] h-[14px] ml-0.5" fill="currentColor" />}
           </button>
         )}
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const Icon = item.icon
           const active = isActive(item)
           return (

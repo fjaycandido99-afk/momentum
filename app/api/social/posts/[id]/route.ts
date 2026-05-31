@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { isBlocked } from '@/lib/social/blocks'
 import { detectRegion } from '@/lib/social/crisis-detect'
+import { assertCommunityAccess } from '@/lib/social/access'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +14,9 @@ export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
+  const _access = await assertCommunityAccess()
+  if (!_access.ok) return _access.response
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

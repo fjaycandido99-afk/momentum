@@ -20,6 +20,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createAuthClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { randomUUID } from 'crypto'
+import { assertCommunityAccess } from '@/lib/social/access'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +58,9 @@ function extFromMime(mime: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  const _access = await assertCommunityAccess()
+  if (!_access.ok) return _access.response
+
   try {
     const supabase = await createAuthClient()
     const { data: { user } } = await supabase.auth.getUser()

@@ -11,6 +11,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Loader2, Sparkles, Send, EyeOff, RefreshCw, FileText, Mic, SlidersHorizontal, Pencil, X } from 'lucide-react'
+import { CommunityAccessGate } from '@/components/social/CommunityAccessGate'
 import { PostCard } from '@/components/social/PostCard'
 import { CommunityPulse } from '@/components/social/CommunityPulse'
 import { VoiceRecorder } from '@/components/social/VoiceRecorder'
@@ -139,6 +140,7 @@ export default function CommunityPage() {
 
   return (
     <div className="min-h-screen text-white pb-32">
+      <CommunityAccessGate />
       {/* Header — title + tabs + Filter button. Mindset + mood chips
           collapsed into the Filter popover so the feed starts higher. */}
       <div className="sticky top-0 z-20 px-6 pt-12 pb-3 bg-black border-b border-white/[0.05]">

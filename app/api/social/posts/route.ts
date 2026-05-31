@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma'
 import { ensureProfile } from '@/lib/social/handle'
 import { detectCrisisLevel } from '@/lib/social/crisis-detect'
 import { enrichPost } from '@/lib/social/post-enrichment'
+import { assertCommunityAccess } from '@/lib/social/access'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,9 @@ const POST_LIMIT_PER_HOUR = 10
 const POST_LIMIT_PER_DAY = 40
 
 export async function POST(request: NextRequest) {
+  const _access = await assertCommunityAccess()
+  if (!_access.ok) return _access.response
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -151,6 +155,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const _access = await assertCommunityAccess()
+  if (!_access.ok) return _access.response
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

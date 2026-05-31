@@ -5,6 +5,7 @@ import { Quote, Check, Sparkles, Share2, Heart, Loader2, ChevronDown, Lightbulb,
 import { getDayOfYearQuote } from '@/lib/quotes'
 import { useShareCard } from '@/hooks/useShareCard'
 import { useShareSheet } from '@/components/social/ShareSheetProvider'
+import { useCommunityAccess } from '@/hooks/useCommunityAccess'
 
 interface QuoteCardProps {
   isCompleted: boolean
@@ -32,6 +33,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
   const [loadingExplanation, setLoadingExplanation] = useState(false)
   const { shareAsImage, isGenerating: isShareGenerating } = useShareCard()
   const shareSheet = useShareSheet()
+  const communityAccess = useCommunityAccess()
 
   const fetchExplanation = useCallback(async () => {
     if (explanation || loadingExplanation || !quote) return
@@ -263,14 +265,16 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                         isFavorited ? 'text-white fill-white' : favoriteError ? 'text-white animate-pulse' : isCompleted ? 'text-white/50' : 'text-white/70 hover:text-white'
                       }`} />
                     </button>
-                    <button
-                      onClick={handleShareToCommunity}
-                      aria-label="Share to Voxu Community"
-                      title="Share to Voxu Community"
-                      className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-                    >
-                      <Users className={`w-3.5 h-3.5 ${isCompleted ? 'text-white/50' : 'text-white/70'} hover:text-white transition-colors`} />
-                    </button>
+                    {communityAccess === true && (
+                      <button
+                        onClick={handleShareToCommunity}
+                        aria-label="Share to Voxu Community"
+                        title="Share to Voxu Community"
+                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                      >
+                        <Users className={`w-3.5 h-3.5 ${isCompleted ? 'text-white/50' : 'text-white/70'} hover:text-white transition-colors`} />
+                      </button>
+                    )}
                     <button
                       onClick={handleShare}
                       disabled={isShareGenerating}

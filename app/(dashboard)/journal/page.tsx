@@ -29,6 +29,7 @@ import { EmptyWritingState } from '@/components/journal/EmptyWritingState'
 import { JournalMilestoneCelebration } from '@/components/journal/JournalMilestoneCelebration'
 import { VoiceJournalMode } from '@/components/journal/VoiceJournalMode'
 import { ShareToCommunityButton } from '@/components/social/ShareToCommunityButton'
+import { useCommunityAccess } from '@/hooks/useCommunityAccess'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 
@@ -68,6 +69,11 @@ export default function JournalPage() {
 
 function JournalContent() {
   const searchParams = useSearchParams()
+  // Community is staged behind the access gate (lib/social/access.ts).
+  // Hide the "Also share to Community" toggle + sticky anon prefs +
+  // ShareToCommunityButton path entirely for non-allowed users so the
+  // share-on-save flow doesn't even appear.
+  const communityAccess = useCommunityAccess()
   const { checkAccess, openUpgradeModal } = useSubscription()
   const mindsetCtx = useMindsetOptional()
   const hasJournalHistory = checkAccess('journal_history')
@@ -1360,7 +1366,7 @@ function JournalContent() {
                 on save. Highlighted with a Users icon + gradient bg when
                 active so users actually notice it. Preference sticks
                 across sessions (localStorage). */}
-            {!isSaved && (
+            {!isSaved && communityAccess === true && (
               <div className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all ${
                 saveAndShare
                   ? 'bg-white/[0.10] border border-white/20 shadow-[0_0_24px_rgba(255,255,255,0.08)]'

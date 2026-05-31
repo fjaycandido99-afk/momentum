@@ -9,6 +9,7 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Loader2, Sparkles, RefreshCw } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
+import { CommunityAccessGate } from '@/components/social/CommunityAccessGate'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import type { MindsetId } from '@/lib/mindset/types'
 import type { CrisisRegion } from '@/lib/social/crisis-detect'
@@ -55,6 +56,7 @@ export default function MindsetFeedPage({ params }: { params: { mindset: string 
 
   return (
     <div className="min-h-screen text-white pb-24">
+      <CommunityAccessGate />
       <div className="sticky top-0 z-20 px-6 pt-12 pb-3 bg-black">
         <Link href="/community" className="inline-flex items-center gap-1 text-xs text-white/60 hover:text-white mb-2">
           <ChevronLeft className="w-3 h-3" /> All community

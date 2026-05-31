@@ -14,6 +14,7 @@ import { ensureProfile } from '@/lib/social/handle'
 import { detectCrisisLevel } from '@/lib/social/crisis-detect'
 import { sendPushToUser } from '@/lib/push-service'
 import { isBlocked, getBlockedUserIds } from '@/lib/social/blocks'
+import { assertCommunityAccess } from '@/lib/social/access'
 
 async function notifyComment(authorId: string, commenterId: string, postId: string) {
   if (authorId === commenterId) return
@@ -37,6 +38,9 @@ export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
+  const _access = await assertCommunityAccess()
+  if (!_access.ok) return _access.response
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -112,6 +116,9 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
+  const _access = await assertCommunityAccess()
+  if (!_access.ok) return _access.response
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

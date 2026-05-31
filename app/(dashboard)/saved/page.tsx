@@ -6,6 +6,7 @@ import { FeatureHint } from '@/components/ui/FeatureHint'
 import { MoodTimeline } from '@/components/saved/MoodTimeline'
 import { trackFeature } from '@/lib/analytics/track'
 import { useShareSheet } from '@/components/social/ShareSheetProvider'
+import { useCommunityAccess } from '@/hooks/useCommunityAccess'
 
 type SavedFilter = 'all' | 'quote' | 'journal' | 'affirmation' | 'reflection'
 
@@ -36,6 +37,7 @@ export default function SavedPage() {
   const [filter, setFilter] = useState<SavedFilter>('all')
   const [expanded, setExpanded] = useState<FavoriteItem | null>(null)
   const shareSheet = useShareSheet()
+  const communityAccess = useCommunityAccess()
 
   const handleShareToCommunity = (item: FavoriteItem) => {
     if (item.content_type === 'quote') {
@@ -308,12 +310,14 @@ export default function SavedPage() {
             )}
 
             <div className="mt-8 flex items-center justify-between gap-3">
-              <button
-                onClick={() => handleShareToCommunity(expanded)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/15 text-white/75 hover:text-white hover:bg-white/10 transition-colors text-xs press-scale"
-              >
-                <Users className="w-3.5 h-3.5" /> Share to Community
-              </button>
+              {communityAccess === true ? (
+                <button
+                  onClick={() => handleShareToCommunity(expanded)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/15 text-white/75 hover:text-white hover:bg-white/10 transition-colors text-xs press-scale"
+                >
+                  <Users className="w-3.5 h-3.5" /> Share to Community
+                </button>
+              ) : <span />}
               <button
                 onClick={() => { handleDelete(expanded.id); setExpanded(null) }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/15 text-white/60 hover:text-red-400 hover:bg-red-500/10 transition-colors text-xs press-scale"

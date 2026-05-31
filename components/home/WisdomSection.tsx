@@ -9,6 +9,7 @@ import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
 import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
 import { getDateString } from '@/lib/daily-guide/day-type'
 import { useShareSheet } from '@/components/social/ShareSheetProvider'
+import { useCommunityAccess } from '@/hooks/useCommunityAccess'
 
 function dateSeed(dateStr: string): number {
   let hash = 0
@@ -58,6 +59,7 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
 
   const { shareAsImage, isGenerating: isSharing } = useShareCard()
   const shareSheet = useShareSheet()
+  const communityAccess = useCommunityAccess()
 
   const handleShareQuote = useCallback(() => {
     if (!dailyQuote) return
@@ -144,14 +146,16 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
             <div className="flex items-center gap-0.5">
               {/* Appears only once the daily audiogram has been rendered */}
               <ShareVideoButton mindset={mindsetId} date={today} />
-              <button
-                onClick={handleShareToCommunity}
-                className="p-1.5 rounded-full hover:bg-white/5 transition-colors"
-                aria-label="Share to Voxu Community"
-                title="Share to Voxu Community"
-              >
-                <Users className="w-4 h-4 text-white/40" />
-              </button>
+              {communityAccess === true && (
+                <button
+                  onClick={handleShareToCommunity}
+                  className="p-1.5 rounded-full hover:bg-white/5 transition-colors"
+                  aria-label="Share to Voxu Community"
+                  title="Share to Voxu Community"
+                >
+                  <Users className="w-4 h-4 text-white/40" />
+                </button>
+              )}
               <button
                 onClick={handleShareQuote}
                 disabled={isSharing}

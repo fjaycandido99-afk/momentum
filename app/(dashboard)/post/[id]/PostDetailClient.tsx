@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { PostCard } from '@/components/social/PostCard'
+import { CommunityAccessGate } from '@/components/social/CommunityAccessGate'
 import type { CrisisRegion } from '@/lib/social/crisis-detect'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,6 +54,7 @@ export function PostDetailClient({ id }: { id: string }) {
 
   return (
     <div className="min-h-screen text-white pb-24">
+      <CommunityAccessGate />
       <div className="px-6 pt-12 pb-3">
         <Link href="/community" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">
           <ChevronLeft className="w-4 h-4" /> Community

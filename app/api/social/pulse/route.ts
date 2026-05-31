@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getBlockedUserIds } from '@/lib/social/blocks'
+import { assertCommunityAccess } from '@/lib/social/access'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +26,9 @@ const WINDOW_HOURS: Record<string, number> = {
 }
 
 export async function GET(request: NextRequest) {
+  const _access = await assertCommunityAccess()
+  if (!_access.ok) return _access.response
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

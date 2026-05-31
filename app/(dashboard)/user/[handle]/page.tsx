@@ -15,6 +15,7 @@ import { PostCard } from '@/components/social/PostCard'
 import { InkSpiral } from '@/components/social/InkSpiral'
 import { MoodSpark } from '@/components/social/MoodSpark'
 import { VoiceRecorder } from '@/components/social/VoiceRecorder'
+import { CommunityAccessGate } from '@/components/social/CommunityAccessGate'
 import { Flame, Play, Pause, Mic, Sparkles, RefreshCw } from 'lucide-react'
 
 type MoodLevel = 'awful' | 'low' | 'okay' | 'good' | 'great'
@@ -265,6 +266,7 @@ export default function ProfilePage({ params }: { params: { handle: string } }) 
 
   return (
     <div className="min-h-screen text-white pb-24">
+      <CommunityAccessGate />
       {/* Header / back */}
       <div className="px-6 pt-12 pb-3">
         <Link href="/community" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">

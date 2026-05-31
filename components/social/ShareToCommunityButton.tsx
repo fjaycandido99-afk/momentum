@@ -13,6 +13,7 @@ import { useState } from 'react'
 import { Share2, Loader2, EyeOff, Check, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useGuidelinesGate } from './GuidelinesGate'
+import { useCommunityAccess } from '@/hooks/useCommunityAccess'
 
 interface Props {
   /** Pre-filled body. The editor lets the user trim before posting. */
@@ -26,6 +27,10 @@ interface Props {
 }
 
 export function ShareToCommunityButton({ body, sourceEntryId, mindsetId }: Props) {
+  // Hard-hide the whole share UI for users outside the Community
+  // allow-list — they shouldn't see any path INTO community while the
+  // feature is staged.
+  const communityAccess = useCommunityAccess()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(body)
   const [anonymous, setAnonymous] = useState(false)
@@ -65,6 +70,10 @@ export function ShareToCommunityButton({ body, sourceEntryId, mindsetId }: Props
   }
 
   // After-shared receipt
+  // Gate: render nothing until access is known true. Returning null
+  // for both `null` (loading) and `false` (denied) avoids a flash.
+  if (communityAccess !== true) return null
+
   if (posted) {
     return (
       <>

@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { assertCommunityAccess } from '@/lib/social/access'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,9 @@ const VALID_REASONS = new Set(['abuse', 'spam', 'off_topic', 'self_harm_concern'
 const RATE_LIMIT_PER_HOUR = 10
 
 export async function POST(request: NextRequest) {
+  const _access = await assertCommunityAccess()
+  if (!_access.ok) return _access.response
+
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
