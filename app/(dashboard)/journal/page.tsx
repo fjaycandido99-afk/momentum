@@ -267,10 +267,32 @@ function JournalContent() {
     }
   }, [])
 
-  // Auto-exit focus mode when keyboard closes (300ms delay to avoid glitches)
+  // Auto-exit focus mode when keyboard closes (300ms delay to avoid glitches).
+  //
+  // RACE-CONDITION FIX (was breaking journal typing on native iOS):
+  // When focusMode flips on, the keyboard hasn't opened YET — and
+  // useKeyboardAware debounces visualViewport changes by 150ms before
+  // reporting keyboardOpen=true. If iOS takes longer than ~150ms to
+  // emit the resize event (normal on native WKWebView), the previous
+  // version saw `focusMode=true, keyboardOpen=false`, scheduled
+  // exitFocusMode in 300ms, fired blur(), and dismissed the keyboard
+  // before the user could type a single character.
+  //
+  // Fix: only auto-exit when the keyboard has been observed open at
+  // least once during THIS focus session. We track that with a ref
+  // (resets on every focusMode entry). So the effect now means
+  // "keyboard was open and just closed" instead of "keyboard isn't
+  // open right now."
+  const keyboardEverOpenedRef = useRef(false)
+  useEffect(() => {
+    if (focusMode) keyboardEverOpenedRef.current = false
+  }, [focusMode])
+  useEffect(() => {
+    if (keyboardOpen) keyboardEverOpenedRef.current = true
+  }, [keyboardOpen])
   useEffect(() => {
     if (!focusMode) return
-    if (!keyboardOpen) {
+    if (!keyboardOpen && keyboardEverOpenedRef.current) {
       focusExitTimer.current = setTimeout(() => {
         exitFocusMode()
       }, 300)
