@@ -169,7 +169,14 @@ function JournalContent() {
   const gratitudeRef = useRef<HTMLTextAreaElement>(null)
   const intentionRef = useRef<HTMLTextAreaElement>(null)
   const dreamRef = useRef<HTMLTextAreaElement>(null)
-  useAutoResizeTextarea(freeTextRef, freeText, { focusMode: focusMode && focusField === 'freewrite' })
+  // Free-write opts OUT of auto-resize when inline (it scrolls inside a
+  // fixed-height box instead — feels stable instead of growing then
+  // jumping into scroll mode). Focus-mode overlay still uses the hook
+  // so it can fill the viewport via CSS flex.
+  useAutoResizeTextarea(freeTextRef, freeText, {
+    focusMode: focusMode && focusField === 'freewrite',
+    disabled: !(focusMode && focusField === 'freewrite'),
+  })
   useAutoResizeTextarea(winRef, win, { focusMode: focusMode && focusField === 'win' })
   useAutoResizeTextarea(gratitudeRef, gratitude, { focusMode: focusMode && focusField === 'gratitude' })
   useAutoResizeTextarea(intentionRef, intention, { focusMode: focusMode && focusField === 'intention' })
@@ -1368,8 +1375,11 @@ function JournalContent() {
                   autoComplete="off"
                   spellCheck
                   enterKeyHint="enter"
-                  className="w-full bg-transparent text-lg leading-loose text-white placeholder-white/30 caret-white px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none"
-                  rows={8}
+                  /* Fixed-height + overflow-y-auto so the box stays a
+                     stable visual size and the content scrolls inside
+                     as it grows. No more "small box that suddenly hits
+                     a scroll cap" feeling. */
+                  className="w-full h-72 bg-transparent text-lg leading-loose text-white placeholder-white/30 caret-white px-1 py-2 focus:outline-none focus:border-white/20 focus-visible:ring-1 focus-visible:ring-white/20 resize-none overflow-y-auto"
                   maxLength={5000}
                 />
                 {interimText && (

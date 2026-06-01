@@ -56,6 +56,11 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
   const [backend, setBackend] = useState<Backend>('none')
   const [isRecording, setIsRecording] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
+  // Visible error state — every previous failure path silently
+  // console.error'd, so on native the user just saw the mic button
+  // do nothing. Now we surface what went wrong inline.
+  const [error, setError] = useState<string | null>(null)
+  const clearError = useCallback(() => setError(null), [])
 
   // Web Speech refs
   const recognitionRef = useRef<{ stop: () => void } | null>(null)
@@ -113,7 +118,16 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onerror = (event: any) => {
       console.error('[VoiceInput] Speech API error:', event.error)
-      if (event.error !== 'no-speech') setIsRecording(false)
+      if (event.error !== 'no-speech') {
+        setIsRecording(false)
+        setError(
+          event.error === 'not-allowed'
+            ? 'Microphone permission denied.'
+            : event.error === 'network'
+              ? 'Voice service unreachable. Check your connection.'
+              : `Voice error: ${event.error}`,
+        )
+      }
     }
     recognition.onend = () => {
       setIsRecording(false)
@@ -122,9 +136,15 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
     }
 
     recognitionRef.current = recognition
-    recognition.start()
-    setIsRecording(true)
-    resetSilenceTimer()
+    try {
+      recognition.start()
+      setIsRecording(true)
+      setError(null)
+      resetSilenceTimer()
+    } catch (err) {
+      console.error('[VoiceInput] Speech API start failed:', err)
+      setError(err instanceof Error ? `Couldn't start mic: ${err.message.slice(0, 80)}` : 'Couldn\'t start mic.')
+    }
   }, [onTranscript, onInterim, resetSilenceTimer])
 
   // ── MediaRecorder backend (Capacitor native, others) ──────────────────
@@ -148,6 +168,7 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
         chunksRef.current = []
         if (blob.size === 0) {
           setIsTranscribing(false)
+          setError('No audio captured — try holding closer to the mic and recording for at least a second.')
           return
         }
         try {
@@ -157,12 +178,22 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
           const resp = await fetch('/api/transcribe', { method: 'POST', body: form })
           if (resp.ok) {
             const data = await resp.json()
-            if (data.text) onTranscript(data.text)
+            if (data.text) {
+              onTranscript(data.text)
+              setError(null)
+            } else {
+              setError('Couldn\'t make out any words. Try again.')
+            }
           } else {
-            console.error('[VoiceInput] Transcribe failed', resp.status, await resp.text().catch(() => ''))
+            const detail = await resp.text().catch(() => '')
+            console.error('[VoiceInput] Transcribe failed', resp.status, detail.slice(0, 200))
+            setError(`Transcription failed (${resp.status}). Tap to retry.`)
           }
         } catch (err) {
           console.error('[VoiceInput] Transcribe error:', err)
+          setError(err instanceof Error
+            ? `Transcription error: ${err.message.slice(0, 80)}`
+            : 'Transcription error.')
         } finally {
           setIsTranscribing(false)
           onInterim('')
@@ -171,11 +202,19 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
       recorderRef.current = recorder
       recorder.start()
       setIsRecording(true)
+      setError(null)
     } catch (err) {
       // Most common path here is the user denying mic permission. On iOS
       // they need to allow it in Settings → Voxu → Microphone.
       console.error('[VoiceInput] getUserMedia failed:', err)
       setIsRecording(false)
+      // Detect the iOS permission denial specifically so we can give a
+      // useful prompt instead of a cryptic browser message.
+      const msg = err instanceof Error ? err.message : String(err)
+      const isPermission = /denied|not\s*allowed|permission/i.test(msg)
+      setError(isPermission
+        ? 'Microphone permission denied. Open Settings → Voxu → Microphone to enable.'
+        : `Couldn't access microphone: ${msg.slice(0, 80)}`)
     }
   }, [onTranscript, onInterim])
 
@@ -209,35 +248,49 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
   const showSpinner = isTranscribing && !isRecording
 
   return (
-    <button
-      onClick={toggle}
-      disabled={disabled || showSpinner}
-      className={`relative p-3 rounded-xl transition-all ${
-        isRecording
-          ? 'bg-red-500/20 text-red-400'
-          : showSpinner
-            ? 'bg-white/10 text-white/70'
-            : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white/85'
-      } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-      aria-label={isRecording ? 'Stop recording' : showSpinner ? 'Transcribing' : 'Start voice input'}
-    >
-      {showSpinner ? (
-        <Loader2 className="w-5 h-5 animate-spin" />
-      ) : isRecording ? (
-        <>
-          <MicOff className="w-5 h-5 relative z-10" />
-          {/* Pulsing ring */}
-          <span className="absolute inset-0 rounded-xl border-2 border-red-400/50 animate-ping" />
-          {/* Waveform bars */}
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-0.5">
-            <span className="w-0.5 h-2 bg-red-400 rounded-full animate-[wave_0.5s_ease-in-out_infinite]" />
-            <span className="w-0.5 h-3 bg-red-400 rounded-full animate-[wave_0.5s_ease-in-out_infinite_0.1s]" />
-            <span className="w-0.5 h-2 bg-red-400 rounded-full animate-[wave_0.5s_ease-in-out_infinite_0.2s]" />
-          </div>
-        </>
-      ) : (
-        <Mic className="w-5 h-5" />
+    <div className="relative inline-flex flex-col items-end gap-1">
+      <button
+        onClick={() => { clearError(); toggle() }}
+        disabled={disabled || showSpinner}
+        className={`relative p-3 rounded-xl transition-all ${
+          isRecording
+            ? 'bg-red-500/20 text-red-400'
+            : showSpinner
+              ? 'bg-white/10 text-white/70'
+              : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white/85'
+        } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+        aria-label={isRecording ? 'Stop recording' : showSpinner ? 'Transcribing' : 'Start voice input'}
+      >
+        {showSpinner ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : isRecording ? (
+          <>
+            <MicOff className="w-5 h-5 relative z-10" />
+            {/* Pulsing ring */}
+            <span className="absolute inset-0 rounded-xl border-2 border-red-400/50 animate-ping" />
+            {/* Waveform bars */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-0.5">
+              <span className="w-0.5 h-2 bg-red-400 rounded-full animate-[wave_0.5s_ease-in-out_infinite]" />
+              <span className="w-0.5 h-3 bg-red-400 rounded-full animate-[wave_0.5s_ease-in-out_infinite_0.1s]" />
+              <span className="w-0.5 h-2 bg-red-400 rounded-full animate-[wave_0.5s_ease-in-out_infinite_0.2s]" />
+            </div>
+          </>
+        ) : (
+          <Mic className="w-5 h-5" />
+        )}
+      </button>
+      {/* Error toast — appears under the button when something goes
+          wrong so the user actually sees why nothing happened. Tap to
+          dismiss; also clears the next time the user taps the mic. */}
+      {error && (
+        <button
+          type="button"
+          onClick={clearError}
+          className="absolute top-full right-0 mt-2 max-w-[220px] px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-[11px] text-red-200 text-left leading-snug shadow-lg z-10"
+        >
+          {error}
+        </button>
       )}
-    </button>
+    </div>
   )
 }

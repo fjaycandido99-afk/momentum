@@ -3,6 +3,9 @@ import { useEffect, type RefObject } from 'react'
 interface AutoResizeOptions {
   maxHeight?: number
   focusMode?: boolean
+  /** Opt out — useful when the caller wants a fixed-height,
+   *  scroll-inside-the-box behavior instead of grow-then-scroll. */
+  disabled?: boolean
 }
 
 export function useAutoResizeTextarea(
@@ -13,11 +16,14 @@ export function useAutoResizeTextarea(
   // Support legacy signature: (ref, value, maxHeight)
   const opts: AutoResizeOptions =
     typeof options === 'number' ? { maxHeight: options } : options
-  const { maxHeight = 300, focusMode = false } = opts
+  const { maxHeight = 300, focusMode = false, disabled = false } = opts
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
+
+    // Opt-out: caller handles its own sizing (fixed h-X + overflow-y-auto).
+    if (disabled) return
 
     // In focus mode, let CSS flex handle the height
     if (focusMode) {
@@ -47,5 +53,5 @@ export function useAutoResizeTextarea(
 
     // Restore scroll position
     el.scrollTop = prevScrollTop
-  }, [ref, value, maxHeight, focusMode])
+  }, [ref, value, maxHeight, focusMode, disabled])
 }
