@@ -19,12 +19,36 @@ const TONE_GUIDELINES: Record<GuideTone, string> = {
 // SESSION PROMPTS
 // ============================================
 
-export function buildMorningPrimePrompt(tone: GuideTone): string {
+/**
+ * Optional context from today's Morning Minute — the 60-second voice
+ * ritual that runs BEFORE the user opens Daily Guide. When present,
+ * Morning Prime is told to weave in what the user shared so the
+ * session feels like a continuation of the same conversation, not a
+ * fresh start.
+ */
+export interface MorningMinuteContext {
+  transcript: string
+  response: string
+}
+
+export function buildMorningPrimePrompt(
+  tone: GuideTone,
+  minute?: MorningMinuteContext | null,
+): string {
+  const minuteBlock = minute
+    ? `\n\nThe user already spoke briefly this morning. Weave their exact words into the opening — this is a continuation, not a new conversation. Don't restate their words verbatim; show you heard them.
+
+What they said: "${minute.transcript.replace(/"/g, "'")}"
+What you (Voxu) reflected back: "${minute.response.replace(/"/g, "'")}"
+
+Open by gently calling back to that — something like "About what you said this morning..." or "That weight you mentioned..." — then deepen it.\n`
+    : ''
+
   return `Generate a Morning Prime audio script to start the day (~2 minutes, 200-250 words).
 
 Tone: ${tone}
 ${TONE_GUIDELINES[tone]}
-
+${minuteBlock}
 The Morning Prime should:
 - Warmly acknowledge the start of the day
 - Set intention and energy for what's ahead
@@ -140,6 +164,10 @@ Return JSON:
 interface GenerationContext {
   tone: GuideTone
   mindset?: MindsetId
+  /** Today's Morning Minute — when present, Morning Prime opens by
+   *  calling back to what the user shared so the session feels like
+   *  one continuous conversation, not two separate features. */
+  morningMinute?: MorningMinuteContext | null
 }
 
 export async function generateSessionContent(
@@ -150,7 +178,7 @@ export async function generateSessionContent(
 
   switch (sessionType) {
     case 'morning_prime':
-      prompt = buildMorningPrimePrompt(context.tone)
+      prompt = buildMorningPrimePrompt(context.tone, context.morningMinute)
       break
     case 'midday_reset':
       prompt = buildMiddayResetPrompt(context.tone)

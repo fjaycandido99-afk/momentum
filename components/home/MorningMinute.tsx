@@ -20,7 +20,8 @@
    ============================================================================ */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Mic, Square, Loader2, RefreshCw, Sparkles, AlertTriangle } from 'lucide-react'
+import Link from 'next/link'
+import { Mic, Square, Loader2, RefreshCw, Sparkles, AlertTriangle, ArrowRight } from 'lucide-react'
 
 interface Minute {
   transcript: string
@@ -259,6 +260,27 @@ export function MorningMinute() {
           <p className="mt-3 text-center text-[10.5px] uppercase tracking-[0.18em] text-white/35">
             You showed up today
           </p>
+
+          {/* Depth handoff — Daily Guide's Morning Prime now opens
+              by calling back to what the user just shared. One tap
+              from the ritual into the deeper session. */}
+          <Link
+            href="/daily-guide"
+            className="mt-5 flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] transition-colors press-scale group"
+          >
+            <div className="min-w-0">
+              <p className="text-[10.5px] uppercase tracking-[0.18em] text-white/45 font-semibold">
+                Go deeper
+              </p>
+              <p className="mt-0.5 text-[13.5px] text-white/85 leading-tight">
+                Take 5 minutes with today&apos;s Morning Prime
+              </p>
+              <p className="mt-0.5 text-[11px] text-white/45 italic">
+                Built around what you just said
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-white/55 group-hover:text-white shrink-0" />
+          </Link>
         </div>
       )}
 

@@ -110,14 +110,34 @@ export async function POST(request: NextRequest) {
     const tone = (preferences.guide_tone || 'calm') as GuideTone
     const mindset = await getUserMindset(user.id)
 
-    console.log('[generate] Generating 4 session scripts', { tone, mindset })
+    // Today's Morning Minute (if the user already did it) — passed only
+    // to morning_prime so the script opens by calling back to what they
+    // shared. Daily Guide becomes the depth layer of the Morning Minute
+    // ritual, not a parallel feature. See project_voxu_value_spine.
+    const todayGuideRow = await prisma.dailyGuide.findFirst({
+      where: { user_id: user.id, date: new Date(dateKey) },
+      select: { morning_minute_transcript: true, morning_minute_response: true },
+    }).catch(() => null)
+    const morningMinute = todayGuideRow?.morning_minute_transcript && todayGuideRow.morning_minute_response
+      ? { transcript: todayGuideRow.morning_minute_transcript, response: todayGuideRow.morning_minute_response }
+      : null
+
+    console.log('[generate] Generating 4 session scripts', { tone, mindset, hasMinute: !!morningMinute })
 
     // Generate all 4 session scripts in parallel
     const sessionTypes: SessionType[] = ['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story']
     const results = await Promise.all(
       sessionTypes.map(async (sessionType) => {
         try {
-          const result = await generateSessionContent(sessionType, { tone, mindset: mindset || undefined })
+          const ctx = {
+            tone,
+            mindset: mindset || undefined,
+            // Only morning_prime is minute-aware (per value-spine design).
+            // The other sessions stay generic until we wire a separate
+            // continuity story for midday/wind-down/bedtime.
+            morningMinute: sessionType === 'morning_prime' ? morningMinute : null,
+          }
+          const result = await generateSessionContent(sessionType, ctx)
           return { key: sessionType, result }
         } catch (error) {
           console.error(`[generate] Failed to generate ${sessionType}:`, error)
