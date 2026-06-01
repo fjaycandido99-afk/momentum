@@ -82,6 +82,7 @@ export async function GET(
           { journal_learned: { not: null } },
           { journal_intention: { not: null } },
           { journal_freetext: { not: null } },
+            { morning_minute_transcript: { not: null } },
         ],
       },
       _count: { _all: true },

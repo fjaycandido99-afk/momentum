@@ -27,6 +27,9 @@ const ENTRY_OR = [
   { journal_learned: { not: null } },
   { journal_intention: { not: null } },
   { journal_freetext: { not: null } },
+  // Morning Minute counts as showing up — drives the spiral stroke
+  // and the streak day the same way a written entry does.
+  { morning_minute_transcript: { not: null } },
 ] as const
 
 export type MoodLevel = 'awful' | 'low' | 'okay' | 'good' | 'great'

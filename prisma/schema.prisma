@@ -602,6 +602,15 @@ model DailyGuide {
   journal_mood      String? // 5-level: "awful" | "low" | "okay" | "good" | "great"
   journal_prompt    String? // Which rotating prompt was shown
 
+  // === Morning Minute — the 60-second daily voice ritual that is the
+  //     primary entry point on home. One per day per user. Drives the
+  //     spiral stroke + serves as the "you showed up today" signal. ===
+  morning_minute_voice_url        String?   // Supabase Storage URL of the raw audio
+  morning_minute_voice_duration   Int?      // seconds
+  morning_minute_transcript       String?   // Whisper transcript of the voice clip
+  morning_minute_response         String?   // Single AI sentence offered back
+  morning_minute_at               DateTime? // when the user completed the ritual
+
   // Mood tracking
   mood_before String? // "low" | "medium" | "high" - before morning flow
   mood_after  String? // "low" | "medium" | "high" - after day close

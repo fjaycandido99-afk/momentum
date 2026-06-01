@@ -51,6 +51,7 @@ import { DailyFeatureTip } from './DailyFeatureTip'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
 import { YesterdayFollowUp } from './YesterdayFollowUp'
+import { MorningMinute } from './MorningMinute'
 import { FirstMomentOverlay } from './FirstMomentOverlay'
 import { DailyProgressRing } from './DailyProgressRing'
 import { useToast } from '@/contexts/ToastContext'
@@ -1232,6 +1233,13 @@ export function ImmersiveHome() {
 
       {/* "Coach remembers you" — follows up on yesterday's intention / mood / reflection */}
       <YesterdayFollowUp />
+
+      {/* THE VALUE SPINE — Today's Minute is the first thing every user
+          sees on home, by design. One tap → 30 seconds of voice → one
+          sentence of AI reflection → a new stroke on their spiral. The
+          single daily ritual the rest of Voxu is the deeper rabbit
+          hole for. */}
+      <MorningMinute />
 
       {/* Hero Carousel: Daily Guide + Path + Featured */}
       {(() => {
