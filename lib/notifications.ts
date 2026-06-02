@@ -145,15 +145,22 @@ export async function scheduleReminder(options: ScheduleReminderOptions): Promis
 }
 
 // Schedule morning reminder
+//
+// Per project_voxu_value_spine: the morning notification leads to the
+// Morning Minute (the 60s daily voice ritual on home), NOT into Daily
+// Guide. Daily Guide is the optional deeper layer the Minute opens
+// into. Routing the notification to '/' lands the user directly on
+// the Today's Minute card, which auto-opens its idle state ready for
+// the first tap.
 export async function scheduleMorningReminder(hour: number, minute: number): Promise<boolean> {
   return scheduleReminder({
     id: NOTIFICATION_IDS.MORNING_REMINDER,
-    title: 'Good Morning! ☀️',
-    body: 'Your daily guide is ready. Start your morning flow.',
+    title: 'Good morning',
+    body: 'One minute? Tell me what’s on your mind.',
     hour,
     minute,
     actionTypeId: 'DAILY_REMINDER',
-    extra: { route: '/daily-guide', action: 'morning' },
+    extra: { route: '/', action: 'morning_minute' },
   })
 }
 

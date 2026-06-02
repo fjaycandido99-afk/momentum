@@ -132,10 +132,12 @@ export async function POST(request: NextRequest) {
           const ctx = {
             tone,
             mindset: mindset || undefined,
-            // Only morning_prime is minute-aware (per value-spine design).
-            // The other sessions stay generic until we wire a separate
-            // continuity story for midday/wind-down/bedtime.
-            morningMinute: sessionType === 'morning_prime' ? morningMinute : null,
+            // Full-day continuity: all three reflection sessions
+            // (morning_prime / midday_reset / wind_down) call back to
+            // the Morning Minute when one exists. Bedtime_story is
+            // narrative — Minute is intentionally NOT injected to
+            // preserve the fourth-wall story experience.
+            morningMinute: sessionType === 'bedtime_story' ? null : morningMinute,
           }
           const result = await generateSessionContent(sessionType, ctx)
           return { key: sessionType, result }

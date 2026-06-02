@@ -225,11 +225,14 @@ export async function POST(request: NextRequest) {
           morning_minute_transcript: transcript,
           morning_minute_response: response,
           morning_minute_at: at,
-          // Invalidate today's Morning Prime script so the next
-          // /daily-guide request regenerates it with this Minute as
-          // context. The other session scripts stay (not minute-aware
-          // today). See project_voxu_value_spine.
+          // Invalidate today's continuity-aware session scripts so the
+          // next /daily-guide request regenerates them with this Minute
+          // as context. Bedtime_story is intentionally NOT invalidated
+          // — it's a narrative and doesn't break the fourth wall.
+          // See project_voxu_value_spine.
           morning_prime_script: null,
+          midday_reset_script: null,
+          wind_down_script: null,
         },
       })
     } else {

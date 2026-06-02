@@ -69,12 +69,22 @@ Return JSON:
 }`
 }
 
-export function buildMiddayResetPrompt(tone: GuideTone): string {
+export function buildMiddayResetPrompt(
+  tone: GuideTone,
+  minute?: MorningMinuteContext | null,
+): string {
+  const minuteBlock = minute
+    ? `\nContinuity: this morning the user spoke briefly and you reflected back. Open by checking in on that mid-day — "This morning you mentioned X — how's it sitting now?" — then transition into the reset. Don't restate verbatim; show continuity.
+
+What they said this morning: "${minute.transcript.replace(/"/g, "'")}"
+What you reflected: "${minute.response.replace(/"/g, "'")}"\n`
+    : ''
+
   return `Generate a Midday Reset audio script for recharging mid-day (~2 minutes, 200-250 words).
 
 Tone: ${tone}
 ${TONE_GUIDELINES[tone]}
-
+${minuteBlock}
 The Midday Reset should:
 - Acknowledge the day is halfway through
 - Offer a quick mental reset and recharge
@@ -95,12 +105,22 @@ Return JSON:
 }`
 }
 
-export function buildWindDownPrompt(tone: GuideTone): string {
+export function buildWindDownPrompt(
+  tone: GuideTone,
+  minute?: MorningMinuteContext | null,
+): string {
+  const minuteBlock = minute
+    ? `\nContinuity: this morning the user spoke and you reflected back. Open by closing the loop — "You came in this morning carrying X. Let's set it down well." Then transition into rest. Don't restate verbatim.
+
+What they said this morning: "${minute.transcript.replace(/"/g, "'")}"
+What you reflected: "${minute.response.replace(/"/g, "'")}"\n`
+    : ''
+
   return `Generate a Wind Down audio script for the evening (~2 minutes, 200-250 words).
 
 Tone: ${tone}
 ${TONE_GUIDELINES[tone]}
-
+${minuteBlock}
 The Wind Down should:
 - Help transition from productivity to rest
 - Invite reflection on the day without judgment
@@ -181,12 +201,14 @@ export async function generateSessionContent(
       prompt = buildMorningPrimePrompt(context.tone, context.morningMinute)
       break
     case 'midday_reset':
-      prompt = buildMiddayResetPrompt(context.tone)
+      prompt = buildMiddayResetPrompt(context.tone, context.morningMinute)
       break
     case 'wind_down':
-      prompt = buildWindDownPrompt(context.tone)
+      prompt = buildWindDownPrompt(context.tone, context.morningMinute)
       break
     case 'bedtime_story':
+      // Bedtime story is narrative; we don't break the fourth wall.
+      // The Minute is logged but not woven in.
       prompt = buildBedtimeStoryPrompt(context.tone)
       break
     default:

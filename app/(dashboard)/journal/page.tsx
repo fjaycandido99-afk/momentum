@@ -1369,7 +1369,7 @@ function JournalContent() {
                   ref={freeTextRef}
                   value={freeText}
                   onChange={(e) => { setFreeText(e.target.value); setIsSaved(false) }}
-                  onFocus={() => { activeFieldRef.current = 'freewrite'; setWritingActive(true); enterFocusMode('freewrite') }}
+                  onFocus={() => { activeFieldRef.current = 'freewrite'; setWritingActive(true); /* No focus-mode overlay for free-write — user prefers the inline scroll-in-box treatment. Other fields (win/gratitude/intention/dream) still use it. */ }}
                   placeholder="Let your thoughts flow..."
                   autoCapitalize="sentences"
                   autoComplete="off"

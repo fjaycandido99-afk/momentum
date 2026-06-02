@@ -21,7 +21,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Mic, Square, Loader2, RefreshCw, Sparkles, AlertTriangle, ArrowRight } from 'lucide-react'
+import { Mic, Square, Loader2, RefreshCw, Sparkles, AlertTriangle, ArrowRight, Flame } from 'lucide-react'
 
 interface Minute {
   transcript: string
@@ -44,6 +44,7 @@ export function MorningMinute() {
   const [elapsed, setElapsed] = useState(0)
   const [minute, setMinute] = useState<Minute | null>(null)
   const [errMsg, setErrMsg] = useState('')
+  const [streakDays, setStreakDays] = useState<number>(0)
 
   // Refs for the mic pipeline.
   const streamRef = useRef<MediaStream | null>(null)
@@ -52,21 +53,42 @@ export function MorningMinute() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const startedAtRef = useRef<number>(0)
 
-  // On mount: see if today's minute already exists. If yes, jump to 'done'.
+  // On mount: see if today's minute already exists. If yes, jump to
+  // 'done'. Streak fetch runs in parallel so it's there from frame 1.
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       try {
-        const res = await fetch('/api/journal/morning-minute')
-        if (!res.ok) return
-        const data = await res.json()
-        if (!cancelled && data?.minute) {
-          setMinute(data.minute)
-          setPhase('done')
+        const [minRes, streakRes] = await Promise.all([
+          fetch('/api/journal/morning-minute'),
+          fetch('/api/journal/streak'),
+        ])
+        if (minRes.ok) {
+          const data = await minRes.json()
+          if (!cancelled && data?.minute) {
+            setMinute(data.minute)
+            setPhase('done')
+          }
+        }
+        if (streakRes.ok) {
+          const s = await streakRes.json()
+          if (!cancelled) setStreakDays(s.streak_days || 0)
         }
       } catch { /* silent — start fresh */ }
     })()
     return () => { cancelled = true }
+  }, [])
+
+  // After a fresh submit, the streak should bump by one — refresh from
+  // the server so the home card reflects reality without a reload.
+  const refetchStreak = useCallback(async () => {
+    try {
+      const res = await fetch('/api/journal/streak')
+      if (res.ok) {
+        const s = await res.json()
+        setStreakDays(s.streak_days || 0)
+      }
+    } catch {}
   }, [])
 
   // Cleanup on unmount — release the mic so iOS clears the dot.
@@ -158,6 +180,7 @@ export function MorningMinute() {
         at: data.at,
       })
       setPhase('done')
+      void refetchStreak()
     } catch (err) {
       console.error('[MorningMinute] post failed:', err)
       setErrMsg(err instanceof Error ? err.message.slice(0, 100) : 'Something didn\'t connect.')
@@ -178,7 +201,9 @@ export function MorningMinute() {
       aria-labelledby="morning-minute-heading"
       className="relative mx-5 mt-4 p-5 rounded-3xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.10] overflow-hidden"
     >
-      {/* Eyebrow */}
+      {/* Eyebrow — title + streak badge (when earned). The streak makes
+          the spine's reward visible at all times so the loss-aversion
+          loop kicks in once a user has a few days going. */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-white/55" />
@@ -188,6 +213,15 @@ export function MorningMinute() {
           >
             Today&apos;s Minute
           </h2>
+          {streakDays >= 2 && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.10] text-[11px] font-semibold text-white tabular-nums"
+              title={`${streakDays} day streak`}
+            >
+              <Flame className="w-3 h-3" />
+              {streakDays}
+            </span>
+          )}
         </div>
         {phase === 'done' && (
           <button
@@ -281,6 +315,18 @@ export function MorningMinute() {
             </div>
             <ArrowRight className="w-4 h-4 text-white/55 group-hover:text-white shrink-0" />
           </Link>
+
+          {/* Year portrait — surfaces only after the user has built
+              something worth seeing. Threshold of 7 = one week of
+              showing up; below that the link would feel empty. */}
+          {streakDays >= 7 && (
+            <Link
+              href={`/portrait/${new Date().getFullYear()}`}
+              className="mt-2.5 block text-center text-[11px] text-white/50 hover:text-white/85 underline-offset-2 hover:underline transition-colors"
+            >
+              See your year so far →
+            </Link>
+          )}
         </div>
       )}
 
