@@ -5,6 +5,7 @@ import { Bookmark, Loader2, Trash2, Sparkles, X } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { MoodTimeline } from '@/components/saved/MoodTimeline'
 import { trackFeature } from '@/lib/analytics/track'
+import { unwrapQuoted } from '@/lib/quotes'
 
 type SavedFilter = 'all' | 'quote' | 'journal' | 'affirmation' | 'reflection'
 
@@ -81,7 +82,8 @@ export default function SavedPage() {
       const r = parseReflection(item.content_text)
       if (r) t = r.answer
     }
-    return t.length > 200 ? t.slice(0, 197).trimEnd() + '…' : t
+    const clean = unwrapQuoted(t)
+    return clean.length > 200 ? clean.slice(0, 197).trimEnd() + '…' : clean
   }
 
   // Don't repeat the featured memory in the list below it.
@@ -271,7 +273,7 @@ export default function SavedPage() {
               </div>
             ) : (
               <p className="mt-5 text-2xl text-white leading-snug" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-                &ldquo;{expanded.content_text}&rdquo;
+                &ldquo;{unwrapQuoted(expanded.content_text)}&rdquo;
               </p>
             )}
 

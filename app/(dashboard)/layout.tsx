@@ -31,12 +31,22 @@ export default function DashboardLayout({
               (z-55+) inside main correctly paint OVER the dock (z-40)
               within main's own stacking context. Bottom padding leaves
               clear room under the floating dock + mobile capsules. */}
+          {/* Reading width on desktop.
+              Ten of the twelve dashboard pages had no max-width at all, so
+              on a laptop a saved reflection rendered as a single 1,400px
+              line — far past any readability guideline, and the reason the
+              app looks like a phone screenshot stretched sideways.
+              lg: only, so nothing about the mobile layout changes. Home and
+              the mindset screens opt out: they are built on full-bleed
+              carousels and hero art that are SUPPOSED to reach the edges. */}
           <main
             id="main-content"
             key={pathname}
             className={`relative z-10 min-h-screen page-enter ${isHome ? '' : 'pb-16'} ${!hideChrome ? 'lg:pb-40' : ''}`}
           >
-            {children}
+            <div className={isHome || hideChrome ? '' : 'lg:mx-auto lg:max-w-3xl'}>
+              {children}
+            </div>
 
             {/* Bottom scrim — fades page content to black behind the
                 floating dock so the dock's translucent pill never has

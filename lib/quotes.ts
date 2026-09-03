@@ -197,3 +197,33 @@ export function displayAuthor(author?: string | null): string | null {
   if (lowered === 'unknown' || lowered === 'anonymous' || lowered === 'anon') return null
   return trimmed
 }
+
+/**
+ * Text ready to sit inside typographic quote marks.
+ *
+ * Saved quotes are stored already wrapped and attributed —
+ *   "text" — Author
+ * — because that is what goes on the clipboard and into a share card. The
+ * Saved page then wrapped that string in &ldquo;…&rdquo; again, so every
+ * saved quote rendered as:
+ *   ""If you look at what you have in life…" — Oprah Winfrey"
+ * Double quotes at the front, a stray one after the author's name.
+ *
+ * Strips one layer of wrapping so the caller's quote marks are the only
+ * ones. Leaves an unquoted string untouched.
+ */
+export function unwrapQuoted(text: string): string {
+  const t = (text || '').trim()
+  const OPEN = ['"', '“']
+  const CLOSE = ['"', '”']
+  if (t.length < 2 || !OPEN.includes(t[0])) return t
+
+  // Find the closing mark that pairs with the opener; anything after it
+  // (typically " — Author") is kept, just un-nested.
+  for (let i = t.length - 1; i > 0; i--) {
+    if (CLOSE.includes(t[i])) {
+      return (t.slice(1, i) + t.slice(i + 1)).trim()
+    }
+  }
+  return t
+}
