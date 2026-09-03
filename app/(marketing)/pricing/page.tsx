@@ -28,13 +28,13 @@ const SAVINGS_PERCENT = Math.round((1 - YEARLY_PRICE / (MONTHLY_PRICE * 12)) * 1
 const FEATURES = [
   {
     name: 'Daily sessions',
-    free: '1 per day',
+    free: 'Unlimited',
     premium: 'Unlimited',
     icon: Zap,
   },
   {
     name: 'Session duration',
-    free: '10 minutes',
+    free: 'No limit',
     premium: 'No limit',
     icon: Clock,
   },
@@ -46,7 +46,7 @@ const FEATURES = [
   },
   {
     name: 'Checkpoints',
-    free: false,
+    free: true,
     premium: true,
     icon: Sparkles,
   },
@@ -61,6 +61,18 @@ const FEATURES = [
     free: false,
     premium: true,
     icon: Download,
+  },
+  {
+    name: 'AI features',
+    free: 'A few per day',
+    premium: 'Unlimited',
+    icon: Sparkles,
+  },
+  {
+    name: 'AI memory',
+    free: 'Today only',
+    premium: '30 days',
+    icon: Book,
   },
   {
     name: 'Weekly review',
@@ -206,14 +218,31 @@ export default function PricingPage() {
                 <span className="text-white/50">/forever</span>
               </div>
 
+              {/* These MUST track FREE_TIER_LIMITS and AI_FEATURE_LIMITS in
+                  lib/subscription-constants.ts.
+
+                  They had drifted badly: the page advertised "1 session per
+                  day" and a "10-minute session limit" long after both caps
+                  were lifted (sessions_per_day is 99, duration 999), and
+                  listed Checkpoints as NOT included when checkpoints_enabled
+                  is true for free. We were talking prospects out of a free
+                  tier that is considerably better than advertised. */}
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>1 session per day</span>
+                  <span>Unlimited sessions, no time limit</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>10-minute session limit</span>
+                  <span>Daily Guide with checkpoints</span>
+                </li>
+                <li className="flex items-center gap-3 text-white/70 text-sm">
+                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
+                  <span>Journaling, saved quotes &amp; streaks</span>
+                </li>
+                <li className="flex items-center gap-3 text-white/70 text-sm">
+                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
+                  <span>A daily taste of the AI features</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
@@ -221,7 +250,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-3 text-white/40 text-sm">
                   <X className="w-4 h-4 flex-shrink-0" />
-                  <span>Checkpoints</span>
+                  <span>Unlimited AI &amp; full memory</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/40 text-sm">
                   <X className="w-4 h-4 flex-shrink-0" />

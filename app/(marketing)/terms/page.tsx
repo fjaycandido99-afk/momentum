@@ -55,7 +55,7 @@ export default function TermsOfServicePage() {
             Free Tier
           </h3>
           <p className="text-sm text-white/70 leading-relaxed mb-4">
-            Voxu offers a free tier with limited features, including one session per day, 10-minute session limits, and rotating daily music. The free tier is available indefinitely at no cost.
+            Voxu offers a free tier, available indefinitely at no cost. It includes unlimited sessions with no time limit, the Daily Guide, journaling, saved content, rotating daily music, and a limited daily allowance of the AI features. Premium removes the AI allowances, extends how much of your history the AI can draw on, and adds journal history, all music genres and offline downloads. Specific allowances may change as the product develops.
           </p>
 
           <h3 className="text-base font-medium text-white mb-2">
