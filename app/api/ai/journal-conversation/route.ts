@@ -139,7 +139,16 @@ IMPORTANT — this person has just said something that may indicate ${
       temperature: 0.7,
     })
 
-    const reply = completion.choices[0]?.message?.content?.trim() || FALLBACK_REPLY
+    // An empty completion is a failure, not an answer. Track it so the
+    // response can say so rather than passing the canned line off as the
+    // coach's considered reply.
+    const generated = completion.choices[0]?.message?.content?.trim()
+    const reply = generated || FALLBACK_REPLY
+    if (!generated) {
+      console.error('[journal-conversation] empty completion from model', {
+        model: GROQ_MODEL,
+      })
+    }
 
     // Extract suggested tags if this is a longer conversation
     let suggestedTags: string[] | undefined
@@ -172,13 +181,22 @@ IMPORTANT — this person has just said something that may indicate ${
       reply,
       suggestedTags,
       crisis,
+      // True when `reply` is the canned line rather than something the
+      // model actually said, so the UI can be honest about it.
+      degraded: !generated,
       // Lets the UI show "2 left today" and prompt for memory consent
       // without a second round trip.
       quota: { remaining: quota.remaining, limit: quota.limit },
       memory: { consented: memory.consented, active: memory.block !== '' },
     })
   } catch (error) {
+    // The canned line used to be returned here with a bare 200 and no
+    // marker, so a total failure — Groq down, a throw anywhere above —
+    // was presented to the user as the coach's considered reply. In an
+    // app where the AI IS the product, silently serving a stock sentence
+    // is worse than admitting it could not answer: the user thinks that
+    // vague line is what their coach had to offer.
     console.error('Journal conversation error:', error)
-    return NextResponse.json({ reply: FALLBACK_REPLY })
+    return NextResponse.json({ reply: FALLBACK_REPLY, degraded: true })
   }
 }

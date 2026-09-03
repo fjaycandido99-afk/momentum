@@ -137,6 +137,7 @@ function JournalContent() {
   const [chatQuota, setChatQuota] = useState<ChatQuota | null>(null)
   const [chatMemoryConsented, setChatMemoryConsented] = useState<boolean | null>(null)
   const [chatCrisis, setChatCrisis] = useState<CrisisContent | null>(null)
+  const [chatDegraded, setChatDegraded] = useState(false)
   const [chatBlocked, setChatBlocked] = useState<{ reason?: 'locked' | 'exhausted'; limit: number | null } | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
@@ -635,6 +636,7 @@ function JournalContent() {
     const newConversation = [...conversation, { role: 'user' as const, content: userMessage }]
     setConversation(newConversation)
     setChatLoading(true)
+    setChatDegraded(false)
 
     try {
       const res = await fetch('/api/ai/journal-conversation', {
@@ -663,6 +665,7 @@ function JournalContent() {
         if (data.quota) setChatQuota(data.quota)
         if (data.memory) setChatMemoryConsented(!!data.memory.consented)
         setChatCrisis(data.crisis ?? null)
+        setChatDegraded(!!data.degraded)
       }
     } catch {
       setConversation(prev => [...prev, { role: 'assistant', content: 'Take a moment to sit with that thought. What comes to mind?' }])
@@ -1044,6 +1047,15 @@ function JournalContent() {
                 )}
                 {/* Sits with the latest reply, not over it. */}
                 {chatCrisis && !chatLoading && <CrisisBanner content={chatCrisis} />}
+
+                {/* The reply above is the stock fallback, not something the
+                    model said. Saying so is better than letting a vague
+                    sentence pass as the coach's considered answer. */}
+                {chatDegraded && !chatLoading && (
+                  <p className="px-1 text-[11px] text-white/40">
+                    Couldn&apos;t reach your coach just then — that reply is a stock one. Try sending again.
+                  </p>
+                )}
                 <div ref={chatEndRef} />
               </div>
 
