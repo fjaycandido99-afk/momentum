@@ -1022,11 +1022,25 @@ export function ImmersiveHome() {
   }, [stopPreview, startPreview, genreVideos, genreBackgrounds, backgrounds, createBgMusicPlayer, audioContext, dispatch])
 
   return (
-    <div className="isolate min-h-screen">
+    <div className="isolate h-[100dvh] overflow-hidden">
+    {/* App-shell scrolling: the PAGE does not scroll, this container does.
+        On iOS the document rubber-bands past its ends, and during that
+        bounce the entire visual viewport moves — so a header pinned with
+        `sticky` OR `fixed` travels with it. That is why swapping between
+        the two changed nothing: neither can outrun a moving viewport.
+        A container that scrolls internally with overscroll-contain does
+        not bounce, so the header genuinely holds still.
+
+        This is also what the code already assumed: scrollRef feeds
+        useScrollReveal, useSectionTransitions, useParallax and
+        useScrollHeader, all of which read scrollRef.current.scrollTop.
+        That div never scrolled, so all four have been reading 0 — the
+        shrink-on-scroll header, the parallax and the reveals have never
+        once fired. */}
     <FirstMomentOverlay />
     <div
       ref={scrollRef}
-      className={`relative min-h-screen text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer || showGuidedPlayer ? 'overflow-hidden max-h-screen' : ''}`}
+      className={`relative h-full text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer || showGuidedPlayer ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
     >
       {/* --- Fullscreen overlays --- */}
 
