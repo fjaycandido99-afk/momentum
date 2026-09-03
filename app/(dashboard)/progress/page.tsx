@@ -1,7 +1,5 @@
 'use client'
 
-import { FixedHeader } from '@/components/ui/FixedHeader'
-
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Loader2, Flame, Mail, BarChart3 } from 'lucide-react'
@@ -82,11 +80,11 @@ export default function ProgressPage() {
 
   return (
     <div className="min-h-screen text-white pb-24">
-      <FixedHeader className="z-50 px-6 safe-area-pt pb-4 bg-black" spacerClassName="mb-4">
+      <div className="sticky top-0 z-50 px-6 safe-area-pt pb-4 mb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <h1 className="text-2xl font-semibold shimmer-text">Progress</h1>
         <FeatureHint id="progress-intro" text="Your streaks, listening time & journal stats at a glance" mode="once" />
-      </FixedHeader>
+      </div>
 
       <TierBanner page="progress" />
 

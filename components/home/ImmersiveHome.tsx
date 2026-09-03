@@ -1,7 +1,5 @@
 'use client'
 
-import { FixedHeader } from '@/components/ui/FixedHeader'
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -1131,7 +1129,8 @@ export function ImmersiveHome() {
 
       {/* Header — hidden when any fullscreen overlay is active */}
       {!showMorningFlow && !audioState.playingSound && !audioState.showSoundscapePlayer && (
-        <FixedHeader className="z-50 px-5 pt-12 pb-3.5 animate-fade-in-down bg-black before:absolute before:content-[''] before:-top-20 before:left-0 before:right-0 before:h-20 before:bg-black">
+        <div className="sticky top-0 z-50 px-5 pt-12 pb-3.5 animate-fade-in-down bg-black before:absolute before:content-[''] before:-top-20 before:left-0 before:right-0 before:h-20 before:bg-black"
+        >
           {/* Bottom blur fade */}
           <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
           <div className="flex items-center justify-between">
@@ -1169,7 +1168,7 @@ export function ImmersiveHome() {
               </button>
             </div>
           </div>
-        </FixedHeader>
+        </div>
       )}
 
       {/* Hamburger Menu Dropdown */}

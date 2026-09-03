@@ -1,7 +1,5 @@
 'use client'
 
-import { FixedHeader } from '@/components/ui/FixedHeader'
-
 import { useState, useEffect, useMemo } from 'react'
 import { Bookmark, Loader2, Trash2, Sparkles, X } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
@@ -109,11 +107,11 @@ export default function SavedPage() {
 
   return (
     <div className="min-h-screen text-white pb-24">
-      <FixedHeader className="z-50 px-8 safe-area-pt pb-4 bg-black" spacerClassName="mb-4">
+      <div className="sticky top-0 z-50 px-8 safe-area-pt pb-4 mb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <h1 className="text-2xl font-semibold shimmer-text">Saved</h1>
         <FeatureHint id="saved-intro" text="Heart any video to save it here for quick access" mode="once" />
-      </FixedHeader>
+      </div>
 
       <div className="px-8 space-y-4">
         {/* Filter Pills */}
