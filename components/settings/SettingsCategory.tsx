@@ -66,12 +66,30 @@ export function SettingsCategory({
     }
     setMounted(true)
 
-    if (targeted) {
-      // After paint, so the expanded height is measured before scrolling.
-      requestAnimationFrame(() => {
-        document.getElementById(id)?.scrollIntoView({ block: 'start' })
-      })
-    }
+    if (!targeted) return
+
+    // Scroll AFTER the layout settles, not on the next frame.
+    //
+    // The first attempt at this used requestAnimationFrame and did nothing
+    // useful, for two compounding reasons: children are gated behind
+    // `mounted`, so at that point the section is still an empty box; and
+    // opening is a 300ms grid-template-rows transition, so its height keeps
+    // growing for another 300ms afterwards. Scrolling ~16ms in aimed at a
+    // collapsed element, and the page then grew out from under it.
+    //
+    // Two passes: one just after the transition, one later as a safety net
+    // for slower devices and late-rendering children. Both bail if the user
+    // has already started scrolling — yanking the viewport out from under
+    // someone is worse than not scrolling at all.
+    const startedAt = window.scrollY
+    const settle = (delay: number) =>
+      window.setTimeout(() => {
+        if (Math.abs(window.scrollY - startedAt) > 40) return // user took over
+        document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+      }, delay)
+
+    const timers = [settle(360), settle(750)]
+    return () => timers.forEach(clearTimeout)
   }, [id])
 
   const toggle = () => {
