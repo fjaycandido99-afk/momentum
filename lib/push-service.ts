@@ -620,6 +620,7 @@ export async function sendBedtimeReminders(): Promise<void> {
     select: {
       user_id: true,
       wake_time: true,
+      bedtime_reminder_time: true,
       timezone: true,
     },
   })
@@ -628,11 +629,20 @@ export async function sendBedtimeReminders(): Promise<void> {
   let totalFailed = 0
   let totalSkipped = 0
 
-  for (const { user_id, wake_time, timezone } of usersToNotify) {
-    // Parse wake_time (format: "HH:MM") and calculate bedtime (8 hours before)
+  for (const { user_id, wake_time, bedtime_reminder_time, timezone } of usersToNotify) {
     const [wakeHour] = (wake_time || '07:00').split(':').map(Number)
-    let bedtimeHour = wakeHour - 8
-    if (bedtimeHour < 0) bedtimeHour += 24
+
+    // An explicit bedtime the user set wins. Otherwise keep the original
+    // derivation (wake time minus 8h) so nobody's existing reminder moves
+    // just because this setting appeared.
+    let bedtimeHour: number
+    if (bedtime_reminder_time) {
+      const [h] = bedtime_reminder_time.split(':').map(Number)
+      bedtimeHour = Number.isFinite(h) ? h : 23
+    } else {
+      bedtimeHour = wakeHour - 8
+      if (bedtimeHour < 0) bedtimeHour += 24
+    }
 
     // Check if user's LOCAL hour matches their bedtime hour
     if (!isLocalHour(timezone, bedtimeHour)) {
@@ -1564,18 +1574,36 @@ export async function sendCoachAccountability(): Promise<void> {
  */
 async function sendSegmentReminder(
   type: 'midday_reset' | 'wind_down',
-  localHour: number
+  defaultHour: number
 ): Promise<void> {
   const subscriptions = await prisma.pushSubscription.findMany({
     where: { checkpoint_alerts: true },
     select: { user_id: true },
     distinct: ['user_id'],
   })
+  const subscribed = subscriptions.map(s => s.user_id)
+  if (subscribed.length === 0) return
 
-  const eligibleUserIds = await filterUsersByLocalHour(
-    subscriptions.map(s => s.user_id),
-    localHour
-  )
+  // Each user picks their own hour (Settings → Daily Guide Reminders).
+  // defaultHour is only the fallback for anyone who has never set one —
+  // firing everyone at a time this code chose is exactly what the
+  // setting exists to stop.
+  const enabledField = type === 'midday_reset' ? 'midday_reminder_enabled' : 'winddown_reminder_enabled'
+  const timeField = type === 'midday_reset' ? 'midday_reminder_time' : 'winddown_reminder_time'
+
+  const prefs = await prisma.userPreferences.findMany({
+    where: { user_id: { in: subscribed }, [enabledField]: true },
+    select: { user_id: true, timezone: true, [timeField]: true },
+  })
+
+  const eligibleUserIds = prefs
+    .filter(p => {
+      const raw = (p as Record<string, unknown>)[timeField]
+      const [hour] = String(raw || `${String(defaultHour).padStart(2, '0')}:00`).split(':').map(Number)
+      return isLocalHour(p.timezone, Number.isFinite(hour) ? hour : defaultHour)
+    })
+    .map(p => p.user_id)
+
   if (eligibleUserIds.length === 0) return
 
   // Don't nudge someone toward a segment they've already finished today.

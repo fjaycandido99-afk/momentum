@@ -158,6 +158,24 @@ model UserPreferences {
   // Gamification
   total_xp Int @default(0)
 
+  // Daily Guide reminders — one per segment.
+  //
+  // Morning already had daily_reminder + reminder_time. Bedtime was
+  // DERIVED as wake_time minus 8h and could not be set directly, and
+  // Midday/Wind Down were hardcoded to 13:00 and 19:00 in push-service.
+  // All four are now on the same footing: an on/off and a time the user
+  // picks. Times are HH:MM in the user's own timezone.
+  //
+  // Midday and Wind Down default ON to match the behaviour already
+  // shipped (they rode checkpoint_alerts), so this only adds control.
+  // bedtime_reminder_time is nullable and falls back to the old
+  // wake_time-8h derivation when unset, so nobody's bedtime moves.
+  midday_reminder_enabled   Boolean @default(true)
+  midday_reminder_time      String? // 13:00
+  winddown_reminder_enabled Boolean @default(true)
+  winddown_reminder_time    String? // 19:00
+  bedtime_reminder_time     String? // overrides the wake_time-8h default
+
   // Bedtime reminder
   bedtime_reminder_enabled Boolean @default(false)
 

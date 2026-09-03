@@ -38,6 +38,7 @@ import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { SettingsCategory } from '@/components/settings/SettingsCategory'
+import { GuideReminderSettings } from '@/components/settings/GuideReminderSettings'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
@@ -126,6 +127,11 @@ function SettingsContent() {
   const [dailyReminder, setDailyReminder] = useState(true)
   const [reminderTime, setReminderTime] = useState('07:00')
   const [bedtimeReminderEnabled, setBedtimeReminderEnabled] = useState(false)
+  const [bedtimeTime, setBedtimeTime] = useState('')
+  const [middayEnabled, setMiddayEnabled] = useState(true)
+  const [middayTime, setMiddayTime] = useState('13:00')
+  const [winddownEnabled, setWinddownEnabled] = useState(true)
+  const [winddownTime, setWinddownTime] = useState('19:00')
   const [astrologyEnabled, setAstrologyEnabled] = useState(false)
   const [aiMemoryEnabled, setAiMemoryEnabled] = useState(false)
   const [zodiacSign, setZodiacSign] = useState<string | null>(null)
@@ -179,6 +185,11 @@ function SettingsContent() {
           if (data.daily_reminder !== undefined) setDailyReminder(data.daily_reminder)
           if (data.reminder_time) setReminderTime(data.reminder_time)
           if (data.bedtime_reminder_enabled !== undefined) setBedtimeReminderEnabled(data.bedtime_reminder_enabled)
+          if (data.bedtime_reminder_time) setBedtimeTime(data.bedtime_reminder_time)
+          if (data.midday_reminder_enabled !== undefined) setMiddayEnabled(data.midday_reminder_enabled)
+          if (data.midday_reminder_time) setMiddayTime(data.midday_reminder_time)
+          if (data.winddown_reminder_enabled !== undefined) setWinddownEnabled(data.winddown_reminder_enabled)
+          if (data.winddown_reminder_time) setWinddownTime(data.winddown_reminder_time)
           if (data.astrology_enabled !== undefined) setAstrologyEnabled(data.astrology_enabled)
           if (data.ai_memory_enabled !== undefined) setAiMemoryEnabled(data.ai_memory_enabled)
           if (data.zodiac_sign !== undefined) setZodiacSign(data.zodiac_sign)
@@ -228,6 +239,11 @@ function SettingsContent() {
           daily_reminder: dailyReminder,
           reminder_time: reminderTime,
           bedtime_reminder_enabled: bedtimeReminderEnabled,
+          bedtime_reminder_time: bedtimeTime || null,
+          midday_reminder_enabled: middayEnabled,
+          midday_reminder_time: middayTime || null,
+          winddown_reminder_enabled: winddownEnabled,
+          winddown_reminder_time: winddownTime || null,
           astrology_enabled: astrologyEnabled,
           ai_memory_enabled: aiMemoryEnabled,
           zodiac_sign: zodiacSign,
@@ -268,7 +284,7 @@ function SettingsContent() {
     } finally {
       setIsSaving(false)
     }
-  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, bedtimeReminderEnabled, astrologyEnabled, zodiacSign, aiMemoryEnabled])
+  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, bedtimeReminderEnabled, bedtimeTime, middayEnabled, middayTime, winddownEnabled, winddownTime, astrologyEnabled, zodiacSign, aiMemoryEnabled])
 
   // Debounced auto-save when any preference changes
   useEffect(() => {
@@ -742,90 +758,49 @@ function SettingsContent() {
           title="Notifications"
           description="Push notifications & reminders"
         >
-          {/* Reminder time & bedtime */}
-          <div className="space-y-4 mb-2">
-            <div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-white text-sm">Morning Reminder</p>
-                  <p className="text-white/75 text-xs">Get notified each morning</p>
-                </div>
-                <button
-                  onClick={() => setDailyReminder(!dailyReminder)}
-                  role="switch"
-                  aria-checked={dailyReminder}
-                  aria-label="Daily reminder"
-                  className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    dailyReminder ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                      dailyReminder ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-              <div className="mt-3">
-                <label htmlFor="wake-time-notif" className="block text-[11px] text-white/40 mb-1.5">Wake time</label>
-                <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-                  <input
-                    id="wake-time-notif"
-                    type="time"
-                    value={wakeTime}
-                    onChange={(e) => { setWakeTime(e.target.value); setReminderTime(e.target.value) }}
-                    aria-label="Wake time"
-                    className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                    style={{ colorScheme: 'dark' }}
-                  />
-                </div>
-              </div>
+          {/* Wake time drives the Daily Guide schedule. It used to also
+              silently set the morning reminder time; those are separate
+              now, so a reminder can sit where the user wants it. */}
+          <div className="mb-4">
+            <label htmlFor="wake-time-notif" className="block text-[11px] text-white/40 mb-1.5">Wake time</label>
+            <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
+              <input
+                id="wake-time-notif"
+                type="time"
+                value={wakeTime}
+                onChange={(e) => setWakeTime(e.target.value)}
+                aria-label="Wake time"
+                className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                style={{ colorScheme: 'dark' }}
+              />
             </div>
-
-            <div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-white text-sm">Bedtime Reminder</p>
-                  <p className="text-white/75 text-xs">8 hours before wake time</p>
-                </div>
-                <button
-                  onClick={() => setBedtimeReminderEnabled(!bedtimeReminderEnabled)}
-                  role="switch"
-                  aria-checked={bedtimeReminderEnabled}
-                  aria-label="Bedtime reminder"
-                  className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    bedtimeReminderEnabled ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'bg-white/10'
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                      bedtimeReminderEnabled ? 'bg-black translate-x-6' : 'bg-white translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-              {bedtimeReminderEnabled && wakeTime && (
-                <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/15">
-                  <p className="text-sm text-white/70">
-                    You&apos;ll be reminded at{' '}
-                    <span className="text-white font-medium">
-                      {(() => {
-                        const [h, m] = wakeTime.split(':').map(Number)
-                        let bedH = h - 8
-                        if (bedH < 0) bedH += 24
-                        const period = bedH >= 12 ? 'PM' : 'AM'
-                        const display = bedH % 12 || 12
-                        return `${display}:${(m || 0).toString().padStart(2, '0')} ${period}`
-                      })()}
-                    </span>
-                    {' '}to get 8 hours of sleep
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-white/5 pt-2" />
           </div>
+
+          <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 px-1 mb-2">Daily Guide reminders</p>
+          <GuideReminderSettings
+            values={{
+              dailyReminder,
+              reminderTime,
+              middayEnabled,
+              middayTime,
+              winddownEnabled,
+              winddownTime,
+              bedtimeEnabled: bedtimeReminderEnabled,
+              bedtimeTime,
+            }}
+            onChange={(patch) => {
+              if (patch.dailyReminder !== undefined) setDailyReminder(patch.dailyReminder)
+              if (patch.reminderTime !== undefined) setReminderTime(patch.reminderTime)
+              if (patch.middayEnabled !== undefined) setMiddayEnabled(patch.middayEnabled)
+              if (patch.middayTime !== undefined) setMiddayTime(patch.middayTime)
+              if (patch.winddownEnabled !== undefined) setWinddownEnabled(patch.winddownEnabled)
+              if (patch.winddownTime !== undefined) setWinddownTime(patch.winddownTime)
+              if (patch.bedtimeEnabled !== undefined) setBedtimeReminderEnabled(patch.bedtimeEnabled)
+              if (patch.bedtimeTime !== undefined) setBedtimeTime(patch.bedtimeTime)
+            }}
+          />
+
+          <div className="border-t border-white/5 pt-2 mt-4" />
 
           <NotificationSettings />
         </SettingsCategory>

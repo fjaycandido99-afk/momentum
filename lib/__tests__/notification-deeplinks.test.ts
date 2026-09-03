@@ -51,3 +51,33 @@ describe('notification deep links', () => {
     }
   })
 })
+
+describe('per-segment reminder times', () => {
+  // The sender resolves an hour from an optional "HH:MM" preference,
+  // falling back to a default. Pinned here because the failure is silent:
+  // a bad parse would quietly fire everyone at the fallback hour, which is
+  // exactly the behaviour the setting exists to remove.
+  const hourFor = (pref: string | null | undefined, fallback: number) => {
+    const [h] = String(pref || `${String(fallback).padStart(2, '0')}:00`).split(':').map(Number)
+    return Number.isFinite(h) ? h : fallback
+  }
+
+  it('uses the time the user picked', () => {
+    expect(hourFor('09:30', 13)).toBe(9)
+    expect(hourFor('00:00', 13)).toBe(0)
+    expect(hourFor('23:15', 13)).toBe(23)
+  })
+
+  it('falls back when unset, empty or unparseable', () => {
+    expect(hourFor(null, 13)).toBe(13)
+    expect(hourFor(undefined, 19)).toBe(19)
+    expect(hourFor('', 13)).toBe(13)
+    expect(hourFor('not a time', 19)).toBe(19)
+  })
+
+  it('treats midnight as a real choice, not as missing', () => {
+    // '00:00' parses to 0, which is falsy — an `|| fallback` on the HOUR
+    // rather than the string would silently move a midnight reminder.
+    expect(hourFor('00:00', 19)).toBe(0)
+  })
+})

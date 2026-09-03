@@ -271,6 +271,11 @@ export async function POST(request: NextRequest) {
       daily_reminder,
       reminder_time,
       bedtime_reminder_enabled,
+      bedtime_reminder_time,
+      midday_reminder_enabled,
+      midday_reminder_time,
+      winddown_reminder_enabled,
+      winddown_reminder_time,
 
       // Astrology preferences
       astrology_enabled,
@@ -413,6 +418,11 @@ export async function POST(request: NextRequest) {
 
         // Timezone
         ...(timezone !== undefined && { timezone }),
+        ...(bedtime_reminder_time !== undefined && { bedtime_reminder_time }),
+        ...(midday_reminder_enabled !== undefined && { midday_reminder_enabled }),
+        ...(midday_reminder_time !== undefined && { midday_reminder_time }),
+        ...(winddown_reminder_enabled !== undefined && { winddown_reminder_enabled }),
+        ...(winddown_reminder_time !== undefined && { winddown_reminder_time }),
         ...(ai_memory_enabled !== undefined && {
           ai_memory_enabled,
           ai_memory_consented_at: ai_memory_enabled ? new Date() : null,
@@ -474,6 +484,11 @@ export async function POST(request: NextRequest) {
 
         // Timezone
         timezone: timezone || null,
+        bedtime_reminder_time: bedtime_reminder_time ?? null,
+        midday_reminder_enabled: midday_reminder_enabled ?? true,
+        midday_reminder_time: midday_reminder_time ?? null,
+        winddown_reminder_enabled: winddown_reminder_enabled ?? true,
+        winddown_reminder_time: winddown_reminder_time ?? null,
         ai_memory_enabled: ai_memory_enabled ?? false,
         ai_memory_consented_at: ai_memory_enabled ? new Date() : null,
       },
