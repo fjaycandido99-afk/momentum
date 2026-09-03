@@ -1,5 +1,7 @@
 'use client'
 
+import { FixedHeader } from '@/components/ui/FixedHeader'
+
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import {
   Bell,
@@ -375,7 +377,7 @@ function SettingsContent() {
   return (
     <div className="min-h-screen text-white pb-[calc(env(safe-area-inset-bottom)+6rem)]">
       {/* Header */}
-      <div className="sticky top-0 z-50 px-6 safe-area-pt pb-4 mb-4 bg-black">
+      <FixedHeader className="z-50 px-6 safe-area-pt pb-4 bg-black" spacerClassName="mb-4">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
@@ -401,7 +403,7 @@ function SettingsContent() {
           )}
         </div>
         <p className="text-white/70 text-sm mt-1">Customize your Daily Guide</p>
-      </div>
+      </FixedHeader>
 
       <TierBanner page="settings" />
 

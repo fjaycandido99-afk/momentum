@@ -1,5 +1,7 @@
 'use client'
 
+import { FixedHeader } from '@/components/ui/FixedHeader'
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Loader2,
@@ -394,7 +396,7 @@ export function DailyGuideHome({ embedded = false, initialSession = null }: Dail
       {!embedded && <TrialEndingBanner />}
 
       {/* Header */}
-      <div className="sticky top-0 z-50 p-6 safe-area-pt mb-4 bg-black/95 backdrop-blur-xl animate-fade-in-down">
+      <FixedHeader className="z-50 p-6 safe-area-pt bg-black/95 backdrop-blur-xl animate-fade-in-down" spacerClassName="mb-4">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
 
         {/* Greeting */}
@@ -422,7 +424,7 @@ export function DailyGuideHome({ embedded = false, initialSession = null }: Dail
           onSelect={(id) => setActiveSession(id)}
           activeSession={activeSession}
         />
-      </div>
+      </FixedHeader>
 
       {/* Session Limit Banner */}
       <div className="px-6 mb-4">

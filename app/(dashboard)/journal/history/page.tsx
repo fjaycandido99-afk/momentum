@@ -1,5 +1,7 @@
 'use client'
 
+import { FixedHeader } from '@/components/ui/FixedHeader'
+
 /* ============================================================================
    Journal History — full archive of past entries surfaced as a scrollable
    timeline grouped by month. Each card shows the date, mood, content
@@ -139,7 +141,7 @@ export default function JournalHistoryPage() {
   return (
     <div className="min-h-screen text-white pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-20 px-6 safe-area-pt pb-3 bg-black">
+      <FixedHeader className="z-20 px-6 safe-area-pt pb-3 bg-black">
         <div className="flex items-center gap-2 mb-3">
           <Link
             href="/journal"
@@ -165,7 +167,7 @@ export default function JournalHistoryPage() {
             className="w-full pl-9 pr-3 py-2.5 text-sm text-white placeholder-white/50 bg-white/[0.04] border border-white/15 rounded-xl focus:outline-none focus:ring-1 focus:ring-white/40"
           />
         </div>
-      </div>
+      </FixedHeader>
 
       {/* Loading state */}
       {isLoading && (
