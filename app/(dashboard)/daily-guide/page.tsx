@@ -1,14 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { authFetch } from '@/lib/auth-fetch'
+import { isSessionType } from '@/lib/daily-guide/decision-tree'
 
-export default function DailyGuidePage() {
+function DailyGuideContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
   const [isOnboarded, setIsOnboarded] = useState(false)
 
@@ -60,5 +62,24 @@ export default function DailyGuidePage() {
     return null
   }
 
-  return <ErrorBoundary><DailyGuideHome /></ErrorBoundary>
+  // ?session=<id> lets a notification open the card it was about, rather
+  // than whichever one the clock happens to land on.
+  const requested = searchParams.get('session')
+  const initialSession = isSessionType(requested) ? requested : null
+
+  return (
+    <ErrorBoundary>
+      <DailyGuideHome initialSession={initialSession} />
+    </ErrorBoundary>
+  )
+}
+
+export default function DailyGuidePage() {
+  // useSearchParams needs a Suspense boundary to avoid opting the whole
+  // route into client-side-only rendering.
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <DailyGuideContent />
+    </Suspense>
+  )
 }

@@ -24,6 +24,8 @@ const PRIORITY: Record<NotificationType, Priority> = {
   evening_reminder: 'normal',
   bedtime_reminder: 'normal',
   checkpoint: 'normal',
+  midday_reset: 'normal',
+  wind_down: 'normal',
   weekly_review: 'normal',
   coach_checkin: 'normal',
   coach_accountability: 'normal',

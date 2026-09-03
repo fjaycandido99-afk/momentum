@@ -25,6 +25,14 @@
       "schedule": "0 3 * * *"
     },
     {
+      "path": "/api/cron/notifications?type=midday_reset",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=wind_down",
+      "schedule": "0 * * * *"
+    },
+    {
       "path": "/api/cron/notifications?type=daily_quote",
       "schedule": "0 * * * *"
     },

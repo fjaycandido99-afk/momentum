@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { useServiceWorker } from '@/hooks/useServiceWorker'
 import { useDeepLink } from '@/hooks/useDeepLink'
+import { useHardwareBack } from '@/hooks/useHardwareBack'
 import { useNativePush } from '@/hooks/useNativePush'
 import { installAuthInterceptor } from '@/lib/auth-interceptor'
 import { createClient } from '@/lib/supabase/client'
@@ -35,6 +36,7 @@ export function AppWrapper({ children }: AppWrapperProps) {
   installAuthInterceptor()
   useServiceWorker()
   useDeepLink()
+  useHardwareBack()
   useNativePush()
   const pathname = usePathname()
   const [showSplash, setShowSplash] = useState(true)

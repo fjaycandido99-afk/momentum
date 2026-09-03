@@ -6,6 +6,8 @@ import {
   sendWeeklyReviewReminders,
   sendWeeklyInsights,
   sendDailyQuotes,
+  sendMiddayResets,
+  sendWindDowns,
   sendDailyAffirmations,
   sendMotivationalNudges,
   sendDailyMotivation,
@@ -76,6 +78,14 @@ export async function GET(request: NextRequest) {
       case 'cleanup':
         await cleanupExpiredAudioCache()
         return NextResponse.json({ success: true, type: 'cache_cleanup' })
+
+      case 'midday_reset':
+        await sendMiddayResets()
+        return NextResponse.json({ success: true, type: 'midday_reset' })
+
+      case 'wind_down':
+        await sendWindDowns()
+        return NextResponse.json({ success: true, type: 'wind_down' })
 
       case 'daily_quote':
         await sendDailyQuotes()

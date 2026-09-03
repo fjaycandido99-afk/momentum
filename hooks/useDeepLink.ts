@@ -20,11 +20,14 @@ export function useDeepLink() {
 
         const listener = await App.addListener('appUrlOpen', (event) => {
           const url = new URL(event.url)
-          const path = url.pathname
+          // Keep the query string and hash. Dropping them silently broke
+          // any deep link that carried state — a notification pointing at
+          // /daily-guide?session=midday_reset landed on the page with the
+          // segment lost, and picked one from the clock instead.
+          const target = url.pathname + url.search + url.hash
 
-          // Route deep links to the correct page
-          if (path) {
-            router.push(path)
+          if (url.pathname) {
+            router.push(target)
           }
         })
 

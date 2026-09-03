@@ -88,9 +88,15 @@ interface AudioData {
 
 interface DailyGuideHomeProps {
   embedded?: boolean
+  /**
+   * Segment to open instead of the one the clock would pick. Set from
+   * ?session= so a notification opens the card it was actually about —
+   * a Midday Reset push tapped at 6pm should still land on Midday Reset.
+   */
+  initialSession?: SessionType | null
 }
 
-export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
+export function DailyGuideHome({ embedded = false, initialSession = null }: DailyGuideHomeProps) {
   const subscription = useSubscriptionOptional()
   const audioContext = useAudioOptional()
   const mindsetCtx = useMindsetOptional()
@@ -106,7 +112,7 @@ export function DailyGuideHome({ embedded = false }: DailyGuideHomeProps) {
   const [generationError, setGenerationError] = useState<string | null>(null)
 
   // Session state
-  const [activeSession, setActiveSession] = useState<SessionType>(() => getCurrentSession())
+  const [activeSession, setActiveSession] = useState<SessionType>(() => initialSession ?? getCurrentSession())
   const [completedSessions, setCompletedSessions] = useState<SessionType[]>([])
   const [loadingSession, setLoadingSession] = useState<SessionType | null>(null)
   const [sessionAudio, setSessionAudio] = useState<Record<string, AudioData>>({})

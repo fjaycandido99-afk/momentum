@@ -183,3 +183,18 @@ export function formatTimeEstimate(seconds: number): string {
   const remainingMinutes = minutes % 60
   return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
 }
+
+/**
+ * Narrowing guard for a session id arriving from outside the app — a
+ * ?session= param, a push payload. Anything unrecognised is rejected so
+ * a stale or hand-edited link falls back to the clock rather than
+ * putting the UI into a segment that does not exist.
+ */
+export function isSessionType(value: unknown): value is SessionType {
+  return (
+    value === 'morning_prime' ||
+    value === 'midday_reset' ||
+    value === 'wind_down' ||
+    value === 'bedtime_story'
+  )
+}

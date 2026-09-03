@@ -36,6 +36,8 @@ export type NotificationType =
   | 'daily_affirmation'
   | 'motivational_nudge'
   | 'daily_motivation'
+  | 'midday_reset'
+  | 'wind_down'
 
   | 'coach_checkin'
   | 'coach_accountability'
@@ -82,6 +84,28 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
     tag: 'morning-reminder',
     actions: [
       { action: 'open', title: 'Start Flow' },
+      { action: 'dismiss', title: 'Later' },
+    ],
+  },
+  midday_reset: {
+    title: 'Midday Reset',
+    body: 'Two minutes to recharge, affirm and refocus.',
+    icon: '/icon-192.png',
+    badge: '/apple-touch-icon.png',
+    tag: 'midday-reset',
+    actions: [
+      { action: 'open', title: 'Play' },
+      { action: 'dismiss', title: 'Later' },
+    ],
+  },
+  wind_down: {
+    title: 'Wind Down',
+    body: 'Close the day out before it closes you out.',
+    icon: '/icon-192.png',
+    badge: '/apple-touch-icon.png',
+    tag: 'wind-down',
+    actions: [
+      { action: 'open', title: 'Play' },
       { action: 'dismiss', title: 'Later' },
     ],
   },
@@ -256,15 +280,20 @@ function initWebPush(): boolean {
 // Default deep-link per type — points each push at its most relevant screen
 // instead of the home feed. A per-send customPayload.data.url still overrides.
 const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
-  morning_reminder: '/daily-guide',
+  // ?session= so the card that opens is the one the notification was about.
+  // Without it /daily-guide picks a segment from the clock, so a Midday
+  // Reset push opened at 6pm landed on Wind Down.
+  morning_reminder: '/daily-guide?session=morning_prime',
   checkpoint: '/daily-guide',
-  evening_reminder: '/daily-guide',
-  bedtime_reminder: '/daily-guide',
+  evening_reminder: '/daily-guide?session=wind_down',
+  bedtime_reminder: '/daily-guide?session=bedtime_story',
+  midday_reset: '/daily-guide?session=midday_reset',
+  wind_down: '/daily-guide?session=wind_down',
   streak_at_risk: '/daily-guide',
   weekly_review: '/journal?review=1',
   insight: '/journal?review=1',
   daily_quote: '/',
-  daily_affirmation: '/daily-guide',
+  daily_affirmation: '/daily-guide?session=morning_prime',
   motivational_nudge: '/',
   daily_motivation: '/',
   coach_checkin: '/coach',
@@ -299,6 +328,8 @@ export async function sendPushToUser(
     feature_discovery: 'motivational_nudge_alerts',
     weekly_review: 'weekly_review',
     insight: 'insight_alerts',
+    midday_reset: 'checkpoint_alerts', // segment nudges ride the checkpoint pref
+    wind_down: 'checkpoint_alerts',
     daily_quote: 'daily_quote_alerts',
     daily_affirmation: 'daily_affirmation_alerts',
     motivational_nudge: 'motivational_nudge_alerts',
@@ -1512,4 +1543,84 @@ export async function sendCoachAccountability(): Promise<void> {
   }
 
   console.log(`Coach accountability: ${totalSent} sent, ${totalFailed} failed, ${totalSkipped} skipped (not premium or no goals/streak)`)
+}
+
+/**
+ * Midday Reset and Wind Down reminders.
+ *
+ * These two segments previously had NO notification at all — a user only
+ * found them by happening to open the app inside the right window, which
+ * meant two of the four daily segments were effectively invisible.
+ *
+ * They ride the existing `checkpoint_alerts` preference rather than
+ * introducing new columns (bedtime_reminder already reuses
+ * evening_reminder the same way), so this needs no migration and honours
+ * a choice users have already made about segment nudges.
+ *
+ * Both deep-link to their own card via DEFAULT_URL_BY_TYPE. Neither
+ * autoplays: the notification opens the segment with Play ready, because
+ * a phone that starts talking on its own in a meeting is worse than one
+ * extra tap.
+ */
+async function sendSegmentReminder(
+  type: 'midday_reset' | 'wind_down',
+  localHour: number
+): Promise<void> {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { checkpoint_alerts: true },
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  const eligibleUserIds = await filterUsersByLocalHour(
+    subscriptions.map(s => s.user_id),
+    localHour
+  )
+  if (eligibleUserIds.length === 0) return
+
+  // Don't nudge someone toward a segment they've already finished today.
+  //
+  // "Today" has to be resolved per user, not from the server clock: these
+  // users were selected because it is 13:00 or 19:00 where THEY are, and
+  // at those hours a chunk of them are on a different calendar date to
+  // the server. Using the server's date would check the wrong day's row
+  // and re-nudge people who already finished.
+  const doneField = type === 'midday_reset' ? 'midday_reset_done' : 'wind_down_done'
+  const tzRows = await prisma.userPreferences.findMany({
+    where: { user_id: { in: eligibleUserIds } },
+    select: { user_id: true, timezone: true },
+  })
+  const localDate = new Map(tzRows.map(r => [r.user_id, localDateForTz(r.timezone)]))
+
+  const alreadyDone = await prisma.dailyGuide.findMany({
+    where: {
+      [doneField]: true,
+      OR: eligibleUserIds.map(user_id => ({
+        user_id,
+        date: localDate.get(user_id) ?? localDateForTz(null),
+      })),
+    },
+    select: { user_id: true },
+  })
+  const skip = new Set(alreadyDone.map(g => g.user_id))
+
+  let totalSent = 0
+  let totalFailed = 0
+
+  for (const user_id of eligibleUserIds) {
+    if (skip.has(user_id)) continue
+    const result = await sendPushToUser(user_id, type)
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`${type}: ${totalSent} sent, ${totalFailed} failed (${eligibleUserIds.length} in window, ${skip.size} already done)`)
+}
+
+export async function sendMiddayResets(): Promise<void> {
+  await sendSegmentReminder('midday_reset', 13)
+}
+
+export async function sendWindDowns(): Promise<void> {
+  await sendSegmentReminder('wind_down', 19)
 }
