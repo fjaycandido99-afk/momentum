@@ -45,6 +45,20 @@
   border-color: rgb(var(--border));
 }
 
+/* The document scroller.
+   overscroll-behavior was set on `body` alone, which does nothing for the
+   scroll that actually rubber-bands: on iOS the document scroller is the
+   HTML element, so the rule was declared on the wrong box and the page
+   bounced freely past the top.
+   That bounce is what made every header look like it "moves when
+   scrolling" — pull past the top and the whole document, header included,
+   travels with the rubber band and snaps back. It affects sticky and
+   fixed identically, which is why swapping between them changed nothing,
+   and it is WebKit-only, which is why Chrome always looked correct. */
+html {
+  overscroll-behavior: none;
+}
+
 body {
   background: rgb(var(--background));
   color: rgb(var(--foreground));
