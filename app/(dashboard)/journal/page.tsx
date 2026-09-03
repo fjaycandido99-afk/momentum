@@ -28,6 +28,8 @@ import { FocusModeToolbar } from '@/components/journal/FocusModeToolbar'
 import { EmptyWritingState } from '@/components/journal/EmptyWritingState'
 import { JournalMilestoneCelebration } from '@/components/journal/JournalMilestoneCelebration'
 import { VoiceJournalMode } from '@/components/journal/VoiceJournalMode'
+import { ChatStatusStrip, type ChatQuota } from '@/components/journal/ChatStatusStrip'
+import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 
@@ -129,6 +131,12 @@ function JournalContent() {
   const [conversation, setConversation] = useState<ConversationMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
+  // Metered-chat state. All three are populated by the reply itself, so
+  // the strip under the chat needs no extra round trip.
+  const [chatQuota, setChatQuota] = useState<ChatQuota | null>(null)
+  const [chatMemoryConsented, setChatMemoryConsented] = useState<boolean | null>(null)
+  const [chatCrisis, setChatCrisis] = useState<CrisisContent | null>(null)
+  const [chatBlocked, setChatBlocked] = useState<{ reason?: 'locked' | 'exhausted'; limit: number | null } | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   // Dream journal state
@@ -597,7 +605,7 @@ function JournalContent() {
 
   // Conversational journal handlers
   const sendChatMessage = useCallback(async () => {
-    if (!chatInput.trim() || chatLoading) return
+    if (!chatInput.trim() || chatLoading || chatBlocked) return
     const userMessage = chatInput.trim()
     setChatInput('')
 
@@ -611,19 +619,34 @@ function JournalContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage, conversation }),
       })
+
+      // 403 means the metered allowance is gone (or this tier never had
+      // it). Roll the user's message back out of the thread — leaving it
+      // hanging with no reply reads as the app silently breaking.
+      if (res.status === 403) {
+        const err = await res.json().catch(() => ({}))
+        setConversation(prev => prev.slice(0, -1))
+        setChatInput(userMessage)
+        setChatBlocked({ reason: err?.reason, limit: err?.limit ?? null })
+        return
+      }
+
       if (res.ok) {
         const data = await res.json()
         setConversation(prev => [...prev, { role: 'assistant', content: data.reply }])
         if (data.suggestedTags?.length) {
           setJournalTags(data.suggestedTags)
         }
+        if (data.quota) setChatQuota(data.quota)
+        if (data.memory) setChatMemoryConsented(!!data.memory.consented)
+        setChatCrisis(data.crisis ?? null)
       }
     } catch {
       setConversation(prev => [...prev, { role: 'assistant', content: 'Take a moment to sit with that thought. What comes to mind?' }])
     } finally {
       setChatLoading(false)
     }
-  }, [chatInput, chatLoading, conversation])
+  }, [chatInput, chatLoading, chatBlocked, conversation])
 
   const saveConversation = useCallback(async () => {
     if (conversation.length < 2) return
@@ -993,6 +1016,8 @@ function JournalContent() {
                     </div>
                   </div>
                 )}
+                {/* Sits with the latest reply, not over it. */}
+                {chatCrisis && !chatLoading && <CrisisBanner content={chatCrisis} />}
                 <div ref={chatEndRef} />
               </div>
 
@@ -1017,9 +1042,9 @@ function JournalContent() {
                 />
                 <button
                   onClick={sendChatMessage}
-                  disabled={!chatInput.trim() || chatLoading}
+                  disabled={!chatInput.trim() || chatLoading || !!chatBlocked}
                   className={`p-3 rounded-xl transition-all ${
-                    chatInput.trim() && !chatLoading
+                    chatInput.trim() && !chatLoading && !chatBlocked
                       ? 'bg-white/25 border border-white/30 text-white hover:bg-white/35'
                       : 'bg-white/5 text-white/30'
                   }`}
@@ -1028,6 +1053,14 @@ function JournalContent() {
                 </button>
               </div>
             </div>
+
+            <ChatStatusStrip
+              quota={chatQuota}
+              memoryConsented={chatMemoryConsented}
+              isPremium={checkAccess('ai_coach')}
+              blocked={chatBlocked}
+              onUpgrade={openUpgradeModal}
+            />
 
             {/* Save conversation button */}
             {conversation.length >= 2 && (

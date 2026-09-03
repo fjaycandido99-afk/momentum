@@ -182,3 +182,97 @@ export function hasFeatureAccess(
       return false
   }
 }
+
+// ---------------------------------------------------------------------------
+// Metered AI features
+// ---------------------------------------------------------------------------
+//
+// Every gate above this line is a boolean: you have the feature or you
+// don't. That shape can't express "a taste, then a paywall", which is
+// what the free tier needs in order to sell itself — a locked door
+// converts far worse than a door that opens twice and then explains why
+// it stopped.
+//
+// So AI features carry a per-day allowance per tier instead:
+//
+//   0    → locked. Identical to the old boolean-false.
+//   n    → n calls per local day, then a paywall citing the limit.
+//   null → unlimited (still subject to the per-minute rate limiter).
+//
+// Counts are persisted per user/feature/day in AiUsageDaily. They are
+// NOT in lib/rate-limit.ts, which is a per-instance in-memory Map and
+// would hand out a fresh allowance on every cold start.
+
+export type AiFeatureKey =
+  | 'chat'
+  | 'reflections'
+  | 'dream'
+  | 'smart_session'
+  | 'wellness'
+  | 'briefing'
+  | 'quote_explain'
+  | 'goal_decompose'
+  | 'letter'
+  | 'retrospective'
+  | 'mindset_evolution'
+
+export interface AiFeatureLimit {
+  /** Calls per local day. 0 = locked, null = unlimited. */
+  free: number | null
+  premium: number | null
+  /** Shown in the paywall when a free user runs out. */
+  label: string
+}
+
+// Free allowances are deliberately small. The goal is for a free user to
+// feel the thing work and want more of it — not to have a workable free
+// product. Anything periodic by nature (a monthly retrospective, a letter
+// you write to your future self) stays fully premium: metering something
+// you'd only ever use once a month communicates nothing.
+export const AI_FEATURE_LIMITS: Record<AiFeatureKey, AiFeatureLimit> = {
+  chat:              { free: 5, premium: null, label: 'AI chat' },
+  quote_explain:     { free: 3, premium: null, label: 'Quote insights' },
+  reflections:       { free: 2, premium: null, label: 'AI reflections' },
+  dream:             { free: 1, premium: null, label: 'Dream interpretation' },
+  smart_session:     { free: 1, premium: null, label: 'Smart sessions' },
+  wellness:          { free: 1, premium: null, label: 'Wellness score' },
+  briefing:          { free: 1, premium: null, label: 'Morning briefing' },
+  goal_decompose:    { free: 1, premium: null, label: 'Goal breakdown' },
+  letter:            { free: 0, premium: null, label: 'Letter to self' },
+  retrospective:     { free: 0, premium: null, label: 'Monthly retrospective' },
+  mindset_evolution: { free: 0, premium: null, label: 'Mindset evolution' },
+}
+
+export function aiFeatureAllowance(feature: AiFeatureKey, isPremium: boolean): number | null {
+  const limit = AI_FEATURE_LIMITS[feature]
+  if (!limit) return 0
+  return isPremium ? limit.premium : limit.free
+}
+
+// ---------------------------------------------------------------------------
+// Chat memory depth
+// ---------------------------------------------------------------------------
+//
+// The second lever, and the one actually worth paying for. A message cap
+// cuts someone off mid-thought and reads as the product breaking. A
+// memory cap makes the companion visibly want to know more — the limit
+// argues for the upgrade on its own, and honestly, because it's true.
+//
+// Gated on consent FIRST (UserPreferences.ai_memory_enabled), tier second.
+// A user who hasn't opted in gets no memory at either tier.
+
+export interface AiMemoryDepth {
+  /** Days of journal history to read back. */
+  journalDays: number
+  /** Saved quotes/favourites to include, newest first. */
+  savedItems: number
+  /** Whether active goals are included. */
+  goals: boolean
+  /** Whether the 7-day mood trend is included. */
+  moodTrend: boolean
+}
+
+export const AI_MEMORY_DEPTH: Record<'free' | 'premium', AiMemoryDepth> = {
+  free:    { journalDays: 1,  savedItems: 3,  goals: false, moodTrend: false },
+  premium: { journalDays: 30, savedItems: 25, goals: true,  moodTrend: true },
+}

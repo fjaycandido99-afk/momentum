@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { isPremiumUser } from '@/lib/subscription-check'
+import { aiGate } from '@/lib/ai/gate'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
@@ -25,11 +25,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Premium check
-    const isPremium = await isPremiumUser(user.id)
+    const gate = await aiGate(user.id, 'quote_explain')
 
-    if (!isPremium) {
-      return NextResponse.json({ error: 'Premium required' }, { status: 403 })
-    }
+    if (!gate.ok) return gate.response
 
     const body = await request.json()
     const { quoteText, author } = body

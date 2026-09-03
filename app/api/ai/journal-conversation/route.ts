@@ -5,6 +5,10 @@ import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 import { rateLimit } from '@/lib/rate-limit'
+import { prisma } from '@/lib/prisma'
+import { consumeAiQuota } from '@/lib/ai/quota'
+import { buildUserContext } from '@/lib/ai/user-context'
+import { detectCrisisLevel, detectRegion, crisisResourceForLevel } from '@/lib/ai/crisis-detect'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,22 +33,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
-    // Premium check
-    const isPremium = await isPremiumUser(user.id)
-
-    if (!isPremium) {
-      return NextResponse.json({ error: 'Premium required' }, { status: 403 })
-    }
-
     const body = await request.json()
     const { message, conversation = [] } = body as {
       message: string
       conversation: ConversationMessage[]
     }
 
+    // Validate BEFORE spending a quota unit — a malformed request must
+    // not cost a free user one of their five messages for the day.
     if (!message?.trim()) {
       return NextResponse.json({ error: 'message is required' }, { status: 400 })
     }
+
+    // Tier no longer decides IF you can chat, only how much and how
+    // deeply. Free users get a metered taste; the paywall below cites the
+    // real number so it reads as a limit rather than a wall.
+    const isPremium = await isPremiumUser(user.id)
+    const prefs = await prisma.userPreferences.findUnique({
+      where: { user_id: user.id },
+      select: { timezone: true },
+    })
+
+    const quota = await consumeAiQuota(user.id, 'chat', isPremium, prefs?.timezone)
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error: quota.reason === 'locked' ? 'Premium required' : 'Daily limit reached',
+          reason: quota.reason,
+          limit: quota.limit,
+          feature: 'chat',
+          upgrade: true,
+        },
+        { status: 403 }
+      )
+    }
+
+    // Crisis check runs on the raw message, before the model sees it, and
+    // never depends on the model noticing. Over-triggering is the correct
+    // bias here: the resources are gentle and never punitive.
+    const crisisLevel = detectCrisisLevel(message)
+    const crisis = crisisLevel
+      ? crisisResourceForLevel(crisisLevel, detectRegion(prefs?.timezone))
+      : null
+
+    const memory = await buildUserContext(user.id, isPremium ? 'premium' : 'free')
 
     const mindset = await getUserMindset(user.id)
     const exchangeCount = conversation.filter(m => m.role === 'user').length
@@ -60,12 +92,34 @@ Rules:
 - Never judge, always validate
 - Be curious and gentle`
 
+    // When someone says something that reads as crisis language, a
+    // journalling follow-up question is the wrong response — it keeps
+    // them exploring instead of pointing them somewhere real. Resources
+    // are attached to the response separately; the model's job here is
+    // just to not undercut them.
+    const crisisPrompt = crisisLevel
+      ? `
+
+IMPORTANT — this person has just said something that may indicate ${
+          crisisLevel === 'urgent'
+            ? 'thoughts of suicide or self-harm'
+            : 'hopelessness or wanting to give up'
+        }. For this reply only:
+- Do NOT ask a probing follow-up question
+- Acknowledge what they said plainly, without alarm and without minimising
+- Make clear they deserve support from a person, not only an app
+- Crisis resources are already being shown to them; do not list phone numbers yourself
+- Stay under 50 words`
+      : ''
+
+    const systemPrompt =
+      buildMindsetSystemPrompt(basePrompt, mindset) +
+      (memory.block ? `\n\n${memory.block}` : '') +
+      crisisPrompt
+
     // Build message history for context
     const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
-      {
-        role: 'system',
-        content: buildMindsetSystemPrompt(basePrompt, mindset),
-      },
+      { role: 'system', content: systemPrompt },
     ]
 
     // Add conversation history (limit to last 10 exchanges to stay within context)
@@ -113,7 +167,15 @@ Rules:
       }
     }
 
-    return NextResponse.json({ reply, suggestedTags })
+    return NextResponse.json({
+      reply,
+      suggestedTags,
+      crisis,
+      // Lets the UI show "2 left today" and prompt for memory consent
+      // without a second round trip.
+      quota: { remaining: quota.remaining, limit: quota.limit },
+      memory: { consented: memory.consented, active: memory.block !== '' },
+    })
   } catch (error) {
     console.error('Journal conversation error:', error)
     return NextResponse.json({ reply: FALLBACK_REPLY })

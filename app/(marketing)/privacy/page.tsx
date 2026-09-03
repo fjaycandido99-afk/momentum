@@ -92,6 +92,28 @@ export default function PrivacyPolicyPage() {
             <li>Respond to support inquiries and communicate service updates</li>
             <li>Detect and prevent fraud or abuse</li>
           </ul>
+
+          <h3 className="text-base font-medium text-white mt-6 mb-2">
+            AI memory (opt-in)
+          </h3>
+          <p className="text-sm text-white/70 leading-relaxed mb-3">
+            The AI chat can be given access to what you have already written, so it can
+            refer back to it instead of meeting you fresh every time. This is <strong className="text-white/90">off
+            until you turn it on</strong> in Settings &rarr; AI Memory, on every plan, including paid ones.
+          </p>
+          <ul className="list-disc list-inside text-sm text-white/70 space-y-1 mb-3">
+            <li>When it is off, the chat receives only the messages in that conversation. It cannot read your journal or your saved items.</li>
+            <li>When it is on, the chat receives recent journal entries, your saved quotes, and (on Premium) your active goals and recent mood. Free accounts share only the current day; Premium shares up to 30 days.</li>
+            <li>This content is sent to our AI provider to generate that one reply. It is not used to train any model, and it is not shared with other users.</li>
+            <li>Turning it off stops that access immediately. Nothing you wrote is deleted &mdash; your entries and saved items remain exactly as they were.</li>
+          </ul>
+          <p className="text-sm text-white/70 leading-relaxed">
+            Separately, and regardless of this setting, messages you send to the AI chat are
+            scanned on our servers by a fixed keyword check for language indicating
+            self-harm or suicidal thoughts. When it matches, we show you crisis helpline
+            resources alongside the reply. This check involves no AI, produces no profile,
+            and is not stored.
+          </p>
         </section>
 
         {/* 3. Third-Party Services */}

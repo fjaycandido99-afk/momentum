@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
-import { isPremiumUser } from '@/lib/subscription-check'
+import { aiGate } from '@/lib/ai/gate'
 import { getGroq } from '@/lib/groq'
 import { rateLimit } from '@/lib/rate-limit'
 
@@ -23,11 +23,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
-    const isPremium = await isPremiumUser(user.id)
+    const gate = await aiGate(user.id, 'mindset_evolution')
 
-    if (!isPremium) {
-      return NextResponse.json({ error: 'Premium required' }, { status: 403 })
-    }
+    if (!gate.ok) return gate.response
 
     // Check if enough data and not recently suggested
     const prefs = await prisma.userPreferences.findUnique({

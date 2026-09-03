@@ -281,6 +281,9 @@ export async function POST(request: NextRequest) {
 
       // Timezone
       timezone,
+
+      // AI memory consent (opt-in, all tiers)
+      ai_memory_enabled,
     } = body
 
     // If mindset changed, clear today's cached AI content so it regenerates with new mindset
@@ -410,6 +413,10 @@ export async function POST(request: NextRequest) {
 
         // Timezone
         ...(timezone !== undefined && { timezone }),
+        ...(ai_memory_enabled !== undefined && {
+          ai_memory_enabled,
+          ai_memory_consented_at: ai_memory_enabled ? new Date() : null,
+        }),
       },
       create: {
         user_id: user.id,
@@ -467,6 +474,8 @@ export async function POST(request: NextRequest) {
 
         // Timezone
         timezone: timezone || null,
+        ai_memory_enabled: ai_memory_enabled ?? false,
+        ai_memory_consented_at: ai_memory_enabled ? new Date() : null,
       },
     })
 

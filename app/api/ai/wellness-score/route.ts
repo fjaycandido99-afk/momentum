@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
-import { isPremiumUser } from '@/lib/subscription-check'
+import { aiGate } from '@/lib/ai/gate'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
@@ -33,11 +33,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
-    const isPremium = await isPremiumUser(user.id)
+    const gate = await aiGate(user.id, 'wellness')
 
-    if (!isPremium) {
-      return NextResponse.json({ error: 'Premium required' }, { status: 403 })
-    }
+    if (!gate.ok) return gate.response
 
     // Check cache
     const today = new Date()

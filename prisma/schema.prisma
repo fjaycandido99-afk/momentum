@@ -54,6 +54,9 @@ model User {
   alertPreferences UserAlertPreference[]
   scheduledAlerts  ScheduledAlert[]
   alertHistory     AlertHistory[]
+
+  // AI
+  aiUsage          AiUsageDaily[]
 }
 
 model Subscription {
@@ -124,9 +127,6 @@ model UserPreferences {
   daily_guide_enabled   Boolean @default(false)
   guide_onboarding_done Boolean @default(false)
   theme_onboarding_done Boolean @default(false)
-  /// When the user accepted the Community Guidelines. NULL = hasn't
-  /// accepted yet → blocks first share with the acceptance modal.
-  community_guidelines_accepted_at DateTime?
 
   // Student-specific settings
   class_days       Int[]   @default([1, 2, 3, 4, 5]) // Days with classes
@@ -167,6 +167,13 @@ model UserPreferences {
 
   // Timezone (IANA format e.g. "America/New_York")
   timezone String?
+
+  // AI memory consent. OFF by default and never inferred — the chat only
+  // reads journal entries and saved quotes once the user has explicitly
+  // turned this on. Applies to every tier: a paying user is equally
+  // entitled to a companion that has NOT read their diary.
+  ai_memory_enabled     Boolean   @default(false)
+  ai_memory_consented_at DateTime?
 
   // Mindset system
   mindset             String    @default("stoic")
@@ -824,4 +831,31 @@ model AlertHistory {
   @@index([user_id, status])
   @@index([scheduled_alert_id])
   @@map("alert_history")
+}
+
+// Per-day, per-feature AI usage counter backing the free tier's metered
+// taste of each AI feature.
+//
+// This exists because lib/rate-limit.ts CANNOT do this job: it is an
+// in-memory Map, per serverless instance, so a daily quota enforced
+// there would reset on every cold start and differ per instance. A
+// quota users can see and a paywall can cite has to be durable.
+//
+// `day` is a YYYY-MM-DD key in the USER'S timezone, not UTC — a cap
+// that resets at 2pm local because the server rolled over at midnight
+// UTC reads as a bug. Computed by dayKeyFor() in lib/ai/quota.ts.
+model AiUsageDaily {
+  id      String @id @default(cuid())
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  feature String // AiFeatureKey — see lib/subscription-constants.ts
+  day     String // "YYYY-MM-DD" in the user's local timezone
+  count   Int    @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([user_id, feature, day])
+  @@index([user_id, day])
 }

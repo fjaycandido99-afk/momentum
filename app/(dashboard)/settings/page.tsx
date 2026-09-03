@@ -26,8 +26,6 @@ import {
   FileText,
   Trash2,
   RefreshCw,
-  Users,
-  Ban,
   ChevronRight,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -129,6 +127,7 @@ function SettingsContent() {
   const [reminderTime, setReminderTime] = useState('07:00')
   const [bedtimeReminderEnabled, setBedtimeReminderEnabled] = useState(false)
   const [astrologyEnabled, setAstrologyEnabled] = useState(false)
+  const [aiMemoryEnabled, setAiMemoryEnabled] = useState(false)
   const [zodiacSign, setZodiacSign] = useState<string | null>(null)
   const [locale, setLocale] = useState('en')
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -181,6 +180,7 @@ function SettingsContent() {
           if (data.reminder_time) setReminderTime(data.reminder_time)
           if (data.bedtime_reminder_enabled !== undefined) setBedtimeReminderEnabled(data.bedtime_reminder_enabled)
           if (data.astrology_enabled !== undefined) setAstrologyEnabled(data.astrology_enabled)
+          if (data.ai_memory_enabled !== undefined) setAiMemoryEnabled(data.ai_memory_enabled)
           if (data.zodiac_sign !== undefined) setZodiacSign(data.zodiac_sign)
         }
       } catch (error) {
@@ -229,6 +229,7 @@ function SettingsContent() {
           reminder_time: reminderTime,
           bedtime_reminder_enabled: bedtimeReminderEnabled,
           astrology_enabled: astrologyEnabled,
+          ai_memory_enabled: aiMemoryEnabled,
           zodiac_sign: zodiacSign,
           workout_enabled: true, // legacy
           micro_lesson_enabled: true, // legacy
@@ -267,7 +268,7 @@ function SettingsContent() {
     } finally {
       setIsSaving(false)
     }
-  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, bedtimeReminderEnabled, astrologyEnabled, zodiacSign])
+  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, bedtimeReminderEnabled, astrologyEnabled, zodiacSign, aiMemoryEnabled])
 
   // Debounced auto-save when any preference changes
   useEffect(() => {
@@ -828,6 +829,43 @@ function SettingsContent() {
 
           <NotificationSettings />
         </SettingsCategory>
+        {/* ═══════════════ 6. AI Memory ═══════════════ */}
+        <SettingsCategory
+          id="ai-memory"
+          icon={Sparkles}
+          title="AI Memory"
+          description="What the AI chat is allowed to remember"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="pr-4">
+                <p className="font-medium text-white text-sm">Let the chat remember me</p>
+                <p className="text-white/75 text-xs">It can read your journal entries and saved quotes</p>
+              </div>
+              <button
+                onClick={() => setAiMemoryEnabled(!aiMemoryEnabled)}
+                role="switch"
+                aria-checked={aiMemoryEnabled}
+                aria-label="Let the AI chat remember your journal and saved quotes"
+                className={`shrink-0 w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                  aiMemoryEnabled ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.25)]' : 'bg-white/10'
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
+                    aiMemoryEnabled ? 'bg-white translate-x-6' : 'bg-white translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <p className="text-xs text-white/55 leading-relaxed">
+              {aiMemoryEnabled
+                ? 'The chat can refer back to what you’ve written and saved, so it notices patterns instead of meeting you fresh each time. Turn this off at any time — it stops reading immediately, and nothing you wrote is deleted.'
+                : 'Off. The chat sees only the conversation in front of it — it cannot read your journal or your saved quotes.'}
+            </p>
+          </div>
+        </SettingsCategory>
+
 
         {/* ═══════════════ 7. Language ═══════════════ */}
         <SettingsCategory
