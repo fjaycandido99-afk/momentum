@@ -6,6 +6,8 @@ import {
   type AiFeatureKey,
 } from '@/lib/subscription-constants'
 import { detectCrisisLevel, detectRegion, crisisResourceForLevel } from '@/lib/ai/crisis-detect'
+import { applyVoiceTone, GUIDE_TONES } from '@/lib/ai/voice-tone'
+import { TONE_VOICES, CHAT_CREDIT_LIMIT, MONTHLY_CREDIT_LIMIT } from '@/lib/daily-guide/audio-utils'
 
 // consumeAiQuota touches the database, so the counter tests below drive a
 // stubbed Prisma. Everything else here is pure.
@@ -31,10 +33,20 @@ beforeEach(() => {
   findUnique.mockReset()
 })
 
+// Premium is unlimited everywhere EXCEPT where a call costs us real money
+// per use. Spoken replies burn ElevenLabs characters out of a shared
+// monthly pool, so premium is capped there too. Anything added to this
+// list is a deliberate decision to charge someone and still say no.
+const METERED_FOR_PREMIUM: AiFeatureKey[] = ['chat_voice']
+
 describe('aiFeatureAllowance', () => {
-  it('gives premium an unlimited allowance for everything it has', () => {
+  it('gives premium an unlimited allowance except where each call costs money', () => {
     for (const key of Object.keys(AI_FEATURE_LIMITS) as AiFeatureKey[]) {
-      expect(aiFeatureAllowance(key, true)).toBeNull()
+      if (METERED_FOR_PREMIUM.includes(key)) {
+        expect(aiFeatureAllowance(key, true)).toBeGreaterThan(0)
+      } else {
+        expect(aiFeatureAllowance(key, true)).toBeNull()
+      }
     }
   })
 
@@ -172,5 +184,38 @@ describe('crisis detection — self-harm intent', () => {
   it('does not fire on an ordinary physical injury', () => {
     expect(detectCrisisLevel('I hurt myself at the gym today')).toBeNull()
     expect(detectCrisisLevel('hurt my knee running')).toBeNull()
+  })
+})
+
+describe('voice tone', () => {
+  it('applies the delivery block the user actually chose', () => {
+    const out = applyVoiceTone('BASE', 'direct')
+    expect(out).toContain('BASE')
+    expect(out).toContain('Direct')
+    expect(out).not.toContain('Unhurried')
+  })
+
+  it('lands AFTER the mindset block so a hand-picked tone wins the conflict', () => {
+    // The mindset modifier emits its own "TONE:" line. If delivery came
+    // first, the philosophical tone would be the last word and the user's
+    // explicit choice would lose.
+    const withMindset = 'BASE\n\nTONE: aphoristic and severe'
+    const out = applyVoiceTone(withMindset, 'calm')
+    expect(out.indexOf('DELIVERY')).toBeGreaterThan(out.indexOf('TONE:'))
+  })
+
+  it('passes the prompt through untouched for a missing or unknown tone', () => {
+    expect(applyVoiceTone('BASE', null)).toBe('BASE')
+    expect(applyVoiceTone('BASE', 'shouty')).toBe('BASE')
+  })
+
+  it('has a voice id for every selectable tone', () => {
+    for (const tone of GUIDE_TONES) {
+      expect(TONE_VOICES[tone]).toBeTruthy()
+    }
+  })
+
+  it('keeps the chat sub-budget below the global pool, or it reserves nothing', () => {
+    expect(CHAT_CREDIT_LIMIT).toBeLessThan(MONTHLY_CREDIT_LIMIT)
   })
 })

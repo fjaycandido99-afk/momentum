@@ -205,6 +205,7 @@ export function hasFeatureAccess(
 
 export type AiFeatureKey =
   | 'chat'
+  | 'chat_voice'
   | 'reflections'
   | 'dream'
   | 'smart_session'
@@ -231,6 +232,9 @@ export interface AiFeatureLimit {
 // you'd only ever use once a month communicates nothing.
 export const AI_FEATURE_LIMITS: Record<AiFeatureKey, AiFeatureLimit> = {
   chat:              { free: 5, premium: null, label: 'AI chat' },
+  // Spoken replies cost real ElevenLabs characters, so premium is capped
+  // too — the only feature here where that is true. See CHAT_CREDIT_LIMIT.
+  chat_voice:        { free: 0, premium: 30, label: 'Spoken replies' },
   quote_explain:     { free: 3, premium: null, label: 'Quote insights' },
   reflections:       { free: 2, premium: null, label: 'AI reflections' },
   dream:             { free: 1, premium: null, label: 'Dream interpretation' },

@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma'
 import { consumeAiQuota } from '@/lib/ai/quota'
 import { buildUserContext } from '@/lib/ai/user-context'
 import { detectCrisisLevel, detectRegion, crisisResourceForLevel } from '@/lib/ai/crisis-detect'
+import { applyVoiceTone } from '@/lib/ai/voice-tone'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
     const isPremium = await isPremiumUser(user.id)
     const prefs = await prisma.userPreferences.findUnique({
       where: { user_id: user.id },
-      select: { timezone: true },
+      select: { timezone: true, guide_tone: true },
     })
 
     const quota = await consumeAiQuota(user.id, 'chat', isPremium, prefs?.timezone)
@@ -113,7 +114,7 @@ IMPORTANT — this person has just said something that may indicate ${
       : ''
 
     const systemPrompt =
-      buildMindsetSystemPrompt(basePrompt, mindset) +
+      applyVoiceTone(buildMindsetSystemPrompt(basePrompt, mindset), prefs?.guide_tone) +
       (memory.block ? `\n\n${memory.block}` : '') +
       crisisPrompt
 

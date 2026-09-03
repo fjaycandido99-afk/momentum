@@ -30,6 +30,7 @@ import { JournalMilestoneCelebration } from '@/components/journal/JournalMilesto
 import { VoiceJournalMode } from '@/components/journal/VoiceJournalMode'
 import { ChatStatusStrip, type ChatQuota } from '@/components/journal/ChatStatusStrip'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
+import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 
@@ -998,7 +999,7 @@ function JournalContent() {
                 {conversation.map((msg, i) => (
                   <div
                     key={i}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex items-end gap-1 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${
                       msg.role === 'user'
@@ -1007,6 +1008,9 @@ function JournalContent() {
                     }`}>
                       {msg.content}
                     </div>
+                    {msg.role === 'assistant' && (
+                      <SpeakReplyButton text={msg.content} onUpgrade={openUpgradeModal} />
+                    )}
                   </div>
                 ))}
                 {chatLoading && (

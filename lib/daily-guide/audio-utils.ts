@@ -38,45 +38,96 @@ export async function setSharedCache(cacheKey: string, audioBase64: string, dura
 // Monthly credit limit (characters) — raised to use available ElevenLabs credits
 const MONTHLY_CREDIT_LIMIT = 500_000
 
-function getMonthKey() {
+// Sub-budget for conversational replies.
+//
+// The chat speaks far more often than the daily guide does, and they draw
+// on the same pool. Without a ceiling of its own, a busy chat month would
+// consume the whole allowance and the guided audio — the thing people
+// actually subscribe for — would silently go quiet, because whoever calls
+// generateAudio first wins.
+//
+// So chat spends against BOTH counters: its own cap here, and the global
+// one above. It is cut off when either is reached; the guide only ever
+// checks the global one, which means the guide can always use whatever
+// chat has not already spent, but never the reverse.
+//
+// Tune with TTS_CHAT_MONTHLY_LIMIT. Keep it comfortably under
+// MONTHLY_CREDIT_LIMIT or the reservation is meaningless.
+const CHAT_CREDIT_LIMIT = Number(process.env.TTS_CHAT_MONTHLY_LIMIT ?? 150_000)
+
+export const TTS_CHAT_BUDGET_KEY = 'chat'
+
+function getMonthKey(scope?: string) {
   const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const base = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  return scope ? `${base}:${scope}` : base
 }
 
-async function getMonthlyUsage(): Promise<number> {
+async function getMonthlyUsage(scope?: string): Promise<number> {
   try {
-    const row = await prisma.ttsUsage.findUnique({ where: { month_key: getMonthKey() } })
+    const row = await prisma.ttsUsage.findUnique({ where: { month_key: getMonthKey(scope) } })
     return row?.credits ?? 0
   } catch { return 0 }
 }
 
-async function trackUsage(characters: number) {
-  const key = getMonthKey()
-  try {
-    await prisma.ttsUsage.upsert({
-      where: { month_key: key },
-      update: { credits: { increment: characters } },
-      create: { month_key: key, credits: characters },
-    })
-  } catch (e) {
-    console.error('[TTS Usage] tracking error:', e)
+/** Characters of chat speech left this month. Never negative. */
+export async function getChatVoiceRemaining(): Promise<number> {
+  const [chatUsed, globalUsed] = await Promise.all([
+    getMonthlyUsage(TTS_CHAT_BUDGET_KEY),
+    getMonthlyUsage(),
+  ])
+  return Math.max(0, Math.min(CHAT_CREDIT_LIMIT - chatUsed, MONTHLY_CREDIT_LIMIT - globalUsed))
+}
+
+async function trackUsage(characters: number, scope?: string) {
+  const keys = scope ? [getMonthKey(), getMonthKey(scope)] : [getMonthKey()]
+  for (const key of keys) {
+    try {
+      await prisma.ttsUsage.upsert({
+        where: { month_key: key },
+        update: { credits: { increment: characters } },
+        create: { month_key: key, credits: characters },
+      })
+    } catch (e) {
+      console.error('[TTS Usage] tracking error:', e)
+    }
   }
 }
 
 // Generate audio with ElevenLabs (max 2 min, 100k credits/month)
-export async function generateAudio(script: string, tone: string = 'calm'): Promise<{ audioBase64: string | null; duration: number }> {
+export async function generateAudio(
+  script: string,
+  tone: string = 'calm',
+  /**
+   * Names a sub-budget to spend against as well as the global one (see
+   * CHAT_CREDIT_LIMIT). Omit for the daily guide, which spends only
+   * against the global pool.
+   */
+  scope?: string
+): Promise<{ audioBase64: string | null; duration: number }> {
   const apiKey = process.env.ELEVENLABS_API_KEY
   if (!apiKey) {
     console.error('[ElevenLabs] No API key')
     return { audioBase64: null, duration: 0 }
   }
 
-  // Check monthly credit limit
+  // Check monthly credit limit. Note: no browser-TTS fallback actually
+  // exists — the old log line here claimed one for a feature that was
+  // never built. Callers get null and must handle silence themselves.
   const used = await getMonthlyUsage()
   const charCount = script.length
   if (used + charCount > MONTHLY_CREDIT_LIMIT) {
-    console.warn(`[ElevenLabs] Monthly limit reached (${used}/${MONTHLY_CREDIT_LIMIT}), falling back to browser TTS`)
+    console.warn(`[ElevenLabs] Monthly limit reached (${used}/${MONTHLY_CREDIT_LIMIT}) — returning no audio`)
     return { audioBase64: null, duration: 0 }
+  }
+
+  if (scope) {
+    const scopeUsed = await getMonthlyUsage(scope)
+    const scopeLimit = scope === TTS_CHAT_BUDGET_KEY ? CHAT_CREDIT_LIMIT : MONTHLY_CREDIT_LIMIT
+    if (scopeUsed + charCount > scopeLimit) {
+      console.warn(`[ElevenLabs] Sub-budget "${scope}" exhausted (${scopeUsed}/${scopeLimit})`)
+      return { audioBase64: null, duration: 0 }
+    }
   }
 
   try {
@@ -110,7 +161,7 @@ export async function generateAudio(script: string, tone: string = 'calm'): Prom
     }
 
     // Track usage after successful generation
-    await trackUsage(charCount)
+    await trackUsage(charCount, scope)
 
     const audioBuffer = await response.arrayBuffer()
     const audioBase64 = Buffer.from(audioBuffer).toString('base64')
@@ -126,4 +177,4 @@ export async function generateAudio(script: string, tone: string = 'calm'): Prom
 }
 
 // Export for admin/monitoring
-export { getMonthlyUsage, MONTHLY_CREDIT_LIMIT }
+export { getMonthlyUsage, MONTHLY_CREDIT_LIMIT, CHAT_CREDIT_LIMIT }
