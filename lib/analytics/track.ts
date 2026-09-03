@@ -20,7 +20,9 @@ export type FeatureName =
   | 'letter_to_self'
   | 'wellness_score'
 
-export type FeatureAction = 'open' | 'use' | 'complete'
+// enable/disable exist so opt-OUT is measurable, not just adoption. Two new
+// daily pushes shipped with no way to see who turned them off.
+export type FeatureAction = 'open' | 'use' | 'complete' | 'enable' | 'disable'
 
 interface QueuedEvent {
   feature: FeatureName

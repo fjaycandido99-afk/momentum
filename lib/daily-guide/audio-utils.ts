@@ -94,6 +94,56 @@ async function trackUsage(characters: number, scope?: string) {
   }
 }
 
+// Which ElevenLabs model speaks. `turbo` is the fast, cheap one and it is
+// what made the delivery sound flat — it trades expressiveness for latency,
+// which is the wrong trade for an app whose whole product is a voice being
+// warm at you. `eleven_multilingual_v2` is the natural-sounding default.
+//
+// Override with ELEVENLABS_MODEL to go back to turbo (cheaper, faster) or to
+// try a newer model without a deploy.
+const PRIMARY_MODEL = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2'
+// If the primary is unavailable on the account's plan, or is rejected for any
+// reason, fall back rather than returning silence. Losing all generated audio
+// because a model id changed upstream would be a much worse failure than a
+// slightly flatter voice.
+const FALLBACK_MODEL = 'eleven_turbo_v2_5'
+
+// Lower stability = more emotional range and less monotone. 0.65 was
+// deliberate-sounding but robotic; ~0.45 with a little style is the usual
+// setting for narration that should sound like a person. speaker_boost keeps
+// the voice recognisably itself at the lower stability.
+const VOICE_SETTINGS = {
+  stability: 0.45,
+  similarity_boost: 0.80,
+  style: 0.35,
+  use_speaker_boost: true,
+  speed: 0.95,
+} as const
+
+async function speak(voiceId: string, script: string, apiKey: string): Promise<Response> {
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`
+  const headers = {
+    Accept: 'audio/mpeg',
+    'Content-Type': 'application/json',
+    'xi-api-key': apiKey,
+  }
+
+  const request = (model: string) =>
+    fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ text: script, model_id: model, voice_settings: VOICE_SETTINGS }),
+    })
+
+  const primary = await request(PRIMARY_MODEL)
+  if (primary.ok || PRIMARY_MODEL === FALLBACK_MODEL) return primary
+
+  console.warn(
+    `[ElevenLabs] ${PRIMARY_MODEL} returned ${primary.status}; retrying with ${FALLBACK_MODEL}`
+  )
+  return request(FALLBACK_MODEL)
+}
+
 // Generate audio with ElevenLabs (max 2 min, 100k credits/month)
 export async function generateAudio(
   script: string,
@@ -133,26 +183,7 @@ export async function generateAudio(
   try {
     const voiceId = TONE_VOICES[tone] || TONE_VOICES.calm
 
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Accept': 'audio/mpeg',
-          'Content-Type': 'application/json',
-          'xi-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          text: script,
-          model_id: 'eleven_turbo_v2_5',
-          voice_settings: {
-            stability: 0.65,
-            similarity_boost: 0.80,
-            speed: 0.9,
-          },
-        }),
-      }
-    )
+    const response = await speak(voiceId, script, apiKey)
 
     if (!response.ok) {
       const error = await response.text()
@@ -177,4 +208,4 @@ export async function generateAudio(
 }
 
 // Export for admin/monitoring
-export { getMonthlyUsage, MONTHLY_CREDIT_LIMIT, CHAT_CREDIT_LIMIT }
+export { getMonthlyUsage, MONTHLY_CREDIT_LIMIT, CHAT_CREDIT_LIMIT, PRIMARY_MODEL }

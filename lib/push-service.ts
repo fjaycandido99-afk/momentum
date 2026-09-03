@@ -1026,11 +1026,6 @@ function buildYesterdayNudge(guide: {
   daily_intention?: string | null
   journal_intention?: string | null
   journal_mood?: string | null
-  journal_freetext?: string | null
-  journal_win?: string | null
-  journal_gratitude?: string | null
-  journal_conversation?: string | null
-  journal_dream?: string | null
 } | null): { title: string; body: string } | null {
   if (!guide) return null
 
@@ -1044,11 +1039,17 @@ function buildYesterdayNudge(guide: {
     return { title: 'A fresh start', body: 'Yesterday felt heavy. Two minutes to reset and start today clear?' }
   }
 
-  const reflected = !!(guide.journal_freetext || guide.journal_win || guide.journal_gratitude || guide.journal_conversation || guide.journal_dream)
-  if (reflected) {
-    return { title: 'Pick up where you left off', body: 'You reflected yesterday — want to keep the thread going today?' }
-  }
-
+  // Deliberately NO generic "you reflected yesterday" tier any more.
+  //
+  // It used to return "Pick up where you left off" for anyone who had
+  // written anything at all, and since this nudge takes priority over the
+  // daily quote, the effect was backwards: the more someone journalled,
+  // the less often they ever saw a quote. The most engaged users got
+  // boilerplate and everyone else got the real thing.
+  //
+  // The two tiers above stay because they are genuinely better than a
+  // quote — they reference the user's own intention or a hard day. A
+  // generic prompt is not, so it now falls through and the quote wins.
   return null
 }
 
@@ -1083,10 +1084,12 @@ export async function sendDailyQuotes(): Promise<void> {
     try {
       const guide = await prisma.dailyGuide.findUnique({
         where: { user_id_date: { user_id, date: yDate } },
+        // Only what the nudge still reads. This used to also pull
+        // journal_freetext (up to 5,000 chars) plus four more text columns
+        // for every user in the 8am window, to decide something it no
+        // longer decides — a lot of egress for nothing.
         select: {
           daily_intention: true, journal_intention: true, journal_mood: true,
-          journal_freetext: true, journal_win: true, journal_gratitude: true,
-          journal_conversation: true, journal_dream: true,
         },
       })
       if (guide) yMap.set(user_id, guide)

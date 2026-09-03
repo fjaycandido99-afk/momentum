@@ -32,6 +32,7 @@ import {
   getSharedCached,
   setSharedCache,
   TTS_CHAT_BUDGET_KEY,
+  PRIMARY_MODEL,
 } from '@/lib/daily-guide/audio-utils'
 
 export const dynamic = 'force-dynamic'
@@ -70,7 +71,12 @@ export async function POST(request: NextRequest) {
 
     // Serve a cache hit before spending a quota unit — replaying a line
     // that cost nothing should not count against the user's day.
-    const cacheKey = `chat-${tone}-${createHash('sha1').update(text).digest('hex').slice(0, 32)}`
+    //
+    // The model is part of the key. Without it, changing the voice model
+    // would keep serving every previously-cached reply in the OLD voice
+    // forever, so one conversation could mix two different deliveries.
+    const voiceHash = createHash('sha1').update(text).digest('hex').slice(0, 32)
+    const cacheKey = `chat-${PRIMARY_MODEL}-${tone}-${voiceHash}`
     const cached = await getSharedCached(cacheKey)
     if (cached) {
       return NextResponse.json({ audio: cached.audioBase64, duration: cached.duration, tone, cached: true })

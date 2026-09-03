@@ -81,3 +81,23 @@ describe('per-segment reminder times', () => {
     expect(hourFor('00:00', 19)).toBe(0)
   })
 })
+
+describe('voice quality settings', () => {
+  const src = require('fs').readFileSync('lib/daily-guide/audio-utils.ts', 'utf8') as string
+
+  it('no longer defaults to the fast/flat turbo model', () => {
+    const primary = src.match(/const PRIMARY_MODEL = process\.env\.ELEVENLABS_MODEL \|\| '([^']+)'/)
+    expect(primary?.[1]).toBeTruthy()
+    expect(primary![1]).not.toBe('eleven_turbo_v2_5')
+  })
+
+  it('keeps a fallback model, so an unavailable primary means a flatter voice, not silence', () => {
+    expect(src).toContain("const FALLBACK_MODEL = 'eleven_turbo_v2_5'")
+    expect(src).toContain('retrying with')
+  })
+
+  it('lowers stability for expressiveness rather than leaving it monotone', () => {
+    const stability = src.match(/stability:\s*([\d.]+)/)
+    expect(Number(stability?.[1])).toBeLessThan(0.65)
+  })
+})

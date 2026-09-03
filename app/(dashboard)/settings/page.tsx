@@ -789,6 +789,23 @@ function SettingsContent() {
               bedtimeTime,
             }}
             onChange={(patch) => {
+              // Record every on/off so opt-out rates are visible. Midday and
+              // Wind Down were added to everyone's day at once; without this
+              // there is no way to tell whether people accepted them or
+              // quietly switched them off.
+              const toggles: Array<[keyof typeof patch, string]> = [
+                ['dailyReminder', 'morning_prime'],
+                ['middayEnabled', 'midday_reset'],
+                ['winddownEnabled', 'wind_down'],
+                ['bedtimeEnabled', 'bedtime_story'],
+              ]
+              for (const [key, segment] of toggles) {
+                const next = patch[key]
+                if (typeof next === 'boolean') {
+                  trackFeature('daily_guide', next ? 'enable' : 'disable', `reminder:${segment}`)
+                }
+              }
+
               if (patch.dailyReminder !== undefined) setDailyReminder(patch.dailyReminder)
               if (patch.reminderTime !== undefined) setReminderTime(patch.reminderTime)
               if (patch.middayEnabled !== undefined) setMiddayEnabled(patch.middayEnabled)
