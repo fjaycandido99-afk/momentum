@@ -82,3 +82,49 @@ describe('createChatCompletion', () => {
     expect(GROQ_MODEL).not.toBe(GROQ_FALLBACK_MODEL)
   })
 })
+
+describe('model ladder', () => {
+  it('keeps walking past a model this account cannot reach', async () => {
+    // The live outage: a valid key getting 404 "does not exist or you do
+    // not have access to it" on the first TWO models. A pair gave up; a
+    // ladder finds whatever the account can actually reach.
+    process.env.GROQ_MODELS = 'gone-a,gone-b,alive-c'
+    const fetchMock = mockFetchSequence([
+      { status: 404, body: MODEL_GONE },
+      { status: 404, body: MODEL_GONE },
+      { status: 200, body: OK_BODY },
+    ])
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+
+    const { createChatCompletion } = await import('@/lib/groq')
+    const res = await createChatCompletion({ messages: [{ role: 'user', content: 'hi' }] })
+
+    expect(res.choices[0].message.content).toBe('a real reply')
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(JSON.parse(String(fetchMock.mock.calls[2][1].body)).model).toBe('alive-c')
+    delete process.env.GROQ_MODELS
+  })
+
+  it('does not hammer every rung with a request that is doomed anyway', async () => {
+    // Bad auth fails identically on all of them — one attempt is enough.
+    process.env.GROQ_MODELS = 'a,b,c,d'
+    const fetchMock = mockFetchSequence([{ status: 401, body: { error: { message: 'Invalid API Key' } } }])
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+
+    const { createChatCompletion } = await import('@/lib/groq')
+    await expect(createChatCompletion({ messages: [{ role: 'user', content: 'hi' }] })).rejects.toThrow()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    delete process.env.GROQ_MODELS
+  })
+
+  it('ships a ladder with more than one family on it', async () => {
+    delete process.env.GROQ_MODELS
+    delete process.env.GROQ_MODEL
+    delete process.env.GROQ_FALLBACK_MODEL
+    const { GROQ_MODELS } = await import('@/lib/groq')
+    expect(GROQ_MODELS.length).toBeGreaterThan(2)
+    // Not all llama — the whole point is that one family being unreachable
+    // should not take the app down.
+    expect(GROQ_MODELS.some(m => !m.includes('llama'))).toBe(true)
+  })
+})

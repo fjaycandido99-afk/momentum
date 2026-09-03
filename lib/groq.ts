@@ -1,26 +1,47 @@
 import { logAiCall } from './ai/usage-log'
 
-// Both overridable from the environment, because a provider can retire a
-// model at any time and fixing that should not require a deploy.
+// A LADDER, not a pair.
 //
-// It already happened: Groq decommissioned llama-3.1-8b-instant, and from
-// 2026-08-16 every call on it returned
-//   404 model_not_found — "The model ... does not exist"
-// for SEVENTEEN DAYS, silently, because the AI routes degrade to canned
-// text on failure.
-export const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
+// From 2026-08-16, every AI call returned 404 model_not_found for
+// SEVENTEEN DAYS and nobody noticed, because the AI routes degrade to
+// plausible canned text on failure.
+//
+// Groq's docs list llama-3.1-8b-instant and llama-3.3-70b-versatile as
+// current production models, yet this account gets
+//   404 "does not exist OR YOU DO NOT HAVE ACCESS TO IT"
+// on both — while a deliberately wrong key gets a clean 401. A valid key
+// that cannot reach current production models is an ACCOUNT problem
+// (plan, billing, project-scoped key), not a retirement.
+//
+// Which means guessing one replacement is a coin flip. Instead we walk a
+// list from different families until something answers, so whatever this
+// account CAN reach gets used and the app heals itself. Override the whole
+// list with GROQ_MODELS (comma-separated) — no deploy needed.
+const DEFAULT_MODEL_LADDER = [
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+  'openai/gpt-oss-20b',
+  'openai/gpt-oss-120b',
+  'groq/compound-mini',
+]
 
-// MUST be a different model from GROQ_MODEL or there is no fallback at
-// all — the previous values were identical, so canFallback was always
-// false and the "resilient" retry re-tried the very model that was dead.
-export const GROQ_FALLBACK_MODEL = process.env.GROQ_FALLBACK_MODEL || 'llama-3.1-8b-instant'
+function resolveLadder(): string[] {
+  // GROQ_MODELS wins: one comma-separated list, in preference order.
+  const list = process.env.GROQ_MODELS?.split(',').map(m => m.trim()).filter(Boolean)
+  if (list?.length) return list
 
-if (GROQ_MODEL === GROQ_FALLBACK_MODEL) {
-  console.warn(
-    `[groq] GROQ_MODEL and GROQ_FALLBACK_MODEL are both "${GROQ_MODEL}" — ` +
-    'there is no fallback. Set GROQ_FALLBACK_MODEL to a different model.'
-  )
+  // Otherwise honour the older single-model vars if either is set.
+  const pair = [process.env.GROQ_MODEL, process.env.GROQ_FALLBACK_MODEL].filter(Boolean) as string[]
+  if (pair.length) return [...new Set(pair)]
+
+  return DEFAULT_MODEL_LADDER
 }
+
+export const GROQ_MODELS: string[] = resolveLadder()
+
+// Kept for the call sites that already import these names.
+export const GROQ_MODEL = GROQ_MODELS[0]
+export const GROQ_FALLBACK_MODEL = GROQ_MODELS[GROQ_MODELS.length - 1]
 
 export const GROQ_DEFAULTS = {
   temperature: 0.7,
@@ -136,47 +157,46 @@ export async function createChatCompletion(
 ): Promise<ChatCompletionResponse> {
   const start = Date.now()
   const requested = options.model || GROQ_MODEL
-  const canFallback = requested !== GROQ_FALLBACK_MODEL
   const endpoint = meta.endpoint || 'unknown'
   const userId = meta.userId ?? null
 
-  // Attempt 1 — the requested model.
-  let res = await attempt(requested, options)
-  if (res.ok) {
-    await logAiCall({ endpoint, userId, requestedModel: requested, model: res.data.model || requested, fellBack: false, outcome: 'ok', usage: res.data.usage, latencyMs: Date.now() - start })
-    return res.data
+  // Walk the ladder: the requested model first, then every other rung in
+  // order. Stop at the first one that answers.
+  const ladder = [requested, ...GROQ_MODELS.filter(m => m !== requested)]
+  const failures: string[] = []
+
+  for (const model of ladder) {
+    const res = await attempt(model, options)
+
+    if (res.ok) {
+      await logAiCall({
+        endpoint, userId, requestedModel: requested,
+        model: res.data.model || model,
+        fellBack: model !== requested,
+        outcome: 'ok', usage: res.data.usage, latencyMs: Date.now() - start,
+      })
+      return res.data
+    }
+
+    failures.push(`${model}: ${res.status} ${res.body.slice(0, 100)}`)
+
+    // A model that is gone, or that this account cannot reach, is
+    // permanent for THAT model but says nothing about the next rung.
+    const modelGone = res.status === 404 || /model_not_found|does not exist/i.test(res.body)
+
+    // Anything else permanent — bad auth, missing key, malformed request —
+    // will fail identically on every rung. Stop rather than hammer Groq
+    // with the same doomed request five times.
+    if (!res.transient && !modelGone) break
   }
 
-  // A retired or unavailable MODEL is permanent for that model but not
-  // for the request — a different model may serve it perfectly well. This
-  // is exactly the case that took the chat down for seventeen days: a 404
-  // is not transient, so it failed fast and never tried anything else.
-  const modelGone = res.status === 404 || /model_not_found|does not exist/i.test(res.body)
-
-  // Permanent error (bad request, auth, missing key) — retrying or
-  // swapping models won't help. Fail now so the caller falls back.
-  if (!res.transient && !(modelGone && canFallback)) {
-    await logAiCall({ endpoint, userId, requestedModel: requested, model: requested, fellBack: false, outcome: 'failed', latencyMs: Date.now() - start, error: `${res.status} ${res.body}` })
-    throw new Error(`Groq error ${res.status}: ${res.body.slice(0, 200)}`)
-  }
-
-  // Keep the FIRST failure. When both attempts fail we used to log only
-  // the second error, so a dead primary was invisible: the row said the
-  // fallback 404'd and said nothing about why we fell back at all.
-  const firstError = `${requested}: ${res.status} ${res.body.slice(0, 120)}`
-
-  // Attempt 2 — fall back to the floor model (or retry the same model if
-  // we were already on it).
-  const secondModel = canFallback ? GROQ_FALLBACK_MODEL : requested
-  res = await attempt(secondModel, options)
-  if (res.ok) {
-    const fellBack = secondModel !== requested
-    await logAiCall({ endpoint, userId, requestedModel: requested, model: res.data.model || secondModel, fellBack, outcome: 'ok', usage: res.data.usage, latencyMs: Date.now() - start })
-    return res.data
-  }
-
-  await logAiCall({ endpoint, userId, requestedModel: requested, model: secondModel, fellBack: secondModel !== requested, outcome: 'failed', latencyMs: Date.now() - start, error: `${firstError} | ${secondModel}: ${res.status} ${res.body}` })
-  throw new Error(`Groq failed after retry (${res.status}): ${res.body.slice(0, 200)}`)
+  await logAiCall({
+    endpoint, userId, requestedModel: requested,
+    model: ladder[ladder.length - 1], fellBack: ladder.length > 1,
+    outcome: 'failed', latencyMs: Date.now() - start,
+    error: failures.join(' | '),
+  })
+  throw new Error(`Groq failed on all ${ladder.length} models: ${failures[0] ?? 'no attempts'}`)
 }
 
 // Drop-in replacement: same .chat.completions.create() interface every
