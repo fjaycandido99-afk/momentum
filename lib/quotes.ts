@@ -181,3 +181,19 @@ export function getHeuristicQuote(mood?: string, energy?: string, pool?: Quote[]
 
   return matching[Math.floor(Math.random() * matching.length)]
 }
+
+/**
+ * An author worth printing, or null.
+ *
+ * A good chunk of the quote set carries author: "Unknown" — a real value
+ * in the data, but rendering "— Unknown" under a quote reads as filler and
+ * undercuts the line above it. Every render site should route the author
+ * through this so an unattributed quote simply stands on its own.
+ */
+export function displayAuthor(author?: string | null): string | null {
+  const trimmed = (author || '').trim()
+  if (!trimmed) return null
+  const lowered = trimmed.toLowerCase()
+  if (lowered === 'unknown' || lowered === 'anonymous' || lowered === 'anon') return null
+  return trimmed
+}

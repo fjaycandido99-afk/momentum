@@ -113,6 +113,15 @@ input[type="range"] {
 }
 
 /* Safe area for mobile notches */
+/* Top inset for sticky headers. The home header hardcoded pt-12 to
+   approximate an iPhone notch, which on the web is just 48px of dead
+   black above the fold. env() resolves to 0 where there is no notch and
+   to the real inset where there is (the root layout sets
+   viewport-fit=cover, so this works inside the Capacitor shell too). */
+.safe-area-pt {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.875rem);
+}
+
 .safe-area-inset-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }

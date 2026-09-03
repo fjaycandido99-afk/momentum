@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Quote, Check, Sparkles, Share2, Heart, Loader2, ChevronDown, Lightbulb } from 'lucide-react'
-import { getDayOfYearQuote } from '@/lib/quotes'
+import { getDayOfYearQuote, displayAuthor } from '@/lib/quotes'
 import { useShareCard } from '@/hooks/useShareCard'
 
 interface QuoteCardProps {
@@ -237,7 +237,7 @@ export function QuoteCard({ isCompleted, onComplete, mood, energy, dayType }: Qu
                 </div>
                 <div className="flex items-center justify-between mt-2 pl-4">
                   <p className={`text-xs ${isCompleted ? 'text-white/50' : 'text-white/50'}`}>
-                    — {quote.author}
+                    {displayAuthor(quote.author) ? `— ${displayAuthor(quote.author)}` : ''}
                   </p>
                   <div className="flex items-center gap-1">
                     <button

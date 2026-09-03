@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Sparkles, X, Heart, Send } from 'lucide-react'
-import { QUOTES } from '@/lib/quotes'
+import { QUOTES, displayAuthor } from '@/lib/quotes'
 import { getNextSpark, Spark } from '@/lib/daily-sparks'
 
 const IDLE_TIMEOUT = 10 * 60 * 1000     // 10 minutes of no interaction
@@ -234,7 +234,7 @@ export function DailySpark() {
       role="dialog"
       aria-modal="true"
       aria-label={spark.type === 'quote' ? 'Daily Quote' : spark.type === 'affirmation' ? 'Daily Affirmation' : 'Daily Spark'}
-      className={`fixed inset-0 z-50 flex items-center justify-center px-6 ${
+      className={`fixed inset-0 z-[60] flex items-center justify-center px-6 ${
         dismissing ? 'animate-spark-out' : animating ? 'animate-spark-in' : 'opacity-0 scale-95'
       }`}
     >
@@ -294,8 +294,8 @@ export function DailySpark() {
             <p className="text-[15px] text-white leading-relaxed font-medium">
               &ldquo;{spark.text}&rdquo;
             </p>
-            {spark.author && (
-              <p className="text-xs text-amber-300/60 mt-2">&mdash; {spark.author}</p>
+            {displayAuthor(spark.author) && (
+              <p className="text-xs text-amber-300/60 mt-2">&mdash; {displayAuthor(spark.author)}</p>
             )}
           </div>
 

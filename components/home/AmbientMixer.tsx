@@ -124,7 +124,7 @@ export function AmbientMixer({ onClose }: AmbientMixerProps) {
   const activeCount = Object.keys(activeLayers).length
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end" onClick={onClose}>
       <div
         className="w-full bg-black/95 backdrop-blur-xl border-t border-white/10 rounded-t-2xl animate-sheet-slide-up"
         onClick={e => e.stopPropagation()}

@@ -6,6 +6,7 @@ import { useShareCard } from '@/hooks/useShareCard'
 import { ShareVideoButton } from '@/components/sharing/ShareVideoButton'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
+import { displayAuthor } from '@/lib/quotes'
 import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
 import { getDateString } from '@/lib/daily-guide/day-type'
 
@@ -155,9 +156,11 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
           <blockquote className="text-sm text-white/90 leading-relaxed italic">
             &ldquo;{dailyQuote.text}&rdquo;
           </blockquote>
-          <p className="text-[11px] text-white/50 mt-2">
-            — {dailyQuote.author}
-          </p>
+          {displayAuthor(dailyQuote.author) && (
+            <p className="text-[11px] text-white/50 mt-2">
+              — {displayAuthor(dailyQuote.author)}
+            </p>
+          )}
         </div>
 
         {/* Expand toggle for reflection */}

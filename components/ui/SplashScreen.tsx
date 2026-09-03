@@ -76,7 +76,7 @@ export function SplashScreen({ onComplete, minDuration = 3500 }: SplashScreenPro
         >
           VOXU
         </h1>
-        <p className="text-white/50 text-sm mt-2 tracking-wide">Your Audio Mentor</p>
+        <p className="text-white/50 text-sm mt-2 tracking-wide">Your AI Audio Coach</p>
       </div>
     </div>
   )
