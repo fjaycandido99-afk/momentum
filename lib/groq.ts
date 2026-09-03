@@ -1,11 +1,26 @@
 import { logAiCall } from './ai/usage-log'
 
-export const GROQ_MODEL = 'llama-3.1-8b-instant'
-// Cheap/fast model every request can safely fall back to when the
-// requested (usually 70b) model is rate-limited or erroring. 8b-instant
-// is the floor — there's nothing cheaper to fall back to, so requests
-// already on it just retry once instead.
-export const GROQ_FALLBACK_MODEL = 'llama-3.1-8b-instant'
+// Both overridable from the environment, because a provider can retire a
+// model at any time and fixing that should not require a deploy.
+//
+// It already happened: Groq decommissioned llama-3.1-8b-instant, and from
+// 2026-08-16 every call on it returned
+//   404 model_not_found — "The model ... does not exist"
+// for SEVENTEEN DAYS, silently, because the AI routes degrade to canned
+// text on failure.
+export const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
+
+// MUST be a different model from GROQ_MODEL or there is no fallback at
+// all — the previous values were identical, so canFallback was always
+// false and the "resilient" retry re-tried the very model that was dead.
+export const GROQ_FALLBACK_MODEL = process.env.GROQ_FALLBACK_MODEL || 'llama-3.1-8b-instant'
+
+if (GROQ_MODEL === GROQ_FALLBACK_MODEL) {
+  console.warn(
+    `[groq] GROQ_MODEL and GROQ_FALLBACK_MODEL are both "${GROQ_MODEL}" — ` +
+    'there is no fallback. Set GROQ_FALLBACK_MODEL to a different model.'
+  )
+}
 
 export const GROQ_DEFAULTS = {
   temperature: 0.7,
@@ -131,9 +146,15 @@ export async function createChatCompletion(
     return res.data
   }
 
+  // A retired or unavailable MODEL is permanent for that model but not
+  // for the request — a different model may serve it perfectly well. This
+  // is exactly the case that took the chat down for seventeen days: a 404
+  // is not transient, so it failed fast and never tried anything else.
+  const modelGone = res.status === 404 || /model_not_found|does not exist/i.test(res.body)
+
   // Permanent error (bad request, auth, missing key) — retrying or
   // swapping models won't help. Fail now so the caller falls back.
-  if (!res.transient) {
+  if (!res.transient && !(modelGone && canFallback)) {
     logAiCall({ endpoint, userId, requestedModel: requested, model: requested, fellBack: false, outcome: 'failed', latencyMs: Date.now() - start, error: `${res.status} ${res.body}` })
     throw new Error(`Groq error ${res.status}: ${res.body.slice(0, 200)}`)
   }
