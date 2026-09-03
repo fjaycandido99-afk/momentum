@@ -861,7 +861,7 @@ function JournalContent() {
             on desktop so the mode-tab row doesn't pull apart edge to
             edge on a wide monitor — page stays full-bleed, only the
             interactive content is column-constrained) ── */}
-      <div className="sticky top-0 z-50 px-6 pt-12 pb-3 bg-black">
+      <div className="sticky top-0 z-50 px-6 safe-area-pt pb-3 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <div className="lg:max-w-5xl lg:mx-auto">{/* writing-column wrapper for header rows */}
         {/* Row 1: Title + actions */}

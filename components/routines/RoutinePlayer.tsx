@@ -88,7 +88,7 @@ export function RoutinePlayer({ routineId, routineName, steps, onClose }: Routin
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex flex-col overlay-enter">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-12 pb-4">
+      <div className="flex items-center justify-between px-6 safe-area-pt pb-4">
         <div>
           <p className="text-xs text-white/70">{routineName}</p>
           <p className="text-sm text-white/85">Step {currentStep + 1} of {steps.length}</p>

@@ -27,7 +27,10 @@ const NUDGE_TEMPLATES: Record<NudgeType, string> = {
   streak_risk: "You haven't logged in today yet. Keep your streak going!",
   journal_reminder: "You've been journaling consistently. Don't forget to reflect today!",
   mood_trend: "Your mood has been trending upward this week. Keep it up!",
-  inactive: "We miss you! Take a moment to check in with yourself today.",
+  // This is shown IN THE APP, to someone who is looking at the screen —
+  // they have already come back, so "we miss you" reads as a push
+  // notification that escaped into the UI. Meet them where they are.
+  inactive: "It's been a few days. No catching up needed — just start where you are.",
   energy_pattern: "You tend to have more energy in the mornings. Plan your important tasks then.",
   completion_pattern: "Try mixing up your routine — exploring new modules can boost your growth.",
   mood_dip: "Your mood has been dipping recently. A breathing exercise might help reset.",
@@ -119,10 +122,40 @@ export async function GET() {
     const todayStr = getDateString(new Date())
 
     const hasToday = guides.some(g => getDateString(new Date(g.date)) === todayStr)
+
+    // The last 7 CALENDAR days, not the last 7 rows.
+    //
+    // A DailyGuide row only exists for days the user engaged, so
+    // guides.slice(0, 7) could span months, and `7 - activeDays` counted
+    // "has fewer than 7 rows" as absence. A user three days into the app,
+    // active every single day, scored inactiveDays = 4 and got told
+    // "We miss you!" — the app telling brand new users it misses them.
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setHours(0, 0, 0, 0)
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6) // inclusive of today
+
+    const lastWeek = guides.filter(g => new Date(g.date) >= sevenDaysAgo)
     const recentDays = guides.slice(0, 7)
     const journalCount = recentDays.filter(g => g.journal_win || g.journal_gratitude).length
-    const activeDays = recentDays.filter(g => g.morning_prime_done || g.midday_reset_done || g.bedtime_story_done).length
+
+    // wind_down_done was missing here, so finishing Wind Down did not
+    // count as being active. Journalling counts too — writing an entry is
+    // not "inactive" just because no audio was played.
+    const activeDates = new Set(
+      lastWeek
+        .filter(g =>
+          g.morning_prime_done || g.midday_reset_done ||
+          g.wind_down_done || g.bedtime_story_done ||
+          g.journal_win || g.journal_gratitude
+        )
+        .map(g => getDateString(new Date(g.date)))
+    )
+    const activeDays = activeDates.size
     const inactiveDays = 7 - activeDays
+
+    // Proof the account is not brand new: a guide row from before this
+    // week. `guides` covers two weeks, so this is available for free.
+    const hasHistoryBeforeThisWeek = guides.some(g => new Date(g.date) < sevenDaysAgo)
 
     // Check if streak is broken (recovery scenario)
     let streakBroken = false
@@ -211,7 +244,10 @@ export async function GET() {
       nudgeType = 'completion_pattern'
     } else if (moodTrending) {
       nudgeType = 'mood_trend'
-    } else if (inactiveDays >= 4) {
+    } else if (inactiveDays >= 4 && hasHistoryBeforeThisWeek) {
+      // The history guard stops a brand new account tripping this. Someone
+      // three days in has at most three active days, which looks identical
+      // to a lapsed user unless we check they existed before this week.
       nudgeType = 'inactive'
     } else if (energyCounts.high >= 3 || energyCounts.low >= 3) {
       nudgeType = 'energy_pattern'

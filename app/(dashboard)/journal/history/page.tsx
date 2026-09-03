@@ -139,7 +139,7 @@ export default function JournalHistoryPage() {
   return (
     <div className="min-h-screen text-white pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-20 px-6 pt-12 pb-3 bg-black">
+      <div className="sticky top-0 z-20 px-6 safe-area-pt pb-3 bg-black">
         <div className="flex items-center gap-2 mb-3">
           <Link
             href="/journal"

@@ -81,7 +81,7 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
 
   return (
     <div className="min-h-screen text-white pb-24">
-      <div className="px-6 pt-12 pb-3">
+      <div className="px-6 safe-area-pt pb-3">
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">
           <ChevronLeft className="w-4 h-4" /> Home
         </Link>

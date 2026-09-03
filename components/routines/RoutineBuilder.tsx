@@ -73,7 +73,7 @@ export function RoutineBuilder({ onClose, onCreated }: RoutineBuilderProps) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col overlay-enter">
-      <div className="flex items-center gap-3 px-6 pt-12 pb-4">
+      <div className="flex items-center gap-3 px-6 safe-area-pt pb-4">
         <button onClick={onClose} aria-label="Close builder" className="p-2 rounded-full hover:bg-white/10 transition-colors press-scale">
           <ArrowLeft className="w-5 h-5 text-white/85" />
         </button>
