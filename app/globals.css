@@ -119,7 +119,15 @@ input[type="range"] {
    to the real inset where there is (the root layout sets
    viewport-fit=cover, so this works inside the Capacitor shell too). */
 .safe-area-pt {
-  padding-top: calc(env(safe-area-inset-top, 0px) + 0.875rem);
+  /* max(), not calc(+).
+     The first version ADDED 14px on top of the inset, so on a Dynamic
+     Island iPhone (inset ~59px) the header sat at 73px where the old
+     hardcoded pt-12 put it at 48px — visibly too low on device, while
+     correctly removing the phantom 48px on desktop.
+     What is actually wanted is "at least clear the notch, and never less
+     than a small gutter": 14px in a browser where the inset is 0, and
+     exactly the inset on hardware that has one. */
+  padding-top: max(0.875rem, env(safe-area-inset-top, 0px));
 }
 
 .safe-area-inset-bottom {
