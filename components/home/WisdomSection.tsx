@@ -174,8 +174,14 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
               onClick={() => setExpanded(!expanded)}
               className="w-full flex items-center justify-between px-4 py-2.5 border-t border-white/[0.06] hover:bg-white/[0.02] transition-colors"
             >
-              <span className="text-[11px] text-white/50 font-medium">
-                Daily Reflection
+              {/* Show the actual question, not the category name.
+                  "Daily Reflection" is a label for a container — it tells
+                  you a thing exists without giving you any reason to open
+                  it. The question itself is the reason. Collapsed, it
+                  reads as an invitation; before, it read as a filing
+                  cabinet drawer. */}
+              <span className="text-[11px] text-white/60 font-medium text-left pr-3 line-clamp-1">
+                {expanded ? 'Daily Reflection' : dailyQuestion}
               </span>
               <ChevronDown
                 className={`w-3.5 h-3.5 text-white/40 transition-transform duration-200 ${

@@ -199,7 +199,7 @@ export function MorningMinute() {
   return (
     <section
       aria-labelledby="morning-minute-heading"
-      className="relative mx-5 mt-4 p-5 rounded-3xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.10] overflow-hidden"
+      className="relative mx-5 mt-4 p-6 rounded-3xl bg-gradient-to-br from-white/[0.09] to-white/[0.02] border border-white/[0.16] shadow-[0_0_40px_rgba(255,255,255,0.05)] overflow-hidden"
     >
       {/* Eyebrow — title + streak badge (when earned). The streak makes
           the spine's reward visible at all times so the loss-aversion
@@ -238,7 +238,11 @@ export function MorningMinute() {
       {/* IDLE */}
       {phase === 'idle' && (
         <div className="text-center pt-2 pb-1">
-          <p className="text-[15px] text-white/85 leading-snug max-w-xs mx-auto">
+          {/* This file's own header calls this "the single value-spine
+              bet". The question was set at 15px — the same size as body
+              copy in the card below it — so nothing on the screen said it
+              mattered more than anything else. */}
+          <p className="text-[19px] text-white leading-snug max-w-xs mx-auto">
             What&apos;s on your mind right now?
           </p>
           <p className="text-[11.5px] text-white/45 mt-1.5">

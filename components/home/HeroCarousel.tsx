@@ -9,7 +9,19 @@ interface HeroCarouselProps {
   autoPlayMs?: number
 }
 
-export function HeroCarousel({ children, autoPlayMs = 6000 }: HeroCarouselProps) {
+/**
+ * Six seconds was too fast to read a quote, and auto-advancing content
+ * that cannot be stopped fails WCAG 2.2.2 — the slides moved under you
+ * whether or not you had asked for motion. Nine seconds, and no
+ * auto-advance at all when the OS says reduce motion: the dots still
+ * work, so nothing becomes unreachable, it just stops moving on its own.
+ */
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+export function HeroCarousel({ children, autoPlayMs = 9000 }: HeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const count = children.length
   const pausedUntilRef = useRef(0)
@@ -26,9 +38,10 @@ export function HeroCarousel({ children, autoPlayMs = 6000 }: HeroCarouselProps)
     pausedUntilRef.current = Date.now() + durationMs
   }, [])
 
-  // Auto-advance
+  // Auto-advance — unless the OS has asked for less motion, in which case
+  // the slides hold still and the dots remain the way through.
   useEffect(() => {
-    if (count <= 1) return
+    if (count <= 1 || prefersReducedMotion()) return
     const interval = setInterval(() => {
       if (Date.now() < pausedUntilRef.current) return
       setActiveIndex(prev => (prev + 1) % count)
