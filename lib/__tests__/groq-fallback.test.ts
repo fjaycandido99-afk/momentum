@@ -9,7 +9,7 @@ const original = globalThis.fetch
 
 function mockFetchSequence(responses: Array<{ status: number; body: unknown }>) {
   let i = 0
-  return vi.fn(async () => {
+  return vi.fn(async (_url: string, _init: RequestInit) => {
     const r = responses[Math.min(i++, responses.length - 1)]
     return {
       ok: r.status >= 200 && r.status < 300,
@@ -52,7 +52,7 @@ describe('createChatCompletion', () => {
     expect(res.choices[0].message.content).toBe('a real reply')
     expect(fetchMock).toHaveBeenCalledTimes(2)
 
-    const secondBody = JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string)
+    const secondBody = JSON.parse(String(fetchMock.mock.calls[1][1].body))
     expect(secondBody.model).toBe('fallback-model')
   })
 
