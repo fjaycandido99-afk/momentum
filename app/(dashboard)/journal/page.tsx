@@ -33,6 +33,7 @@ import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBan
 import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 
 interface JournalEntry {
   date: string
@@ -244,12 +245,16 @@ function JournalContent() {
     if (!isLoading && !availableModes.includes(mode)) setMode('freewrite')
   }, [availableModes, mode, isLoading])
 
+  // Focus mode is a fullscreen overlay — freeze the page behind it. The old
+  // inline body.style.overflow stopped working when this page moved to
+  // app-shell scrolling: the document is no longer the scrolling element.
+  useBodyScrollLock(focusMode)
+
   // Focus mode helpers
   const enterFocusMode = useCallback((field: typeof focusField) => {
     if (mode === 'conversational') return // Chat mode has its own layout
     setFocusField(field)
     setFocusMode(true)
-    document.body.style.overflow = 'hidden'
     // Focus the textarea inside the overlay after render
     requestAnimationFrame(() => {
       focusTextareaRef.current?.focus()
@@ -259,16 +264,8 @@ function JournalContent() {
   const exitFocusMode = useCallback(() => {
     setFocusMode(false)
     setFocusField(null)
-    document.body.style.overflow = ''
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur()
-    }
-  }, [])
-
-  // Cleanup: restore body overflow if component unmounts while in focus mode
-  useEffect(() => {
-    return () => {
-      document.body.style.overflow = ''
     }
   }, [])
 
@@ -852,7 +849,14 @@ function JournalContent() {
   // stretch absurdly wide on ultrawide monitors but the page no
   // longer sits narrow in a sea of empty space.
   return (
-    <div className="min-h-screen text-white pb-24">
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white pb-24"
+      data-app-shell
+    >
+      {/* App-shell scroll: this container scrolls, the document does not.
+      iOS rubber-bands the document past its ends and the whole visual
+      viewport moves with it, carrying any sticky/fixed header along.
+      Scrolling a container with overscroll-contain removes the bounce,
+      so the header actually holds still. */}
       {/* Desktop sidebar — fixed-positioned, fills the empty space to the
           right of the centered journal column at xl+. Skips lg (1024–1280)
           where the column already takes most of the width. */}

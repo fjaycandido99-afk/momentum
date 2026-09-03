@@ -137,7 +137,14 @@ export default function JournalHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen text-white pb-24">
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white pb-24"
+      data-app-shell
+    >
+      {/* App-shell scroll: this container scrolls, the document does not.
+      iOS rubber-bands the document past its ends and the whole visual
+      viewport moves with it, carrying any sticky/fixed header along.
+      Scrolling a container with overscroll-contain removes the bounce,
+      so the header actually holds still. */}
       {/* Header */}
       <div className="sticky top-0 z-20 px-6 safe-area-pt pb-3 bg-black">
         <div className="flex items-center gap-2 mb-3">

@@ -1041,6 +1041,8 @@ export function ImmersiveHome() {
     <div
       ref={scrollRef}
       className={`relative h-full text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer || showGuidedPlayer ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
+    
+      data-app-shell
     >
       {/* --- Fullscreen overlays --- */}
 

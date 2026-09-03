@@ -2814,3 +2814,17 @@ button:nth-child(6) > .card-gradient-border-round { animation-delay: 0s, 2.0s; }
     border: 1px solid ButtonText;
   }
 }
+
+/* Scroll lock behind modals.
+   The scrolling element on most screens is the app-shell container, not the
+   document, so `body { overflow: hidden }` alone leaves a live, scrollable
+   page behind a fixed overlay — visible as the background sliding under the
+   Daily Spark popup. Set by useBodyScrollLock. */
+html.modal-open,
+html.modal-open body {
+  overflow: hidden;
+}
+
+html.modal-open [data-app-shell] {
+  overflow: hidden !important;
+}

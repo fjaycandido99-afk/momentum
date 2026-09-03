@@ -79,7 +79,14 @@ export default function ProgressPage() {
   }, [])
 
   return (
-    <div className="min-h-screen text-white pb-24">
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white pb-24"
+      data-app-shell
+    >
+      {/* App-shell scroll: this container scrolls, the document does not.
+      iOS rubber-bands the document past its ends and the whole visual
+      viewport moves with it, carrying any sticky/fixed header along.
+      Scrolling a container with overscroll-contain removes the bounce,
+      so the header actually holds still. */}
       <div className="sticky top-0 z-50 px-6 safe-area-pt pb-4 mb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <h1 className="text-2xl font-semibold shimmer-text">Progress</h1>

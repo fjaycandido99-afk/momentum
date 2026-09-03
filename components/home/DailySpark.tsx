@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Sparkles, X, Heart, Send } from 'lucide-react'
 import { QUOTES, displayAuthor } from '@/lib/quotes'
 import { getNextSpark, Spark } from '@/lib/daily-sparks'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 
 const IDLE_TIMEOUT = 10 * 60 * 1000     // 10 minutes of no interaction
 const MIN_RECURRING = 30 * 60 * 1000     // 30 minutes
@@ -226,6 +227,10 @@ export function DailySpark() {
       setSaving(false)
     }
   }
+
+  // Freeze the page underneath: this popup is a fixed overlay, and without
+  // this the app-shell container behind it still scrolls under the finger.
+  useBodyScrollLock(visible)
 
   if (!visible || !spark) return null
 
