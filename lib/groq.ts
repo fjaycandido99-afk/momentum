@@ -14,16 +14,21 @@ import { isOpenAiConfigured, tryOpenAi, OPENAI_MODEL, OPENAI_LOG_PREFIX } from '
 // that cannot reach current production models is an ACCOUNT problem
 // (plan, billing, project-scoped key), not a retirement.
 //
-// Which means guessing one replacement is a coin flip. Instead we walk a
-// list from different families until something answers, so whatever this
-// account CAN reach gets used and the app heals itself. Override the whole
-// list with GROQ_MODELS (comma-separated) — no deploy needed.
+// Order matters: every rung above a working model costs a real round trip
+// on EVERY request. The Groq console's own model list (checked 2026-09-02)
+// offers GPT-OSS and Qwen — no Llama at all — so the Llama ids that ran
+// this app until 16 August are retired and now sit at the bottom, kept
+// only so an old GROQ_MODEL override still resolves to something.
+//
+// Override the whole list with GROQ_MODELS (comma-separated), no deploy
+// needed — which is the point, because this will happen again.
 const DEFAULT_MODEL_LADDER = [
-  'llama-3.3-70b-versatile',
-  'llama-3.1-8b-instant',
   'openai/gpt-oss-20b',
   'openai/gpt-oss-120b',
   'groq/compound-mini',
+  // Retired on Groq. Harmless if they ever return, skipped in one 404 if not.
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
 ]
 
 function resolveLadder(): string[] {
