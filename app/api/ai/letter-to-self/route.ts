@@ -117,7 +117,7 @@ Rules:
       journals.length > 0 ? `Recent journal entries:\n${journalContext}` : null,
     ].filter(Boolean).join('\n')
 
-    const completion = await getGroq().chat.completions.create({
+    const completion = await getGroq('letter-to-self').chat.completions.create({
       model: DEEP_MODEL,
       messages: [
         { role: 'system', content: buildMindsetSystemPrompt(basePrompt, mindset) },

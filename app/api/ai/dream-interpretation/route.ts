@@ -65,7 +65,7 @@ Rules:
 - Be insightful, not sensational
 - Return valid JSON only`
 
-    const completion = await getGroq().chat.completions.create({
+    const completion = await getGroq('dream-interpretation').chat.completions.create({
       model: DEEP_MODEL,
       messages: [
         {

@@ -125,7 +125,7 @@ Rules:
 - The suggestedMindset must be different from their current mindset
 - Return valid JSON only`
 
-    const completion = await getGroq().chat.completions.create({
+    const completion = await getGroq('mindset-evolution').chat.completions.create({
       model: DEEP_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },

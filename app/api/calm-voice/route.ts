@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { GROQ_MODEL as GROQ_CHAT_MODEL } from '@/lib/groq'
 import Groq from 'groq-sdk'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
@@ -149,7 +150,10 @@ export async function POST(request: NextRequest) {
     let script = ''
     try {
       const completion = await getGroq().chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
+        // Was a hardcoded Llama id that Groq has retired. This route uses the
+        // raw SDK rather than lib/groq, so it never got the ladder — at least
+        // follow the same model the rest of the app resolves to.
+        model: GROQ_CHAT_MODEL,
         messages: [
           { role: 'system', content: 'You are a calm, soothing meditation guide. Write scripts that are peaceful and reassuring. Use ellipses (...) for pauses. No markdown formatting.' },
           { role: 'user', content: `${contentType.prompt} Today is ${dateString}. Variant ${variant + 1} of ${POOL_SIZE}. Make this unique.` },

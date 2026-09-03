@@ -101,7 +101,7 @@ export async function GET() {
       return `${dateStr}: ${parts}`
     }).join('\n')
 
-    const completion = await getGroq().chat.completions.create({
+    const completion = await getGroq('journal-insights').chat.completions.create({
       model: DEEP_MODEL,
       messages: [
         {

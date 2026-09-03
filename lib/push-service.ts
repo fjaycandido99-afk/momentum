@@ -1172,7 +1172,7 @@ export async function sendDailyAffirmations(): Promise<void> {
 
           const basePrompt = `You are a personal wellness coach. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. No quotes, no attribution. ${context ? `Context: ${context}` : ''}`
 
-          const completion = await getGroq().chat.completions.create({
+          const completion = await getGroq('lib').chat.completions.create({
             model: GROQ_MODEL,
             messages: [
               { role: 'system', content: buildMindsetSystemPrompt(basePrompt, mindset) },

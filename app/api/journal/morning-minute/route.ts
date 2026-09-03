@@ -20,6 +20,7 @@
    ============================================================================ */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { GROQ_MODEL as GROQ_CHAT_MODEL } from '@/lib/groq'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createSbAdmin } from '@supabase/supabase-js'
@@ -31,7 +32,11 @@ export const runtime = 'nodejs'
 const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null
 
 const GROQ_WHISPER_URL = 'https://api.groq.com/openai/v1/audio/transcriptions'
-const WHISPER_MODEL = 'whisper-large-v3-turbo'
+// The Groq console lists 'Whisper Large v3' — the -turbo variant may be
+// gone with the Llama models. Env-overridable so transcription can be
+// repointed without a deploy; Today's Minute is the app's value spine and
+// must not sit broken waiting on one.
+const WHISPER_MODEL = process.env.GROQ_WHISPER_MODEL || 'whisper-large-v3'
 const MORNING_BUCKET = 'morning-minute'
 
 function todayUtcDate(): Date {
@@ -73,7 +78,10 @@ async function reflectOnTranscript(transcript: string): Promise<string> {
   if (!groq) return fallback
   try {
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      // Was a hardcoded Llama id that Groq has retired. This route uses the
+      // raw SDK rather than lib/groq, so it never got the ladder — at least
+      // follow the same model the rest of the app resolves to.
+      model: GROQ_CHAT_MODEL,
       messages: [
         { role: 'system', content: REFLECTION_SYSTEM },
         { role: 'user', content: transcript },

@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
           systemPrompt = `You are a warm wellness companion. Generate a single short motivational spark (1 sentence, max 15 words). It should feel encouraging and personal — like a gentle nudge from a friend. No preamble. ${context ? `Context: ${context}` : ''}`
         }
 
-        const completion = await getGroq().chat.completions.create({
+        const completion = await getGroq('spark').chat.completions.create({
           model: GROQ_MODEL,
           messages: [
             { role: 'system', content: buildMindsetSystemPrompt(systemPrompt, sparkMindset) },

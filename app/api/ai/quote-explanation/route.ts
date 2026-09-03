@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     const basePrompt = `You are a wisdom interpreter. Explain in 2-3 sentences why this quote matters for personal growth. Connect it to daily life. Be specific and actionable, not generic. Keep it under 60 words.`
 
-    const completion = await getGroq().chat.completions.create({
+    const completion = await getGroq('quote-explanation').chat.completions.create({
       model: GROQ_MODEL,
       messages: [
         {

@@ -157,7 +157,7 @@ export async function GET() {
           const mindset = await getUserMindset(user.id)
           const basePrompt = 'You are a compassionate wellness advisor. The user\'s wellness score is low. Write 2-3 sentences of gentle encouragement and one actionable suggestion. Do not mention the score number directly.'
 
-          const completion = await getGroq().chat.completions.create({
+          const completion = await getGroq('wellness-score').chat.completions.create({
             model: GROQ_MODEL,
             messages: [
               { role: 'system', content: buildMindsetSystemPrompt(basePrompt, mindset) },

@@ -82,7 +82,7 @@ Rules:
       ? `Schedule: wake ${prefs.wake_time}, work ${prefs.work_start_time || '9:00'}-${prefs.work_end_time || '17:00'}`
       : ''
 
-    const completion = await getGroq().chat.completions.create({
+    const completion = await getGroq('goal-decompose').chat.completions.create({
       model: DEEP_MODEL,
       messages: [
         { role: 'system', content: buildMindsetSystemPrompt(basePrompt, mindset) },

@@ -224,7 +224,7 @@ Rules:
       userContent = `Plan my session:\n${context}`
     }
 
-    const completion = await getGroq().chat.completions.create({
+    const completion = await getGroq('smart-session').chat.completions.create({
       model: DEEP_MODEL,
       messages: [
         { role: 'system', content: buildMindsetSystemPrompt(systemPrompt, mindset) },

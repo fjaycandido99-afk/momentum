@@ -326,7 +326,7 @@ export async function POST(request: NextRequest) {
         const mindset = await getUserMindset(user.id)
         const baseReflectionPrompt = `You are a thoughtful wellness coach. Based on today's journal entry and recent patterns, provide a 1-2 sentence insight or reflection. Be specific, reference their actual words, notice patterns or growth. Don't be generic. Be warm but substantive.${goalsContext}`
 
-        const completion = await getGroq().chat.completions.create({
+        const completion = await getGroq('journal').chat.completions.create({
           model: GROQ_MODEL,
           messages: [
             {
@@ -402,7 +402,7 @@ export async function POST(request: NextRequest) {
             .join('. ')
 
           if (tagContent.length > 10) {
-            const tagCompletion = await getGroq().chat.completions.create({
+            const tagCompletion = await getGroq('journal').chat.completions.create({
               model: GROQ_MODEL,
               messages: [
                 {

@@ -170,7 +170,7 @@ Return valid JSON only. Be specific to their data.`
 
     let aiNarrative = null
     try {
-      const completion = await getGroq().chat.completions.create({
+      const completion = await getGroq('monthly-retrospective').chat.completions.create({
         model: DEEP_MODEL,
         messages: [
           { role: 'system', content: buildMindsetSystemPrompt(basePrompt, mindset) },

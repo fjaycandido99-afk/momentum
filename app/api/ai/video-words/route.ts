@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'title is required' }, { status: 400 })
     }
 
-    const completion = await getGroq().chat.completions.create({
+    const completion = await getGroq('video-words').chat.completions.create({
       model: GROQ_MODEL,
       messages: [
         {

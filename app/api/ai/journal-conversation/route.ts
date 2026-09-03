@@ -132,7 +132,7 @@ IMPORTANT — this person has just said something that may indicate ${
     // Add the new user message
     messages.push({ role: 'user', content: message })
 
-    const completion = await getGroq().chat.completions.create({
+    const completion = await getGroq('journal-conversation').chat.completions.create({
       model: GROQ_MODEL,
       messages,
       max_tokens: 100,
@@ -155,7 +155,7 @@ IMPORTANT — this person has just said something that may indicate ${
     if (exchangeCount >= 3) {
       try {
         const allUserMessages = [...conversation.filter(m => m.role === 'user').map(m => m.content), message].join('. ')
-        const tagCompletion = await getGroq().chat.completions.create({
+        const tagCompletion = await getGroq('journal-conversation').chat.completions.create({
           model: GROQ_MODEL,
           messages: [
             {

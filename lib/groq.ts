@@ -236,11 +236,18 @@ export async function createChatCompletion(
 // Drop-in replacement: same .chat.completions.create() interface every
 // caller already uses — now resilient + observable. The optional 2nd
 // `meta` arg lets a caller label the call for telemetry.
-export function getGroq() {
+export function getGroq(endpoint?: string, userId?: string | null) {
+  // Pass a label — getGroq('journal-conversation') — and every row in
+  // AiCallLog says which feature made the call. Without one they all log
+  // as "unknown", which during the 17-day outage meant a successful call
+  // and a failing one were indistinguishable in the only table that could
+  // have told them apart.
+  const meta: GroqCallMeta = { endpoint, userId }
   return {
     chat: {
       completions: {
-        create: createChatCompletion,
+        create: (options: ChatCompletionOptions, override?: GroqCallMeta) =>
+          createChatCompletion(options, { ...meta, ...override }),
       },
     },
   }

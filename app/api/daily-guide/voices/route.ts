@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { GROQ_MODEL as GROQ_CHAT_MODEL } from '@/lib/groq'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { VOICE_SCRIPTS, DAY_TYPE_VOICE_SCRIPTS } from '@/lib/daily-guide/voice-scripts'
@@ -150,7 +151,10 @@ async function generatePersonalizedText(
     const userMessage = `${prompt} Make this unique and fresh.\n\nIMPORTANT PERSONALIZATION: ${yesterdayContext} Briefly reference one of these naturally in the opening, without quoting them verbatim.`
 
     const completion = await getGroq().chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      // Was a hardcoded Llama id that Groq has retired. This route uses the
+      // raw SDK rather than lib/groq, so it never got the ladder — at least
+      // follow the same model the rest of the app resolves to.
+      model: GROQ_CHAT_MODEL,
       messages: [
         { role: 'system', content: 'You are a calm, soothing wellness guide. Write scripts that are peaceful and reassuring. Use ellipses (...) for pauses. No markdown formatting.' },
         { role: 'user', content: userMessage },

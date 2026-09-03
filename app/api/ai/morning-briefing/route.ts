@@ -114,7 +114,7 @@ Style: Conversational, warm, like a trusted friend. Write for spoken delivery â€
       streak > 1 ? `Current streak: ${streak} days` : null,
     ].filter(Boolean).join('\n')
 
-    const completion = await getGroq().chat.completions.create({
+    const completion = await getGroq('morning-briefing').chat.completions.create({
       model: GROQ_MODEL,
       messages: [
         { role: 'system', content: buildMindsetSystemPrompt(basePrompt, mindset) },
