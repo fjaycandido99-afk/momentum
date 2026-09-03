@@ -44,9 +44,16 @@ export default function DashboardLayout({
             key={pathname}
             className={`relative z-10 min-h-screen page-enter ${isHome ? '' : 'pb-16'} ${!hideChrome ? 'lg:pb-40' : ''}`}
           >
-            <div className={isHome || hideChrome ? '' : 'lg:mx-auto lg:max-w-3xl'}>
-              {children}
-            </div>
+            {/* Home renders children with NO wrapper at all, not merely an
+                unstyled one. An extra block ancestor changes the containing
+                block for the sticky header inside it, and WKWebView is far
+                fussier about sticky than desktop browsers — the header
+                started scrolling away on device while remaining correctly
+                stuck on the web. Not worth being clever about on the
+                platform that is the actual product. */}
+            {isHome || hideChrome ? children : (
+              <div className="lg:mx-auto lg:max-w-3xl">{children}</div>
+            )}
 
             {/* Bottom scrim — fades page content to black behind the
                 floating dock so the dock's translucent pill never has
