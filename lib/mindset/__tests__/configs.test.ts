@@ -10,8 +10,17 @@ describe('MINDSET_CONFIGS', () => {
     }
   })
 
-  it('should have 6 mindsets', () => {
-    expect(Object.keys(MINDSET_CONFIGS)).toHaveLength(6)
+  it('has exactly one config per declared mindset, and no extras', () => {
+    // Was `toHaveLength(6)`. Two mindsets (manifestor, hustler) were added
+    // later and this was not, so the suite has been red ever since — which
+    // means "tests pass" stopped being a signal anyone could act on.
+    //
+    // Asserting a hardcoded COUNT tests nothing useful: it fails when the
+    // product legitimately grows, and it would still pass if a config were
+    // swapped for a duplicate. What is worth pinning is that
+    // MINDSET_CONFIGS and MINDSET_IDS agree in both directions — a config
+    // with no id, or an id with no config, is a real bug.
+    expect(Object.keys(MINDSET_CONFIGS).sort()).toEqual([...MINDSET_IDS].sort())
   })
 
   it('each config should have all required fields', () => {
