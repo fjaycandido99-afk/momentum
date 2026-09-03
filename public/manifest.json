@@ -9,16 +9,28 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192.svg",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.svg",
+      "src": "/icon-512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
   "shortcuts": [
@@ -27,14 +39,26 @@
       "short_name": "Morning",
       "description": "Start your morning routine",
       "url": "/?action=morning",
-      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Daily Guide",
       "short_name": "Guide",
       "description": "Open your Daily Guide",
       "url": "/daily-guide",
-      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ],
   "widgets": [
@@ -46,8 +70,9 @@
       "ms_ac_template": "widget-template.json",
       "icons": [
         {
-          "src": "/icon-192.svg",
-          "sizes": "192x192"
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ],
       "screenshots": [],
@@ -65,8 +90,9 @@
       "ms_ac_template": "widget-streak.json",
       "icons": [
         {
-          "src": "/icon-192.svg",
-          "sizes": "192x192"
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ],
       "screenshots": [],
