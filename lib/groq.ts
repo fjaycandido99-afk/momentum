@@ -1,4 +1,5 @@
 import { logAiCall } from './ai/usage-log'
+import { isOpenAiConfigured, tryOpenAi, OPENAI_MODEL, OPENAI_LOG_PREFIX } from './ai/openai-fallback'
 
 // A LADDER, not a pair.
 //
@@ -188,6 +189,34 @@ export async function createChatCompletion(
     // will fail identically on every rung. Stop rather than hammer Groq
     // with the same doomed request five times.
     if (!res.transient && !modelGone) break
+  }
+
+  // Every Groq rung failed. Before giving the caller its canned text, try
+  // the other provider — this is the case that ran for seventeen days.
+  if (isOpenAiConfigured()) {
+    const alt = await tryOpenAi(options.messages, {
+      maxTokens: options.max_tokens ?? GROQ_DEFAULTS.max_tokens,
+      temperature: options.temperature ?? GROQ_DEFAULTS.temperature,
+    })
+
+    if (alt.ok && alt.content) {
+      // Loudly. A failover is a working app AND an incident — if this
+      // line is in your logs, Groq is down and you are paying more per
+      // token until someone looks.
+      console.error(
+        `[ai] GROQ UNAVAILABLE — served by ${OPENAI_LOG_PREFIX}${OPENAI_MODEL}. Groq said: ${failures.join(' | ').slice(0, 300)}`
+      )
+      await logAiCall({
+        endpoint, userId, requestedModel: requested,
+        model: `${OPENAI_LOG_PREFIX}${OPENAI_MODEL}`,
+        fellBack: true, outcome: 'ok',
+        usage: alt.usage, latencyMs: Date.now() - start,
+        error: `groq unavailable: ${failures.join(' | ')}`,
+      })
+      return { choices: [{ message: { content: alt.content } }], usage: alt.usage }
+    }
+
+    failures.push(`${OPENAI_LOG_PREFIX}${OPENAI_MODEL}: ${alt.error}`)
   }
 
   await logAiCall({

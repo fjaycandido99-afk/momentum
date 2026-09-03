@@ -10,7 +10,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 // production AiCallLog, polluting the exact table being used to diagnose a
 // live outage.
 vi.mock('@/lib/prisma', () => ({
-  prisma: { aiCallLog: { create: vi.fn().mockResolvedValue({}) } },
+  prisma: {
+    aiCallLog: {
+      create: vi.fn().mockResolvedValue({}),
+      // The OpenAI spend guard counts today's fallback calls. Without
+      // this the guard fails closed and the fallback never fires.
+      count: vi.fn().mockResolvedValue(0),
+    },
+  },
 }))
 
 const original = globalThis.fetch
@@ -126,5 +133,44 @@ describe('model ladder', () => {
     // Not all llama — the whole point is that one family being unreachable
     // should not take the app down.
     expect(GROQ_MODELS.some(m => !m.includes('llama'))).toBe(true)
+  })
+})
+
+describe('cross-provider fallback', () => {
+  it('reaches OpenAI when every Groq model is unreachable', async () => {
+    process.env.GROQ_MODELS = 'gone-a,gone-b'
+    process.env.OPENAI_API_KEY = 'sk-test'
+
+    const fetchMock = vi.fn(async (url: string) => {
+      if (String(url).includes('api.groq.com')) {
+        return { ok: false, status: 404, text: async () => JSON.stringify(MODEL_GONE), json: async () => MODEL_GONE } as unknown as Response
+      }
+      const body = { choices: [{ message: { content: 'from openai' } }], usage: {} }
+      return { ok: true, status: 200, text: async () => JSON.stringify(body), json: async () => body } as unknown as Response
+    })
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+
+    const { createChatCompletion } = await import('@/lib/groq')
+    const res = await createChatCompletion({ messages: [{ role: 'user', content: 'hi' }] })
+
+    expect(res.choices[0].message.content).toBe('from openai')
+    expect(fetchMock.mock.calls.some(c => String(c[0]).includes('api.openai.com'))).toBe(true)
+
+    delete process.env.GROQ_MODELS
+    delete process.env.OPENAI_API_KEY
+  })
+
+  it('stays dormant when no OpenAI key is configured', async () => {
+    process.env.GROQ_MODELS = 'gone-a'
+    delete process.env.OPENAI_API_KEY
+
+    const fetchMock = mockFetchSequence([{ status: 404, body: MODEL_GONE }])
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+
+    const { createChatCompletion } = await import('@/lib/groq')
+    await expect(createChatCompletion({ messages: [{ role: 'user', content: 'hi' }] })).rejects.toThrow()
+    expect(fetchMock.mock.calls.every(c => !String(c[0]).includes('openai.com'))).toBe(true)
+
+    delete process.env.GROQ_MODELS
   })
 })
