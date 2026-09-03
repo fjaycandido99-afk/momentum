@@ -158,7 +158,7 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
       {/* Mobile: horizontal scroll. Desktop: wrap to a grid so the row
           doesn't stretch into an endless ribbon. Tiles centered in each
           column with vertical breathing room. */}
-      <div className="flex gap-4 overflow-x-auto px-6 pr-24 lg:pr-6 pb-3 scrollbar-hide snap-row lg:grid lg:grid-cols-7 xl:grid-cols-9 lg:gap-x-4 lg:gap-y-7 lg:overflow-visible lg:justify-items-center lg:pt-2 lg:pb-6">
+      <div className="flex gap-4 overflow-x-auto px-6 pb-3 scrollbar-hide snap-row lg:grid lg:grid-cols-7 xl:grid-cols-9 lg:gap-x-4 lg:gap-y-7 lg:overflow-visible lg:justify-items-center lg:pt-2 lg:pb-6">
         {VOICE_GUIDES.map((guide, index) => {
           const Icon = guide.icon
           const isLoading = loadingGuide === guide.id
