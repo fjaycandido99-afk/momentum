@@ -18,7 +18,6 @@ import { trackFeature } from '@/lib/analytics/track'
 import { SoundscapesSection } from './SoundscapesSection'
 import { GuidedSection } from './GuidedSection'
 import { GuidedPlayer } from '@/components/player/GuidedPlayer'
-import { XPBadge } from './XPBadge'
 const MotivationSection = dynamic(() => import('./MotivationSection').then(m => m.MotivationSection), { ssr: false })
 import { MusicTabsSection } from './MusicTabsSection'
 import { WelcomeBackCard } from './WelcomeBackCard'
@@ -52,7 +51,6 @@ import { DailyIntentionCard } from './DailyIntentionCard'
 import { YesterdayFollowUp } from './YesterdayFollowUp'
 import { MorningMinute } from './MorningMinute'
 import { FirstMomentOverlay } from './FirstMomentOverlay'
-import { DailyProgressRing } from './DailyProgressRing'
 import { useToast } from '@/contexts/ToastContext'
 import { usePreferences, useJournalMood, useMotivationVideos, useFavorites, useWelcomeStatus, useGamificationStatus } from '@/hooks/useHomeSWR'
 import { useListeningStats, checkAudioAchievements } from '@/hooks/useListeningStats'
@@ -439,7 +437,7 @@ export function ImmersiveHome() {
   const { journalData, journalMood, journalLoading, moodBefore, energyLevel, hasJournaledToday, modulesCompletedToday, dailyIntention } = useJournalMood(today)
 
   // SWR: Gamification status (for bonus, freezes)
-  const { dailyBonusClaimed, streakFreezes } = useGamificationStatus()
+  const { streakFreezes } = useGamificationStatus()
 
   // Keep the iOS home-screen widget's streak + journey in sync (native-only no-op on web)
   useEffect(() => {
@@ -1136,19 +1134,22 @@ export function ImmersiveHome() {
           {/* Bottom blur fade */}
           <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
           <div className="flex items-center justify-between">
+            {/* One metric, not three.
+                This row carried the streak, an XP level bar and a daily
+                progress ring side by side — three scores before any
+                content, on a screen whose job is to feel calm. The ring
+                also rendered a bare "0" with no label, which tells a user
+                nothing except that they are behind.
+                The streak stays because it is the habit hook and it is the
+                one number that changes what someone does today. The other
+                two are not lost, only relocated to where a person goes when
+                they actually want numbers: XP/level on Progress
+                (XPProgress), and the four daily segments on Daily Guide
+                (SessionTimeline), which already showed exactly the same
+                state the ring did. */}
             <div className="flex items-center gap-2.5 min-w-0">
               <h1 className={`font-bold shimmer-text transition-all duration-300 shrink-0 tracking-tight ${headerScrolled ? 'text-xl' : 'text-2xl'}`}>Explore</h1>
               <StreakBadge streak={streak} freezeCount={streakFreezes} />
-              <XPBadge />
-              <DailyProgressRing
-                morningDone={!!journalData?.morning_prime_done}
-                middayDone={!!journalData?.midday_reset_done}
-                windDownDone={!!journalData?.wind_down_done}
-                bedtimeDone={!!journalData?.bedtime_story_done}
-                hasJournaledToday={hasJournaledToday}
-                dailyIntention={!!dailyIntention}
-                dailyBonusClaimed={dailyBonusClaimed}
-              />
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {/* Reset wind button — parked per user request. Infra
