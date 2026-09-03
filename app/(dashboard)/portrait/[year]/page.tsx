@@ -131,7 +131,7 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
         {/* Dominant moods (when data exists) */}
         {data.dominant_moods.length > 0 && (
           <div className="mt-8 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-            <p className="text-[10.5px] uppercase tracking-[0.2em] text-white/45 font-semibold mb-3">
+            <p className="card-eyebrow mb-3">
               How the year felt
             </p>
             <div className="space-y-2">
@@ -156,7 +156,7 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
           <div className="mt-8">
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="w-3.5 h-3.5 text-white/45" />
-              <p className="text-[10.5px] uppercase tracking-[0.2em] text-white/45 font-semibold">
+              <p className="card-eyebrow">
                 Recent reflections
               </p>
             </div>

@@ -278,7 +278,7 @@ export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
       {/* === Transcript === */}
       {transcript && phase !== 'idle' && phase !== 'recording' && (
         <div className="mt-8 w-full max-w-xl px-2">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-white/45 mb-2">You said</div>
+          <div className="card-eyebrow mb-2">You said</div>
           <p className="text-[15px] text-white/85 leading-relaxed italic whitespace-pre-wrap">
             &ldquo;{transcript}&rdquo;
           </p>
@@ -291,7 +291,7 @@ export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
           <div className="relative p-5 rounded-2xl bg-white/[0.05] border border-white/[0.10]">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-3.5 h-3.5 text-white/70" />
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white/55">{reflectionLabel}</span>
+              <span className="card-eyebrow">{reflectionLabel}</span>
               <button
                 onClick={togglePlayback}
                 aria-label={isPlaying ? 'Pause reflection' : 'Play reflection'}

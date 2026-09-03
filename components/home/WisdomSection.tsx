@@ -121,9 +121,13 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
         {/* Quote Card */}
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">
+            {/* Was the only card header on the screen in title case at
+                full white — sitting directly beneath TODAY'S MINUTE, which
+                uses the app's micro-caps eyebrow. Two adjacent cards, two
+                different header languages. This one was the outlier. */}
             <div className="flex items-center gap-2">
               <span className="text-sm">{config?.icon || '💡'}</span>
-              <h3 className="text-sm font-semibold text-white">
+              <h3 className="card-eyebrow">
                 {config?.name || 'Daily'} Wisdom
               </h3>
             </div>

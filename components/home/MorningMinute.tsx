@@ -209,7 +209,7 @@ export function MorningMinute() {
           <Sparkles className="w-3.5 h-3.5 text-white/55" />
           <h2
             id="morning-minute-heading"
-            className="text-[10.5px] uppercase tracking-[0.22em] text-white/55 font-semibold"
+            className="card-eyebrow"
           >
             Today&apos;s Minute
           </h2>
@@ -305,7 +305,7 @@ export function MorningMinute() {
           >
             &ldquo;{minute.response}&rdquo;
           </p>
-          <p className="mt-3 text-center text-[10.5px] uppercase tracking-[0.18em] text-white/35">
+          <p className="mt-3 text-center card-eyebrow">
             You showed up today
           </p>
 
@@ -317,7 +317,7 @@ export function MorningMinute() {
             className="mt-5 flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] transition-colors press-scale group"
           >
             <div className="min-w-0">
-              <p className="text-[10.5px] uppercase tracking-[0.18em] text-white/45 font-semibold">
+              <p className="card-eyebrow">
                 Go deeper
               </p>
               <p className="mt-0.5 text-[13.5px] text-white/85 leading-tight">

@@ -866,6 +866,22 @@ input:focus:not(:focus-visible), select:focus:not(:focus-visible), textarea:focu
 /* Larger, more cinematic section titles. Bigger size + stronger weight +
    tighter tracking = a "breathing" hierarchy instead of the old compressed
    18px. One change here upgrades every home section that uses the class. */
+/* The small tracked label above a card's content — MEMORY RESURFACED,
+   SMART NUDGE, TODAY'S MINUTE, WELLNESS SCORE.
+   This was already the app's convention, but implemented by hand each
+   time: eight call sites with eight different combinations of size
+   (10 vs 10.5px), tracking (0.18/0.20/0.22em) and opacity (35/40/45/55).
+   Close enough to look accidental rather than designed, and drifting
+   further with every new card. One definition instead. */
+.card-eyebrow {
+  font-size: 10.5px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 600;
+  color: rgb(255 255 255 / 0.45);
+}
+
 .section-header-title {
   font-size: 1.5rem;
   font-weight: 700;

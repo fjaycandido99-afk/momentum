@@ -777,7 +777,7 @@ function SettingsContent() {
             </div>
           </div>
 
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 px-1 mb-2">Daily Guide reminders</p>
+          <p className="card-eyebrow px-1 mb-2">Daily Guide reminders</p>
           <GuideReminderSettings
             values={{
               dailyReminder,
