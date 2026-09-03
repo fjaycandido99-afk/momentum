@@ -26,6 +26,7 @@ import {
   FileText,
   Trash2,
   RefreshCw,
+  Download,
   ChevronRight,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -1033,6 +1034,21 @@ function SettingsContent() {
           <div className="pt-2 space-y-3">
             {isAuthenticated ? (
               <>
+                {/* Export. Deliberately above Sign Out and Delete: the
+                    most likely moment someone wants a copy of their
+                    journal is right before they leave. */}
+                <a
+                  href="/api/account/export"
+                  download
+                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/15 text-white hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                >
+                  <Download className="w-5 h-5" />
+                  Export My Data
+                </a>
+                <p className="text-[11px] text-white/45 text-center -mt-1">
+                  Your journal, saved items, goals and preferences, as JSON.
+                </p>
+
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/15 text-white hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"

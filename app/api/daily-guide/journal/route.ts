@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { isPremiumUser } from '@/lib/subscription-check'
+import { journalHistoryDays } from '@/lib/subscription-constants'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
@@ -71,6 +72,24 @@ export async function GET(request: NextRequest) {
       const end = new Date(endDate)
       end.setHours(23, 59, 59, 999)
 
+      // Free tier reads a window of its own writing rather than nothing.
+      // Clamped here, not in the UI, so the limit is real — and returned
+      // in the response so the client can say what it is showing instead
+      // of quietly truncating someone's diary.
+      const isPremium = await isPremiumUser(user.id)
+      const windowDays = journalHistoryDays(isPremium)
+      let clamped = false
+
+      if (windowDays !== null) {
+        const earliest = new Date()
+        earliest.setHours(0, 0, 0, 0)
+        earliest.setDate(earliest.getDate() - (windowDays - 1))
+        if (start < earliest) {
+          start.setTime(earliest.getTime())
+          clamped = true
+        }
+      }
+
       const guides = await prisma.dailyGuide.findMany({
         where: {
           user_id: user.id,
@@ -106,7 +125,13 @@ export async function GET(request: NextRequest) {
         },
       })
 
-      return NextResponse.json({ entries: guides })
+      return NextResponse.json({
+        entries: guides,
+        // What the caller is actually allowed to see, so the UI can be
+        // explicit rather than pretending this is the whole archive.
+        historyWindowDays: windowDays,
+        clamped,
+      })
     }
 
     // Default: return this week's entries

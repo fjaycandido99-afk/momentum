@@ -1543,36 +1543,13 @@ function JournalContent() {
             <Calendar className="w-4 h-4 text-white/90" />
             <h2 className="text-sm font-medium text-white/90 uppercase tracking-wider">Recent Entries</h2>
           </div>
-          {!hasJournalHistory && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-medium">PRO</span>
-          )}
         </div>
 
-        {!hasJournalHistory ? (
-          <button
-            onClick={openUpgradeModal}
-            className="w-full p-6 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] hover:bg-white/5 transition-all press-scale group"
-          >
-            <div className="flex flex-col items-center gap-3">
-              <div className="relative">
-                <div className="p-3 rounded-xl bg-white/10 border border-white/20">
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 p-1 rounded-full bg-white/30">
-                  <Lock className="w-3 h-3 text-white" />
-                </div>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-white font-medium mb-1">Unlock Journal History</p>
-                <p className="text-xs text-white/80 mb-3">Look back on your growth journey</p>
-                <div className="flex items-center justify-center gap-1.5 text-white text-xs font-medium group-hover:scale-105 transition-transform">
-                  <Crown className="w-3.5 h-3.5" />
-                  Upgrade to Pro
-                </div>
-              </div>
-            </div>
-          </button>
-        ) : loadingPast ? (
+        {/* Free users now read their last week rather than seeing a
+            padlock over their own diary. The upgrade prompt moved BELOW
+            the entries: it asks for money once looking back has already
+            proved useful, instead of before the user has felt anything. */}
+        {loadingPast ? (
           <div className="flex items-center justify-center py-6">
             <Loader2 className="w-4 h-4 text-white/90 animate-spin" />
           </div>
@@ -1708,6 +1685,24 @@ function JournalContent() {
               </div>
             )}
           </>
+        )}
+
+        {/* The upsell, once there is something to look back on. Asking
+            after the value has landed converts better than a padlock, and
+            it stops the free tier being a write-only box. */}
+        {!hasJournalHistory && recentEntries.length > 0 && (
+          <button
+            onClick={openUpgradeModal}
+            className="mt-4 w-full flex items-center justify-between gap-3 p-4 rounded-2xl bg-white/[0.04] border border-white/[0.10] text-left hover:bg-white/[0.07] transition-colors press-scale"
+          >
+            <div className="min-w-0">
+              <p className="text-sm text-white">You&apos;re seeing the last 7 days</p>
+              <p className="text-[11px] text-white/55 mt-0.5">
+                Premium keeps every entry, and lets the AI read a month of them.
+              </p>
+            </div>
+            <Crown className="w-4 h-4 shrink-0 text-white/70" />
+          </button>
         )}
       </div>
 

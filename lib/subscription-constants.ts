@@ -79,7 +79,16 @@ export const FREE_TIER_LIMITS = {
   session_duration_minutes: 999, // No meaningful limit
   music_genres: ['daily_rotation'], // Only daily rotation
   checkpoints_enabled: true,
-  journal_history_enabled: false,
+  // Free users can read the last week of their OWN writing.
+  //
+  // This used to be a hard false — a padlock over your own diary. The
+  // whole reason to journal is compounding: you write today because
+  // looking back later means something. A free user who never sees that
+  // never forms the habit, so they never convert for the right reason,
+  // and meanwhile the thing being withheld is their own words. Sell the
+  // depth (search, insights, the full archive), not the access.
+  journal_history_enabled: true,
+  journal_history_days: 7,
   offline_enabled: false,
   // AI feature gates (free = false)
   ai_voice_enabled: false,
@@ -98,6 +107,7 @@ export const PREMIUM_FEATURES = {
   all_music_genres: true,
   all_checkpoints: true,
   full_journal_history: true,
+  journal_history_days: null as number | null, // unlimited
   weekly_review_full: true,
   all_backgrounds: true,
   offline_downloads: true,
@@ -279,4 +289,15 @@ export interface AiMemoryDepth {
 export const AI_MEMORY_DEPTH: Record<'free' | 'premium', AiMemoryDepth> = {
   free:    { journalDays: 1,  savedItems: 3,  goals: false, moodTrend: false },
   premium: { journalDays: 30, savedItems: 25, goals: true,  moodTrend: true },
+}
+
+/**
+ * How many days back a tier may read its own journal. null = everything.
+ *
+ * Enforced server-side in /api/daily-guide/journal — a client-only limit
+ * would be decoration, and this decides what someone can read of their
+ * own writing, so it should be honest in both directions.
+ */
+export function journalHistoryDays(isPremium: boolean): number | null {
+  return isPremium ? null : FREE_TIER_LIMITS.journal_history_days
 }
