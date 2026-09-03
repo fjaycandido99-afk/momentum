@@ -1174,12 +1174,27 @@ export function ImmersiveHome() {
       {/* Hamburger Menu Dropdown */}
       {showMenu && (
         <>
-          <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} role="presentation" />
-          <div className="fixed right-6 top-[100px] z-40 w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up">
-            <button onClick={() => { setShowMenu(false); stopBackgroundMusic(); setShowMorningFlow(true) }} className="flex items-center gap-3 px-4 py-3 w-full hover:bg-white/5 active:bg-white/5 transition-colors">
+          {/* z-[60] and a safe-area-relative offset.
+              This menu was z-40 while the sticky header above it is z-50,
+              and it was pinned at a hardcoded top-[100px]. On a notched
+              iPhone the header is taller than 100px once
+              safe-area-inset-top is added, so the header painted straight
+              over the menu's first row — Daily Guide — and it simply was
+              not there on the device. Invisible on desktop, where the
+              header is shorter. Same layering mistake as the quote popup.
+              Offset now follows the notch instead of guessing at it. */}
+          <div className="fixed inset-0 z-[55]" onClick={() => setShowMenu(false)} role="presentation" />
+          <div
+            className="fixed right-6 z-[60] w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 4.5rem)' }}
+          >
+            {/* Goes to the Daily Guide PAGE. It used to open the morning
+                flow overlay, so the one menu entry named after the page
+                never took you to it. */}
+            <Link href="/daily-guide" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 w-full hover:bg-white/5 active:bg-white/5 transition-colors">
               <Headphones className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Daily Guide</span>
-            </button>
+            </Link>
             <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <PenLine className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Journal</span>
