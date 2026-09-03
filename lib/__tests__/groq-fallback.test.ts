@@ -5,6 +5,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 // anything else — a 404 was classed permanent, and the fallback model was
 // the same dead model. Both halves are asserted here.
 
+// Mock prisma. Without this the telemetry insert inside createChatCompletion
+// hits the REAL database — this test wrote fake primary-model rows into
+// production AiCallLog, polluting the exact table being used to diagnose a
+// live outage.
+vi.mock('@/lib/prisma', () => ({
+  prisma: { aiCallLog: { create: vi.fn().mockResolvedValue({}) } },
+}))
+
 const original = globalThis.fetch
 
 function mockFetchSequence(responses: Array<{ status: number; body: unknown }>) {

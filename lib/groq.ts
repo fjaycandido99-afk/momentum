@@ -160,6 +160,11 @@ export async function createChatCompletion(
     throw new Error(`Groq error ${res.status}: ${res.body.slice(0, 200)}`)
   }
 
+  // Keep the FIRST failure. When both attempts fail we used to log only
+  // the second error, so a dead primary was invisible: the row said the
+  // fallback 404'd and said nothing about why we fell back at all.
+  const firstError = `${requested}: ${res.status} ${res.body.slice(0, 120)}`
+
   // Attempt 2 — fall back to the floor model (or retry the same model if
   // we were already on it).
   const secondModel = canFallback ? GROQ_FALLBACK_MODEL : requested
@@ -170,7 +175,7 @@ export async function createChatCompletion(
     return res.data
   }
 
-  await logAiCall({ endpoint, userId, requestedModel: requested, model: secondModel, fellBack: secondModel !== requested, outcome: 'failed', latencyMs: Date.now() - start, error: `${res.status} ${res.body}` })
+  await logAiCall({ endpoint, userId, requestedModel: requested, model: secondModel, fellBack: secondModel !== requested, outcome: 'failed', latencyMs: Date.now() - start, error: `${firstError} | ${secondModel}: ${res.status} ${res.body}` })
   throw new Error(`Groq failed after retry (${res.status}): ${res.body.slice(0, 200)}`)
 }
 
