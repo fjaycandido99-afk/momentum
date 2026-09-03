@@ -45,7 +45,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
           as an endless ribbon trailing off the canvas. justify-items-center
           + gap-y so each tile sits centered in its column with breathing
           room above/below. */}
-      <div className="flex gap-4 overflow-x-auto px-6 pt-1 pb-3 scrollbar-hide snap-row lg:grid lg:grid-cols-7 xl:grid-cols-9 lg:gap-x-4 lg:gap-y-7 lg:overflow-visible lg:justify-items-center lg:pt-4 lg:pb-6">
+      <div className="flex gap-4 overflow-x-auto px-6 pr-24 lg:pr-6 pt-1 pb-3 scrollbar-hide snap-row lg:grid lg:grid-cols-7 xl:grid-cols-9 lg:gap-x-4 lg:gap-y-7 lg:overflow-visible lg:justify-items-center lg:pt-4 lg:pb-6">
         {SOUNDSCAPE_ITEMS.map((item, index) => {
           const Icon = item.icon
           const isActive = activeSoundscape?.soundId === item.id && soundscapeIsPlaying

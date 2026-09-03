@@ -1468,11 +1468,19 @@ export function ImmersiveHome() {
       {/* Daily Spark */}
       {!showMorningFlow && <DailySpark />}
 
-      {/* Floating AI Coach Button + Greeting Bubble */}
+      {/* Floating AI Coach Button + Greeting Bubble.
+          Was 80x80 — an enormous footprint for a floating button, and
+          because it is fixed while the page scrolls it parked itself on
+          top of the horizontal content rows. On the Soundscapes row it
+          covered the Ocean tile outright, so tapping Ocean opened the
+          coach. 56px is the standard size, still well past the 44px touch
+          minimum, and it frees roughly half the area it was stealing.
+          The rows also carry trailing padding now so a tile can always be
+          scrolled out from under it. */}
       <div className="fixed right-5 bottom-28 z-30 flex items-center gap-2">
         <CoachGreetingBubble mindsetId={mindsetCtx?.mindset} onVisibleChange={setIsCoachNudging} />
         <Link href="/coach" aria-label="Open AI coach" className="transition-all press-scale">
-          <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" nudging={isCoachNudging} plain className="!w-20 !h-20" />
+          <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" nudging={isCoachNudging} plain className="!w-14 !h-14" />
         </Link>
       </div>
 

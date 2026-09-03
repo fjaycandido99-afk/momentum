@@ -94,7 +94,7 @@ export function MusicTabsSection({
       {/* Genre pills */}
       <div
         ref={pillsRef}
-        className="flex gap-2 overflow-x-auto px-6 pb-4 scrollbar-hide"
+        className="flex gap-2 overflow-x-auto px-6 pr-24 lg:pr-6 pb-4 scrollbar-hide"
       >
         {genres.map(g => {
           const isActive = g.id === selectedGenreId
