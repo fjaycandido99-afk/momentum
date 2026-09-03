@@ -47,13 +47,31 @@ export function SettingsCategory({
   const [isOpen, setIsOpen] = useState(defaultOpen)
   const [mounted, setMounted] = useState(false)
 
-  // Restore from localStorage on mount
+  // Restore from localStorage on mount.
+  //
+  // A #hash pointing at this section wins over the stored state: arriving
+  // from a link like /settings#ai-memory should land you on an OPEN
+  // section, not on a collapsed one you still have to find and tap.
   useEffect(() => {
-    const stored = getStoredState()
-    if (id in stored) {
-      setIsOpen(stored[id])
+    const targeted =
+      typeof window !== 'undefined' && window.location.hash === `#${id}`
+
+    if (targeted) {
+      setIsOpen(true)
+    } else {
+      const stored = getStoredState()
+      if (id in stored) {
+        setIsOpen(stored[id])
+      }
     }
     setMounted(true)
+
+    if (targeted) {
+      // After paint, so the expanded height is measured before scrolling.
+      requestAnimationFrame(() => {
+        document.getElementById(id)?.scrollIntoView({ block: 'start' })
+      })
+    }
   }, [id])
 
   const toggle = () => {
@@ -63,7 +81,11 @@ export function SettingsCategory({
   }
 
   return (
-    <div className="bg-black rounded-2xl overflow-hidden border border-white/15">
+    // The id has to reach the DOM or no #anchor can ever resolve. It was
+    // previously used only as a localStorage key, so every in-app link to
+    // a settings section silently dropped the user at the top of the page.
+    // scroll-mt-24 keeps the sticky header off the heading once it does.
+    <div id={id} className="scroll-mt-24 bg-black rounded-2xl overflow-hidden border border-white/15">
       <button
         onClick={toggle}
         aria-expanded={isOpen}
