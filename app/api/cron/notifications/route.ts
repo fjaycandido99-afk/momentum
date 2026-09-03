@@ -17,7 +17,7 @@ import {
   sendWinBackReminders,
   sendFeatureDiscovery,
 } from '@/lib/push-service'
-import { cleanupExpiredAudioCache } from '@/lib/daily-guide/cache-cleanup'
+import { cleanupExpiredAudioCache, cleanupChatVoiceCache, cleanupAiUsage } from '@/lib/daily-guide/cache-cleanup'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -75,9 +75,19 @@ export async function GET(request: NextRequest) {
         await sendWeeklyInsights()
         return NextResponse.json({ success: true, type: 'weekly_insights' })
 
-      case 'cleanup':
-        await cleanupExpiredAudioCache()
-        return NextResponse.json({ success: true, type: 'cache_cleanup' })
+      case 'cleanup': {
+        // Three unbounded tables, one nightly sweep.
+        const [audio, chatAudio, aiUsage] = await Promise.all([
+          cleanupExpiredAudioCache(),
+          cleanupChatVoiceCache(),
+          cleanupAiUsage(),
+        ])
+        return NextResponse.json({
+          success: true,
+          type: 'cache_cleanup',
+          deleted: { audio: audio.deleted, chatAudio: chatAudio.deleted, aiUsage: aiUsage.deleted },
+        })
+      }
 
       case 'midday_reset':
         await sendMiddayResets()

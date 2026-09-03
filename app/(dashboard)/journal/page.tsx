@@ -200,6 +200,28 @@ function JournalContent() {
     if (searchParams.get('review')) setShowWeeklyReview(true)
   }, [searchParams])
 
+  // Read the day's allowance when chat opens, so someone with none left
+  // sees that immediately instead of typing a message and watching it
+  // bounce. Read-only — this does not spend one.
+  useEffect(() => {
+    if (mode !== 'conversational' || chatQuota !== null) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/ai/quota?feature=chat')
+        if (!res.ok) return
+        const data = await res.json()
+        if (cancelled) return
+        setChatQuota({ remaining: data.remaining, limit: data.limit })
+        setChatMemoryConsented(!!data.memoryConsented)
+        if (data.reason) setChatBlocked({ reason: data.reason, limit: data.limit ?? null })
+      } catch {
+        // Non-fatal: the reply itself reports the quota too.
+      }
+    })()
+    return () => { cancelled = true }
+  }, [mode, chatQuota])
+
   const isToday = selectedDate.toDateString() === new Date().toDateString()
 
   // Which modes are offered for the viewed date. Today → all four. Past dates →
