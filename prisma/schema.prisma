@@ -877,3 +877,21 @@ model AiUsageDaily {
   @@unique([user_id, feature, day])
   @@index([user_id, day])
 }
+
+
+// Alert state, so a live incident pages you once rather than every hour,
+// and so recovery is announced exactly once too.
+//
+// Exists because AI telemetry alone was not enough: AiCallLog recorded the
+// entire seventeen-day outage faithfully and nobody read it. Data without
+// attention is not monitoring.
+model SystemAlert {
+  id     String @id @default(cuid())
+  kind   String // e.g. ai_failure
+  state  String // firing | resolved
+  detail String?
+
+  created_at DateTime @default(now())
+
+  @@index([kind, created_at])
+}
