@@ -12,13 +12,22 @@ export interface AiCallLogInput {
   error?: string | null
 }
 
-// Fire-and-forget per-call Groq telemetry. NEVER throws and NEVER blocks
-// the response — a failed insert (e.g. the ai_call_logs table not pushed
-// yet) is swallowed, so this is safe to ship before `npm run db:push`.
-// This is the single signal that tells you when AI silently degraded to
-// canned content: watch `outcome=failed` and `fell_back=true`.
-export function logAiCall(input: AiCallLogInput): void {
-  prisma.aiCallLog
+// Per-call Groq telemetry. NEVER throws — a failed insert (e.g. the table
+// not pushed yet) is swallowed, so this is safe to ship before db:push.
+//
+// AWAIT IT. This used to be fire-and-forget "so it never blocks the
+// response", which sounds free and is not: on Vercel the function returns
+// and is frozen, so the insert is routinely killed mid-flight and the row
+// never lands. That was discovered the hard way — chasing a live AI
+// outage, the failing calls left no trace at all, because the only signal
+// that says "AI silently degraded to canned content" was itself dropping
+// writes at exactly the moment it mattered.
+//
+// An insert costs tens of milliseconds against an AI call that takes
+// seconds. Observability you cannot trust is worth less than the latency
+// it saves.
+export function logAiCall(input: AiCallLogInput): Promise<void> {
+  return prisma.aiCallLog
     .create({
       data: {
         endpoint: input.endpoint,
@@ -33,5 +42,6 @@ export function logAiCall(input: AiCallLogInput): void {
         error: input.error ? input.error.slice(0, 300) : null,
       },
     })
+    .then(() => {})
     .catch(() => {})
 }

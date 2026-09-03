@@ -128,7 +128,8 @@ async function attempt(model: string, options: ChatCompletionOptions): Promise<A
 // back to the fast/cheap model (or retry if already on it) → on success
 // return; on total failure THROW so the caller's existing try/catch
 // degrades to its pre-written fallback content. Every outcome (incl. the
-// fallback flag + token usage) is logged fire-and-forget.
+// fallback flag + token usage) is logged, and the log is AWAITED — see
+// usage-log.ts for why fire-and-forget lost rows on Vercel.
 export async function createChatCompletion(
   options: ChatCompletionOptions,
   meta: GroqCallMeta = {},
@@ -142,7 +143,7 @@ export async function createChatCompletion(
   // Attempt 1 — the requested model.
   let res = await attempt(requested, options)
   if (res.ok) {
-    logAiCall({ endpoint, userId, requestedModel: requested, model: res.data.model || requested, fellBack: false, outcome: 'ok', usage: res.data.usage, latencyMs: Date.now() - start })
+    await logAiCall({ endpoint, userId, requestedModel: requested, model: res.data.model || requested, fellBack: false, outcome: 'ok', usage: res.data.usage, latencyMs: Date.now() - start })
     return res.data
   }
 
@@ -155,7 +156,7 @@ export async function createChatCompletion(
   // Permanent error (bad request, auth, missing key) — retrying or
   // swapping models won't help. Fail now so the caller falls back.
   if (!res.transient && !(modelGone && canFallback)) {
-    logAiCall({ endpoint, userId, requestedModel: requested, model: requested, fellBack: false, outcome: 'failed', latencyMs: Date.now() - start, error: `${res.status} ${res.body}` })
+    await logAiCall({ endpoint, userId, requestedModel: requested, model: requested, fellBack: false, outcome: 'failed', latencyMs: Date.now() - start, error: `${res.status} ${res.body}` })
     throw new Error(`Groq error ${res.status}: ${res.body.slice(0, 200)}`)
   }
 
@@ -165,11 +166,11 @@ export async function createChatCompletion(
   res = await attempt(secondModel, options)
   if (res.ok) {
     const fellBack = secondModel !== requested
-    logAiCall({ endpoint, userId, requestedModel: requested, model: res.data.model || secondModel, fellBack, outcome: 'ok', usage: res.data.usage, latencyMs: Date.now() - start })
+    await logAiCall({ endpoint, userId, requestedModel: requested, model: res.data.model || secondModel, fellBack, outcome: 'ok', usage: res.data.usage, latencyMs: Date.now() - start })
     return res.data
   }
 
-  logAiCall({ endpoint, userId, requestedModel: requested, model: secondModel, fellBack: secondModel !== requested, outcome: 'failed', latencyMs: Date.now() - start, error: `${res.status} ${res.body}` })
+  await logAiCall({ endpoint, userId, requestedModel: requested, model: secondModel, fellBack: secondModel !== requested, outcome: 'failed', latencyMs: Date.now() - start, error: `${res.status} ${res.body}` })
   throw new Error(`Groq failed after retry (${res.status}): ${res.body.slice(0, 200)}`)
 }
 
