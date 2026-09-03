@@ -7,7 +7,6 @@ import { PageTransition } from '@/components/ui/PageTransition'
 import { AmbientBackground } from '@/components/ui/AmbientBackground'
 import { Providers } from './providers'
 import { ResetProvider } from '@/contexts/ResetContext'
-import { ShareSheetProvider } from '@/components/social/ShareSheetProvider'
 
 export default function DashboardLayout({
   children,
@@ -23,7 +22,6 @@ export default function DashboardLayout({
   return (
     <Providers>
       <ResetProvider>
-        <ShareSheetProvider>
         <div className="isolate min-h-screen bg-black">
           <AmbientBackground />
 
@@ -64,10 +62,9 @@ export default function DashboardLayout({
                 context reason. Mounted outside the lg:hidden wrapper
                 used to keep the Home pill visible above the modal
                 backdrop (sibling of main → root context → above
-                main's z-10), which then bled THROUGH the community
-                share modal. Inside main, MinimalNav's z-30 is
-                scoped to main and the z-50 share modal correctly
-                covers it. */}
+                main's z-10), which then bled THROUGH modal overlays.
+                Inside main, MinimalNav's z-30 is scoped to main so
+                z-50 overlays correctly cover it. */}
             {!isHome && !hideChrome && (
               <div className="lg:hidden">
                 <MinimalNav />
@@ -75,7 +72,6 @@ export default function DashboardLayout({
             )}
           </main>
         </div>
-        </ShareSheetProvider>
       </ResetProvider>
     </Providers>
   )

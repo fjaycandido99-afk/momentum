@@ -3,9 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind, Users } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
-import { useCommunityAccess } from '@/hooks/useCommunityAccess'
 import { CoachAvatar } from '@/components/coach/CoachAvatar'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -85,9 +84,6 @@ function getDailyGuideCTA(): { subtitle: string; Icon: typeof Sun } {
 }
 
 export function ImmersiveHome() {
-  // Community is staged behind the access gate — hide the menu link
-  // entirely for non-allowed users so the section truly doesn't render.
-  const communityAccess = useCommunityAccess()
   const [timeContext] = useState(getTimeContext)
   const [activeMode, setActiveMode] = useState<Mode>(timeContext.suggested)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -1187,12 +1183,6 @@ export function ImmersiveHome() {
               <PenLine className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Journal</span>
             </Link>
-            {communityAccess === true && (
-              <Link href="/community" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
-                <Users className="w-4 h-4 text-white/85" />
-                <span className="text-sm text-white/90">Community</span>
-              </Link>
-            )}
             <Link href="/saved" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <Save className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Saved</span>

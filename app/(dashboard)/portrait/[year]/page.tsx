@@ -16,7 +16,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Flame, Calendar, Loader2 } from 'lucide-react'
-import { InkSpiral } from '@/components/social/InkSpiral'
+import { InkSpiral } from '@/components/portrait/InkSpiral'
 import { createClient } from '@/lib/supabase/client'
 
 interface PortraitData {
@@ -45,26 +45,10 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
     let alive = true
     ;(async () => {
       try {
-        // Pull the caller's handle so the spiral seeds correctly.
+        // Seed the spiral off the caller's id so it stays stable per user.
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        if (alive && user) {
-          // Hit /me to get handle (works without community access — it
-          // auto-mints a profile if missing, but is gated by the
-          // community-access wall when not allowed; if it 404s we
-          // fall back to seeding from user.id).
-          try {
-            const meRes = await fetch('/api/social/profile/me')
-            if (meRes.ok) {
-              const meData = await meRes.json()
-              if (alive && meData?.profile?.handle) setSeed(meData.profile.handle)
-            } else if (alive) {
-              setSeed(user.id)
-            }
-          } catch {
-            if (alive) setSeed(user.id)
-          }
-        }
+        if (alive && user) setSeed(user.id)
 
         const res = await fetch(`/api/portrait/${year}`)
         if (res.ok) {

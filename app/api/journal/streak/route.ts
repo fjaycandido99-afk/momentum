@@ -14,7 +14,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
-import { loadProfileWallStats } from '@/lib/social/profile-stats'
+import { loadProfileWallStats } from '@/lib/profile-stats'
 
 export const dynamic = 'force-dynamic'
 

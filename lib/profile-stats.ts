@@ -1,7 +1,7 @@
 /* ============================================================================
-   profile-stats — server-side computation for the public profile "wall"
-   that the InkSpiral lives in. Single source of truth so the per-handle
-   API and any future profile widgets stay consistent.
+   profile-stats — server-side computation for the journal streak + year portrait
+   surfaces. Single source of truth so the streak API and the portrait
+   stay consistent.
 
    Three signals derived from DailyGuide:
 

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target,
   Sparkles, BookOpen, Calendar, X, Crown, Lock, Shuffle, ChevronDown,
-  MessageCircle, Moon, Send, Save, Search, Download, Trash2, Mic, Users,
+  MessageCircle, Moon, Send, Save, Search, Download, Trash2, Mic,
 } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
@@ -28,8 +28,6 @@ import { FocusModeToolbar } from '@/components/journal/FocusModeToolbar'
 import { EmptyWritingState } from '@/components/journal/EmptyWritingState'
 import { JournalMilestoneCelebration } from '@/components/journal/JournalMilestoneCelebration'
 import { VoiceJournalMode } from '@/components/journal/VoiceJournalMode'
-import { ShareToCommunityButton } from '@/components/social/ShareToCommunityButton'
-import { useCommunityAccess } from '@/hooks/useCommunityAccess'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 
@@ -69,11 +67,6 @@ export default function JournalPage() {
 
 function JournalContent() {
   const searchParams = useSearchParams()
-  // Community is staged behind the access gate (lib/social/access.ts).
-  // Hide the "Also share to Community" toggle + sticky anon prefs +
-  // ShareToCommunityButton path entirely for non-allowed users so the
-  // share-on-save flow doesn't even appear.
-  const communityAccess = useCommunityAccess()
   const { checkAccess, openUpgradeModal } = useSubscription()
   const mindsetCtx = useMindsetOptional()
   const hasJournalHistory = checkAccess('journal_history')
@@ -196,33 +189,6 @@ function JournalContent() {
   // A ?review=1 deep-link opens the Weekly Review (from home / notifications).
   useEffect(() => {
     if (searchParams.get('review')) setShowWeeklyReview(true)
-  }, [searchParams])
-
-  // A ?seed=<postId> deep-link from a community post's "Reflect on this"
-  // button. Fetches the post and prefills the free-write with a gentle
-  // prompt that quotes the post + asks what it brought up.
-  useEffect(() => {
-    const seedId = searchParams.get('seed')
-    if (!seedId) return
-    let cancelled = false
-    ;(async () => {
-      try {
-        const res = await fetch(`/api/social/posts/${seedId}`)
-        if (!res.ok) return
-        const data = await res.json()
-        const p = data.post
-        if (cancelled || !p) return
-        const who = p.anonymous || !p.author ? 'Someone' : `@${p.author.handle}`
-        const excerpt = (p.essence || p.body || '').trim().slice(0, 220)
-        const seedText = `${who} wrote: "${excerpt}${(p.body || '').length > 220 ? '…' : ''}"\n\nWhat does this bring up for you?\n\n`
-        setMode('freewrite')
-        setFreeText(prev => prev || seedText)
-        setWritingActive(true)
-      } catch (err) {
-        console.warn('[journal] seed fetch failed:', err)
-      }
-    })()
-    return () => { cancelled = true }
   }, [searchParams])
 
   const isToday = selectedDate.toDateString() === new Date().toDateString()
@@ -475,17 +441,6 @@ function JournalContent() {
   }, [streak])
 
   // Internal save function used by both manual save and autosave
-  // "Save & Share" toggle — sticky preference so a user who wants to
-  // share-by-default doesn't have to re-tick on every save. Stored in
-  // localStorage; default OFF (private by default).
-  const [saveAndShare, setSaveAndShare] = useState(false)
-  const [saveAndShareAnon, setSaveAndShareAnon] = useState(false)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    setSaveAndShare(localStorage.getItem('voxu.journal.shareOnSave') === '1')
-    setSaveAndShareAnon(localStorage.getItem('voxu.journal.shareOnSaveAnon') === '1')
-  }, [])
-
   const handleSaveInternal = useCallback(async () => {
     const guidedContent = win.trim() || gratitude.trim() || intention.trim()
     const freeContent = freeText.trim()
@@ -558,37 +513,13 @@ function JournalContent() {
             prevStreakRef.current = newStreak
           }
         } catch {}
-
-        // One-tap share-on-save — if the user pre-ticked the box, fire
-        // a community post in the same flow so the entry lands in /community
-        // immediately. Best-effort: a share failure doesn't undo the save.
-        if (saveAndShare) {
-          const shareBody = [freeText, win, gratitude, intention].filter(Boolean).join('\n\n').trim()
-          if (shareBody) {
-            try {
-              await fetch('/api/social/posts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  body: shareBody,
-                  anonymous: saveAndShareAnon,
-                  sourceEntryId: data.data?.guide?.id || data.data?.id || undefined,
-                  mindsetId: mindsetCtx?.mindset || undefined,
-                  mood: mood || undefined,
-                }),
-              })
-            } catch (err) {
-              console.warn('[save&share] community post failed:', err)
-            }
-          }
-        }
       }
     } catch (error) {
       console.error('Failed to save journal:', error)
     } finally {
       setIsSaving(false)
     }
-  }, [win, gratitude, intention, freeText, dreamText, mood, mode, selectedDate, saveAndShare, saveAndShareAnon, mindsetCtx])
+  }, [win, gratitude, intention, freeText, dreamText, mood, mode, selectedDate, mindsetCtx])
   handleSaveRef.current = handleSaveInternal
 
   const handleSave = handleSaveInternal
@@ -1394,49 +1325,6 @@ function JournalContent() {
         {/* Save + Delete — only for guided and freewrite modes */}
         {!isLoading && (mode === 'guided' || mode === 'freewrite') && (
           <div className="mt-4 space-y-2">
-            {/* Save & Share — one-tap opt-in to ALSO post to Community
-                on save. Highlighted with a Users icon + gradient bg when
-                active so users actually notice it. Preference sticks
-                across sessions (localStorage). */}
-            {!isSaved && communityAccess === true && (
-              <div className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all ${
-                saveAndShare
-                  ? 'bg-white/[0.10] border border-white/20 shadow-[0_0_24px_rgba(255,255,255,0.08)]'
-                  : 'bg-white/[0.04] border border-white/[0.08]'
-              }`}>
-                <label className="flex items-center gap-2 text-white cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={saveAndShare}
-                    onChange={(e) => {
-                      const v = e.target.checked
-                      setSaveAndShare(v)
-                      try { localStorage.setItem('voxu.journal.shareOnSave', v ? '1' : '0') } catch {}
-                    }}
-                    className="accent-white"
-                  />
-                  <Users className="w-3.5 h-3.5 text-white/75" />
-                  <span className={saveAndShare ? 'font-medium' : 'text-white/80'}>
-                    Also share to Community
-                  </span>
-                </label>
-                {saveAndShare && (
-                  <label className="flex items-center gap-1.5 text-white/75 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={saveAndShareAnon}
-                      onChange={(e) => {
-                        const v = e.target.checked
-                        setSaveAndShareAnon(v)
-                        try { localStorage.setItem('voxu.journal.shareOnSaveAnon', v ? '1' : '0') } catch {}
-                      }}
-                      className="accent-white"
-                    />
-                    Anonymously
-                  </label>
-                )}
-              </div>
-            )}
             <div className="flex gap-2">
               <button
                 onClick={handleSave}
@@ -1474,15 +1362,6 @@ function JournalContent() {
                 {wordCount > 0 && streak > 0 && ' | '}
                 {streak > 0 && <>{streak}-day streak</>}
               </p>
-            )}
-            {/* Share to community — appears AFTER save, opt-in. Default
-                private. Passes the mindset so the post carries the
-                "Shared journal entry · <mindset>" badge. */}
-            {isSaved && (mode === 'freewrite' || mode === 'guided') && (
-              <ShareToCommunityButton
-                body={[freeText, win, gratitude, intention].filter(Boolean).join('\n\n').trim()}
-                mindsetId={mindsetCtx?.mindset || null}
-              />
             )}
             {/* Reassurance — private-by-default warmth before saving */}
             {!isSaved && (

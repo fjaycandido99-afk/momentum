@@ -1,9 +1,8 @@
 /**
  * GET /api/og/default — site-wide default OG image (1200x630 PNG).
  *
- * Used as the fallback unfurl card for /, /community, /journal, /about,
- * and anywhere else that doesn't render its own per-page OG. Bespoke
- * post cards live at /api/og/post?id=...
+ * Used as the fallback unfurl card for /, /journal, /about, and
+ * anywhere else that doesn't render its own per-page OG.
  *
  * Optional ?title= and ?subtitle= overrides let any future surface
  * customize without writing a new endpoint:
