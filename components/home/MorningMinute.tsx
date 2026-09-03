@@ -21,7 +21,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Mic, Square, Loader2, RefreshCw, Sparkles, AlertTriangle, ArrowRight, Flame } from 'lucide-react'
+import { Mic, Square, Loader2, RefreshCw, Sparkles, AlertTriangle, ArrowRight, Flame, MessageCircle } from 'lucide-react'
 
 interface Minute {
   transcript: string
@@ -252,6 +252,20 @@ export function MorningMinute() {
             <Mic className="w-6 h-6" />
           </button>
           <p className="mt-3 text-[10.5px] text-white/35">Tap to begin</p>
+
+          {/* Voice is the intended ritual, but it is not always available:
+              people are on a train, in an office, next to someone asleep.
+              Asking "what's on your mind" and only accepting speech turns
+              those users away at the first screen. Secondary by design —
+              quiet enough not to compete with the mic, present enough to
+              rescue the moment. */}
+          <Link
+            href="/journal?mode=chat"
+            className="mt-4 inline-flex items-center gap-1.5 text-[11px] text-white/45 transition-colors hover:text-white/80"
+          >
+            <MessageCircle className="w-3 h-3" />
+            Rather type it out?
+          </Link>
         </div>
       )}
 
