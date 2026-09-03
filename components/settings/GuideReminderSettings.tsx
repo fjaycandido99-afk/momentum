@@ -96,15 +96,41 @@ export function GuideReminderSettings({ values, onChange }: Props) {
         const time = values[row.timeKey] as string
 
         return (
+          // Two lines, not one.
+          //
+          // The single-row version squeezed icon + label + time + switch
+          // into ~350px and truncated everything: "Morning Pri…",
+          // "Recharge, affir…". Worse, the time box was too narrow to show
+          // the AM/PM the browser appends, so a 13:00 reminder rendered as
+          // a bare "01:00" — a user reading that reasonably concludes
+          // their midday nudge fires at one in the morning.
           <div
             key={row.key}
-            className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2.5"
+            className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-3"
           >
-            <Icon className="h-4 w-4 shrink-0 text-white/60" />
+            <div className="flex items-center gap-3">
+              <Icon className="h-4 w-4 shrink-0 text-white/60" />
 
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-white">{row.label}</p>
-              <p className="truncate text-[11px] text-white/50">{row.hint}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-white">{row.label}</p>
+                <p className="text-[11px] leading-snug text-white/50">{row.hint}</p>
+              </div>
+
+              <button
+                onClick={() => onChange({ [row.enabledKey]: !enabled } as Partial<GuideReminderValues>)}
+                role="switch"
+                aria-checked={enabled}
+                aria-label={`${row.label} reminder`}
+                className={`h-6 w-11 shrink-0 rounded-full transition-all press-scale focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+                  enabled ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.25)]' : 'bg-white/10'
+                }`}
+              >
+                <div
+                  className={`h-4 w-4 rounded-full bg-white shadow-lg transition-transform ${
+                    enabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
 
             <input
@@ -114,24 +140,9 @@ export function GuideReminderSettings({ values, onChange }: Props) {
               onChange={e => onChange({ [row.timeKey]: e.target.value } as Partial<GuideReminderValues>)}
               placeholder={row.placeholder}
               aria-label={`${row.label} reminder time`}
-              className="w-[92px] shrink-0 rounded-lg border border-white/15 bg-white/[0.06] px-2 py-1.5 text-sm text-white disabled:opacity-35 focus:border-white/40 focus:outline-none"
+              style={{ colorScheme: 'dark' }}
+              className="mt-2.5 ml-7 w-[calc(100%-1.75rem)] rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2 text-sm text-white disabled:opacity-35 focus:border-white/40 focus:outline-none"
             />
-
-            <button
-              onClick={() => onChange({ [row.enabledKey]: !enabled } as Partial<GuideReminderValues>)}
-              role="switch"
-              aria-checked={enabled}
-              aria-label={`${row.label} reminder`}
-              className={`h-6 w-11 shrink-0 rounded-full transition-all press-scale focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
-                enabled ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.25)]' : 'bg-white/10'
-              }`}
-            >
-              <div
-                className={`h-4 w-4 rounded-full bg-white shadow-lg transition-transform ${
-                  enabled ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
           </div>
         )
       })}

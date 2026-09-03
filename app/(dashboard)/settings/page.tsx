@@ -374,7 +374,7 @@ function SettingsContent() {
   return (
     <div className="min-h-screen text-white pb-[calc(env(safe-area-inset-bottom)+6rem)]">
       {/* Header */}
-      <div className="sticky top-0 z-50 px-6 pt-[max(3rem,env(safe-area-inset-top))] pb-4 mb-4 bg-black">
+      <div className="sticky top-0 z-50 px-6 safe-area-pt pb-4 mb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
