@@ -7,17 +7,20 @@ let locks = 0
 /**
  * Freezes whatever is behind a fullscreen overlay.
  *
- * Two things make this more than `body { overflow: hidden }`:
+ * Most screens use app-shell scrolling: the document does NOT scroll, an
+ * inner container marked `data-app-shell` does. There, the lock is purely a
+ * class — `modal-open` on <html>, which globals.css turns into
+ * `overflow: hidden` on the container.
  *
- * 1. Most screens now use app-shell scrolling — the document does NOT scroll,
- *    an inner container marked `data-app-shell` does. The body technique below
- *    is a no-op on those screens (scrollY is permanently 0), which is how the
- *    Daily Spark popup ended up with a live, scrollable Home behind it. The
- *    `modal-open` class covers the container; see globals.css. The body half
- *    is kept for the screens that still scroll the document.
- * 2. Overlays stack — a spark over a player over a sheet. Unbalanced
- *    add/remove would let the first one to close unlock everything, so locks
- *    are counted and only the last release unlocks.
+ * The <body> half below is ONLY for screens that still scroll the document,
+ * and must not run otherwise. `position: fixed` on <body> makes WKWebView
+ * re-resolve the page box against the safe area and shove everything down by
+ * the inset — that is what dropped Home's header ~59px the moment the Daily
+ * Spark popup appeared, and left it there after dismiss. On an app-shell
+ * screen it also freezes nothing: scrollY is permanently 0.
+ *
+ * Overlays stack (a spark over a player), so locks are counted and only the
+ * last release unlocks.
  *
  * Pass `active` for an overlay that stays mounted while hidden; omit it when
  * the component itself is mounted conditionally.
@@ -26,28 +29,36 @@ export function useBodyScrollLock(active: boolean = true) {
   useEffect(() => {
     if (!active) return
 
-    const scrollY = window.scrollY
-    const prev = {
-      overflow: document.body.style.overflow,
-      position: document.body.style.position,
-      width: document.body.style.width,
-      top: document.body.style.top,
-    }
-    document.body.style.overflow = 'hidden'
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
-    document.body.style.top = `-${scrollY}px`
-
     locks += 1
     document.documentElement.classList.add('modal-open')
 
-    return () => {
-      document.body.style.overflow = prev.overflow
-      document.body.style.position = prev.position
-      document.body.style.width = prev.width
-      document.body.style.top = prev.top
-      window.scrollTo(0, scrollY)
+    const documentScrolls = !document.querySelector('[data-app-shell]')
+    let restoreBody: (() => void) | undefined
 
+    if (documentScrolls) {
+      const scrollY = window.scrollY
+      const prev = {
+        overflow: document.body.style.overflow,
+        position: document.body.style.position,
+        width: document.body.style.width,
+        top: document.body.style.top,
+      }
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.top = `-${scrollY}px`
+
+      restoreBody = () => {
+        document.body.style.overflow = prev.overflow
+        document.body.style.position = prev.position
+        document.body.style.width = prev.width
+        document.body.style.top = prev.top
+        window.scrollTo(0, scrollY)
+      }
+    }
+
+    return () => {
+      restoreBody?.()
       locks = Math.max(0, locks - 1)
       if (locks === 0) document.documentElement.classList.remove('modal-open')
     }
