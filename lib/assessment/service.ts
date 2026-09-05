@@ -26,6 +26,8 @@ export interface AssessmentState {
   read: Read
   /** Item ids still inside their re-ask cooldown. */
   onCooldown: Set<string>
+  /** Item ids ordered by least-recently-answered, for when all are cooling. */
+  staleFirst: string[]
   /** Whether this user has already answered an item today, in their own day. */
   answeredToday: boolean
 }
@@ -48,19 +50,32 @@ export async function loadState(userId: string, timezone: string | null): Promis
     rows.filter(r => r.created_at.getTime() >= cooldownStart).map(r => r.item_id),
   )
 
+  // Rows arrive newest-first, so the FIRST time an item appears is its most
+  // recent answer. Reversing that order gives least-recently-answered first,
+  // which is the order to re-ask in once everything is cooling down.
+  const mostRecent = new Map<string, number>()
+  for (const r of rows) {
+    if (!mostRecent.has(r.item_id)) mostRecent.set(r.item_id, r.created_at.getTime())
+  }
+  const staleFirst = [...mostRecent.entries()]
+    .sort((a, b) => a[1] - b[1])
+    .map(([id]) => id)
+
   const today = localDay(timezone)
   const answeredToday = rows.some(r => r.local_day === today)
 
-  return { read: computeRead(answers), onCooldown, answeredToday }
+  return { read: computeRead(answers), onCooldown, staleFirst, answeredToday }
 }
 
 /**
- * The next item to put in front of this user, or null if there isn't one —
- * already answered today, or the whole bank is inside its cooldown.
+ * The next item to put in front of this user, or null if they have already
+ * answered today. This is the single guard that stops the hero card and the
+ * Spark popup from both asking on the same day — each stands the other down
+ * by writing the day's row.
  */
 export function nextItemFor(state: AssessmentState): AssessmentItem | null {
   if (state.answeredToday) return null
-  return pickNextItem(state.onCooldown, state.read.coverage)
+  return pickNextItem(state.onCooldown, state.read.coverage, state.staleFirst)
 }
 
 /**

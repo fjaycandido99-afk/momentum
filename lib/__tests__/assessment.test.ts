@@ -8,7 +8,7 @@ import {
   type ScoredAnswer,
   type AxisId,
 } from '@/lib/assessment/axes'
-import { ASSESSMENT_ITEMS, ITEMS_BY_ID, pickNextItem, SCALE } from '@/lib/assessment/items'
+import { ASSESSMENT_ITEMS, ITEMS_BY_ID, pickNextItem, SCALE, RE_ASK_AFTER_DAYS } from '@/lib/assessment/items'
 import { MINDSET_IDS } from '@/lib/mindset/types'
 
 const empty: Record<AxisId, number> = { agency: 0, discipline: 0, inquiry: 0, faith: 0 }
@@ -130,7 +130,7 @@ describe('picking the next item', () => {
     // Everything known except faith — the next item should be a faith item.
     const coverage: Record<AxisId, number> = { agency: 4, discipline: 4, inquiry: 4, faith: 0 }
     for (let i = 0; i < 20; i++) {
-      const item = pickNextItem(new Set(), coverage, () => i / 20)
+      const item = pickNextItem(new Set(), coverage, [], () => i / 20)
       expect(item?.axis).toBe('faith')
     }
   })
@@ -138,13 +138,41 @@ describe('picking the next item', () => {
   it('never repeats an item still inside its cooldown', () => {
     const answered = new Set(ASSESSMENT_ITEMS.filter(i => i.axis === 'agency').map(i => i.id))
     for (let i = 0; i < 20; i++) {
-      const item = pickNextItem(answered, empty, () => i / 20)
+      const item = pickNextItem(answered, empty, [], () => i / 20)
       expect(answered.has(item!.id)).toBe(false)
     }
   })
 
-  it('returns null once the whole bank is inside cooldown', () => {
+  it('keeps going once the whole bank is cooling, re-asking the oldest first', () => {
+    // The original bug: 40 items against a 120-day cooldown meant a daily
+    // answerer emptied the bank in ~6 weeks and then got NOTHING for ~11
+    // weeks. It never errored, it just silently stopped appearing.
     const all = new Set(ASSESSMENT_ITEMS.map(i => i.id))
-    expect(pickNextItem(all, empty)).toBeNull()
+    const staleFirst = ['fa07', 'in03', 'ag01']
+    const item = pickNextItem(all, empty, staleFirst)
+    expect(item).not.toBeNull()
+    expect(item!.id).toBe('fa07')
+  })
+
+  it('still returns something when everything is cooling and nothing is stale-ranked', () => {
+    const all = new Set(ASSESSMENT_ITEMS.map(i => i.id))
+    expect(pickNextItem(all, empty, [])).not.toBeNull()
+  })
+
+  it('ignores stale ids that are no longer in the bank', () => {
+    const all = new Set(ASSESSMENT_ITEMS.map(i => i.id))
+    // An item retired since the user answered it must not strand the picker.
+    const item = pickNextItem(all, empty, ['retired-item-id', 'di05'])
+    expect(item!.id).toBe('di05')
+  })
+
+  it('keeps the cooldown within a sane multiple of the bank size', () => {
+    // A daily answerer empties the bank in ASSESSMENT_ITEMS.length days, so
+    // the fallback carries the gap between that and the cooldown. It should
+    // be a short gap, not a season: at 120 days against 40 items the fallback
+    // was doing ALL the work for eleven weeks, which is how the feature
+    // silently disappeared. Grow the bank and this can grow with it.
+    expect(RE_ASK_AFTER_DAYS).toBeGreaterThan(ASSESSMENT_ITEMS.length)
+    expect(RE_ASK_AFTER_DAYS).toBeLessThanOrEqual(ASSESSMENT_ITEMS.length * 2)
   })
 })

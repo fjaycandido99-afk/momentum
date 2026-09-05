@@ -19,6 +19,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { ITEMS_BY_ID } from '@/lib/assessment/items'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,7 @@ export async function GET() {
 
     // Everything is scoped to user.id. No route param decides whose data
     // this is, so there is no way to ask for somebody else's.
-    const [account, preferences, guides, favorites, goals, routines, playlists] = await Promise.all([
+    const [account, preferences, guides, favorites, goals, routines, playlists, assessment] = await Promise.all([
       prisma.user.findUnique({
         where: { id: user.id },
         select: { id: true, email: true, name: true, created_at: true },
@@ -71,6 +72,15 @@ export async function GET() {
       prisma.goal.findMany({ where: { user_id: user.id } }),
       prisma.routine.findMany({ where: { user_id: user.id }, include: { steps: true } }),
       prisma.playlist.findMany({ where: { user_id: user.id }, include: { items: true } }),
+      // Daily Read. This is a record of how someone thinks, scored over time —
+      // exactly the kind of personal data an export exists for, and it was
+      // missed when the table was added because this list is enumerated by
+      // hand. Anything new goes here too.
+      prisma.assessmentAnswer.findMany({
+        where: { user_id: user.id },
+        orderBy: { created_at: 'asc' },
+        select: { item_id: true, axis: true, direction: true, score: true, local_day: true, created_at: true },
+      }),
     ])
 
     const payload = {
@@ -83,6 +93,12 @@ export async function GET() {
       goals,
       routines,
       playlists,
+      daily_read: assessment.map(a => ({
+        ...a,
+        // The stored row is just an id and a number; without the wording it
+        // is not a meaningful export of what the person actually answered.
+        statement: ITEMS_BY_ID.get(a.item_id)?.text ?? null,
+      })),
     }
 
     const filename = `voxu-export-${new Date().toISOString().slice(0, 10)}.json`

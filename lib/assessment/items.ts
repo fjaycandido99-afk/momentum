@@ -88,28 +88,51 @@ export const SCALE = [
 ] as const
 
 /**
- * How long before an already-answered item can come round again.
+ * How long before an already-answered item is preferably not re-asked.
  *
  * Re-asking is deliberate: drift is the product. A lean that can move is the
  * thing worth watching, and it is what gives the premium history view
  * anything to show. This is why answers are NOT uniquely constrained per
  * (user, item) — that constraint would have made drift unmeasurable.
+ *
+ * A PREFERENCE, not a gate. It was originally 120 days against a bank of 40
+ * items, which meant a daily answerer emptied the bank in about six weeks and
+ * then hit roughly eleven weeks where every item was still cooling down and
+ * the feature silently stopped appearing. Nothing errored — it just went
+ * away. pickNextItem now falls back to the least-recently-answered item, so
+ * the bank cycles at its own size (~40 days between repeats) instead of
+ * going dark, and this number only governs the first pass.
  */
-export const RE_ASK_AFTER_DAYS = 120
+export const RE_ASK_AFTER_DAYS = 60
 
 /**
  * Pick the next item for a user.
  *
  * Prefers whichever axis we know least about, so a read becomes possible as
  * early as possible rather than after forty answers about willpower.
+ *
+ * `staleFirst` is item ids ordered oldest-answered first, used only once
+ * every item is inside its cooldown. Returns null only if the bank is empty.
  */
 export function pickNextItem(
   recentlyAnswered: Set<string>,
   coverage: Record<AxisId, number>,
+  staleFirst: string[] = [],
   random: () => number = Math.random,
 ): AssessmentItem | null {
   const available = ASSESSMENT_ITEMS.filter(i => !recentlyAnswered.has(i.id))
-  if (available.length === 0) return null
+
+  if (available.length === 0) {
+    // Everything is cooling down. Re-ask the one answered longest ago rather
+    // than showing nothing — see RE_ASK_AFTER_DAYS.
+    for (const id of staleFirst) {
+      const item = ITEMS_BY_ID.get(id)
+      if (item) return item
+    }
+    return ASSESSMENT_ITEMS.length > 0
+      ? ASSESSMENT_ITEMS[Math.floor(random() * ASSESSMENT_ITEMS.length)]
+      : null
+  }
 
   const counts = Object.values(coverage) as number[]
   const thinnest = counts.length > 0 ? Math.min(...counts) : 0
