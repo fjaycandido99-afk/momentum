@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Compass } from 'lucide-react'
 import type { DailyReadToday } from '@/hooks/useDailyRead'
 
@@ -19,11 +20,9 @@ import type { DailyReadToday } from '@/hooks/useDailyRead'
 export function DailyReadCard({
   data,
   onAnswered,
-  onContinue,
 }: {
   data: DailyReadToday
   onAnswered: (answered: number) => void
-  onContinue: () => void
 }) {
   const [rating, setRating] = useState<number | null>(null)
   const [count, setCount] = useState(data.answered)
@@ -92,12 +91,12 @@ export function DailyReadCard({
               interrupting people — it shouldn't stop someone who came
               looking. */}
           {remaining > 0 && (
-            <button
-              onClick={onContinue}
-              className="mt-1 w-full py-2 rounded-lg bg-white/[0.06] border border-white/[0.12] text-xs text-white/85 font-medium hover:bg-white/[0.12] hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            <Link
+              href="/daily-read"
+              className="mt-1 w-full block text-center py-2 rounded-lg bg-white/[0.06] border border-white/[0.12] text-xs text-white/85 font-medium hover:bg-white/[0.12] hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               Answer the rest now
-            </button>
+            </Link>
           )}
         </div>
       </div>
@@ -135,12 +134,12 @@ export function DailyReadCard({
         </div>
         <div className="flex items-center justify-between gap-3">
           {progress}
-          <button
-            onClick={onContinue}
+          <Link
+            href="/daily-read"
             className="shrink-0 text-[11px] text-white/60 hover:text-white underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded"
           >
             Do the rest
-          </button>
+          </Link>
         </div>
       </div>
     </div>

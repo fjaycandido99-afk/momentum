@@ -83,6 +83,7 @@ import { Globe } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { restorePurchases } from '@/lib/revenuecat'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
+import { DailyReadHint } from '@/components/settings/DailyReadHint'
 
 function SettingsContent() {
   const router = useRouter()
@@ -683,6 +684,10 @@ function SettingsContent() {
                 </div>
               </div>
             )}
+            {/* The read is only actionable next to the control that changes
+                your path. Nothing switches automatically — a run of daily
+                questions is not grounds for overriding someone's choice. */}
+            <DailyReadHint />
             <Link
               href="/mindset-selection"
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/15 text-white/90 text-sm hover:bg-white/10 transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"

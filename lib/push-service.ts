@@ -20,6 +20,8 @@ import { getCoachName, MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { getJourney } from '@/lib/journey'
 import { isPremiumUser } from './subscription-check'
 import { isLocalHour } from './timezone-utils'
+import { loadState } from '@/lib/assessment/service'
+import { MIN_ANSWERS_FOR_READ } from '@/lib/assessment/axes'
 
 // Notification types that can be sent
 import { shouldSendNotification, logNotificationSent } from './notification-gate'
@@ -43,6 +45,7 @@ export type NotificationType =
   | 'coach_accountability'
   | 'win_back'
   | 'feature_discovery'
+  | 'daily_read'
   | 'custom'
 
 // Notification payload structure
@@ -191,6 +194,17 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'open', title: 'View' },
     ],
   },
+  daily_read: {
+    title: 'Daily Read',
+    body: 'One question, one tap — it builds a picture of how you tick.',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
+    tag: 'daily-read',
+    actions: [
+      { action: 'open', title: 'Answer' },
+      { action: 'dismiss', title: 'Later' },
+    ],
+  },
   motivational_nudge: {
     title: 'Midday Check-In',
     body: 'A quick moment of encouragement',
@@ -294,6 +308,7 @@ const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
   insight: '/journal?review=1',
   daily_quote: '/',
   daily_affirmation: '/daily-guide?session=morning_prime',
+  daily_read: '/',
   motivational_nudge: '/',
   daily_motivation: '/',
   coach_checkin: '/coach',
@@ -333,6 +348,7 @@ export async function sendPushToUser(
     daily_quote: 'daily_quote_alerts',
     daily_affirmation: 'daily_affirmation_alerts',
     motivational_nudge: 'motivational_nudge_alerts',
+    daily_read: 'motivational_nudge_alerts',
     daily_motivation: 'daily_motivation_alerts',
 coach_checkin: 'coach_checkin_alerts',
     coach_accountability: 'coach_accountability_alerts',
@@ -1654,4 +1670,68 @@ export async function sendMiddayResets(): Promise<void> {
 
 export async function sendWindDowns(): Promise<void> {
   await sendSegmentReminder('wind_down', 19)
+}
+
+/**
+ * Daily Read nudge.
+ *
+ * Deliberately narrow. There are already a dozen notification types competing
+ * for two opportunistic slots a day, and that competition is exactly what
+ * starved the user's scheduled reminders for three weeks. So this one:
+ *
+ *   - only goes to people whose profile is still INCOMPLETE, and stops for
+ *     good once they have a read — mirroring the hero card, which removes
+ *     itself at the same moment;
+ *   - skips anyone who already answered today, from either surface;
+ *   - sits in the opportunistic lane, so it can never outrank a reminder
+ *     someone actually set.
+ *
+ * It exists for the fortnight where the feature is asking for input and
+ * cannot yet give anything back, and then it goes away.
+ */
+export async function sendDailyReadNudges(): Promise<void> {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { motivational_nudge_alerts: true },
+    select: { user_id: true },
+    distinct: ['user_id'],
+  })
+
+  const eligibleUserIds = await filterUsersByLocalHour(
+    subscriptions.map(s => s.user_id),
+    19,
+  )
+  if (eligibleUserIds.length === 0) return
+
+  let totalSent = 0
+  let totalFailed = 0
+  let skipped = 0
+
+  for (const user_id of eligibleUserIds) {
+    try {
+      const prefs = await prisma.userPreferences.findUnique({
+        where: { user_id },
+        select: { timezone: true },
+      })
+      const state = await loadState(user_id, prefs?.timezone ?? null)
+
+      // Has a read already, or has answered today — nothing to nudge about.
+      if (state.read.lean !== null || state.answeredToday) {
+        skipped++
+        continue
+      }
+
+      const remaining = Math.max(0, MIN_ANSWERS_FOR_READ - state.read.answered)
+      const body = state.read.answered === 0
+        ? 'One question, one tap — it starts building a picture of how you tick.'
+        : `${remaining} more answer${remaining === 1 ? '' : 's'} and your read can start telling you something.`
+
+      const result = await sendPushToUser(user_id, 'daily_read', { body })
+      totalSent += result.sent
+      totalFailed += result.failed
+    } catch {
+      skipped++
+    }
+  }
+
+  console.log(`daily_read: ${totalSent} sent, ${totalFailed} failed, ${skipped} skipped (${eligibleUserIds.length} in window)`)
 }

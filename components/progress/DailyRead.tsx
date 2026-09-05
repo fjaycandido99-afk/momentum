@@ -67,8 +67,8 @@ export function DailyRead() {
   return (
     <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
       <div className="flex items-center gap-2.5 mb-4">
-        <div className="p-1.5 rounded-lg bg-violet-500/20">
-          <Compass className="w-4 h-4 text-violet-300" />
+        <div className="p-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12]">
+          <Compass className="w-4 h-4 text-white" />
         </div>
         <div>
           <h3 className="text-sm font-semibold text-white">Daily Read</h3>
@@ -92,8 +92,8 @@ export function DailyRead() {
             )}
           </p>
           {diverges && (
-            <div className="mb-4 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <p className="text-xs text-amber-200/90">
+            <div className="mb-4 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.15]">
+              <p className="text-xs text-white/80">
                 Your answers lean {data.leanName}, but your guide is set to something else.
                 Neither is wrong — worth a look when you feel like it.
               </p>
@@ -128,7 +128,7 @@ export function DailyRead() {
                 <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20" />
                 {axis.answers > 0 && (
                   <div
-                    className="absolute top-0 bottom-0 bg-violet-400/70 rounded-full transition-all"
+                    className="absolute top-0 bottom-0 bg-white/70 rounded-full transition-all"
                     style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
                   />
                 )}

@@ -62,6 +62,10 @@ const LANE: Record<NotificationType, Lane> = {
   motivational_nudge: 'opportunistic',
   daily_motivation: 'opportunistic',
   feature_discovery: 'opportunistic',
+  // Nudging someone to answer a question we chose to ask. It stops sending
+  // itself once their profile is complete, but while it runs it must queue
+  // behind anything they actually scheduled.
+  daily_read: 'opportunistic',
   custom: 'opportunistic',
 }
 
