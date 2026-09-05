@@ -46,6 +46,8 @@ import { AmbientMixer } from './AmbientMixer'
 import { LongPressPreview } from './LongPressPreview'
 import { WellnessWidget } from './WellnessWidget'
 import { DailyFeatureTip } from './DailyFeatureTip'
+import { DailyReadCard } from './DailyReadCard'
+import { useDailyRead } from '@/hooks/useDailyRead'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
 import { YesterdayFollowUp } from './YesterdayFollowUp'
@@ -90,6 +92,7 @@ export function ImmersiveHome() {
   const audioContext = useAudioOptional()
   const mindsetCtx = useMindsetOptional()
   const { openReset } = useReset()
+  const dailyRead = useDailyRead()
   const hasRestoredRef = useRef(false)
   const isRestorePendingRef = useRef(!!audioContext?.lastPlayed)
 
@@ -1312,6 +1315,22 @@ export function ImmersiveHome() {
           <WisdomSection key="wisdom-hero" embedded />
         )
 
+
+        // Daily Read — only while it has something to do. The popup alone
+        // takes ~20 days to reach a first read (40% of opens, once a day),
+        // and this closes that gap. The server decides `show`, and turns it
+        // off the moment there's a lean, at which point Progress owns it.
+        // Deliberately after the guide: the guide is the value spine and a
+        // personality question doesn't outrank it.
+        if (dailyRead.data?.show) {
+          slides.push(
+            <DailyReadCard
+              key="daily-read"
+              data={dailyRead.data}
+              onAnswered={dailyRead.recordLocally}
+            />
+          )
+        }
 
         // Slide 3: Daily Feature Tip
         slides.push(<DailyFeatureTip key="feature-tip" />)
