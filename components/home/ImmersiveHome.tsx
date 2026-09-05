@@ -47,6 +47,7 @@ import { LongPressPreview } from './LongPressPreview'
 import { WellnessWidget } from './WellnessWidget'
 import { DailyFeatureTip } from './DailyFeatureTip'
 import { DailyReadCard } from './DailyReadCard'
+import { DailyReadModal } from './DailyReadModal'
 import { useDailyRead } from '@/hooks/useDailyRead'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
@@ -93,6 +94,7 @@ export function ImmersiveHome() {
   const mindsetCtx = useMindsetOptional()
   const { openReset } = useReset()
   const dailyRead = useDailyRead()
+  const [showDailyRead, setShowDailyRead] = useState(false)
   const hasRestoredRef = useRef(false)
   const isRestorePendingRef = useRef(!!audioContext?.lastPlayed)
 
@@ -1041,6 +1043,13 @@ export function ImmersiveHome() {
         shrink-on-scroll header, the parallax and the reveals have never
         once fired. */}
     <FirstMomentOverlay />
+
+    {showDailyRead && (
+      <DailyReadModal
+        onClose={() => setShowDailyRead(false)}
+        onDone={dailyRead.recordLocally}
+      />
+    )}
     <div
       ref={scrollRef}
       className={`relative h-full text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer || showGuidedPlayer ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
@@ -1328,6 +1337,7 @@ export function ImmersiveHome() {
               key="daily-read"
               data={dailyRead.data}
               onAnswered={dailyRead.recordLocally}
+              onContinue={() => setShowDailyRead(true)}
             />
           )
         }

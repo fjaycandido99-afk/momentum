@@ -142,3 +142,34 @@ export function pickNextItem(
 
   return pool[Math.floor(random() * pool.length)]
 }
+
+/**
+ * A run of items for someone who wants to get through several in one sitting.
+ *
+ * Not just `pickNextItem` called N times: coverage is advanced as it goes, so
+ * the run spreads across the four axes instead of returning whichever axis was
+ * thinnest at the start over and over. That matters because a first read needs
+ * every axis heard from — a run of eight all about willpower would leave the
+ * user exactly where they started.
+ */
+export function pickSequence(
+  count: number,
+  recentlyAnswered: Set<string>,
+  coverage: Record<AxisId, number>,
+  staleFirst: string[] = [],
+  random: () => number = Math.random,
+): AssessmentItem[] {
+  const taken = new Set(recentlyAnswered)
+  const running = { ...coverage }
+  const out: AssessmentItem[] = []
+
+  for (let i = 0; i < count; i++) {
+    const item = pickNextItem(taken, running, staleFirst, random)
+    if (!item || taken.has(item.id)) break
+    out.push(item)
+    taken.add(item.id)
+    running[item.axis] += 1
+  }
+
+  return out
+}

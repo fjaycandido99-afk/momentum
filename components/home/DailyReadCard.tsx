@@ -19,9 +19,11 @@ import type { DailyReadToday } from '@/hooks/useDailyRead'
 export function DailyReadCard({
   data,
   onAnswered,
+  onContinue,
 }: {
   data: DailyReadToday
   onAnswered: (answered: number) => void
+  onContinue: () => void
 }) {
   const [rating, setRating] = useState<number | null>(null)
   const [count, setCount] = useState(data.answered)
@@ -85,6 +87,18 @@ export function DailyReadCard({
             />
           </div>
           {progress}
+          {/* Without this the card is a dead end: "answered for today" and
+              nothing to do about it. The daily rule exists to stop US
+              interrupting people — it shouldn't stop someone who came
+              looking. */}
+          {remaining > 0 && (
+            <button
+              onClick={onContinue}
+              className="mt-1 w-full py-2 rounded-lg bg-white/[0.06] border border-white/[0.12] text-xs text-white/85 font-medium hover:bg-white/[0.12] hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            >
+              Answer the rest now
+            </button>
+          )}
         </div>
       </div>
     )
@@ -119,7 +133,15 @@ export function DailyReadCard({
             </button>
           ))}
         </div>
-        {progress}
+        <div className="flex items-center justify-between gap-3">
+          {progress}
+          <button
+            onClick={onContinue}
+            className="shrink-0 text-[11px] text-white/60 hover:text-white underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded"
+          >
+            Do the rest
+          </button>
+        </div>
       </div>
     </div>
   )

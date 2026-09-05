@@ -19,13 +19,13 @@ type Row = {
 
 let rows: Row[] = []
 const findMany = vi.fn(async () => rows)
-const create = vi.fn(async () => ({}))
+const create = vi.fn(async (_args: { data: Record<string, unknown> }) => ({}))
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     assessmentAnswer: {
       findMany: (...a: unknown[]) => findMany(...(a as [])),
-      create: (...a: unknown[]) => create(...(a as [])),
+      create: (args: { data: Record<string, unknown> }) => create(args),
     },
   },
 }))
@@ -145,7 +145,7 @@ describe('recordAnswer', () => {
   it('takes axis and direction from the bank, never from the caller', async () => {
     const ok = await recordAnswer('u1', 'Pacific/Honolulu', 'fa02', 5)
     expect(ok).toBe(true)
-    const arg = create.mock.calls[0][0] as { data: Record<string, unknown> }
+    const arg = create.mock.calls[0][0]
     // fa02 is a faith item loading -1; a client cannot claim otherwise.
     expect(arg.data.axis).toBe('faith')
     expect(arg.data.direction).toBe(-1)

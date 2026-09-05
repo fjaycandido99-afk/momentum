@@ -8,7 +8,7 @@ import {
   type ScoredAnswer,
   type AxisId,
 } from '@/lib/assessment/axes'
-import { ASSESSMENT_ITEMS, ITEMS_BY_ID, pickNextItem, SCALE, RE_ASK_AFTER_DAYS } from '@/lib/assessment/items'
+import { ASSESSMENT_ITEMS, ITEMS_BY_ID, pickNextItem, pickSequence, SCALE, RE_ASK_AFTER_DAYS } from '@/lib/assessment/items'
 import { MINDSET_IDS } from '@/lib/mindset/types'
 
 const empty: Record<AxisId, number> = { agency: 0, discipline: 0, inquiry: 0, faith: 0 }
@@ -164,6 +164,29 @@ describe('picking the next item', () => {
     // An item retired since the user answered it must not strand the picker.
     const item = pickNextItem(all, empty, ['retired-item-id', 'di05'])
     expect(item!.id).toBe('di05')
+  })
+
+  it('spreads a run across the axes instead of hammering the thinnest one', () => {
+    // The naive version — pickNextItem called N times — would return the
+    // same starving axis every time, because coverage never advances. A run
+    // of eight all about willpower leaves the user exactly where they began:
+    // still no read, because a read needs every axis heard from.
+    const seq = pickSequence(8, new Set(), empty)
+    expect(seq).toHaveLength(8)
+    const axes = new Set(seq.map(i => i.axis))
+    expect(axes.size).toBe(4)
+  })
+
+  it('never repeats an item within a single run', () => {
+    const seq = pickSequence(12, new Set(), empty)
+    expect(new Set(seq.map(i => i.id)).size).toBe(seq.length)
+  })
+
+  it('stops early rather than padding when the bank runs short', () => {
+    const nearlyAll = new Set(ASSESSMENT_ITEMS.slice(0, 38).map(i => i.id))
+    const seq = pickSequence(10, nearlyAll, empty)
+    expect(seq.length).toBeLessThanOrEqual(2)
+    expect(seq.every(i => !nearlyAll.has(i.id))).toBe(true)
   })
 
   it('keeps the cooldown within a sane multiple of the bank size', () => {
