@@ -82,6 +82,7 @@ import { LanguageSelector } from '@/components/settings/LanguageSelector'
 import { Globe } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { restorePurchases } from '@/lib/revenuecat'
+import { TRIAL_DAYS } from '@/lib/subscription-constants'
 
 function SettingsContent() {
   const router = useRouter()
@@ -1009,7 +1010,7 @@ function SettingsContent() {
                   Upgrade to Premium - $6.99/mo
                 </button>
                 <p className="text-center text-white/50 text-xs">
-                  7-day free trial · Cancel anytime
+                  {TRIAL_DAYS}-day free trial · Cancel anytime
                 </p>
                 <Link
                   href="/pricing"

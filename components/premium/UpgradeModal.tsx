@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { X, Check, Crown, Sparkles, Zap, Clock, Music, Book, Download, Loader2 } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { purchaseProduct, REVENUECAT_PRODUCTS } from '@/lib/revenuecat'
+import { TRIAL_DAYS } from '@/lib/subscription-constants'
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -194,7 +195,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             ) : (
               <>
                 <Sparkles className="w-5 h-5" />
-                <span>Start 7-Day Free Trial</span>
+                <span>Start {TRIAL_DAYS}-Day Free Trial</span>
               </>
             )}
           </button>

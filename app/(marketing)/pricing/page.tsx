@@ -17,6 +17,7 @@ import {
   Shield,
   CreditCard,
 } from 'lucide-react'
+import { TRIAL_DAYS } from '@/lib/subscription-constants'
 
 // Pricing constants
 const MONTHLY_PRICE = 6.99
@@ -92,7 +93,7 @@ const FEATURES = [
 const FAQ_ITEMS = [
   {
     question: 'What happens after my free trial?',
-    answer: 'After your 7-day free trial ends, you\'ll be automatically charged based on your selected plan (monthly or yearly). You can cancel anytime before the trial ends to avoid being charged.',
+    answer: `After your ${TRIAL_DAYS}-day free trial ends, you'll be automatically charged based on your selected plan (monthly or yearly). You can cancel anytime before the trial ends to avoid being charged.`,
   },
   {
     question: 'Can I cancel anytime?',
@@ -155,7 +156,7 @@ export default function PricingPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 mb-6">
             <Crown className="w-4 h-4 text-amber-400" />
-            <span className="text-sm text-amber-400 font-medium">7-day free trial</span>
+            <span className="text-sm text-amber-400 font-medium">{TRIAL_DAYS}-day free trial</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -356,7 +357,7 @@ export default function PricingPage() {
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    <span>Start 7-Day Free Trial</span>
+                    <span>Start {TRIAL_DAYS}-Day Free Trial</span>
                   </>
                 )}
               </button>
@@ -506,7 +507,7 @@ export default function PricingPage() {
             )}
           </button>
           <p className="text-white/50 text-sm mt-3">
-            7-day free trial. Cancel anytime.
+            {TRIAL_DAYS}-day free trial. Cancel anytime.
           </p>
         </div>
       </section>

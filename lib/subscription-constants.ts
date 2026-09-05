@@ -122,8 +122,11 @@ export const PREMIUM_FEATURES = {
   ai_meditation_enabled: true,
 }
 
-// Trial duration
-export const TRIAL_DAYS = 7
+// Trial duration.
+// NOTE: this governs the Stripe/web checkout only. Native purchases run
+// through RevenueCat, where the trial is set per-product in App Store
+// Connect — change it there too or web and iOS silently diverge.
+export const TRIAL_DAYS = 14
 
 // Helper to check if user has premium access
 export function hasPremiumAccess(

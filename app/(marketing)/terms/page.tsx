@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { TRIAL_DAYS } from '@/lib/subscription-constants'
 
 export const metadata = {
   title: 'Terms of Service | Voxu',
@@ -69,7 +70,7 @@ export default function TermsOfServicePage() {
             Free Trial
           </h3>
           <p className="text-sm text-white/70 leading-relaxed mb-4">
-            New premium subscribers may be eligible for a 7-day free trial. If you do not cancel before the trial ends, you will be automatically charged for the selected plan.
+            New premium subscribers may be eligible for a {TRIAL_DAYS}-day free trial. If you do not cancel before the trial ends, you will be automatically charged for the selected plan.
           </p>
 
           <h3 className="text-base font-medium text-white mb-2">
