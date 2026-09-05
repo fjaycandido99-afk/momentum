@@ -31,6 +31,9 @@ export function DailySpark() {
   const [saveError, setSaveError] = useState(false)
   const [answer, setAnswer] = useState('')
   const [answerFocused, setAnswerFocused] = useState(false)
+  // Daily Read: the score tapped, and the answered-count we show back.
+  const [rating, setRating] = useState<number | null>(null)
+  const [ratingCount, setRatingCount] = useState<number | null>(null)
 
   const recurringTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -169,6 +172,34 @@ export function DailySpark() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * Daily Read: one tap answers the item and closes the popup.
+   *
+   * The score is shown as chosen straight away and the request runs behind it
+   * — the whole point of this type is that it costs a second, so it must not
+   * make anyone wait on a round trip. A failed write loses one item out of
+   * forty, which is not worth an error state that interrupts the morning.
+   */
+  const handleRate = async (score: number) => {
+    if (!spark?.itemId || rating !== null) return
+    setRating(score)
+    setRatingCount((spark.answered ?? 0) + 1)
+    setTimeout(() => dismiss(), 1100)
+    try {
+      const res = await fetch('/api/assessment/answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: spark.itemId, score }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (typeof data?.read?.answered === 'number') setRatingCount(data.read.answered)
+      }
+    } catch {
+      // Silent by design — see above.
+    }
+  }
+
   const handleSubmitAnswer = async () => {
     if (!spark || !answer.trim() || saving || saved) return
     setSaving(true)
@@ -238,7 +269,7 @@ export function DailySpark() {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={spark.type === 'quote' ? 'Daily Quote' : spark.type === 'affirmation' ? 'Daily Affirmation' : 'Daily Spark'}
+      aria-label={spark.type === 'quote' ? 'Daily Quote' : spark.type === 'affirmation' ? 'Daily Affirmation' : spark.type === 'assessment' ? 'Daily Read' : 'Daily Spark'}
       className={`fixed inset-0 z-[60] flex items-center justify-center px-6 ${
         dismissing ? 'animate-spark-out' : animating ? 'animate-spark-in' : 'opacity-0 scale-95'
       }`}
@@ -267,10 +298,13 @@ export function DailySpark() {
                 <Sparkles className="w-4 h-4 text-violet-300 spark-icon-glow" />
               </div>
               <span className="text-xs font-semibold text-violet-300/80 uppercase tracking-wider">
-                {spark.type === 'quote' ? 'Daily Quote' : spark.type === 'affirmation' ? 'Daily Affirmation' : 'Daily Spark'}
+                {spark.type === 'quote' ? 'Daily Quote' : spark.type === 'affirmation' ? 'Daily Affirmation' : spark.type === 'assessment' ? 'Daily Read' : 'Daily Spark'}
               </span>
             </div>
             <div className="flex items-center gap-1">
+              {/* Nothing to favourite on an assessment item — it's a question
+                  about you, not a piece of writing worth keeping. */}
+              {spark.type !== 'assessment' && (
               <button
                 onClick={handleSave}
                 disabled={saving || saved}
@@ -284,6 +318,7 @@ export function DailySpark() {
                   }`}
                 />
               </button>
+              )}
               <button
                 onClick={() => dismiss()}
                 aria-label="Dismiss"
@@ -297,15 +332,60 @@ export function DailySpark() {
           {/* Content — stagger 2 */}
           <div className="spark-text-in" style={{ animationDelay: '0.25s' }}>
             <p className="text-[15px] text-white leading-relaxed font-medium">
-              &ldquo;{spark.text}&rdquo;
+              {/* An assessment item is a statement about the reader, not a
+                  quotation — wrapping it in quote marks reads as someone
+                  else's words. */}
+              {spark.type === 'assessment' ? spark.text : <>&ldquo;{spark.text}&rdquo;</>}
             </p>
             {displayAuthor(spark.author) && (
               <p className="text-xs text-amber-300/60 mt-2">&mdash; {displayAuthor(spark.author)}</p>
             )}
           </div>
 
-          {/* Answer input for questions — stagger 3 */}
-          {spark.type === 'question' && !saved ? (
+          {/* Daily Read scale — stagger 3.
+              Five points, not seven: this is one question on a phone, often
+              first thing, and seven targets is precision a half-awake thumb
+              can't deliver. False precision would only pollute the score. */}
+          {spark.type === 'assessment' ? (
+            <div className="mt-5 spark-text-in" style={{ animationDelay: '0.4s' }}>
+              <div className="flex items-stretch gap-1.5" role="radiogroup" aria-label={spark.text}>
+                {(spark.scale ?? []).map(point => {
+                  const chosen = rating === point.score
+                  return (
+                    <button
+                      key={point.score}
+                      role="radio"
+                      aria-checked={chosen}
+                      aria-label={point.label}
+                      disabled={rating !== null}
+                      onClick={() => handleRate(point.score)}
+                      className={`flex-1 min-h-[3.25rem] px-1 py-2 rounded-xl border text-[11px] leading-tight font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                        chosen
+                          ? 'bg-violet-500/40 border-violet-300/50 text-white scale-[1.04]'
+                          : rating !== null
+                            ? 'bg-white/[0.03] border-white/10 text-white/30'
+                            : 'bg-white/5 border-white/15 text-white/70 hover:bg-white/10 hover:text-white active:scale-95'
+                      }`}
+                    >
+                      {point.label}
+                    </button>
+                  )
+                })}
+              </div>
+              {rating !== null ? (
+                <p className="text-xs text-emerald-400/90 mt-3 text-center">
+                  Noted{ratingCount ? ` · ${ratingCount} answered` : ''}
+                </p>
+              ) : (
+                <button
+                  onClick={() => dismiss()}
+                  className="w-full mt-2.5 py-2 rounded-xl text-xs text-white/50 hover:text-white/70 transition-colors"
+                >
+                  Skip
+                </button>
+              )}
+            </div>
+          ) : spark.type === 'question' && !saved ? (
             <div className="mt-4 spark-text-in" style={{ animationDelay: '0.4s' }}>
               <div className="relative">
                 <textarea

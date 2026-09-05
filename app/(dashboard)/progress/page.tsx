@@ -19,6 +19,7 @@ import { MoodInsights } from '@/components/progress/MoodInsights'
 import { WellnessScore } from '@/components/progress/WellnessScore'
 import { MonthlyRetrospective } from '@/components/progress/MonthlyRetrospective'
 import { MindsetEvolution } from '@/components/progress/MindsetEvolution'
+import { DailyRead } from '@/components/progress/DailyRead'
 import { LetterToSelf } from '@/components/progress/LetterToSelf'
 import { GoalTracker } from '@/components/daily-guide/GoalTracker'
 import { JourneyCard } from '@/components/progress/JourneyCard'
@@ -209,6 +210,11 @@ export default function ProgressPage() {
 
           {/* Monthly Retrospective */}
           <MonthlyRetrospective />
+
+          {/* Daily Read — sits directly above the evolution advisor because
+              it is the same subject at two depths: where you're leaning now,
+              then what to do about it. */}
+          <DailyRead />
 
           {/* Mindset Evolution Advisor */}
           <MindsetEvolution />

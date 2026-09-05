@@ -9,6 +9,8 @@ import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 import { getWeightedQuestions } from '@/lib/daily-sparks'
 import { getWeightedQuotePool } from '@/lib/mindset/quotes'
 import { getRandomAffirmation } from '@/lib/mindset/affirmations'
+import { loadState, nextItemFor } from '@/lib/assessment/service'
+import { SCALE } from '@/lib/assessment/items'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,6 +43,43 @@ export async function GET(request: NextRequest) {
         ai_affirmation: true,
       },
     })
+
+    // Daily Read: on roughly three days in seven this popup asks a scored
+    // statement instead of an open question. It REPLACES a spark rather than
+    // adding a second interruption — two popups in a morning is one too many,
+    // and Spark is already the thing people dismiss when they're busy.
+    //
+    // Costs nothing: the item comes from a static bank and scoring is
+    // arithmetic, so this branch never touches an AI provider.
+    if (Math.random() < 0.4) {
+      // FAILS OPEN. This branch is inside the route that renders the whole
+      // popup, so anything that throws here — most obviously the answer table
+      // not existing yet — would take Daily Spark down with it on 40% of
+      // loads. A Daily Read that quietly doesn't appear is a missing feature;
+      // an exception here is a broken morning.
+      try {
+        const prefs = await prisma.userPreferences.findUnique({
+          where: { user_id: user.id },
+          select: { timezone: true },
+        })
+        const state = await loadState(user.id, prefs?.timezone ?? null)
+        const item = nextItemFor(state)
+        if (item) {
+          return NextResponse.json({
+            type: 'assessment',
+            text: item.text,
+            itemId: item.id,
+            scale: SCALE,
+            answered: state.read.answered,
+            ai: false,
+          })
+        }
+        // Already answered today, or the bank is exhausted — fall through to
+        // a normal spark rather than showing nothing.
+      } catch (err) {
+        console.error('[spark] Daily Read unavailable, falling through:', err)
+      }
+    }
 
     const hour = new Date().getHours()
     const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'

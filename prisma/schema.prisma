@@ -57,6 +57,9 @@ model User {
 
   // AI
   aiUsage          AiUsageDaily[]
+
+  // Daily Read
+  assessmentAnswers AssessmentAnswer[]
 }
 
 model Subscription {
@@ -894,4 +897,32 @@ model SystemAlert {
   created_at DateTime @default(now())
 
   @@index([kind, created_at])
+}
+
+// One answered Daily Read item. See lib/assessment/axes.ts for the model.
+//
+// Deliberately NOT unique on (user_id, item_id): items come back around after
+// RE_ASK_AFTER_DAYS because drift is the point — a lean that can move is what
+// the history view exists to show, and a unique constraint would have made
+// that unmeasurable.
+//
+// `axis` and `direction` are denormalised from the item bank so scoring is
+// arithmetic over rows: computing a lean never has to load the bank, and
+// rewording an item later cannot silently rewrite past answers.
+model AssessmentAnswer {
+  id      String @id @default(cuid())
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  item_id   String // stable id from lib/assessment/items.ts
+  axis      String // "agency" | "discipline" | "inquiry" | "faith"
+  direction Int    // -1 or +1, the item's loading
+  score     Int    // 1..5 as tapped
+  local_day String // YYYY-MM-DD in the USER's timezone, not the server's
+
+  created_at DateTime @default(now())
+
+  @@index([user_id, created_at])
+  @@index([user_id, item_id])
+  @@index([user_id, local_day])
 }

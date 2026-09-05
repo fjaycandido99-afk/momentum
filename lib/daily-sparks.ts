@@ -42,9 +42,14 @@ export const DAILY_QUESTIONS: string[] = [
 ]
 
 export interface Spark {
-  type: 'question' | 'quote' | 'affirmation'
+  type: 'question' | 'quote' | 'affirmation' | 'assessment'
   text: string
   author?: string
+  /** Daily Read only: which item this is, and the scale to render. */
+  itemId?: string
+  scale?: readonly { score: number; label: string }[]
+  /** Daily Read only: how many items answered so far, for the progress line. */
+  answered?: number
 }
 
 /**
