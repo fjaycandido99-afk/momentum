@@ -464,7 +464,7 @@ coach_checkin: 'coach_checkin_alerts',
   }
 
   // Record the send so the gate can throttle subsequent pushes today.
-  if (sent > 0) logNotificationSent(userId, type)
+  if (sent > 0) await logNotificationSent(userId, type)
 
   return {
     success: sent > 0,
