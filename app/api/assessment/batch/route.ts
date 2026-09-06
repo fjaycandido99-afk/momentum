@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { loadState } from '@/lib/assessment/service'
-import { SCALE, pickSequence } from '@/lib/assessment/items'
+import { SCALE, pickSequence, toWire } from '@/lib/assessment/items'
 import { MIN_ANSWERS_FOR_READ } from '@/lib/assessment/axes'
 
 export const dynamic = 'force-dynamic'
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const items = pickSequence(count, state.onCooldown, state.read.coverage, state.staleFirst)
 
     return NextResponse.json({
-      items: items.map(i => ({ id: i.id, text: i.text })),
+      items: items.map(toWire),
       scale: SCALE,
       answered: state.read.answered,
       needed: MIN_ANSWERS_FOR_READ,

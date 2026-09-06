@@ -18,7 +18,8 @@ import type { AxisId } from './axes'
  * wording is fine, changing its id orphans history.
  */
 
-export interface AssessmentItem {
+export interface ScaleItem {
+  kind?: 'scale'
   id: string
   text: string
   axis: AxisId
@@ -26,7 +27,7 @@ export interface AssessmentItem {
   direction: 1 | -1
 }
 
-export const ASSESSMENT_ITEMS: AssessmentItem[] = [
+export const SCALE_ITEMS: ScaleItem[] = [
   // ---- Agency: accepts what comes  <->  bends things to will ----
   { id: 'ag01', axis: 'agency', direction: -1, text: 'When something goes wrong, I focus first on what I can still control.' },
   { id: 'ag02', axis: 'agency', direction: 1, text: 'If I want something badly enough, I can usually make it happen.' },
@@ -76,7 +77,115 @@ export const ASSESSMENT_ITEMS: AssessmentItem[] = [
   { id: 'fa10', axis: 'faith', direction: -1, text: 'I believe a thing when I can see the evidence for it.' },
 ]
 
+/**
+ * Forced-choice items: two statements, pick the one that's more you.
+ *
+ * Added for two reasons, and the second one matters more than variety.
+ *
+ * Every scale item asks how much you AGREE, and agreement scales carry
+ * acquiescence bias — people drift toward agreeing, especially when tired or
+ * moving fast, which is exactly the 7am user this is built for. Loading half
+ * the bank in reverse hedges against it but doesn't remove it. A forced
+ * choice can't be agreed with, so the bias has nowhere to go.
+ *
+ * Both options sit on the SAME axis at opposite poles, so a choice is a clean
+ * signal about one thing. Pairing across axes would score two at once, but
+ * "I prefer A to B" conflates the two and is much harder to interpret later.
+ */
+export interface ChoiceItem {
+  kind: 'choice'
+  id: string
+  axis: AxisId
+  options: [{ text: string; direction: 1 | -1 }, { text: string; direction: 1 | -1 }]
+}
+
+export const CHOICE_ITEMS: ChoiceItem[] = [
+  { kind: 'choice', id: 'cag01', axis: 'agency', options: [
+    { text: 'Change what I can reach', direction: 1 },
+    { text: 'Accept what I cannot', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cag02', axis: 'agency', options: [
+    { text: 'Make my own luck', direction: 1 },
+    { text: 'Work with the luck I get', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cag03', axis: 'agency', options: [
+    { text: 'Push through the wall', direction: 1 },
+    { text: 'Find another way round', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cag04', axis: 'agency', options: [
+    { text: 'Take the wheel', direction: 1 },
+    { text: 'Let it play out', direction: -1 },
+  ]},
+
+  { kind: 'choice', id: 'cdi01', axis: 'discipline', options: [
+    { text: 'Stick to the plan', direction: 1 },
+    { text: 'Follow the better offer', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cdi02', axis: 'discipline', options: [
+    { text: 'Earn it first', direction: 1 },
+    { text: 'Enjoy it now', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cdi03', axis: 'discipline', options: [
+    { text: 'Same time every day', direction: 1 },
+    { text: 'Whenever it strikes', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cdi04', axis: 'discipline', options: [
+    { text: 'Finish what I started', direction: 1 },
+    { text: 'Start what excites me', direction: -1 },
+  ]},
+
+  { kind: 'choice', id: 'cin01', axis: 'inquiry', options: [
+    { text: 'Understand it first', direction: 1 },
+    { text: 'Try it and see', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cin02', axis: 'inquiry', options: [
+    { text: 'Question the rule', direction: 1 },
+    { text: 'Trust it and move', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cin03', axis: 'inquiry', options: [
+    { text: 'Sleep on it', direction: 1 },
+    { text: 'Decide now', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cin04', axis: 'inquiry', options: [
+    { text: 'Read the argument against', direction: 1 },
+    { text: 'Go with what I already think', direction: -1 },
+  ]},
+
+  { kind: 'choice', id: 'cfa01', axis: 'faith', options: [
+    { text: 'Assume it works out', direction: 1 },
+    { text: 'Plan for it not to', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cfa02', axis: 'faith', options: [
+    { text: 'Give people the benefit', direction: 1 },
+    { text: 'Wait until they earn it', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cfa03', axis: 'faith', options: [
+    { text: 'Some things you just know', direction: 1 },
+    { text: 'Show me the evidence', direction: -1 },
+  ]},
+  { kind: 'choice', id: 'cfa04', axis: 'faith', options: [
+    { text: 'Hope for the best', direction: 1 },
+    { text: 'Expect the catch', direction: -1 },
+  ]},
+]
+
+export type AssessmentItem = (ScaleItem & { kind: 'scale' }) | ChoiceItem
+
+/**
+ * The whole bank. Scale items get their `kind` stamped here rather than on all
+ * forty by hand, so adding a shape never means touching existing rows.
+ */
+export const ASSESSMENT_ITEMS: AssessmentItem[] = [
+  ...SCALE_ITEMS.map(i => ({ ...i, kind: 'scale' as const })),
+  ...CHOICE_ITEMS,
+]
+
 export const ITEMS_BY_ID = new Map(ASSESSMENT_ITEMS.map(i => [i.id, i]))
+
+/** How strongly a forced choice moves its axis. Deliberately ±1 rather than
+ *  the ±2 a "5" on the scale gives: a choice is definite, but it's a choice
+ *  between two poles, not an emphatic endorsement of one. */
+export const CHOICE_SCORE = 4
 
 /** The 5-point scale, low to high. Labels are the user-facing wording. */
 export const SCALE = [
@@ -172,4 +281,38 @@ export function pickSequence(
   }
 
   return out
+}
+
+/** What a client needs to render an item, whatever shape it is. */
+export interface WireItem {
+  id: string
+  kind: 'scale' | 'choice'
+  /** The statement to rate, or the prompt above a choice. */
+  text: string
+  /** Present only for forced choice. */
+  options?: { text: string }[]
+}
+
+export const CHOICE_PROMPT = 'Which is more you?'
+
+export function toWire(item: AssessmentItem): WireItem {
+  if (item.kind === 'choice') {
+    return {
+      id: item.id,
+      kind: 'choice',
+      text: CHOICE_PROMPT,
+      options: item.options.map(o => ({ text: o.text })),
+    }
+  }
+  return { id: item.id, kind: 'scale', text: item.text }
+}
+
+/**
+ * A human-readable rendering of an item, for the data export. An id and a
+ * number is not a meaningful account of what someone actually answered.
+ */
+export function itemLabel(item: AssessmentItem): string {
+  return item.kind === 'choice'
+    ? `${CHOICE_PROMPT} ${item.options.map(o => o.text).join(' / ')}`
+    : item.text
 }

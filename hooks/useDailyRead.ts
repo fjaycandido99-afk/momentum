@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 export interface DailyReadToday {
   show: boolean
-  item: { id: string; text: string } | null
+  item: { id: string; kind: 'scale' | 'choice'; text: string; options?: { text: string }[] } | null
   scale: readonly { score: number; label: string }[]
   answered: number
   needed: number

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { computeRead, type AxisId, type Read, type ScoredAnswer } from './axes'
-import { ITEMS_BY_ID, RE_ASK_AFTER_DAYS, pickNextItem, type AssessmentItem } from './items'
+import { ITEMS_BY_ID, RE_ASK_AFTER_DAYS, CHOICE_SCORE, pickNextItem, type AssessmentItem } from './items'
 
 /**
  * Server-side Daily Read helpers. Everything here is arithmetic over rows —
@@ -90,19 +90,38 @@ export async function recordAnswer(
   userId: string,
   timezone: string | null,
   itemId: string,
-  score: number,
+  score: number | null,
+  choice?: number | null,
 ): Promise<boolean> {
   const item = ITEMS_BY_ID.get(itemId)
   if (!item) return false
-  if (!Number.isInteger(score) || score < 1 || score > 5) return false
+
+  let axis: string
+  let direction: 1 | -1
+  let storedScore: number
+
+  if (item.kind === 'choice') {
+    // A forced choice: the picked option supplies the direction, and the
+    // magnitude is fixed. Definite, but not the ±2 an emphatic "Exactly"
+    // gives — it's a choice between two poles, not a shout.
+    if (!Number.isInteger(choice) || choice! < 0 || choice! > 1) return false
+    axis = item.axis
+    direction = item.options[choice!].direction
+    storedScore = CHOICE_SCORE
+  } else {
+    if (score === null || !Number.isInteger(score) || score < 1 || score > 5) return false
+    axis = item.axis
+    direction = item.direction
+    storedScore = score
+  }
 
   await prisma.assessmentAnswer.create({
     data: {
       user_id: userId,
       item_id: item.id,
-      axis: item.axis,
-      direction: item.direction,
-      score,
+      axis,
+      direction,
+      score: storedScore,
       local_day: localDay(timezone),
     },
   })

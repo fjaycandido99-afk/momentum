@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ITEMS_BY_ID } from '@/lib/assessment/items'
+import { SCALE_ITEMS } from '@/lib/assessment/items'
+const SCALE_BY_ID = new Map(SCALE_ITEMS.map(i => [i.id, i]))
 
 /**
  * Covers the glue between the scoring maths and the database — the part that
@@ -33,7 +34,7 @@ vi.mock('@/lib/prisma', () => ({
 const { loadState, nextItemFor, recordAnswer, localDay } = await import('@/lib/assessment/service')
 
 function row(item_id: string, daysAgo: number, score = 4, local_day = '2026-01-01'): Row {
-  const item = ITEMS_BY_ID.get(item_id)!
+  const item = SCALE_BY_ID.get(item_id)!
   return {
     item_id,
     axis: item.axis,
@@ -151,5 +152,38 @@ describe('recordAnswer', () => {
     expect(arg.data.direction).toBe(-1)
     expect(arg.data.score).toBe(5)
     expect(arg.data.local_day).toBe(localDay('Pacific/Honolulu'))
+  })
+})
+
+describe('recordAnswer — forced choice', () => {
+  it('takes the direction from the option picked', async () => {
+    // cag01: option 0 is +1 agency, option 1 is -1.
+    expect(await recordAnswer('u1', null, 'cag01', null, 0)).toBe(true)
+    expect(create.mock.calls[0][0].data.axis).toBe('agency')
+    expect(create.mock.calls[0][0].data.direction).toBe(1)
+
+    vi.clearAllMocks()
+    expect(await recordAnswer('u1', null, 'cag01', null, 1)).toBe(true)
+    expect(create.mock.calls[0][0].data.direction).toBe(-1)
+  })
+
+  it('scores a choice more softly than an emphatic scale answer', async () => {
+    // A choice between two poles is definite, but it is not the same as
+    // picking "Exactly" — it must not swamp the scale items.
+    await recordAnswer('u1', null, 'cag01', null, 0)
+    const choiceScore = create.mock.calls[0][0].data.score as number
+    expect(Math.abs(choiceScore - 3)).toBeLessThan(2)
+  })
+
+  it('refuses an option index that is not one of the two', async () => {
+    for (const bad of [-1, 2, 1.5, NaN]) {
+      expect(await recordAnswer('u1', null, 'cag01', null, bad), `choice ${bad}`).toBe(false)
+    }
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('refuses a choice item answered as if it were a scale', async () => {
+    expect(await recordAnswer('u1', null, 'cag01', 5)).toBe(false)
+    expect(create).not.toHaveBeenCalled()
   })
 })

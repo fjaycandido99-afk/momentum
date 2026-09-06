@@ -8,7 +8,7 @@ import {
   type ScoredAnswer,
   type AxisId,
 } from '@/lib/assessment/axes'
-import { ASSESSMENT_ITEMS, ITEMS_BY_ID, pickNextItem, pickSequence, SCALE, RE_ASK_AFTER_DAYS } from '@/lib/assessment/items'
+import { ASSESSMENT_ITEMS, SCALE_ITEMS, CHOICE_ITEMS, ITEMS_BY_ID, pickNextItem, pickSequence, SCALE, RE_ASK_AFTER_DAYS, toWire } from '@/lib/assessment/items'
 import { MINDSET_IDS } from '@/lib/mindset/types'
 
 const empty: Record<AxisId, number> = { agency: 0, discipline: 0, inquiry: 0, faith: 0 }
@@ -99,7 +99,7 @@ describe('assessment item bank', () => {
 
   it('covers every axis evenly', () => {
     for (const axis of AXIS_IDS) {
-      const forAxis = ASSESSMENT_ITEMS.filter(i => i.axis === axis)
+      const forAxis = SCALE_ITEMS.filter(i => i.axis === axis)
       expect(forAxis.length, axis).toBe(10)
       // Both directions present, or the axis can only ever be agreed upward.
       expect(forAxis.some(i => i.direction === 1), `${axis} needs +1 items`).toBe(true)
@@ -108,7 +108,7 @@ describe('assessment item bank', () => {
   })
 
   it('states, never asks — a question does not take a scale', () => {
-    for (const item of ASSESSMENT_ITEMS) {
+    for (const item of SCALE_ITEMS) {
       expect(item.text.endsWith('?'), item.id).toBe(false)
       expect(item.text.endsWith('.'), item.id).toBe(true)
     }
@@ -183,9 +183,12 @@ describe('picking the next item', () => {
   })
 
   it('stops early rather than padding when the bank runs short', () => {
-    const nearlyAll = new Set(ASSESSMENT_ITEMS.slice(0, 38).map(i => i.id))
+    // Sized off the bank, not a literal — this broke the moment forced-choice
+    // items were added and the bank grew from 40 to 56.
+    const leaveFree = 2
+    const nearlyAll = new Set(ASSESSMENT_ITEMS.slice(0, ASSESSMENT_ITEMS.length - leaveFree).map(i => i.id))
     const seq = pickSequence(10, nearlyAll, empty)
-    expect(seq.length).toBeLessThanOrEqual(2)
+    expect(seq.length).toBeLessThanOrEqual(leaveFree)
     expect(seq.every(i => !nearlyAll.has(i.id))).toBe(true)
   })
 
@@ -197,5 +200,48 @@ describe('picking the next item', () => {
     // silently disappeared. Grow the bank and this can grow with it.
     expect(RE_ASK_AFTER_DAYS).toBeGreaterThan(ASSESSMENT_ITEMS.length)
     expect(RE_ASK_AFTER_DAYS).toBeLessThanOrEqual(ASSESSMENT_ITEMS.length * 2)
+  })
+})
+
+describe('forced-choice items', () => {
+  it('pairs two poles of the SAME axis', () => {
+    // Pairing across axes would score two at once, but "I prefer A to B"
+    // conflates them and is far harder to read back later.
+    for (const item of CHOICE_ITEMS) {
+      expect(item.options).toHaveLength(2)
+      const dirs = item.options.map(o => o.direction).sort()
+      expect(dirs, item.id).toEqual([-1, 1])
+    }
+  })
+
+  it('covers every axis', () => {
+    for (const axis of AXIS_IDS) {
+      expect(CHOICE_ITEMS.some(i => i.axis === axis), axis).toBe(true)
+    }
+  })
+
+  it('has ids that cannot collide with scale items', () => {
+    const scaleIds = new Set(SCALE_ITEMS.map(i => i.id))
+    for (const item of CHOICE_ITEMS) {
+      expect(scaleIds.has(item.id), item.id).toBe(false)
+    }
+  })
+
+  it('serialises both shapes into one thing a client can render', () => {
+    const scale = toWire(ASSESSMENT_ITEMS.find(i => i.kind === 'scale')!)
+    expect(scale.kind).toBe('scale')
+    expect(scale.options).toBeUndefined()
+    expect(scale.text.length).toBeGreaterThan(0)
+
+    const choice = toWire(ASSESSMENT_ITEMS.find(i => i.kind === 'choice')!)
+    expect(choice.kind).toBe('choice')
+    expect(choice.options).toHaveLength(2)
+    expect(choice.text.length).toBeGreaterThan(0)
+  })
+
+  it('mixes both shapes into a single run', () => {
+    const seq = pickSequence(12, new Set(), empty)
+    expect(seq.some(i => i.kind === 'choice')).toBe(true)
+    expect(seq.some(i => i.kind === 'scale')).toBe(true)
   })
 })

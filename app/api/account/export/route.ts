@@ -19,7 +19,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
-import { ITEMS_BY_ID } from '@/lib/assessment/items'
+import { ITEMS_BY_ID, itemLabel } from '@/lib/assessment/items'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,7 +97,7 @@ export async function GET() {
         ...a,
         // The stored row is just an id and a number; without the wording it
         // is not a meaningful export of what the person actually answered.
-        statement: ITEMS_BY_ID.get(a.item_id)?.text ?? null,
+        statement: (() => { const it = ITEMS_BY_ID.get(a.item_id); return it ? itemLabel(it) : null })(),
       })),
     }
 

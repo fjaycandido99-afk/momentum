@@ -10,7 +10,7 @@ import { getWeightedQuestions } from '@/lib/daily-sparks'
 import { getWeightedQuotePool } from '@/lib/mindset/quotes'
 import { getRandomAffirmation } from '@/lib/mindset/affirmations'
 import { loadState, nextItemFor } from '@/lib/assessment/service'
-import { SCALE } from '@/lib/assessment/items'
+import { SCALE, toWire } from '@/lib/assessment/items'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         if (item) {
           return NextResponse.json({
             type: 'assessment',
-            text: item.text,
+            ...toWire(item),
             itemId: item.id,
             scale: SCALE,
             answered: state.read.answered,

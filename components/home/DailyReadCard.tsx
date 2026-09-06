@@ -24,21 +24,24 @@ export function DailyReadCard({
   data: DailyReadToday
   onAnswered: (answered: number) => void
 }) {
-  const [rating, setRating] = useState<number | null>(null)
+  // A boolean, not "did they pick a score": a forced choice answers with an
+  // option index and no score at all, so keying the answered state off the
+  // rating would leave the card sitting there as if nothing happened.
+  const [submitted, setSubmitted] = useState(false)
   const [count, setCount] = useState(data.answered)
 
   const remaining = Math.max(0, data.needed - count)
 
-  const rate = async (score: number) => {
-    if (!data.item || rating !== null) return
-    setRating(score)
+  const rate = async (score: number | null, choice?: number) => {
+    if (!data.item || submitted) return
+    setSubmitted(true)
     const optimistic = count + 1
     setCount(optimistic)
     try {
       const res = await fetch('/api/assessment/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId: data.item.id, score }),
+        body: JSON.stringify({ itemId: data.item.id, score, choice }),
       })
       if (res.ok) {
         const body = await res.json()
@@ -64,7 +67,7 @@ export function DailyReadCard({
   // Answered today, or the bank is momentarily empty — show the accumulation
   // rather than nothing. Watching the number climb is the entire reason this
   // card exists during the quiet weeks.
-  if (!data.item || rating !== null) {
+  if (!data.item || submitted) {
     return (
       <div className="relative p-5 card-surface-lg h-full flex flex-col justify-between">
         <div className="flex items-center gap-3">
@@ -74,7 +77,7 @@ export function DailyReadCard({
           <div>
             <h2 className="text-lg font-medium text-white">Daily Read</h2>
             <p className="text-xs text-white/90">
-              {rating !== null ? 'Noted — thanks' : 'Answered for today'}
+              {submitted ? 'Noted — thanks' : 'Answered for today'}
             </p>
           </div>
         </div>
@@ -128,19 +131,39 @@ export function DailyReadCard({
       <p className="text-[15px] text-white leading-snug mt-3">{data.item.text}</p>
 
       <div className="mt-auto pt-3 flex flex-col gap-2">
-        <div className="flex items-stretch gap-1.5" role="radiogroup" aria-label={data.item.text}>
-          {data.scale.map(point => (
-            <button
-              key={point.score}
-              role="radio"
-              aria-checked={false}
-              aria-label={point.label}
-              onClick={() => rate(point.score)}
-              className="flex-1 min-h-[2.75rem] px-1 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12] text-[10px] leading-tight text-white/80 font-medium hover:bg-white/[0.12] hover:text-white active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-            >
-              {point.label}
-            </button>
-          ))}
+        {/* A forced choice gets two wide rows rather than five narrow ones —
+            two options squeezed into a five-wide strip would look like a
+            broken scale. */}
+        <div
+          className={data.item.kind === 'choice' ? 'flex flex-col gap-1.5' : 'flex items-stretch gap-1.5'}
+          role="radiogroup"
+          aria-label={data.item.text}
+        >
+          {data.item.kind === 'choice'
+            ? (data.item.options ?? []).map((opt, i) => (
+                <button
+                  key={i}
+                  role="radio"
+                  aria-checked={false}
+                  aria-label={opt.text}
+                  onClick={() => rate(null, i)}
+                  className="w-full min-h-[2.5rem] px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.12] text-[12px] leading-tight text-white/85 font-medium hover:bg-white/[0.12] hover:text-white active:scale-[0.98] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                >
+                  {opt.text}
+                </button>
+              ))
+            : data.scale.map(point => (
+                <button
+                  key={point.score}
+                  role="radio"
+                  aria-checked={false}
+                  aria-label={point.label}
+                  onClick={() => rate(point.score)}
+                  className="flex-1 min-h-[2.75rem] px-1 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12] text-[10px] leading-tight text-white/80 font-medium hover:bg-white/[0.12] hover:text-white active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                >
+                  {point.label}
+                </button>
+              ))}
         </div>
         <div className="flex items-center justify-between gap-3">
           {progress}

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { loadState, nextItemFor } from '@/lib/assessment/service'
-import { SCALE } from '@/lib/assessment/items'
+import { SCALE, toWire } from '@/lib/assessment/items'
 import { MIN_ANSWERS_FOR_READ } from '@/lib/assessment/axes'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 
@@ -48,7 +48,7 @@ export async function GET() {
       // only permanent home: the Progress panel was buried among twenty
       // others and nobody could find it.
       show: item !== null || state.read.lean !== null,
-      item: item ? { id: item.id, text: item.text } : null,
+      item: item ? toWire(item) : null,
       scale: SCALE,
       answered: state.read.answered,
       needed: MIN_ANSWERS_FOR_READ,

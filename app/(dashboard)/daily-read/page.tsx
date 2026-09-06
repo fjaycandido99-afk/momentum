@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Compass, Loader2, Check } from 'lucide-react'
 
-interface BatchItem { id: string; text: string }
+interface BatchItem { id: string; kind: 'scale' | 'choice'; text: string; options?: { text: string }[] }
 interface AxisRead { id: string; label: string; low: string; high: string; value: number; answers: number }
 interface ReadResponse {
   lean: string | null
@@ -78,7 +78,7 @@ export default function DailyReadPage() {
     return () => { cancelled = true }
   }, [finished])
 
-  const answer = async (score: number) => {
+  const answer = async (score: number | null, choice?: number) => {
     if (!current || busy) return
     setBusy(true)
     const next = answered + 1
@@ -87,7 +87,7 @@ export default function DailyReadPage() {
       const res = await fetch('/api/assessment/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId: current.id, score }),
+        body: JSON.stringify({ itemId: current.id, score, choice }),
       })
       if (res.ok) {
         const body = await res.json()
@@ -223,18 +223,31 @@ export default function DailyReadPage() {
             </p>
 
             {/* Stacked, not a five-across row: full-width rows give a thumb a
-                target it cannot miss, and the labels stay readable. */}
+                target it cannot miss, and the labels stay readable. Forced
+                choice uses the same shape with two rows — a different question
+                shouldn't mean a different interaction to learn. */}
             <div className="flex flex-col gap-2 mt-8">
-              {batch.scale.map(point => (
-                <button
-                  key={point.score}
-                  disabled={busy}
-                  onClick={() => answer(point.score)}
-                  className="w-full py-4 rounded-xl bg-white/[0.05] border border-white/[0.12] text-[15px] text-white/85 font-medium hover:bg-white/[0.12] hover:text-white hover:border-white/25 active:scale-[0.98] disabled:opacity-40 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-                >
-                  {point.label}
-                </button>
-              ))}
+              {current.kind === 'choice'
+                ? (current.options ?? []).map((opt, i) => (
+                    <button
+                      key={i}
+                      disabled={busy}
+                      onClick={() => answer(null, i)}
+                      className="w-full py-5 rounded-xl bg-white/[0.05] border border-white/[0.12] text-[16px] text-white/90 font-medium hover:bg-white/[0.12] hover:text-white hover:border-white/25 active:scale-[0.98] disabled:opacity-40 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                    >
+                      {opt.text}
+                    </button>
+                  ))
+                : batch.scale.map(point => (
+                    <button
+                      key={point.score}
+                      disabled={busy}
+                      onClick={() => answer(point.score)}
+                      className="w-full py-4 rounded-xl bg-white/[0.05] border border-white/[0.12] text-[15px] text-white/85 font-medium hover:bg-white/[0.12] hover:text-white hover:border-white/25 active:scale-[0.98] disabled:opacity-40 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                    >
+                      {point.label}
+                    </button>
+                  ))}
             </div>
 
             <p className="text-[11px] text-white/35 mt-6 text-center">

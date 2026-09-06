@@ -20,8 +20,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => null)
     const itemId = typeof body?.itemId === 'string' ? body.itemId : null
     const score = typeof body?.score === 'number' ? body.score : null
-    if (!itemId || score === null) {
-      return NextResponse.json({ error: 'itemId and score are required' }, { status: 400 })
+    const choice = typeof body?.choice === 'number' ? body.choice : null
+    if (!itemId || (score === null && choice === null)) {
+      return NextResponse.json({ error: 'itemId and score or choice are required' }, { status: 400 })
     }
 
     const prefs = await prisma.userPreferences.findUnique({
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
       select: { timezone: true },
     })
 
-    const ok = await recordAnswer(user.id, prefs?.timezone ?? null, itemId, score)
+    const ok = await recordAnswer(user.id, prefs?.timezone ?? null, itemId, score, choice)
     if (!ok) return NextResponse.json({ error: 'Unknown item or score out of range' }, { status: 400 })
 
     // Hand back the updated read so the popup can show progress immediately
