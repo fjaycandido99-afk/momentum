@@ -1259,14 +1259,7 @@ export function ImmersiveHome() {
       {/* "Coach remembers you" — follows up on yesterday's intention / mood / reflection */}
       <YesterdayFollowUp />
 
-      {/* THE VALUE SPINE — Today's Minute is the first thing every user
-          sees on home, by design. One tap → 30 seconds of voice → one
-          sentence of AI reflection → a new stroke on their spiral. The
-          single daily ritual the rest of Voxu is the deeper rabbit
-          hole for. */}
-      <MorningMinute />
-
-      {/* Hero Carousel: Daily Guide + Path + Featured */}
+      {/* Hero Carousel: Daily Guide + Today's Minute + Path + Featured */}
       {(() => {
         const slides: React.ReactNode[] = [
           // Slide 1: Daily Guide
@@ -1309,6 +1302,18 @@ export function ImmersiveHome() {
             </div>
           </button>,
         ]
+
+        // Today's Minute. It used to sit ABOVE the carousel as "the value
+        // spine" — the first thing on home, every open, for everyone. The
+        // record disagreed: two uses across 200 daily-guide rows, one of
+        // them five characters long. It asks for voice, which is the highest
+        // -friction input there is (you cannot use it on a bus, at a desk,
+        // or beside someone asleep), from a blank prompt that never changes.
+        //
+        // Demoted rather than deleted: it still feeds real context into the
+        // day's guide scripts, and it should be there on the days someone
+        // wants it. It just shouldn't tax every single open to be there.
+        slides.push(<MorningMinute key="todays-minute" />)
 
         // Slide 2: Mindset Wisdom
         slides.push(

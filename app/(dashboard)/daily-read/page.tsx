@@ -5,6 +5,18 @@ import { useRouter } from 'next/navigation'
 import { ChevronLeft, Compass, Loader2, Check } from 'lucide-react'
 
 interface BatchItem { id: string; text: string }
+interface AxisRead { id: string; label: string; low: string; high: string; value: number; answers: number }
+interface ReadResponse {
+  lean: string | null
+  leanName: string | null
+  leanIcon: string | null
+  runnerUpName: string | null
+  confidence: 'none' | 'early' | 'emerging' | 'clear'
+  answered: number
+  completeness: number
+  axes: AxisRead[]
+}
+
 interface Batch {
   items: BatchItem[]
   scale: { score: number; label: string }[]
@@ -51,6 +63,20 @@ export default function DailyReadPage() {
   const current = batch?.items[index]
   const total = batch?.items.length ?? 0
   const reached = batch ? answered >= batch.needed : false
+
+  // The read itself lives here now. It had a panel on Progress, but Progress
+  // carries about twenty panels and Francis couldn't find it — a result
+  // nobody sees may as well not be computed.
+  const [read, setRead] = useState<ReadResponse | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    const load = () => fetch('/api/assessment/read')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (!cancelled) setRead(d) })
+      .catch(() => {})
+    load()
+    return () => { cancelled = true }
+  }, [finished])
 
   const answer = async (score: number) => {
     if (!current || busy) return
@@ -117,26 +143,68 @@ export default function DailyReadPage() {
               {reached ? 'That’s enough for a first read' : `${answered} answered`}
             </p>
             <p className="text-sm text-white/60 mb-7">
-              {reached
-                ? 'It’s on your Progress screen now, and it keeps moving as you answer more.'
+              {read?.lean
+                ? 'It keeps moving as you answer more.'
                 : `${Math.max(0, batch.needed - answered)} more and it can start telling you something.`}
             </p>
-            <div className="flex flex-col gap-2.5">
-              {reached && (
-                <button
-                  onClick={() => router.push('/progress')}
-                  className="w-full py-3.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-                >
-                  See your read
-                </button>
-              )}
-              <button
-                onClick={() => router.push('/')}
-                className="w-full py-3.5 rounded-xl bg-white/[0.06] border border-white/[0.12] text-sm text-white/90 font-medium hover:bg-white/[0.12] transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-              >
-                Done
-              </button>
-            </div>
+
+            {/* The read, in the place you just earned it — rather than a
+                "go and look somewhere else" button. */}
+            {read?.lean && (
+              <div className="text-left rounded-2xl bg-white/[0.04] border border-white/10 p-5 mb-6">
+                <p className="text-xs text-white/50 mb-1">Leaning toward</p>
+                <p className="text-2xl font-medium text-white mb-2">
+                  <span className="mr-2">{read.leanIcon}</span>{read.leanName}
+                </p>
+                <p className="text-xs text-white/60 mb-5">
+                  {read.confidence === 'clear'
+                    ? 'This has held steady for a while.'
+                    : read.confidence === 'emerging'
+                      ? 'A pattern is starting to show.'
+                      : 'Early days — this can still move a lot.'}
+                  {read.runnerUpName && read.confidence !== 'clear' && (
+                    <> Closest alternative is {read.runnerUpName}.</>
+                  )}
+                </p>
+
+                <div className="space-y-2.5">
+                  {read.axes.map(axis => {
+                    const offset = Math.max(-1, Math.min(1, axis.value / 2))
+                    const width = Math.abs(offset) * 50
+                    const left = offset >= 0 ? 50 : 50 - width
+                    return (
+                      <div key={axis.id}>
+                        <div className="flex justify-between text-[10px] text-white/40 mb-1">
+                          <span>{axis.low}</span>
+                          <span>{axis.high}</span>
+                        </div>
+                        <div className="relative h-1.5 rounded-full bg-white/10 overflow-hidden">
+                          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20" />
+                          {axis.answers > 0 && (
+                            <div
+                              className="absolute top-0 bottom-0 bg-white/70 rounded-full transition-all"
+                              style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between text-xs mt-4">
+                  <span className="text-white/40">{read.answered} answered</span>
+                  <span className="text-white/40">{Math.round(read.completeness * 100)}% of the picture</span>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => router.push('/')}
+              className="w-full py-3.5 rounded-xl bg-white/[0.06] border border-white/[0.12] text-sm text-white/90 font-medium hover:bg-white/[0.12] transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            >
+              Done
+            </button>
           </div>
         ) : current ? (
           <div className="pt-6 max-w-sm mx-auto">

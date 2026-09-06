@@ -9,6 +9,10 @@ export interface DailyReadToday {
   answered: number
   needed: number
   answeredToday: boolean
+  lean: string | null
+  leanName: string | null
+  leanIcon: string | null
+  completeness: number
 }
 
 /**

@@ -78,6 +78,18 @@ export function DailyReadCard({
             </p>
           </div>
         </div>
+
+        {/* Once there is a read, show it. This card is the feature's only
+            permanent home now — the Progress panel was buried among twenty
+            others and nobody could find it. */}
+        {data.leanName && (
+          <div className="mt-3">
+            <p className="text-[11px] text-white/50 mb-0.5">Leaning toward</p>
+            <p className="text-xl font-medium text-white">
+              <span className="mr-1.5">{data.leanIcon}</span>{data.leanName}
+            </p>
+          </div>
+        )}
         <div className="mt-auto pt-2 flex flex-col gap-2">
           <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
             <div
@@ -87,17 +99,15 @@ export function DailyReadCard({
           </div>
           {progress}
           {/* Without this the card is a dead end: "answered for today" and
-              nothing to do about it. The daily rule exists to stop US
-              interrupting people — it shouldn't stop someone who came
-              looking. */}
-          {remaining > 0 && (
-            <Link
-              href="/daily-read"
-              className="mt-1 w-full block text-center py-2 rounded-lg bg-white/[0.06] border border-white/[0.12] text-xs text-white/85 font-medium hover:bg-white/[0.12] hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-            >
-              Answer the rest now
-            </Link>
-          )}
+              nothing to do about it for 23 hours. The one-a-day rule exists
+              to stop US interrupting people — it shouldn't stop someone who
+              came looking. */}
+          <Link
+            href="/daily-read"
+            className="mt-1 w-full block text-center py-2 rounded-lg bg-white/[0.06] border border-white/[0.12] text-xs text-white/85 font-medium hover:bg-white/[0.12] hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+          >
+            {remaining > 0 ? 'Answer the rest now' : 'See your read'}
+          </Link>
         </div>
       </div>
     )

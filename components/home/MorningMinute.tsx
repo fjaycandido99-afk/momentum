@@ -196,10 +196,12 @@ export function MorningMinute() {
 
   // ── RENDER ─────────────────────────────────────────────────────────
 
+  // Sized as a carousel slide, not a standalone block: the carousel supplies
+  // the horizontal padding, so margins here would double it.
   return (
     <section
       aria-labelledby="morning-minute-heading"
-      className="relative mx-5 mt-4 p-6 rounded-3xl bg-gradient-to-br from-white/[0.09] to-white/[0.02] border border-white/[0.16] shadow-[0_0_40px_rgba(255,255,255,0.05)] overflow-hidden"
+      className="relative h-full p-6 rounded-3xl bg-gradient-to-br from-white/[0.09] to-white/[0.02] border border-white/[0.16] shadow-[0_0_40px_rgba(255,255,255,0.05)] overflow-hidden"
     >
       {/* Eyebrow — title + streak badge (when earned). The streak makes
           the spine's reward visible at all times so the loss-aversion
