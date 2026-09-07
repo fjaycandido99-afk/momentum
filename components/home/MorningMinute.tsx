@@ -315,6 +315,20 @@ export function MorningMinute() {
             You showed up today
           </p>
 
+          {/* The reply above used to be the end of it: you spoke, it said one
+              sentence, and that was the whole exchange — talking to yourself
+              with a witness. This carries the same thread into the chat,
+              which already has memory, your voice tone and a microphone, so
+              the minute becomes the OPENING TURN of a conversation rather
+              than a monologue. */}
+          <Link
+            href="/journal?mode=chat&from=minute"
+            className="mt-4 flex items-center justify-center gap-2 w-full px-3.5 py-3 rounded-xl bg-white text-black text-[13.5px] font-semibold hover:bg-white/90 transition-colors press-scale"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Talk it through
+          </Link>
+
           {/* Depth handoff — Daily Guide's Morning Prime now opens
               by calling back to what the user just shared. One tap
               from the ritual into the deeper session. */}

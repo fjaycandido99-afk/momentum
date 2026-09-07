@@ -626,6 +626,36 @@ function JournalContent() {
     setCurrentPromptIndex(index)
   }
 
+  // Seed the chat from Today's Minute.
+  //
+  // ?from=minute means the user just spoke on home and tapped "Talk it
+  // through". Their words and the reply become the first two turns, so the
+  // conversation CONTINUES instead of restarting cold — the whole point
+  // being that the minute is an opening turn, not a monologue.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (new URLSearchParams(window.location.search).get('from') !== 'minute') return
+    if (conversation.length > 0) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/journal/morning-minute')
+        if (!res.ok) return
+        const data = await res.json()
+        const m = data?.minute
+        if (cancelled || !m?.transcript) return
+        setConversation([
+          { role: 'user', content: m.transcript },
+          ...(m.response ? [{ role: 'assistant' as const, content: m.response }] : []),
+        ])
+      } catch {
+        // No seed — the user simply starts the conversation themselves.
+      }
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Conversational journal handlers
   const sendChatMessage = useCallback(async (spokenText?: string) => {
     const source = (spokenText ?? chatInput).trim()

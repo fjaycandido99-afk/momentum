@@ -1534,7 +1534,7 @@ export function ImmersiveHome() {
           scrolled out from under it. */}
       <div className="fixed right-5 bottom-28 z-30 flex items-center gap-2">
         <CoachGreetingBubble mindsetId={mindsetCtx?.mindset} onVisibleChange={setIsCoachNudging} />
-        <Link href="/coach" aria-label="Open AI coach" className="transition-all press-scale">
+        <Link href="/journal?mode=chat" aria-label="Talk to your coach" className="transition-all press-scale">
           <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" nudging={isCoachNudging} plain className="!w-14 !h-14" />
         </Link>
       </div>
