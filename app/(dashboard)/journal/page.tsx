@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   PenLine, ChevronLeft, ChevronRight, Loader2, Heart, Target,
   Sparkles, BookOpen, Calendar, X, Crown, Lock, Shuffle, ChevronDown,
-  MessageCircle, Moon, Send, Save, Search, Download, Trash2, Mic,
+  MessageCircle, Moon, Send, Save, Search, Download, Trash2, Mic, Volume2,
 } from 'lucide-react'
 import { CalendarView } from '@/components/daily-guide/CalendarView'
 import { WeeklyReview, WeeklyReviewPrompt } from '@/components/daily-guide/WeeklyReview'
@@ -134,6 +134,26 @@ function JournalContent() {
   const [chatInput, setChatInput] = useState('')
   // Whether the last chat turn was spoken rather than typed.
   const [spokeLastTurn, setSpokeLastTurn] = useState(false)
+  /**
+   * Voice or text — the user's choice, not something inferred per message.
+   *
+   * In voice, every reply is spoken; in text, replies stay silent unless
+   * tapped. Remembered because it's a preference about how someone likes to
+   * talk, not a per-session mood, and re-picking it every visit would be a
+   * chore. Defaults to text: silence is the safe default when we can't know
+   * whether someone is on a bus.
+   */
+  const [voiceMode, setVoiceMode] = useState(false)
+  useEffect(() => {
+    try { setVoiceMode(localStorage.getItem('voxu_chat_voice_mode') === '1') } catch {}
+  }, [])
+  const toggleVoiceMode = useCallback(() => {
+    setVoiceMode(prev => {
+      const next = !prev
+      try { localStorage.setItem('voxu_chat_voice_mode', next ? '1' : '0') } catch {}
+      return next
+    })
+  }, [])
   const [chatLoading, setChatLoading] = useState(false)
   // Metered-chat state. All three are populated by the reply itself, so
   // the strip under the chat needs no extra round trip.
@@ -1083,7 +1103,7 @@ function JournalContent() {
                       <SpeakReplyButton
                         text={msg.content}
                         onUpgrade={openUpgradeModal}
-                        autoPlay={spokeLastTurn && i === conversation.length - 1}
+                        autoPlay={(voiceMode || spokeLastTurn) && i === conversation.length - 1}
                       />
                     )}
                   </div>
@@ -1114,6 +1134,29 @@ function JournalContent() {
                   speaking is what makes this a conversation, but it's also
                   the thing you can't do on a train or at a desk, and
                   voice-only is exactly what left Today's Minute unused. */}
+              {/* Voice or text — the user picks, and it sticks. In voice
+                  every reply is spoken back; in text they stay silent unless
+                  tapped. Both take spoken OR typed input, so the choice is
+                  about whether it TALKS to you, not about which hand you
+                  use. */}
+              <div className="flex items-center gap-2 px-3 pt-2.5">
+                <button
+                  onClick={toggleVoiceMode}
+                  aria-pressed={voiceMode}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                    voiceMode
+                      ? 'bg-white text-black'
+                      : 'bg-white/[0.06] border border-white/[0.12] text-white/70 hover:text-white hover:bg-white/[0.12]'
+                  }`}
+                >
+                  {voiceMode ? <Volume2 className="w-3.5 h-3.5" /> : <MessageCircle className="w-3.5 h-3.5" />}
+                  {voiceMode ? 'Talking' : 'Texting'}
+                </button>
+                <span className="text-[11px] text-white/40">
+                  {voiceMode ? 'Replies are spoken aloud' : 'Replies stay silent — tap to hear one'}
+                </span>
+              </div>
+
               <div className="flex items-end gap-2 p-3 border-t border-white/15">
                 <VoiceInput
                   onTranscript={(text) => { if (text.trim()) sendChatMessage(text) }}
