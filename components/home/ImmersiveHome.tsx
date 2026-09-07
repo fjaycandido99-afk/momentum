@@ -48,6 +48,7 @@ import { WellnessWidget } from './WellnessWidget'
 import { DailyFeatureTip } from './DailyFeatureTip'
 import { DailyReadCard } from './DailyReadCard'
 import { useDailyRead } from '@/hooks/useDailyRead'
+import { autoplayNextEnabled } from '@/hooks/useAutoplayNext'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
 import { YesterdayFollowUp } from './YesterdayFollowUp'
@@ -874,8 +875,12 @@ export function ImmersiveHome() {
   // --- Skip ---
   const handleSkipNext = useCallback(() => {
     const pl = audioState.currentPlaylist
-    if (!pl || pl.index >= pl.videos.length - 1) return
-    const nextIndex = pl.index + 1
+    if (!pl || pl.videos.length === 0) return
+    // Wrap at the end rather than stopping — a playlist that dies on its last
+    // track leaves silence for someone who explicitly asked for continuous
+    // play. Skipping forward by hand wraps too, which is what every other
+    // player does.
+    const nextIndex = (pl.index + 1) % pl.videos.length
     const nextVideo = pl.videos[nextIndex]
     if (!nextVideo) return
 
@@ -940,14 +945,18 @@ export function ImmersiveHome() {
     }
   }, [audioState.currentPlaylist, topicName, genreBackgrounds, backgrounds, createBgMusicPlayer, audioContext, dispatch, isContentFree])
 
-  // Keep autoSkipNextRef in sync
+  // Keep autoSkipNextRef in sync.
+  //
+  // This used to go null on the LAST track, so a playlist stopped dead at the
+  // end — the YouTube handler then fell back to replaying that one track
+  // forever. Neither is what someone who put a playlist on wants. It now
+  // stays wired for the whole playlist and handleSkipNext wraps to the start,
+  // unless the user has turned "keep playing" off, in which case the end of
+  // the list is the end.
   useEffect(() => {
     const pl = audioState.currentPlaylist
-    if (pl && pl.index < pl.videos.length - 1) {
-      autoSkipNextRef.current = handleSkipNext
-    } else {
-      autoSkipNextRef.current = null
-    }
+    autoSkipNextRef.current =
+      pl && pl.videos.length > 1 && autoplayNextEnabled() ? handleSkipNext : null
   }, [audioState.currentPlaylist, handleSkipNext])
 
   // --- Section callbacks ---

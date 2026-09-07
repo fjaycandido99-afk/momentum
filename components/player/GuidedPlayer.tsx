@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Play, Pause, ChevronDown, Loader2, Lock } from 'lucide-react'
+import { Play, Pause, ChevronDown, Loader2, Lock, Repeat } from 'lucide-react'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
+import { useAutoplayNext } from '@/hooks/useAutoplayNext'
 import { CircularVisualizer } from './CircularVisualizer'
 import { sourceCache, contextCache, analyserCache, BufferAnalyser, type AudioAnalyserLike } from './audio-analyser-cache'
 import { VOICE_GUIDES } from '@/components/home/home-types'
@@ -53,6 +54,36 @@ export function GuidedPlayer({
   const isPremium = subscription?.isPremium ?? false
 
   useBodyScrollLock()
+
+  const autoplay = useAutoplayNext()
+
+  /**
+   * Roll into the next guide when this one ends.
+   *
+   * Wraps around, and skips anything locked on this tier rather than
+   * advancing into a paywall — being interrupted by an upsell you didn't ask
+   * for is the opposite of what someone lying still with their eyes closed
+   * wants. If everything else is locked it simply stops.
+   */
+  useEffect(() => {
+    if (!audioElement || !autoplay.enabled) return
+
+    const onEnded = () => {
+      const start = VOICE_GUIDES.findIndex(g => g.id === guideId)
+      if (start === -1) return
+      for (let step = 1; step <= VOICE_GUIDES.length; step++) {
+        const candidate = VOICE_GUIDES[(start + step) % VOICE_GUIDES.length]
+        if (candidate.id === guideId) break
+        if (isContentFree('voiceGuide', candidate.id, isPremium)) {
+          onSwitchGuide(candidate.id, candidate.name)
+          return
+        }
+      }
+    }
+
+    audioElement.addEventListener('ended', onEnded)
+    return () => audioElement.removeEventListener('ended', onEnded)
+  }, [audioElement, autoplay.enabled, guideId, isPremium, onSwitchGuide])
 
   // Keepalive handled by useAudioSideEffects at the provider level — no duplicate needed here
 
@@ -196,6 +227,23 @@ export function GuidedPlayer({
             <span className="text-[11px] text-white/40 tabular-nums">{formatTime(currentTime)}</span>
             <span className="text-[11px] text-white/40 tabular-nums">{duration > 0 ? formatTime(duration) : '--:--'}</span>
           </div>
+        </div>
+
+        {/* Keep playing — one preference shared with music and motivation,
+            because it's one intention: settled in, keep it going. */}
+        <div className="flex justify-center pb-3">
+          <button
+            onClick={autoplay.toggle}
+            aria-pressed={autoplay.enabled}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+              autoplay.enabled
+                ? 'bg-white/15 border border-white/25 text-white'
+                : 'bg-white/[0.04] border border-white/10 text-white/50 hover:text-white/80'
+            }`}
+          >
+            <Repeat className="w-3 h-3" />
+            {autoplay.enabled ? 'Keep playing' : 'Stop after this'}
+          </button>
         </div>
 
         {/* Guide selector — miniature SVG pattern cards */}
