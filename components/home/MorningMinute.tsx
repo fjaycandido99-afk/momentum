@@ -21,6 +21,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Mic, Square, Loader2, RefreshCw, Sparkles, AlertTriangle, ArrowRight, Flame, MessageCircle } from 'lucide-react'
 
 interface Minute {
@@ -40,6 +41,7 @@ function fmtTime(s: number): string {
 }
 
 export function MorningMinute() {
+  const router = useRouter()
   const [phase, setPhase] = useState<Phase>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [minute, setMinute] = useState<Minute | null>(null)
@@ -181,6 +183,17 @@ export function MorningMinute() {
       })
       setPhase('done')
       void refetchStreak()
+
+      // Straight into the conversation, rather than a text reply and a full
+      // stop. Speaking and getting one sentence back IS talking to yourself
+      // with a witness — the point of recording is to be answered, out loud,
+      // and then to be able to say something back.
+      //
+      // The minute has already done its own work by this point: transcript
+      // stored, guide scripts invalidated so they regenerate knowing what was
+      // said. The 'done' state above still stands for anyone who comes back
+      // to the card later in the day.
+      router.push('/journal?mode=chat&from=minute&spoken=1')
     } catch (err) {
       console.error('[MorningMinute] post failed:', err)
       setErrMsg(err instanceof Error ? err.message.slice(0, 100) : 'Something didn\'t connect.')

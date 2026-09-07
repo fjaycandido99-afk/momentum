@@ -648,6 +648,13 @@ function JournalContent() {
           { role: 'user', content: m.transcript },
           ...(m.response ? [{ role: 'assistant' as const, content: m.response }] : []),
         ])
+        // ?spoken=1 means they got here by TALKING, not by tapping a link,
+        // so the reply is spoken back. Arriving from the "Talk it through"
+        // button later in the day is a read, not a conversation, and stays
+        // silent — nobody wants their phone announcing this on a bus.
+        if (new URLSearchParams(window.location.search).get('spoken') === '1') {
+          setSpokeLastTurn(true)
+        }
       } catch {
         // No seed — the user simply starts the conversation themselves.
       }
