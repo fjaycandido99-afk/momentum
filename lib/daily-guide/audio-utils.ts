@@ -209,3 +209,12 @@ export async function generateAudio(
 
 // Export for admin/monitoring
 export { getMonthlyUsage, MONTHLY_CREDIT_LIMIT, CHAT_CREDIT_LIMIT, PRIMARY_MODEL }
+
+/**
+ * The month's total chat-speech allowance, for callers that need to reason
+ * about how much is LEFT as a proportion rather than an absolute — e.g.
+ * holding a reserve back for paying users.
+ */
+export function getChatBudgetTotal(): number {
+  return Math.min(CHAT_CREDIT_LIMIT, MONTHLY_CREDIT_LIMIT)
+}

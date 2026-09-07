@@ -10,10 +10,11 @@
  *
  * Two ceilings, both deliberate:
  *   - Per user, per day, via the same AI meter as everything else
- *     (chat_voice: locked on free, 30/day on premium).
+ *     (chat_voice: 1/day on free, 30/day on premium).
  *   - Per month across all users, via the chat sub-budget in
  *     audio-utils, so conversation can never drink the daily guide's
- *     credits.
+ *     credits. Free users stop at a reserve inside that budget, so the
+ *     free taste can never spend what a subscriber has left.
  *
  * Replies are short and highly repetitive across users ("What comes up
  * when you sit with that?"), so identical text in the same voice is
@@ -29,11 +30,20 @@ import { aiGate } from '@/lib/ai/gate'
 import { isGuideTone } from '@/lib/ai/voice-tone'
 import {
   generateAudio,
+  getChatVoiceRemaining,
+  getChatBudgetTotal,
   getSharedCached,
   setSharedCache,
   TTS_CHAT_BUDGET_KEY,
   PRIMARY_MODEL,
 } from '@/lib/daily-guide/audio-utils'
+
+/**
+ * Share of the month's chat-speech budget held back for paying users. Free
+ * spoken replies stop once the pool drops below this; premium keeps going to
+ * zero.
+ */
+const FREE_TIER_CUTOFF = 0.4
 
 export const dynamic = 'force-dynamic'
 
@@ -84,6 +94,25 @@ export async function POST(request: NextRequest) {
 
     const gate = await aiGate(user.id, 'chat_voice')
     if (!gate.ok) return gate.response
+
+    // Free users get a taste of spoken replies, but never out of a paying
+    // subscriber's share.
+    //
+    // Chat speech comes from ONE monthly pool of characters shared by every
+    // user, and whoever calls first wins — the same first-come problem the
+    // chat/guide split already guards against, except across tiers rather
+    // than features. Without this, a busy free month could leave the people
+    // actually paying for voice with none. So free is cut off while the last
+    // slice of the month's budget is held back for premium.
+    if (!gate.isPremium) {
+      const [remaining, total] = [await getChatVoiceRemaining(), getChatBudgetTotal()]
+      if (remaining < total * FREE_TIER_CUTOFF) {
+        return NextResponse.json(
+          { error: 'Spoken replies are premium this month', locked: true, reason: 'tier' },
+          { status: 403 },
+        )
+      }
+    }
 
     const { audioBase64, duration } = await generateAudio(text, tone, TTS_CHAT_BUDGET_KEY)
 

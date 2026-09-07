@@ -219,3 +219,27 @@ describe('voice tone', () => {
     expect(CHAT_CREDIT_LIMIT).toBeLessThan(MONTHLY_CREDIT_LIMIT)
   })
 })
+
+describe('spoken replies — the free taste', () => {
+  it('gives free users a non-zero allowance', () => {
+    // At zero, a free user only ever meets the locked door and never hears
+    // the thing that would sell them the upgrade.
+    expect(AI_FEATURE_LIMITS.chat_voice.free).toBeGreaterThan(0)
+  })
+
+  it('keeps the free allowance well below premium', () => {
+    const { free, premium } = AI_FEATURE_LIMITS.chat_voice
+    expect(premium).not.toBeNull()
+    expect(free).toBeLessThan((premium as number) / 5)
+  })
+
+  it('is the only feature where premium is also capped', () => {
+    // Every other premium allowance is unlimited. Voice is capped because
+    // ElevenLabs characters are a real, shared, monthly cost — if that ever
+    // stops being true this test should be the thing that asks why.
+    const capped = Object.entries(AI_FEATURE_LIMITS)
+      .filter(([, v]) => v.premium !== null)
+      .map(([k]) => k)
+    expect(capped).toEqual(['chat_voice'])
+  })
+})
