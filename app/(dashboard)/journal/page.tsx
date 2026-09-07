@@ -132,6 +132,8 @@ function JournalContent() {
   // Conversational journal state
   const [conversation, setConversation] = useState<ConversationMessage[]>([])
   const [chatInput, setChatInput] = useState('')
+  // Whether the last chat turn was spoken rather than typed.
+  const [spokeLastTurn, setSpokeLastTurn] = useState(false)
   const [chatLoading, setChatLoading] = useState(false)
   // Metered-chat state. All three are populated by the reply itself, so
   // the strip under the chat needs no extra round trip.
@@ -625,10 +627,13 @@ function JournalContent() {
   }
 
   // Conversational journal handlers
-  const sendChatMessage = useCallback(async () => {
-    if (!chatInput.trim() || chatLoading || chatBlocked) return
-    const userMessage = chatInput.trim()
-    setChatInput('')
+  const sendChatMessage = useCallback(async (spokenText?: string) => {
+    const source = (spokenText ?? chatInput).trim()
+    if (!source || chatLoading || chatBlocked) return
+    const userMessage = source
+    // A spoken message gets a spoken reply — see SpeakReplyButton autoPlay.
+    setSpokeLastTurn(!!spokenText)
+    if (!spokenText) setChatInput('')
 
     const newConversation = [...conversation, { role: 'user' as const, content: userMessage }]
     setConversation(newConversation)
@@ -1038,7 +1043,11 @@ function JournalContent() {
                       {msg.content}
                     </div>
                     {msg.role === 'assistant' && (
-                      <SpeakReplyButton text={msg.content} onUpgrade={openUpgradeModal} />
+                      <SpeakReplyButton
+                        text={msg.content}
+                        onUpgrade={openUpgradeModal}
+                        autoPlay={spokeLastTurn && i === conversation.length - 1}
+                      />
                     )}
                   </div>
                 ))}
@@ -1063,8 +1072,15 @@ function JournalContent() {
                 <div ref={chatEndRef} />
               </div>
 
-              {/* Pinned input at bottom of card */}
+              {/* Pinned input at bottom of card.
+                  Voice sits beside the text box rather than replacing it:
+                  speaking is what makes this a conversation, but it's also
+                  the thing you can't do on a train or at a desk, and
+                  voice-only is exactly what left Today's Minute unused. */}
               <div className="flex items-end gap-2 p-3 border-t border-white/15">
+                <VoiceInput
+                  onTranscript={(text) => { if (text.trim()) sendChatMessage(text) }}
+                />
                 <textarea
                   value={chatInput}
                   onChange={e => {
@@ -1083,7 +1099,7 @@ function JournalContent() {
                   style={{ maxHeight: '120px' }}
                 />
                 <button
-                  onClick={sendChatMessage}
+                  onClick={() => sendChatMessage()}
                   disabled={!chatInput.trim() || chatLoading || !!chatBlocked}
                   className={`p-3 rounded-xl transition-all ${
                     chatInput.trim() && !chatLoading && !chatBlocked

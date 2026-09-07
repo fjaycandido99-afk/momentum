@@ -30,7 +30,9 @@ import { Mic, MicOff, Loader2 } from 'lucide-react'
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void
-  onInterim: (text: string) => void
+  /** Live partial text while speaking. Optional — the chat composer sends
+   *  the finished transcript straight off and has nowhere to show interim. */
+  onInterim?: (text: string) => void
   disabled?: boolean
 }
 
@@ -113,7 +115,7 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
         else interim += transcript
       }
       if (final) onTranscript(final)
-      if (interim) onInterim(interim)
+      if (interim) onInterim?.(interim)
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onerror = (event: any) => {
@@ -131,7 +133,7 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
     }
     recognition.onend = () => {
       setIsRecording(false)
-      onInterim('')
+      onInterim?.('')
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
     }
 
@@ -196,7 +198,7 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
             : 'Transcription error.')
         } finally {
           setIsTranscribing(false)
-          onInterim('')
+          onInterim?.('')
         }
       }
       recorderRef.current = recorder

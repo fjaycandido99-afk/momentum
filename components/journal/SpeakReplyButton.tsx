@@ -13,14 +13,31 @@
  * the text reply is already there and is the actual product.
  */
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Volume2, Loader2, VolumeX } from 'lucide-react'
 
 type State = 'idle' | 'loading' | 'playing' | 'unavailable'
 
-export function SpeakReplyButton({ text, onUpgrade }: { text: string; onUpgrade?: () => void }) {
+export function SpeakReplyButton({
+  text,
+  onUpgrade,
+  autoPlay = false,
+}: {
+  text: string
+  onUpgrade?: () => void
+  /**
+   * Speak this reply without being asked.
+   *
+   * Only ever set when the user SPOKE their message — a conversation you
+   * talk to has to talk back, or it isn't one. Typed messages keep
+   * tap-to-play: someone journalling on a train has not consented to their
+   * phone talking, and every playback costs ElevenLabs characters.
+   */
+  autoPlay?: boolean
+}) {
   const [state, setState] = useState<State>('idle')
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const autoPlayedRef = useRef(false)
 
   const stop = useCallback(() => {
     audioRef.current?.pause()
@@ -67,6 +84,15 @@ export function SpeakReplyButton({ text, onUpgrade }: { text: string; onUpgrade?
       setState('unavailable')
     }
   }, [text, state, stop, onUpgrade])
+
+  // Autoplay once per reply, and only once: re-renders must not restart it,
+  // and a failed attempt must not retry in a loop burning credits.
+  useEffect(() => {
+    if (!autoPlay || autoPlayedRef.current) return
+    autoPlayedRef.current = true
+    void play()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay])
 
   if (state === 'unavailable') {
     return (
