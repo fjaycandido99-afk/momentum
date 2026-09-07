@@ -45,7 +45,7 @@ export function SpeakReplyButton({
     setState('idle')
   }, [])
 
-  const play = useCallback(async () => {
+  const play = useCallback(async (userInitiated: boolean) => {
     if (state === 'loading') return
     if (state === 'playing') return stop()
 
@@ -59,8 +59,14 @@ export function SpeakReplyButton({
 
       if (res.status === 403) {
         // Locked on this tier, or the day's spoken replies are used up.
+        //
+        // Only pitch the upgrade if the user ASKED to hear this. In Talking
+        // mode playback is automatic, so upselling here would throw a modal
+        // over a conversation nobody interrupted — the app interrupting you
+        // to sell you something you didn't just reach for. Autoplay simply
+        // goes quiet and the button stays there to tap.
         setState('idle')
-        onUpgrade?.()
+        if (userInitiated) onUpgrade?.()
         return
       }
       if (!res.ok) {
@@ -90,7 +96,7 @@ export function SpeakReplyButton({
   useEffect(() => {
     if (!autoPlay || autoPlayedRef.current) return
     autoPlayedRef.current = true
-    void play()
+    void play(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPlay])
 
@@ -105,7 +111,7 @@ export function SpeakReplyButton({
 
   return (
     <button
-      onClick={play}
+      onClick={() => play(true)}
       aria-label={state === 'playing' ? 'Stop' : 'Play this reply aloud'}
       className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-white/40 transition-colors hover:text-white/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30"
     >
