@@ -239,8 +239,11 @@ describe('forced-choice items', () => {
     expect(choice.text.length).toBeGreaterThan(0)
   })
 
-  it('mixes both shapes into a single run', () => {
-    const seq = pickSequence(12, new Set(), empty)
+  it('draws from both shapes, not just the scale items', () => {
+    // Over a run long enough to drain the bank, both kinds must appear.
+    // Asserting this on a 12-item run was flaky: the picker is random and
+    // 40 of the 56 items are scale, so an all-scale run is perfectly legal.
+    const seq = pickSequence(ASSESSMENT_ITEMS.length, new Set(), empty)
     expect(seq.some(i => i.kind === 'choice')).toBe(true)
     expect(seq.some(i => i.kind === 'scale')).toBe(true)
   })

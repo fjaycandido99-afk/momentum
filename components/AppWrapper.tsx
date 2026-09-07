@@ -65,8 +65,22 @@ export function AppWrapper({ children }: AppWrapperProps) {
     if (!isNative) return
     ;(async () => {
       try {
-        const { Keyboard } = await import('@capacitor/keyboard')
+        const { Keyboard, KeyboardResize } = await import('@capacitor/keyboard')
         await Keyboard.setAccessoryBarVisible({ isVisible: false })
+
+        // Set the resize mode at RUNTIME, not just in capacitor.config.ts.
+        //
+        // The config value is compiled into the binary and only takes effect
+        // after a rebuild, but this plugin is already in the installed app,
+        // so calling it here reaches the phone through an ordinary web
+        // deploy. Worth doing because the default 'native' mode resizes the
+        // WebView frame when the keyboard opens, and that resize is when
+        // WKWebView re-applies a safe-area inset the CSS has already
+        // applied — the ~59px the header keeps dropping by.
+        //
+        // This is the half of the fix that can ship without a rebuild. The
+        // other half, ios.contentInset: 'never', still needs one.
+        await Keyboard.setResizeMode({ mode: KeyboardResize.Body })
       } catch (err) {
         // Plugin not available on this platform — fine, ignore.
         console.debug('[keyboard] accessory bar hide skipped:', err)
