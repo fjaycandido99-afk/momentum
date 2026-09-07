@@ -28,6 +28,18 @@ export async function createClient() {
       }
     }
   } catch (e) {
+    // Next signals "this route cannot be rendered statically" by THROWING
+    // from headers(). That is control flow, not a failure — it is how a page
+    // bails out to dynamic rendering. Catching it here reported six auth
+    // errors per build for /login and /signup, which is alarming, wrong, and
+    // would hide a genuine bearer-token problem in the noise.
+    //
+    // It also ate the bail-out signal. The build kept working only because
+    // cookies() below throws the same error again outside this try — so
+    // static generation was being prevented by accident. Wrap that call too
+    // and a login page could render statically with no auth at all.
+    if ((e as { digest?: string })?.digest === 'DYNAMIC_SERVER_USAGE') throw e
+
     // Bearer auth failed — fall through to cookie-based auth
     console.error('[Auth] Bearer token validation failed:', e)
   }
