@@ -111,8 +111,23 @@ export function DailyGuideHome({ embedded = false, initialSession = null }: Dail
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
 
-  // Session state
+  // Session state.
+  //
+  // Two things kept this landing on the wrong card. A ?session= deep link
+  // from a notification pinned the guide to that segment with no expiry, so
+  // last night's bedtime reminder still had you on Bedtime Story the next
+  // morning. And getCurrentSession() was called here with no wake time, so
+  // it used the 07:00 default — which at mount is all it COULD use, since
+  // preferences haven't loaded yet. Someone who wakes at 05:00 or turns in
+  // at 21:00 got somebody else's schedule.
+  //
+  // So: the deep link wins while it's fresh, and after that the clock wins,
+  // recomputed with the user's real wake time once we know it.
   const [activeSession, setActiveSession] = useState<SessionType>(() => initialSession ?? getCurrentSession())
+  /** A segment the user tapped themselves is never overridden by the clock. */
+  const userChoseSessionRef = useRef(false)
+  /** When the notification deep link arrived; 0 when there wasn't one. */
+  const deepLinkAtRef = useRef(initialSession ? Date.now() : 0)
   const [completedSessions, setCompletedSessions] = useState<SessionType[]>([])
   const [loadingSession, setLoadingSession] = useState<SessionType | null>(null)
   const [sessionAudio, setSessionAudio] = useState<Record<string, AudioData>>({})
@@ -134,9 +149,34 @@ export function DailyGuideHome({ embedded = false, initialSession = null }: Dail
   const [todayKey, setTodayKey] = useState(() => getDateString(new Date()))
   const today = new Date()
   const wakeTime = preferences?.wake_time || '07:00'
+  // The user's own bedtime, when they've set one. Without it the end of the
+  // day is derived from the start of it, which assumes everyone keeps the
+  // same hours — see getTimeWindows.
+  const bedtime = (preferences?.bedtime_reminder_time as string | null) ?? null
 
   // Get session statuses for timeline
-  const sessionStatuses = getAllSessionsStatus(completedSessions, today, wakeTime)
+  const sessionStatuses = getAllSessionsStatus(completedSessions, today, wakeTime, bedtime)
+
+  /**
+   * A notification deep link should open the card it was about — but only
+   * while it's actually being followed. Tapping a reminder puts you in the
+   * app within seconds, so anything older than this is a stale URL being
+   * re-entered, not an intention.
+   */
+  const DEEP_LINK_TTL_MS = 5 * 60 * 1000
+
+  const syncSessionToClock = useCallback((wake: string, bed: string | null) => {
+    if (userChoseSessionRef.current) return
+    if (deepLinkAtRef.current && Date.now() - deepLinkAtRef.current < DEEP_LINK_TTL_MS) return
+    setActiveSession(getCurrentSession(new Date(), wake, bed))
+  }, [])
+
+  // Once preferences arrive we finally know the real wake time — recompute,
+  // because the session picked at mount could only have used the 07:00
+  // default.
+  useEffect(() => {
+    syncSessionToClock(wakeTime, bedtime)
+  }, [wakeTime, bedtime, syncSessionToClock])
 
   // Adaptive recommendation from the user's current state. `today` is the
   // client's local Date (this is a 'use client' component), so the session
@@ -145,7 +185,7 @@ export function DailyGuideHome({ embedded = false, initialSession = null }: Dail
   const adaptiveRec = getAdaptiveRecommendation({
     mood: moodAfter || moodBefore,
     energy: (guide?.energy_level as string | undefined) || null,
-    currentSession: getCurrentSession(today, wakeTime),
+    currentSession: getCurrentSession(today, wakeTime, bedtime),
     completedSessions,
   })
 
@@ -222,17 +262,24 @@ export function DailyGuideHome({ embedded = false, initialSession = null }: Dail
       if (newKey !== todayKey) {
         setTodayKey(newKey)
         setCompletedSessions([])
-        setActiveSession(getCurrentSession())
+        userChoseSessionRef.current = false
+        deepLinkAtRef.current = 0
+        setActiveSession(getCurrentSession(new Date(), wakeTime, bedtime))
         setMoodBefore(null)
         setMoodAfter(null)
         setGuide(null)
         setIsLoading(true)
         fetchData()
+      } else {
+        // Same day, but the app may have been in the background for hours —
+        // morning can become evening without the date changing. Re-check the
+        // clock rather than leaving whatever card was on screen.
+        syncSessionToClock(wakeTime, bedtime)
       }
     }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
-  }, [todayKey, fetchData])
+  }, [todayKey, fetchData, wakeTime, bedtime, syncSessionToClock])
 
   // Cleanup session active on unmount
   useEffect(() => {
@@ -419,7 +466,7 @@ export function DailyGuideHome({ embedded = false, initialSession = null }: Dail
             id: s.session.id,
             status: s.status,
           }))}
-          onSelect={(id) => setActiveSession(id)}
+          onSelect={(id) => { userChoseSessionRef.current = true; setActiveSession(id) }}
           activeSession={activeSession}
         />
       </div>
@@ -464,7 +511,7 @@ export function DailyGuideHome({ embedded = false, initialSession = null }: Dail
           {adaptiveRec && adaptiveRec.kind !== 'reset' && (
             <button
               onClick={() => {
-                if (adaptiveRec.session) setActiveSession(adaptiveRec.session)
+                if (adaptiveRec.session) { userChoseSessionRef.current = true; setActiveSession(adaptiveRec.session) }
               }}
               className="w-full text-left rounded-2xl border border-white/15 bg-white/[0.05] p-4 press-scale"
             >

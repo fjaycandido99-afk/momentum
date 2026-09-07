@@ -89,15 +89,23 @@ function parseHour(timeStr: string): number {
  * Get time windows adjusted by user's wake time.
  * The wake time shifts the morning start; other windows adjust proportionally.
  */
-export function getTimeWindows(wakeTime: string = '07:00'): TimeWindows {
+export function getTimeWindows(wakeTime: string = '07:00', bedtime?: string | null): TimeWindows {
   const wake = parseHour(wakeTime)
 
   // Morning Prime: wake time → wake + 6 hours (capped at reasonable midday)
   const morningEnd = Math.min(wake + 6, 14)
   // Midday Reset: morning end → morning end + 5 hours
   const middayEnd = Math.min(morningEnd + 5, 19)
-  // Wind Down: midday end → midday end + 4 hours (max 23)
-  const windDownEnd = Math.min(middayEnd + 4, 23)
+
+  // Wind Down ends when Bedtime begins. If the user has set a bedtime we use
+  // it: deriving the end of the day from the START of it assumed everyone
+  // keeps the same hours, so someone turning in at 21:00 was still being
+  // shown Wind Down. Kept at least an hour after midday so the window can't
+  // collapse or invert if someone sets a very early bedtime.
+  const derivedEnd = Math.min(middayEnd + 4, 23)
+  const windDownEnd = bedtime
+    ? Math.min(Math.max(parseHour(bedtime), middayEnd + 1), 23)
+    : derivedEnd
   // Bedtime Story: wind down end → wake time (next day)
 
   return {
@@ -111,9 +119,9 @@ export function getTimeWindows(wakeTime: string = '07:00'): TimeWindows {
 /**
  * Get the current session based on time of day
  */
-export function getCurrentSession(now: Date = new Date(), wakeTime: string = '07:00'): SessionType {
+export function getCurrentSession(now: Date = new Date(), wakeTime: string = '07:00', bedtime?: string | null): SessionType {
   const hour = now.getHours()
-  const windows = getTimeWindows(wakeTime)
+  const windows = getTimeWindows(wakeTime, bedtime)
 
   // Check each window (bedtime_story wraps around midnight)
   if (hour >= windows.morning_prime.start && hour < windows.morning_prime.end) {
@@ -135,10 +143,11 @@ export function getCurrentSession(now: Date = new Date(), wakeTime: string = '07
 export function getAllSessionsStatus(
   completedSessions: SessionType[],
   now: Date = new Date(),
-  wakeTime: string = '07:00'
+  wakeTime: string = '07:00',
+  bedtime?: string | null
 ): SessionState[] {
-  const currentSession = getCurrentSession(now, wakeTime)
-  const windows = getTimeWindows(wakeTime)
+  const currentSession = getCurrentSession(now, wakeTime, bedtime)
+  const windows = getTimeWindows(wakeTime, bedtime)
   const hour = now.getHours()
 
   // Session order for the day
