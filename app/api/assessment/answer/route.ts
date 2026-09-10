@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
 import { loadState, recordAnswer } from '@/lib/assessment/service'
+import { resolveSignature } from '@/lib/assessment/cohort'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,6 +37,12 @@ export async function POST(request: NextRequest) {
     // Hand back the updated read so the popup can show progress immediately
     // rather than making the client fetch again.
     const { read } = await loadState(user.id, prefs?.timezone ?? null)
+
+    // Keep the cohort row in step with the answer that just moved it. Doing
+    // this on the write path rather than on a cron means the share is never
+    // counting a signature its owner has already grown out of.
+    await resolveSignature(user.id, read)
+
     return NextResponse.json({ ok: true, read })
   } catch (error) {
     console.error('Assessment answer error:', error)

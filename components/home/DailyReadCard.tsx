@@ -85,12 +85,10 @@ export function DailyReadCard({
         {/* Once there is a read, show it. This card is the feature's only
             permanent home now — the Progress panel was buried among twenty
             others and nobody could find it. */}
-        {data.leanName && (
+        {data.signatureName && (
           <div className="mt-3">
-            <p className="text-[11px] text-white/50 mb-0.5">Leaning toward</p>
-            <p className="text-xl font-medium text-white">
-              <span className="mr-1.5">{data.leanIcon}</span>{data.leanName}
-            </p>
+            <p className="text-[11px] text-white/50 mb-0.5">Your read</p>
+            <p className="text-xl font-medium text-white">{data.signatureName}</p>
           </div>
         )}
         <div className="mt-auto pt-2 flex flex-col gap-2">

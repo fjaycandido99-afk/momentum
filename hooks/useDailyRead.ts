@@ -12,6 +12,8 @@ export interface DailyReadToday {
   lean: string | null
   leanName: string | null
   leanIcon: string | null
+  /** The name the card shows — see app/api/assessment/today/route.ts. */
+  signatureName: string | null
   completeness: number
 }
 

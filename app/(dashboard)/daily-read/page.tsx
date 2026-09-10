@@ -6,12 +6,23 @@ import { ChevronLeft, Compass, Loader2, Check } from 'lucide-react'
 
 interface BatchItem { id: string; kind: 'scale' | 'choice'; text: string; options?: { text: string }[] }
 interface AxisRead { id: string; label: string; low: string; high: string; value: number; answers: number }
+interface Signature {
+  key: string | null
+  name: string
+  blurb: string
+  probe: string
+  /** False while only one axis is strong — a trait, not yet a name. */
+  named: boolean
+  /** This name's own margin. The mindset model's confidence is not it. */
+  confidence: 'none' | 'early' | 'emerging' | 'clear'
+}
 interface ReadResponse {
+  signature: Signature | null
+  /** Percent of reads landing on the same signature, or null if too few. */
+  share: number | null
   lean: string | null
   leanName: string | null
   leanIcon: string | null
-  runnerUpName: string | null
-  confidence: 'none' | 'early' | 'emerging' | 'clear'
   answered: number
   completeness: number
   axes: AxisRead[]
@@ -143,27 +154,36 @@ export default function DailyReadPage() {
               {reached ? 'That’s enough for a first read' : `${answered} answered`}
             </p>
             <p className="text-sm text-white/60 mb-7">
-              {read?.lean
+              {read?.signature
                 ? 'It keeps moving as you answer more.'
                 : `${Math.max(0, batch.needed - answered)} more and it can start telling you something.`}
             </p>
 
             {/* The read, in the place you just earned it — rather than a
-                "go and look somewhere else" button. */}
-            {read?.lean && (
+                "go and look somewhere else" button.
+
+                The headline names a SIGNATURE, not a mindset. Naming one of
+                the eight here put this screen in competition with the mindset
+                the user chose themselves, so a read landed as "you picked
+                wrong" instead of "here's what you're like". The nearest
+                mindset is a footnote now. */}
+            {read?.signature && (
               <div className="text-left rounded-2xl bg-white/[0.04] border border-white/10 p-5 mb-6">
-                <p className="text-xs text-white/50 mb-1">Leaning toward</p>
-                <p className="text-2xl font-medium text-white mb-2">
-                  <span className="mr-2">{read.leanIcon}</span>{read.leanName}
-                </p>
+                <p className="text-xs text-white/50 mb-1">Your read</p>
+                <p className="text-2xl font-medium text-white mb-2">{read.signature.name}</p>
+                <p className="text-sm text-white/75 mb-3">{read.signature.blurb}</p>
                 <p className="text-xs text-white/60 mb-5">
-                  {read.confidence === 'clear'
-                    ? 'This has held steady for a while.'
-                    : read.confidence === 'emerging'
-                      ? 'A pattern is starting to show.'
-                      : 'Early days — this can still move a lot.'}
-                  {read.runnerUpName && read.confidence !== 'clear' && (
-                    <> Closest alternative is {read.runnerUpName}.</>
+                  {!read.signature.named
+                    ? 'One more side of this and it gets a name.'
+                    : read.signature.confidence === 'clear'
+                      ? 'This has held steady for a while.'
+                      : read.signature.confidence === 'emerging'
+                        ? 'A pattern is starting to show.'
+                        : 'Early days — this can still move a lot.'}
+                  {/* Only ever rendered when the server had enough reads to
+                      mean it. No floor, no placeholder, no "you and 4 others". */}
+                  {typeof read.share === 'number' && (
+                    <> {read.share}% of reads land here.</>
                   )}
                 </p>
 
@@ -196,15 +216,44 @@ export default function DailyReadPage() {
                   <span className="text-white/40">{read.answered} answered</span>
                   <span className="text-white/40">{Math.round(read.completeness * 100)}% of the picture</span>
                 </div>
+
+                {/* The mindset, demoted to what it always was: a comparison,
+                    offered — not a verdict on the one they chose. */}
+                {read.leanName && (
+                  <p className="text-[11px] text-white/35 mt-3 pt-3 border-t border-white/[0.07]">
+                    Answers like these usually sit near {read.leanIcon} {read.leanName}.
+                  </p>
+                )}
               </div>
             )}
 
-            <button
-              onClick={() => router.push('/')}
-              className="w-full py-3.5 rounded-xl bg-white/[0.06] border border-white/[0.12] text-sm text-white/90 font-medium hover:bg-white/[0.12] transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-            >
-              Done
-            </button>
+            {/* "Done" alone was a dead end — a result with nothing to do about
+                it. This hands the read to the conversation the same way the
+                minute does, seeded with the signature's own question so the
+                chat opens on something specific rather than "how are you". */}
+            {read?.signature ? (
+              <>
+                <button
+                  onClick={() => router.push('/journal?mode=chat&from=read')}
+                  className="w-full py-3.5 rounded-xl bg-white text-black text-sm font-medium hover:bg-white/90 active:scale-[0.99] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                >
+                  Talk it through
+                </button>
+                <button
+                  onClick={() => router.push('/')}
+                  className="w-full py-3 mt-1 text-sm text-white/50 hover:text-white/80 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded-xl"
+                >
+                  Done
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => router.push('/')}
+                className="w-full py-3.5 rounded-xl bg-white/[0.06] border border-white/[0.12] text-sm text-white/90 font-medium hover:bg-white/[0.12] transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+              >
+                Done
+              </button>
+            )}
           </div>
         ) : current ? (
           <div className="pt-6 max-w-sm mx-auto">

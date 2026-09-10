@@ -5,6 +5,8 @@ import { loadState, nextItemFor } from '@/lib/assessment/service'
 import { SCALE, toWire } from '@/lib/assessment/items'
 import { MIN_ANSWERS_FOR_READ } from '@/lib/assessment/axes'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
+import { computeSignature } from '@/lib/assessment/signature'
+import { loadSignatureKey } from '@/lib/assessment/cohort'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,6 +36,12 @@ export async function GET() {
     const state = await loadState(user.id, prefs?.timezone ?? null)
     const item = nextItemFor(state)
 
+    // Read-only: the card shows the standing name but never sets one. The
+    // stored key has to come along or home would render the raw reading
+    // while the read screen renders the sticky one, and they would disagree
+    // on the days a name is drifting.
+    const signature = computeSignature(state.read, await loadSignatureKey(user.id))
+
     return NextResponse.json({
       // Show whenever there is something to ask today, and hide once it has
       // been answered.
@@ -56,6 +64,10 @@ export async function GET() {
       lean: state.read.lean,
       leanName: state.read.lean ? MINDSET_CONFIGS[state.read.lean].name : null,
       leanIcon: state.read.lean ? MINDSET_CONFIGS[state.read.lean].icon : null,
+      // What the card actually shows. The mindset fields above stay because
+      // `show` still keys off `lean`, but the card names the signature — the
+      // home screen shouldn't tell someone they picked the wrong mindset.
+      signatureName: signature?.name ?? null,
       completeness: state.read.completeness,
     })
   } catch (error) {

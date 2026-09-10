@@ -683,6 +683,38 @@ function JournalContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Seed the chat from the Daily Read.
+  //
+  // ?from=read means they just finished a run of questions and tapped "Talk
+  // it through". The signature's own question becomes the opening turn, so
+  // the conversation starts on something specific instead of a blank box
+  // under a result they can't do anything with. Written client-side from the
+  // read itself — no model call, so opening this costs nothing until they
+  // actually reply.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (new URLSearchParams(window.location.search).get('from') !== 'read') return
+    if (conversation.length > 0) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/assessment/read')
+        if (!res.ok) return
+        const data = await res.json()
+        const sig = data?.signature
+        if (cancelled || !sig?.probe) return
+        const opener = sig.named
+          ? `Your read came back as ${sig.name} — ${sig.blurb} ${sig.probe}`
+          : `${sig.blurb} ${sig.probe}`
+        setConversation([{ role: 'assistant', content: opener }])
+      } catch {
+        // No seed — the user simply starts the conversation themselves.
+      }
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Conversational journal handlers
   const sendChatMessage = useCallback(async (spokenText?: string) => {
     const source = (spokenText ?? chatInput).trim()

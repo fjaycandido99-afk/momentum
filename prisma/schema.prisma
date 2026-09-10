@@ -60,6 +60,7 @@ model User {
 
   // Daily Read
   assessmentAnswers AssessmentAnswer[]
+  assessmentSignature AssessmentSignature?
 }
 
 model Subscription {
@@ -925,4 +926,24 @@ model AssessmentAnswer {
   @@index([user_id, created_at])
   @@index([user_id, item_id])
   @@index([user_id, local_day])
+}
+
+// The name the Daily Read currently gives this user, kept as a row so the
+// "how many people land here" share is one grouped count over <=24 buckets
+// rather than a scan of every answer ever written. Derived data: only ever
+// recomputed from AssessmentAnswer, never edited, and losing it costs a
+// recompute and nothing else.
+//
+// Someone sitting near the centre has no signature and simply has no row —
+// they are not a cohort, and counting them as one would flatter the share.
+model AssessmentSignature {
+  user_id String @id
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  signature String // key from lib/assessment/signature.ts
+  answered  Int    // answers behind it, so thin rows can be excluded later
+
+  updated_at DateTime @updatedAt
+
+  @@index([signature])
 }
