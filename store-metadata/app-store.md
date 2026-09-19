@@ -45,17 +45,17 @@ HOW IT WORKS
 
 ALSO INSIDE
 
-• A journal that is always yours: never locked behind a paywall, and you can export it
+• A journal you can export anytime
 • A daily guide shaped around your wake time and schedule
 • Free motivation and focus music videos
-• Soundscapes for focus, rest and sleep
+• Free soundscapes for focus, rest and sleep
 • Streaks and progress
 
 FREE AND PREMIUM
 
-Free: Today's Minute, your journal, 5 coach messages a day and one spoken reply a day.
+Free: Today's Minute, your journal (last 7 days), 5 coach messages a day, one spoken reply a day, and every music video and soundscape.
 
-Premium: unlimited conversation, up to 30 spoken replies a day, memory across your last 30 days, every voice tone, and the full soundscape and guided-session library.
+Premium: unlimited conversation, up to 30 spoken replies a day, memory across your last 30 days, full journal history, every voice tone and every guided voice session.
 
 Start with a free trial. Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in your Apple ID settings.
 
@@ -79,15 +79,15 @@ https://voxu.app/privacy
 https://voxu.app/support
 
 ## What's New
-Your coach talks back now. Record Today's Minute and keep the conversation going, out loud or by text. Also new: the Daily Read, and motivation and music videos are free for everyone.
+Your coach talks back now. Record Today's Minute and keep the conversation going, out loud or by text. Also new: the Daily Read, and music, motivation and soundscapes are now free for everyone.
 
 ## Copyright
 Copyright 2026 Voxu. All rights reserved.
 
 ## Review Notes
 - The app requires an internet connection for AI-generated content
-- Free tier: Today's Minute, journal, 5 AI coach messages/day, 1 spoken reply/day, motivation and music videos, 4 soundscapes
-- Premium unlocks unlimited coach messages, up to 30 spoken replies/day, 30-day AI memory (opt-in), all voice tones, soundscapes and guided sessions
+- Free tier: Today's Minute, journal (last 7 days), 5 AI coach messages/day, 1 spoken reply/day, all music, motivation videos and soundscapes (YouTube embeds, never paywalled)
+- Premium unlocks unlimited coach messages, up to 30 spoken replies/day, 30-day AI memory (opt-in), full journal history, all voice tones and guided voice sessions
 - Background audio playback is supported via Audio background mode
 
 ### Test Account for Review

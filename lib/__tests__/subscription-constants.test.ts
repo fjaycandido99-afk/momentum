@@ -16,23 +16,6 @@ describe('isContentFree', () => {
     expect(isContentFree('voiceGuide', 'anything', true)).toBe(true)
   })
 
-  describe('soundscape', () => {
-    it('free by index within limit', () => {
-      expect(isContentFree('soundscape', 0, false)).toBe(true)
-      expect(isContentFree('soundscape', 3, false)).toBe(true)
-    })
-    it('not free by index outside limit', () => {
-      expect(isContentFree('soundscape', 4, false)).toBe(false)
-    })
-    it('free by id in freeIds', () => {
-      expect(isContentFree('soundscape', 'focus', false)).toBe(true)
-      expect(isContentFree('soundscape', 'relax', false)).toBe(true)
-    })
-    it('not free by id not in freeIds', () => {
-      expect(isContentFree('soundscape', 'cosmic', false)).toBe(false)
-    })
-  })
-
   describe('voiceGuide', () => {
     it('breathing is free', () => {
       expect(isContentFree('voiceGuide', 'breathing', false)).toBe(true)
@@ -44,7 +27,7 @@ describe('isContentFree', () => {
 
   // YouTube embeds: its API terms forbid charging for access, so these must
   // never lock — at any index, by index or id, for a free user.
-  describe.each(['motivation', 'music'] as const)('%s (YouTube)', (type) => {
+  describe.each(['soundscape', 'motivation', 'music'] as const)('%s (YouTube)', (type) => {
     it('is free at every index for free users', () => {
       for (const i of [0, 1, 2, 5, 99]) {
         expect(isContentFree(type, i, false)).toBe(true)
@@ -53,6 +36,12 @@ describe('isContentFree', () => {
     it('is free when addressed by id', () => {
       expect(isContentFree(type, 'dQw4w9WgXcQ', false)).toBe(true)
     })
+  })
+
+  it('soundscapes that used to be premium are free by id', () => {
+    for (const id of ['focus', 'rain', 'ocean', 'cosmic']) {
+      expect(isContentFree('soundscape', id, false)).toBe(true)
+    }
   })
 })
 
@@ -111,7 +100,6 @@ describe('constants', () => {
   })
 
   it('FREEMIUM_LIMITS has expected structure', () => {
-    expect(FREEMIUM_LIMITS.soundscapes.freeCount).toBeGreaterThan(0)
-    expect(FREEMIUM_LIMITS.soundscapes.freeIds.length).toBeGreaterThan(0)
+    expect(FREEMIUM_LIMITS.voiceGuides.freeIds.length).toBeGreaterThan(0)
   })
 })

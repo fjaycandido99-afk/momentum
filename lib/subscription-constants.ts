@@ -18,14 +18,11 @@ export type PremiumFeature =
 
 // Freemium content limits
 export const FREEMIUM_LIMITS = {
-  soundscapes: {
-    freeCount: 4, // First 4 by index: focus, relax, sleep, energy
-    freeIds: ['focus', 'relax', 'sleep', 'energy'],
-  },
   voiceGuides: {
     freeIds: ['breathing'], // Only breathing is free
   },
-  // No motivation / music entries: those are YouTube embeds, free for all.
+  // No soundscape / motivation / music entries: those are YouTube embeds,
+  // free for all.
   voiceTones: {
     freeCount: 1, // User picks one during onboarding, locked afterward
   },
@@ -47,19 +44,15 @@ export function isContentFree(
   if (isPremium) return true
 
   switch (type) {
-    case 'soundscape':
-      if (typeof indexOrId === 'number') {
-        return indexOrId < FREEMIUM_LIMITS.soundscapes.freeCount
-      }
-      return FREEMIUM_LIMITS.soundscapes.freeIds.includes(indexOrId)
-
     case 'voiceGuide':
       return FREEMIUM_LIMITS.voiceGuides.freeIds.includes(String(indexOrId))
 
-    // Motivation and music are YouTube embeds, and YouTube's API terms do
-    // not allow charging for access to its content — so they are never
-    // locked, for anyone. Selling someone else's videos was never ours to
-    // do; the paid tier sells what we make (the coach, voices, our audio).
+    // Soundscapes, motivation and music are YouTube embeds, and YouTube's
+    // API terms do not allow charging for access to its content — so they
+    // are never locked, for anyone. Selling someone else's videos was never
+    // ours to do; the paid tier sells what we make (the coach, voices, our
+    // audio).
+    case 'soundscape':
     case 'motivation':
     case 'music':
       return true

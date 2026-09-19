@@ -29,17 +29,17 @@ HOW IT WORKS
 
 ALSO INSIDE
 
-• A journal that is always yours: never locked behind a paywall, and you can export it
+• A journal you can export anytime
 • A daily guide shaped around your wake time and schedule
 • Free motivation and focus music videos
-• Soundscapes for focus, rest and sleep
+• Free soundscapes for focus, rest and sleep
 • Streaks and progress
 
 FREE AND PREMIUM
 
-Free: Today's Minute, your journal, 5 coach messages a day and one spoken reply a day.
+Free: Today's Minute, your journal (last 7 days), 5 coach messages a day, one spoken reply a day, and every music video and soundscape.
 
-Premium: unlimited conversation, up to 30 spoken replies a day, memory across your last 30 days, every voice tone, and the full soundscape and guided-session library.
+Premium: unlimited conversation, up to 30 spoken replies a day, memory across your last 30 days, full journal history, every voice tone and every guided voice session.
 
 Start with a free trial. Subscriptions renew automatically until cancelled. Manage or cancel anytime in Google Play.
 
