@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { X, Zap } from 'lucide-react'
-import { RARITY_TEXT, RARITY_COLORS, getAchievementById } from '@/lib/achievements'
+import { RARITY_TEXT, RARITY_COLORS, getAchievementById, achievementMark } from '@/lib/achievements'
 import { AchievementBadge } from './AchievementBadge'
 
 interface AchievementCelebrationProps {
@@ -136,6 +136,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
             icon={achievement.icon}
             rarity={achievement.rarity}
             unlocked
+            mark={(() => { const full = getAchievementById(achievement.id); return full ? achievementMark(full) : null })()}
             size={88}
           />
         </div>

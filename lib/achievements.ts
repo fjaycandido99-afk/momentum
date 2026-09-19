@@ -204,8 +204,7 @@ export function getAchievementsByCategory(category: AchievementCategory): Achiev
  * Check which achievements should be newly unlocked based on user stats.
  * Returns only achievements that are NOT already in the unlockedIds set.
  */
-export function checkNewAchievements(
-  stats: {
+export interface AchievementStats {
     streak: number
     totalXP: number
     level: number
@@ -229,7 +228,10 @@ export function checkNewAchievements(
     consecutiveFullDays: number
     /** Optional so callers that don't load era rows can't unlock era badges by accident. */
     era?: EraAchievementStats
-  },
+}
+
+export function checkNewAchievements(
+  stats: AchievementStats,
   unlockedIds: Set<string>
 ): Achievement[] {
   const newlyUnlocked: Achievement[] = []
@@ -304,4 +306,73 @@ export function checkNewAchievements(
   }
 
   return newlyUnlocked
+}
+
+// ─── Display helpers ─────────────────────────────────────────────────────────
+
+function compact(n: number): string {
+  if (n >= 1000) return `${Math.round(n / 100) / 10}K`.replace('.0K', 'K')
+  return String(n)
+}
+
+/**
+ * The stamp on an achievement's coin — what tells two badges in the same
+ * category apart at a glance. Its number where it has one ("7", "30", "365",
+ * "2K"), otherwise null and the badge shows the achievement's own glyph.
+ */
+export function achievementMark(a: Achievement): string | null {
+  const c = a.condition
+  switch (c.type) {
+    case 'streak': return String(c.days)
+    case 'consecutive_days': return String(c.days)
+    case 'count': return c.count > 1 ? compact(c.count) : null
+    case 'xp_total': return compact(c.amount)
+    case 'level': return `L${c.level}`
+    case 'era': return c.count > 1 ? String(c.count) : null
+    default: return null
+  }
+}
+
+/**
+ * How far a locked achievement is, where that's measurable: { current,
+ * target }, current capped at target. Null for one-off or time-of-day ones,
+ * and for anything whose stat isn't loaded — never a guessed number.
+ */
+export function achievementProgress(a: Achievement, stats: AchievementStats): { current: number; target: number } | null {
+  const c = a.condition
+  const of = (current: number, target: number) => ({ current: Math.min(current, target), target })
+  switch (c.type) {
+    case 'streak': return of(stats.streak, c.days)
+    case 'xp_total': return of(stats.totalXP, c.amount)
+    case 'level': return of(stats.level, c.level)
+    case 'count': {
+      const v: Record<string, number> = {
+        journal: stats.journalCount,
+        mood_log: stats.moodLogCount,
+        breathingSession: stats.breathingCount,
+        moduleComplete: stats.moduleCount,
+        full_day_complete: stats.fullDayCount,
+        weekend_active: stats.weekendActiveCount,
+        unique_genres: stats.uniqueGenres,
+        unique_modules: stats.uniqueModuleTypes,
+      }
+      return c.action in v ? of(v[c.action], c.count) : null
+    }
+    case 'era': {
+      if (!stats.era) return null
+      const e = stats.era
+      const v: Record<EraMetric, number> = {
+        promises_made: e.promisesMade,
+        promises_kept: e.promisesKept,
+        promise_streak: e.longestPromiseStreak,
+        eras_started: e.erasStarted,
+        eras_completed: e.erasCompleted,
+        perfect_eras: e.perfectEras,
+        custom_eras: e.customEras,
+        comebacks: e.comebacks,
+      }
+      return of(v[c.metric], c.count)
+    }
+    default: return null
+  }
 }

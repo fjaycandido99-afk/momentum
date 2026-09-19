@@ -6,6 +6,8 @@ import {
   CATEGORY_ICONS,
   CATEGORY_BADGE_IMAGES,
   checkNewAchievements,
+  achievementMark,
+  achievementProgress,
   type EraAchievementStats,
 } from '../achievements'
 import { SERVER_ONLY_XP_EVENTS, XP_REWARDS } from '../gamification'
@@ -90,5 +92,41 @@ describe('era XP events', () => {
       expect(e in XP_REWARDS, e).toBe(true)
       expect(SERVER_ONLY_XP_EVENTS, e).toContain(e)
     }
+  })
+})
+
+describe('achievementMark', () => {
+  const byId = (id: string) => ACHIEVEMENTS.find(a => a.id === id)!
+
+  it('stamps the number that tells same-category badges apart', () => {
+    expect(achievementMark(byId('streak_3'))).toBe('3')
+    expect(achievementMark(byId('streak_365'))).toBe('365')
+    expect(achievementMark(byId('xp_2000'))).toBe('2K')
+    expect(achievementMark(byId('era_kept_7'))).toBe('7')
+  })
+
+  it('has no number for one-offs, so the badge stamps its glyph instead', () => {
+    expect(achievementMark(byId('first_journal'))).toBeNull()
+    expect(achievementMark(byId('era_first_promise'))).toBeNull()
+  })
+
+  it('gives every Consistency badge a different stamp', () => {
+    const marks = ACHIEVEMENTS.filter(a => a.category === 'consistency' && a.condition.type === 'streak').map(achievementMark)
+    expect(new Set(marks).size).toBe(marks.length)
+  })
+})
+
+describe('achievementProgress', () => {
+  const byId = (id: string) => ACHIEVEMENTS.find(a => a.id === id)!
+
+  it('reports current/target, capped at the target', () => {
+    expect(achievementProgress(byId('streak_7'), { ...baseStats, streak: 5 })).toEqual({ current: 5, target: 7 })
+    expect(achievementProgress(byId('streak_7'), { ...baseStats, streak: 12 })).toEqual({ current: 7, target: 7 })
+    expect(achievementProgress(byId('era_kept_7'), { ...baseStats, era: { ...noEra, promisesKept: 5 } })).toEqual({ current: 5, target: 7 })
+  })
+
+  it('never guesses: no progress for time-of-day ones or unloaded stats', () => {
+    expect(achievementProgress(byId('night_owl'), baseStats)).toBeNull()
+    expect(achievementProgress(byId('era_kept_7'), baseStats)).toBeNull()
   })
 })

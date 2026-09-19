@@ -23,6 +23,7 @@ import { MusicTabsSection } from './MusicTabsSection'
 import { WelcomeBackCard } from './WelcomeBackCard'
 import { WisdomSection } from './WisdomSection'
 import { EraHome } from './EraHome'
+import { AchievementShelf } from './AchievementShelf'
 import { mutate as mutateSWR } from 'swr'
 import { logXPEventServer } from '@/lib/gamification'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
@@ -1430,6 +1431,10 @@ export function ImmersiveHome() {
           </Link>
         )}
       </div>
+
+      {/* Next up + recently earned — right under today's loop, so the next
+          unlock is visible from the same screen as the promise that earns it. */}
+      <AchievementShelf />
 
       <WisdomSection />
 

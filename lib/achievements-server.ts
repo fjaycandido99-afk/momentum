@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { XP_REWARDS, type XPEventType, getLevelFromXP } from '@/lib/gamification'
-import { checkNewAchievements, type EraAchievementStats } from '@/lib/achievements'
+import { checkNewAchievements, type AchievementStats, type EraAchievementStats } from '@/lib/achievements'
 import { localDay } from '@/lib/assessment/service'
 import { eraDayNumber, previousDay } from '@/lib/era/logic'
 
@@ -80,16 +80,15 @@ function userLocalHour(timezone: string | null): number {
   }
 }
 
-/** Check every achievement against current stats; insert and pay out new ones. */
-export async function evaluateAndAwardAchievements(
+/**
+ * Every stat the achievements read, for one user. Shared by the awarder
+ * below and by /api/gamification/status, which shows progress on locked
+ * achievements ("Seven Kept · 5/7").
+ */
+export async function gatherAchievementStats(
   userId: string,
   opts: { totalXP: number; streak: number },
-): Promise<{ bonusXP: number; achievements: AwardedAchievement[] }> {
-  const existingAchievements = await prisma.userAchievement.findMany({
-    where: { user_id: userId },
-    select: { achievement_id: true },
-  })
-  const unlockedIds = new Set(existingAchievements.map(a => a.achievement_id))
+): Promise<AchievementStats> {
   const { current } = getLevelFromXP(opts.totalXP)
 
   // Count various stats for achievements
@@ -149,33 +148,43 @@ export async function evaluateAndAwardAchievements(
     return (day === 0 || day === 6) && (g.morning_prime_done || g.midday_reset_done || g.wind_down_done || g.bedtime_story_done)
   }).length
 
-  const newAchievements = checkNewAchievements(
-    {
-      streak: opts.streak,
-      totalXP: opts.totalXP,
-      level: current.level,
-      journalCount,
-      moodLogCount,
-      breathingCount,
-      moduleCount,
-      fullDayCount,
-      weekendActiveCount,
-      uniqueGenres: genreCount.length,
-      uniqueModuleTypes: moduleTypesSeen.size,
-      hasFirstJournal: journalCount > 0,
-      hasFirstSoundscape: soundscapeEvents > 0,
-      hasFirstRoutine: routineCount > 0,
-      hasCompletedGoal: completedGoals > 0,
-      hasFirstPathComplete: false,
-      pathCompleteCount: 0,
-      consecutivePathDays: 0,
-      consecutiveVirtueDays: 0,
-      currentHour: userLocalHour(tzPrefs?.timezone ?? null),
-      consecutiveFullDays,
-      era,
-    },
-    unlockedIds,
-  )
+  return {
+    streak: opts.streak,
+    totalXP: opts.totalXP,
+    level: current.level,
+    journalCount,
+    moodLogCount,
+    breathingCount,
+    moduleCount,
+    fullDayCount,
+    weekendActiveCount,
+    uniqueGenres: genreCount.length,
+    uniqueModuleTypes: moduleTypesSeen.size,
+    hasFirstJournal: journalCount > 0,
+    hasFirstSoundscape: soundscapeEvents > 0,
+    hasFirstRoutine: routineCount > 0,
+    hasCompletedGoal: completedGoals > 0,
+    hasFirstPathComplete: false,
+    pathCompleteCount: 0,
+    consecutivePathDays: 0,
+    consecutiveVirtueDays: 0,
+    currentHour: userLocalHour(tzPrefs?.timezone ?? null),
+    consecutiveFullDays,
+    era,
+  }
+}
+
+/** Check every achievement against current stats; insert and pay out new ones. */
+export async function evaluateAndAwardAchievements(
+  userId: string,
+  opts: { totalXP: number; streak: number },
+): Promise<{ bonusXP: number; achievements: AwardedAchievement[] }> {
+  const existingAchievements = await prisma.userAchievement.findMany({
+    where: { user_id: userId },
+    select: { achievement_id: true },
+  })
+  const unlockedIds = new Set(existingAchievements.map(a => a.achievement_id))
+  const newAchievements = checkNewAchievements(await gatherAchievementStats(userId, opts), unlockedIds)
 
   if (newAchievements.length === 0) return { bonusXP: 0, achievements: [] }
 

@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getLevelFromXP } from '@/lib/gamification'
-import { ACHIEVEMENTS } from '@/lib/achievements'
+import { ACHIEVEMENTS, achievementMark, achievementProgress } from '@/lib/achievements'
+import { gatherAchievementStats } from '@/lib/achievements-server'
 import { getDailyChallenges, checkChallengeCondition } from '@/lib/daily-challenges'
 import { getWeekString, getWeeklyMissions, checkMissionProgress } from '@/lib/weekly-missions'
 import { computeSocialNudges } from '@/lib/social-proof'
@@ -93,11 +94,23 @@ export async function GET() {
 
     // --- Achievements ---
     const unlockedSet = new Set(achievements.map(a => a.achievement_id))
-    const achievementData = ACHIEVEMENTS.map(a => ({
-      ...a,
-      unlocked: unlockedSet.has(a.id),
-      unlockedAt: achievements.find(ua => ua.achievement_id === a.id)?.unlocked_at || null,
-    }))
+    // Progress on locked achievements ("5/7") — the same stats the awarder
+    // reads, so a bar can never show further along than the unlock logic.
+    // Best-effort: a failure here just means no bars, never a broken page.
+    const stats = await gatherAchievementStats(user.id, {
+      totalXP,
+      streak: prefs?.current_streak || 0,
+    }).catch(() => null)
+    const achievementData = ACHIEVEMENTS.map(a => {
+      const unlocked = unlockedSet.has(a.id)
+      return {
+        ...a,
+        unlocked,
+        unlockedAt: achievements.find(ua => ua.achievement_id === a.id)?.unlocked_at || null,
+        mark: achievementMark(a),
+        progress: !unlocked && stats ? achievementProgress(a, stats) : null,
+      }
+    })
 
     // --- Daily Challenges ---
     const mindsetRaw = prefs?.mindset as MindsetId | undefined

@@ -14,6 +14,10 @@ import { AchievementBadge } from './AchievementBadge'
 interface AchievementWithStatus extends Achievement {
   unlocked: boolean
   unlockedAt: string | null
+  /** The coin's stamp — see achievementMark. */
+  mark?: string | null
+  /** How far a locked one is, where measurable — see achievementProgress. */
+  progress?: { current: number; target: number } | null
 }
 
 interface AchievementGridProps {
@@ -108,7 +112,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                           : hidden ? 'Secret achievement, locked' : `${a.title}, locked. ${a.description}`
                       }
                     >
-                      <AchievementBadge category={a.category} icon={a.icon} rarity={a.rarity} unlocked={a.unlocked} size={48} />
+                      <AchievementBadge category={a.category} icon={a.icon} rarity={a.rarity} unlocked={a.unlocked} mark={hidden ? null : a.mark} size={48} />
 
                       <span className={`text-[11px] font-medium text-center leading-tight line-clamp-2 ${
                         a.unlocked ? 'text-white' : 'text-white/45'
@@ -124,9 +128,22 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                           {a.unlockedAt && <span className="text-[10px] text-white/40">{formatDate(a.unlockedAt)}</span>}
                         </span>
                       ) : (
-                        <span className="text-[10px] text-white/35 text-center leading-snug line-clamp-2">
-                          {hidden ? 'Keep going to find it' : a.description}
-                        </span>
+                        <>
+                          <span className="text-[10px] text-white/35 text-center leading-snug line-clamp-2">
+                            {hidden ? 'Keep going to find it' : a.description}
+                          </span>
+                          {!hidden && a.progress && a.progress.current > 0 && (
+                            <span className="w-full flex items-center gap-1.5 mt-0.5">
+                              <span className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
+                                <span
+                                  className="block h-full rounded-full bg-white/70"
+                                  style={{ width: `${Math.round((a.progress.current / a.progress.target) * 100)}%` }}
+                                />
+                              </span>
+                              <span className="text-[10px] text-white/55 tabular-nums">{a.progress.current}/{a.progress.target}</span>
+                            </span>
+                          )}
+                        </>
                       )}
                     </button>
                   )

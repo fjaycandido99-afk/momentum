@@ -167,6 +167,7 @@ function StartHero() {
 
 function EraHero({ era }: { era: EraToday }) {
   const pct = Math.round((era.day / era.lengthDays) * 100)
+  const byDay = new Map(era.days.map(d => [d.day, d.kept]))
   return (
     <Link href="/era" className="block group" aria-label={`${era.title}, day ${era.day} of ${era.lengthDays}. Open your era.`}>
       {heroShell(
@@ -192,11 +193,27 @@ function EraHero({ era }: { era: EraToday }) {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 mt-2.5">
-            <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden" aria-hidden>
-              <div className="h-full rounded-full bg-gradient-to-r from-white/60 to-white transition-all duration-700" style={{ width: `${pct}%` }} />
+          {/* One segment per day — a hairline percentage bar was easy to miss
+              and said nothing about HOW the days went. Kept is solid white,
+              not kept is dim, a day without a promise is faint, today glows
+              until it's answered, and the days ahead are empty. */}
+          <div className="flex items-center gap-3 mt-3">
+            <div className="flex-1 flex gap-[3px]" role="img" aria-label={`Day ${era.day} of ${era.lengthDays}, ${era.stats.kept} promises kept`}>
+              {Array.from({ length: era.lengthDays }, (_, i) => {
+                const n = i + 1
+                const kept = byDay.get(n)
+                const isToday = n === era.day && era.step !== 'complete'
+                const cls =
+                  n > era.day ? 'bg-white/[0.08]'
+                    : kept === true ? 'bg-white'
+                    : kept === false ? 'bg-white/35'
+                    : kept === null ? 'bg-white/60'
+                    : isToday ? 'bg-white/25 animate-pulse motion-reduce:animate-none'
+                    : 'bg-white/15'
+                return <span key={n} className={`flex-1 h-2.5 rounded-[2px] ${cls}`} />
+              })}
             </div>
-            <span className="text-[11px] text-white/55 tabular-nums">{pct}%</span>
+            <span className="text-[11px] text-white/60 tabular-nums">{pct}%</span>
           </div>
         </>,
         era.image,
