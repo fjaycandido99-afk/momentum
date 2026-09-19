@@ -77,6 +77,40 @@ ${input.yesterday === 'broken'
   }
 }
 
+/**
+ * The era, as the coach CHAT sees it — so "Talk to your coach" knows it's
+ * talking to someone on day 9 of Locked In who promised X this morning.
+ *
+ * Not gated on the AI-memory consent: that consent is about the coach reading
+ * the user's journal. The era and the promise were said TO the coach, for
+ * coaching, so knowing them is the point rather than a privacy reach.
+ */
+export function formatEraChatBlock(input: {
+  eraTitle: string
+  day: number
+  lengthDays: number
+  change: string
+  why: string | null
+  stats: EraStats
+  todayPromise: { text: string; kept: boolean | null } | null
+}): string {
+  const lines = [
+    `THE USER'S CURRENT ERA — a ${input.lengthDays}-day commitment they chose, called "${input.eraTitle}". Today is day ${input.day}.`,
+    `On day 1 they said they want to change: "${input.change}"`,
+    input.why ? `Why it matters to them: "${input.why}"` : null,
+    input.stats.answered > 0
+      ? `Promises kept so far: ${input.stats.kept} of ${input.stats.answered} answered.`
+      : null,
+    input.todayPromise
+      ? `Today's promise: "${input.todayPromise.text}" — ${
+          input.todayPromise.kept === null ? 'not checked in yet' : input.todayPromise.kept ? 'they kept it' : "they didn't keep it"
+        }.`
+      : 'They have not made a promise yet today.',
+    'Bring this up only when it is relevant to what they are saying — not in every reply. Use only these facts; never invent a number.',
+  ]
+  return lines.filter(Boolean).join('\n')
+}
+
 export function fallbackPromiseReply(day: number): string {
   return day === 1
     ? "Day 1. You said it out loud — now it's real. Go keep it."

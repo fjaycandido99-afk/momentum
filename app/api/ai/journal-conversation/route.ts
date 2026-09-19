@@ -10,6 +10,7 @@ import { consumeAiQuota } from '@/lib/ai/quota'
 import { buildUserContext } from '@/lib/ai/user-context'
 import { detectCrisisLevel, detectRegion, crisisResourceForLevel } from '@/lib/ai/crisis-detect'
 import { applyVoiceTone } from '@/lib/ai/voice-tone'
+import { buildEraChatContext } from '@/lib/era/service'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,7 +78,13 @@ export async function POST(request: NextRequest) {
       ? crisisResourceForLevel(crisisLevel, detectRegion(prefs?.timezone))
       : null
 
-    const memory = await buildUserContext(user.id, isPremium ? 'premium' : 'free')
+    const [memory, eraBlock] = await Promise.all([
+      buildUserContext(user.id, isPremium ? 'premium' : 'free'),
+      // The era isn't journal memory — it was said to the coach, for
+      // coaching — so it isn't behind the memory consent. See
+      // lib/era/coach.ts formatEraChatBlock.
+      buildEraChatContext(user.id),
+    ])
 
     const mindset = await getUserMindset(user.id)
     const exchangeCount = conversation.filter(m => m.role === 'user').length
@@ -116,6 +123,7 @@ IMPORTANT — this person has just said something that may indicate ${
     const systemPrompt =
       applyVoiceTone(buildMindsetSystemPrompt(basePrompt, mindset), prefs?.guide_tone) +
       (memory.block ? `\n\n${memory.block}` : '') +
+      (eraBlock ? `\n\n${eraBlock}` : '') +
       crisisPrompt
 
     // Build message history for context

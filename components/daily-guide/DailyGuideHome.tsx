@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { SessionCard, SessionTimeline } from './SessionCard'
 import { QuoteCard } from './QuoteCard'
+import { EraPromiseStrip } from './EraPromiseStrip'
 import { SmartNudgeBanner } from './SmartNudgeBanner'
 import { MorningBriefing } from './MorningBriefing'
 import { StreakBadge } from './StreakDisplay'
@@ -504,6 +505,10 @@ export function DailyGuideHome({ embedded = false, initialSession = null }: Dail
               </div>
             </div>
           )}
+
+          {/* The era's promise, carried into the guide — and the check-in
+              itself during the evening sessions. */}
+          {guide.id !== 'demo' && <EraPromiseStrip evening={isCurrentEvening} />}
 
           {/* Adaptive recommendation — only appears when mood/energy signals
               something worth adapting to. Reset kind is suppressed for now

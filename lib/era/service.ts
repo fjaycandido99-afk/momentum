@@ -18,7 +18,7 @@ import {
   type EraStats,
   type EraStep,
 } from './logic'
-import { generatePromiseReply } from './coach'
+import { formatEraChatBlock, generatePromiseReply } from './coach'
 
 /**
  * Server-side Era operations. The rules live in logic.ts; this file only
@@ -135,6 +135,30 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     days: promises
       .filter(p => daysBetween(era.start_day, p.local_day) >= 0)
       .map(p => ({ day: eraDayNumber(era.start_day, p.local_day), localDay: p.local_day, kept: p.kept })),
+  }
+}
+
+/**
+ * The era block for the coach chat's system prompt, or '' when there's no
+ * era running (or it has finished). Never throws — a chat reply is worth more
+ * than this context.
+ */
+export async function buildEraChatContext(userId: string): Promise<string> {
+  try {
+    const era = await loadEraToday(userId)
+    if (!era || era.step === 'complete') return ''
+    return formatEraChatBlock({
+      eraTitle: era.title,
+      day: era.day,
+      lengthDays: era.lengthDays,
+      change: era.change,
+      why: era.why,
+      stats: era.stats,
+      todayPromise: era.today ? { text: era.today.text, kept: era.today.kept } : null,
+    })
+  } catch (err) {
+    console.warn('[era] chat context failed:', err)
+    return ''
   }
 }
 

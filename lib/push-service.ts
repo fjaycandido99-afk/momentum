@@ -1367,6 +1367,30 @@ export async function sendDailyMotivation(): Promise<void> {
  * Send evening reminder notifications with mindset-specific journal prompts
  * Uses the evening_reminder preference (no new schema needed)
  */
+/**
+ * Users (of those given) who made an era promise today, in their own day.
+ *
+ * Their evening already has a push that is about THEM — the 8pm "did you
+ * keep your promise?" — so the generic 9pm evening pushes stand down for
+ * them. One evening touch that matters beats three that don't.
+ */
+async function usersWithEraPromiseToday(userIds: string[]): Promise<Set<string>> {
+  if (userIds.length === 0) return new Set()
+  const since = new Date(Date.now() - 36 * 60 * 60 * 1000)
+  const [rows, prefs] = await Promise.all([
+    prisma.eraPromise.findMany({
+      where: { user_id: { in: userIds }, created_at: { gte: since } },
+      select: { user_id: true, local_day: true },
+    }),
+    prisma.userPreferences.findMany({
+      where: { user_id: { in: userIds } },
+      select: { user_id: true, timezone: true },
+    }),
+  ])
+  const tzMap = new Map(prefs.map(p => [p.user_id, p.timezone]))
+  return new Set(rows.filter(r => r.local_day === localDay(tzMap.get(r.user_id) ?? null)).map(r => r.user_id))
+}
+
 export async function sendEveningReminders(): Promise<void> {
   const subscriptions = await prisma.pushSubscription.findMany({
     where: { evening_reminder: true },
@@ -1378,6 +1402,8 @@ export async function sendEveningReminders(): Promise<void> {
   const allUserIds = subscriptions.map(s => s.user_id)
   const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 21)
   const eligibleSet = new Set(eligibleUserIds)
+  // Anyone who made an era promise today already got their evening push.
+  for (const id of await usersWithEraPromiseToday(eligibleUserIds)) eligibleSet.delete(id)
 
   const now = new Date()
   const startOfYear = new Date(now.getFullYear(), 0, 0)
@@ -1518,6 +1544,9 @@ export async function sendCoachAccountability(): Promise<void> {
   const allUserIds = subscriptions.map(s => s.user_id)
   const eligibleUserIds = await filterUsersByLocalHour(allUserIds, 21)
   const eligibleSet = new Set(eligibleUserIds)
+  // The era check-in at 8pm is this same "how did today go" for anyone who
+  // made a promise — don't ask twice in an hour.
+  for (const id of await usersWithEraPromiseToday(eligibleUserIds)) eligibleSet.delete(id)
 
   let totalSent = 0
   let totalFailed = 0

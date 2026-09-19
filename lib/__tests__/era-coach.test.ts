@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest'
 // prompt builder, so keep the network client out of the module graph.
 vi.mock('@/lib/groq', () => ({ getGroq: vi.fn() }))
 
-import { buildPromiseReplyMessages, isCallbackDay, fallbackPromiseReply, type PromiseReplyInput } from '../era/coach'
+import { buildPromiseReplyMessages, isCallbackDay, fallbackPromiseReply, formatEraChatBlock, type PromiseReplyInput } from '../era/coach'
 
 const base: PromiseReplyInput = {
   eraTitle: 'Locked In',
@@ -73,5 +73,39 @@ describe('fallbackPromiseReply', () => {
     expect(fallbackPromiseReply(1)).toMatch(/^Day 1\./)
     expect(fallbackPromiseReply(12)).toMatch(/^Day 12\./)
     expect(fallbackPromiseReply(12)).not.toMatch(/\d+ of \d+|%/)
+  })
+})
+
+describe('formatEraChatBlock', () => {
+  const input = {
+    eraTitle: 'Locked In',
+    day: 9,
+    lengthDays: 30,
+    change: 'I waste my mornings',
+    why: null,
+    stats: { made: 8, answered: 7, kept: 5, keptPercent: 71, promiseStreak: 8 },
+    todayPromise: { text: 'Finish the report', kept: null },
+  }
+
+  it('tells the chat the era, the day, the record and today', () => {
+    const block = formatEraChatBlock(input)
+    expect(block).toContain('"Locked In"')
+    expect(block).toContain('Today is day 9.')
+    expect(block).toContain('5 of 7 answered')
+    expect(block).toContain('"Finish the report" — not checked in yet')
+  })
+
+  it('says when there is no promise yet, and leaves out a record that does not exist', () => {
+    const block = formatEraChatBlock({
+      ...input,
+      stats: { made: 0, answered: 0, kept: 0, keptPercent: null, promiseStreak: 0 },
+      todayPromise: null,
+    })
+    expect(block).toContain('not made a promise yet today')
+    expect(block).not.toMatch(/Promises kept so far/)
+  })
+
+  it('tells the model not to bring it up every turn', () => {
+    expect(formatEraChatBlock(input)).toMatch(/only when it is relevant/)
   })
 })
