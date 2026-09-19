@@ -33,6 +33,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
       'Focus: the one important thing they keep avoiding. Push toward starting it early and finishing before distractions win. Name drift plainly when you see it.',
     soundscapeId: 'focus',
     guideId: 'focus_meditation',
+    image: '/era/locked_in.jpg',
   },
   discipline: {
     coachFocus:

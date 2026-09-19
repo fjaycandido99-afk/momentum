@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { ERA_PRESETS, CUSTOM_ERA_KEY } from '../era/presets'
 import { ERA_PROGRAMS, programFor } from '../era/programs'
 import { ERA_MISSIONS } from '../era/missions'
@@ -16,6 +16,16 @@ describe('era programs', () => {
   it('every era has a program, and unknown keys fall back to custom', () => {
     for (const k of ALL_KEYS) expect(ERA_PROGRAMS[k], k).toBeTruthy()
     expect(programFor('no_such_era')).toBe(ERA_PROGRAMS.custom)
+  })
+
+  it('points only at hero images that are actually committed', () => {
+    for (const k of ALL_KEYS) {
+      const img = ERA_PROGRAMS[k].image
+      if (!img) continue
+      expect(img, k).toMatch(/^\/era\/[a-z0-9_]+\.(jpg|webp)$/)
+      // A missing file would render a broken image in the hero.
+      expect(existsSync(`public${img}`), `${k}: public${img}`).toBe(true)
+    }
   })
 
   it('links only to content that exists in the app', () => {
