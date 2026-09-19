@@ -18,7 +18,7 @@ spaces after commas, don't repeat words already in name/subtitle).
 -->
 
 ## App Name
-Voxu: Stoic AI Coach
+Voxu - AI Audio Coach
 
 ## Subtitle
 A coach that talks back

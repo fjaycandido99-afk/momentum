@@ -5,7 +5,7 @@ step. Limits: title 30, short description 80, full description 4000. Prices
 are left out on purpose; Play shows them on the subscription sheet. -->
 
 ## App Name
-Voxu: Stoic AI Coach
+Voxu - AI Audio Coach
 
 ## Short Description
 Speak for a minute each morning. Your philosophy coach talks back.
