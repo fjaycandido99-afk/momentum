@@ -107,7 +107,15 @@ export const CATEGORY_ICONS: Record<AchievementCategory, string> = {
  * Unset until the file is committed — tiles fall back to the monochrome
  * emoji. The achievements test fails if a path points at a missing file.
  */
-export const CATEGORY_BADGE_IMAGES: Partial<Record<AchievementCategory, string>> = {}
+export const CATEGORY_BADGE_IMAGES: Partial<Record<AchievementCategory, string>> = {
+  era: '/achievements/era.jpg',
+  consistency: '/achievements/consistency.jpg',
+  explorer: '/achievements/explorer.jpg',
+  dedication: '/achievements/dedication.jpg',
+  mastery: '/achievements/mastery.jpg',
+  growth: '/achievements/growth.jpg',
+  secret: '/achievements/secret.jpg',
+}
 
 export const ACHIEVEMENTS: Achievement[] = [
   // --- Era (10) — the promise loop ---

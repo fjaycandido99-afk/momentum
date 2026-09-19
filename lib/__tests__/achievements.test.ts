@@ -68,6 +68,14 @@ describe('achievement catalogue', () => {
     expect(Object.keys(CATEGORY_LABELS)[0]).toBe('era')
   })
 
+  it('every category has committed badge art', () => {
+    for (const cat of Object.keys(CATEGORY_LABELS)) {
+      const img = CATEGORY_BADGE_IMAGES[cat as keyof typeof CATEGORY_BADGE_IMAGES]
+      expect(img, cat).toBeTruthy()
+      expect(existsSync(`public${img}`), cat).toBe(true)
+    }
+  })
+
   it('points only at badge images that are committed', () => {
     for (const [cat, img] of Object.entries(CATEGORY_BADGE_IMAGES)) {
       expect(img, cat).toMatch(/^\/achievements\/[a-z_]+\.(jpg|webp|png)$/)
