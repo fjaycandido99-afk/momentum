@@ -23,7 +23,7 @@ const MESSAGES: Record<TierPage, { guest: string; free: string }> = {
   },
   focus: {
     guest: 'Sign in to track your focus sessions and earn XP',
-    free: 'Upgrade for all soundscapes and music genres',
+    free: 'Upgrade for all soundscapes and voice guides',
   },
   progress: {
     guest: 'Sign in to save your streaks, achievements, and XP',

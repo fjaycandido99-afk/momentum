@@ -42,23 +42,16 @@ describe('isContentFree', () => {
     })
   })
 
-  describe('motivation', () => {
-    it('first 2 are free', () => {
-      expect(isContentFree('motivation', 0, false)).toBe(true)
-      expect(isContentFree('motivation', 1, false)).toBe(true)
+  // YouTube embeds: its API terms forbid charging for access, so these must
+  // never lock — at any index, by index or id, for a free user.
+  describe.each(['motivation', 'music'] as const)('%s (YouTube)', (type) => {
+    it('is free at every index for free users', () => {
+      for (const i of [0, 1, 2, 5, 99]) {
+        expect(isContentFree(type, i, false)).toBe(true)
+      }
     })
-    it('index 2+ are not free', () => {
-      expect(isContentFree('motivation', 2, false)).toBe(false)
-    })
-  })
-
-  describe('music', () => {
-    it('first 2 are free', () => {
-      expect(isContentFree('music', 0, false)).toBe(true)
-      expect(isContentFree('music', 1, false)).toBe(true)
-    })
-    it('index 2+ are not free', () => {
-      expect(isContentFree('music', 2, false)).toBe(false)
+    it('is free when addressed by id', () => {
+      expect(isContentFree(type, 'dQw4w9WgXcQ', false)).toBe(true)
     })
   })
 })
@@ -120,6 +113,5 @@ describe('constants', () => {
   it('FREEMIUM_LIMITS has expected structure', () => {
     expect(FREEMIUM_LIMITS.soundscapes.freeCount).toBeGreaterThan(0)
     expect(FREEMIUM_LIMITS.soundscapes.freeIds.length).toBeGreaterThan(0)
-    expect(FREEMIUM_LIMITS.musicPerGenre.freeCount).toBeGreaterThan(0)
   })
 })

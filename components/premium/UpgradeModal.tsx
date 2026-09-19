@@ -15,7 +15,7 @@ interface UpgradeModalProps {
 const PREMIUM_BENEFITS = [
   { icon: Zap, text: 'Unlimited daily sessions' },
   { icon: Clock, text: 'No time limits' },
-  { icon: Music, text: 'All 6 music genres' },
+  { icon: Music, text: 'All soundscapes & voice guides' },
   { icon: Sparkles, text: 'All checkpoints & features' },
   { icon: Book, text: 'Full journal history' },
   { icon: Download, text: 'Offline downloads' },

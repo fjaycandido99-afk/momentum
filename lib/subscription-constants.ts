@@ -25,12 +25,7 @@ export const FREEMIUM_LIMITS = {
   voiceGuides: {
     freeIds: ['breathing'], // Only breathing is free
   },
-  motivation: {
-    freeCount: 2, // First 2 per topic
-  },
-  musicPerGenre: {
-    freeCount: 2, // First 2 per genre
-  },
+  // No motivation / music entries: those are YouTube embeds, free for all.
   voiceTones: {
     freeCount: 1, // User picks one during onboarding, locked afterward
   },
@@ -61,11 +56,13 @@ export function isContentFree(
     case 'voiceGuide':
       return FREEMIUM_LIMITS.voiceGuides.freeIds.includes(String(indexOrId))
 
+    // Motivation and music are YouTube embeds, and YouTube's API terms do
+    // not allow charging for access to its content — so they are never
+    // locked, for anyone. Selling someone else's videos was never ours to
+    // do; the paid tier sells what we make (the coach, voices, our audio).
     case 'motivation':
-      return typeof indexOrId === 'number' && indexOrId < FREEMIUM_LIMITS.motivation.freeCount
-
     case 'music':
-      return typeof indexOrId === 'number' && indexOrId < FREEMIUM_LIMITS.musicPerGenre.freeCount
+      return true
 
     default:
       return false
@@ -77,7 +74,6 @@ export function isContentFree(
 export const FREE_TIER_LIMITS = {
   sessions_per_day: 99, // Effectively unlimited
   session_duration_minutes: 999, // No meaningful limit
-  music_genres: ['daily_rotation'], // Only daily rotation
   checkpoints_enabled: true,
   // Free users can read the last week of their OWN writing.
   //
@@ -104,7 +100,6 @@ export const FREE_TIER_LIMITS = {
 // Premium features
 export const PREMIUM_FEATURES = {
   unlimited_sessions: true,
-  all_music_genres: true,
   all_checkpoints: true,
   full_journal_history: true,
   journal_history_days: null as number | null, // unlimited

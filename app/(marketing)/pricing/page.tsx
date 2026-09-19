@@ -40,9 +40,9 @@ const FEATURES = [
     icon: Clock,
   },
   {
-    name: 'Music genres',
-    free: 'Daily rotation only',
-    premium: 'All 6 genres',
+    name: 'Music & motivation videos',
+    free: true,
+    premium: true,
     icon: Music,
   },
   {
@@ -247,7 +247,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>Daily rotation music</span>
+                  <span>All music &amp; motivation videos</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/40 text-sm">
                   <X className="w-4 h-4 flex-shrink-0" />
@@ -322,7 +322,7 @@ export default function PricingPage() {
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
-                  <span>All 6 music genres</span>
+                  <span>All soundscapes &amp; voice guides</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
