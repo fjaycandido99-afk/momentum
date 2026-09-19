@@ -305,6 +305,9 @@ function ActiveEra({
         <p className="text-4xl font-medium text-white mt-1">
           Day {era.day}<span className="text-white/35 text-xl font-normal"> / {era.lengthDays}</span>
         </p>
+        <p className="text-sm text-white mt-2">
+          <span className="text-white/50">{era.stage.label} · </span>{era.stage.line}
+        </p>
         <p className="text-sm text-white/70 mt-2">
           {era.stats.keptPercent === null
             ? 'No check-ins yet.'
@@ -349,6 +352,13 @@ function ActiveEra({
           })}
         </div>
       </div>
+
+      {era.mission && (
+        <div className="rounded-2xl border border-white/[0.12] p-4">
+          <p className="text-xs text-white/50">Today&rsquo;s mission</p>
+          <p className="text-[15px] text-white mt-1 leading-snug">{era.mission}</p>
+        </div>
+      )}
 
       <div className="rounded-2xl bg-white/[0.04] border border-white/[0.12] p-4">
         <p className="text-xs text-white/50">On day 1 you said</p>

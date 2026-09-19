@@ -120,3 +120,63 @@ export function eraStep(args: {
 
 /** Local hour from which the card asks "did you keep it?" plainly. */
 export const CHECK_IN_FROM_HOUR = 17
+
+/**
+ * The four stages of an era. The card's line and the coach's tone move with
+ * them — "you're not starting anymore" only lands if it's true.
+ *
+ * Boundaries are by week for a 30-day era (1–7, 8–14, 15–21, 22–30) and scale
+ * proportionally for any other length.
+ */
+export type EraStageKey = 'starting' | 'building' | 'maintaining' | 'becoming'
+
+export interface EraStage {
+  key: EraStageKey
+  label: string
+  /** The line under the era title on the card. */
+  line: string
+  /** How the coach should pitch its replies at this stage. */
+  coachNote: string
+}
+
+export const ERA_STAGES: Record<EraStageKey, EraStage> = {
+  starting: {
+    key: 'starting',
+    label: 'Starting',
+    line: 'You said it. Now you prove it.',
+    coachNote: 'Stage: starting (week 1). Make it feel doable. Small wins build the habit.',
+  },
+  building: {
+    key: 'building',
+    label: 'Building',
+    line: 'The first week is behind you. Keep stacking days.',
+    coachNote: 'Stage: building (week 2). The novelty is wearing off — this is where it becomes real.',
+  },
+  maintaining: {
+    key: 'maintaining',
+    label: 'Maintaining',
+    line: "You're not starting anymore. You're becoming consistent.",
+    coachNote: 'Stage: maintaining (week 3). Expect the mid-point dip; consistency matters more than intensity now.',
+  },
+  becoming: {
+    key: 'becoming',
+    label: 'Becoming',
+    line: 'This is who you are now. Finish like it.',
+    coachNote: 'Stage: becoming (final stretch). Speak to who they are becoming, not what they are trying.',
+  },
+}
+
+export function eraStage(day: number, lengthDays: number): EraStage {
+  // Scale a 30-day week grid to any length: day 8 of 30 → 8/30 ≈ 0.267.
+  const f = (Math.min(Math.max(day, 1), lengthDays) - 1) / lengthDays
+  if (f < 7 / 30) return ERA_STAGES.starting
+  if (f < 14 / 30) return ERA_STAGES.building
+  if (f < 21 / 30) return ERA_STAGES.maintaining
+  return ERA_STAGES.becoming
+}
+
+/** Today's mission from a bank, day 1 = index 0; wraps if the era outlasts the bank. */
+export function missionForDay(bank: readonly string[] | undefined, day: number): string | null {
+  if (!bank || bank.length === 0) return null
+  return bank[(Math.max(day, 1) - 1) % bank.length]
+}

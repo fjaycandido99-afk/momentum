@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowUp, Check, ChevronRight, Loader2, X } from 'lucide-react'
+import { ArrowUp, Check, ChevronRight, Loader2, Lock, Play, Target, X } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
+import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
+import { VOICE_GUIDES } from './home-types'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { ERA_LIMITS } from '@/lib/era/presets'
 import type { EraToday } from '@/hooks/useEra'
@@ -21,15 +23,55 @@ import type { EraToday } from '@/hooks/useEra'
  * Typing is first-class. Today's Minute asked for voice only and was used
  * twice across 200 days; the mic here fills the same text box instead.
  */
+/** Plays the era's linked content through home's own handlers (premium checks included). */
+export interface EraContentHandlers {
+  onPlaySoundscape: (id: string) => void
+  onPlayGuide: (id: string) => void
+  isGuideLocked: (id: string) => boolean
+}
+
 export function EraCard({
   era,
   onChange,
+  content,
 }: {
   era: EraToday | null
   onChange: (era: EraToday | null) => void
+  content?: EraContentHandlers
 }) {
   if (!era) return <StartCard />
-  return <ActiveCard era={era} onChange={onChange} />
+  return <ActiveCard era={era} onChange={onChange} content={content} />
+}
+
+/**
+ * "For your era" — the one soundscape and one voice guide this era leans on
+ * (lib/era/programs.ts). The point is that the whole app answers to the era,
+ * not that the card grows a content shelf; two items, one line.
+ */
+function EraContentRow({ era, content }: { era: EraToday; content: EraContentHandlers }) {
+  const sound = SOUNDSCAPE_ITEMS.find(s => s.id === era.links.soundscapeId)
+  const guide = VOICE_GUIDES.find(g => g.id === era.links.guideId)
+  if (!sound && !guide) return null
+  const locked = guide ? content.isGuideLocked(guide.id) : false
+  const chip =
+    'inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1.5 text-xs text-white/85 hover:bg-white/[0.1] active:scale-[0.97] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none'
+  return (
+    <div className="mt-4">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-white/45">For your era</p>
+      <div className="flex flex-wrap gap-2 mt-2">
+        {sound && (
+          <button className={chip} onClick={() => content.onPlaySoundscape(sound.id)}>
+            <Play className="w-3 h-3" /> {sound.label} soundscape
+          </button>
+        )}
+        {guide && (
+          <button className={chip} onClick={() => content.onPlayGuide(guide.id)}>
+            {locked ? <Lock className="w-3 h-3" /> : <Play className="w-3 h-3" />} {guide.name}
+          </button>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function StartCard() {
@@ -74,7 +116,15 @@ function KeptLine({ era }: { era: EraToday }) {
   )
 }
 
-function ActiveCard({ era, onChange }: { era: EraToday; onChange: (era: EraToday | null) => void }) {
+function ActiveCard({
+  era,
+  onChange,
+  content,
+}: {
+  era: EraToday
+  onChange: (era: EraToday | null) => void
+  content?: EraContentHandlers
+}) {
   const [draft, setDraft] = useState('')
   const [source, setSource] = useState<'typed' | 'spoken'>('typed')
   const [busy, setBusy] = useState(false)
@@ -123,6 +173,9 @@ function ActiveCard({ era, onChange }: { era: EraToday; onChange: (era: EraToday
           Day {era.day}
           <span className="text-white/40 text-base font-normal"> / {era.lengthDays}</span>
         </p>
+        {era.step !== 'complete' && (
+          <p className="text-xs text-white/60 mt-1">{era.stage.line}</p>
+        )}
       </div>
       <div className="flex items-center gap-1 text-white/60 pt-1 shrink-0">
         {era.stats.promiseStreak > 1 && (
@@ -185,6 +238,23 @@ function ActiveCard({ era, onChange }: { era: EraToday; onChange: (era: EraToday
     case 'promise':
       body = (
         <div className="mt-3">
+          {/* Today's mission — the era's suggestion for the day. One tap
+              makes it the promise; typing your own is just as valid. */}
+          {era.mission && (
+            <div className="mb-4 rounded-xl border border-white/[0.12] bg-white/[0.03] p-3">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-white/50">
+                <Target className="w-3 h-3" /> Today&rsquo;s mission
+              </div>
+              <p className="text-[15px] text-white mt-1 leading-snug">{era.mission}</p>
+              <button
+                onClick={() => { setDraft(era.mission!); setSource('typed') }}
+                disabled={busy}
+                className="mt-2 text-xs text-white/70 underline underline-offset-2 hover:text-white disabled:opacity-40"
+              >
+                Make it my promise
+              </button>
+            </div>
+          )}
           <label htmlFor="era-promise" className="text-xs text-white/60">
             What are you promising yourself today?
           </label>
@@ -237,6 +307,11 @@ function ActiveCard({ era, onChange }: { era: EraToday; onChange: (era: EraToday
               {t.coachReply}
             </p>
           )}
+          {era.mission && t?.text !== era.mission && (
+            <p className="text-xs text-white/50 mt-3 flex items-start gap-1.5">
+              <Target className="w-3 h-3 mt-0.5 shrink-0" /> <span>Today&rsquo;s mission: {era.mission}</span>
+            </p>
+          )}
           {era.step === 'check' ? (
             <>
               <p className="text-xs text-white/60 mt-4">
@@ -261,6 +336,7 @@ function ActiveCard({ era, onChange }: { era: EraToday; onChange: (era: EraToday
       {body}
       {crisis && <div className="mt-4"><CrisisBanner content={crisis} /></div>}
       {error && <p className="text-xs text-white/70 mt-3" role="alert">{error}</p>}
+      {content && era.step !== 'complete' && <EraContentRow era={era} content={content} />}
       <KeptLine era={era} />
     </div>
   )

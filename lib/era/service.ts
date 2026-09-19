@@ -13,12 +13,21 @@ import {
   computeStats,
   daysBetween,
   eraDayNumber,
+  eraStage,
   eraStep,
+  missionForDay,
   previousDay,
+  type EraStageKey,
   type EraStats,
   type EraStep,
 } from './logic'
 import { formatEraChatBlock, generatePromiseReply } from './coach'
+import { programFor } from './programs'
+import { ERA_MISSIONS } from './missions'
+
+function missionFor(eraKey: string, day: number): string | null {
+  return missionForDay(ERA_MISSIONS[eraKey] ?? ERA_MISSIONS.custom, day)
+}
 
 /**
  * Server-side Era operations. The rules live in logic.ts; this file only
@@ -88,6 +97,12 @@ export interface EraTodayWire {
   today: { text: string; coachReply: string | null; kept: boolean | null } | null
   yesterday: { text: string; kept: boolean | null } | null
   promiseHint: string
+  /** Where in the 30 days they are, and the card's line for it. */
+  stage: { key: EraStageKey; label: string; line: string }
+  /** Today's mission from the era's bank (lib/era/missions.ts). */
+  mission: string | null
+  /** App content this era leans on (lib/era/programs.ts). */
+  links: { soundscapeId: string; guideId: string }
   /** Every day with a promise, oldest first — the page draws the 30-day grid from it. */
   days: EraDayWire[]
 }
@@ -109,6 +124,9 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
   const todayRow = promises.find(p => p.local_day === today) ?? null
   const yesterdayRow = promises.find(p => p.local_day === yesterday) ?? null
   const preset = ERA_PRESETS_BY_KEY.get(era.era_key)
+  const day = Math.min(eraDayNumber(era.start_day, today), era.length_days)
+  const stage = eraStage(day, era.length_days)
+  const program = programFor(era.era_key)
 
   return {
     id: era.id,
@@ -119,7 +137,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     startDay: era.start_day,
     lengthDays: era.length_days,
     // Capped so a finished era reads "Day 30 / 30", never "Day 31 / 30".
-    day: Math.min(eraDayNumber(era.start_day, today), era.length_days),
+    day,
     step: eraStep({
       startDay: era.start_day,
       lengthDays: era.length_days,
@@ -132,6 +150,9 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     today: todayRow ? { text: todayRow.text, coachReply: todayRow.coach_reply, kept: todayRow.kept } : null,
     yesterday: yesterdayRow ? { text: yesterdayRow.text, kept: yesterdayRow.kept } : null,
     promiseHint: preset?.promiseHint ?? "I'll do the one thing I keep putting off.",
+    stage: { key: stage.key, label: stage.label, line: stage.line },
+    mission: missionFor(era.era_key, day),
+    links: { soundscapeId: program.soundscapeId, guideId: program.guideId },
     days: promises
       .filter(p => daysBetween(era.start_day, p.local_day) >= 0)
       .map(p => ({ day: eraDayNumber(era.start_day, p.local_day), localDay: p.local_day, kept: p.kept })),
@@ -155,6 +176,9 @@ export async function buildEraChatContext(userId: string): Promise<string> {
       why: era.why,
       stats: era.stats,
       todayPromise: era.today ? { text: era.today.text, kept: era.today.kept } : null,
+      stageLabel: era.stage.label,
+      mission: era.mission,
+      coachFocus: programFor(era.key).coachFocus,
     })
   } catch (err) {
     console.warn('[era] chat context failed:', err)
@@ -274,6 +298,9 @@ export async function makePromise(
           promise: text,
           stats,
           yesterday,
+          coachFocus: programFor(era.era_key).coachFocus,
+          stageNote: eraStage(day, era.length_days).coachNote,
+          mission: missionFor(era.era_key, day),
         },
         mindset,
         prefs?.guide_tone ?? null,

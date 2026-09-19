@@ -15,6 +15,9 @@ const base: PromiseReplyInput = {
   promise: "I'll finish the report before 11",
   stats: { made: 8, answered: 7, kept: 5, keptPercent: 71, promiseStreak: 8 },
   yesterday: 'kept',
+  coachFocus: 'Focus: the one important thing they keep avoiding.',
+  stageNote: 'Stage: building (week 2).',
+  mission: 'Put your phone in another room for your first hour of work',
 }
 
 describe('isCallbackDay', () => {
@@ -107,5 +110,19 @@ describe('formatEraChatBlock', () => {
 
   it('tells the model not to bring it up every turn', () => {
     expect(formatEraChatBlock(input)).toMatch(/only when it is relevant/)
+  })
+})
+
+describe('era program in the prompt', () => {
+  it("carries the era's focus, the stage and today's mission", () => {
+    const { system, user } = buildPromiseReplyMessages(base, 'stoic', null)
+    expect(system).toContain(base.coachFocus)
+    expect(system).toContain(base.stageNote)
+    expect(user).toContain(`"${base.mission}"`)
+  })
+
+  it('leaves the mission out when there is none', () => {
+    const { user } = buildPromiseReplyMessages({ ...base, mission: null }, 'stoic', null)
+    expect(user).not.toMatch(/mission/)
   })
 })

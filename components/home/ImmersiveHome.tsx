@@ -28,7 +28,7 @@ import { SavedMotivationSection } from './SavedMotivationSection'
 import {
   Mode, VideoItem, MUSIC_GENRES, getGenreBackgrounds,
   getTimeContext, getSuggestedMode, getTodaysTopicName, getTodaysBackgrounds,
-  getMoodTopicName,
+  getMoodTopicName, VOICE_GUIDES,
 } from './home-types'
 import { getDateString } from '@/lib/daily-guide/day-type'
 import { useAudioOptional } from '@/contexts/AudioContext'
@@ -1277,7 +1277,24 @@ export function ImmersiveHome() {
           prompt flash first. */}
       {era.loaded && (
         <div className="px-6 mt-4">
-          <EraCard era={era.era} onChange={era.setEra} />
+          <EraCard
+            era={era.era}
+            onChange={era.setEra}
+            // The era's linked content plays through the same handlers as
+            // the shelves below, so premium previews and locks behave the
+            // same wherever it's started from.
+            content={{
+              onPlaySoundscape: id => {
+                const item = SOUNDSCAPE_ITEMS.find(i => i.id === id)
+                if (item) handleSoundscapePlay(item, !isContentFree('soundscape', id))
+              },
+              onPlayGuide: id => {
+                const g = VOICE_GUIDES.find(v => v.id === id)
+                if (g) handleGuidePlay(id, g.name, !isContentFree('voiceGuide', id))
+              },
+              isGuideLocked: id => !isContentFree('voiceGuide', id),
+            }}
+          />
         </div>
       )}
 

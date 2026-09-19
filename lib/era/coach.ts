@@ -29,6 +29,12 @@ export interface PromiseReplyInput {
   stats: EraStats
   /** Yesterday's outcome, if there was a promise yesterday. */
   yesterday: 'kept' | 'broken' | 'unanswered' | null
+  /** The era's own focus (lib/era/programs.ts). */
+  coachFocus: string
+  /** The stage's note on pitch (lib/era/logic.ts eraStage). */
+  stageNote: string
+  /** Today's mission, if the era has one. */
+  mission: string | null
 }
 
 /** The days the coach should quote their day-1 words back to them. */
@@ -57,10 +63,14 @@ ${callback
 ${input.yesterday === 'broken'
     ? "- They didn't keep yesterday's promise. Don't scold and don't excuse it. Today is the answer to yesterday."
     : ''}
-- Output ONLY the reply text.`
+- Output ONLY the reply text.
+
+${input.coachFocus}
+${input.stageNote}`
 
   const facts = [
     `Day ${input.day} of ${input.lengthDays}.`,
+    input.mission ? `Today's suggested mission for this era: "${input.mission}"` : null,
     `On day 1 they said they want to change: "${input.change}"`,
     input.why ? `And why it matters to them: "${input.why}"` : null,
     input.stats.answered > 0
@@ -93,9 +103,14 @@ export function formatEraChatBlock(input: {
   why: string | null
   stats: EraStats
   todayPromise: { text: string; kept: boolean | null } | null
+  stageLabel?: string
+  mission?: string | null
+  coachFocus?: string
 }): string {
   const lines = [
-    `THE USER'S CURRENT ERA — a ${input.lengthDays}-day commitment they chose, called "${input.eraTitle}". Today is day ${input.day}.`,
+    `THE USER'S CURRENT ERA — a ${input.lengthDays}-day commitment they chose, called "${input.eraTitle}". Today is day ${input.day}${input.stageLabel ? ` (stage: ${input.stageLabel})` : ''}.`,
+    input.coachFocus ?? null,
+    input.mission ? `Today's mission for this era: "${input.mission}"` : null,
     `On day 1 they said they want to change: "${input.change}"`,
     input.why ? `Why it matters to them: "${input.why}"` : null,
     input.stats.answered > 0
