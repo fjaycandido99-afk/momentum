@@ -27,8 +27,13 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
  */
 const TAGLINE = (id: MindsetId) => MINDSET_VOICES[id].tagline
 
-/** Card-sized, grayscale versions of the portraits (public/portraits/cards). */
-const cardImage = (id: MindsetId) => `/portraits/cards/${id}.jpg`
+/**
+ * Card-sized, grayscale versions of the portraits (public/portraits/cards).
+ * ?v= busts the iOS WebView's cache when the art is replaced — the file
+ * name stays the same, so without it phones kept showing the old portraits.
+ */
+export const PORTRAIT_VERSION = 2
+const cardImage = (id: MindsetId) => `/portraits/cards/${id}.jpg?v=${PORTRAIT_VERSION}`
 
 function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap: (id: MindsetId) => void }) {
   const [visible, setVisible] = useState(false)
@@ -58,7 +63,11 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
 
       <div className="absolute inset-x-0 bottom-0 p-3.5">
         <p className="text-[9px] tracking-[0.22em] uppercase text-white/55">{TAGLINE(id)}</p>
-        <p className="text-[24px] leading-none text-white uppercase mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+        {/* Long names (Existentialist) step down a size so they never clip. */}
+        <p
+          className={`${config.name.length > 11 ? 'text-[19px]' : 'text-[24px]'} leading-none text-white uppercase mt-1 break-words`}
+          style={{ ...SERIF, fontWeight: 600 }}
+        >
           {config.name}
         </p>
         <p className="text-[11px] text-white/70 leading-snug mt-1.5 line-clamp-2">{config.subtitle}</p>

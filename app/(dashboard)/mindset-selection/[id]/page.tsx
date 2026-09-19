@@ -9,6 +9,7 @@ import { MINDSET_DETAILS } from '@/lib/mindset/detail-content'
 import { MINDSET_IDS, type MindsetId } from '@/lib/mindset/types'
 import { MINDSET_VOICES, SAMPLE_PROMISE } from '@/lib/mindset/voice-samples'
 import { ERA_PRESETS_BY_KEY } from '@/lib/era/presets'
+import { PORTRAIT_VERSION } from '@/components/mindset/MindsetSelectionScreen'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -65,7 +66,7 @@ export default function MindsetDetailPage() {
       <div className="relative w-full aspect-[4/5] max-h-[62vh] overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`/portraits/cards/${mindsetId}.jpg`}
+          src={`/portraits/cards/${mindsetId}.jpg?v=${PORTRAIT_VERSION}`}
           alt=""
           aria-hidden
           className="absolute inset-0 w-full h-full object-cover object-top grayscale opacity-80"
@@ -73,7 +74,7 @@ export default function MindsetDetailPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 px-6 pb-5">
           <p className="text-[10px] tracking-[0.28em] uppercase text-white/60">{voice.tagline}</p>
-          <h1 className="text-[48px] leading-[0.9] uppercase mt-1.5" style={{ ...SERIF, fontWeight: 600 }}>
+          <h1 className={`${config.name.length > 11 ? 'text-[38px]' : 'text-[48px]'} leading-[0.9] uppercase mt-1.5 break-words`} style={{ ...SERIF, fontWeight: 600 }}>
             {config.name}
           </h1>
           <p className="text-xs text-white/55 mt-2">
