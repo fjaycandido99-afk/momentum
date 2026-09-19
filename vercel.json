@@ -87,6 +87,10 @@
     {
       "path": "/api/cron/notifications?type=era_checkin",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=era_wake",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

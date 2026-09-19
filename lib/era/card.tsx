@@ -115,6 +115,7 @@ export function sampleEra(key: string): EraTodayWire | null {
     checkInOpen: false, today: null, yesterday: null, promiseHint: '',
     stage: { key: 'maintaining', label: 'Maintaining', line: "You're not starting anymore. You're becoming consistent." },
     mission: null, links: { soundscapeId: 'focus', guideId: 'breathing' }, image: programFor(key).image ?? null,
-    isPremium: false, memoryLockedToday: false, recap: null, alignment: null, days,
+    isPremium: false, memoryLockedToday: false, recap: null, alignment: null,
+    wakeCall: { enabled: false, time: null }, days,
   }
 }

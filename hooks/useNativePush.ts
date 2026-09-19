@@ -48,7 +48,11 @@ export function useNativePush() {
       (notification) => {
         console.log('[NativePush] Push notification tapped:', notification.title)
         const data = notification.data as Record<string, string> | undefined
-        const route = data?.route
+        // The server sends `url` (lib/push-service DEFAULT_URL_BY_TYPE);
+        // this only ever read `route`, so every server push tap opened home
+        // — a Midday Reset push never opened Midday Reset. Same-app paths only.
+        const target = data?.route || data?.url
+        const route = typeof target === 'string' && target.startsWith('/') && !target.startsWith('//') ? target : null
         if (route) {
           router.push(routeMap[route] || route)
         } else {

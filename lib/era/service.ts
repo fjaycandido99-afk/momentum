@@ -125,6 +125,8 @@ export interface EraTodayWire {
    * without a read target (custom). See lib/era/alignment.
    */
   alignment: EraAlignment | null
+  /** The wake-up call's settings (lib/era/wake.ts), for the home chip. */
+  wakeCall: { enabled: boolean; time: string | null }
   /** Every day with a promise, oldest first — the page draws the 30-day grid from it. */
   days: EraDayWire[]
 }
@@ -133,7 +135,11 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
   const era = await getActiveEra(userId)
   if (!era) return null
 
-  const tz = await userTimezone(userId)
+  const prefs = await prisma.userPreferences.findUnique({
+    where: { user_id: userId },
+    select: { timezone: true, wake_call_enabled: true, wake_call_time: true },
+  })
+  const tz = prefs?.timezone ?? null
   const today = localDay(tz)
   const yesterday = previousDay(today)
 
@@ -193,6 +199,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     memoryLockedToday: isMemoryLockedToday(day, era.length_days, yesterdayOutcome, premium),
     recap: era.recap ?? null,
     alignment,
+    wakeCall: { enabled: prefs?.wake_call_enabled ?? false, time: prefs?.wake_call_time ?? null },
     days: promises
       .filter(p => daysBetween(era.start_day, p.local_day) >= 0)
       .map(p => ({ day: eraDayNumber(era.start_day, p.local_day), localDay: p.local_day, kept: p.kept })),

@@ -122,6 +122,12 @@ model UserPreferences {
   daily_reminder Boolean @default(true)
   reminder_time  String? // "06:25" format
 
+  // Era wake-up call (lib/era/wake.ts). Its own time, not wake_time: that
+  // one is defaulted to 07:00 by several screens, and a call nobody chose
+  // must never go out.
+  wake_call_enabled Boolean @default(false)
+  wake_call_time    String? // "06:30" format, user-local
+
   // User Type
   user_type String @default("professional") // "professional" | "student" | "hybrid"
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Play, Share2, Target, X,
+  AlarmClock, ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Play, Share2, Target, X,
   type LucideIcon,
 } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
@@ -17,6 +17,8 @@ import { useSubscription } from '@/contexts/SubscriptionContext'
 import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { ShareEraSheet } from './ShareEraSheet'
+import { WakeCallSheet, type WakeCallSettings } from './WakeCallSheet'
+import { clockLabel } from '@/lib/era/wake'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
 import type { EraToday } from '@/hooks/useEra'
 
@@ -315,6 +317,10 @@ function ActiveEra({
   const [crisis, setCrisis] = useState<CrisisContent | null>(null)
   const [trialOffer, setTrialOffer] = useState(false)
   const [sharing, setSharing] = useState(false)
+  const [wakeOpen, setWakeOpen] = useState(false)
+  const [wake, setWake] = useState<WakeCallSettings>(era.wakeCall)
+  useEffect(() => { setWake(era.wakeCall) }, [era.wakeCall.enabled, era.wakeCall.time]) // eslint-disable-line react-hooks/exhaustive-deps
+  const wakeLabel = wake.enabled ? clockLabel(wake.time) : null
   // Share moments: a week, two, three, and the finish — the days people are
   // proud of. Dismissed per era per milestone, so "Not now" means not again.
   const milestone = era.step === 'complete' ? 'complete' : [7, 14, 21].includes(era.day) ? String(era.day) : null
@@ -612,6 +618,9 @@ function ActiveEra({
       )}
 
       {sharing && <ShareEraSheet era={era} onClose={() => setSharing(false)} />}
+      {wakeOpen && (
+        <WakeCallSheet eraTitle={era.title} initial={wake} onClose={() => setWakeOpen(false)} onSaved={setWake} />
+      )}
 
       {/* Alignment — whether the Daily Read is moving toward the era. Early on
           it says how many answers it still needs, which is itself the nudge
@@ -623,11 +632,15 @@ function ActiveEra({
         </Link>
       )}
 
-      {/* For your era — the one soundscape and one voice guide this era leans on. */}
-      {era.step !== 'complete' && (sound || guide) && (
+      {/* For your era — the wake-up call, and the one soundscape and one voice
+          guide this era leans on. */}
+      {era.step !== 'complete' && (
         <div>
           <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 px-1">For your era</p>
           <div className="flex flex-wrap gap-2 mt-2">
+            <button className={chip} onClick={() => setWakeOpen(true)}>
+              <AlarmClock className="w-3 h-3" /> {wakeLabel ? `Wake-up call · ${wakeLabel}` : 'Set a wake-up call'}
+            </button>
             {sound && (
               <button className={chip} onClick={() => content.onPlaySoundscape(sound.id)}>
                 <Play className="w-3 h-3" /> {sound.label} soundscape

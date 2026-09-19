@@ -26,6 +26,8 @@ import { eraDayNumber } from '@/lib/era/logic'
 import { loadEraToday } from '@/lib/era/service'
 import { eraQuote } from '@/lib/era/content'
 import { programFor } from '@/lib/era/programs'
+import { isInWakeWindow, localMinutes, parseWakeTime } from '@/lib/era/wake'
+import { loadWakeCall } from '@/lib/era/wake-server'
 
 // Notification types that can be sent
 import { shouldSendNotification, logNotificationSent } from './notification-gate'
@@ -51,6 +53,7 @@ export type NotificationType =
   | 'feature_discovery'
   | 'daily_read'
   | 'era_checkin'
+  | 'era_wake'
   | 'custom'
 
 // Notification payload structure
@@ -209,6 +212,16 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'open', title: 'Check in' },
     ],
   },
+  era_wake: {
+    title: 'Get up.',
+    body: 'Your coach left you a wake-up call.',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
+    tag: 'era-wake',
+    actions: [
+      { action: 'open', title: 'Listen' },
+    ],
+  },
   daily_read: {
     title: 'Daily Read',
     body: 'One question, one tap — it builds a picture of how you tick.',
@@ -325,6 +338,7 @@ const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
   daily_affirmation: '/daily-guide?session=morning_prime',
   daily_read: '/',
   era_checkin: '/',
+  era_wake: '/era/wake',
   motivational_nudge: '/',
   daily_motivation: '/',
   coach_checkin: '/coach',
@@ -368,6 +382,9 @@ export async function sendPushToUser(
     // Rides the evening preference: it is the evening check-in, and a new
     // PushSubscription column would need a migration for no extra control.
     era_checkin: 'evening_reminder',
+    // Listed for the type map only: the wake-up call has its own switch
+    // (UserPreferences.wake_call_enabled) and skips this filter below.
+    era_wake: 'morning_reminder',
     daily_motivation: 'daily_motivation_alerts',
 coach_checkin: 'coach_checkin_alerts',
     coach_accountability: 'coach_accountability_alerts',
@@ -377,7 +394,9 @@ coach_checkin: 'coach_checkin_alerts',
   const prefKey = notificationPreferenceMap[type]
 
   // Filter subscriptions that have this notification type enabled
-  const enabledSubscriptions = type === 'custom'
+  // The wake-up call is something the user switched on and gave a time to,
+  // on its own control; a morning-reminder toggle mustn't silently veto it.
+  const enabledSubscriptions = type === 'custom' || type === 'era_wake'
     ? subscriptions
     : subscriptions.filter(sub => sub[prefKey] === true)
 
@@ -572,6 +591,7 @@ export async function sendMorningReminders(): Promise<void> {
       user_id: true,
       reminder_time: true,
       timezone: true,
+      wake_call_enabled: true,
     },
   })
 
@@ -583,7 +603,7 @@ export async function sendMorningReminders(): Promise<void> {
   let totalFailed = 0
   let totalSkipped = 0
 
-  for (const { user_id, reminder_time, timezone } of usersToNotify) {
+  for (const { user_id, reminder_time, timezone, wake_call_enabled } of usersToNotify) {
     // Parse reminder_time (format: "HH:MM")
     const [reminderHour] = (reminder_time || '07:00').split(':').map(Number)
 
@@ -610,6 +630,12 @@ export async function sendMorningReminders(): Promise<void> {
     try {
       const era = await loadEraToday(user_id)
       if (era && (era.step === 'promise' || era.step === 'check_yesterday')) {
+        // Their wake-up call asks for the promise already (sendEraWakeCalls);
+        // a second push saying the same thing in text is just noise.
+        if (wake_call_enabled) {
+          totalSkipped++
+          continue
+        }
         const body = era.step === 'check_yesterday'
           ? "Did you keep yesterday's promise? Then make today's."
           : era.mission
@@ -1880,4 +1906,52 @@ export async function sendEraCheckins(): Promise<void> {
   }
 
   console.log(`era_checkin: ${totalSent} sent, ${totalFailed} failed, ${skipped} skipped (${eligible.size} in window)`)
+}
+
+/**
+ * The era wake-up call (lib/era/wake.ts): at the time the user chose, a push
+ * from their coach — "Francis, get up." — that opens /era/wake, where the
+ * coach says the rest out loud.
+ *
+ * Runs every five minutes, so it's cheap on purpose: one small read of the
+ * users who switched it on, and nothing else unless someone's
+ * wake time is in the window. The send gate's once-a-day dedupe stops a
+ * second call inside the window. The voice is generated only when they tap,
+ * never here.
+ */
+export async function sendEraWakeCalls(now: Date = new Date()): Promise<void> {
+  const users = await prisma.userPreferences.findMany({
+    where: { wake_call_enabled: true, wake_call_time: { not: null } },
+    select: { user_id: true, wake_call_time: true, timezone: true },
+  })
+
+  let sent = 0
+  let failed = 0
+  let quiet = 0
+
+  for (const u of users) {
+    const wake = parseWakeTime(u.wake_call_time)
+    if (wake === null || !isInWakeWindow(localMinutes(u.timezone, now), wake)) continue
+
+    try {
+      const { call, ring } = await loadWakeCall(u.user_id)
+      // No era, a finished one, or already up and promised — stay quiet.
+      if (!call || !ring) {
+        quiet++
+        continue
+      }
+      const result = await sendPushToUser(u.user_id, 'era_wake', {
+        title: call.title,
+        body: call.body,
+        data: { type: 'era_wake', url: '/era/wake' },
+      })
+      sent += result.sent
+      failed += result.failed
+    } catch (err) {
+      console.error('[era_wake] failed for a user:', err)
+      failed++
+    }
+  }
+
+  console.log(`era_wake: ${sent} sent, ${failed} failed, ${quiet} quiet (${users.length} with a call set)`)
 }
