@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MINDSET_IDS, type MindsetId } from '@/lib/mindset/types'
+import { MINDSET_VOICES } from '@/lib/mindset/voice-samples'
 
 interface MindsetSelectionScreenProps {
   /** If true, show as a "Reset My Path" picker instead of onboarding */
@@ -24,16 +25,7 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
  * longer "your path"; it's the VOICE your coach speaks in. The era is what
  * you're working on.
  */
-const TAGLINE: Record<MindsetId, string> = {
-  stoic: 'Unshakable calm',
-  existentialist: 'Radical freedom',
-  cynic: 'Raw truth',
-  hedonist: 'Savor life',
-  samurai: 'Honor & discipline',
-  scholar: 'Cosmic wisdom',
-  manifestor: 'Create your reality',
-  hustler: 'Outwork everyone',
-}
+const TAGLINE = (id: MindsetId) => MINDSET_VOICES[id].tagline
 
 /** Card-sized, grayscale versions of the portraits (public/portraits/cards). */
 const cardImage = (id: MindsetId) => `/portraits/cards/${id}.jpg`
@@ -65,7 +57,7 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
 
       <div className="absolute inset-x-0 bottom-0 p-3.5">
-        <p className="text-[9px] tracking-[0.22em] uppercase text-white/55">{TAGLINE[id]}</p>
+        <p className="text-[9px] tracking-[0.22em] uppercase text-white/55">{TAGLINE(id)}</p>
         <p className="text-[24px] leading-none text-white uppercase mt-1" style={{ ...SERIF, fontWeight: 600 }}>
           {config.name}
         </p>
@@ -109,7 +101,7 @@ export function MindsetSelectionScreen({ isReset }: MindsetSelectionScreenProps)
       </div>
 
       <p className={`text-white/50 text-[11px] mt-8 transition-all duration-700 delay-700 ${headerVisible ? 'opacity-100' : 'opacity-0'}`}>
-        Tap one to hear what it sounds like. You can change it anytime.
+        Tap one to see how it talks. You can change it anytime.
       </p>
     </div>
   )
