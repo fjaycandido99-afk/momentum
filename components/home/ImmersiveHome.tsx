@@ -23,6 +23,8 @@ import { MusicTabsSection } from './MusicTabsSection'
 import { WelcomeBackCard } from './WelcomeBackCard'
 import { WisdomSection } from './WisdomSection'
 import { EraHome } from './EraHome'
+import { programFor } from '@/lib/era/programs'
+import { eraFirst, eraQuote } from '@/lib/era/content'
 import { getSessionThumb } from '@/lib/daily-guide/session-art'
 import { AchievementShelf } from './AchievementShelf'
 import { mutate as mutateSWR } from 'swr'
@@ -106,6 +108,8 @@ export function ImmersiveHome() {
   const { openReset } = useReset()
   const dailyRead = useDailyRead()
   const era = useEra()
+  // What the rest of home leans toward while an era runs (lib/era/content).
+  const eraProgram = era.era ? programFor(era.era.key) : null
   const hasRestoredRef = useRef(false)
   const isRestorePendingRef = useRef(!!audioContext?.lastPlayed)
 
@@ -269,9 +273,10 @@ export function ImmersiveHome() {
   // (after mount) for the same hydration reason as the clock values above.
   const dailyQuote = useMemo(() => {
     if (!mounted) return null
-    const q = getDailyMindsetQuote((mindsetCtx?.mindset ?? 'stoic') as MindsetId, getDateString(new Date()))
+    // Era-themed when an era runs; identical to getDailyMindsetQuote otherwise.
+    const q = eraQuote((mindsetCtx?.mindset ?? 'stoic') as MindsetId, getDateString(new Date()), eraProgram?.quoteCategories)
     return q ? { text: q.text, author: q.author } : null
-  }, [mounted, mindsetCtx?.mindset])
+  }, [mounted, mindsetCtx?.mindset, eraProgram])
 
   // YT players, createSoundscapePlayer, createBgMusicPlayer, stopBackgroundMusic
   // are now provided by HomeAudioProvider via useHomeAudio()
@@ -488,7 +493,10 @@ export function ImmersiveHome() {
   }, [moodBefore, energyLevel, timeContext.suggested])
 
   const moodTopic = getMoodTopicName(journalMood)
-  const featuredTopic = moodTopic || topicName
+  // A low mood still wins (comfort first); then the era's topic; then the
+  // topic of the day.
+  const eraTopic = eraProgram?.motivationTopic ?? null
+  const featuredTopic = moodTopic || eraTopic || topicName
 
   // Adaptive section ordering (#2)
   const sectionOrder = useMemo(() => getAdaptiveSectionOrder({
@@ -1461,7 +1469,7 @@ export function ImmersiveHome() {
           unlock is visible from the same screen as the promise that earns it. */}
       <AchievementShelf />
 
-      <WisdomSection />
+      <WisdomSection eraQuoteCategories={eraProgram?.quoteCategories} eraTitle={era.era?.title} />
 
 
       {/* Smart Nudge — shows after 30s idle when not playing audio */}
@@ -1481,6 +1489,8 @@ export function ImmersiveHome() {
             return (
               <div key="soundscapes" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
                 <SoundscapesSection
+                  eraPickId={era.era?.links.soundscapeId}
+                  eraTitle={era.era?.title}
                   activeSoundscape={audioState.activeSoundscape}
                   soundscapeIsPlaying={audioState.soundscapeIsPlaying}
                   isContentFree={(type, id) => isContentFree(type, id)}
@@ -1494,6 +1504,8 @@ export function ImmersiveHome() {
             return (
               <div key="guided" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
                 <GuidedSection
+                  eraPickId={era.era?.links.guideId}
+                  eraTitle={era.era?.title}
                   guideLabel={audioState.guideLabel}
                   guideIsPlaying={audioState.guideIsPlaying}
                   loadingGuide={audioState.loadingGuide}
@@ -1511,7 +1523,13 @@ export function ImmersiveHome() {
                     videos={featuredMotivationVideos}
                     loading={loadingMotivation}
                     topicName={moodTopic ? 'For You' : featuredTopic}
-                    tagline={moodTopic ? `Based on your mood \u00b7 ${featuredTopic}` : undefined}
+                    tagline={
+                      moodTopic
+                        ? `Based on your mood \u00b7 ${featuredTopic}`
+                        : eraTopic && era.era
+                          ? `For your ${era.era.title} era`
+                          : undefined
+                    }
                     heroCard={true}
                     backgrounds={backgrounds}
                     activeCardId={audioState.activeCardId}
@@ -1562,7 +1580,7 @@ export function ImmersiveHome() {
               <React.Fragment key="music">
                 <div className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
                   <MusicTabsSection
-                    genres={MUSIC_GENRES}
+                    genres={eraFirst(MUSIC_GENRES, eraProgram?.musicGenre)}
                     currentPlayingGenreId={audioState.currentPlaylist?.type === 'music' ? audioState.currentPlaylist.genreId : undefined}
                     fallbackBackgrounds={backgrounds}
                     audioState={audioState}

@@ -34,6 +34,8 @@ import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
+import { useEra } from '@/hooks/useEra'
+import { eraJournalPrompt } from '@/lib/era/content'
 
 interface JournalEntry {
   date: string
@@ -73,6 +75,7 @@ function JournalContent() {
   const searchParams = useSearchParams()
   const { checkAccess, openUpgradeModal } = useSubscription()
   const mindsetCtx = useMindsetOptional()
+  const era = useEra()
   const hasJournalHistory = checkAccess('journal_history')
 
   // Existing state
@@ -1063,6 +1066,25 @@ function JournalContent() {
           moodHistory={allEntries}
         />
         {isToday && <FeatureHint id="journal-modes-v2" text="Try Chat for a guided AI conversation, or Dream to decode your dreams" mode="once" />}
+
+        {/* Tonight's era prompt — the Journal leaning toward the era. One
+            tap opens Free write with the prompt still in view above it. */}
+        {isToday && era.era && era.era.step !== 'complete' && (
+          <div className="rounded-2xl border border-white/[0.14] bg-white/[0.03] p-4">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-white/50">Tonight, for your era</p>
+            <p className="text-[16px] text-white leading-snug mt-1.5" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+              {eraJournalPrompt(era.era)}
+            </p>
+            {mode !== 'freewrite' && (
+              <button
+                onClick={() => setMode('freewrite')}
+                className="mt-3 text-xs text-white/75 underline underline-offset-2 hover:text-white"
+              >
+                Write about it
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <TierBanner page="journal" />

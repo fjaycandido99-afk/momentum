@@ -5,7 +5,8 @@ import { ChevronDown, Heart, Send, Share2 } from 'lucide-react'
 import { useShareCard } from '@/hooks/useShareCard'
 import { ShareVideoButton } from '@/components/sharing/ShareVideoButton'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
-import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
+import { eraQuote } from '@/lib/era/content'
+import type { MindsetId } from '@/lib/mindset/types'
 import { displayAuthor } from '@/lib/quotes'
 import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
 import { getDateString } from '@/lib/daily-guide/day-type'
@@ -18,7 +19,16 @@ function dateSeed(dateStr: string): number {
   return Math.abs(hash)
 }
 
-export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
+export function WisdomSection({
+  embedded = false,
+  eraQuoteCategories,
+  eraTitle,
+}: {
+  embedded?: boolean
+  /** The era's quote themes — today's quote is drawn from them (lib/era/content). */
+  eraQuoteCategories?: string[]
+  eraTitle?: string
+}) {
   const mindsetCtx = useMindsetOptional()
   const [expanded, setExpanded] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -42,12 +52,12 @@ export function WisdomSection({ embedded = false }: { embedded?: boolean }) {
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [today])
 
-  const dailyQuote = useMemo(() => {
-    const quotes = MINDSET_QUOTES[mindsetId]
-    if (!quotes || quotes.length === 0) return null
-    const idx = dateSeed(today) % quotes.length
-    return quotes[idx]
-  }, [mindsetId, today])
+  // Same seed as before; with an era it draws from the era's themes, and
+  // matches the greeting and the daily-quote push either way.
+  const dailyQuote = useMemo(
+    () => eraQuote(mindsetId as MindsetId, today, eraQuoteCategories),
+    [mindsetId, today, eraQuoteCategories],
+  )
 
   const dailyQuestion = useMemo(() => {
     const questions = MINDSET_DAILY_QUESTIONS[mindsetId]

@@ -30,6 +30,19 @@ export interface EraProgram {
    * words, and guessing an axis for "Dad Mode" would be making it up.
    */
   readTarget?: ReadTarget
+  /**
+   * How the rest of the app leans toward this era (lib/era/content). Each is
+   * a preference, never a filter: the era's pick comes first, nothing else
+   * is hidden.
+   *  - motivationTopic: a TOPIC_NAMES entry (components/home/home-types)
+   *  - musicGenre: a MUSIC_GENRES id, moved to the front of the music shelf
+   *  - quoteCategories: MINDSET_QUOTES categories the daily quote draws from
+   *  - journalQuestion: tonight's era prompt in the Journal
+   */
+  motivationTopic?: string
+  musicGenre?: string
+  quoteCategories?: string[]
+  journalQuestion: string
 }
 
 /** Art for the "Who are you becoming?" hero shown before an era starts. */
@@ -42,6 +55,10 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'focus',
     guideId: 'focus_meditation',
     image: '/era/locked_in.jpg',
+    motivationTopic: 'Focus',
+    musicGenre: 'study',
+    quoteCategories: ['focus', 'action'],
+    journalQuestion: "Where did you hold your focus today, and where did it slip?",
     readTarget: { axis: 'discipline', direction: 1 },
   },
   discipline: {
@@ -50,6 +67,10 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'energy',
     guideId: 'affirmation',
     image: '/era/discipline.jpg',
+    motivationTopic: 'Discipline',
+    musicGenre: 'lofi',
+    quoteCategories: ['action', 'strength'],
+    journalQuestion: "What did you do today even though you didn't feel like it?",
     readTarget: { axis: 'discipline', direction: 1 },
   },
   comeback: {
@@ -58,6 +79,10 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'relax',
     guideId: 'emotional_reset',
     image: '/era/comeback.jpg',
+    motivationTopic: 'Resilience',
+    musicGenre: 'piano',
+    quoteCategories: ['resilience', 'growth'],
+    journalQuestion: "What small step back did you take today? Be kind about the rest.",
     readTarget: { axis: 'faith', direction: 1 },
   },
   gym_arc: {
@@ -66,6 +91,9 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'energy',
     guideId: 'breathing',
     image: '/era/gym_arc.jpg',
+    motivationTopic: 'Hustle',
+    quoteCategories: ['strength', 'action'],
+    journalQuestion: "How did your body feel today, and did you show up for it?",
     readTarget: { axis: 'discipline', direction: 1 },
   },
   stoic_mode: {
@@ -74,6 +102,10 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'rain',
     guideId: 'anxiety',
     image: '/era/stoic_mode.jpg',
+    motivationTopic: 'Mindset',
+    musicGenre: 'classical',
+    quoteCategories: ['wisdom', 'resilience'],
+    journalQuestion: "What happened today that wasn't yours to control, and how did you respond?",
     readTarget: { axis: 'agency', direction: -1 },
   },
   confidence: {
@@ -82,6 +114,10 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'energy',
     guideId: 'confidence',
     image: '/era/confidence.jpg',
+    motivationTopic: 'Confidence',
+    musicGenre: 'jazz',
+    quoteCategories: ['strength', 'action'],
+    journalQuestion: "When did you speak up today, and when did you hold back?",
     readTarget: { axis: 'agency', direction: 1 },
   },
   study: {
@@ -90,6 +126,10 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'focus',
     guideId: 'focus_meditation',
     image: '/era/study.jpg',
+    motivationTopic: 'Focus',
+    musicGenre: 'study',
+    quoteCategories: ['wisdom', 'focus'],
+    journalQuestion: "What do you understand today that you didn't yesterday?",
     readTarget: { axis: 'inquiry', direction: 1 },
   },
   five_am: {
@@ -98,6 +138,10 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'energy',
     guideId: 'breathing',
     image: '/era/five_am.jpg',
+    motivationTopic: 'Discipline',
+    musicGenre: 'piano',
+    quoteCategories: ['action', 'purpose'],
+    journalQuestion: "How did your first hour go, and what will you do tonight to protect tomorrow's?",
     readTarget: { axis: 'discipline', direction: 1 },
   },
   custom: {
@@ -106,6 +150,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'focus',
     guideId: 'breathing',
     image: '/era/custom.jpg',
+    journalQuestion: 'What did today do for the change you named on day 1?',
   },
 }
 

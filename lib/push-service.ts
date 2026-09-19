@@ -24,6 +24,8 @@ import { loadState, localDay } from '@/lib/assessment/service'
 import { MIN_ANSWERS_FOR_READ } from '@/lib/assessment/axes'
 import { eraDayNumber } from '@/lib/era/logic'
 import { loadEraToday } from '@/lib/era/service'
+import { eraQuote } from '@/lib/era/content'
+import { programFor } from '@/lib/era/programs'
 
 // Notification types that can be sent
 import { shouldSendNotification, logNotificationSent } from './notification-gate'
@@ -1153,6 +1155,14 @@ export async function sendDailyQuotes(): Promise<void> {
     } catch { /* no yesterday entry — falls back to the quote */ }
   }))
 
+  // Anyone in an era gets the era-themed quote — the same one home shows
+  // (lib/era/content eraQuote), so the push and the app still agree.
+  const activeEras = await prisma.era.findMany({
+    where: { user_id: { in: eligibleUserIds }, status: 'active' },
+    select: { user_id: true, era_key: true },
+  })
+  const eraKeyByUser = new Map(activeEras.map(e => [e.user_id, e.era_key]))
+
   let nudged = 0
   for (const user_id of eligibleUserIds) {
     const p = prefMap.get(user_id)
@@ -1165,7 +1175,12 @@ export async function sendDailyQuotes(): Promise<void> {
       nudged++
     } else {
       const dateStr = localDateForTz(p?.timezone || null)
-      const quote = getDailyMindsetQuote((p?.mindset as MindsetId) || 'stoic', dateStr) || getDayOfYearQuote()
+      const eraKey = eraKeyByUser.get(user_id)
+      const quote = eraQuote(
+        (p?.mindset as MindsetId) || 'stoic',
+        dateStr,
+        eraKey ? programFor(eraKey).quoteCategories : undefined,
+      ) || getDayOfYearQuote()
       payload = { body: `"${quote.text}" — ${quote.author}` }
     }
 

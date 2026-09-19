@@ -9,7 +9,7 @@ export interface MindsetQuote {
 // Deterministic daily quote for a mindset — the SAME selection the in-app
 // WisdomSection uses (dateSeed % length), so a daily-quote push matches what
 // the user sees in the app. dateStr = the user's LOCAL date ("YYYY-MM-DD").
-function quoteDateSeed(dateStr: string): number {
+export function quoteDateSeed(dateStr: string): number {
   let hash = 0
   for (let i = 0; i < dateStr.length; i++) {
     hash = ((hash << 5) - hash + dateStr.charCodeAt(i)) | 0

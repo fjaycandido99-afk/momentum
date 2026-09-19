@@ -1,6 +1,7 @@
 'use client'
 
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
+import { eraFirst } from '@/lib/era/content'
 import { AuraRing } from '@/components/ui/Aura'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
@@ -16,9 +17,12 @@ interface SoundscapesSectionProps {
   onPlay: (item: typeof SOUNDSCAPE_ITEMS[number], isLocked: boolean) => void
   onReopen: (soundId: string) => void
   onOpenMixer?: () => void
+  /** The era's soundscape — shown first and tagged (lib/era/content). */
+  eraPickId?: string
+  eraTitle?: string
 }
 
-export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isContentFree, onPlay, onReopen, onOpenMixer }: SoundscapesSectionProps) {
+export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isContentFree, onPlay, onReopen, onOpenMixer, eraPickId, eraTitle }: SoundscapesSectionProps) {
   return (
     <div className="mb-10 liquid-reveal section-fade-bg">
       <div className="flex items-center justify-between px-6 mb-5">
@@ -46,7 +50,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
           + gap-y so each tile sits centered in its column with breathing
           room above/below. */}
       <div className="flex gap-4 overflow-x-auto px-6 pt-1 pb-3 scrollbar-hide snap-row lg:grid lg:grid-cols-7 xl:grid-cols-9 lg:gap-x-4 lg:gap-y-7 lg:overflow-visible lg:justify-items-center lg:pt-4 lg:pb-6">
-        {SOUNDSCAPE_ITEMS.map((item, index) => {
+        {eraFirst(SOUNDSCAPE_ITEMS, eraPickId).map((item, index) => {
           const Icon = item.icon
           const isActive = activeSoundscape?.soundId === item.id && soundscapeIsPlaying
           const isLocked = !isContentFree('soundscape', item.id)
@@ -100,6 +104,11 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
                 )}
               </div>
               <span className={`text-[11px] ${isActive ? 'text-white' : 'text-white/90'}`}>{item.label}</span>
+              {item.id === eraPickId && (
+                <span className="text-[8px] tracking-[0.18em] uppercase text-white/55 -mt-0.5" title={eraTitle ? `For your ${eraTitle} era` : undefined}>
+                  Your era
+                </span>
+              )}
             </button>
           )
         })}

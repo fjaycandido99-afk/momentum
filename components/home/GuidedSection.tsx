@@ -1,6 +1,7 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
+import { eraFirst } from '@/lib/era/content'
 import { EqBars } from '@/components/ui/EqBars'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { VOICE_GUIDES } from './home-types'
@@ -141,9 +142,12 @@ interface GuidedSectionProps {
   isContentFree: (type: FreemiumContentType, id: number | string) => boolean
   onPlay: (guideId: string, name: string, isLocked: boolean) => void
   audioElement?: HTMLAudioElement | null
+  /** The era's voice guide — shown first and tagged (lib/era/content). */
+  eraPickId?: string
+  eraTitle?: string
 }
 
-export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isContentFree, onPlay, audioElement }: GuidedSectionProps) {
+export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isContentFree, onPlay, audioElement, eraPickId, eraTitle }: GuidedSectionProps) {
   return (
     <div className="mb-10 liquid-reveal section-fade-bg">
       <div className="flex items-center justify-between px-6 mb-5">
@@ -159,7 +163,7 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
           doesn't stretch into an endless ribbon. Tiles centered in each
           column with vertical breathing room. */}
       <div className="flex gap-4 overflow-x-auto px-6 pb-3 scrollbar-hide snap-row lg:grid lg:grid-cols-7 xl:grid-cols-9 lg:gap-x-4 lg:gap-y-7 lg:overflow-visible lg:justify-items-center lg:pt-2 lg:pb-6">
-        {VOICE_GUIDES.map((guide, index) => {
+        {eraFirst(VOICE_GUIDES, eraPickId).map((guide, index) => {
           const Icon = guide.icon
           const isLoading = loadingGuide === guide.id
           const isGuideActive = guideLabel === guide.name && guideIsPlaying
@@ -224,6 +228,11 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
 
                 <div className="relative z-10 bg-black/80 px-3 py-3 border-t border-white/[0.06]">
                   <span className="text-sm font-medium text-white block text-center">{guide.name}</span>
+                  {guide.id === eraPickId && (
+                    <span className="block text-center text-[9px] tracking-[0.2em] uppercase text-white/60 mt-0.5 truncate" title={eraTitle ? `For your ${eraTitle} era` : undefined}>
+                      Your era
+                    </span>
+                  )}
                 </div>
               </div>
             </button>
