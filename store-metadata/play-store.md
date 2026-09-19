@@ -1,52 +1,56 @@
 # Google Play Store Listing
 
+<!-- Same positioning and claim sources as app-store.md — keep the two in
+step. Limits: title 30, short description 80, full description 4000. Prices
+are left out on purpose; Play shows them on the subscription sheet. -->
+
 ## App Name
-Voxu - AI Audio Coach
+Voxu: Stoic AI Coach
 
 ## Short Description
-AI-powered daily motivation, focus music, soundscapes, and guided sessions.
+Speak for a minute each morning. Your philosophy coach talks back.
 
 ## Full Description
-Voxu is your personal AI-powered audio companion for daily growth, focus, and clarity.
+Say one minute of what's on your mind. Your coach answers out loud, in the voice of the philosophy you choose, and keeps talking with you.
 
-Start each day with a guided session tailored to your schedule, mindset, and goals. Choose from six philosophical frameworks and let your AI coach adapt its wisdom to your chosen path.
+Voxu is a morning coach, not a content library. No 40-minute courses. Just a real conversation to start your day.
 
-DAILY GUIDED SESSIONS
-Personalized morning flows with motivational content, breathing exercises, and reflections adapted to your schedule and preferences.
+HOW IT WORKS
 
-AMBIENT SOUNDSCAPES
-Rain, ocean waves, forest sounds, and more. Curated environments designed for deep work, relaxation, and sleep.
+• Today's Minute: each morning, speak (or type) what's on your mind. Your coach replies through your chosen philosophy, then you talk it through together.
 
-FOCUS MUSIC
-Lo-fi beats, classical, jazz, piano, and ambient playlists to enhance your concentration and productivity.
+• Talk or text: choose whether your coach speaks its replies or stays quiet. Speak or type either way, so it works on a bus as well as at home.
 
-AI COACHING
-Get personalized guidance from an AI coach that speaks through the lens of your chosen philosophical mindset.
+• Pick your philosophy: Stoic, Samurai Code, Existentialist, Cynic, Hedonist, Scholar, Manifestor or Hustler. Your coach, daily quotes and journal prompts all follow it. Switch anytime.
 
-MINDSET SYSTEM
-Choose your path:
-- Stoic: Master emotions and focus on what you can control
-- Existentialist: Create your own meaning through radical freedom
-- Cynic: Question everything and find freedom in simplicity
-- Hedonist: Pursue meaningful pleasure and savor each moment
-- Samurai Code: Walk the warrior's path with honor and discipline
-- Scholar: Explore mind, myth, and cosmos
+• The Daily Read: one quick question a day. Over the weeks it builds a picture of how you actually think.
 
-JOURNAL & PROGRESS
-Reflect with AI-powered prompts, track your mood, build streaks, and watch your growth over time.
+• Memory, only if you want it: turn it on and your coach reads your recent journal, so you never start from zero. It stays off until you choose.
 
-PREMIUM ($4.99/month)
-- All voice tones and AI audio
-- Unlimited content
-- Offline access
-- AI coaching and affirmations
-- 7-day free trial
+ALSO INSIDE
+
+• A journal that is always yours: never locked behind a paywall, and you can export it
+• A daily guide shaped around your wake time and schedule
+• Free motivation and focus music videos
+• Soundscapes for focus, rest and sleep
+• Streaks and progress
+
+FREE AND PREMIUM
+
+Free: Today's Minute, your journal, 5 coach messages a day and one spoken reply a day.
+
+Premium: unlimited conversation, up to 30 spoken replies a day, memory across your last 30 days, every voice tone, and the full soundscape and guided-session library.
+
+Start with a free trial. Subscriptions renew automatically until cancelled. Manage or cancel anytime in Google Play.
+
+Terms: https://voxu.app/terms
+Privacy: https://voxu.app/privacy
 
 ## Category
 Health & Fitness
 
 ## Tags
-meditation, motivation, mindfulness, focus music, daily routine, audio coach, productivity, wellness
+philosophy, stoic, motivation, journal, morning routine, mindset, AI coach, self improvement
 
 ## Content Rating
 Everyone

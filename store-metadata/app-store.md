@@ -1,38 +1,69 @@
 # App Store Listing
 
+<!--
+Positioning (2026-09-18): lead with ONE hook — a philosophy coach that talks
+back — instead of the feature list. Calm/Headspace own "soundscapes + music",
+ChatGPT owns "talk to an AI"; the morning conversation in a chosen philosophy
+is the part nobody else has. Everything else lives under "Also inside".
+
+Every claim below is checked against the code. Re-check before editing:
+free/premium quotas → lib/subscription-constants.ts (AI_FEATURE_LIMITS,
+AI_MEMORY_DEPTH); mindsets → lib/mindset/configs.ts; memory is opt-in →
+lib/ai/user-context.ts. Prices are deliberately NOT in the description —
+App Store shows the IAP prices itself, and they have drifted from the copy
+before.
+
+Limits: name 30, subtitle 30, promo 170, keywords 100 (comma-separated, no
+spaces after commas, don't repeat words already in name/subtitle).
+-->
+
 ## App Name
-Voxu - AI Audio Coach
+Voxu: Stoic AI Coach
 
 ## Subtitle
-Motivation, Mindfulness & Focus
+A coach that talks back
+
+## Promotional Text
+Speak for one minute each morning. Your coach answers in the voice of the philosophy you choose, then keeps the conversation going.
 
 ## Description
-Voxu is your personal AI-powered audio companion for daily growth, focus, and clarity.
+Say one minute of what's on your mind. Your coach answers out loud, in the voice of the philosophy you choose, and keeps talking with you.
 
-Start each day with a guided session tailored to your schedule, mindset, and goals. Choose from six philosophical frameworks — Stoic, Existentialist, Cynic, Hedonist, Samurai Code, or Scholar — and let your AI coach adapt its wisdom to your chosen path.
+Voxu is a morning coach, not a content library. No 40-minute courses. Just a real conversation to start your day.
 
-KEY FEATURES:
+HOW IT WORKS
 
-- Daily Guided Sessions: Personalized morning flows with motivational content, breathing exercises, and reflections
-- Ambient Soundscapes: Curated nature sounds and focus environments for deep work
-- Focus Music: Lo-fi, classical, jazz, and ambient playlists to enhance concentration
-- AI Coaching: Get personalized guidance adapted to your philosophical mindset
-- Journal: Reflect on your day with AI-powered prompts and mood tracking
-- Streak Tracking: Build consistency with daily streaks and milestone celebrations
-- Beautiful Backgrounds: Animated visual themes that match your mindset
+• Today's Minute: each morning, speak (or type) what's on your mind. Your coach replies through your chosen philosophy, then you talk it through together.
 
-MINDSET SYSTEM:
-Choose your philosophical path and watch everything adapt — AI responses, daily quotes, journal prompts, and visual themes. Switch anytime to explore new perspectives.
+• Talk or text: choose whether your coach speaks its replies or stays quiet. Speak or type either way, so it works on a bus as well as at home.
 
-PREMIUM FEATURES:
-- All voice tones and AI-generated audio
-- Unlimited soundscapes and music genres
-- Full journal history and weekly AI summaries
-- AI coaching and affirmations
-- Offline access
+• Pick your philosophy: Stoic, Samurai Code, Existentialist, Cynic, Hedonist, Scholar, Manifestor or Hustler. Your coach, daily quotes and journal prompts all follow it. Switch anytime.
+
+• The Daily Read: one quick question a day. Over the weeks it builds a picture of how you actually think.
+
+• Memory, only if you want it: turn it on and your coach reads your recent journal, so you never start from zero. It stays off until you choose.
+
+ALSO INSIDE
+
+• A journal that is always yours: never locked behind a paywall, and you can export it
+• A daily guide shaped around your wake time and schedule
+• Free motivation and focus music videos
+• Soundscapes for focus, rest and sleep
+• Streaks and progress
+
+FREE AND PREMIUM
+
+Free: Today's Minute, your journal, 5 coach messages a day and one spoken reply a day.
+
+Premium: unlimited conversation, up to 30 spoken replies a day, memory across your last 30 days, every voice tone, and the full soundscape and guided-session library.
+
+Start with a free trial. Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in your Apple ID settings.
+
+Terms: https://voxu.app/terms
+Privacy: https://voxu.app/privacy
 
 ## Keywords
-meditation, motivation, mindfulness, focus, audio, coach, daily, routine, stoic, music, soundscape, journal, productivity, wellness, guided
+philosophy,motivation,journal,morning routine,mindset,samurai,marcus aurelius,seneca,daily,voice
 
 ## Categories
 - Primary: Health & Fitness
@@ -47,19 +78,16 @@ https://voxu.app/privacy
 ## Support URL
 https://voxu.app/support
 
-## Promotional Text
-Your AI-powered daily audio coach. Guided sessions, focus music, journaling, and six philosophical mindsets to transform your routine.
-
-## What's New (v1.0.0)
-Welcome to Voxu! Your personal AI audio coach is here. Start your daily guided sessions, explore six philosophical mindsets, and build lasting habits with streaks and journaling.
+## What's New
+Your coach talks back now. Record Today's Minute and keep the conversation going, out loud or by text. Also new: the Daily Read, and motivation and music videos are free for everyone.
 
 ## Copyright
-Copyright 2025 Voxu. All rights reserved.
+Copyright 2026 Voxu. All rights reserved.
 
 ## Review Notes
 - The app requires an internet connection for AI-generated content
-- Free tier includes limited soundscapes, music, and text-only daily guides
-- Premium subscription ($4.99/month) unlocks all features with a 7-day free trial
+- Free tier: Today's Minute, journal, 5 AI coach messages/day, 1 spoken reply/day, motivation and music videos, 4 soundscapes
+- Premium unlocks unlimited coach messages, up to 30 spoken replies/day, 30-day AI memory (opt-in), all voice tones, soundscapes and guided sessions
 - Background audio playback is supported via Audio background mode
 
 ### Test Account for Review
@@ -68,11 +96,16 @@ Copyright 2025 Voxu. All rights reserved.
 - Note: Create this test account in Supabase before submitting
 
 ### Subscription Information
+<!-- CHECK against App Store Connect before relying on these. The web
+checkout charges $6.99/mo and $49.99/yr with a 14-day trial
+(app/(marketing)/pricing/page.tsx, TRIAL_DAYS in
+lib/subscription-constants.ts). The IAP products were originally set up at
+$4.99 / $39.99 with a 7-day trial and may never have been changed. -->
 - Subscription Group: Voxu Premium
-- Monthly: $4.99/month with 7-day free trial (product ID: voxu_premium_monthly)
-- Yearly: $39.99/year with 7-day free trial (product ID: voxu_premium_yearly)
+- Monthly: product ID `voxu_premium_monthly`
+- Yearly: product ID `voxu_premium_yearly`
 - Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period
-- Payment is charged to the iTunes account at confirmation of purchase
+- Payment is charged to the Apple ID account at confirmation of purchase
 
 ---
 
@@ -83,8 +116,8 @@ Copyright 2025 Voxu. All rights reserved.
 1. **Apple Developer Account** ($99/year) — enroll at developer.apple.com
 2. **App Store Connect** — create app record with bundle ID `com.voxu.app`
 3. **In-App Purchases** — create subscription group "Voxu Premium":
-   - `voxu_premium_monthly` — $4.99/month with 7-day free trial
-   - `voxu_premium_yearly` — $39.99/year with 7-day free trial
+   - `voxu_premium_monthly`
+   - `voxu_premium_yearly`
 4. **RevenueCat Dashboard** — connect App Store Connect, map product IDs, set entitlement "premium"
 5. **Screenshots** — need 6.7" (iPhone 15 Pro Max) and 6.5" (iPhone 11 Pro Max) at minimum
 6. **App Privacy** — fill out App Store Connect privacy questionnaire (data types: name, email, purchases, usage data)
