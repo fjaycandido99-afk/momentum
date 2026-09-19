@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { existsSync, readFileSync } from 'fs'
 import { ERA_PRESETS, CUSTOM_ERA_KEY } from '../era/presets'
-import { ERA_PROGRAMS, programFor } from '../era/programs'
+import { ERA_PROGRAMS, ERA_START_IMAGE, programFor } from '../era/programs'
 import { ERA_MISSIONS } from '../era/missions'
 import { eraStage, missionForDay } from '../era/logic'
 
@@ -73,5 +73,16 @@ describe('eraStage', () => {
   it('clamps out-of-range days instead of throwing', () => {
     expect(eraStage(0, 30).key).toBe('starting')
     expect(eraStage(45, 30).key).toBe('becoming')
+  })
+})
+
+describe('era hero art', () => {
+  it('every era and the start hero have committed art', () => {
+    for (const k of ALL_KEYS) {
+      expect(ERA_PROGRAMS[k].image, k).toBeTruthy()
+      expect(existsSync(`public${ERA_PROGRAMS[k].image}`), k).toBe(true)
+    }
+    expect(ERA_START_IMAGE).toBeTruthy()
+    expect(existsSync(`public${ERA_START_IMAGE}`)).toBe(true)
   })
 })

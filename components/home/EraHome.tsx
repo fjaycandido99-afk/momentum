@@ -120,7 +120,7 @@ function heroShell(children: React.ReactNode, image?: string | null) {
           src={image}
           alt=""
           aria-hidden
-          className="absolute inset-y-0 right-0 h-full w-[62%] object-cover grayscale opacity-80 pointer-events-none"
+          className="absolute inset-y-0 right-0 h-full w-[62%] object-cover object-right grayscale opacity-80 pointer-events-none"
           style={{
             WebkitMaskImage: 'linear-gradient(to left, black 45%, transparent)',
             maskImage: 'linear-gradient(to left, black 45%, transparent)',
