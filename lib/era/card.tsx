@@ -3,7 +3,7 @@ import type { EraTodayWire } from './service'
 import { ERA_COMPLETE_IMAGE, programFor } from './programs'
 import { eraSlug } from './share'
 import { ERA_PRESETS_BY_KEY } from './presets'
-import { ogFonts } from '@/lib/og-fonts'
+import { ogFonts, typeset } from '@/lib/og-fonts'
 
 /**
  * The era share card — Story-sized (1080×1920). Pure given the era: the API
@@ -22,7 +22,7 @@ export async function eraCardImage(era: EraTodayWire, origin: string): Promise<I
   const art = new URL(complete ? ERA_COMPLETE_IMAGE : programFor(era.key).image ?? '/era/custom.jpg', origin).toString()
   const byDay = new Map(era.days.map(d => [d.day, d.kept]))
   const joinable = ERA_PRESETS_BY_KEY.has(era.key)
-  const title = era.title.toUpperCase()
+  const title = typeset(era.title.toUpperCase())
   const titleSize = title.length > 14 ? 118 : title.length > 10 ? 138 : 158
 
   return new ImageResponse(
@@ -44,7 +44,7 @@ export async function eraCardImage(era: EraTodayWire, origin: string): Promise<I
             {title}
           </div>
           <div style={{ display: 'flex', fontSize: 42, color: 'rgba(255,255,255,0.8)', fontFamily: SERIF, fontWeight: 500, marginTop: 26 }}>
-            {complete ? `${era.lengthDays} days. Finished.` : era.stage.line}
+            {typeset(complete ? `${era.lengthDays} days. Finished.` : era.stage.line)}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-end', marginTop: 64, fontFamily: SERIF, fontWeight: 600 }}>

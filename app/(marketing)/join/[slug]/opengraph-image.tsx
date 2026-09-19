@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { ERA_PRESETS_BY_KEY, DEFAULT_ERA_LENGTH_DAYS } from '@/lib/era/presets'
 import { programFor } from '@/lib/era/programs'
 import { eraKeyFromSlug } from '@/lib/era/share'
-import { ogFonts } from '@/lib/og-fonts'
+import { ogFonts, typeset } from '@/lib/og-fonts'
 
 /**
  * The link preview for /join/<era> — what iMessage, WhatsApp, X and friends
@@ -34,7 +34,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
             {title}
           </div>
           <div style={{ display: 'flex', fontSize: 32, color: 'rgba(255,255,255,0.75)', fontFamily: 'Cormorant', fontWeight: 500, marginTop: 22 }}>
-            {preset?.tagline ?? 'Pick an era. Make one promise a day.'}
+            {typeset(preset?.tagline ?? 'Pick an era. Make one promise a day.')}
           </div>
           <div style={{ display: 'flex', fontSize: 24, color: 'rgba(255,255,255,0.55)', marginTop: 40 }}>
             {`${DEFAULT_ERA_LENGTH_DAYS} days · one promise a day · voxu.app`}

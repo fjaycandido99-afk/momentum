@@ -8,7 +8,15 @@
  * font — a card in the wrong typeface beats no card.
  */
 
-type OgFont = { name: string; data: ArrayBuffer; weight: 500 | 600; style: 'normal' }
+/**
+ * Straight apostrophe → typographic ’, for any text set in these images.
+ * next/og measures Cormorant's straight ' wider than it draws it, which left
+ * a visible gap after "You're" — and ’ is what a set serif line should use
+ * anyway.
+ */
+export const typeset = (s: string) => s.replace(/'/g, '’')
+
+type OgFont ={ name: string; data: ArrayBuffer; weight: 500 | 600; style: 'normal' }
 
 let cache: Promise<OgFont[]> | null = null
 
