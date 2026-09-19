@@ -21,7 +21,8 @@ import {
   type EraStats,
   type EraStep,
 } from './logic'
-import { formatEraChatBlock, generatePromiseReply } from './coach'
+import { formatEraChatBlock, generatePromiseReply, generateRecap, isMemoryLockedToday } from './coach'
+import { isPremiumUser } from '@/lib/subscription-check'
 import { programFor } from './programs'
 import { ERA_MISSIONS } from './missions'
 
@@ -33,9 +34,11 @@ function missionFor(eraKey: string, day: number): string | null {
  * Server-side Era operations. The rules live in logic.ts; this file only
  * loads rows, calls those rules, and writes.
  *
- * Everything is free on every tier. The era and the promise are the habit
- * the rest of the app is sold on, and a paywall in front of a habit loop just
- * means the loop never forms. The coach's reply is one short Groq call.
+ * The loop itself — era, promise, mission, check-in, streak — is free on
+ * every tier: a paywall in front of a habit means the habit never forms.
+ * Premium is the depth: the coach quoting your day-1 words on every callback
+ * day (free gets day 1 and day 7), spoken replies beyond the daily one, and
+ * the Era Recap at the end.
  */
 
 export type CrisisContent = NonNullable<ReturnType<typeof crisisResourceForLevel>>
@@ -105,6 +108,15 @@ export interface EraTodayWire {
   links: { soundscapeId: string; guideId: string }
   /** Hero art, or null to render the hero text-only. */
   image: string | null
+  /** Premium drives the memory taste, the voice taste and the recap. */
+  isPremium: boolean
+  /**
+   * Today is a day the coach would have quoted their day-1 words back —
+   * and doesn't, because they're on free. The card shows the upsell then.
+   */
+  memoryLockedToday: boolean
+  /** The Era Recap, once written (premium, finished eras). */
+  recap: string | null
   /** Every day with a promise, oldest first — the page draws the 30-day grid from it. */
   days: EraDayWire[]
 }
@@ -126,6 +138,8 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
   const todayRow = promises.find(p => p.local_day === today) ?? null
   const yesterdayRow = promises.find(p => p.local_day === yesterday) ?? null
   const preset = ERA_PRESETS_BY_KEY.get(era.era_key)
+  const premium = await isPremiumUser(userId).catch(() => false)
+  const yesterdayOutcome = !yesterdayRow ? null : yesterdayRow.kept === null ? 'unanswered' : yesterdayRow.kept ? 'kept' : 'broken'
   const day = Math.min(eraDayNumber(era.start_day, today), era.length_days)
   const stage = eraStage(day, era.length_days)
   const program = programFor(era.era_key)
@@ -156,6 +170,9 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     mission: missionFor(era.era_key, day),
     links: { soundscapeId: program.soundscapeId, guideId: program.guideId },
     image: program.image ?? null,
+    isPremium: premium,
+    memoryLockedToday: isMemoryLockedToday(day, era.length_days, yesterdayOutcome, premium),
+    recap: era.recap ?? null,
     days: promises
       .filter(p => daysBetween(era.start_day, p.local_day) >= 0)
       .map(p => ({ day: eraDayNumber(era.start_day, p.local_day), localDay: p.local_day, kept: p.kept })),
@@ -182,6 +199,7 @@ export async function buildEraChatContext(userId: string): Promise<string> {
       stageLabel: era.stage.label,
       mission: era.mission,
       coachFocus: programFor(era.key).coachFocus,
+      fullMemory: era.isPremium,
     })
   } catch (err) {
     console.warn('[era] chat context failed:', err)
@@ -304,6 +322,7 @@ export async function makePromise(
           coachFocus: programFor(era.era_key).coachFocus,
           stageNote: eraStage(day, era.length_days).coachNote,
           mission: missionFor(era.era_key, day),
+          fullMemory: await isPremiumUser(userId).catch(() => false),
         },
         mindset,
         prefs?.guide_tone ?? null,
@@ -343,4 +362,62 @@ export async function checkPromise(
   })
   if (count === 0) return { ok: false, error: 'No promise for that day', status: 404 }
   return { ok: true }
+}
+
+// ─── Era Recap ───────────────────────────────────────────────────────────────
+
+export type RecapResult =
+  | { ok: true; recap: string }
+  | { ok: false; error: string; status: number; locked?: boolean }
+
+/**
+ * The Era Recap for the active, finished era — premium. Written by the model
+ * the first time it's asked for and stored on the row, so it reads the same
+ * every time and costs one call per era.
+ */
+export async function getEraRecap(userId: string): Promise<RecapResult> {
+  const era = await getActiveEra(userId)
+  if (!era) return { ok: false, error: 'No era', status: 404 }
+
+  const tz = await userTimezone(userId)
+  const today = localDay(tz)
+  if (eraDayNumber(era.start_day, today) <= era.length_days) {
+    return { ok: false, error: 'The recap unlocks when the era is finished', status: 409 }
+  }
+  if (era.recap) return { ok: true, recap: era.recap }
+
+  if (!(await isPremiumUser(userId).catch(() => false))) {
+    return { ok: false, error: 'The Era Recap is a Premium feature', status: 403, locked: true }
+  }
+
+  const promises = await prisma.eraPromise.findMany({
+    where: { era_id: era.id },
+    select: { local_day: true, text: true, kept: true },
+    orderBy: { local_day: 'asc' },
+  })
+  const [mindset, prefs] = await Promise.all([
+    getUserMindset(userId),
+    prisma.userPreferences.findUnique({ where: { user_id: userId }, select: { guide_tone: true } }),
+  ])
+  const recap = await generateRecap(
+    {
+      eraTitle: era.title,
+      lengthDays: era.length_days,
+      change: era.change,
+      why: era.why,
+      stats: computeStats(promises, today),
+      promises: promises
+        .filter(p => daysBetween(era.start_day, p.local_day) >= 0)
+        .map(p => ({ day: eraDayNumber(era.start_day, p.local_day), text: p.text, kept: p.kept })),
+    },
+    mindset,
+    prefs?.guide_tone ?? null,
+    userId,
+  )
+  if (!recap) return { ok: false, error: "Your coach couldn't write it right now. Try again in a minute.", status: 503 }
+
+  // Only the first writer wins, so a double tap can't produce two letters.
+  await prisma.era.updateMany({ where: { id: era.id, recap: null }, data: { recap, recap_at: new Date() } })
+  const saved = await prisma.era.findUnique({ where: { id: era.id }, select: { recap: true } })
+  return { ok: true, recap: saved?.recap ?? recap }
 }

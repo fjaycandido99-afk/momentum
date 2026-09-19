@@ -1058,6 +1058,40 @@ export function ImmersiveHome() {
     handleGuidePlay(voiceType[session], todaysAudio.title, locked)
   }, [todaysAudio, isPremium, checkAccess, stopBackgroundMusic, handleGuidePlay])
 
+  // What Today's Audio offers: the one thing worth listening to right now.
+  // The Daily Guide segment for the time of day until it's done; after that
+  // the era's own voice guide (or Breathing, which is free) — so the card
+  // never shows something already finished, and never lands on a paywall
+  // it chose itself.
+  const todaysAudioCard = useMemo(() => {
+    const segmentsDone = [
+      !!journalData?.morning_prime_done,
+      !!journalData?.midday_reset_done,
+      !!journalData?.wind_down_done,
+      !!journalData?.bedtime_story_done,
+    ]
+    const doneIndex: Record<SessionType, number> = { morning_prime: 0, midday_reset: 1, wind_down: 2, bedtime_story: 3 }
+    if (!segmentsDone[doneIndex[todaysAudio.session]]) {
+      return {
+        title: todaysAudio.title,
+        subtitle: todaysAudio.subtitle,
+        durationSec: SESSION_DURATIONS[todaysAudio.session] as number | null,
+        segmentsDone,
+        onOpen: handlePlayTodaysAudio,
+      }
+    }
+    const eraGuideId = era.era?.links.guideId
+    const pickId = eraGuideId && isContentFree('voiceGuide', eraGuideId) ? eraGuideId : 'breathing'
+    const g = VOICE_GUIDES.find(v => v.id === pickId) ?? VOICE_GUIDES[0]
+    return {
+      title: g.name,
+      subtitle: era.era ? `For your ${era.era.title} era` : g.tagline,
+      durationSec: null,
+      segmentsDone,
+      onOpen: () => handleGuidePlay(g.id, g.name, !isContentFree('voiceGuide', g.id)),
+    }
+  }, [journalData, todaysAudio, era.era, isContentFree, handlePlayTodaysAudio, handleGuidePlay])
+
   // A session played to the end from Today's Audio counts exactly as it does
   // on the Daily Guide page: segment checked in, XP awarded, and home's
   // "n/4 today" refreshed.
@@ -1347,18 +1381,7 @@ export function ImmersiveHome() {
           era={era.era}
           onChange={era.setEra}
           quote={dailyQuote}
-          audio={{
-            title: todaysAudio.title,
-            subtitle: todaysAudio.subtitle,
-            durationSec: SESSION_DURATIONS[todaysAudio.session],
-            segmentsDone: [
-              !!journalData?.morning_prime_done,
-              !!journalData?.midday_reset_done,
-              !!journalData?.wind_down_done,
-              !!journalData?.bedtime_story_done,
-            ],
-            onOpen: handlePlayTodaysAudio,
-          }}
+          audio={todaysAudioCard}
           // The era's linked content plays through the same handlers as
           // the shelves below, so premium previews and locks behave the
           // same wherever it's started from.

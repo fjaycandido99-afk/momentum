@@ -11,6 +11,9 @@ import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBan
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { VOICE_GUIDES } from './home-types'
 import { ERA_LIMITS } from '@/lib/era/presets'
+import { TRIAL_DAYS } from '@/lib/subscription-constants'
+import { useSubscription } from '@/contexts/SubscriptionContext'
+import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
 import { ERA_START_IMAGE } from '@/lib/era/programs'
 import type { EraToday } from '@/hooks/useEra'
 
@@ -40,7 +43,8 @@ export interface EraContentHandlers {
 export interface TodaysAudio {
   title: string
   subtitle: string
-  durationSec: number
+  /** Shown for Daily Guide sessions; null for a voice guide (length varies). */
+  durationSec: number | null
   /** Morning, Midday, Wind Down, Bedtime — done or not. */
   segmentsDone: boolean[]
   onOpen: () => void
@@ -222,11 +226,18 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
       <div className="min-w-0 flex-1">
         <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">Today&rsquo;s audio</p>
         <p className="text-xl text-white leading-tight mt-0.5 truncate" style={{ ...SERIF, fontWeight: 500 }}>{audio.title}</p>
-        <p className="text-xs text-white/60 mt-0.5 truncate">
-          {audio.subtitle} · {done}/4 today
-        </p>
+        <p className="text-xs text-white/60 mt-0.5 truncate">{audio.subtitle}</p>
+        {/* The day's four Daily Guide segments as dots — the "n/4" that
+            used to be squeezed onto the subtitle and cut off on a phone. */}
+        <div className="flex items-center gap-1 mt-1.5" aria-label={`${done} of 4 Daily Guide sessions done today`}>
+          {audio.segmentsDone.map((d, i) => (
+            <span key={i} className={`w-1.5 h-1.5 rounded-full ${d ? 'bg-white' : 'bg-white/20'}`} />
+          ))}
+        </div>
       </div>
-      <span className="text-xs text-white/60 tabular-nums shrink-0">{formatDuration(audio.durationSec)}</span>
+      {audio.durationSec !== null && (
+        <span className="text-xs text-white/60 tabular-nums shrink-0">{formatDuration(audio.durationSec)}</span>
+      )}
       <span className="w-10 h-10 shrink-0 rounded-full bg-white text-black flex items-center justify-center">
         <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
       </span>
@@ -263,6 +274,8 @@ function ActiveEra({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [crisis, setCrisis] = useState<CrisisContent | null>(null)
+  const [trialOffer, setTrialOffer] = useState(false)
+  const { openUpgradeModal } = useSubscription()
 
   const post = async (url: string, body: unknown) => {
     setBusy(true)
@@ -296,7 +309,20 @@ function ActiveEra({
     if (ok) setDraft('')
   }
 
-  const check = (which: 'today' | 'yesterday', kept: boolean) => post('/api/era/check', { which, kept })
+  const check = async (which: 'today' | 'yesterday', kept: boolean) => {
+    const data = await post('/api/era/check', { which, kept })
+    // The trial offer's one moment: right after a win, once three promises
+    // have been kept. Never on day 1, never a wall, and only ever once.
+    const next = data?.era as EraToday | null | undefined
+    if (kept && next && !next.isPremium && next.stats.kept >= 3) {
+      try {
+        if (!localStorage.getItem(TRIAL_OFFER_KEY)) {
+          localStorage.setItem(TRIAL_OFFER_KEY, '1')
+          setTrialOffer(true)
+        }
+      } catch { /* storage blocked: skip the offer rather than repeat it */ }
+    }
+  }
 
   const yesNo = (which: 'today' | 'yesterday', quiet = false) => (
     <div className="flex gap-2 mt-3">
@@ -328,6 +354,7 @@ function ActiveEra({
             You finished your {era.title} era.
             {era.stats.keptPercent !== null && <> You kept {era.stats.kept} of {era.stats.answered} promises.</>}
           </p>
+          <EraRecap era={era} onLocked={openUpgradeModal} />
           <Link href="/era" className="mt-3 w-full block text-center py-3 rounded-xl bg-white text-black text-sm font-medium">
             Start your next era
           </Link>
@@ -420,7 +447,23 @@ function ActiveEra({
           {(t?.coachReply || era.step === 'check' || t?.kept !== null) && (
             <div className="card-surface-lg p-4">
               {t?.coachReply && (
-                <p className="text-sm text-white/80 leading-relaxed border-l-2 border-white/25 pl-3">{t.coachReply}</p>
+                <div className="flex items-start gap-2">
+                  <p className="flex-1 text-sm text-white/80 leading-relaxed border-l-2 border-white/25 pl-3">{t.coachReply}</p>
+                  {/* Hear it: free users get one spoken reply a day from the
+                      shared allowance; past that it offers the upgrade. */}
+                  <SpeakReplyButton text={t.coachReply} onUpgrade={openUpgradeModal} />
+                </div>
+              )}
+              {era.memoryLockedToday && t?.coachReply && (
+                <button
+                  onClick={openUpgradeModal}
+                  className="mt-3 w-full text-left rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2.5 flex items-center gap-2.5"
+                >
+                  <Lock className="w-3.5 h-3.5 text-white/70 shrink-0" />
+                  <span className="text-xs text-white/75 leading-snug">
+                    Today&rsquo;s a memory day. With Premium, your coach brings back what you told it on day 1.
+                  </span>
+                </button>
               )}
               {era.step === 'check' ? (
                 <div className={t?.coachReply ? 'mt-4' : ''}>
@@ -454,6 +497,27 @@ function ActiveEra({
       {action}
       {crisis && <CrisisBanner content={crisis} />}
       {error && <p className="text-xs text-white/70" role="alert">{error}</p>}
+      {trialOffer && (
+        <div className="card-surface-lg p-4 border border-white/20">
+          <p className="text-[19px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
+            {era.stats.kept} for {era.stats.answered}. You&rsquo;re someone who keeps promises.
+          </p>
+          <p className="text-sm text-white/70 mt-1.5">
+            Keep your coach in your corner — the voice, the memory, the recap at day {era.lengthDays}.
+          </p>
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => { setTrialOffer(false); openUpgradeModal() }}
+              className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-medium"
+            >
+              Try Premium free for {TRIAL_DAYS} days
+            </button>
+            <button onClick={() => setTrialOffer(false)} className="px-4 py-2.5 rounded-xl border border-white/15 text-sm text-white/75">
+              Not now
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Promises kept · streak */}
       <div className="card-surface-lg px-4 py-3.5 grid grid-cols-2 divide-x divide-white/10">
@@ -496,5 +560,72 @@ function ActiveEra({
         </div>
       )}
     </>
+  )
+}
+
+const TRIAL_OFFER_KEY = 'voxu-era-trial-offer-shown'
+
+/**
+ * The Era Recap — a letter from the coach about the finished era. Premium:
+ * free users see what it is and the upgrade; premium opens it (written on
+ * first open, then kept) and can have it read aloud.
+ */
+function EraRecap({ era, onLocked }: { era: EraToday; onLocked: () => void }) {
+  const [recap, setRecap] = useState<string | null>(era.recap)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const open = async () => {
+    if (!era.isPremium) return onLocked()
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/era/recap', { method: 'POST' })
+      const data = await res.json().catch(() => null)
+      if (res.status === 403 && data?.locked) return onLocked()
+      if (!res.ok || !data?.recap) {
+        setError(data?.error || 'Could not load your recap.')
+        return
+      }
+      setRecap(data.recap)
+    } catch {
+      setError("Couldn't reach Voxu. Check your connection.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (recap) {
+    return (
+      <div className="mt-4 rounded-xl border border-white/15 bg-white/[0.03] p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">Your Era Recap</p>
+          <SpeakReplyButton text={recap} onUpgrade={onLocked} />
+        </div>
+        <p className="text-[16px] text-white/90 leading-relaxed mt-2 whitespace-pre-line" style={SERIF}>{recap}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4">
+      <button
+        onClick={open}
+        disabled={busy}
+        className="w-full text-left rounded-xl border border-white/20 bg-white/[0.05] px-4 py-3 flex items-center gap-3 disabled:opacity-50"
+      >
+        {era.isPremium
+          ? (busy ? <Loader2 className="w-4 h-4 animate-spin text-white/80" /> : <BookOpen className="w-4 h-4 text-white/80" />)
+          : <Lock className="w-4 h-4 text-white/80" />}
+        <span className="flex-1">
+          <span className="block text-sm text-white font-medium">Your Era Recap</span>
+          <span className="block text-xs text-white/60">
+            {era.isPremium ? 'Your coach wrote you a letter about these 30 days.' : 'A letter from your coach about these 30 days — Premium.'}
+          </span>
+        </span>
+        <ChevronRight className="w-4 h-4 text-white/60" />
+      </button>
+      {error && <p className="text-xs text-white/70 mt-2" role="alert">{error}</p>}
+    </div>
   )
 }

@@ -35,6 +35,12 @@ export interface PromiseReplyInput {
   stageNote: string
   /** Today's mission, if the era has one. */
   mission: string | null
+  /**
+   * Premium memory. Without it the coach still remembers on day 1 and day 7
+   * — enough to feel what being remembered is like — but on the other
+   * callback days it answers today's promise only.
+   */
+  fullMemory: boolean
 }
 
 /** The days the coach should quote their day-1 words back to them. */
@@ -42,12 +48,39 @@ export function isCallbackDay(day: number, lengthDays: number, yesterday: Promis
   return day === 1 || day % 7 === 0 || day === lengthDays || yesterday === 'broken'
 }
 
+/** The callback days a free user still gets: the first, and one week in. */
+export const FREE_CALLBACK_DAYS = [1, 7] as const
+
+/** Whether today's reply may quote day 1 back, given the tier. */
+export function callbackAllowed(
+  day: number,
+  lengthDays: number,
+  yesterday: PromiseReplyInput['yesterday'],
+  fullMemory: boolean,
+): boolean {
+  if (!isCallbackDay(day, lengthDays, yesterday)) return false
+  return fullMemory || (FREE_CALLBACK_DAYS as readonly number[]).includes(day)
+}
+
+/** A callback premium would have given today, withheld on free — the upsell moment. */
+export function isMemoryLockedToday(
+  day: number,
+  lengthDays: number,
+  yesterday: PromiseReplyInput['yesterday'],
+  fullMemory: boolean,
+): boolean {
+  return isCallbackDay(day, lengthDays, yesterday) && !callbackAllowed(day, lengthDays, yesterday, fullMemory)
+}
+
 export function buildPromiseReplyMessages(
   input: PromiseReplyInput,
   mindset: MindsetId,
   tone: string | null,
 ): { system: string; user: string } {
-  const callback = isCallbackDay(input.day, input.lengthDays, input.yesterday)
+  const callback = callbackAllowed(input.day, input.lengthDays, input.yesterday, input.fullMemory)
+  // Free users' day-1 words only reach the model on the days it may use
+  // them, so it can't quote them anyway on a day premium would have.
+  const showDayOne = callback || input.fullMemory
 
   const base = `You are the user's coach in Voxu. They are in the middle of a ${input.lengthDays}-day commitment they named "${input.eraTitle}". Each morning they make one promise to themselves, and you answer it.
 
@@ -71,8 +104,8 @@ ${input.stageNote}`
   const facts = [
     `Day ${input.day} of ${input.lengthDays}.`,
     input.mission ? `Today's suggested mission for this era: "${input.mission}"` : null,
-    `On day 1 they said they want to change: "${input.change}"`,
-    input.why ? `And why it matters to them: "${input.why}"` : null,
+    showDayOne ? `On day 1 they said they want to change: "${input.change}"` : null,
+    showDayOne && input.why ? `And why it matters to them: "${input.why}"` : null,
     input.stats.answered > 0
       ? `Promises kept so far: ${input.stats.kept} of ${input.stats.answered} answered.`
       : 'No promises answered yet in this era.',
@@ -106,13 +139,16 @@ export function formatEraChatBlock(input: {
   stageLabel?: string
   mission?: string | null
   coachFocus?: string
+  /** Premium memory: the chat also knows their day-1 words. Defaults on. */
+  fullMemory?: boolean
 }): string {
+  const dayOne = input.fullMemory !== false
   const lines = [
     `THE USER'S CURRENT ERA — a ${input.lengthDays}-day commitment they chose, called "${input.eraTitle}". Today is day ${input.day}${input.stageLabel ? ` (stage: ${input.stageLabel})` : ''}.`,
     input.coachFocus ?? null,
     input.mission ? `Today's mission for this era: "${input.mission}"` : null,
-    `On day 1 they said they want to change: "${input.change}"`,
-    input.why ? `Why it matters to them: "${input.why}"` : null,
+    dayOne ? `On day 1 they said they want to change: "${input.change}"` : null,
+    dayOne && input.why ? `Why it matters to them: "${input.why}"` : null,
     input.stats.answered > 0
       ? `Promises kept so far: ${input.stats.kept} of ${input.stats.answered} answered.`
       : null,
@@ -154,5 +190,67 @@ export async function generatePromiseReply(
   } catch (err) {
     console.warn('[era] promise reply failed:', err)
     return fallbackPromiseReply(input.day)
+  }
+}
+
+// ─── Era Recap ───────────────────────────────────────────────────────────────
+
+export interface RecapInput {
+  eraTitle: string
+  lengthDays: number
+  change: string
+  why: string | null
+  stats: EraStats
+  /** Every promise in order: day number, text, outcome. */
+  promises: { day: number; text: string; kept: boolean | null }[]
+}
+
+/**
+ * The Era Recap: a letter from the coach about the finished era (premium).
+ * It's the peak-and-end moment of the whole loop, so it has to be specific —
+ * quoting real promises by day — and honest about the misses.
+ */
+export function buildRecapMessages(input: RecapInput, mindset: MindsetId, tone: string | null): { system: string; user: string } {
+  const base = `You are the user's coach in Voxu. They just finished a ${input.lengthDays}-day era they named "${input.eraTitle}". Write them a short letter about it.
+
+Rules:
+- 130 to 180 words. Plain paragraphs, no headings, no lists, no emoji.
+- Second person. Warm, direct, specific — this is about THEM, not about habits in general.
+- Quote two or three of their actual promises by day ("On day 4 you promised…").
+- Be honest about the days they didn't keep, without scolding. Name the pattern if there is one.
+- Use ONLY the facts below. Never invent a promise, a number or a feeling they didn't state.
+- End with one line about who they are now, and one about what comes next.
+- Output ONLY the letter.`
+
+  const lines = input.promises.map(p =>
+    `Day ${p.day}: "${p.text.slice(0, 140)}" — ${p.kept === null ? 'not checked in' : p.kept ? 'kept' : 'not kept'}`,
+  )
+  const facts = [
+    `On day 1 they said they wanted to change: "${input.change}"`,
+    input.why ? `Why it mattered: "${input.why}"` : null,
+    `Promises made: ${input.stats.made}. Answered: ${input.stats.answered}. Kept: ${input.stats.kept}.`,
+    'Their promises:',
+    ...lines,
+  ].filter(Boolean).join('\n')
+
+  return { system: applyVoiceTone(buildMindsetSystemPrompt(base, mindset), tone), user: facts }
+}
+
+export async function generateRecap(input: RecapInput, mindset: MindsetId, tone: string | null, userId: string): Promise<string | null> {
+  const { system, user } = buildRecapMessages(input, mindset, tone)
+  try {
+    const completion = await getGroq('era-recap', userId).chat.completions.create({
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+      temperature: 0.7,
+      max_tokens: 420,
+    })
+    const text = completion.choices[0]?.message?.content?.trim() || ''
+    return text || null
+  } catch (err) {
+    console.warn('[era] recap failed:', err)
+    return null
   }
 }

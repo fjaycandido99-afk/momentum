@@ -975,6 +975,12 @@ model Era {
   start_day   String // YYYY-MM-DD, user's timezone
   status      String  @default("active") // "active" | "ended"
 
+  // The Era Recap: a letter from the coach about the finished 30 days
+  // (premium). Written once when first asked for, then kept, so it reads
+  // the same every time and costs one model call per era.
+  recap    String?
+  recap_at DateTime?
+
   ended_at   DateTime?
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
