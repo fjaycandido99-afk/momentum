@@ -20,8 +20,9 @@ import { getCoachName, MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { getJourney } from '@/lib/journey'
 import { isPremiumUser } from './subscription-check'
 import { isLocalHour } from './timezone-utils'
-import { loadState } from '@/lib/assessment/service'
+import { loadState, localDay } from '@/lib/assessment/service'
 import { MIN_ANSWERS_FOR_READ } from '@/lib/assessment/axes'
+import { eraDayNumber } from '@/lib/era/logic'
 
 // Notification types that can be sent
 import { shouldSendNotification, logNotificationSent } from './notification-gate'
@@ -46,6 +47,7 @@ export type NotificationType =
   | 'win_back'
   | 'feature_discovery'
   | 'daily_read'
+  | 'era_checkin'
   | 'custom'
 
 // Notification payload structure
@@ -194,6 +196,16 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'open', title: 'View' },
     ],
   },
+  era_checkin: {
+    title: 'Did you keep your promise?',
+    body: 'One tap to check in.',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
+    tag: 'era-checkin',
+    actions: [
+      { action: 'open', title: 'Check in' },
+    ],
+  },
   daily_read: {
     title: 'Daily Read',
     body: 'One question, one tap — it builds a picture of how you tick.',
@@ -309,6 +321,7 @@ const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
   daily_quote: '/',
   daily_affirmation: '/daily-guide?session=morning_prime',
   daily_read: '/',
+  era_checkin: '/',
   motivational_nudge: '/',
   daily_motivation: '/',
   coach_checkin: '/coach',
@@ -349,6 +362,9 @@ export async function sendPushToUser(
     daily_affirmation: 'daily_affirmation_alerts',
     motivational_nudge: 'motivational_nudge_alerts',
     daily_read: 'motivational_nudge_alerts',
+    // Rides the evening preference: it is the evening check-in, and a new
+    // PushSubscription column would need a migration for no extra control.
+    era_checkin: 'evening_reminder',
     daily_motivation: 'daily_motivation_alerts',
 coach_checkin: 'coach_checkin_alerts',
     coach_accountability: 'coach_accountability_alerts',
@@ -1734,4 +1750,65 @@ export async function sendDailyReadNudges(): Promise<void> {
   }
 
   console.log(`daily_read: ${totalSent} sent, ${totalFailed} failed, ${skipped} skipped (${eligibleUserIds.length} in window)`)
+}
+
+/**
+ * The era check-in: "Did you keep your promise?" at 8pm local.
+ *
+ * Sent ONLY to someone who made a promise today and hasn't answered it yet,
+ * never as a generic "come back" push. That is what earns it the scheduled
+ * lane in notification-gate: the user asked for this one by making the
+ * promise.
+ *
+ * 8pm, not 9: it has to land before the 10pm quiet hours with room to act
+ * on, and early enough that "I kept it" can still be true.
+ */
+export async function sendEraCheckins(): Promise<void> {
+  // Candidates: unanswered promises from roughly the last day and a half.
+  // Matching the user's own calendar day happens below, per timezone.
+  const since = new Date(Date.now() - 36 * 60 * 60 * 1000)
+  const open = await prisma.eraPromise.findMany({
+    where: { kept: null, created_at: { gte: since }, era: { status: 'active' } },
+    select: {
+      user_id: true,
+      local_day: true,
+      text: true,
+      era: { select: { title: true, start_day: true, length_days: true } },
+    },
+  })
+  if (open.length === 0) return
+
+  const eligible = new Set(await filterUsersByLocalHour([...new Set(open.map(p => p.user_id))], 20))
+  if (eligible.size === 0) return
+  const tzs = await prisma.userPreferences.findMany({
+    where: { user_id: { in: [...eligible] } },
+    select: { user_id: true, timezone: true },
+  })
+  const tzMap = new Map(tzs.map(t => [t.user_id, t.timezone]))
+
+  let totalSent = 0
+  let totalFailed = 0
+  let skipped = 0
+
+  for (const p of open) {
+    if (!eligible.has(p.user_id)) continue
+    // Only TODAY's promise. An unanswered yesterday is asked on the home card
+    // in the morning instead, where the answer can still be honest.
+    if (p.local_day !== localDay(tzMap.get(p.user_id) ?? null)) {
+      skipped++
+      continue
+    }
+
+    const day = Math.min(eraDayNumber(p.era.start_day, p.local_day), p.era.length_days)
+    const promise = p.text.length > 90 ? `${p.text.slice(0, 87)}…` : p.text
+
+    const result = await sendPushToUser(p.user_id, 'era_checkin', {
+      title: `${p.era.title} · Day ${day}`,
+      body: `"${promise}" — did you keep it?`,
+    })
+    totalSent += result.sent
+    totalFailed += result.failed
+  }
+
+  console.log(`era_checkin: ${totalSent} sent, ${totalFailed} failed, ${skipped} skipped (${eligible.size} in window)`)
 }

@@ -48,6 +48,8 @@ import { WellnessWidget } from './WellnessWidget'
 import { DailyFeatureTip } from './DailyFeatureTip'
 import { DailyReadCard } from './DailyReadCard'
 import { useDailyRead } from '@/hooks/useDailyRead'
+import { EraCard } from './EraCard'
+import { useEra } from '@/hooks/useEra'
 import { autoplayNextEnabled } from '@/hooks/useAutoplayNext'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
@@ -94,6 +96,7 @@ export function ImmersiveHome() {
   const mindsetCtx = useMindsetOptional()
   const { openReset } = useReset()
   const dailyRead = useDailyRead()
+  const era = useEra()
   const hasRestoredRef = useRef(false)
   const isRestorePendingRef = useRef(!!audioContext?.lastPlayed)
 
@@ -1268,6 +1271,16 @@ export function ImmersiveHome() {
       {/* "Coach remembers you" — follows up on yesterday's intention / mood / reflection */}
       <YesterdayFollowUp />
 
+      {/* Era — who you're becoming, and today's promise. Above the carousel,
+          not in it: the carousel auto-advances and this card takes typing.
+          Waits for the fetch so someone on day 20 never sees the start
+          prompt flash first. */}
+      {era.loaded && (
+        <div className="px-6 mt-4">
+          <EraCard era={era.era} onChange={era.setEra} />
+        </div>
+      )}
+
       {/* Hero Carousel: Daily Guide + Today's Minute + Path + Featured */}
       {(() => {
         const slides: React.ReactNode[] = [
@@ -1322,7 +1335,10 @@ export function ImmersiveHome() {
         // Demoted rather than deleted: it still feeds real context into the
         // day's guide scripts, and it should be there on the days someone
         // wants it. It just shouldn't tax every single open to be there.
-        slides.push(<MorningMinute key="todays-minute" />)
+        //
+        // Also stands down while an era is running — the era card above asks
+        // for today's promise in the same morning moment, typed or spoken.
+        if (!era.era) slides.push(<MorningMinute key="todays-minute" />)
 
         // Slide 2: Mindset Wisdom
         slides.push(
@@ -1467,8 +1483,11 @@ export function ImmersiveHome() {
                   />
                 )}
 
-                {/* Daily Intention — "What's your focus today?" */}
-                <DailyIntentionCard dailyIntention={dailyIntention} today={today} />
+                {/* Daily Intention — "What's your focus today?" Stands down
+                    while an era is running: the era's promise asks the same
+                    question with more behind it, and two cards asking it
+                    makes neither feel like it matters. */}
+                {!era.era && <DailyIntentionCard dailyIntention={dailyIntention} today={today} />}
               </React.Fragment>
             )
           case 'music':

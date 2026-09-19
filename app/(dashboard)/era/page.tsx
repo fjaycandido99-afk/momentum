@@ -1,0 +1,391 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ChevronLeft, Flame, Loader2 } from 'lucide-react'
+import { useEra, type EraToday } from '@/hooks/useEra'
+import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY } from '@/lib/era/presets'
+import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
+
+/**
+ * /era — pick an era, or see the one you're in.
+ *
+ * Two questions on the way in, not five: what you want to change, and
+ * (optionally) why. The coach quotes the first back on the days it matters,
+ * so it's the one worth asking; every extra question before day 1 is a
+ * reason to never reach day 1.
+ */
+
+const DRAFT_KEY = 'voxu-era-draft'
+
+interface Draft { key: string; title: string; change: string; why: string }
+
+function readDraft(): Draft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    return raw ? (JSON.parse(raw) as Draft) : null
+  } catch {
+    return null
+  }
+}
+
+function writeDraft(d: Draft | null) {
+  try {
+    if (d) localStorage.setItem(DRAFT_KEY, JSON.stringify(d))
+    else localStorage.removeItem(DRAFT_KEY)
+  } catch {
+    // Private mode or blocked storage: the draft just isn't remembered.
+  }
+}
+
+export default function EraPage() {
+  const router = useRouter()
+  const { era, loaded, setEra } = useEra()
+  const [choosing, setChoosing] = useState(false)
+
+  const showPicker = loaded && (!era || era.step === 'complete' || choosing)
+
+  return (
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
+      {/* Same app-shell pattern as /daily-read: this container scrolls, the
+          document doesn't, so iOS can't rubber-band the header away. */}
+      <header className="sticky top-0 z-40 bg-black safe-area-pt pb-3 px-5">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => (choosing ? setChoosing(false) : router.back())}
+            aria-label="Back"
+            className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+          >
+            <ChevronLeft className="w-5 h-5 text-white" />
+          </button>
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12]">
+              <Flame className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-base font-medium text-white leading-tight">Your Era</h1>
+              <p className="text-[11px] text-white/50 leading-tight">30 days. One promise a day.</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="px-5 pb-16">
+        {!loaded ? (
+          <div className="py-24 flex justify-center">
+            <Loader2 className="w-5 h-5 animate-spin text-white/40" />
+          </div>
+        ) : showPicker ? (
+          <Picker
+            replacing={!!era && era.step !== 'complete'}
+            onStarted={next => { setEra(next); setChoosing(false); router.push('/') }}
+          />
+        ) : era ? (
+          <ActiveEra era={era} onEnded={() => setEra(null)} onChooseNew={() => setChoosing(true)} />
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+// ─── Picker ─────────────────────────────────────────────────────────────────
+
+function Picker({ replacing, onStarted }: { replacing: boolean; onStarted: (era: EraToday | null) => void }) {
+  const [key, setKey] = useState<string | null>(null)
+  const [title, setTitle] = useState('')
+  const [change, setChange] = useState('')
+  const [why, setWhy] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [needsAccount, setNeedsAccount] = useState(false)
+  const [crisis, setCrisis] = useState<CrisisContent | null>(null)
+
+  // A guest who filled this in, signed up, and came back shouldn't have to
+  // type it all again.
+  useEffect(() => {
+    const d = readDraft()
+    if (d) { setKey(d.key); setTitle(d.title); setChange(d.change); setWhy(d.why) }
+  }, [])
+
+  const preset = key ? ERA_PRESETS_BY_KEY.get(key) : undefined
+  const isCustom = key === CUSTOM_ERA_KEY
+  const canStart = !!key && change.trim().length > 0 && (!isCustom || title.trim().length > 0)
+
+  const start = async () => {
+    if (!canStart || busy) return
+    setBusy(true)
+    setError(null)
+    const draft = { key: key!, title, change, why }
+    try {
+      const res = await fetch('/api/era', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(draft),
+      })
+      if (res.status === 401) {
+        writeDraft(draft)
+        setNeedsAccount(true)
+        return
+      }
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setError(data?.error || 'Could not start your era. Try again.')
+        return
+      }
+      writeDraft(null)
+      if (data?.crisis) {
+        // Hold on this screen so the resources are actually seen.
+        setCrisis(data.crisis)
+        return
+      }
+      onStarted(data?.era ?? null)
+    } catch {
+      setError("Couldn't reach Voxu. Check your connection.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (crisis) {
+    return (
+      <div className="pt-6 space-y-4">
+        <p className="text-[15px] text-white">Your era has started. Before you go — this matters more.</p>
+        <CrisisBanner content={crisis} />
+        <Link href="/" className="block text-center py-3 rounded-xl bg-white text-black text-sm font-medium">
+          Go to today
+        </Link>
+      </div>
+    )
+  }
+
+  if (!key) {
+    return (
+      <div className="pt-4">
+        <h2 className="text-2xl font-medium text-white">Who are you becoming?</h2>
+        <p className="text-sm text-white/60 mt-1">
+          {replacing ? 'Starting a new era ends the one you’re in. Your promises stay.' : 'Pick one for the next 30 days.'}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-5">
+          {ERA_PRESETS.map(p => (
+            <button
+              key={p.key}
+              onClick={() => setKey(p.key)}
+              className="text-left p-4 rounded-2xl bg-white/[0.04] border border-white/[0.12] hover:bg-white/[0.08] hover:border-white/25 active:scale-[0.99] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            >
+              <p className="text-base font-medium text-white">{p.title}</p>
+              <p className="text-xs text-white/60 mt-0.5">{p.tagline}</p>
+            </button>
+          ))}
+          <button
+            onClick={() => setKey(CUSTOM_ERA_KEY)}
+            className="text-left p-4 rounded-2xl border border-dashed border-white/25 hover:bg-white/[0.05] active:scale-[0.99] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+          >
+            <p className="text-base font-medium text-white">Name your own</p>
+            <p className="text-xs text-white/60 mt-0.5">Healing Era. Dad Mode. Whatever it is.</p>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const inputClass =
+    'mt-2 w-full rounded-xl bg-white/[0.05] border border-white/[0.15] px-3 py-3 text-base text-white placeholder:text-white/35 focus:outline-none focus:border-white/40'
+
+  return (
+    <div className="pt-4 space-y-6">
+      <div>
+        <button onClick={() => setKey(null)} className="text-xs text-white/50 hover:text-white underline underline-offset-2">
+          Choose a different era
+        </button>
+        <h2 className="text-2xl font-medium text-white mt-2">{isCustom ? 'Your own era' : preset?.title}</h2>
+        {preset && <p className="text-sm text-white/60 mt-1">{preset.tagline}</p>}
+      </div>
+
+      {isCustom && (
+        <div>
+          <label htmlFor="era-title" className="text-sm text-white/80">What do you call it?</label>
+          <input
+            id="era-title"
+            value={title}
+            maxLength={ERA_LIMITS.title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Healing Era"
+            className={inputClass}
+          />
+        </div>
+      )}
+
+      <div>
+        <label htmlFor="era-change" className="text-sm text-white/80">What are you trying to change?</label>
+        <textarea
+          id="era-change"
+          rows={3}
+          value={change}
+          maxLength={ERA_LIMITS.change}
+          onChange={e => setChange(e.target.value)}
+          placeholder={preset?.changeHint ?? 'Say it the way you’d say it to a friend.'}
+          className={`${inputClass} resize-none`}
+        />
+        <p className="text-[11px] text-white/40 mt-1.5">Your coach will remind you of this, in your own words.</p>
+      </div>
+
+      <div>
+        <label htmlFor="era-why" className="text-sm text-white/80">
+          Why does it matter? <span className="text-white/40">(optional)</span>
+        </label>
+        <textarea
+          id="era-why"
+          rows={2}
+          value={why}
+          maxLength={ERA_LIMITS.why}
+          onChange={e => setWhy(e.target.value)}
+          placeholder="Because…"
+          className={`${inputClass} resize-none`}
+        />
+      </div>
+
+      {needsAccount ? (
+        <div className="rounded-2xl border border-white/20 bg-white/[0.05] p-4">
+          <p className="text-sm text-white">Create a free account to start your era — your answers are saved.</p>
+          <div className="flex gap-2 mt-3">
+            <Link href="/signup" className="flex-1 text-center py-2.5 rounded-xl bg-white text-black text-sm font-medium">
+              Sign up free
+            </Link>
+            <Link href="/login" className="flex-1 text-center py-2.5 rounded-xl border border-white/20 text-white text-sm">
+              Log in
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={start}
+          disabled={!canStart || busy}
+          className="w-full py-3.5 rounded-xl bg-white text-black text-[15px] font-medium disabled:opacity-30 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+        >
+          {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+          Start day 1
+        </button>
+      )}
+      {error && <p className="text-xs text-white/70" role="alert">{error}</p>}
+    </div>
+  )
+}
+
+// ─── Active era ─────────────────────────────────────────────────────────────
+
+function ActiveEra({
+  era,
+  onEnded,
+  onChooseNew,
+}: {
+  era: EraToday
+  onEnded: () => void
+  onChooseNew: () => void
+}) {
+  const [confirmEnd, setConfirmEnd] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  const byDay = new Map(era.days.map(d => [d.day, d]))
+
+  const end = async () => {
+    setBusy(true)
+    try {
+      const res = await fetch('/api/era', { method: 'DELETE' })
+      if (res.ok) onEnded()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="pt-4 space-y-7">
+      <div>
+        <p className="text-[11px] tracking-[0.18em] text-white/50 uppercase">{era.title}</p>
+        <p className="text-4xl font-medium text-white mt-1">
+          Day {era.day}<span className="text-white/35 text-xl font-normal"> / {era.lengthDays}</span>
+        </p>
+        <p className="text-sm text-white/70 mt-2">
+          {era.stats.keptPercent === null
+            ? 'No check-ins yet.'
+            : `Promises kept: ${era.stats.keptPercent}% (${era.stats.kept} of ${era.stats.answered})`}
+          {era.stats.promiseStreak > 1 && ` · ${era.stats.promiseStreak}-day streak`}
+        </p>
+      </div>
+
+      {/* The 30 days. Filled = kept, crossed = not kept, ring = promised but
+          never checked, faint = no promise. Today is outlined. */}
+      <div>
+        <div className="grid grid-cols-10 gap-1.5" role="list" aria-label="Your days">
+          {Array.from({ length: era.lengthDays }, (_, i) => {
+            const n = i + 1
+            const d = byDay.get(n)
+            const isToday = n === era.day
+            const state = !d ? 'none' : d.kept === true ? 'kept' : d.kept === false ? 'broken' : 'open'
+            const label = `Day ${n}: ${
+              state === 'kept' ? 'kept' : state === 'broken' ? 'not kept' : state === 'open' ? 'not checked in' : n > era.day ? 'ahead' : 'no promise'
+            }`
+            return (
+              <div
+                key={n}
+                role="listitem"
+                aria-label={label}
+                title={label}
+                className={`aspect-square rounded-md flex items-center justify-center text-[10px] ${
+                  state === 'kept'
+                    ? 'bg-white text-black font-medium'
+                    : state === 'broken'
+                      ? 'border border-white/30 text-white/50 line-through'
+                      : state === 'open'
+                        ? 'border border-white/50 text-white/70'
+                        : n > era.day
+                          ? 'bg-white/[0.03] text-white/20'
+                          : 'bg-white/[0.06] text-white/35'
+                } ${isToday ? 'ring-2 ring-white/70 ring-offset-2 ring-offset-black' : ''}`}
+              >
+                {n}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-white/[0.04] border border-white/[0.12] p-4">
+        <p className="text-xs text-white/50">On day 1 you said</p>
+        <p className="text-[15px] text-white mt-1 leading-snug">&ldquo;{era.change}&rdquo;</p>
+        {era.why && <p className="text-sm text-white/65 mt-2 leading-snug">Because &ldquo;{era.why}&rdquo;</p>}
+      </div>
+
+      <Link href="/" className="block text-center py-3 rounded-xl bg-white text-black text-sm font-medium">
+        {era.step === 'promise' ? 'Make today’s promise' : 'Back to today'}
+      </Link>
+
+      <div className="pt-2 border-t border-white/10 space-y-3">
+        <button onClick={onChooseNew} className="text-sm text-white/60 hover:text-white">
+          Start a different era
+        </button>
+        {confirmEnd ? (
+          <div className="rounded-xl border border-white/15 p-3">
+            <p className="text-sm text-white">End your {era.title} era now? Your promises are kept.</p>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={end}
+                disabled={busy}
+                className="flex-1 py-2 rounded-lg bg-white text-black text-sm font-medium disabled:opacity-40"
+              >
+                End it
+              </button>
+              <button onClick={() => setConfirmEnd(false)} className="flex-1 py-2 rounded-lg border border-white/20 text-sm text-white">
+                Keep going
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button onClick={() => setConfirmEnd(true)} className="block text-sm text-white/40 hover:text-white/70">
+            End this era
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}

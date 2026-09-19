@@ -83,6 +83,10 @@
     {
       "path": "/api/cron/notifications?type=daily_read",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=era_checkin",
+      "schedule": "0 * * * *"
     }
   ]
 }

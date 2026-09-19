@@ -33,7 +33,7 @@ export async function GET() {
 
     // Everything is scoped to user.id. No route param decides whose data
     // this is, so there is no way to ask for somebody else's.
-    const [account, preferences, guides, favorites, goals, routines, playlists, assessment] = await Promise.all([
+    const [account, preferences, guides, favorites, goals, routines, playlists, assessment, eras] = await Promise.all([
       prisma.user.findUnique({
         where: { id: user.id },
         select: { id: true, email: true, name: true, created_at: true },
@@ -81,6 +81,19 @@ export async function GET() {
         orderBy: { created_at: 'asc' },
         select: { item_id: true, axis: true, direction: true, score: true, local_day: true, created_at: true },
       }),
+      // Eras and every promise made in them — the user's own words, every day.
+      prisma.era.findMany({
+        where: { user_id: user.id },
+        orderBy: { created_at: 'asc' },
+        select: {
+          title: true, era_key: true, change: true, why: true, length_days: true,
+          start_day: true, status: true, ended_at: true, created_at: true,
+          promises: {
+            orderBy: { local_day: 'asc' },
+            select: { local_day: true, text: true, source: true, coach_reply: true, kept: true, checked_at: true },
+          },
+        },
+      }),
     ])
 
     const payload = {
@@ -99,6 +112,7 @@ export async function GET() {
         // is not a meaningful export of what the person actually answered.
         statement: (() => { const it = ITEMS_BY_ID.get(a.item_id); return it ? itemLabel(it) : null })(),
       })),
+      eras,
     }
 
     const filename = `voxu-export-${new Date().toISOString().slice(0, 10)}.json`

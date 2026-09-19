@@ -17,6 +17,7 @@ import {
   sendWinBackReminders,
   sendFeatureDiscovery,
   sendDailyReadNudges,
+  sendEraCheckins,
 } from '@/lib/push-service'
 import { cleanupExpiredAudioCache, cleanupChatVoiceCache, cleanupAiUsage } from '@/lib/daily-guide/cache-cleanup'
 
@@ -133,6 +134,10 @@ export async function GET(request: NextRequest) {
       case 'daily_read':
         await sendDailyReadNudges()
         return NextResponse.json({ success: true, type: 'daily_read' })
+
+      case 'era_checkin':
+        await sendEraCheckins()
+        return NextResponse.json({ success: true, type: 'era_checkin' })
 
       case 'feature_discovery':
         await sendFeatureDiscovery()
