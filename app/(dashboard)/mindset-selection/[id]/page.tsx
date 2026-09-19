@@ -9,7 +9,6 @@ import { MINDSET_DETAILS } from '@/lib/mindset/detail-content'
 import { MINDSET_IDS, type MindsetId } from '@/lib/mindset/types'
 import { MindsetPortrait } from '@/components/mindset/MindsetPortrait'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
-import { CoachAvatar } from '@/components/coach/CoachAvatar'
 
 export default function MindsetDetailPage() {
   const params = useParams()
@@ -71,7 +70,8 @@ export default function MindsetDetailPage() {
 
       {/* Mindset header */}
       <div className="text-center px-6 mt-6 flex flex-col items-center opacity-0 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
-        <CoachAvatar mindsetId={mindsetId} size="lg" className="!w-24 !h-24" />
+        {/* The line icon, not the cartoon robot — the portrait above is the face. */}
+        <MindsetIcon mindsetId={mindsetId} className="w-12 h-12 text-white/80" />
         <h1 className="text-2xl font-light mt-3 tracking-wide">
           {config.name}
         </h1>
