@@ -95,3 +95,13 @@ export const ERA_LIMITS = {
   why: 280,
   promise: 240,
 } as const
+
+/**
+ * "Locked In" → "Locked In era", but "Study Era" stays "Study Era" — three
+ * presets already end in Era, and "my Study Era era" read like a typo on
+ * the share card, the join page and home.
+ */
+export function eraName(title: string): string {
+  const t = title.trim()
+  return /(^|\s)era$/i.test(t) ? t : `${t} era`
+}

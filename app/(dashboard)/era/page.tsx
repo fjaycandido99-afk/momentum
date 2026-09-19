@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Compass, Flame, Loader2 } from 'lucide-react'
 import { useEra, type EraToday } from '@/hooks/useEra'
-import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY } from '@/lib/era/presets'
+import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY, eraName } from '@/lib/era/presets'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { programFor } from '@/lib/era/programs'
@@ -42,6 +42,8 @@ function EraArt({ eraKey, className = '' }: { eraKey: string; className?: string
  */
 
 const DRAFT_KEY = 'voxu-era-draft'
+/** The sharer's era id from a "Join this era" link — kept through sign-up. */
+const REF_KEY = 'voxu-era-ref'
 
 interface Draft { key: string; title: string; change: string; why: string }
 
@@ -67,6 +69,21 @@ export default function EraPage() {
   const router = useRouter()
   const { era, loaded, setEra } = useEra()
   const [choosing, setChoosing] = useState(false)
+  // Arriving from /join/<era>: open the picker on that era, and keep the
+  // sharer's era id so starting it credits them (EraReferral).
+  const [startKey, setStartKey] = useState<string | null>(null)
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    const start = q.get('start')
+    const from = q.get('from')
+    if (from) {
+      try { localStorage.setItem(REF_KEY, from) } catch { /* storage blocked */ }
+    }
+    if (start && ERA_PRESETS_BY_KEY.has(start)) {
+      setStartKey(start)
+      setChoosing(true)
+    }
+  }, [])
 
   const showPicker = loaded && (!era || era.step === 'complete' || choosing)
 
@@ -102,6 +119,7 @@ export default function EraPage() {
           </div>
         ) : showPicker ? (
           <Picker
+            initialKey={startKey}
             replacing={!!era && era.step !== 'complete'}
             onStarted={next => { setEra(next); setChoosing(false); router.push('/') }}
           />
@@ -115,8 +133,17 @@ export default function EraPage() {
 
 // ─── Picker ─────────────────────────────────────────────────────────────────
 
-function Picker({ replacing, onStarted }: { replacing: boolean; onStarted: (era: EraToday | null) => void }) {
-  const [key, setKey] = useState<string | null>(null)
+function Picker({
+  replacing,
+  onStarted,
+  initialKey,
+}: {
+  replacing: boolean
+  onStarted: (era: EraToday | null) => void
+  initialKey?: string | null
+}) {
+  const [key, setKey] = useState<string | null>(initialKey ?? null)
+  useEffect(() => { if (initialKey) setKey(initialKey) }, [initialKey])
   const [title, setTitle] = useState('')
   const [change, setChange] = useState('')
   const [why, setWhy] = useState('')
@@ -142,11 +169,13 @@ function Picker({ replacing, onStarted }: { replacing: boolean; onStarted: (era:
     setBusy(true)
     setError(null)
     const draft = { key: key!, title, change, why }
+    let ref: string | null = null
+    try { ref = localStorage.getItem(REF_KEY) } catch { /* storage blocked */ }
     try {
       const res = await fetch('/api/era', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(draft),
+        body: JSON.stringify({ ...draft, ref }),
       })
       if (res.status === 401) {
         writeDraft(draft)
@@ -159,6 +188,7 @@ function Picker({ replacing, onStarted }: { replacing: boolean; onStarted: (era:
         return
       }
       writeDraft(null)
+      try { localStorage.removeItem(REF_KEY) } catch { /* storage blocked */ }
       if (data?.newAchievements?.length) achievements?.triggerAchievements(data.newAchievements)
       if (data?.crisis) {
         // Hold on this screen so the resources are actually seen.
@@ -423,7 +453,7 @@ function ActiveEra({
         </button>
         {confirmEnd ? (
           <div className="rounded-xl border border-white/15 p-3">
-            <p className="text-sm text-white">End your {era.title} era now? Your promises are kept.</p>
+            <p className="text-sm text-white">End your {eraName(era.title)} now? Your promises are kept.</p>
             <div className="flex gap-2 mt-3">
               <button
                 onClick={end}

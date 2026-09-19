@@ -3,19 +3,20 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Play, Target, X,
+  ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Play, Share2, Target, X,
   type LucideIcon,
 } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { VOICE_GUIDES } from './home-types'
-import { ERA_LIMITS } from '@/lib/era/presets'
+import { ERA_LIMITS, eraName } from '@/lib/era/presets'
 import { alignmentLine } from '@/lib/era/alignment'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
+import { ShareEraSheet } from './ShareEraSheet'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
 import type { EraToday } from '@/hooks/useEra'
 
@@ -168,10 +169,11 @@ function StartHero() {
   )
 }
 
-function EraHero({ era }: { era: EraToday }) {
+function EraHero({ era, onShare }: { era: EraToday; onShare: () => void }) {
   const pct = Math.round((era.day / era.lengthDays) * 100)
   const byDay = new Map(era.days.map(d => [d.day, d.kept]))
   return (
+    <div className="relative">
     <Link href="/era" className="block group" aria-label={`${era.title}, day ${era.day} of ${era.lengthDays}. Open your era.`}>
       {heroShell(
         <>
@@ -223,6 +225,16 @@ function EraHero({ era }: { era: EraToday }) {
         era.step === 'complete' ? ERA_COMPLETE_IMAGE : era.image,
       )}
     </Link>
+    {/* Share — a sibling of the link, not inside it, so tapping it never
+        also opens the era page. */}
+    <button
+      onClick={onShare}
+      aria-label="Share your era"
+      className="absolute top-3 right-3 z-10 p-2.5 rounded-full bg-black/45 backdrop-blur-sm border border-white/15 hover:bg-black/65 active:scale-95 transition-all"
+    >
+      <Share2 className="w-4 h-4 text-white" />
+    </button>
+    </div>
   )
 }
 
@@ -302,6 +314,20 @@ function ActiveEra({
   const [error, setError] = useState<string | null>(null)
   const [crisis, setCrisis] = useState<CrisisContent | null>(null)
   const [trialOffer, setTrialOffer] = useState(false)
+  const [sharing, setSharing] = useState(false)
+  // Share moments: a week, two, three, and the finish — the days people are
+  // proud of. Dismissed per era per milestone, so "Not now" means not again.
+  const milestone = era.step === 'complete' ? 'complete' : [7, 14, 21].includes(era.day) ? String(era.day) : null
+  const milestoneKey = milestone ? `voxu-era-share-${era.id}-${milestone}` : null
+  const [milestoneDismissed, setMilestoneDismissed] = useState(true)
+  useEffect(() => {
+    if (!milestoneKey) return
+    try { setMilestoneDismissed(!!localStorage.getItem(milestoneKey)) } catch { setMilestoneDismissed(false) }
+  }, [milestoneKey])
+  const dismissMilestone = () => {
+    setMilestoneDismissed(true)
+    try { if (milestoneKey) localStorage.setItem(milestoneKey, '1') } catch { /* storage blocked */ }
+  }
   const { openUpgradeModal } = useSubscription()
   const achievements = useAchievementOptional()
 
@@ -380,7 +406,7 @@ function ActiveEra({
       action = (
         <div className="card-surface-lg p-4">
           <p className="text-[15px] text-white">
-            You finished your {era.title} era.
+            You finished your {eraName(era.title)}.
             {era.stats.keptPercent !== null && <> You kept {era.stats.kept} of {era.stats.answered} promises.</>}
           </p>
           <EraRecap era={era} onLocked={openUpgradeModal} />
@@ -521,7 +547,7 @@ function ActiveEra({
 
   return (
     <>
-      <EraHero era={era} />
+      <EraHero era={era} onShare={() => setSharing(true)} />
       <AudioCard audio={audio} />
       {action}
       {crisis && <CrisisBanner content={crisis} />}
@@ -569,6 +595,23 @@ function ActiveEra({
           </div>
         </div>
       </div>
+
+      {milestone && !milestoneDismissed && (
+        <div className="card-surface-lg p-4 border border-white/20">
+          <p className="text-[19px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
+            {milestone === 'complete' ? 'You finished it.' : milestone === '7' ? 'One week in.' : milestone === '14' ? 'Two weeks in.' : 'Three weeks in.'}
+          </p>
+          <p className="text-sm text-white/70 mt-1">Show someone — they can start your era with you.</p>
+          <div className="flex gap-2 mt-3">
+            <button onClick={() => { dismissMilestone(); setSharing(true) }} className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-medium flex items-center justify-center gap-1.5">
+              <Share2 className="w-4 h-4" /> Share your era
+            </button>
+            <button onClick={dismissMilestone} className="px-4 py-2.5 rounded-xl border border-white/15 text-sm text-white/75">Not now</button>
+          </div>
+        </div>
+      )}
+
+      {sharing && <ShareEraSheet era={era} onClose={() => setSharing(false)} />}
 
       {/* Alignment — whether the Daily Read is moving toward the era. Early on
           it says how many answers it still needs, which is itself the nudge

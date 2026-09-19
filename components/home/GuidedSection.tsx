@@ -2,6 +2,7 @@
 
 import { Loader2 } from 'lucide-react'
 import { eraFirst } from '@/lib/era/content'
+import { eraName } from '@/lib/era/presets'
 import { EqBars } from '@/components/ui/EqBars'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { VOICE_GUIDES } from './home-types'
@@ -229,7 +230,7 @@ export function GuidedSection({ guideLabel, guideIsPlaying, loadingGuide, isCont
                 <div className="relative z-10 bg-black/80 px-3 py-3 border-t border-white/[0.06]">
                   <span className="text-sm font-medium text-white block text-center">{guide.name}</span>
                   {guide.id === eraPickId && (
-                    <span className="block text-center text-[9px] tracking-[0.2em] uppercase text-white/60 mt-0.5 truncate" title={eraTitle ? `For your ${eraTitle} era` : undefined}>
+                    <span className="block text-center text-[9px] tracking-[0.2em] uppercase text-white/60 mt-0.5 truncate" title={eraTitle ? `For your ${eraName(eraTitle)}` : undefined}>
                       Your era
                     </span>
                   )}

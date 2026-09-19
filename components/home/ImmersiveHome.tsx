@@ -24,6 +24,7 @@ import { WelcomeBackCard } from './WelcomeBackCard'
 import { WisdomSection } from './WisdomSection'
 import { EraHome } from './EraHome'
 import { programFor } from '@/lib/era/programs'
+import { eraName } from '@/lib/era/presets'
 import { eraFirst, eraQuote } from '@/lib/era/content'
 import { getSessionThumb } from '@/lib/daily-guide/session-art'
 import { AchievementShelf } from './AchievementShelf'
@@ -1097,7 +1098,7 @@ export function ImmersiveHome() {
     const g = VOICE_GUIDES.find(v => v.id === pickId) ?? VOICE_GUIDES[0]
     return {
       title: g.name,
-      subtitle: era.era ? `For your ${era.era.title} era` : g.tagline,
+      subtitle: era.era ? `For your ${eraName(era.era.title)}` : g.tagline,
       durationSec: null,
       image: era.era?.image ?? null,
       segmentsDone,
@@ -1527,7 +1528,7 @@ export function ImmersiveHome() {
                       moodTopic
                         ? `Based on your mood \u00b7 ${featuredTopic}`
                         : eraTopic && era.era
-                          ? `For your ${era.era.title} era`
+                          ? `For your ${eraName(era.era.title)}`
                           : undefined
                     }
                     heroCard={true}

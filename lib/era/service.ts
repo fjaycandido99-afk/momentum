@@ -236,7 +236,7 @@ export type StartEraResult =
 
 export async function startEra(
   userId: string,
-  input: { key: unknown; title?: unknown; change: unknown; why?: unknown },
+  input: { key: unknown; title?: unknown; change: unknown; why?: unknown; ref?: unknown },
 ): Promise<StartEraResult> {
   const key = typeof input.key === 'string' ? input.key : ''
   const preset = ERA_PRESETS_BY_KEY.get(key)
@@ -276,6 +276,7 @@ export async function startEra(
   // for them.
   const level = detectCrisisLevel(`${change} ${why ?? ''}`)
   const newAchievements = await awardEraXPOnce(userId, 'eraStart', created.id)
+  await recordReferral(userId, created.id, created.era_key, input.ref)
   return { ok: true, crisis: crisisResourceForLevel(level, detectRegion(tz)), newAchievements }
 }
 
@@ -479,5 +480,33 @@ export async function eraReadFocus(userId: string): Promise<AxisId | null> {
     return era ? programFor(era.era_key).readTarget?.axis ?? null : null
   } catch {
     return null
+  }
+}
+
+/**
+ * Credit a "Join this era" link. `ref` is the sharer's era id from the link
+ * (?from=). Only counted when it's a real era belonging to someone ELSE —
+ * sharing your own link to yourself credits nothing — and at most once per
+ * invitee per shared era. Never throws: a bad ref must not stop anyone
+ * starting their era.
+ */
+async function recordReferral(userId: string, inviteeEraId: string, eraKey: string, ref: unknown): Promise<void> {
+  if (typeof ref !== 'string' || !ref || ref.length > 64) return
+  try {
+    const inviter = await prisma.era.findUnique({ where: { id: ref }, select: { id: true, user_id: true } })
+    if (!inviter || inviter.user_id === userId) return
+    await prisma.eraReferral.upsert({
+      where: { invitee_user_id_inviter_era_id: { invitee_user_id: userId, inviter_era_id: inviter.id } },
+      create: {
+        inviter_era_id: inviter.id,
+        inviter_user_id: inviter.user_id,
+        invitee_user_id: userId,
+        invitee_era_id: inviteeEraId,
+        era_key: eraKey,
+      },
+      update: {},
+    })
+  } catch (err) {
+    console.warn('[era] referral not recorded:', err)
   }
 }

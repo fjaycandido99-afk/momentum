@@ -2,6 +2,7 @@
 
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { eraFirst } from '@/lib/era/content'
+import { eraName } from '@/lib/era/presets'
 import { AuraRing } from '@/components/ui/Aura'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { SoftLockBadge } from '@/components/premium/SoftLock'
@@ -105,7 +106,7 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
               </div>
               <span className={`text-[11px] ${isActive ? 'text-white' : 'text-white/90'}`}>{item.label}</span>
               {item.id === eraPickId && (
-                <span className="text-[8px] tracking-[0.18em] uppercase text-white/55 -mt-0.5" title={eraTitle ? `For your ${eraTitle} era` : undefined}>
+                <span className="text-[8px] tracking-[0.18em] uppercase text-white/55 -mt-0.5" title={eraTitle ? `For your ${eraName(eraTitle)}` : undefined}>
                   Your era
                 </span>
               )}

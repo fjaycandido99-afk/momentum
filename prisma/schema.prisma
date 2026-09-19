@@ -1013,3 +1013,22 @@ model EraPromise {
   @@unique([era_id, local_day])
   @@index([user_id, local_day])
 }
+
+// Someone started an era through another user's "Join this era" link.
+// `inviter_era_id` is the era that was shared (its id rides the link as
+// ?from=), so a join is credited to the era, not just the person — which is
+// what "3 friends are in your Locked In era" will count. One row per invitee
+// per shared era: re-joining through the same link doesn't count twice.
+model EraReferral {
+  id              String   @id @default(cuid())
+  inviter_era_id  String
+  inviter_user_id String
+  invitee_user_id String
+  invitee_era_id  String
+  era_key         String
+  created_at      DateTime @default(now())
+
+  @@unique([invitee_user_id, inviter_era_id])
+  @@index([inviter_user_id])
+  @@index([inviter_era_id])
+}
