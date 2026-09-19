@@ -96,11 +96,10 @@ Copyright 2026 Voxu. All rights reserved.
 - Note: Create this test account in Supabase before submitting
 
 ### Subscription Information
-<!-- CHECK against App Store Connect before relying on these. The web
-checkout charges $6.99/mo and $49.99/yr with a 14-day trial
-(app/(marketing)/pricing/page.tsx, TRIAL_DAYS in
-lib/subscription-constants.ts). The IAP products were originally set up at
-$4.99 / $39.99 with a 7-day trial and may never have been changed. -->
+<!-- Confirmed in App Store Connect 2026-09-18: $6.99/mo and $49.99/yr (US),
+matching the web checkout. Introductory offer on both: free for 2 weeks
+(TRIAL_DAYS = 14 in lib/subscription-constants.ts) — the old 1-week offer was
+deleted. Keep all three in step if any of them changes. -->
 - Subscription Group: Voxu Premium
 - Monthly: product ID `voxu_premium_month`
 - Yearly: product ID `voxu_premium_yearly`
