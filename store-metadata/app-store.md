@@ -102,7 +102,7 @@ checkout charges $6.99/mo and $49.99/yr with a 14-day trial
 lib/subscription-constants.ts). The IAP products were originally set up at
 $4.99 / $39.99 with a 7-day trial and may never have been changed. -->
 - Subscription Group: Voxu Premium
-- Monthly: product ID `voxu_premium_monthly`
+- Monthly: product ID `voxu_premium_month`
 - Yearly: product ID `voxu_premium_yearly`
 - Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period
 - Payment is charged to the Apple ID account at confirmation of purchase
@@ -116,7 +116,7 @@ $4.99 / $39.99 with a 7-day trial and may never have been changed. -->
 1. **Apple Developer Account** ($99/year) — enroll at developer.apple.com
 2. **App Store Connect** — create app record with bundle ID `com.voxu.app`
 3. **In-App Purchases** — create subscription group "Voxu Premium":
-   - `voxu_premium_monthly`
+   - `voxu_premium_month`
    - `voxu_premium_yearly`
 4. **RevenueCat Dashboard** — connect App Store Connect, map product IDs, set entitlement "premium"
 5. **Screenshots** — need 6.7" (iPhone 15 Pro Max) and 6.5" (iPhone 11 Pro Max) at minimum
