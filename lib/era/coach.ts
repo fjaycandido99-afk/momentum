@@ -141,6 +141,8 @@ export function formatEraChatBlock(input: {
   coachFocus?: string
   /** Premium memory: the chat also knows their day-1 words. Defaults on. */
   fullMemory?: boolean
+  /** One line on whether their Daily Read is moving with the era, if it can say. */
+  alignment?: string | null
 }): string {
   const dayOne = input.fullMemory !== false
   const lines = [
@@ -157,6 +159,7 @@ export function formatEraChatBlock(input: {
           input.todayPromise.kept === null ? 'not checked in yet' : input.todayPromise.kept ? 'they kept it' : "they didn't keep it"
         }.`
       : 'They have not made a promise yet today.',
+    input.alignment ? `Their Daily Read (self-reported, one question a day): ${input.alignment}` : null,
     'Bring this up only when it is relevant to what they are saying — not in every reply. Use only these facts; never invent a number.',
   ]
   return lines.filter(Boolean).join('\n')
@@ -203,6 +206,8 @@ export interface RecapInput {
   stats: EraStats
   /** Every promise in order: day number, text, outcome. */
   promises: { day: number; text: string; kept: boolean | null }[]
+  /** Whether their Daily Read moved with the era, if there was enough to say. */
+  alignment?: string | null
 }
 
 /**
@@ -229,6 +234,7 @@ Rules:
     `On day 1 they said they wanted to change: "${input.change}"`,
     input.why ? `Why it mattered: "${input.why}"` : null,
     `Promises made: ${input.stats.made}. Answered: ${input.stats.answered}. Kept: ${input.stats.kept}.`,
+    input.alignment ? `Their Daily Read over the era (self-reported, one question a day): ${input.alignment}` : null,
     'Their promises:',
     ...lines,
   ].filter(Boolean).join('\n')

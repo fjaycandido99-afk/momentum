@@ -10,6 +10,7 @@ import { getWeightedQuestions } from '@/lib/daily-sparks'
 import { getWeightedQuotePool } from '@/lib/mindset/quotes'
 import { getRandomAffirmation } from '@/lib/mindset/affirmations'
 import { loadState, nextItemFor } from '@/lib/assessment/service'
+import { eraReadFocus } from '@/lib/era/service'
 import { SCALE, toWire } from '@/lib/assessment/items'
 
 export const dynamic = 'force-dynamic'
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
           select: { timezone: true },
         })
         const state = await loadState(user.id, prefs?.timezone ?? null)
-        const item = nextItemFor(state)
+        const item = nextItemFor(state, await eraReadFocus(user.id))
         if (item) {
           return NextResponse.json({
             type: 'assessment',

@@ -73,9 +73,9 @@ export async function loadState(userId: string, timezone: string | null): Promis
  * Spark popup from both asking on the same day — each stands the other down
  * by writing the day's row.
  */
-export function nextItemFor(state: AssessmentState): AssessmentItem | null {
+export function nextItemFor(state: AssessmentState, focusAxis: AxisId | null = null): AssessmentItem | null {
   if (state.answeredToday) return null
-  return pickNextItem(state.onCooldown, state.read.coverage, state.staleFirst)
+  return pickNextItem(state.onCooldown, state.read.coverage, state.staleFirst, Math.random, focusAxis)
 }
 
 /**

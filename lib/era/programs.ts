@@ -1,3 +1,5 @@
+import type { ReadTarget } from './alignment'
+
 /**
  * What makes each era its own program rather than a label on the same loop.
  *
@@ -22,6 +24,12 @@ export interface EraProgram {
    * without it, and a path to a missing file would show a broken image.
    */
   image?: string
+  /**
+   * The Daily Read axis this era is trying to move, and which way — see
+   * lib/era/alignment. Unset for custom eras: their goal is the user's own
+   * words, and guessing an axis for "Dad Mode" would be making it up.
+   */
+  readTarget?: ReadTarget
 }
 
 /** Art for the "Who are you becoming?" hero shown before an era starts. */
@@ -34,6 +42,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'focus',
     guideId: 'focus_meditation',
     image: '/era/locked_in.jpg',
+    readTarget: { axis: 'discipline', direction: 1 },
   },
   discipline: {
     coachFocus:
@@ -41,6 +50,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'energy',
     guideId: 'affirmation',
     image: '/era/discipline.jpg',
+    readTarget: { axis: 'discipline', direction: 1 },
   },
   comeback: {
     coachFocus:
@@ -48,6 +58,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'relax',
     guideId: 'emotional_reset',
     image: '/era/comeback.jpg',
+    readTarget: { axis: 'faith', direction: 1 },
   },
   gym_arc: {
     coachFocus:
@@ -55,6 +66,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'energy',
     guideId: 'breathing',
     image: '/era/gym_arc.jpg',
+    readTarget: { axis: 'discipline', direction: 1 },
   },
   stoic_mode: {
     coachFocus:
@@ -62,6 +74,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'rain',
     guideId: 'anxiety',
     image: '/era/stoic_mode.jpg',
+    readTarget: { axis: 'agency', direction: -1 },
   },
   confidence: {
     coachFocus:
@@ -69,6 +82,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'energy',
     guideId: 'confidence',
     image: '/era/confidence.jpg',
+    readTarget: { axis: 'agency', direction: 1 },
   },
   study: {
     coachFocus:
@@ -76,6 +90,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'focus',
     guideId: 'focus_meditation',
     image: '/era/study.jpg',
+    readTarget: { axis: 'inquiry', direction: 1 },
   },
   five_am: {
     coachFocus:
@@ -83,6 +98,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'energy',
     guideId: 'breathing',
     image: '/era/five_am.jpg',
+    readTarget: { axis: 'discipline', direction: 1 },
   },
   custom: {
     coachFocus:

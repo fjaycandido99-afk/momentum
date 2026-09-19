@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Flame, Loader2 } from 'lucide-react'
+import { ChevronLeft, Compass, Flame, Loader2 } from 'lucide-react'
 import { useEra, type EraToday } from '@/hooks/useEra'
 import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY } from '@/lib/era/presets'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { programFor } from '@/lib/era/programs'
+import { alignmentLine } from '@/lib/era/alignment'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -398,6 +399,19 @@ function ActiveEra({
         <p className="text-[15px] text-white mt-1 leading-snug">&ldquo;{era.change}&rdquo;</p>
         {era.why && <p className="text-sm text-white/65 mt-2 leading-snug">Because &ldquo;{era.why}&rdquo;</p>}
       </div>
+
+      {/* Is the Daily Read moving toward who this era is about? */}
+      {era.alignment && (
+        <Link href="/daily-read" className="block rounded-2xl border border-white/[0.12] p-4 hover:bg-white/[0.03]">
+          <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+            <Compass className="w-3.5 h-3.5" /> Alignment
+          </div>
+          <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>{alignmentLine(era.alignment)}</p>
+          <p className="text-[11px] text-white/45 mt-2">
+            From your Daily Read — one question a day, self-reported, so it only ever says a direction.
+          </p>
+        </Link>
+      )}
 
       <Link href="/" className="block text-center py-3 rounded-xl bg-white text-black text-sm font-medium">
         {era.step === 'promise' ? 'Make today’s promise' : 'Back to today'}

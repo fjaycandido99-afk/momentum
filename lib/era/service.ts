@@ -25,6 +25,8 @@ import { formatEraChatBlock, generatePromiseReply, generateRecap, isMemoryLocked
 import { isPremiumUser } from '@/lib/subscription-check'
 import { awardEraXPOnce, ERA_COMPLETE_MIN_PROMISES, type AwardedAchievement } from '@/lib/achievements-server'
 import { programFor } from './programs'
+import { alignmentLine, computeAlignment, type EraAlignment } from './alignment'
+import type { AxisId } from '@/lib/assessment/axes'
 import { ERA_MISSIONS } from './missions'
 
 function missionFor(eraKey: string, day: number): string | null {
@@ -118,6 +120,11 @@ export interface EraTodayWire {
   memoryLockedToday: boolean
   /** The Era Recap, once written (premium, finished eras). */
   recap: string | null
+  /**
+   * Is the Daily Read moving toward who this era is about? Null for eras
+   * without a read target (custom). See lib/era/alignment.
+   */
+  alignment: EraAlignment | null
   /** Every day with a promise, oldest first — the page draws the 30-day grid from it. */
   days: EraDayWire[]
 }
@@ -144,6 +151,17 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
   const day = Math.min(eraDayNumber(era.start_day, today), era.length_days)
   const stage = eraStage(day, era.length_days)
   const program = programFor(era.era_key)
+  const target = program.readTarget
+  const alignment = target
+    ? computeAlignment(
+        target,
+        (await prisma.assessmentAnswer.findMany({
+          where: { user_id: userId, axis: target.axis },
+          select: { axis: true, direction: true, score: true, local_day: true },
+        })).map(a => ({ ...a, axis: a.axis as AxisId, direction: (a.direction >= 0 ? 1 : -1) as 1 | -1 })),
+        era.start_day,
+      )
+    : null
 
   return {
     id: era.id,
@@ -174,6 +192,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     isPremium: premium,
     memoryLockedToday: isMemoryLockedToday(day, era.length_days, yesterdayOutcome, premium),
     recap: era.recap ?? null,
+    alignment,
     days: promises
       .filter(p => daysBetween(era.start_day, p.local_day) >= 0)
       .map(p => ({ day: eraDayNumber(era.start_day, p.local_day), localDay: p.local_day, kept: p.kept })),
@@ -201,6 +220,7 @@ export async function buildEraChatContext(userId: string): Promise<string> {
       mission: era.mission,
       coachFocus: programFor(era.key).coachFocus,
       fullMemory: era.isPremium,
+      alignment: era.alignment && era.alignment.status !== 'early' ? alignmentLine(era.alignment) : null,
     })
   } catch (err) {
     console.warn('[era] chat context failed:', err)
@@ -421,6 +441,11 @@ export async function getEraRecap(userId: string): Promise<RecapResult> {
       promises: promises
         .filter(p => daysBetween(era.start_day, p.local_day) >= 0)
         .map(p => ({ day: eraDayNumber(era.start_day, p.local_day), text: p.text, kept: p.kept })),
+      // "You started this era answering like someone who follows the day…"
+      // — only when the Daily Read had enough to say.
+      alignment: await loadEraToday(userId)
+        .then(e => (e?.alignment && e.alignment.status !== 'early' ? alignmentLine(e.alignment) : null))
+        .catch(() => null),
     },
     mindset,
     prefs?.guide_tone ?? null,
@@ -441,4 +466,18 @@ export async function getEraRecap(userId: string): Promise<RecapResult> {
 export async function awardEraCompletionIfDue(userId: string, era: EraTodayWire | null): Promise<AwardedAchievement[]> {
   if (!era || era.step !== 'complete' || era.stats.made < ERA_COMPLETE_MIN_PROMISES) return []
   return awardEraXPOnce(userId, 'eraComplete', era.id)
+}
+
+/**
+ * The Daily Read axis to lean on while this user's era runs, or null. The
+ * Daily Read routes pass it to nextItemFor so an era gathers enough answers
+ * on its own axis to say something (lib/era/alignment).
+ */
+export async function eraReadFocus(userId: string): Promise<AxisId | null> {
+  try {
+    const era = await getActiveEra(userId)
+    return era ? programFor(era.era_key).readTarget?.axis ?? null : null
+  } catch {
+    return null
+  }
 }

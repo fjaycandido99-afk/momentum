@@ -228,8 +228,21 @@ export function pickNextItem(
   coverage: Record<AxisId, number>,
   staleFirst: string[] = [],
   random: () => number = Math.random,
+  /**
+   * The axis the user's era is trying to move (lib/era/alignment). Half the
+   * time the question comes from it, so a 30-day era gathers enough answers
+   * on that axis to say something; the other half keeps the whole read
+   * filling in. 14 items per axis and a 60-day cooldown make ~15 in an era
+   * fit without repeats.
+   */
+  focusAxis: AxisId | null = null,
 ): AssessmentItem | null {
   const available = ASSESSMENT_ITEMS.filter(i => !recentlyAnswered.has(i.id))
+
+  if (focusAxis && available.length > 0 && random() < 0.5) {
+    const focused = available.filter(i => i.axis === focusAxis)
+    if (focused.length > 0) return focused[Math.floor(random() * focused.length)]
+  }
 
   if (available.length === 0) {
     // Everything is cooling down. Re-ask the one answered longest ago rather

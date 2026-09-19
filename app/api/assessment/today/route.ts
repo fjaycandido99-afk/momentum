@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { loadState, nextItemFor } from '@/lib/assessment/service'
+import { eraReadFocus } from '@/lib/era/service'
 import { SCALE, toWire } from '@/lib/assessment/items'
 import { MIN_ANSWERS_FOR_READ } from '@/lib/assessment/axes'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
@@ -34,7 +35,8 @@ export async function GET() {
     })
 
     const state = await loadState(user.id, prefs?.timezone ?? null)
-    const item = nextItemFor(state)
+    // Half the time, ask about the axis the user's era is trying to move.
+    const item = nextItemFor(state, await eraReadFocus(user.id))
 
     // Read-only: the card shows the standing name but never sets one. The
     // stored key has to come along or home would render the raw reading

@@ -11,6 +11,7 @@ import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBan
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { VOICE_GUIDES } from './home-types'
 import { ERA_LIMITS } from '@/lib/era/presets'
+import { alignmentLine } from '@/lib/era/alignment'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
@@ -567,6 +568,16 @@ function ActiveEra({
           </div>
         </div>
       </div>
+
+      {/* Alignment — whether the Daily Read is moving toward the era. Early on
+          it says how many answers it still needs, which is itself the nudge
+          to answer today's question. */}
+      {era.alignment && era.step !== 'complete' && (
+        <Link href="/daily-read" className="flex items-start gap-2.5 px-1 -mt-0.5">
+          <span className="text-[10px] tracking-[0.2em] uppercase text-white/45 pt-0.5 shrink-0">Alignment</span>
+          <span className="text-xs text-white/75 leading-snug">{alignmentLine(era.alignment)}</span>
+        </Link>
+      )}
 
       {/* For your era — the one soundscape and one voice guide this era leans on. */}
       {era.step !== 'complete' && (sound || guide) && (
