@@ -60,7 +60,6 @@ import { autoplayNextEnabled } from '@/hooks/useAutoplayNext'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
 import { YesterdayFollowUp } from './YesterdayFollowUp'
-import { MorningMinute } from './MorningMinute'
 import { FirstMomentOverlay } from './FirstMomentOverlay'
 import { useToast } from '@/contexts/ToastContext'
 import { usePreferences, useJournalMood, useMotivationVideos, useFavorites, useWelcomeStatus, useGamificationStatus } from '@/hooks/useHomeSWR'
@@ -1101,6 +1100,27 @@ export function ImmersiveHome() {
   // A session played to the end from Today's Audio counts exactly as it does
   // on the Daily Guide page: segment checked in, XP awarded, and home's
   // "n/4 today" refreshed.
+  // Deep links from challenges and missions: /?play=guide:<id> or
+  // /?play=soundscape:<id> opens that player straight away (with the usual
+  // premium preview if it's locked). Consumed once, then stripped from the
+  // URL so a refresh or back doesn't replay it.
+  useEffect(() => {
+    if (!mounted) return
+    const play = new URLSearchParams(window.location.search).get('play')
+    if (!play) return
+    window.history.replaceState(null, '', window.location.pathname)
+    const [kind, id] = play.split(':')
+    if (kind === 'guide') {
+      const g = VOICE_GUIDES.find(v => v.id === id)
+      if (g) handleGuidePlay(g.id, g.name, !isContentFree('voiceGuide', g.id))
+    } else if (kind === 'soundscape') {
+      const item = SOUNDSCAPE_ITEMS.find(i => i.id === id)
+      if (item) handleSoundscapePlay(item, !isContentFree('soundscape', item.id))
+    }
+    // Runs once, after mount; the handlers read current state when called.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted])
+
   const handleGuideEnded = useCallback(() => {
     const session = activeSessionRef.current
     if (!session) return
@@ -1410,9 +1430,9 @@ export function ImmersiveHome() {
           Wisdom is its own section below, and the feature tip is retired.
           Nothing here is removed from the app — only from the rotation. */}
       <div className="px-6 mt-3 mb-8 space-y-3">
-        {/* Today's Minute stands down while an era runs — the era's promise
-            asks for the same morning moment, typed or spoken. */}
-        {era.loaded && !era.era && <MorningMinute />}
+        {/* Today's Minute is gone from home (Francis, 2026-09-18). The era's
+            promise asks for the same morning moment, typed or spoken; the
+            Minute's API and saved recordings are untouched. */}
 
         {/* Daily Read — only while it has something to do; the server
             decides `show`. */}

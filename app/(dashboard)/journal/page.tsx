@@ -253,7 +253,11 @@ function JournalContent() {
   // have a saved entry to review. Chat & Dream are live AI flows you can't
   // create retroactively, so they only appear on past days that actually used them.
   const availableModes = useMemo<JournalMode[]>(() => {
-    if (isToday) return ['guided', 'freewrite', 'voice', 'conversational', 'dream']
+    // Voice is hidden for now: it speaks its reply through ElevenLabs on every
+    // use, and voice is the one cost that isn't bounded (2026-09-18, Francis).
+    // The mode still exists — add 'voice' back here to bring it back. Old
+    // ?mode=voice links fall back to Free via the effect below.
+    if (isToday) return ['guided', 'freewrite', 'conversational', 'dream']
     const modes: JournalMode[] = []
     if (win || gratitude || intention) modes.push('guided')
     modes.push('freewrite')

@@ -125,13 +125,23 @@ function dateToSeed(dateStr: string): number {
 /** Get 3 deterministic daily challenges for a given date (YYYY-MM-DD).
  *  When mindsetId is provided: 1 mindset-specific + 2 generic.
  *  Without mindsetId: 3 generic (same as before). */
+/**
+ * Challenge types with no screen to do them on. Routines have a builder and a
+ * player in components/routines, but neither is mounted anywhere — so a
+ * "complete a routine" challenge could never be completed. Kept out of the
+ * rotation until routines have a real home.
+ */
+export const UNAVAILABLE_CHALLENGE_TYPES: readonly string[] = ['routine_complete']
+
+const doable = (c: DailyChallenge) => !UNAVAILABLE_CHALLENGE_TYPES.includes(c.condition.type)
+
 export function getDailyChallenges(dateStr: string, mindsetId?: MindsetId | null): DailyChallenge[] {
   const seed = dateToSeed(dateStr)
   const rand = seededRandom(seed)
 
   if (mindsetId && MINDSET_CHALLENGE_POOL[mindsetId]) {
     // Pick 1 mindset challenge
-    const mindsetPool = [...MINDSET_CHALLENGE_POOL[mindsetId]]
+    const mindsetPool = MINDSET_CHALLENGE_POOL[mindsetId].filter(doable)
     for (let i = mindsetPool.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));
       [mindsetPool[i], mindsetPool[j]] = [mindsetPool[j], mindsetPool[i]]
@@ -139,7 +149,7 @@ export function getDailyChallenges(dateStr: string, mindsetId?: MindsetId | null
     const mindsetChallenge = mindsetPool[0]
 
     // Pick 2 generic challenges
-    const genericPool = [...CHALLENGE_POOL]
+    const genericPool = CHALLENGE_POOL.filter(doable)
     for (let i = genericPool.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));
       [genericPool[i], genericPool[j]] = [genericPool[j], genericPool[i]]
@@ -149,7 +159,7 @@ export function getDailyChallenges(dateStr: string, mindsetId?: MindsetId | null
   }
 
   // Fallback: 3 generic
-  const pool = [...CHALLENGE_POOL]
+  const pool = CHALLENGE_POOL.filter(doable)
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]]

@@ -1,6 +1,8 @@
 'use client'
 
-import { Check } from 'lucide-react'
+import Link from 'next/link'
+import { Check, ChevronRight } from 'lucide-react'
+import { routeForCondition } from '@/lib/challenge-routes'
 
 interface ChallengeData {
   id: string
@@ -10,6 +12,7 @@ interface ChallengeData {
   xpReward: number
   completed: boolean
   mindsetTag?: string
+  condition?: { type: string }
 }
 
 interface DailyChallengesProps {
@@ -42,14 +45,19 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
       </div>
 
       <div className="space-y-2">
-        {challenges.map(c => (
-          <div
+        {challenges.map(c => {
+          // Unfinished challenges open the screen where they're done.
+          const href = c.completed ? null : routeForCondition(c.condition?.type)
+          const Row = href ? Link : 'div'
+          return (
+          <Row
             key={c.id}
+            href={href ?? ''}
             className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
               c.completed
                 ? 'bg-white/10 border border-white/20'
                 : 'bg-white/[0.03] border border-white/5'
-            }`}
+            } ${href ? 'press-scale hover:bg-white/[0.06]' : ''}`}
           >
             <span className="text-lg shrink-0">{c.icon}</span>
 
@@ -77,8 +85,10 @@ export function DailyChallenges({ challenges }: DailyChallengesProps) {
                 <div className="w-5 h-5 rounded-full bg-white/5 border border-white/15" />
               )}
             </div>
-          </div>
-        ))}
+            {href && <ChevronRight className="w-4 h-4 text-white/35 shrink-0" />}
+          </Row>
+          )
+        })}
       </div>
 
       {completedCount === 3 && (

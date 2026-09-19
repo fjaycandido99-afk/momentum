@@ -173,7 +173,7 @@ export default function ProgressPage() {
           <WellnessScore />
 
           {/* Goals — relocated here from the journal so it's actually findable */}
-          <GoalTracker />
+          <div id="goals" className="scroll-mt-24"><GoalTracker /></div>
 
           {/* Daily Challenges */}
           {gamification?.dailyChallenges && (

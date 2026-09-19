@@ -1,6 +1,8 @@
 'use client'
 
-import { Check } from 'lucide-react'
+import Link from 'next/link'
+import { Check, ChevronRight } from 'lucide-react'
+import { routeForCondition } from '@/lib/challenge-routes'
 
 interface MissionData {
   id: string
@@ -11,6 +13,7 @@ interface MissionData {
   progress: number
   target: number
   completed: boolean
+  condition?: { type: string }
 }
 
 interface WeeklyMissionsProps {
@@ -31,14 +34,18 @@ export function WeeklyMissions({ missions }: WeeklyMissionsProps) {
       </div>
 
       <div className="space-y-3">
-        {missions.map(m => (
-          <div
+        {missions.map(m => {
+          const href = m.completed ? null : routeForCondition(m.condition?.type)
+          const Row = href ? Link : 'div'
+          return (
+          <Row
             key={m.id}
-            className={`p-3 rounded-xl transition-all ${
+            href={href ?? ''}
+            className={`block p-3 rounded-xl transition-all ${
               m.completed
                 ? 'bg-white/10 border border-white/20'
                 : 'bg-white/[0.03] border border-white/5'
-            }`}
+            } ${href ? 'press-scale hover:bg-white/[0.06]' : ''}`}
           >
             <div className="flex items-center gap-3 mb-2">
               <span className="text-lg shrink-0">{m.icon}</span>
@@ -72,8 +79,9 @@ export function WeeklyMissions({ missions }: WeeklyMissionsProps) {
               </div>
               <span className="text-[10px] text-white/60 tabular-nums">{m.progress}/{m.target}</span>
             </div>
-          </div>
-        ))}
+          </Row>
+          )
+        })}
       </div>
     </div>
   )

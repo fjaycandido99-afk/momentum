@@ -91,8 +91,10 @@ export function AchievementShelf() {
 
       {recent.length > 0 && (
         <div className="mt-4">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/50 mb-2.5">Recently earned</p>
-          <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-white/50 mb-0.5">Recently earned</p>
+          {/* pt-4: a horizontal scroller clips vertically too, and it was
+              cutting the tops off the rings and the legendary glow. */}
+          <div className="flex gap-4 overflow-x-auto pt-4 pb-3 -mx-6 px-6 scrollbar-hide">
             {recent.map(a => (
               <Link key={a.id} href="/progress" className="flex flex-col items-center gap-2 w-[68px] shrink-0">
                 <AchievementBadge category={a.category} icon={a.icon} rarity={a.rarity} unlocked mark={a.mark} size={56} />

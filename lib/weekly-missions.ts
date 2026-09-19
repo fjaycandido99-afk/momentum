@@ -56,9 +56,12 @@ export function getWeekString(date: Date): string {
 }
 
 /** Get 2 deterministic weekly missions for a given week string */
+/** Missions with no screen to complete them on — see UNAVAILABLE_CHALLENGE_TYPES. */
+export const UNAVAILABLE_MISSION_TYPES: readonly string[] = ['routines_complete']
+
 export function getWeeklyMissions(weekStr: string): WeeklyMission[] {
   const rand = seededRandom(weekToSeed(weekStr))
-  const pool = [...MISSION_POOL]
+  const pool = MISSION_POOL.filter(m => !UNAVAILABLE_MISSION_TYPES.includes(m.condition.type))
 
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
