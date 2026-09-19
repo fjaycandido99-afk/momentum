@@ -1,5 +1,33 @@
 export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary'
-export type AchievementCategory = 'consistency' | 'explorer' | 'dedication' | 'mastery' | 'growth' | 'secret'
+export type AchievementCategory = 'era' | 'consistency' | 'explorer' | 'dedication' | 'mastery' | 'growth' | 'secret'
+
+/**
+ * What an era achievement counts. Evaluated from Era/EraPromise rows on the
+ * server (lib/achievements-server.ts) — never from anything the client sends.
+ */
+export type EraMetric =
+  | 'promises_made'
+  | 'promises_kept'
+  | 'promise_streak'
+  | 'eras_started'
+  | 'eras_completed'
+  | 'perfect_eras'
+  | 'custom_eras'
+  | 'comebacks'
+
+export interface EraAchievementStats {
+  promisesMade: number
+  promisesKept: number
+  /** Longest run of consecutive days with a promise made, in any era. */
+  longestPromiseStreak: number
+  erasStarted: number
+  erasCompleted: number
+  /** Finished eras where every answered promise was kept (20+ answered). */
+  perfectEras: number
+  customEras: number
+  /** A promise kept the day after one that wasn't. */
+  comebacks: number
+}
 
 export interface Achievement {
   id: string
@@ -20,36 +48,42 @@ export type AchievementCondition =
   | { type: 'level'; level: number }
   | { type: 'time_range'; start: number; end: number; action: string }
   | { type: 'consecutive_days'; days: number; action: string }
+  | { type: 'era'; metric: EraMetric; count: number }
 
+// Rarity is monochrome, like the rest of Voxu: it reads as how much light a
+// badge gives off — a faint ring, a clear one, a bright one, one that glows —
+// never as a colour. (It was blue/purple/amber, the only colour in the app.)
 export const RARITY_COLORS: Record<AchievementRarity, string> = {
   common: 'border-white/15',
-  rare: 'border-blue-400/30',
-  epic: 'border-purple-400/40',
-  legendary: 'border-amber-400/50',
+  rare: 'border-white/35',
+  epic: 'border-white/60',
+  legendary: 'border-white',
 }
 
 export const RARITY_BG: Record<AchievementRarity, string> = {
   common: 'bg-white/[0.03]',
-  rare: 'bg-blue-400/[0.06]',
-  epic: 'bg-purple-400/[0.06]',
-  legendary: 'bg-amber-400/[0.08]',
+  rare: 'bg-white/[0.05]',
+  epic: 'bg-white/[0.07]',
+  legendary: 'bg-white/[0.10]',
 }
 
 export const RARITY_TEXT: Record<AchievementRarity, string> = {
-  common: 'text-white/70',
-  rare: 'text-blue-400',
-  epic: 'text-purple-400',
-  legendary: 'text-amber-400',
+  common: 'text-white/55',
+  rare: 'text-white/75',
+  epic: 'text-white/90',
+  legendary: 'text-white',
 }
 
 export const RARITY_GLOW: Record<AchievementRarity, string> = {
   common: '',
-  rare: 'shadow-[0_0_12px_rgba(96,165,250,0.1)]',
-  epic: 'shadow-[0_0_12px_rgba(192,132,252,0.15)]',
-  legendary: 'shadow-[0_0_16px_rgba(251,191,36,0.2)]',
+  rare: 'shadow-[0_0_10px_rgba(255,255,255,0.06)]',
+  epic: 'shadow-[0_0_14px_rgba(255,255,255,0.12)]',
+  legendary: 'shadow-[0_0_22px_rgba(255,255,255,0.28)]',
 }
 
+// Era first: it's the core loop, so its achievements lead the grid.
 export const CATEGORY_LABELS: Record<AchievementCategory, string> = {
+  era: 'Era',
   consistency: 'Consistency',
   explorer: 'Explorer',
   dedication: 'Dedication',
@@ -59,6 +93,7 @@ export const CATEGORY_LABELS: Record<AchievementCategory, string> = {
 }
 
 export const CATEGORY_ICONS: Record<AchievementCategory, string> = {
+  era: '🜂',
   consistency: '🔥',
   explorer: '🧭',
   dedication: '💎',
@@ -67,7 +102,26 @@ export const CATEGORY_ICONS: Record<AchievementCategory, string> = {
   secret: '🔮',
 }
 
+/**
+ * Badge art per category, served from /public (e.g. '/achievements/era.jpg').
+ * Unset until the file is committed — tiles fall back to the monochrome
+ * emoji. The achievements test fails if a path points at a missing file.
+ */
+export const CATEGORY_BADGE_IMAGES: Partial<Record<AchievementCategory, string>> = {}
+
 export const ACHIEVEMENTS: Achievement[] = [
+  // --- Era (10) — the promise loop ---
+  { id: 'era_first_promise', title: 'Said Out Loud', description: 'Make your first promise', icon: '🗣️', category: 'era', rarity: 'common', xpReward: 20, condition: { type: 'era', metric: 'promises_made', count: 1 } },
+  { id: 'era_first_kept', title: 'Word Kept', description: 'Keep your first promise', icon: '✅', category: 'era', rarity: 'common', xpReward: 25, condition: { type: 'era', metric: 'promises_kept', count: 1 } },
+  { id: 'era_custom', title: 'Author', description: 'Start an era you named yourself', icon: '✍️', category: 'era', rarity: 'common', xpReward: 20, condition: { type: 'era', metric: 'custom_eras', count: 1 } },
+  { id: 'era_comeback', title: 'The Answer', description: 'Keep a promise the day after one you didn\'t', icon: '↩️', category: 'era', rarity: 'rare', xpReward: 60, condition: { type: 'era', metric: 'comebacks', count: 1 } },
+  { id: 'era_kept_7', title: 'Seven Kept', description: 'Keep 7 promises', icon: '7️⃣', category: 'era', rarity: 'rare', xpReward: 75, condition: { type: 'era', metric: 'promises_kept', count: 7 } },
+  { id: 'era_streak_7', title: 'Unbroken Week', description: 'Make a promise 7 days in a row', icon: '⛓️', category: 'era', rarity: 'rare', xpReward: 75, condition: { type: 'era', metric: 'promise_streak', count: 7 } },
+  { id: 'era_kept_25', title: 'Person of Your Word', description: 'Keep 25 promises', icon: '🤝', category: 'era', rarity: 'epic', xpReward: 250, condition: { type: 'era', metric: 'promises_kept', count: 25 } },
+  { id: 'era_complete', title: 'Era Complete', description: 'Finish a 30-day era', icon: '🏛️', category: 'era', rarity: 'epic', xpReward: 300, condition: { type: 'era', metric: 'eras_completed', count: 1 } },
+  { id: 'era_three', title: 'Three Eras', description: 'Finish three eras', icon: '🗿', category: 'era', rarity: 'legendary', xpReward: 800, condition: { type: 'era', metric: 'eras_completed', count: 3 } },
+  { id: 'era_flawless', title: 'Flawless Era', description: 'Finish an era keeping every promise you checked in on (20+)', icon: '💠', category: 'era', rarity: 'legendary', xpReward: 1000, condition: { type: 'era', metric: 'perfect_eras', count: 1 } },
+
   // --- Consistency (7) ---
   { id: 'streak_3', title: 'Getting Started', description: 'Reach a 3-day streak', icon: '🔥', category: 'consistency', rarity: 'common', xpReward: 25, condition: { type: 'streak', days: 3 } },
   { id: 'streak_7', title: 'Week Warrior', description: 'Reach a 7-day streak', icon: '🔥', category: 'consistency', rarity: 'common', xpReward: 50, condition: { type: 'streak', days: 7 } },
@@ -123,7 +177,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'listener_100hr', title: 'Audio Legend', description: '100 hours of total listening', icon: '👑', category: 'dedication', rarity: 'legendary', xpReward: 500, condition: { type: 'count', action: 'listening_minutes', count: 6000 } },
   { id: 'flow_master', title: 'Flow Master', description: '60+ minute listening session', icon: '🌊', category: 'mastery', rarity: 'rare', xpReward: 75, condition: { type: 'count', action: 'longest_session', count: 60 } },
   { id: 'deep_flow', title: 'Deep Flow', description: '2+ hour listening session', icon: '🧘', category: 'mastery', rarity: 'epic', xpReward: 200, condition: { type: 'count', action: 'longest_session', count: 120 } },
-  { id: 'genre_explorer_audio', title: 'Sound Explorer', description: 'Played 5 different genres', icon: '🧭', category: 'explorer', rarity: 'rare', xpReward: 75, condition: { type: 'count', action: 'unique_genres', count: 5 } },
+  { id: 'genre_explorer_audio', title: 'Sound Seeker', description: 'Played 5 different genres', icon: '🧭', category: 'explorer', rarity: 'rare', xpReward: 75, condition: { type: 'count', action: 'unique_genres', count: 5 } },
   { id: 'all_genres', title: 'Genre Master', description: 'Played all 7 music genres', icon: '🎹', category: 'explorer', rarity: 'epic', xpReward: 200, condition: { type: 'count', action: 'unique_genres', count: 7 } },
   { id: 'listening_streak_7', title: 'Weekly Listener', description: '7-day listening streak', icon: '🔥', category: 'consistency', rarity: 'common', xpReward: 50, condition: { type: 'consecutive_days', days: 7, action: 'listening' } },
   { id: 'listening_streak_30', title: 'Monthly Listener', description: '30-day listening streak', icon: '💎', category: 'consistency', rarity: 'epic', xpReward: 300, condition: { type: 'consecutive_days', days: 30, action: 'listening' } },
@@ -165,6 +219,8 @@ export function checkNewAchievements(
     consecutiveVirtueDays: number
     currentHour: number
     consecutiveFullDays: number
+    /** Optional so callers that don't load era rows can't unlock era badges by accident. */
+    era?: EraAchievementStats
   },
   unlockedIds: Set<string>
 ): Achievement[] {
@@ -217,6 +273,21 @@ export function checkNewAchievements(
         else if (c.action === 'virtue_track') qualified = stats.consecutiveVirtueDays >= c.days
         else qualified = stats.consecutiveFullDays >= c.days
         break
+    }
+
+    if (c.type === 'era' && stats.era) {
+      const e = stats.era
+      const value: Record<EraMetric, number> = {
+        promises_made: e.promisesMade,
+        promises_kept: e.promisesKept,
+        promise_streak: e.longestPromiseStreak,
+        eras_started: e.erasStarted,
+        eras_completed: e.erasCompleted,
+        perfect_eras: e.perfectEras,
+        custom_eras: e.customEras,
+        comebacks: e.comebacks,
+      }
+      qualified = value[c.metric] >= c.count
     }
 
     if (qualified) {

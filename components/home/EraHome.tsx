@@ -14,6 +14,7 @@ import { ERA_LIMITS } from '@/lib/era/presets'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
+import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { ERA_START_IMAGE } from '@/lib/era/programs'
 import type { EraToday } from '@/hooks/useEra'
 
@@ -276,6 +277,7 @@ function ActiveEra({
   const [crisis, setCrisis] = useState<CrisisContent | null>(null)
   const [trialOffer, setTrialOffer] = useState(false)
   const { openUpgradeModal } = useSubscription()
+  const achievements = useAchievementOptional()
 
   const post = async (url: string, body: unknown) => {
     setBusy(true)
@@ -293,6 +295,7 @@ function ActiveEra({
       }
       if (data?.crisis) setCrisis(data.crisis)
       if (data?.era !== undefined) onChange(data.era)
+      if (data?.newAchievements?.length) achievements?.triggerAchievements(data.newAchievements)
       return data
     } catch {
       setError("Couldn't reach Voxu. Check your connection.")

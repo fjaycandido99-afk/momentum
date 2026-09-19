@@ -7,6 +7,7 @@ import { ChevronLeft, Flame, Loader2 } from 'lucide-react'
 import { useEra, type EraToday } from '@/hooks/useEra'
 import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY } from '@/lib/era/presets'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
+import { useAchievementOptional } from '@/contexts/AchievementContext'
 
 /**
  * /era — pick an era, or see the one you're in.
@@ -100,6 +101,7 @@ function Picker({ replacing, onStarted }: { replacing: boolean; onStarted: (era:
   const [error, setError] = useState<string | null>(null)
   const [needsAccount, setNeedsAccount] = useState(false)
   const [crisis, setCrisis] = useState<CrisisContent | null>(null)
+  const achievements = useAchievementOptional()
 
   // A guest who filled this in, signed up, and came back shouldn't have to
   // type it all again.
@@ -134,6 +136,7 @@ function Picker({ replacing, onStarted }: { replacing: boolean; onStarted: (era:
         return
       }
       writeDraft(null)
+      if (data?.newAchievements?.length) achievements?.triggerAchievements(data.newAchievements)
       if (data?.crisis) {
         // Hold on this screen so the resources are actually seen.
         setCrisis(data.crisis)

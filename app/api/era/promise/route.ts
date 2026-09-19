@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
       coachReply: result.coachReply,
       crisis: result.crisis,
       era: await loadEraToday(user.id),
+      newAchievements: result.newAchievements,
     })
   } catch (error) {
     console.error('[era promise] error:', error)

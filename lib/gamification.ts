@@ -15,7 +15,16 @@ export const XP_REWARDS = {
   letterToSelf: 20,
   dailyIntention: 5,
   dailyBonus: 25,
+  // Era events — awarded by the SERVER when the thing happens (lib/era/service),
+  // never accepted from a client (see SERVER_ONLY_XP_EVENTS).
+  eraStart: 10,
+  eraPromise: 5,
+  eraKept: 10,
+  eraComplete: 100,
 } as const
+
+/** XP events only the server may log — the client XP endpoint rejects them. */
+export const SERVER_ONLY_XP_EVENTS: readonly string[] = ['eraStart', 'eraPromise', 'eraKept', 'eraComplete']
 
 export type XPEventType = keyof typeof XP_REWARDS
 

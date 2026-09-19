@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const result = await checkPromise(user.id, { which: body?.which, kept: body?.kept })
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 
-    return NextResponse.json({ ok: true, era: await loadEraToday(user.id) })
+    return NextResponse.json({ ok: true, era: await loadEraToday(user.id), newAchievements: result.newAchievements })
   } catch (error) {
     console.error('[era check] error:', error)
     return NextResponse.json({ error: 'Could not save your check-in' }, { status: 500 })

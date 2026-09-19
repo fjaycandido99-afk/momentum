@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
-import { endEra, loadEraToday, startEra } from '@/lib/era/service'
+import { awardEraCompletionIfDue, endEra, loadEraToday, startEra } from '@/lib/era/service'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +18,10 @@ export async function GET() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ era: null })
-    return NextResponse.json({ era: await loadEraToday(user.id) })
+    const era = await loadEraToday(user.id)
+    // A finished era pays out the first time home sees it (idempotent).
+    const newAchievements = await awardEraCompletionIfDue(user.id, era)
+    return NextResponse.json({ era, newAchievements })
   } catch (error) {
     // Home must never error over a card. No era shown is the safe failure.
     console.error('[era GET] error:', error)
@@ -41,7 +44,12 @@ export async function POST(request: NextRequest) {
     const result = await startEra(user.id, body)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
 
-    return NextResponse.json({ ok: true, crisis: result.crisis, era: await loadEraToday(user.id) })
+    return NextResponse.json({
+      ok: true,
+      crisis: result.crisis,
+      era: await loadEraToday(user.id),
+      newAchievements: result.newAchievements,
+    })
   } catch (error) {
     console.error('[era POST] error:', error)
     return NextResponse.json({ error: 'Could not start the era' }, { status: 500 })

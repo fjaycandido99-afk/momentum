@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { X, Zap } from 'lucide-react'
-import { RARITY_TEXT, RARITY_COLORS } from '@/lib/achievements'
+import { RARITY_TEXT, RARITY_COLORS, getAchievementById } from '@/lib/achievements'
+import { AchievementBadge } from './AchievementBadge'
 
 interface AchievementCelebrationProps {
   achievement: {
@@ -127,10 +128,16 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
 
         {/* Icon with staged reveal */}
         <div
-          className="text-5xl mb-3"
+          className="mb-4 flex justify-center"
           style={{ animation: 'achievement-icon-reveal 400ms ease-out 200ms both' }}
         >
-          {achievement.icon}
+          <AchievementBadge
+            category={getAchievementById(achievement.id)?.category ?? 'secret'}
+            icon={achievement.icon}
+            rarity={achievement.rarity}
+            unlocked
+            size={88}
+          />
         </div>
 
         {/* Burst particles positioned around the icon */}

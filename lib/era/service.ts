@@ -23,6 +23,7 @@ import {
 } from './logic'
 import { formatEraChatBlock, generatePromiseReply, generateRecap, isMemoryLockedToday } from './coach'
 import { isPremiumUser } from '@/lib/subscription-check'
+import { awardEraXPOnce, ERA_COMPLETE_MIN_PROMISES, type AwardedAchievement } from '@/lib/achievements-server'
 import { programFor } from './programs'
 import { ERA_MISSIONS } from './missions'
 
@@ -210,7 +211,7 @@ export async function buildEraChatContext(userId: string): Promise<string> {
 // ─── Start / end ─────────────────────────────────────────────────────────────
 
 export type StartEraResult =
-  | { ok: true; crisis: CrisisContent | null }
+  | { ok: true; crisis: CrisisContent | null; newAchievements: AwardedAchievement[] }
   | { ok: false; error: string }
 
 export async function startEra(
@@ -232,7 +233,7 @@ export async function startEra(
 
   // One active era at a time. Ending the old one and creating the new one in
   // a single transaction means a double-tap can't leave two running.
-  await prisma.$transaction([
+  const [, created] = await prisma.$transaction([
     prisma.era.updateMany({
       where: { user_id: userId, status: 'active' },
       data: { status: 'ended', ended_at: new Date() },
@@ -254,7 +255,8 @@ export async function startEra(
   // starting the era changes, but the resources are shown if the words call
   // for them.
   const level = detectCrisisLevel(`${change} ${why ?? ''}`)
-  return { ok: true, crisis: crisisResourceForLevel(level, detectRegion(tz)) }
+  const newAchievements = await awardEraXPOnce(userId, 'eraStart', created.id)
+  return { ok: true, crisis: crisisResourceForLevel(level, detectRegion(tz)), newAchievements }
 }
 
 /** Ends the active era early. The row and its promises are kept, never deleted. */
@@ -269,7 +271,7 @@ export async function endEra(userId: string): Promise<boolean> {
 // ─── Promise + check-in ──────────────────────────────────────────────────────
 
 export type PromiseResult =
-  | { ok: true; coachReply: string; crisis: CrisisContent | null }
+  | { ok: true; coachReply: string; crisis: CrisisContent | null; newAchievements: AwardedAchievement[] }
   | { ok: false; error: string; status: number }
 
 export async function makePromise(
@@ -331,19 +333,22 @@ export async function makePromise(
 
   // Re-promising the same day replaces the text and the reply but never a
   // check-in that has already been answered.
-  await prisma.eraPromise.upsert({
+  const row = await prisma.eraPromise.upsert({
     where: { era_id_local_day: { era_id: era.id, local_day: today } },
     create: { era_id: era.id, user_id: userId, local_day: today, text, source, coach_reply: coachReply },
     update: { text, source, coach_reply: coachReply },
+    select: { id: true },
   })
 
-  return { ok: true, coachReply, crisis }
+  // Paid once per promise: rewording today's promise doesn't pay again.
+  const newAchievements = await awardEraXPOnce(userId, 'eraPromise', row.id)
+  return { ok: true, coachReply, crisis, newAchievements }
 }
 
 export async function checkPromise(
   userId: string,
   input: { which: unknown; kept: unknown },
-): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+): Promise<{ ok: true; newAchievements: AwardedAchievement[] } | { ok: false; error: string; status: number }> {
   if (typeof input.kept !== 'boolean') return { ok: false, error: 'kept must be true or false', status: 400 }
   if (input.which !== 'today' && input.which !== 'yesterday') {
     return { ok: false, error: 'which must be today or yesterday', status: 400 }
@@ -356,12 +361,19 @@ export async function checkPromise(
   const today = localDay(tz)
   const target = input.which === 'today' ? today : previousDay(today)
 
-  const { count } = await prisma.eraPromise.updateMany({
-    where: { era_id: era.id, local_day: target },
+  const row = await prisma.eraPromise.findUnique({
+    where: { era_id_local_day: { era_id: era.id, local_day: target } },
+    select: { id: true },
+  })
+  if (!row) return { ok: false, error: 'No promise for that day', status: 404 }
+  await prisma.eraPromise.update({
+    where: { id: row.id },
     data: { kept: input.kept, checked_at: new Date() },
   })
-  if (count === 0) return { ok: false, error: 'No promise for that day', status: 404 }
-  return { ok: true }
+
+  // Kept → paid once for that promise, so flipping the answer can't farm it.
+  const newAchievements = input.kept ? await awardEraXPOnce(userId, 'eraKept', row.id) : []
+  return { ok: true, newAchievements }
 }
 
 // ─── Era Recap ───────────────────────────────────────────────────────────────
@@ -420,4 +432,13 @@ export async function getEraRecap(userId: string): Promise<RecapResult> {
   await prisma.era.updateMany({ where: { id: era.id, recap: null }, data: { recap, recap_at: new Date() } })
   const saved = await prisma.era.findUnique({ where: { id: era.id }, select: { recap: true } })
   return { ok: true, recap: saved?.recap ?? recap }
+}
+
+/**
+ * Pay out a finished era once — when home first sees it complete. Only an era
+ * that was lived counts (ERA_COMPLETE_MIN_PROMISES), matching the achievement.
+ */
+export async function awardEraCompletionIfDue(userId: string, era: EraTodayWire | null): Promise<AwardedAchievement[]> {
+  if (!era || era.step !== 'complete' || era.stats.made < ERA_COMPLETE_MIN_PROMISES) return []
+  return awardEraXPOnce(userId, 'eraComplete', era.id)
 }
