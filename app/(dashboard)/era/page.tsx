@@ -8,6 +8,28 @@ import { useEra, type EraToday } from '@/hooks/useEra'
 import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY } from '@/lib/era/presets'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
+import { programFor } from '@/lib/era/programs'
+
+const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
+
+/** An era's art fading in from the right — the same treatment as the home hero. */
+function EraArt({ eraKey, className = '' }: { eraKey: string; className?: string }) {
+  const img = programFor(eraKey).image
+  if (!img) return null
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={img}
+      alt=""
+      aria-hidden
+      className={`absolute inset-y-0 right-0 h-full w-[62%] object-cover object-right grayscale opacity-75 pointer-events-none ${className}`}
+      style={{
+        WebkitMaskImage: 'linear-gradient(to left, black 40%, transparent)',
+        maskImage: 'linear-gradient(to left, black 40%, transparent)',
+      }}
+    />
+  )
+}
 
 /**
  * /era — pick an era, or see the one you're in.
@@ -174,18 +196,20 @@ function Picker({ replacing, onStarted }: { replacing: boolean; onStarted: (era:
             <button
               key={p.key}
               onClick={() => setKey(p.key)}
-              className="text-left p-4 rounded-2xl bg-white/[0.04] border border-white/[0.12] hover:bg-white/[0.08] hover:border-white/25 active:scale-[0.99] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+              className="relative overflow-hidden text-left p-4 min-h-[104px] flex flex-col justify-end rounded-2xl bg-black border border-white/[0.12] hover:border-white/30 active:scale-[0.99] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
-              <p className="text-base font-medium text-white">{p.title}</p>
-              <p className="text-xs text-white/60 mt-0.5">{p.tagline}</p>
+              <EraArt eraKey={p.key} />
+              <span className="relative block text-[22px] leading-none text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>{p.title}</span>
+              <span className="relative block text-xs text-white/65 mt-1.5 max-w-[62%]">{p.tagline}</span>
             </button>
           ))}
           <button
             onClick={() => setKey(CUSTOM_ERA_KEY)}
-            className="text-left p-4 rounded-2xl border border-dashed border-white/25 hover:bg-white/[0.05] active:scale-[0.99] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            className="relative overflow-hidden text-left p-4 min-h-[104px] flex flex-col justify-end rounded-2xl bg-black border border-dashed border-white/30 hover:border-white/50 active:scale-[0.99] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
-            <p className="text-base font-medium text-white">Name your own</p>
-            <p className="text-xs text-white/60 mt-0.5">Healing Era. Dad Mode. Whatever it is.</p>
+            <EraArt eraKey={CUSTOM_ERA_KEY} className="opacity-50" />
+            <span className="relative block text-[22px] leading-none text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>Name your own</span>
+            <span className="relative block text-xs text-white/65 mt-1.5 max-w-[62%]">Healing Era. Dad Mode. Whatever it is.</span>
           </button>
         </div>
       </div>
@@ -201,8 +225,14 @@ function Picker({ replacing, onStarted }: { replacing: boolean; onStarted: (era:
         <button onClick={() => setKey(null)} className="text-xs text-white/50 hover:text-white underline underline-offset-2">
           Choose a different era
         </button>
-        <h2 className="text-2xl font-medium text-white mt-2">{isCustom ? 'Your own era' : preset?.title}</h2>
-        {preset && <p className="text-sm text-white/60 mt-1">{preset.tagline}</p>}
+        {/* The chosen era as a banner — the same art the home hero will show. */}
+        <div className="relative overflow-hidden mt-3 rounded-2xl border border-white/[0.12] bg-black p-5 min-h-[120px] flex flex-col justify-end">
+          <EraArt eraKey={key} />
+          <h2 className="relative text-[32px] leading-none text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>
+            {isCustom ? (title.trim() || 'Your own era') : preset?.title}
+          </h2>
+          {preset && <p className="relative text-sm text-white/70 mt-2 max-w-[62%]">{preset.tagline}</p>}
+        </div>
       </div>
 
       {isCustom && (

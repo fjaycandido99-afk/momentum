@@ -66,13 +66,14 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
               style={{ animationDelay: `${index * 80}ms` }}
             >
               <div className="relative grid place-items-center" style={{ width: 64, height: 64 }}>
-                {/* Full-color image inside the monochrome ring — the imagery is
-                    the pop of color. A soft center scrim keeps the icon legible. */}
+                {/* Grayscale, like the rest of Voxu (Francis, 2026-09-18: the
+                    colour photos were the only colour on home). A soft centre
+                    scrim keeps the icon legible. */}
                 {(() => {
                   const bg = getSoundscapeBackground(item.id)
                   return bg ? (
                     <div className="absolute rounded-full overflow-hidden" style={{ width: 56, height: 56 }}>
-                      <img src={bg} alt="" className="w-full h-full object-cover" />
+                      <img src={bg} alt="" className="w-full h-full object-cover grayscale" />
                       <div
                         className="absolute inset-0"
                         style={{ background: 'radial-gradient(circle, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.12) 55%, transparent 100%)' }}

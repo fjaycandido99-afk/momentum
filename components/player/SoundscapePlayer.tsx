@@ -80,7 +80,8 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
             fill
             sizes="100vw"
             priority
-            className="object-cover z-0"
+            // Monochrome with the rest of the app — see SoundscapesSection.
+            className="object-cover z-0 grayscale"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/50 z-[2]" />
         </>
