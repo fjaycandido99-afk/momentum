@@ -23,6 +23,9 @@ interface GuidedPlayerProps {
   onClose: () => void
   onSwitchGuide: (guideId: string, guideName: string) => void
   onLockedGuide?: (guideId: string, guideName: string) => void
+  /** Fires when the track plays to its end (not on close or switch). Home
+   *  uses it to mark a Daily Guide session done when it was played there. */
+  onEnded?: () => void
 }
 
 function formatTime(s: number) {
@@ -45,6 +48,7 @@ export function GuidedPlayer({
   onClose,
   onSwitchGuide,
   onLockedGuide,
+  onEnded,
 }: GuidedPlayerProps) {
   const selectorRef = useRef<HTMLDivElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
@@ -84,6 +88,14 @@ export function GuidedPlayer({
     audioElement.addEventListener('ended', onEnded)
     return () => audioElement.removeEventListener('ended', onEnded)
   }, [audioElement, autoplay.enabled, guideId, isPremium, onSwitchGuide])
+
+  // Played to the end — independent of autoplay, which only decides what
+  // comes next.
+  useEffect(() => {
+    if (!audioElement || !onEnded) return
+    audioElement.addEventListener('ended', onEnded)
+    return () => audioElement.removeEventListener('ended', onEnded)
+  }, [audioElement, onEnded])
 
   // Keepalive handled by useAudioSideEffects at the provider level — no duplicate needed here
 

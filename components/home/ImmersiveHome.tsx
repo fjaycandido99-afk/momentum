@@ -23,6 +23,8 @@ import { MusicTabsSection } from './MusicTabsSection'
 import { WelcomeBackCard } from './WelcomeBackCard'
 import { WisdomSection } from './WisdomSection'
 import { EraHome } from './EraHome'
+import { mutate as mutateSWR } from 'swr'
+import { logXPEventServer } from '@/lib/gamification'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { SESSION_DURATIONS, type SessionType } from '@/lib/daily-guide/decision-tree'
 import { getDailyMindsetQuote } from '@/lib/mindset/quotes'
@@ -183,7 +185,14 @@ export function ImmersiveHome() {
   }, [])
 
   // Subscription context for freemium gating
-  const { isPremium, isContentFree, dailyFreeUnlockUsed, useDailyFreeUnlock, openUpgradeModal } = useSubscription()
+  const { isPremium, isContentFree, checkAccess, dailyFreeUnlockUsed, useDailyFreeUnlock, openUpgradeModal } = useSubscription()
+
+  // Which Daily Guide session the guided player is playing, if it was started
+  // from Today's Audio. `pending` is set just before handlePlayGuide runs and
+  // consumed by it, so any OTHER play (shelves, switching, era chips) resets
+  // it — a voice guide finishing must never count as a guide session.
+  const pendingSessionRef = useRef<SessionType | null>(null)
+  const activeSessionRef = useRef<SessionType | null>(null)
 
   // Feature tooltip for locked content
   const featureTooltipCtx = useFeatureTooltip()
@@ -277,6 +286,8 @@ export function ImmersiveHome() {
   const handlePlayGuide = async (guideId: string, guideName: string) => {
     haptic('light')
     trackFeature('guided', 'use')
+    activeSessionRef.current = pendingSessionRef.current
+    pendingSessionRef.current = null
     setActiveGuideId(guideId)
     setShowGuidedPlayer(true)
     // Stop any existing guide audio
@@ -1028,6 +1039,42 @@ export function ImmersiveHome() {
     handlePlayGuide(guideId, name)
   }, [stopPreview, startPreview])
 
+  // Today's Audio plays right here in the guided player instead of opening
+  // the morning flow. Same audio the Daily Guide page plays (its voices
+  // types), and the same tier rule: Morning Prime is voiced for everyone, the
+  // other segments are premium voice — free users get the preview + paywall
+  // the voice guides already use, not a dead end.
+  const handlePlayTodaysAudio = useCallback(() => {
+    const voiceType: Record<SessionType, string> = {
+      morning_prime: 'affirmation',
+      midday_reset: 'midday_reset',
+      wind_down: 'wind_down',
+      bedtime_story: 'bedtime_story',
+    }
+    const session = todaysAudio.session
+    const locked = !isPremium && !checkAccess('ai_voice') && session !== 'morning_prime'
+    stopBackgroundMusic()
+    pendingSessionRef.current = session
+    handleGuidePlay(voiceType[session], todaysAudio.title, locked)
+  }, [todaysAudio, isPremium, checkAccess, stopBackgroundMusic, handleGuidePlay])
+
+  // A session played to the end from Today's Audio counts exactly as it does
+  // on the Daily Guide page: segment checked in, XP awarded, and home's
+  // "n/4 today" refreshed.
+  const handleGuideEnded = useCallback(() => {
+    const session = activeSessionRef.current
+    if (!session) return
+    activeSessionRef.current = null
+    logXPEventServer('moduleComplete').catch(() => {})
+    fetch('/api/daily-guide/checkin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ segment: session, date: today }),
+    })
+      .then(() => mutateSWR(`/api/daily-guide/journal?date=${today}`))
+      .catch(() => {})
+  }, [today])
+
   const handleMotivationPlay = useCallback((video: VideoItem, index: number, isLocked: boolean, topic?: string) => {
     if (isLocked) {
       if (featureTooltipCtx?.showFeatureTooltip('all_content')) return
@@ -1146,6 +1193,7 @@ export function ImmersiveHome() {
           onLockedGuide={(id, name) => {
             handleGuidePlay(id, name, true)
           }}
+          onEnded={handleGuideEnded}
         />
       )}
 
@@ -1309,7 +1357,7 @@ export function ImmersiveHome() {
               !!journalData?.wind_down_done,
               !!journalData?.bedtime_story_done,
             ],
-            onOpen: () => { stopBackgroundMusic(); setShowMorningFlow(true) },
+            onOpen: handlePlayTodaysAudio,
           }}
           // The era's linked content plays through the same handlers as
           // the shelves below, so premium previews and locks behave the
@@ -1545,6 +1593,9 @@ export function ImmersiveHome() {
         onClose={() => {
           setShowPaywall(false)
           stopPreview()
+          // A locked Today's Audio that wasn't unlocked must not attach
+          // itself to the next voice guide played from the shelves.
+          pendingSessionRef.current = null
           // Stop playback and close player — preview ended without unlock
           if (bgPlayerRef.current && bgPlayerReadyRef.current) {
             try { bgPlayerRef.current.stopVideo() } catch {}
