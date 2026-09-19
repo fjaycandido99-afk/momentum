@@ -23,6 +23,7 @@ import { MusicTabsSection } from './MusicTabsSection'
 import { WelcomeBackCard } from './WelcomeBackCard'
 import { WisdomSection } from './WisdomSection'
 import { EraHome } from './EraHome'
+import { getSessionThumb } from '@/lib/daily-guide/session-art'
 import { AchievementShelf } from './AchievementShelf'
 import { mutate as mutateSWR } from 'swr'
 import { logXPEventServer } from '@/lib/gamification'
@@ -1077,6 +1078,9 @@ export function ImmersiveHome() {
         title: todaysAudio.title,
         subtitle: todaysAudio.subtitle,
         durationSec: SESSION_DURATIONS[todaysAudio.session] as number | null,
+        // The session's own art (public/sessions), rotating daily — it was
+        // on disk all along while this card showed generic bars.
+        image: getSessionThumb(todaysAudio.session),
         segmentsDone,
         onOpen: handlePlayTodaysAudio,
       }
@@ -1088,6 +1092,7 @@ export function ImmersiveHome() {
       title: g.name,
       subtitle: era.era ? `For your ${era.era.title} era` : g.tagline,
       durationSec: null,
+      image: era.era?.image ?? null,
       segmentsDone,
       onOpen: () => handleGuidePlay(g.id, g.name, !isContentFree('voiceGuide', g.id)),
     }

@@ -46,6 +46,8 @@ export interface TodaysAudio {
   subtitle: string
   /** Shown for Daily Guide sessions; null for a voice guide (length varies). */
   durationSec: number | null
+  /** Cover art — the session's own (public/sessions) or the era's; null for the bars. */
+  image?: string | null
   /** Morning, Midday, Wind Down, Bedtime — done or not. */
   segmentsDone: boolean[]
   onOpen: () => void
@@ -234,12 +236,17 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
   const done = audio.segmentsDone.filter(Boolean).length
   return (
     <button onClick={audio.onOpen} className="w-full text-left card-surface-lg p-4 press-scale flex items-center gap-4">
-      <div className="w-14 h-14 shrink-0 rounded-xl border border-white/[0.12] bg-[linear-gradient(160deg,rgba(255,255,255,0.18),rgba(255,255,255,0.02))] flex items-center justify-center">
-        <div className="flex items-end gap-[3px] h-5" aria-hidden>
-          {[0.5, 1, 0.7, 0.9, 0.4].map((h, i) => (
-            <span key={i} className="w-[3px] rounded-full bg-white/70" style={{ height: `${h * 100}%` }} />
-          ))}
-        </div>
+      <div className="relative w-14 h-14 shrink-0 rounded-xl overflow-hidden border border-white/[0.12] bg-[linear-gradient(160deg,rgba(255,255,255,0.18),rgba(255,255,255,0.02))] flex items-center justify-center">
+        {audio.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={audio.image} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover grayscale" />
+        ) : (
+          <div className="flex items-end gap-[3px] h-5" aria-hidden>
+            {[0.5, 1, 0.7, 0.9, 0.4].map((h, i) => (
+              <span key={i} className="w-[3px] rounded-full bg-white/70" style={{ height: `${h * 100}%` }} />
+            ))}
+          </div>
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">Today&rsquo;s audio</p>

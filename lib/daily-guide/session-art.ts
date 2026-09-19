@@ -71,3 +71,12 @@ export function getSessionImage(session: SessionType, date: Date = new Date()): 
   const idx = dayHash(date) % pool.length
   return pool[idx]
 }
+
+/**
+ * The same day's image as a 168px thumbnail (public/sessions/thumbs), for
+ * small tiles like home's Today's Audio. The full images are 700-800 KB —
+ * far too much for a 56px square on every home open.
+ */
+export function getSessionThumb(session: SessionType, date: Date = new Date()): string {
+  return getSessionImage(session, date).replace('/sessions/', '/sessions/thumbs/')
+}
