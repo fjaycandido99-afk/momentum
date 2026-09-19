@@ -40,6 +40,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
       "Focus: acting without waiting for motivation. Treat feelings as weather, not instructions. Small, non-negotiable reps beat heroic days.",
     soundscapeId: 'energy',
     guideId: 'affirmation',
+    image: '/era/discipline.jpg',
   },
   comeback: {
     coachFocus:
