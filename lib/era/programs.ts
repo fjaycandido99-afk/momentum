@@ -48,6 +48,9 @@ export interface EraProgram {
 /** Art for the "Who are you becoming?" hero shown before an era starts. */
 export const ERA_START_IMAGE: string | undefined = '/era/start.jpg'
 
+/** Art for a finished era — the summit at sunrise, whatever the era was. */
+export const ERA_COMPLETE_IMAGE = '/era/complete.jpg'
+
 export const ERA_PROGRAMS: Record<string, EraProgram> = {
   locked_in: {
     coachFocus:

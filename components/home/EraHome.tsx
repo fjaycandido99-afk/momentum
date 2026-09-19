@@ -16,7 +16,7 @@ import { TRIAL_DAYS } from '@/lib/subscription-constants'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
-import { ERA_START_IMAGE } from '@/lib/era/programs'
+import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
 import type { EraToday } from '@/hooks/useEra'
 
 /**
@@ -219,7 +219,8 @@ function EraHero({ era }: { era: EraToday }) {
             <span className="text-[11px] text-white/60 tabular-nums">{pct}%</span>
           </div>
         </>,
-        era.image,
+        // A finished era gets the summit, whichever era it was.
+        era.step === 'complete' ? ERA_COMPLETE_IMAGE : era.image,
       )}
     </Link>
   )

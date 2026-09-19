@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { existsSync, readFileSync } from 'fs'
 import { ERA_PRESETS, CUSTOM_ERA_KEY } from '../era/presets'
-import { ERA_PROGRAMS, ERA_START_IMAGE, programFor } from '../era/programs'
+import { ERA_PROGRAMS, ERA_START_IMAGE, ERA_COMPLETE_IMAGE, programFor } from '../era/programs'
 import { ERA_MISSIONS } from '../era/missions'
 import { eraStage, missionForDay } from '../era/logic'
 
@@ -84,5 +84,6 @@ describe('era hero art', () => {
     }
     expect(ERA_START_IMAGE).toBeTruthy()
     expect(existsSync(`public${ERA_START_IMAGE}`)).toBe(true)
+    expect(existsSync(`public${ERA_COMPLETE_IMAGE}`)).toBe(true)
   })
 })
