@@ -22,7 +22,11 @@ const MotivationSection = dynamic(() => import('./MotivationSection').then(m => 
 import { MusicTabsSection } from './MusicTabsSection'
 import { WelcomeBackCard } from './WelcomeBackCard'
 import { WisdomSection } from './WisdomSection'
-import { HeroCarousel } from './HeroCarousel'
+import { EraHome } from './EraHome'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
+import { SESSION_DURATIONS, type SessionType } from '@/lib/daily-guide/decision-tree'
+import { getDailyMindsetQuote } from '@/lib/mindset/quotes'
+import type { MindsetId } from '@/lib/mindset/types'
 import { MorningHeroPopup } from './MorningHeroPopup'
 import { SavedMotivationSection } from './SavedMotivationSection'
 import {
@@ -45,10 +49,8 @@ import { useListeningMilestones } from '@/hooks/useListeningMilestones'
 import { AmbientMixer } from './AmbientMixer'
 import { LongPressPreview } from './LongPressPreview'
 import { WellnessWidget } from './WellnessWidget'
-import { DailyFeatureTip } from './DailyFeatureTip'
 import { DailyReadCard } from './DailyReadCard'
 import { useDailyRead } from '@/hooks/useDailyRead'
-import { EraCard } from './EraCard'
 import { useEra } from '@/hooks/useEra'
 import { autoplayNextEnabled } from '@/hooks/useAutoplayNext'
 import { SmartHomeNudge } from './SmartHomeNudge'
@@ -78,19 +80,23 @@ const SoundscapePlayerComponent = dynamic(
   { ssr: false }
 )
 
-function getDailyGuideCTA(): { subtitle: string; Icon: typeof Sun } {
+/** Home's "Today's audio": the Daily Guide segment for the time of day. */
+interface TodaysAudioSlot { session: SessionType; title: string; subtitle: string }
+
+function getTodaysAudio(): TodaysAudioSlot {
   const hour = new Date().getHours()
-  if (hour >= 5 && hour < 11) return { subtitle: 'Morning Prime ready', Icon: Sunrise }
-  if (hour >= 11 && hour < 16) return { subtitle: 'Midday Reset ready', Icon: Sun }
-  if (hour >= 16 && hour < 21) return { subtitle: 'Time to Wind Down', Icon: Moon }
-  return { subtitle: 'Bedtime Story awaits', Icon: Moon }
+  if (hour >= 5 && hour < 11) return { session: 'morning_prime', title: 'Morning Prime', subtitle: 'Clear mind. Set the day.' }
+  if (hour >= 11 && hour < 16) return { session: 'midday_reset', title: 'Midday Reset', subtitle: 'Pause. Breathe. Refocus.' }
+  if (hour >= 16 && hour < 21) return { session: 'wind_down', title: 'Wind Down', subtitle: 'Let the day go.' }
+  return { session: 'bedtime_story', title: 'Bedtime Story', subtitle: 'A story to fall asleep to.' }
 }
 
 export function ImmersiveHome() {
   const [timeContext] = useState(getTimeContext)
   const [activeMode, setActiveMode] = useState<Mode>(timeContext.suggested)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [guideCTA, setGuideCTA] = useState<{ subtitle: string; Icon: typeof Sun }>({ subtitle: '', Icon: Sun })
+  const [todaysAudio, setTodaysAudio] = useState<TodaysAudioSlot>({ session: 'morning_prime', title: 'Daily Guide', subtitle: 'Your session for today' })
+  const [isWeekend, setIsWeekend] = useState(false)
   const [mounted, setMounted] = useState(false)
   const audioContext = useAudioOptional()
   const mindsetCtx = useMindsetOptional()
@@ -243,9 +249,19 @@ export function ImmersiveHome() {
 
   // Client-only: set time-dependent values to avoid hydration mismatch
   useEffect(() => {
-    setGuideCTA(getDailyGuideCTA())
+    setTodaysAudio(getTodaysAudio())
+    const dow = new Date().getDay() // 0 = Sun, 6 = Sat
+    setIsWeekend(dow === 0 || dow === 6)
     setMounted(true)
   }, [])
+
+  // The greeting's quote: today's line from the user's mindset. Client-only
+  // (after mount) for the same hydration reason as the clock values above.
+  const dailyQuote = useMemo(() => {
+    if (!mounted) return null
+    const q = getDailyMindsetQuote((mindsetCtx?.mindset ?? 'stoic') as MindsetId, getDateString(new Date()))
+    return q ? { text: q.text, author: q.author } : null
+  }, [mounted, mindsetCtx?.mindset])
 
   // YT players, createSoundscapePlayer, createBgMusicPlayer, stopBackgroundMusic
   // are now provided by HomeAudioProvider via useHomeAudio()
@@ -1183,6 +1199,9 @@ export function ImmersiveHome() {
               <StreakBadge streak={streak} freezeCount={streakFreezes} />
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {/* Dot until notifications are on — the era's morning and 8pm
+                  pushes depend on it. */}
+              <NotificationBell />
               {/* Reset wind button — parked per user request. Infra
                   stays mounted; re-add this block to bring it back. */}
               {mindsetCtx && (
@@ -1271,147 +1290,77 @@ export function ImmersiveHome() {
       {/* "Coach remembers you" — follows up on yesterday's intention / mood / reflection */}
       <YesterdayFollowUp />
 
-      {/* Era — who you're becoming, and today's promise. Above the carousel,
-          not in it: the carousel auto-advances and this card takes typing.
-          Waits for the fetch so someone on day 20 never sees the start
+      {/* The top of home — greeting, era hero, today's audio, promise and
+          mission, promises kept and streak (components/home/EraHome.tsx).
+          Waits for the era fetch so someone on day 20 never sees the start
           prompt flash first. */}
       {era.loaded && (
-        <div className="px-6 mt-4">
-          <EraCard
-            era={era.era}
-            onChange={era.setEra}
-            // The era's linked content plays through the same handlers as
-            // the shelves below, so premium previews and locks behave the
-            // same wherever it's started from.
-            content={{
-              onPlaySoundscape: id => {
-                const item = SOUNDSCAPE_ITEMS.find(i => i.id === id)
-                if (item) handleSoundscapePlay(item, !isContentFree('soundscape', id))
-              },
-              onPlayGuide: id => {
-                const g = VOICE_GUIDES.find(v => v.id === id)
-                if (g) handleGuidePlay(id, g.name, !isContentFree('voiceGuide', id))
-              },
-              isGuideLocked: id => !isContentFree('voiceGuide', id),
-            }}
-          />
-        </div>
+        <EraHome
+          era={era.era}
+          onChange={era.setEra}
+          quote={dailyQuote}
+          audio={{
+            title: todaysAudio.title,
+            subtitle: todaysAudio.subtitle,
+            durationSec: SESSION_DURATIONS[todaysAudio.session],
+            segmentsDone: [
+              !!journalData?.morning_prime_done,
+              !!journalData?.midday_reset_done,
+              !!journalData?.wind_down_done,
+              !!journalData?.bedtime_story_done,
+            ],
+            onOpen: () => { stopBackgroundMusic(); setShowMorningFlow(true) },
+          }}
+          // The era's linked content plays through the same handlers as
+          // the shelves below, so premium previews and locks behave the
+          // same wherever it's started from.
+          content={{
+            onPlaySoundscape: id => {
+              const item = SOUNDSCAPE_ITEMS.find(i => i.id === id)
+              if (item) handleSoundscapePlay(item, !isContentFree('soundscape', id))
+            },
+            onPlayGuide: id => {
+              const g = VOICE_GUIDES.find(v => v.id === id)
+              if (g) handleGuidePlay(id, g.name, !isContentFree('voiceGuide', id))
+            },
+            isGuideLocked: id => !isContentFree('voiceGuide', id),
+          }}
+        />
       )}
 
-      {/* Hero Carousel: Daily Guide + Today's Minute + Path + Featured */}
-      {(() => {
-        const slides: React.ReactNode[] = [
-          // Slide 1: Daily Guide
-          <button
-            key="guide"
-            onClick={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
-            className="w-full h-full text-left group"
-          >
-            <div className="relative p-5 card-surface-lg press-scale h-full flex flex-col justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
-                  <guideCTA.Icon className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-medium text-white">Your Daily Guide</h2>
-                  <p className="text-xs text-white/90">{guideCTA.subtitle}</p>
-                </div>
-              </div>
+      {/* What used to rotate in the hero carousel, now in plain view. The
+          carousel is gone: the Daily Guide slide became Today's Audio above,
+          Wisdom is its own section below, and the feature tip is retired.
+          Nothing here is removed from the app — only from the rotation. */}
+      <div className="px-6 mt-3 mb-8 space-y-3">
+        {/* Today's Minute stands down while an era runs — the era's promise
+            asks for the same morning moment, typed or spoken. */}
+        {era.loaded && !era.era && <MorningMinute />}
 
-              {/* Module progress */}
-              <div className="flex items-center gap-4 mt-3">
-                <div className="flex items-center gap-2.5">
-                  {['Morning', 'Midday', 'Wind Down', 'Bedtime'].map((mod, i) => {
-                    const done = [journalData?.morning_prime_done, journalData?.midday_reset_done, journalData?.wind_down_done, journalData?.bedtime_story_done][i]
-                    return (
-                      <div key={mod} className="flex items-center gap-1">
-                        <div className={`w-2.5 h-2.5 rounded-full ${done ? 'bg-white' : 'bg-white/30'}`} />
-                        <span className={`text-[11px] ${done ? 'text-white' : 'text-white/85'}`}>{mod}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-                <span className="text-xs text-white/90 font-medium">{modulesCompletedToday}/4</span>
-              </div>
+        {/* Daily Read — only while it has something to do; the server
+            decides `show`. */}
+        {dailyRead.data?.show && (
+          <DailyReadCard data={dailyRead.data} onAnswered={dailyRead.recordLocally} />
+        )}
 
-              <div className="flex items-center justify-between mt-auto pt-2">
-                <p className="text-sm text-white/90">Tap to open your guide</p>
-                <ChevronRight className="w-5 h-5 text-white/90" />
+        {/* Weekend: surface the Week in Review (otherwise buried in the journal). */}
+        {isWeekend && (
+          <Link href="/journal?review=1" className="block group">
+            <div className="relative p-5 card-surface-lg press-scale flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
+                <BarChart3 className="w-5 h-5 text-white" />
               </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-medium text-white">Your Week in Review</h2>
+                <p className="text-xs text-white/70">Patterns, wins &amp; a fresh focus</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-white/80" />
             </div>
-          </button>,
-        ]
+          </Link>
+        )}
+      </div>
 
-        // Today's Minute. It used to sit ABOVE the carousel as "the value
-        // spine" — the first thing on home, every open, for everyone. The
-        // record disagreed: two uses across 200 daily-guide rows, one of
-        // them five characters long. It asks for voice, which is the highest
-        // -friction input there is (you cannot use it on a bus, at a desk,
-        // or beside someone asleep), from a blank prompt that never changes.
-        //
-        // Demoted rather than deleted: it still feeds real context into the
-        // day's guide scripts, and it should be there on the days someone
-        // wants it. It just shouldn't tax every single open to be there.
-        //
-        // Also stands down while an era is running — the era card above asks
-        // for today's promise in the same morning moment, typed or spoken.
-        if (!era.era) slides.push(<MorningMinute key="todays-minute" />)
-
-        // Slide 2: Mindset Wisdom
-        slides.push(
-          <WisdomSection key="wisdom-hero" embedded />
-        )
-
-
-        // Daily Read — only while it has something to do. The popup alone
-        // takes ~20 days to reach a first read (40% of opens, once a day),
-        // and this closes that gap. The server decides `show`, and turns it
-        // off the moment there's a lean, at which point Progress owns it.
-        // Deliberately after the guide: the guide is the value spine and a
-        // personality question doesn't outrank it.
-        if (dailyRead.data?.show) {
-          slides.push(
-            <DailyReadCard
-              key="daily-read"
-              data={dailyRead.data}
-              onAnswered={dailyRead.recordLocally}
-            />
-          )
-        }
-
-        // Slide 3: Daily Feature Tip
-        slides.push(<DailyFeatureTip key="feature-tip" />)
-
-        // Weekend: surface the Week in Review (otherwise buried in the journal).
-        const dow = new Date().getDay() // 0 = Sun, 6 = Sat
-        if (dow === 0 || dow === 6) {
-          slides.push(
-            <Link
-              key="weekly-review"
-              href="/journal?review=1"
-              className="block w-full h-full text-left group"
-            >
-              <div className="relative p-5 card-surface-lg press-scale h-full flex flex-col justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
-                    <BarChart3 className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-medium text-white">Your Week in Review</h2>
-                    <p className="text-xs text-white/90">Patterns, wins &amp; a fresh focus</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-auto pt-2">
-                  <p className="text-sm text-white/90">Tap to reflect on your week</p>
-                  <ChevronRight className="w-5 h-5 text-white/90" />
-                </div>
-              </div>
-            </Link>
-          )
-        }
-
-        return <HeroCarousel>{slides}</HeroCarousel>
-      })()}
+      <WisdomSection />
 
 
       {/* Smart Nudge — shows after 30s idle when not playing audio */}

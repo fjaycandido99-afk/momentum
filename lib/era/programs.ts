@@ -16,7 +16,16 @@ export interface EraProgram {
   coachFocus: string
   soundscapeId: string
   guideId: string
+  /**
+   * Hero art, served from /public (e.g. '/era/locked_in.jpg'). Leave unset
+   * until the file is actually committed — the hero renders text-only
+   * without it, and a path to a missing file would show a broken image.
+   */
+  image?: string
 }
+
+/** Art for the "Who are you becoming?" hero shown before an era starts. */
+export const ERA_START_IMAGE: string | undefined = undefined
 
 export const ERA_PROGRAMS: Record<string, EraProgram> = {
   locked_in: {

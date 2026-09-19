@@ -103,6 +103,8 @@ export interface EraTodayWire {
   mission: string | null
   /** App content this era leans on (lib/era/programs.ts). */
   links: { soundscapeId: string; guideId: string }
+  /** Hero art, or null to render the hero text-only. */
+  image: string | null
   /** Every day with a promise, oldest first — the page draws the 30-day grid from it. */
   days: EraDayWire[]
 }
@@ -153,6 +155,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     stage: { key: stage.key, label: stage.label, line: stage.line },
     mission: missionFor(era.era_key, day),
     links: { soundscapeId: program.soundscapeId, guideId: program.guideId },
+    image: program.image ?? null,
     days: promises
       .filter(p => daysBetween(era.start_day, p.local_day) >= 0)
       .map(p => ({ day: eraDayNumber(era.start_day, p.local_day), localDay: p.local_day, kept: p.kept })),

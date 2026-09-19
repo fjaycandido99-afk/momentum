@@ -23,6 +23,7 @@ import { isLocalHour } from './timezone-utils'
 import { loadState, localDay } from '@/lib/assessment/service'
 import { MIN_ANSWERS_FOR_READ } from '@/lib/assessment/axes'
 import { eraDayNumber } from '@/lib/era/logic'
+import { loadEraToday } from '@/lib/era/service'
 
 // Notification types that can be sent
 import { shouldSendNotification, logNotificationSent } from './notification-gate'
@@ -599,6 +600,30 @@ export async function sendMorningReminders(): Promise<void> {
     if (!hasSubscription) {
       totalSkipped++
       continue
+    }
+
+    // Someone in an era gets their era's morning instead: the promise is the
+    // morning ritual now, and this is the push that asks for it. Same time,
+    // same preference, same lane — just about the thing they chose.
+    try {
+      const era = await loadEraToday(user_id)
+      if (era && (era.step === 'promise' || era.step === 'check_yesterday')) {
+        const body = era.step === 'check_yesterday'
+          ? "Did you keep yesterday's promise? Then make today's."
+          : era.mission
+            ? `What are you promising yourself today? Today's mission: ${era.mission}`
+            : 'What are you promising yourself today?'
+        const result = await sendPushToUser(user_id, 'morning_reminder', {
+          title: `${era.title} · Day ${era.day}`,
+          body,
+          data: { type: 'morning_reminder', url: '/' },
+        })
+        totalSent += result.sent
+        totalFailed += result.failed
+        continue
+      }
+    } catch {
+      // Fall through to the regular morning reminder.
     }
 
     // Query yesterday's guide for personalization

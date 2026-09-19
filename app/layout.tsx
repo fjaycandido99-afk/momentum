@@ -6,7 +6,8 @@ import { Analytics } from '@/components/analytics/Analytics'
 import { SkipToContent } from '@/components/a11y/SkipToContent'
 
 const inter = Inter({ subsets: ['latin'] })
-const cormorant = Cormorant_Garamond({ subsets: ['latin'], weight: ['300'], variable: '--font-cormorant' })
+// 300 for the splash wordmark; 500/600 for the era hero's display type.
+const cormorant = Cormorant_Garamond({ subsets: ['latin'], weight: ['300', '500', '600'], variable: '--font-cormorant' })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://voxu.app'),
