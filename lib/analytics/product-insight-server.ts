@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { eraKeyRows, funnelRows, keptRate, type EraKeyRow, type FunnelRow } from './era-funnel'
+import { ERA_MISSIONS } from '@/lib/era/missions'
+import { missionForDay } from '@/lib/era/logic'
 
 /**
  * The founder view's numbers (/dev-analytics): where people fall out of the
@@ -29,11 +31,14 @@ export interface EraFunnel {
   byEra: EraKeyRow[]
   promises: { made: number; answered: number; kept: number; keptPercent: number | null }
   stuck: { startedNeverPromised: number; aliveNow: number; erasStarted: number }
+  /** Missions marked done, and the ones done most (text from the bank). */
+  missions: { done: number; top: { eraKey: string; day: number; text: string; count: number }[] }
 }
 
 export async function loadEraFunnel(since: Date): Promise<EraFunnel> {
   const [
     started, day1, day1Answered, day7, neverPromised, alive, health, byKey, referrals, events,
+    missionsDone, topMissions,
   ] = await Promise.all([
     prisma.$queryRaw<{ eras: bigint; users: bigint }[]>`
       SELECT COUNT(*) AS eras, COUNT(DISTINCT user_id) AS users FROM "Era" WHERE created_at >= ${since}`,
@@ -77,6 +82,16 @@ export async function loadEraFunnel(since: Date): Promise<EraFunnel> {
       _count: { id: true },
       where: { feature: 'era', created_at: { gte: since } },
     }),
+    prisma.eraMission.count({ where: { completed_at: { gte: since } } }),
+    // Which missions actually get done. The text comes from the bank by
+    // (era_key, day), so no copy of it is stored.
+    prisma.$queryRaw<{ era_key: string; day: number; count: bigint }[]>`
+      SELECT e.era_key, m.day, COUNT(*) AS count
+      FROM "EraMission" m JOIN "Era" e ON e.id = m.era_id
+      WHERE m.completed_at >= ${since}
+      GROUP BY e.era_key, m.day
+      ORDER BY count DESC, e.era_key ASC, m.day ASC
+      LIMIT 8`,
   ])
 
   // Era events carry their step in metadata ("picker", "share_opened", …).
@@ -114,6 +129,15 @@ export async function loadEraFunnel(since: Date): Promise<EraFunnel> {
       startedNeverPromised: n(neverPromised[0]?.c),
       aliveNow: n(alive[0]?.c),
       erasStarted,
+    },
+    missions: {
+      done: missionsDone,
+      top: topMissions.map(m => ({
+        eraKey: m.era_key,
+        day: Number(m.day),
+        text: missionForDay(ERA_MISSIONS[m.era_key] ?? ERA_MISSIONS.custom, Number(m.day)) ?? '(no mission)',
+        count: n(m.count),
+      })),
     },
   }
 }
@@ -261,6 +285,46 @@ export async function loadThoughtSignals(since: Date): Promise<ThoughtSignals> {
         keptPercent: keptRate(n(c.kept), n(c.answered)),
       })),
     },
+  }
+}
+
+export interface MoneySignals {
+  /** Everyone, by where they are now. */
+  byStatus: { status: string; tier: string; people: number }[]
+  /** Trials that began in the window, and how many are still running. */
+  trialsStarted: number
+  trialsLive: number
+  /** Subscriptions that began, and ones that moved to cancelled, in the window. */
+  started: number
+  cancelled: number
+}
+
+/**
+ * Money, counted from the Subscription rows Stripe and RevenueCat already
+ * write. No new events: a webhook that fires twice would double-count, while
+ * the row is simply the truth about where someone is now.
+ */
+export async function loadMoneySignals(since: Date): Promise<MoneySignals> {
+  const [byStatus, trialsStarted, trialsLive, started, cancelled] = await Promise.all([
+    prisma.subscription.groupBy({
+      by: ['status', 'tier'],
+      _count: { _all: true },
+      orderBy: { _count: { id: 'desc' } },
+    }),
+    prisma.subscription.count({ where: { trial_start: { gte: since } } }),
+    prisma.subscription.count({ where: { status: 'trialing', trial_end: { gte: new Date() } } }),
+    prisma.subscription.count({ where: { tier: 'premium', created_at: { gte: since } } }),
+    // updated_at is the best available signal for "cancelled recently":
+    // nothing stores a cancellation timestamp of its own.
+    prisma.subscription.count({ where: { status: { in: ['canceled', 'expired'] }, updated_at: { gte: since } } }),
+  ])
+
+  return {
+    byStatus: byStatus.map(r => ({ status: r.status, tier: r.tier, people: r._count._all })),
+    trialsStarted,
+    trialsLive,
+    started,
+    cancelled,
   }
 }
 

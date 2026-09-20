@@ -146,6 +146,8 @@ export interface EraTodayWire {
   stage: { key: EraStageKey; label: string; line: string }
   /** Today's mission from the era's bank (lib/era/missions.ts). */
   mission: string | null
+  /** Has today's mission been marked done? */
+  missionDone: boolean
   /** App content this era leans on (lib/era/programs.ts). */
   links: { soundscapeId: string; guideId: string }
   /** Hero art, or null to render the hero text-only. */
@@ -189,6 +191,11 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
       confidence: true, blocker: true, helper: true,
     },
     orderBy: { local_day: 'asc' },
+  })
+
+  const missionRow = await prisma.eraMission.findUnique({
+    where: { era_id_local_day: { era_id: era.id, local_day: today } },
+    select: { id: true },
   })
 
   const todayRow = promises.find(p => p.local_day === today) ?? null
@@ -244,6 +251,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     promiseHint: preset?.promiseHint ?? "I'll do the one thing I keep putting off.",
     stage: { key: stage.key, label: stage.label, line: stage.line },
     mission: missionFor(era.era_key, day),
+    missionDone: missionRow !== null,
     links: { soundscapeId: program.soundscapeId, guideId: program.guideId },
     image: program.image ?? null,
     isPremium: premium,
@@ -476,6 +484,39 @@ export async function checkPromise(
   // Kept → paid once for that promise, so flipping the answer can't farm it.
   const newAchievements = input.kept ? await awardEraXPOnce(userId, 'eraKept', row.id) : []
   return { ok: true, newAchievements }
+}
+
+/**
+ * Mark today's mission done, or undo it. Separate from the promise on
+ * purpose: doing the era's mission is its own act, and plenty of days will
+ * have one without the other.
+ */
+export async function setMissionDone(
+  userId: string,
+  done: unknown,
+): Promise<{ ok: true; done: boolean } | { ok: false; error: string; status: number }> {
+  if (typeof done !== 'boolean') return { ok: false, error: 'done must be true or false', status: 400 }
+
+  const era = await getActiveEra(userId)
+  if (!era) return { ok: false, error: 'No active era', status: 404 }
+
+  const tz = await userTimezone(userId)
+  const today = localDay(tz)
+  const day = eraDayNumber(era.start_day, today)
+  if (day < 1 || day > era.length_days) return { ok: false, error: 'No mission today', status: 409 }
+  if (!missionFor(era.era_key, day)) return { ok: false, error: 'No mission today', status: 409 }
+
+  if (done) {
+    await prisma.eraMission.upsert({
+      where: { era_id_local_day: { era_id: era.id, local_day: today } },
+      create: { era_id: era.id, user_id: userId, local_day: today, day },
+      // Already done: keep the original time rather than re-stamping it.
+      update: {},
+    })
+  } else {
+    await prisma.eraMission.deleteMany({ where: { era_id: era.id, local_day: today } })
+  }
+  return { ok: true, done }
 }
 
 // ─── Era Recap ───────────────────────────────────────────────────────────────

@@ -243,6 +243,11 @@ export function ImmersiveHome() {
   const [showMorningFlow, setShowMorningFlow] = useState(false)
   const [showGuidedPlayer, setShowGuidedPlayer] = useState(false)
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null)
+  // Mirrored in a ref so the "played to the end" event can name the guide
+  // without adding it to handleGuideEnded's deps (the player holds that
+  // callback for the length of a session).
+  const activeGuideIdRef = useRef<string | null>(null)
+  useEffect(() => { activeGuideIdRef.current = activeGuideId }, [activeGuideId])
   const [guideAudioElement, setGuideAudioElement] = useState<HTMLAudioElement | null>(null)
 
   const guideRequestId = useRef(0)
@@ -292,7 +297,8 @@ export function ImmersiveHome() {
   // --- Guide playback ---
   const handlePlayGuide = async (guideId: string, guideName: string) => {
     haptic('light')
-    trackFeature('guided', 'use')
+    // Which guide, not just "a guide": content performance is the question.
+    trackFeature('guided', 'use', guideId)
     activeSessionRef.current = pendingSessionRef.current
     pendingSessionRef.current = null
     setActiveGuideId(guideId)
@@ -748,7 +754,7 @@ export function ImmersiveHome() {
   // --- Play handlers ---
   const handlePlayMotivation = (video: VideoItem, index: number, topic?: string) => {
     haptic('light')
-    trackFeature('motivation', 'use')
+    trackFeature('motivation', 'use', topic || topicName)
     const playTopic = topic || topicName
     const topicVideos = motivationByTopic[playTopic] || motivationVideos
     triggerTap(video.id)
@@ -1002,7 +1008,7 @@ export function ImmersiveHome() {
   // --- Section callbacks ---
   const handleSoundscapePlay = useCallback((item: typeof SOUNDSCAPE_ITEMS[number], isLocked: boolean) => {
     haptic('light')
-    trackFeature('soundscapes', 'use')
+    trackFeature('soundscapes', 'use', item.id)
     if (isLocked) {
       if (featureTooltipCtx?.showFeatureTooltip('all_content')) return
       stopPreview()
@@ -1131,6 +1137,9 @@ export function ImmersiveHome() {
   }, [mounted])
 
   const handleGuideEnded = useCallback(() => {
+    // Played to the end — the difference between "opened" and "listened",
+    // and the only honest measure of whether a session holds people.
+    trackFeature('guided', 'complete', activeGuideIdRef.current ?? undefined)
     const session = activeSessionRef.current
     if (!session) return
     activeSessionRef.current = null

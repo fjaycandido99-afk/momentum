@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { isNativeApp, setupNativeNotificationListeners, subscribeToPush } from '@/lib/push-notifications'
 import { addNotificationTapListener } from '@/lib/notifications'
+import { trackFeature } from '@/lib/analytics/track'
 
 /**
  * Initializes native push notifications on app startup.
@@ -53,6 +54,9 @@ export function useNativePush() {
         // — a Midday Reset push never opened Midday Reset. Same-app paths only.
         const target = data?.route || data?.url
         const route = typeof target === 'string' && target.startsWith('/') && !target.startsWith('//') ? target : null
+        // Which pushes actually get opened — the only measure of whether a
+        // notification did anything. The type travels in the payload.
+        trackFeature('notification', 'open', typeof data?.type === 'string' ? data.type : 'unknown')
         if (route) {
           router.push(routeMap[route] || route)
         } else {

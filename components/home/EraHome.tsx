@@ -464,6 +464,26 @@ function ActiveEra({
     )
   }
 
+  /**
+   * Doing the mission is its own act — plenty of days have the mission
+   * without the promise, or the other way round — so it gets its own tap,
+   * and it's the only way to know which missions people actually do.
+   */
+  const missionToggle = (
+    <button
+      onClick={() => post('/api/era/mission', { done: !era.missionDone })}
+      disabled={busy}
+      aria-pressed={era.missionDone}
+      className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs border transition-all active:scale-[0.97] disabled:opacity-40 ${
+        era.missionDone
+          ? 'bg-white text-black border-white'
+          : 'bg-white/[0.04] text-white/75 border-white/[0.14]'
+      }`}
+    >
+      <Check className="w-3.5 h-3.5" /> {era.missionDone ? 'Mission done' : 'I did the mission'}
+    </button>
+  )
+
   const yesNo = (which: 'today' | 'yesterday', quiet = false) => (
     <div className="flex gap-2 mt-3">
       <button
@@ -529,13 +549,16 @@ function ActiveEra({
                 <Target className="w-3.5 h-3.5" /> Today&rsquo;s mission
               </div>
               <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>{era.mission}</p>
-              <button
-                onClick={() => { setDraft(era.mission!); setSource('typed') }}
-                disabled={busy}
-                className="mt-2 text-xs text-white/70 underline underline-offset-2 hover:text-white disabled:opacity-40"
-              >
-                Make it my promise
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                {missionToggle}
+                <button
+                  onClick={() => { setDraft(era.mission!); setSource('typed') }}
+                  disabled={busy}
+                  className="mt-2 text-xs text-white/70 underline underline-offset-2 hover:text-white disabled:opacity-40"
+                >
+                  Make it my promise
+                </button>
+              </div>
             </div>
           )}
           <label htmlFor="era-promise" className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
@@ -591,6 +614,7 @@ function ActiveEra({
             {era.mission && t?.text !== era.mission && (
               <Tile icon={Target} label="Today's mission">
                 <p className="text-[17px] text-white leading-snug" style={SERIF}>{era.mission}</p>
+                {missionToggle}
               </Tile>
             )}
           </div>

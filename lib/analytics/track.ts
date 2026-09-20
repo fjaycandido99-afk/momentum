@@ -24,6 +24,9 @@ export type FeatureName =
   // metadata says which — 'picker', 'share_opened', 'share_sent',
   // 'join_page', 'wake_call'.
   | 'era'
+  // A push that got opened — the only proof a notification did anything.
+  // metadata is the notification type ('era_wake', 'daily_quote', …).
+  | 'notification'
 
 // enable/disable exist so opt-OUT is measurable, not just adoption. Two new
 // daily pushes shipped with no way to see who turned them off.

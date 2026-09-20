@@ -998,9 +998,35 @@ model Era {
   updated_at DateTime  @updatedAt
 
   promises EraPromise[]
+  missions EraMission[]
 
   @@index([user_id, status])
   @@index([era_key, status])
+}
+
+// A day's mission, marked done (lib/era/missions.ts).
+//
+// Its own row rather than a column on EraPromise, because a mission exists
+// for every day of an era whether or not a promise was made that day — and
+// "did the mission, never wrote a promise" is a real day that a column on
+// the promise could not record.
+//
+// `day` is kept so the mission TEXT can be recovered from the era's bank
+// without storing a copy of it: which missions people actually do is the
+// question this answers.
+model EraMission {
+  id      String @id @default(cuid())
+  era_id  String
+  era     Era    @relation(fields: [era_id], references: [id], onDelete: Cascade)
+  user_id String
+
+  local_day String // YYYY-MM-DD, user's timezone
+  day       Int // 1-based day of the era; index into the mission bank
+
+  completed_at DateTime @default(now())
+
+  @@unique([era_id, local_day])
+  @@index([user_id, local_day])
 }
 
 // One promise per era per day. `kept` is null until they answer the check-in,

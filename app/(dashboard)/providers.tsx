@@ -10,6 +10,7 @@ import { AchievementProvider } from '@/contexts/AchievementContext'
 import { OfflineProvider } from '@/contexts/OfflineContext'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { NativePushRegistrar } from '@/components/notifications/NativePushRegistrar'
+import { NotificationOpenTracker } from '@/components/notifications/NotificationOpenTracker'
 import { UpgradeModalWithContext } from '@/components/premium/UpgradeModal'
 import { FeatureTooltipProvider } from '@/components/premium/FeatureTooltip'
 import { ToastProvider } from '@/contexts/ToastContext'
@@ -35,6 +36,7 @@ export function Providers({ children }: ProvidersProps) {
                       <FeatureTooltipProvider>
                         <OfflineBanner />
                         <NativePushRegistrar />
+                        <NotificationOpenTracker />
                         {children}
                         <UpgradeModalWithContext />
                         <ToastContainer />

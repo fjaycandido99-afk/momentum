@@ -11,7 +11,7 @@ const VALID_FEATURES = new Set<FeatureName>([
   'journal', 'coach', 'daily_guide', 'saved_content', 'settings',
   'dream_interpretation', 'smart_session',
   'morning_briefing', 'letter_to_self', 'wellness_score',
-  'era',
+  'era', 'notification',
 ])
 
 // 'enable' and 'disable' were missing here while trackFeature offered them,

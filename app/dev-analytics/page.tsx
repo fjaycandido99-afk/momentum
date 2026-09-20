@@ -20,6 +20,15 @@ interface EraStats {
   byEra: { key: string; starts: number; promises: number; kept: number; answered: number; keptPercent: number | null; promisesPerEra: number | null }[]
   promises: { made: number; answered: number; kept: number; keptPercent: number | null }
   stuck: { startedNeverPromised: number; aliveNow: number; erasStarted: number }
+  missions: { done: number; top: { eraKey: string; day: number; text: string; count: number }[] }
+}
+
+interface MoneyStats {
+  byStatus: { status: string; tier: string; people: number }[]
+  trialsStarted: number
+  trialsLive: number
+  started: number
+  cancelled: number
 }
 
 interface ThoughtStats {
@@ -53,6 +62,7 @@ interface StatsData {
   era: EraStats
   thoughts: ThoughtStats
   wake: { callsSet: number; callsSent: number; callsOpened: number }
+  money: MoneyStats
   totalEvents: number
   totalUsers: number
   featureRanking: { feature: string; count: number }[]
@@ -242,6 +252,51 @@ function DevAnalyticsContent() {
                 <span>Wake-up calls</span>
                 <span className="tabular-nums">{data.wake.callsSet} set · {data.wake.callsSent} sent · {data.wake.callsOpened} opened</span>
               </div>
+              <div className="flex justify-between text-xs text-white/45">
+                <span>Missions done</span>
+                <span className="tabular-nums">{data.era.missions.done}</span>
+              </div>
+              {data.era.missions.top.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Missions people actually do</p>
+                  {data.era.missions.top.map(m => (
+                    <div key={`${m.eraKey}-${m.day}`} className="flex justify-between gap-3 text-xs text-white/70">
+                      <span className="truncate">{m.text}</span>
+                      <span className="text-white/45 shrink-0 tabular-nums">{formatFeature(m.eraKey)} d{m.day} · {m.count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Money, counted from the Subscription rows Stripe and
+                RevenueCat already write — no webhook events to double-count. */}
+            <div className="bg-white/5 rounded-xl p-4 space-y-2">
+              <h2 className="text-sm font-semibold text-white/70">Subscriptions ({period})</h2>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: 'Trials started', n: data.money.trialsStarted },
+                  { label: 'Trials live', n: data.money.trialsLive },
+                  { label: 'Premium started', n: data.money.started },
+                  { label: 'Cancelled', n: data.money.cancelled },
+                ].map(c => (
+                  <div key={c.label} className="bg-white/[0.03] rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold">{c.n}</div>
+                    <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1 leading-tight">{c.label}</div>
+                  </div>
+                ))}
+              </div>
+              {data.money.byStatus.length > 0 && (
+                <div className="pt-1 space-y-1">
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Everyone, right now</p>
+                  {data.money.byStatus.map(s => (
+                    <div key={`${s.tier}-${s.status}`} className="flex justify-between text-xs text-white/70">
+                      <span>{formatFeature(s.tier)} · {formatFeature(s.status)}</span>
+                      <span className="text-white/45 tabular-nums">{s.people}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* What people tapped — Daily Read answers, moods and their own

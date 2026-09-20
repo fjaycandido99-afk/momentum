@@ -189,8 +189,13 @@ self.addEventListener('notificationclick', (event) => {
     return
   }
 
-  // Get the URL to open
-  const urlToOpen = event.notification.data?.url || '/'
+  // Get the URL to open. `n=<type>` rides along so the app can record that
+  // this push was actually opened (NotificationOpenTracker strips it again).
+  const data = event.notification.data || {}
+  const base = data.url || '/'
+  const urlToOpen = data.type
+    ? `${base}${base.includes('?') ? '&' : '?'}n=${encodeURIComponent(data.type)}`
+    : base
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
