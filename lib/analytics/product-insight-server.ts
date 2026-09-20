@@ -288,6 +288,80 @@ export async function loadThoughtSignals(since: Date): Promise<ThoughtSignals> {
   }
 }
 
+export interface WellnessSignals {
+  /** People who turned check-ins on, and days recorded in the window. */
+  optedIn: number
+  days: number
+  people: number
+  /** Mean of each 1–5 scale, with the answers behind it. */
+  scales: { scale: string; mean: number; answers: number }[]
+  /** Context labels people picked. */
+  tags: { tag: string; count: number }[]
+  /**
+   * The cross-signal: promise kept-rate on days someone rated a scale at an
+   * end. This is the "did low sleep cost them the promise" question — as a
+   * link, never a cause, and blank until both ends have real numbers.
+   */
+  keptByState: { scale: string; end: string; answered: number; kept: number; keptPercent: number | null }[]
+}
+
+/**
+ * Wellness check-ins, aggregated. Only ever numbers people tapped on scales
+ * they could see, from those who turned the feature on — self-reported
+ * wellbeing, never a clinical measure of anyone.
+ */
+export async function loadWellnessSignals(since: Date): Promise<WellnessSignals> {
+  const sinceDay = since.toISOString().slice(0, 10)
+  const [optedIn, totals, scales, tags, byState] = await Promise.all([
+    prisma.userPreferences.count({ where: { wellness_enabled: true } }),
+    prisma.$queryRaw<{ days: bigint; people: bigint }[]>`
+      SELECT COUNT(*) AS days, COUNT(DISTINCT user_id) AS people
+      FROM "WellnessCheckIn" WHERE local_day >= ${sinceDay}`,
+    prisma.$queryRaw<{ scale: string; mean: number | null; answers: bigint }[]>`
+      SELECT 'mood' AS scale, AVG(mood)::float AS mean, COUNT(mood) AS answers FROM "WellnessCheckIn" WHERE local_day >= ${sinceDay}
+      UNION ALL SELECT 'energy', AVG(energy)::float, COUNT(energy) FROM "WellnessCheckIn" WHERE local_day >= ${sinceDay}
+      UNION ALL SELECT 'stress', AVG(stress)::float, COUNT(stress) FROM "WellnessCheckIn" WHERE local_day >= ${sinceDay}
+      UNION ALL SELECT 'rested', AVG(rested)::float, COUNT(rested) FROM "WellnessCheckIn" WHERE local_day >= ${sinceDay}`,
+    prisma.$queryRaw<{ tag: string; count: bigint }[]>`
+      SELECT tag, COUNT(*) AS count FROM (
+        SELECT unnest(tags) AS tag FROM "WellnessCheckIn" WHERE local_day >= ${sinceDay}
+      ) t GROUP BY tag ORDER BY count DESC, tag ASC LIMIT 12`,
+    // One row per scale-end: the promise outcomes on days rated 4–5 or 1–2.
+    prisma.$queryRaw<{ scale: string; end: string; answered: bigint; kept: bigint }[]>`
+      WITH joined AS (
+        SELECT w.energy, w.stress, w.rested, p.kept
+        FROM "WellnessCheckIn" w
+        JOIN "EraPromise" p ON p.user_id = w.user_id AND p.local_day = w.local_day
+        WHERE w.local_day >= ${sinceDay} AND p.kept IS NOT NULL
+      )
+      SELECT 'energy' AS scale, 'high' AS end, COUNT(*) AS answered, COUNT(CASE WHEN kept THEN 1 END) AS kept FROM joined WHERE energy >= 4
+      UNION ALL SELECT 'energy', 'low', COUNT(*), COUNT(CASE WHEN kept THEN 1 END) FROM joined WHERE energy <= 2
+      UNION ALL SELECT 'stress', 'high', COUNT(*), COUNT(CASE WHEN kept THEN 1 END) FROM joined WHERE stress >= 4
+      UNION ALL SELECT 'stress', 'low', COUNT(*), COUNT(CASE WHEN kept THEN 1 END) FROM joined WHERE stress <= 2
+      UNION ALL SELECT 'rested', 'high', COUNT(*), COUNT(CASE WHEN kept THEN 1 END) FROM joined WHERE rested >= 4
+      UNION ALL SELECT 'rested', 'low', COUNT(*), COUNT(CASE WHEN kept THEN 1 END) FROM joined WHERE rested <= 2`,
+  ])
+
+  return {
+    optedIn,
+    days: n(totals[0]?.days),
+    people: n(totals[0]?.people),
+    scales: scales
+      .filter(s => n(s.answers) > 0)
+      .map(s => ({ scale: s.scale, mean: Math.round((s.mean ?? 0) * 100) / 100, answers: n(s.answers) })),
+    tags: tags.map(t => ({ tag: t.tag, count: n(t.count) })),
+    keptByState: byState
+      .filter(r => n(r.answered) > 0)
+      .map(r => ({
+        scale: r.scale,
+        end: r.end,
+        answered: n(r.answered),
+        kept: n(r.kept),
+        keptPercent: keptRate(n(r.kept), n(r.answered)),
+      })),
+  }
+}
+
 export interface MoneySignals {
   /** Everyone, by where they are now. */
   byStatus: { status: string; tier: string; people: number }[]

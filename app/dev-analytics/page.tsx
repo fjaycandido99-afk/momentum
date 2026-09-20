@@ -63,6 +63,14 @@ interface StatsData {
   thoughts: ThoughtStats
   wake: { callsSet: number; callsSent: number; callsOpened: number }
   money: MoneyStats
+  wellness: {
+    optedIn: number
+    days: number
+    people: number
+    scales: { scale: string; mean: number; answers: number }[]
+    tags: { tag: string; count: number }[]
+    keptByState: { scale: string; end: string; answered: number; kept: number; keptPercent: number | null }[]
+  }
   totalEvents: number
   totalUsers: number
   featureRanking: { feature: string; count: number }[]
@@ -265,6 +273,58 @@ function DevAnalyticsContent() {
                       <span className="text-white/45 shrink-0 tabular-nums">{formatFeature(m.eraKey)} d{m.day} · {m.count}</span>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Wellness check-ins — only from people who turned them on.
+                Self-reported numbers, never a clinical measure of anyone. */}
+            <div className="bg-white/5 rounded-xl p-4 space-y-3">
+              <div>
+                <h2 className="text-sm font-semibold text-white/70">Wellness check-ins ({period})</h2>
+                <p className="text-[10px] text-white/35 mt-0.5">
+                  {data.wellness.optedIn} opted in · {data.wellness.days} days from {data.wellness.people} · self-reported, not clinical
+                </p>
+              </div>
+
+              {data.wellness.scales.length > 0 ? (
+                <div className="grid grid-cols-4 gap-2">
+                  {data.wellness.scales.map(s => (
+                    <div key={s.scale} className="bg-white/[0.03] rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold">{s.mean}</div>
+                      <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">{s.scale}</div>
+                      <div className="text-[10px] text-white/30 mt-0.5">{s.answers} answers</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-white/30">Nobody has checked in yet.</p>
+              )}
+
+              {data.wellness.keptByState.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Promises kept, by the state they were in</p>
+                  {data.wellness.keptByState.map(r => (
+                    <div key={`${r.scale}-${r.end}`} className="flex justify-between text-xs text-white/70">
+                      <span>{formatFeature(r.scale)} · {r.end === 'high' ? '4–5' : '1–2'}</span>
+                      <span className="text-white/45 tabular-nums">
+                        {r.keptPercent === null ? '—' : `${r.keptPercent}% kept`} · {r.kept}/{r.answered}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {data.wellness.tags.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider">What was going on</p>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {data.wellness.tags.map(t => (
+                      <span key={t.tag} className="text-xs bg-white/[0.06] rounded-full px-2.5 py-1">
+                        {formatFeature(t.tag)} <span className="text-white/45">{t.count}</span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

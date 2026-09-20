@@ -54,6 +54,28 @@ export default function PrivacyPolicyPage() {
           </ul>
 
           <h3 className="text-base font-medium text-white mb-2">
+            Wellness Check-Ins (Optional, Off by Default)
+          </h3>
+          <p className="text-sm text-white/70 leading-relaxed mb-2">
+            Voxu can record a short daily check-in: how you feel, your energy, your stress, and how rested you feel,
+            each on a 1&ndash;5 scale, plus optional context labels from a fixed list (work, money, sleep, and so on).
+            This is <strong className="text-white/90">off until you turn it on</strong> in Progress &rarr; Today&rsquo;s
+            check-in. Nothing is recorded, and nothing already recorded is used, while it is off. We store when you
+            turned it on.
+          </p>
+          <p className="text-sm text-white/70 leading-relaxed mb-2">
+            We use it for two things: to show you patterns in your own record (for example, how often you keep a
+            promise on a drained day compared with a rested one), and &mdash; counted together with other users, as
+            numbers only &mdash; to understand whether Voxu actually helps. It is never sold, never shown to other
+            users, and never used to train any model.
+          </p>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            This is self-reported wellbeing information, not medical or clinical data. Voxu does not diagnose, screen
+            for, or treat any condition, and produces no clinical score. You can turn check-ins off at any time, delete
+            all of them on their own without deleting your account, and they are included in your data export.
+          </p>
+
+          <h3 className="text-base font-medium text-white mb-2">
             Usage Data
           </h3>
           <ul className="list-disc list-inside text-sm text-white/70 space-y-1 mb-4">

@@ -33,7 +33,10 @@ export async function GET() {
 
     // Everything is scoped to user.id. No route param decides whose data
     // this is, so there is no way to ask for somebody else's.
-    const [account, preferences, guides, favorites, goals, routines, playlists, assessment, eras] = await Promise.all([
+    const [
+      account, preferences, guides, favorites, goals, routines, playlists, assessment, eras,
+      wellness, missions,
+    ] = await Promise.all([
       prisma.user.findUnique({
         where: { id: user.id },
         select: { id: true, email: true, name: true, created_at: true },
@@ -90,9 +93,26 @@ export async function GET() {
           start_day: true, status: true, ended_at: true, created_at: true,
           promises: {
             orderBy: { local_day: 'asc' },
-            select: { local_day: true, text: true, source: true, coach_reply: true, kept: true, checked_at: true },
+            select: {
+              local_day: true, text: true, source: true, coach_reply: true, kept: true, checked_at: true,
+              // The check-in's one-tap answers (lib/era/reasons.ts).
+              confidence: true, blocker: true, helper: true,
+            },
           },
         },
+      }),
+      // Self-reported wellness check-ins. The most personal thing here after
+      // the journal, so it belongs in the copy someone takes with them.
+      prisma.wellnessCheckIn.findMany({
+        where: { user_id: user.id },
+        orderBy: { local_day: 'asc' },
+        select: { local_day: true, mood: true, energy: true, stress: true, rested: true, tags: true },
+      }),
+      // Which day's mission they marked done.
+      prisma.eraMission.findMany({
+        where: { user_id: user.id },
+        orderBy: { local_day: 'asc' },
+        select: { local_day: true, day: true, completed_at: true },
       }),
     ])
 
@@ -113,6 +133,8 @@ export async function GET() {
         statement: (() => { const it = ITEMS_BY_ID.get(a.item_id); return it ? itemLabel(it) : null })(),
       })),
       eras,
+      era_missions: missions,
+      wellness_checkins: wellness,
     }
 
     const filename = `voxu-export-${new Date().toISOString().slice(0, 10)}.json`

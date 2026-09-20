@@ -203,6 +203,53 @@ describe('the one-tap answers', () => {
   })
 })
 
+describe('wellness check-ins', () => {
+  // 10 rested days (9 kept), 10 exhausted days (3 kept).
+  const promises = [
+    ...Array.from({ length: 10 }, (_, i) => promise({ day: day(i), kept: i > 0 })),
+    ...Array.from({ length: 10 }, (_, i) => promise({ day: day(20 + i), kept: i < 3 })),
+  ]
+  const wellness = [
+    ...Array.from({ length: 10 }, (_, i) => ({ day: day(i), mood: null, energy: 5, stress: 1, rested: 5 })),
+    ...Array.from({ length: 10 }, (_, i) => ({ day: day(20 + i), mood: null, energy: 1, stress: 5, rested: 1 })),
+  ]
+
+  it('says what a drained or unrested day costs, both sides with counts', () => {
+    const report = findPatterns(input({ promises, wellness }))
+    const rested = report.patterns.find(p => p.kind === 'rested')!
+    expect(rested.headline).toBe('90% kept on rested days — 30% on days you woke up tired.')
+    expect(rested.detail).toContain('9 of 10 against 3 of 10')
+    const energy = report.patterns.find(p => p.kind === 'energy')!
+    expect(energy.headline).toBe('90% kept on days you had energy — 30% on drained days.')
+  })
+
+  it('calls the stress link a link, not a cause', () => {
+    const stress = findPatterns(input({ promises, wellness })).patterns.find(p => p.kind === 'stress')!
+    // High stress is the WORSE side here, so it reads calm-first.
+    expect(stress.headline).toBe('90% kept on calm days — 30% on high-stress days.')
+    expect(stress.detail).toContain('A link, not a cause')
+  })
+
+  it('says nothing at all when check-ins are off', () => {
+    // The loader passes an empty list unless consent is on.
+    const report = findPatterns(input({ promises, wellness: [] }))
+    for (const kind of ['energy', 'stress', 'rested'] as const) {
+      expect(report.patterns.find(p => p.kind === kind)).toBeUndefined()
+    }
+  })
+
+  it('ignores middling days rather than counting them as either end', () => {
+    const middling = Array.from({ length: 20 }, (_, i) => ({ day: day(i), mood: null, energy: 3, stress: 3, rested: 3 }))
+    const report = findPatterns(input({ promises, wellness: middling }))
+    expect(report.patterns.find(p => p.kind === 'energy')).toBeUndefined()
+  })
+
+  it('needs both ends, not just a long run of good days', () => {
+    const onlyGood = Array.from({ length: 20 }, (_, i) => ({ day: day(i), mood: null, energy: 5, stress: 1, rested: 5 }))
+    expect(findPatterns(input({ promises, wellness: onlyGood })).patterns.find(p => p.kind === 'rested')).toBeUndefined()
+  })
+})
+
 describe('weakDayLine — shrink the ask before the miss', () => {
   // Thursdays 1 of 6 kept; every other day 12 of 12. Thursday = weekday 4.
   const promises = [

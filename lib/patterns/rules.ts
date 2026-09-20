@@ -91,10 +91,21 @@ export interface GuideMoodDay {
   after: GuideMood
 }
 
+/** A consented daily check-in (lib/wellness/scales.ts), 1–5 each. */
+export interface WellnessDay {
+  day: string
+  mood: number | null
+  energy: number | null
+  stress: number | null
+  rested: number | null
+}
+
 export interface PatternInput {
   promises: PromiseRecord[]
   moods: MoodDay[]
   guideMoods: GuideMoodDay[]
+  /** Empty unless the user turned check-ins on. */
+  wellness?: WellnessDay[]
   /** Today in the user's timezone (YYYY-MM-DD) — the anchor for "recently". */
   today?: string
   /**
@@ -117,6 +128,7 @@ export interface PatternGroup {
 export type PatternKind =
   | 'timing' | 'weekday' | 'follow_through' | 'size' | 'voice' | 'momentum' | 'mood' | 'guide'
   | 'confidence' | 'blocker' | 'helper'
+  | 'energy' | 'stress' | 'rested'
 
 export interface Pattern {
   id: string
@@ -413,6 +425,45 @@ function reasonPattern(
   }
 }
 
+/**
+ * What state actually costs them: kept-rate on days they rated a scale high
+ * (4–5) against days they rated it low (1–2). Middling days (3) are left out
+ * of both sides on purpose — the question is whether the ends differ.
+ *
+ * Reported as a link both ways, like the mood pattern. Low energy may cost
+ * follow-through, and a day that went badly may also feel low; this data
+ * can't separate them, and the copy doesn't pretend otherwise.
+ */
+function wellnessPattern(
+  answered: PromiseRecord[],
+  wellness: WellnessDay[],
+  scale: 'energy' | 'stress' | 'rested',
+  wording: { high: string; low: string; note: string },
+): Pattern | null {
+  const byDay = new Map(wellness.map(w => [w.day, w[scale]]))
+  const high: PromiseRecord[] = []
+  const low: PromiseRecord[] = []
+  for (const p of answered) {
+    const score = byDay.get(p.day)
+    if (score === null || score === undefined) continue
+    if (score >= 4) high.push(p)
+    else if (score <= 2) low.push(p)
+  }
+  const a = keptGroup(wording.high, high)
+  const b = keptGroup(wording.low, low)
+  const c = compare([a, b], MIN_PER_GROUP, MIN_GAP_POINTS)
+  if (!c) return null
+  return {
+    id: scale,
+    kind: scale,
+    headline: `${c.best.rate}% kept on ${c.best.label} — ${c.worst.rate}% on ${c.worst.label}.`,
+    detail: `${c.best.hits} of ${c.best.of} against ${c.worst.hits} of ${c.worst.of}. ${wording.note}`,
+    groups: [c.best, c.worst],
+    gap: c.gap,
+    strength: strengthOf(a, b),
+  }
+}
+
 /** Did the guide day end higher than it started? One group, so no comparison. */
 function guidePattern(guideMoods: GuideMoodDay[]): Pattern | null {
   const rank: Record<GuideMood, number> = { low: 1, medium: 2, high: 3 }
@@ -457,6 +508,18 @@ export function findPatterns(input: PatternInput): PatternReport {
         confidencePattern(answered),
         reasonPattern(answered, 'blocker', input.reasonLabel ?? (k => k)),
         reasonPattern(answered, 'helper', input.reasonLabel ?? (k => k)),
+        wellnessPattern(answered, input.wellness ?? [], 'energy', {
+          high: 'days you had energy', low: 'drained days',
+          note: 'Worth making the promise smaller on a drained day than skipping it.',
+        }),
+        wellnessPattern(answered, input.wellness ?? [], 'stress', {
+          high: 'high-stress days', low: 'calm days',
+          note: 'A link, not a cause — a day that goes badly raises both.',
+        }),
+        wellnessPattern(answered, input.wellness ?? [], 'rested', {
+          high: 'rested days', low: 'days you woke up tired',
+          note: 'The night before shows up in the next day’s promise.',
+        }),
       ].filter((p): p is Pattern => p !== null),
     )
   }

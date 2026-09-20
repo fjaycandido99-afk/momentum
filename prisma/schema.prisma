@@ -60,6 +60,9 @@ model User {
 
   // Daily Read
   assessmentAnswers AssessmentAnswer[]
+
+  // Self-reported wellness check-ins (consented, see UserPreferences)
+  wellnessCheckIns WellnessCheckIn[]
   assessmentSignature AssessmentSignature?
 
   // Era
@@ -127,6 +130,13 @@ model UserPreferences {
   // must never go out.
   wake_call_enabled Boolean @default(false)
   wake_call_time    String? // "06:30" format, user-local
+
+  // Daily wellness check-in (lib/wellness). OFF until the user turns it on
+  // from the consent card, and never inferred — nothing is written to
+  // WellnessCheckIn while this is false. consented_at records when they
+  // agreed, which is what makes the collection lawful.
+  wellness_enabled     Boolean   @default(false)
+  wellness_consented_at DateTime?
 
   // Appear in the circles of people whose era link you used, or who used
   // yours (lib/era/circle.ts). On by default, and the join page says what
@@ -1002,6 +1012,36 @@ model Era {
 
   @@index([user_id, status])
   @@index([era_key, status])
+}
+
+// One day's self-reported state (lib/wellness/scales.ts).
+//
+// Four numbers the user taps — how they feel, energy, stress, how rested —
+// plus optional context tags from a fixed list. Self-reported wellness, NOT
+// a medical or clinical record: nothing here screens for, detects or treats
+// anything, and no score is derived that pretends to.
+//
+// Written only while UserPreferences.wellness_enabled is true. Every field is
+// optional: a day with only "slept badly" answered is still worth keeping.
+model WellnessCheckIn {
+  id      String @id @default(cuid())
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  local_day String // YYYY-MM-DD in the user's timezone
+
+  mood   Int? // 1–5, awful → great
+  energy Int? // 1–5, drained → full
+  stress Int? // 1–5, calm → overwhelmed
+  rested Int? // 1–5, how rested they FEEL (perception, not sleep tracking)
+
+  // What was going on, from a closed list — countable without free text.
+  tags String[] @default([])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([user_id, local_day])
 }
 
 // A day's mission, marked done (lib/era/missions.ts).

@@ -66,8 +66,11 @@ function localParts(at: Date, timezone: string | null): { hour: number; weekday:
 export async function loadPatterns(userId: string): Promise<PatternReport> {
   const since = new Date(Date.now() - WINDOW_DAYS * 86400000)
 
-  const [prefs, promiseRows, guideRows] = await Promise.all([
-    prisma.userPreferences.findUnique({ where: { user_id: userId }, select: { timezone: true } }),
+  const [prefs, promiseRows, guideRows, wellnessRows] = await Promise.all([
+    prisma.userPreferences.findUnique({
+      where: { user_id: userId },
+      select: { timezone: true, wellness_enabled: true },
+    }),
     // length(text), never text: the words never leave Postgres.
     prisma.$queryRaw<PromiseRow[]>`
       SELECT local_day, created_at, kept, checked_at, source, length(text) AS len,
@@ -79,6 +82,13 @@ export async function loadPatterns(userId: string): Promise<PatternReport> {
       where: { user_id: userId, date: { gte: since } },
       select: { date: true, journal_mood: true, mood_before: true, mood_after: true },
       orderBy: { date: 'asc' },
+    }),
+    // Read at all only while check-ins are on: consent governs reading as
+    // well as writing, so turning it off stops it being used immediately.
+    prisma.wellnessCheckIn.findMany({
+      where: { user_id: userId, local_day: { gte: since.toISOString().slice(0, 10) } },
+      select: { local_day: true, mood: true, energy: true, stress: true, rested: true },
+      orderBy: { local_day: 'asc' },
     }),
   ])
 
@@ -119,6 +129,15 @@ export async function loadPatterns(userId: string): Promise<PatternReport> {
       })),
     today: localParts(new Date(), tz).day,
     reasonLabel: key => reasonLabel(key) ?? key,
+    wellness: prefs?.wellness_enabled
+      ? wellnessRows.map(w => ({
+          day: w.local_day,
+          mood: w.mood,
+          energy: w.energy,
+          stress: w.stress,
+          rested: w.rested,
+        }))
+      : [],
   }
 
   return findPatterns(input)
