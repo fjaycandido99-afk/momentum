@@ -1086,10 +1086,14 @@ export function ImmersiveHome() {
       !!journalData?.bedtime_story_done,
     ]
     const doneIndex: Record<SessionType, number> = { morning_prime: 0, midday_reset: 1, wind_down: 2, bedtime_story: 3 }
+    const activeEra = era.era
     if (!segmentsDone[doneIndex[todaysAudio.session]]) {
       return {
         title: todaysAudio.title,
-        subtitle: todaysAudio.subtitle,
+        // The clock still chooses the session — it's the spine of the day —
+        // but an era in progress is what the session is FOR, and saying so
+        // is the difference between an app with a feature and a coach.
+        subtitle: activeEra ? `For your ${eraName(activeEra.title)}` : todaysAudio.subtitle,
         durationSec: SESSION_DURATIONS[todaysAudio.session] as number | null,
         // The session's own art (public/sessions), rotating daily — it was
         // on disk all along while this card showed generic bars.
@@ -1098,18 +1102,35 @@ export function ImmersiveHome() {
         onOpen: handlePlayTodaysAudio,
       }
     }
-    const eraGuideId = era.era?.links.guideId
+    // Today's session is done. What follows used to be the era's single
+    // linked guide — the same one every day for thirty days. Alternate with
+    // the era's soundscape by day number so the card moves with the era
+    // instead of repeating itself.
+    if (activeEra && (activeEra.day - 1) % 2 === 1) {
+      const sound = SOUNDSCAPE_ITEMS.find(s => s.id === activeEra.links.soundscapeId)
+      if (sound) {
+        return {
+          title: sound.label,
+          subtitle: `For your ${eraName(activeEra.title)}`,
+          durationSec: null,
+          image: activeEra.image ?? null,
+          segmentsDone,
+          onOpen: () => handleSoundscapePlay(sound, !isContentFree('soundscape', sound.id)),
+        }
+      }
+    }
+    const eraGuideId = activeEra?.links.guideId
     const pickId = eraGuideId && isContentFree('voiceGuide', eraGuideId) ? eraGuideId : 'breathing'
     const g = VOICE_GUIDES.find(v => v.id === pickId) ?? VOICE_GUIDES[0]
     return {
       title: g.name,
-      subtitle: era.era ? `For your ${eraName(era.era.title)}` : g.tagline,
+      subtitle: activeEra ? `For your ${eraName(activeEra.title)}` : g.tagline,
       durationSec: null,
-      image: era.era?.image ?? null,
+      image: activeEra?.image ?? null,
       segmentsDone,
       onOpen: () => handleGuidePlay(g.id, g.name, !isContentFree('voiceGuide', g.id)),
     }
-  }, [journalData, todaysAudio, era.era, isContentFree, handlePlayTodaysAudio, handleGuidePlay])
+  }, [journalData, todaysAudio, era.era, isContentFree, handlePlayTodaysAudio, handleGuidePlay, handleSoundscapePlay])
 
   // A session played to the end from Today's Audio counts exactly as it does
   // on the Daily Guide page: segment checked in, XP awarded, and home's
