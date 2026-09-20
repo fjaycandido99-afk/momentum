@@ -32,6 +32,17 @@ interface HomeAudioContextType {
   audioState: AudioState
   dispatch: Dispatch<AudioAction>
   refs: HomeAudioRefs
+  /**
+   * Is the full-screen player showing?
+   *
+   * Playing and SHOWING are separate now. Tapping a video or a guide starts
+   * the audio and leaves you where you were, with the bottom bar carrying
+   * it; the full player opens when you ask for it, by tapping that bar.
+   * It lives here rather than in the home component because the bar that
+   * opens it is in the navigation, on every page.
+   */
+  fullPlayerOpen: boolean
+  setFullPlayerOpen: (open: boolean) => void
   createBgMusicPlayer: (youtubeId: string, startSeconds?: number) => void
   createSoundscapePlayer: (youtubeId: string) => void
   stopBackgroundMusic: () => void
@@ -62,6 +73,8 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
 
   // Audio state machine (lifted from ImmersiveHome)
   const [audioState, dispatch] = useAudioStateMachine()
+  // Whether the full-screen player is showing — never implied by playback.
+  const [fullPlayerOpen, setFullPlayerOpen] = useState(false)
 
   // Player refs (lifted from ImmersiveHome)
   const soundscapePlayerRef = useRef<YTPlayer | null>(null)
@@ -338,11 +351,13 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
     audioState,
     dispatch,
     refs,
+    fullPlayerOpen,
+    setFullPlayerOpen,
     createBgMusicPlayer,
     createSoundscapePlayer,
     stopBackgroundMusic,
     stopAllHomeAudio,
-  }), [audioState, dispatch, refs, createBgMusicPlayer, createSoundscapePlayer, stopBackgroundMusic, stopAllHomeAudio])
+  }), [audioState, dispatch, refs, fullPlayerOpen, createBgMusicPlayer, createSoundscapePlayer, stopBackgroundMusic, stopAllHomeAudio])
 
   return (
     <HomeAudioContext.Provider value={value}>

@@ -114,7 +114,7 @@ export function ImmersiveHome() {
   const isRestorePendingRef = useRef(!!audioContext?.lastPlayed)
 
   // Audio state machine (from persistent context)
-  const { audioState, dispatch, refs: homeAudioRefs, createBgMusicPlayer, createSoundscapePlayer, stopBackgroundMusic, stopAllHomeAudio } = useHomeAudio()
+  const { audioState, dispatch, refs: homeAudioRefs, fullPlayerOpen, setFullPlayerOpen, createBgMusicPlayer, createSoundscapePlayer, stopBackgroundMusic, stopAllHomeAudio } = useHomeAudio()
   const { bgPlayerRef, bgPlayerReadyRef, soundscapePlayerRef, soundscapeReadyRef, bgProgressIntervalRef, currentBgVideoIdRef, currentScVideoIdRef, keepaliveRef, wakeLockRef, guideAudioRef, guideNativeLoadedRef, autoSkipNextRef } = homeAudioRefs
 
   // Welcome back card
@@ -240,7 +240,8 @@ export function ImmersiveHome() {
 
   // Overlays
   const [showMorningFlow, setShowMorningFlow] = useState(false)
-  const [showGuidedPlayer, setShowGuidedPlayer] = useState(false)
+  // The full-screen players open on request now (the bottom bar), never
+  // because something started playing — see HomeAudioContext.fullPlayerOpen.
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null)
   // Mirrored in a ref so the "played to the end" event can name the guide
   // without adding it to handleGuideEnded's deps (the player holds that
@@ -301,7 +302,8 @@ export function ImmersiveHome() {
     activeSessionRef.current = pendingSessionRef.current
     pendingSessionRef.current = null
     setActiveGuideId(guideId)
-    setShowGuidedPlayer(true)
+    // Deliberately does NOT open the full player: the audio starts, the
+    // bottom bar carries it, and tapping that bar opens the player.
     // Stop any existing guide audio
     if (guideAudioRef.current) {
       guideAudioRef.current.pause()
@@ -374,6 +376,14 @@ export function ImmersiveHome() {
         guideAudioRef.current = audio
         setGuideAudioElement(audio)
 
+        // "Played to the end" used to be wired up inside the full-screen
+        // player, which is no longer mounted just because something is
+        // playing — so a finished session would have stopped counting (the
+        // Daily Guide segment, its XP, the dots on the card). The listener
+        // belongs to the audio, not to the view. Safe to have both: the
+        // handler clears activeSessionRef and the second call returns early.
+        audio.addEventListener('ended', () => { guideEndedRef.current?.() })
+
         let playAttempted = false
         const tryPlay = () => {
           if (playAttempted) return
@@ -411,13 +421,13 @@ export function ImmersiveHome() {
         audio.onended = () => {
           if (guideRequestId.current !== thisRequest) return
           dispatch({ type: 'GUIDE_ENDED' })
-          setShowGuidedPlayer(false)
+          setFullPlayerOpen(false)
           if (blobUrl) URL.revokeObjectURL(blobUrl)
         }
         audio.onerror = () => {
           if (guideRequestId.current !== thisRequest) return
           dispatch({ type: 'GUIDE_ERROR' })
-          setShowGuidedPlayer(false)
+          setFullPlayerOpen(false)
           if (blobUrl) URL.revokeObjectURL(blobUrl)
         }
       } else {
@@ -1183,6 +1193,12 @@ export function ImmersiveHome() {
       .catch(() => {})
   }, [today])
 
+  // The 'ended' listener is attached to the audio element when it's created,
+  // long before this callback exists in that closure — so it calls through a
+  // ref and always runs the current version.
+  const guideEndedRef = useRef<(() => void) | null>(null)
+  useEffect(() => { guideEndedRef.current = handleGuideEnded }, [handleGuideEnded])
+
   const handleMotivationPlay = useCallback((video: VideoItem, index: number, isLocked: boolean, topic?: string) => {
     if (isLocked) {
       if (featureTooltipCtx?.showFeatureTooltip('all_content')) return
@@ -1226,14 +1242,14 @@ export function ImmersiveHome() {
     <FirstMomentOverlay />
     <div
       ref={scrollRef}
-      className={`relative h-full text-white pb-28 ${showMorningFlow || audioState.playingSound || audioState.showSoundscapePlayer || showGuidedPlayer ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
+      className={`relative h-full text-white pb-28 ${showMorningFlow || fullPlayerOpen || audioState.showSoundscapePlayer ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
     
       data-app-shell
     >
       {/* --- Fullscreen overlays --- */}
 
       {/* Video/Music Player */}
-      {audioState.playingSound && (
+      {audioState.playingSound && fullPlayerOpen && (
         <WordAnimationPlayer
           word={audioState.playingSound.word}
           script=""
@@ -1286,7 +1302,7 @@ export function ImmersiveHome() {
       )}
 
       {/* Guided Player */}
-      {audioState.guideLabel && showGuidedPlayer && (
+      {audioState.guideLabel && fullPlayerOpen && (
         <GuidedPlayer
           guideId={activeGuideId || ''}
           guideName={audioState.guideLabel}
@@ -1294,7 +1310,7 @@ export function ImmersiveHome() {
           isLoading={!!audioState.loadingGuide}
           audioElement={guideAudioElement}
           onTogglePlay={toggleGuidePlay}
-          onClose={() => setShowGuidedPlayer(false)}
+          onClose={() => setFullPlayerOpen(false)}
           onSwitchGuide={(id, name) => {
             handlePlayGuide(id, name)
           }}
@@ -1796,7 +1812,7 @@ export function ImmersiveHome() {
             }
             return
           }
-          if (audioState.guideLabel) { setShowGuidedPlayer(true); return }
+          if (audioState.guideLabel) { setFullPlayerOpen(true); return }
           if (audioState.activeSoundscape) {
             dispatch({ type: 'SHOW_SOUNDSCAPE_PLAYER' })
           } else {

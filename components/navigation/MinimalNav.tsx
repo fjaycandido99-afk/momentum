@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { EqBars } from '@/components/ui/EqBars'
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
-import { Home, Pause, Wind } from 'lucide-react'
+import { Home, Loader2, Pause, Wind } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
 import { useHomeAudioOptional } from '@/contexts/HomeAudioContext'
 
@@ -24,11 +24,17 @@ export function MinimalNav() {
   const { openReset } = useReset()
   const isDailyGuide = pathname === '/daily-guide'
 
+  // A guide's audio is generated before it can play, which can take a few
+  // seconds. The full-screen player used to cover that gap with its own
+  // loading state; now that playing doesn't open it, this capsule has to be
+  // the feedback for the tap — otherwise nothing happens and people tap again.
+  const isLoadingGuide = !!homeAudio && !isDailyGuide && !!homeAudio.audioState.loadingGuide
   const isPlaying = homeAudio && !isDailyGuide && (
     homeAudio.audioState.musicPlaying ||
     homeAudio.audioState.guideIsPlaying ||
     homeAudio.audioState.soundscapeIsPlaying
   )
+  const showCapsule = isPlaying || isLoadingGuide
 
   const label = homeAudio ? (
     homeAudio.audioState.backgroundMusic?.label
@@ -36,6 +42,16 @@ export function MinimalNav() {
     || homeAudio.audioState.activeSoundscape?.label
     || ''
   ) : ''
+
+  /**
+   * This capsule is now the way INTO the full-screen player: playing no
+   * longer opens it. From another page it has to get home first, where the
+   * players live.
+   */
+  const openPlayer = () => {
+    homeAudio?.setFullPlayerOpen(true)
+    if (pathname !== '/') router.push('/')
+  }
 
   const handlePause = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -54,24 +70,33 @@ export function MinimalNav() {
 
   return (
     <nav aria-label="Main navigation" className="fixed bottom-0 left-0 right-0 z-30 flex justify-center gap-2 pb-6 pt-3 pointer-events-none">
-      {/* Player capsule — only when playing */}
-      {isPlaying && (
+      {/* Player capsule — while playing, and while a guide is loading */}
+      {showCapsule && (
         <div
           role="button"
           tabIndex={0}
-          onClick={() => router.push('/')}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push('/') } }}
+          onClick={openPlayer}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPlayer() } }}
           className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 backdrop-blur-sm transition-colors press-scale cursor-pointer"
         >
-          <EqBars height={16} barWidth={2.5} gap={2} color="rgba(255,255,255,0.8)" />
-          <span className="text-sm text-white/70 max-w-[100px] truncate">{label}</span>
-          <button
-            aria-label="Pause"
-            onClick={handlePause}
-            className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-          >
-            <Pause className="w-3 h-3 text-white/80" fill="white" fillOpacity={0.8} />
-          </button>
+          {isLoadingGuide && !isPlaying ? (
+            <Loader2 className="w-4 h-4 text-white/70 animate-spin" aria-hidden />
+          ) : (
+            <EqBars height={16} barWidth={2.5} gap={2} color="rgba(255,255,255,0.8)" />
+          )}
+          <span className="text-sm text-white/70 max-w-[100px] truncate">
+            {isLoadingGuide && !isPlaying ? (label || 'Loading') : label}
+          </span>
+          {/* Nothing to pause until it's actually playing. */}
+          {isPlaying && (
+            <button
+              aria-label="Pause"
+              onClick={handlePause}
+              className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+            >
+              <Pause className="w-3 h-3 text-white/80" fill="white" fillOpacity={0.8} />
+            </button>
+          )}
         </div>
       )}
 
