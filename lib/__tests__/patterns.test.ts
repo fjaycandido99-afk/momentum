@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   coachPatternLine,
+  computeScores,
   findPatterns,
+  weakDayLine,
   MAX_PATTERNS,
   MIN_ANSWERED_TOTAL,
   PATTERN_DISCLAIMER,
@@ -144,6 +146,74 @@ describe('findPatterns — what it says when the evidence is there', () => {
     for (const p of findPatterns(input({ promises: [...early, ...late] })).patterns) {
       for (const g of p.groups) expect(Number.isFinite(g.rate)).toBe(true)
     }
+  })
+})
+
+describe('weakDayLine — shrink the ask before the miss', () => {
+  // Thursdays 1 of 6 kept; every other day 12 of 12. Thursday = weekday 4.
+  const promises = [
+    ...Array.from({ length: 6 }, (_, i) => promise({ day: day(3 + i * 7), weekday: 4, kept: i === 0 })),
+    ...Array.from({ length: 12 }, (_, i) => promise({ day: day(1 + i * 2), weekday: 1, kept: true })),
+  ]
+  const report = findPatterns(input({ promises }))
+
+  it('fires only on that weekday, and says what to do about it', () => {
+    expect(weakDayLine(report, 4)).toBe("Thursdays are where you slip — 1 of 6 kept. Make today's promise small enough that you keep it.")
+    for (const other of [0, 1, 2, 3, 5, 6]) expect(weakDayLine(report, other)).toBeNull()
+  })
+
+  it('stays silent without a solid weekday pattern', () => {
+    expect(weakDayLine(findPatterns(input({ promises: [] })), 4)).toBeNull()
+    // Four Thursdays is under the bar for calling a day someone's weak spot.
+    const thin = findPatterns(input({
+      promises: [
+        ...Array.from({ length: 4 }, (_, i) => promise({ day: day(3 + i * 7), weekday: 4, kept: false })),
+        ...Array.from({ length: 10 }, (_, i) => promise({ day: day(1 + i * 2), weekday: 1, kept: true })),
+      ],
+    }))
+    expect(weakDayLine(thin, 4)).toBeNull()
+  })
+})
+
+describe('computeScores', () => {
+  it('reports each rate with its counts, and no composite', () => {
+    const promises = [
+      ...Array.from({ length: 8 }, (_, i) => promise({ day: day(i), kept: i > 1 })),
+      ...Array.from({ length: 2 }, (_, i) => promise({ day: day(10 + i), kept: null })),
+    ]
+    const scores = computeScores({ promises, moods: [], guideMoods: [], today: day(9) })
+    const follow = scores.find(s => s.id === 'follow_through')!
+    expect(follow).toMatchObject({ value: 75, unit: '%', detail: '6 of 8 answered promises kept' })
+    expect(scores.find(s => s.id === 'showing_up')).toMatchObject({ value: 8, unit: 'days' })
+    // No blended score: every entry is one rate someone can check.
+    expect(scores.every(s => s.detail.length > 0)).toBe(true)
+  })
+
+  it('needs a few real returns before averaging a bounce-back', () => {
+    const twoMisses = [
+      promise({ day: day(0), kept: false }), promise({ day: day(1), kept: true }),
+      promise({ day: day(2), kept: false }), promise({ day: day(3), kept: true }),
+    ]
+    expect(computeScores({ promises: twoMisses, moods: [], guideMoods: [] }).find(s => s.id === 'bounce_back')).toBeUndefined()
+
+    const threeMisses = [...twoMisses, promise({ day: day(4), kept: false }), promise({ day: day(6), kept: true })]
+    const bounce = computeScores({ promises: threeMisses, moods: [], guideMoods: [] }).find(s => s.id === 'bounce_back')!
+    expect(bounce).toMatchObject({ value: 1, unit: 'days' })
+    expect(bounce.detail).toContain('3 misses')
+  })
+
+  it('scores low-mood days only with enough of them', () => {
+    const promises = Array.from({ length: 6 }, (_, i) => promise({ day: day(i), kept: i < 2 }))
+    const moods = Array.from({ length: 6 }, (_, i) => ({ day: day(i), mood: 'low' as MoodLevel }))
+    const low = computeScores({ promises, moods, guideMoods: [] }).find(s => s.id === 'low_day')!
+    expect(low).toMatchObject({ value: 33.3, unit: '%' })
+    expect(low.detail).toBe('2 of 6 kept on days you logged a low mood')
+    const few = computeScores({ promises: promises.slice(0, 4), moods: moods.slice(0, 4), guideMoods: [] })
+    expect(few.find(s => s.id === 'low_day')).toBeUndefined()
+  })
+
+  it('says nothing from an empty history', () => {
+    expect(computeScores({ promises: [], moods: [], guideMoods: [], today: day(0) })).toEqual([])
   })
 })
 

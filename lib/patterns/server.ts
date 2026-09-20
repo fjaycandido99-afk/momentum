@@ -109,6 +109,7 @@ export async function loadPatterns(userId: string): Promise<PatternReport> {
         before: g.mood_before as GuideMood,
         after: g.mood_after as GuideMood,
       })),
+    today: localParts(new Date(), tz).day,
   }
 
   return findPatterns(input)

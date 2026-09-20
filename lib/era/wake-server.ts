@@ -9,6 +9,17 @@ import { buildWakeCall, callName, parseWakeTime, type WakeCall } from './wake'
  * so what the notification says and what the coach says always match.
  */
 
+/** Today's weekday (0 = Sunday) in the user's own timezone. */
+function weekdayInZone(timezone: string | null): number {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  try {
+    const name = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: timezone || 'UTC' }).format(new Date())
+    return Math.max(0, days.indexOf(name))
+  } catch {
+    return new Date().getUTCDay()
+  }
+}
+
 export interface WakeSettings {
   enabled: boolean
   /** "06:30", or null if they never picked one. */
@@ -66,7 +77,9 @@ export async function loadWakeCall(userId: string): Promise<WakeCallState> {
       why: era.why,
     },
     quoteDayOne: callbackAllowed(era.day, era.lengthDays, yesterday, era.isPremium),
-    patternLine: await patternLineFor(userId),
+    // On a day they usually slip, the call says so and shrinks the ask —
+    // that's the whole point of knowing the pattern before the day starts.
+    patternLine: await patternLineFor(userId, weekdayInZone(prefs?.timezone ?? null)),
   })
 
   return {

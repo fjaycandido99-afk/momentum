@@ -45,6 +45,13 @@ export const MIN_GAP_POINTS = 15
 export const MIN_GAP_POINTS_WEEKDAY = 25
 /** Per group, when a pattern stops being "thin" and reads as solid. */
 export const SOLID_PER_GROUP = 8
+/**
+ * The same bar for weekdays, which only come round once a week: eight
+ * Thursdays is two months of waiting before the app can act on a weak day.
+ * Six is still six weeks, and the weekday gap requirement is stricter to
+ * make up for it.
+ */
+export const SOLID_PER_WEEKDAY = 6
 /** A wall of statistics is noise; the strongest few are the useful ones. */
 export const MAX_PATTERNS = 4
 
@@ -78,6 +85,8 @@ export interface PatternInput {
   promises: PromiseRecord[]
   moods: MoodDay[]
   guideMoods: GuideMoodDay[]
+  /** Today in the user's timezone (YYYY-MM-DD) — the anchor for "recently". */
+  today?: string
 }
 
 export interface PatternGroup {
@@ -109,6 +118,8 @@ export interface Pattern {
 
 export interface PatternReport {
   patterns: Pattern[]
+  /** Single rates about themselves — no composite, see computeScores. */
+  scores: Score[]
   /** Plain counts of what's still missing before anything can be said. */
   needs: { answeredPromises: number; moodDays: number }
   /** Days and promises the report is computed from. */
@@ -196,7 +207,7 @@ function weekdayPattern(answered: PromiseRecord[]): Pattern | null {
     detail: `${c.worst.hits} of ${c.worst.of} on ${c.worst.label}, ${c.best.hits} of ${c.best.of} on ${c.best.label}.`,
     groups: [c.worst, c.best],
     gap: c.gap,
-    strength: strengthOf(c.best, c.worst),
+    strength: [c.best, c.worst].every(g => g.of >= SOLID_PER_WEEKDAY) ? 'solid' : 'thin',
   }
 }
 
@@ -373,6 +384,7 @@ export function findPatterns(input: PatternInput): PatternReport {
 
   return {
     patterns: patterns.slice(0, MAX_PATTERNS),
+    scores: computeScores(input),
     needs: {
       answeredPromises: Math.max(0, MIN_ANSWERED_TOTAL - answered.length),
       moodDays: Math.max(0, MIN_MOOD_DAYS - moodDays),
@@ -385,6 +397,131 @@ export function findPatterns(input: PatternInput): PatternReport {
     },
     disclaimer: PATTERN_DISCLAIMER,
   }
+}
+
+// ─── Acting on it ────────────────────────────────────────────────────────────
+
+/**
+ * A line for the morning of a day this person usually slips, or null.
+ *
+ * The point is to shrink the ask BEFORE the miss rather than commiserate
+ * after it. Only fires on a solid weekday pattern, and only on that weekday
+ * — being told "today is your weak day" on a Tuesday that isn't would be
+ * both wrong and discouraging.
+ *
+ * `weekday`: 0 = Sunday … 6 = Saturday, in the user's own timezone.
+ */
+export function weakDayLine(report: PatternReport, weekday: number): string | null {
+  const p = report.patterns.find(x => x.kind === 'weekday' && x.strength === 'solid')
+  if (!p) return null
+  const worst = p.groups[0]
+  if (WEEKDAYS[weekday] !== worst.label) return null
+  return `${worst.label}s are where you slip — ${worst.hits} of ${worst.of} kept. Make today's promise small enough that you keep it.`
+}
+
+// ─── Scores ──────────────────────────────────────────────────────────────────
+
+/** A single rate needs less evidence than a comparison, but not none. */
+export const SCORE_MIN_ANSWERED = 5
+/** Times they came back after a miss, before an average means anything. */
+export const SCORE_MIN_RETURNS = 3
+/** Promises made on days they logged a low mood. */
+export const SCORE_MIN_LOW_DAYS = 5
+/** The window "recently" means, in days. */
+export const SCORE_WINDOW_DAYS = 28
+
+export interface Score {
+  id: 'follow_through' | 'showing_up' | 'bounce_back' | 'low_day'
+  label: string
+  value: number
+  unit: '%' | 'days'
+  /** The counts behind the number, always. */
+  detail: string
+}
+
+/** Days between two YYYY-MM-DD dates, by UTC arithmetic. */
+function daysBetween(from: string, to: string): number {
+  const [ay, am, ad] = from.split('-').map(Number)
+  const [by, bm, bd] = to.split('-').map(Number)
+  return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86400000)
+}
+
+/**
+ * The numbers people actually want about themselves, each one a rate with
+ * its counts and no composite. A single blended "consistency score" would
+ * hide which part moved — and any weight in it would be invented.
+ */
+export function computeScores(input: PatternInput): Score[] {
+  const answered = input.promises.filter(p => p.kept !== null)
+  const scores: Score[] = []
+
+  if (answered.length >= SCORE_MIN_ANSWERED) {
+    const kept = answered.filter(p => p.kept).length
+    scores.push({
+      id: 'follow_through',
+      label: 'Follow-through',
+      value: pct(kept, answered.length),
+      unit: '%',
+      detail: `${kept} of ${answered.length} answered promises kept`,
+    })
+  }
+
+  // Showing up: days with a promise inside the window ending today.
+  const today = input.today
+  if (today) {
+    const days = new Set(
+      input.promises
+        .filter(p => {
+          const age = daysBetween(p.day, today)
+          return age >= 0 && age < SCORE_WINDOW_DAYS
+        })
+        .map(p => p.day),
+    )
+    if (days.size > 0) {
+      scores.push({
+        id: 'showing_up',
+        label: 'Showing up',
+        value: days.size,
+        unit: 'days',
+        detail: `promises made on ${days.size} of the last ${SCORE_WINDOW_DAYS} days`,
+      })
+    }
+  }
+
+  // Bounce-back: from a missed promise to the next one they kept.
+  const sorted = [...answered].sort((a, b) => a.day.localeCompare(b.day))
+  const gaps: number[] = []
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].kept !== false) continue
+    const back = sorted.slice(i + 1).find(p => p.kept === true)
+    if (back) gaps.push(daysBetween(sorted[i].day, back.day))
+  }
+  if (gaps.length >= SCORE_MIN_RETURNS) {
+    const mid = [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)]
+    scores.push({
+      id: 'bounce_back',
+      label: 'Bounce-back',
+      value: mid,
+      unit: 'days',
+      detail: `you came back after ${gaps.length} misses — usually within ${mid} ${mid === 1 ? 'day' : 'days'}`,
+    })
+  }
+
+  // Following through on the days that were already hard.
+  const lowDays = new Set(input.moods.filter(m => m.mood === 'low' || m.mood === 'awful').map(m => m.day))
+  const onLowDays = answered.filter(p => lowDays.has(p.day))
+  if (onLowDays.length >= SCORE_MIN_LOW_DAYS) {
+    const kept = onLowDays.filter(p => p.kept).length
+    scores.push({
+      id: 'low_day',
+      label: 'On your low days',
+      value: pct(kept, onLowDays.length),
+      unit: '%',
+      detail: `${kept} of ${onLowDays.length} kept on days you logged a low mood`,
+    })
+  }
+
+  return scores
 }
 
 /**

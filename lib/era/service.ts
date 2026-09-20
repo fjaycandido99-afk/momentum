@@ -29,7 +29,7 @@ import { alignmentLine, computeAlignment, type EraAlignment } from './alignment'
 import type { AxisId } from '@/lib/assessment/axes'
 import { ERA_MISSIONS } from './missions'
 import { loadPatterns } from '@/lib/patterns/server'
-import { coachPatternLine } from '@/lib/patterns/rules'
+import { coachPatternLine, weakDayLine } from '@/lib/patterns/rules'
 
 function missionFor(eraKey: string, day: number): string | null {
   return missionForDay(ERA_MISSIONS[eraKey] ?? ERA_MISSIONS.custom, day)
@@ -39,14 +39,26 @@ function missionFor(eraKey: string, day: number): string | null {
  * One line about their own record for the coach to quote (lib/patterns), or
  * null. Never worth failing a promise over: a reply without it is the normal
  * reply.
+ *
+ * On a weekday they usually slip, that comes FIRST: shrinking today's ask
+ * before the miss is worth more than any other statistic we could say.
  */
-export async function patternLineFor(userId: string): Promise<string | null> {
+export async function patternLineFor(userId: string, weekday?: number): Promise<string | null> {
   try {
-    return coachPatternLine(await loadPatterns(userId))
+    const report = await loadPatterns(userId)
+    return (weekday === undefined ? null : weakDayLine(report, weekday))
+      ?? coachPatternLine(report)
   } catch (err) {
     console.warn('[era] pattern line unavailable:', err)
     return null
   }
+}
+
+/** Weekday (0=Sun) of a YYYY-MM-DD, by date arithmetic, not by timezone. */
+function weekdayOf(day: string): number {
+  const [y, m, d] = day.split('-').map(Number)
+  if (!y || !m || !d) return 0
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay()
 }
 
 /**
@@ -379,7 +391,7 @@ export async function makePromise(
           stageNote: eraStage(day, era.length_days).coachNote,
           mission: missionFor(era.era_key, day),
           fullMemory: await isPremiumUser(userId).catch(() => false),
-          patternLine: await patternLineFor(userId),
+          patternLine: await patternLineFor(userId, weekdayOf(today)),
         },
         mindset,
         prefs?.guide_tone ?? null,

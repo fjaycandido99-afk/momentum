@@ -34,6 +34,22 @@ export function RecordPatterns() {
         <BarChart3 className="w-4 h-4" /> What your record shows
       </h2>
 
+      {report && report.scores.length > 0 && (
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          {report.scores.map(s => (
+            <div key={s.id} className="bg-white/[0.03] rounded-xl p-3">
+              <p className="text-2xl text-white leading-none">
+                {s.value}<span className="text-sm text-white/50">{s.unit === '%' ? '%' : ' days'}</span>
+              </p>
+              <p className="text-[11px] text-white/70 mt-1.5">{s.label}</p>
+              {/* The counts, always — a rate with no denominator is how people
+                  come to believe things about themselves that aren't true. */}
+              <p className="text-[10px] text-white/40 mt-0.5 leading-snug">{s.detail}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {!report ? (
         <div className="flex justify-center py-6">
           <Loader2 className="w-5 h-5 animate-spin text-white/30" />
@@ -42,8 +58,8 @@ export function RecordPatterns() {
         <div className="mt-2">
           <p className="text-sm text-white/70 leading-relaxed">
             {report.needs.answeredPromises > 0
-              ? `Nothing solid to show yet. ${report.needs.answeredPromises} more answered ${report.needs.answeredPromises === 1 ? 'promise' : 'promises'} and this starts comparing your own days against each other.`
-              : 'Nothing has separated out yet — your days look much alike so far, which is its own kind of answer.'}
+              ? `${report.scores.length > 0 ? 'No patterns yet' : 'Nothing to show yet'} — ${report.needs.answeredPromises} more answered ${report.needs.answeredPromises === 1 ? 'promise' : 'promises'} and this starts comparing your own days against each other.`
+              : 'No pattern has separated out yet — your days look much alike so far, which is its own kind of answer.'}
           </p>
           <p className="text-[11px] text-white/40 mt-2">
             It stays quiet until each side of a comparison has enough days behind it. A pattern from four days would just be noise.
