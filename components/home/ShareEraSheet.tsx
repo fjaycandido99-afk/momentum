@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Check, Link2, Loader2, Share2, X } from 'lucide-react'
 import type { EraToday } from '@/hooks/useEra'
 import { eraSlug, joinUrl, shareText } from '@/lib/era/share'
+import { trackFeature } from '@/lib/analytics/track'
 
 /**
  * The share sheet for an era: a preview of the card, then Share.
@@ -25,6 +26,10 @@ export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => 
 
   const url = joinUrl(era.key, era.id)
   const text = shareText({ key: era.key, title: era.title, day: era.day, lengthDays: era.lengthDays, complete: era.step === 'complete' })
+
+  // Opened vs actually shared: the gap between them is the whole question
+  // about sharing, and neither leaves a row behind.
+  useEffect(() => { trackFeature('era', 'open', 'share_opened') }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -48,6 +53,7 @@ export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => 
     try {
       await navigator.clipboard.writeText(`${text} ${url}`)
       setStatus('copied')
+      trackFeature('era', 'complete', 'share_sent')
     } catch { /* clipboard blocked — nothing more to try */ }
   }
 
@@ -55,10 +61,12 @@ export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => 
     try {
       if (file && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], text: `${text} ${url}` })
+        trackFeature('era', 'complete', 'share_sent')
         return onClose()
       }
       if (navigator.share) {
         await navigator.share({ text, url })
+        trackFeature('era', 'complete', 'share_sent')
         return onClose()
       }
       await copy()

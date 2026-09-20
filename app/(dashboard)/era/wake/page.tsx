@@ -7,6 +7,7 @@ import { AlarmClock, Loader2, Play, Square, X } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { WakeCallSheet, type WakeCallSettings } from '@/components/home/WakeCallSheet'
 import { clockLabel } from '@/lib/era/wake'
+import { trackFeature } from '@/lib/analytics/track'
 
 /**
  * /era/wake — where the wake-up call notification lands.
@@ -45,6 +46,9 @@ export default function WakeCallPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const requested = useRef(false)
+
+  // A wake-up call that gets opened is the only proof the push worked.
+  useEffect(() => { trackFeature('era', 'open', 'wake_call') }, [])
 
   useEffect(() => {
     fetch('/api/era/wake', { cache: 'no-store' })

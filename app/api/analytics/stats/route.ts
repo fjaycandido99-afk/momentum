@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { loadEraFunnel, loadThoughtSignals, loadWakeUsage } from '@/lib/analytics/product-insight-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -156,9 +157,21 @@ export async function GET(request: NextRequest) {
       })),
     }
 
+    // ──────────────── The era loop, and what people tapped ────────────────
+    // Counted from rows where rows exist, so these are right for eras that
+    // predate any tracking. Nothing here reads what anyone wrote.
+    const [era, thoughts, wake] = await Promise.all([
+      loadEraFunnel(since),
+      loadThoughtSignals(since),
+      loadWakeUsage(since),
+    ])
+
     return NextResponse.json({
       period,
       days,
+      era,
+      thoughts,
+      wake,
       totalEvents,
       totalUsers: Number(totalUsersResult[0]?.count ?? 0),
       featureRanking: featureRanking.map(r => ({

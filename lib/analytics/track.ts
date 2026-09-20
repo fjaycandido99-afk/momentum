@@ -19,6 +19,11 @@ export type FeatureName =
   | 'morning_briefing'
   | 'letter_to_self'
   | 'wellness_score'
+  // The era loop. Most of it is countable from rows (Era, EraPromise,
+  // EraReferral), so only the steps that leave no row behind are tracked:
+  // metadata says which — 'picker', 'share_opened', 'share_sent',
+  // 'join_page', 'wake_call'.
+  | 'era'
 
 // enable/disable exist so opt-OUT is measurable, not just adoption. Two new
 // daily pushes shipped with no way to see who turned them off.

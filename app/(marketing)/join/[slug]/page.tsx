@@ -5,6 +5,7 @@ import { ERA_PRESETS_BY_KEY, DEFAULT_ERA_LENGTH_DAYS, eraName } from '@/lib/era/
 import { programFor } from '@/lib/era/programs'
 import { ERA_MISSIONS } from '@/lib/era/missions'
 import { eraKeyFromSlug, eraSlug } from '@/lib/era/share'
+import { JoinTracker } from '@/components/era/JoinTracker'
 
 /**
  * /join/<era> — where a shared era card sends people.
@@ -51,6 +52,7 @@ export default function JoinEraPage({
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <JoinTracker />
       {/* Hero — the era's art with its name set over the foot. */}
       <div className="relative w-full aspect-[4/5] max-h-[64vh] overflow-hidden">
         {program.image && (

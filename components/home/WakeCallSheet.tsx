@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { AlarmClock, Loader2, Play, X } from 'lucide-react'
 import { eraName } from '@/lib/era/presets'
 import { isNativeApp, isPushSupported, subscribeToPush } from '@/lib/push-notifications'
+import { trackFeature } from '@/lib/analytics/track'
 
 export interface WakeCallSettings {
   enabled: boolean
@@ -74,6 +75,8 @@ export function WakeCallSheet({
         return
       }
       onSaved(data.settings)
+      // Turning it OFF is the signal worth having, so both are tracked.
+      trackFeature('era', enabled ? 'enable' : 'disable', 'wake_call')
       if (!enabled) return onClose()
 
       const push = await ensurePush()

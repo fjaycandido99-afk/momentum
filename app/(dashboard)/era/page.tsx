@@ -10,6 +10,7 @@ import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBan
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { programFor } from '@/lib/era/programs'
 import { alignmentLine } from '@/lib/era/alignment'
+import { trackFeature } from '@/lib/analytics/track'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -144,6 +145,9 @@ function Picker({
 }) {
   const [key, setKey] = useState<string | null>(initialKey ?? null)
   useEffect(() => { if (initialKey) setKey(initialKey) }, [initialKey])
+  // Seeing the picker leaves no row behind, and "looked but didn't start" is
+  // the one drop-off the funnel can't infer from the database.
+  useEffect(() => { trackFeature('era', 'open', 'picker') }, [])
   const [title, setTitle] = useState('')
   const [change, setChange] = useState('')
   const [why, setWhy] = useState('')

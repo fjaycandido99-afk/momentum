@@ -4,9 +4,50 @@ import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Loader2, BarChart3, Users, Activity, TrendingUp } from 'lucide-react'
 
+interface FunnelRow {
+  key: string
+  label: string
+  value: number
+  note?: string
+  events?: boolean
+  ofTop: number | null
+  ofPrev: number | null
+  anomaly: boolean
+}
+
+interface EraStats {
+  steps: FunnelRow[]
+  byEra: { key: string; starts: number; promises: number; kept: number; answered: number; keptPercent: number | null; promisesPerEra: number | null }[]
+  promises: { made: number; answered: number; kept: number; keptPercent: number | null }
+  stuck: { startedNeverPromised: number; aliveNow: number; erasStarted: number }
+}
+
+interface ThoughtStats {
+  read: {
+    answers: number
+    people: number
+    byAxis: { axis: string; answers: number; people: number; lean: number }[]
+    signatures: { signature: string; people: number }[]
+  }
+  journal: {
+    days: number
+    people: number
+    mood: { value: string; count: number }[]
+    tags: { tag: string; count: number }[]
+    prompts: { prompt: string; count: number }[]
+  }
+  guide: {
+    moodMoved: { better: number; same: number; worse: number }
+    energy: { value: string; count: number }[]
+  }
+}
+
 interface StatsData {
   period: string
   days: number
+  era: EraStats
+  thoughts: ThoughtStats
+  wake: { callsSet: number; callsSent: number; callsOpened: number }
   totalEvents: number
   totalUsers: number
   featureRanking: { feature: string; count: number }[]
@@ -132,6 +173,169 @@ function DevAnalyticsContent() {
                 </div>
                 <p className="text-2xl font-bold">{data.totalUsers.toLocaleString()}</p>
               </div>
+            </div>
+
+            {/* The era loop, counted from rows (Era / EraPromise / EraReferral)
+                where rows exist, so it's right for eras that started before
+                any tracking. Steps marked "counts visits" come from events. */}
+            <div className="bg-white/5 rounded-xl p-4 space-y-3">
+              <h2 className="text-sm font-semibold text-white/70">Era funnel ({period})</h2>
+              <div className="space-y-2">
+                {data.era.steps.map(s => {
+                  const top = data.era.steps[0]?.value || 0
+                  const width = top > 0 ? Math.min(100, (s.value / top) * 100) : 0
+                  return (
+                    <div key={s.key} className="space-y-1">
+                      <div className="flex justify-between items-baseline text-sm gap-3">
+                        <span className="truncate">
+                          {s.label}
+                          {s.note && <span className="text-white/35 text-xs"> · {s.note}</span>}
+                        </span>
+                        <span className="text-white/50 shrink-0 tabular-nums">
+                          {s.value.toLocaleString()}
+                          {s.ofPrev !== null && (
+                            <span className={`ml-2 text-xs ${s.anomaly ? 'text-amber-400/80' : 'text-white/30'}`}>
+                              {s.anomaly ? '↑' : ''}{s.ofPrev}%
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${s.events ? 'bg-white/25' : 'bg-emerald-500/60'}`} style={{ width: `${width}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                {[
+                  { label: 'Promises kept', n: data.era.promises.keptPercent === null ? '—' : `${data.era.promises.keptPercent}%`, sub: `${data.era.promises.kept}/${data.era.promises.answered} answered` },
+                  { label: 'Alive now', n: data.era.stuck.aliveNow, sub: 'promised in 2 days' },
+                  { label: 'Started, never promised', n: data.era.stuck.startedNeverPromised, sub: `of ${data.era.stuck.erasStarted} eras` },
+                ].map(c => (
+                  <div key={c.label} className="bg-white/[0.03] rounded-lg p-3 text-center">
+                    <div className="text-xl font-bold">{c.n}</div>
+                    <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1 leading-tight">{c.label}</div>
+                    <div className="text-[10px] text-white/30 mt-0.5">{c.sub}</div>
+                  </div>
+                ))}
+              </div>
+              {data.era.byEra.length > 0 && (
+                <div className="pt-2 space-y-1">
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Which era, and whether they keep it</p>
+                  {data.era.byEra.map(e => (
+                    <div key={e.key} className="flex justify-between text-xs text-white/70">
+                      <span>{formatFeature(e.key)}</span>
+                      <span className="text-white/45 tabular-nums">
+                        {e.starts} started · {e.promisesPerEra ?? '—'}/era · {e.keptPercent === null ? 'no answers' : `${e.keptPercent}% kept`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex justify-between text-xs text-white/45 pt-2 border-t border-white/5">
+                <span>Wake-up calls</span>
+                <span className="tabular-nums">{data.wake.callsSet} set · {data.wake.callsSent} sent · {data.wake.callsOpened} opened</span>
+              </div>
+            </div>
+
+            {/* What people tapped — Daily Read answers, moods and their own
+                tags. Nothing here is text anyone wrote: the privacy policy
+                says the journal is read only to write one reply. */}
+            <div className="bg-white/5 rounded-xl p-4 space-y-4">
+              <div>
+                <h2 className="text-sm font-semibold text-white/70">What people think ({period})</h2>
+                <p className="text-[10px] text-white/35 mt-0.5">From what they tapped — answers, moods, tags. Never what they wrote.</p>
+              </div>
+
+              <div>
+                <p className="text-[10px] text-white/40 uppercase tracking-wider">
+                  Daily Read · {data.thoughts.read.answers} answers from {data.thoughts.read.people}
+                </p>
+                <div className="mt-2 space-y-2">
+                  {data.thoughts.read.byAxis.map(a => (
+                    <div key={a.axis} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span>{formatFeature(a.axis)}</span>
+                        <span className="text-white/45 tabular-nums">{a.lean > 0 ? '+' : ''}{a.lean} · {a.answers} answers</span>
+                      </div>
+                      {/* −2…+2 around a centre line: which way the group leans. */}
+                      <div className="relative h-2 bg-white/5 rounded-full">
+                        <div className="absolute inset-y-0 left-1/2 w-px bg-white/20" />
+                        <div
+                          className={`absolute inset-y-0 rounded-full ${a.lean >= 0 ? 'bg-emerald-500/60' : 'bg-amber-500/60'}`}
+                          style={
+                            a.lean >= 0
+                              ? { left: '50%', width: `${Math.min(50, (a.lean / 2) * 50)}%` }
+                              : { right: '50%', width: `${Math.min(50, (Math.abs(a.lean) / 2) * 50)}%` }
+                          }
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {data.thoughts.read.byAxis.length === 0 && <p className="text-xs text-white/30">No answers yet.</p>}
+                </div>
+                {data.thoughts.read.signatures.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    <p className="text-[10px] text-white/40 uppercase tracking-wider">Signatures (5+ answers behind them)</p>
+                    {data.thoughts.read.signatures.map(s => (
+                      <div key={s.signature} className="flex justify-between text-xs text-white/70">
+                        <span className="truncate">{s.signature}</span>
+                        <span className="text-white/45">{s.people}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <p className="text-[10px] text-white/40 uppercase tracking-wider">
+                  Journal mood · {data.thoughts.journal.days} days from {data.thoughts.journal.people}
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {data.thoughts.journal.mood.map(m => (
+                    <span key={m.value} className="text-xs bg-white/[0.06] rounded-full px-2.5 py-1">
+                      {m.value} <span className="text-white/45">{m.count}</span>
+                    </span>
+                  ))}
+                  {data.thoughts.journal.mood.length === 0 && <span className="text-xs text-white/30">No moods yet.</span>}
+                </div>
+                <p className="text-xs text-white/45 mt-2">
+                  Guide days where mood moved: <span className="text-emerald-400/80">{data.thoughts.guide.moodMoved.better} better</span>
+                  {' · '}{data.thoughts.guide.moodMoved.same} same
+                  {' · '}<span className="text-amber-400/80">{data.thoughts.guide.moodMoved.worse} worse</span>
+                </p>
+              </div>
+
+              {(data.thoughts.journal.tags.length > 0 || data.thoughts.journal.prompts.length > 0) && (
+                <div className="grid grid-cols-1 gap-3">
+                  {data.thoughts.journal.tags.length > 0 && (
+                    <div>
+                      <p className="text-[10px] text-white/40 uppercase tracking-wider">Tags they chose</p>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {data.thoughts.journal.tags.map(t => (
+                          <span key={t.tag} className="text-xs bg-white/[0.06] rounded-full px-2.5 py-1">
+                            {t.tag} <span className="text-white/45">{t.count}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {data.thoughts.journal.prompts.length > 0 && (
+                    <div>
+                      <p className="text-[10px] text-white/40 uppercase tracking-wider">Prompts they answered</p>
+                      <div className="mt-1.5 space-y-1">
+                        {data.thoughts.journal.prompts.map(p => (
+                          <div key={p.prompt} className="flex justify-between gap-3 text-xs text-white/70">
+                            <span className="truncate">{p.prompt}</span>
+                            <span className="text-white/45 shrink-0">{p.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Activation Funnel — of users active in this period, how many hit each milestone */}

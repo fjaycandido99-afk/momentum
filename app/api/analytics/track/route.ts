@@ -11,9 +11,16 @@ const VALID_FEATURES = new Set<FeatureName>([
   'journal', 'coach', 'daily_guide', 'saved_content', 'settings',
   'dream_interpretation', 'smart_session',
   'morning_briefing', 'letter_to_self', 'wellness_score',
+  'era',
 ])
 
-const VALID_ACTIONS = new Set<FeatureAction>(['open', 'use', 'complete'])
+// 'enable' and 'disable' were missing here while trackFeature offered them,
+// so every opt-out event ever sent (reminder toggles, and now wake-up calls)
+// was silently dropped at the door — the one thing they existed to measure.
+const VALID_ACTIONS = new Set<FeatureAction>(['open', 'use', 'complete', 'enable', 'disable'])
+
+/** Metadata is a short label from the client, never free text to store whole. */
+const METADATA_MAX = 64
 
 interface IncomingEvent {
   feature: string
@@ -49,7 +56,7 @@ export async function POST(request: NextRequest) {
           user_id: userId,
           feature: e.feature,
           action: e.action,
-          metadata: e.metadata || null,
+          metadata: typeof e.metadata === 'string' && e.metadata ? e.metadata.slice(0, METADATA_MAX) : null,
         })),
       })
     }
