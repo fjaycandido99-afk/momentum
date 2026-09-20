@@ -3,9 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind, MessageCircle } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
-import { CoachAvatar } from '@/components/coach/CoachAvatar'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { useHomeAudio } from '@/contexts/HomeAudioContext'
@@ -1646,19 +1645,23 @@ export function ImmersiveHome() {
       {/* Daily Spark */}
       {!showMorningFlow && <DailySpark />}
 
-      {/* Floating AI Coach Button + Greeting Bubble.
-          Was 80x80 — an enormous footprint for a floating button, and
-          because it is fixed while the page scrolls it parked itself on
-          top of the horizontal content rows. On the Soundscapes row it
-          covered the Ocean tile outright, so tapping Ocean opened the
-          coach. 56px is the standard size, still well past the 44px touch
-          minimum, and it frees roughly half the area it was stealing.
-          The rows also carry trailing padding now so a tile can always be
-          scrolled out from under it. */}
+      {/* Floating way into the coach chat, and its greeting.
+          The cartoon robot avatar is gone: the coach is a voice with a
+          mindset, not a machine with eyes, and a toy face undercut that
+          everywhere it appeared. This is the only entry point to the chat
+          from home, so the button stays — 56px (past the 44px touch
+          minimum), fixed right, and the content rows carry trailing
+          padding so a tile can always be scrolled out from under it. */}
       <div className="fixed right-5 bottom-28 z-30 flex items-center gap-2">
         <CoachGreetingBubble mindsetId={mindsetCtx?.mindset} onVisibleChange={setIsCoachNudging} />
-        <Link href="/journal?mode=chat" aria-label="Talk to your coach" className="transition-all press-scale">
-          <CoachAvatar mindsetId={mindsetCtx?.mindset} size="lg" nudging={isCoachNudging} plain className="!w-14 !h-14" />
+        <Link
+          href="/journal?mode=chat"
+          aria-label="Talk to your coach"
+          className={`w-14 h-14 rounded-full border border-white/20 bg-black/70 backdrop-blur-md flex items-center justify-center press-scale transition-all ${
+            isCoachNudging ? 'ring-2 ring-white/30' : ''
+          }`}
+        >
+          <MessageCircle className="w-5 h-5 text-white/85" />
         </Link>
       </div>
 

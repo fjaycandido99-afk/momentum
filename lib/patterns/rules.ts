@@ -23,7 +23,14 @@
  * treats anything.
  */
 
-export const PATTERN_RULES_VERSION = 1
+import { fisherExactTwoTailed, holmSurvivors } from './significance'
+
+/**
+ * Bumped when the rules change in a way that would make two reports
+ * incomparable. v2: differences must now survive Fisher's exact and a Holm
+ * correction before they read as solid (lib/patterns/significance.ts).
+ */
+export const PATTERN_RULES_VERSION = 2
 
 export type MoodLevel = 'awful' | 'low' | 'okay' | 'good' | 'great'
 export type GuideMood = 'low' | 'medium' | 'high'
@@ -140,9 +147,28 @@ export interface Pattern {
   groups: PatternGroup[]
   /** Points between the two groups — what the list is ordered by. */
   gap: number
-  /** 'thin' while a group is still small: shown, but labelled as early. */
-  strength: 'solid' | 'thin'
+  /**
+   * 'solid'  the difference survived Fisher's exact + Holm across every
+   *          comparison in this report, and both sides have real numbers.
+   *          Only these are quoted by the coach or acted on.
+   * 'early'  their own record, but chance is still a live explanation.
+   *          Shown with its counts, labelled, never acted on.
+   */
+  strength: 'solid' | 'early'
+  /**
+   * Fisher's exact two-tailed p, or null for a pattern that is a count
+   * rather than a comparison (the blocker and helper tallies, guide days).
+   */
+  p: number | null
 }
+
+/**
+ * A pattern before it has been tested. Each rule decides whether the SAMPLE
+ * is big enough; whether the DIFFERENCE is more than chance is decided once,
+ * for all of them together, in findPatterns — because that question can only
+ * be answered knowing how many comparisons were made.
+ */
+export type RawPattern = Omit<Pattern, 'p'>
 
 export interface PatternReport {
   patterns: Pattern[]
@@ -195,8 +221,8 @@ function compare(
   return { best, worst, gap }
 }
 
-const strengthOf = (...groups: PatternGroup[]): 'solid' | 'thin' =>
-  groups.every(g => g.of >= SOLID_PER_GROUP) ? 'solid' : 'thin'
+const strengthOf = (...groups: PatternGroup[]): 'solid' | 'early' =>
+  groups.every(g => g.of >= SOLID_PER_GROUP) ? 'solid' : 'early'
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -209,7 +235,7 @@ const HOUR_BUCKETS: { label: string; test: (h: number) => boolean }[] = [
 
 // ─── Rules ───────────────────────────────────────────────────────────────────
 
-function timingPattern(answered: PromiseRecord[]): Pattern | null {
+function timingPattern(answered: PromiseRecord[]): RawPattern | null {
   const groups = HOUR_BUCKETS.map(b => keptGroup(b.label, answered.filter(p => b.test(p.hour))))
   const c = compare(groups, MIN_PER_GROUP, MIN_GAP_POINTS)
   if (!c) return null
@@ -224,7 +250,7 @@ function timingPattern(answered: PromiseRecord[]): Pattern | null {
   }
 }
 
-function weekdayPattern(answered: PromiseRecord[]): Pattern | null {
+function weekdayPattern(answered: PromiseRecord[]): RawPattern | null {
   const groups = WEEKDAYS.map((name, i) => keptGroup(name, answered.filter(p => p.weekday === i)))
   const c = compare(groups, MIN_PER_WEEKDAY, MIN_GAP_POINTS_WEEKDAY)
   if (!c) return null
@@ -235,11 +261,11 @@ function weekdayPattern(answered: PromiseRecord[]): Pattern | null {
     detail: `${c.worst.hits} of ${c.worst.of} on ${c.worst.label}, ${c.best.hits} of ${c.best.of} on ${c.best.label}.`,
     groups: [c.worst, c.best],
     gap: c.gap,
-    strength: [c.best, c.worst].every(g => g.of >= SOLID_PER_WEEKDAY) ? 'solid' : 'thin',
+    strength: [c.best, c.worst].every(g => g.of >= SOLID_PER_WEEKDAY) ? 'solid' : 'early',
   }
 }
 
-function followThroughPattern(answered: PromiseRecord[]): Pattern | null {
+function followThroughPattern(answered: PromiseRecord[]): RawPattern | null {
   const sameDay = keptGroup('when you answer the same day', answered.filter(p => p.answeredSameDay === true))
   const later = keptGroup('when you answer later', answered.filter(p => p.answeredSameDay === false))
   const c = compare([sameDay, later], MIN_PER_GROUP, MIN_GAP_POINTS)
@@ -256,7 +282,7 @@ function followThroughPattern(answered: PromiseRecord[]): Pattern | null {
 }
 
 /** Short promises vs long ones — the size they wrote, not what it said. */
-function sizePattern(answered: PromiseRecord[]): Pattern | null {
+function sizePattern(answered: PromiseRecord[]): RawPattern | null {
   const short = keptGroup('short promises', answered.filter(p => p.length <= 40))
   const long = keptGroup('longer ones', answered.filter(p => p.length > 40))
   const c = compare([short, long], MIN_PER_GROUP, MIN_GAP_POINTS)
@@ -272,7 +298,7 @@ function sizePattern(answered: PromiseRecord[]): Pattern | null {
   }
 }
 
-function voicePattern(answered: PromiseRecord[]): Pattern | null {
+function voicePattern(answered: PromiseRecord[]): RawPattern | null {
   const spoken = keptGroup('spoken out loud', answered.filter(p => p.source === 'spoken'))
   const typed = keptGroup('typed', answered.filter(p => p.source === 'typed'))
   const c = compare([spoken, typed], MIN_PER_GROUP, MIN_GAP_POINTS)
@@ -293,7 +319,7 @@ function voicePattern(answered: PromiseRecord[]): Pattern | null {
  * day after a broken one. Only consecutive days count — a gap is not a
  * "day after".
  */
-function momentumPattern(answered: PromiseRecord[]): Pattern | null {
+function momentumPattern(answered: PromiseRecord[]): RawPattern | null {
   const byDay = new Map(answered.map(p => [p.day, p]))
   const afterKept: PromiseRecord[] = []
   const afterMissed: PromiseRecord[] = []
@@ -331,7 +357,7 @@ function previousDay(day: string): string {
  * cause — a good day makes a promise easier to keep just as much as the
  * reverse, and this data cannot tell the two apart.
  */
-function moodPattern(answered: PromiseRecord[], moods: MoodDay[]): Pattern | null {
+function moodPattern(answered: PromiseRecord[], moods: MoodDay[]): RawPattern | null {
   const moodByDay = new Map(moods.map(m => [m.day, m.mood]))
   const kept: MoodLevel[] = []
   const missed: MoodLevel[] = []
@@ -366,7 +392,7 @@ function moodPattern(answered: PromiseRecord[], moods: MoodDay[]): Pattern | nul
  * only delivers when they already felt sure knows something about how to
  * set tomorrow's promise.
  */
-function confidencePattern(answered: PromiseRecord[]): Pattern | null {
+function confidencePattern(answered: PromiseRecord[]): RawPattern | null {
   const sure = keptGroup('when you felt sure', answered.filter(p => p.confidence !== null && p.confidence >= 4))
   const unsure = keptGroup("when you weren't", answered.filter(p => p.confidence !== null && p.confidence <= 3))
   const c = compare([sure, unsure], MIN_PER_GROUP, MIN_GAP_POINTS)
@@ -396,7 +422,7 @@ function reasonPattern(
   answered: PromiseRecord[],
   which: 'blocker' | 'helper',
   label: (key: string) => string,
-): Pattern | null {
+): RawPattern | null {
   const tagged = answered
     .filter(p => (which === 'blocker' ? p.kept === false : p.kept === true))
     .map(p => (which === 'blocker' ? p.blocker : p.helper))
@@ -421,7 +447,7 @@ function reasonPattern(
       : 'Worth doing on purpose instead of by accident.',
     groups: [g],
     gap: 0,
-    strength: tagged.length >= SOLID_PER_GROUP ? 'solid' : 'thin',
+    strength: tagged.length >= SOLID_PER_GROUP ? 'solid' : 'early',
   }
 }
 
@@ -439,7 +465,7 @@ function wellnessPattern(
   wellness: WellnessDay[],
   scale: 'energy' | 'stress' | 'rested',
   wording: { high: string; low: string; note: string },
-): Pattern | null {
+): RawPattern | null {
   const byDay = new Map(wellness.map(w => [w.day, w[scale]]))
   const high: PromiseRecord[] = []
   const low: PromiseRecord[] = []
@@ -465,7 +491,7 @@ function wellnessPattern(
 }
 
 /** Did the guide day end higher than it started? One group, so no comparison. */
-function guidePattern(guideMoods: GuideMoodDay[]): Pattern | null {
+function guidePattern(guideMoods: GuideMoodDay[]): RawPattern | null {
   const rank: Record<GuideMood, number> = { low: 1, medium: 2, high: 3 }
   const moved = guideMoods.filter(d => rank[d.before] && rank[d.after])
   if (moved.length < MIN_PER_GROUP) return null
@@ -479,7 +505,7 @@ function guidePattern(guideMoods: GuideMoodDay[]): Pattern | null {
     groups: [g],
     // No second group to compare, so it sorts below real comparisons.
     gap: 0,
-    strength: moved.length >= SOLID_PER_GROUP ? 'solid' : 'thin',
+    strength: moved.length >= SOLID_PER_GROUP ? 'solid' : 'early',
   }
 }
 
@@ -492,11 +518,11 @@ export function findPatterns(input: PatternInput): PatternReport {
   )
   const moodDays = input.moods.filter(m => moodDaysWithPromise.has(m.day)).length
 
-  const patterns: Pattern[] = []
+  const raw: RawPattern[] = []
   // Below the bar, the engine stays quiet rather than guessing from a handful
   // of days. The guide pattern stands on its own data, so it isn't gated here.
   if (answered.length >= MIN_ANSWERED_TOTAL) {
-    patterns.push(
+    raw.push(
       ...[
         timingPattern(answered),
         weekdayPattern(answered),
@@ -520,15 +546,35 @@ export function findPatterns(input: PatternInput): PatternReport {
           high: 'rested days', low: 'days you woke up tired',
           note: 'The night before shows up in the next day’s promise.',
         }),
-      ].filter((p): p is Pattern => p !== null),
+      ].filter((x): x is RawPattern => x !== null),
     )
   }
   const guide = guidePattern(input.guideMoods)
-  if (guide) patterns.push(guide)
+  if (guide) raw.push(guide)
 
-  // Biggest difference first; solid before thin at equal size; id last so the
+  // Now the one question that can only be answered for all of them at once:
+  // is each difference more than chance, given how many were tested?
+  //
+  // A pattern that fails is still shown — it is their own record — but it is
+  // labelled early, and coachPatternLine/weakDayLine only ever take a solid
+  // one, so nothing the app SAYS or DOES rests on a coin flip.
+  const pValues = raw.map(r =>
+    r.groups.length === 2
+      ? fisherExactTwoTailed(r.groups[0].hits, r.groups[0].of, r.groups[1].hits, r.groups[1].of)
+      : null)
+  const tested = pValues.filter((p): p is number => p !== null)
+  const survived = holmSurvivors(tested)
+  let testedIndex = 0
+  const patterns: Pattern[] = raw.map((r, i) => {
+    const p = pValues[i]
+    if (p === null) return { ...r, p: null } // a count, not a comparison
+    const passed = survived[testedIndex++]
+    return { ...r, p, strength: passed && r.strength === 'solid' ? 'solid' : 'early' }
+  })
+
+  // Biggest difference first; solid before early at equal size; id last so the
   // same history always produces the same order.
-  const rank = { solid: 0, thin: 1 }
+  const rank = { solid: 0, early: 1 }
   patterns.sort((a, b) =>
     b.gap - a.gap || rank[a.strength] - rank[b.strength] || a.id.localeCompare(b.id))
 

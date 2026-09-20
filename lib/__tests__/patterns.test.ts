@@ -81,13 +81,27 @@ describe('findPatterns — what it says when the evidence is there', () => {
     expect(timing.detail).toBe('9 of 10 against 4 of 10.')
     expect(timing.groups.map(g => `${g.label}:${g.hits}/${g.of}`)).toEqual(['before 8am:9/10', 'in the afternoon:4/10'])
     expect(timing.gap).toBe(50)
+    // A 50-point gap that LOOKS decisive: 9 of 10 against 4 of 10 is only
+    // p ≈ 0.057 on its own, and several patterns were tested. Shown, with
+    // its counts, but labelled early rather than established.
+    expect(timing.strength).toBe('early')
+    expect(timing.p).toBeGreaterThan(0.05)
+  })
+
+  it('becomes solid once the days are actually there', () => {
+    const many = [
+      ...Array.from({ length: 20 }, (_, i) => promise({ day: day(i), hour: 6, kept: i > 1 })),
+      ...Array.from({ length: 20 }, (_, i) => promise({ day: day(30 + i), hour: 14, kept: i < 8 })),
+    ]
+    const timing = findPatterns(input({ promises: many })).patterns.find(p => p.kind === 'timing')!
     expect(timing.strength).toBe('solid')
+    expect(timing.p).toBeLessThan(0.01)
   })
 
   it('carries the disclaimer and the basis every time', () => {
     const report = findPatterns(input({ promises: [...early, ...late] }))
     expect(report.disclaimer).toBe(PATTERN_DISCLAIMER)
-    expect(report.basis).toMatchObject({ answeredPromises: 20, rulesVersion: 1 })
+    expect(report.basis).toMatchObject({ answeredPromises: 20, rulesVersion: 2 })
   })
 
   it('links mood to kept promises as a link, never a cause', () => {
@@ -323,8 +337,21 @@ describe('coachPatternLine', () => {
   const late = Array.from({ length: 10 }, (_, i) => promise({ day: day(20 + i), hour: 14, kept: i < 4 }))
 
   it('hands the coach one solid, promise-relevant line', () => {
-    const line = coachPatternLine(findPatterns(input({ promises: [...early, ...late] })))
-    expect(line).toBe('You keep 90% of the promises you make before 8am — and 40% of the ones you make in the afternoon. (9 of 10 against 4 of 10.)')
+    // Days spaced out so no "day after" pairs exist: this fixture is about
+    // the time of day only, not momentum.
+    const many = [
+      ...Array.from({ length: 20 }, (_, i) => promise({ day: day(i * 3), hour: 6, kept: i > 1 })),
+      ...Array.from({ length: 20 }, (_, i) => promise({ day: day(100 + i * 3), hour: 14, kept: i < 8 })),
+    ]
+    const line = coachPatternLine(findPatterns(input({ promises: many })))
+    expect(line).toBe('You keep 90% of the promises you make before 8am — and 40% of the ones you make in the afternoon. (18 of 20 against 8 of 20.)')
+  })
+
+  it('says nothing to the coach about a difference that could be chance', () => {
+    // The same 90%-vs-40% shape on ten days a side: the app must not act on it.
+    const report = findPatterns(input({ promises: [...early, ...late] }))
+    expect(report.patterns.some(p => p.kind === 'timing')).toBe(true)
+    expect(coachPatternLine(report)).toBeNull()
   })
 
   it('gives the coach nothing when there is nothing solid to say', () => {

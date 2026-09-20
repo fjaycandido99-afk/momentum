@@ -83,8 +83,12 @@ export function RecordPatterns() {
                     </div>
                   ))}
                 </div>
-                {p.strength === 'thin' && (
-                  <p className="text-[10px] text-white/35 mt-2">Early — few days behind this one so far.</p>
+                {/* Honest about what hasn't been established yet: the numbers
+                    are real, the pattern might still be chance. */}
+                {p.strength === 'early' && (
+                  <p className="text-[10px] text-white/35 mt-2">
+                    Early — real numbers, but not yet more than chance could explain.
+                  </p>
                 )}
               </li>
             ))}

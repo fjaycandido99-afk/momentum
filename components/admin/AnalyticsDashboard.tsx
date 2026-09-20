@@ -153,6 +153,25 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
           <h1 className="text-xl font-bold flex items-center gap-2">
             <BarChart3 className="w-5 h-5" /> Feature Analytics
           </h1>
+          {/* Take the numbers with you: what's on screen, as JSON, for a
+              spreadsheet or a diff against last week. Built from the data
+              already loaded, so it costs no extra query. */}
+          {data && (
+            <button
+              onClick={() => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `voxu-stats-${period}-${new Date().toISOString().slice(0, 10)}.json`
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
+              className="text-xs text-white/55 hover:text-white/85 underline underline-offset-2"
+            >
+              Download JSON
+            </button>
+          )}
           <div className="flex gap-1 bg-white/5 rounded-lg p-0.5">
             {PERIODS.map(p => (
               <button
@@ -189,6 +208,19 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                 <p className="text-2xl font-bold">{data.totalUsers.toLocaleString()}</p>
               </div>
             </div>
+
+            {/* Said once, at the top, when there is nothing to read yet — so a
+                screen of zeros can't be mistaken for a screen of bad news. */}
+            {data.era.stuck.erasStarted === 0 && data.era.promises.made === 0 && (
+              <div className="rounded-xl border border-white/15 bg-white/[0.04] p-4">
+                <p className="text-sm text-white">No eras started in this window.</p>
+                <p className="text-xs text-white/55 mt-1.5 leading-relaxed">
+                  The funnel below is all zeros because nothing has happened yet, not because something is broken.
+                  It fills the moment someone starts an era — the share card and a <span className="text-white/75">voxu.app/join/…</span> link
+                  are what put someone at the top of it.
+                </p>
+              </div>
+            )}
 
             {/* The era loop, counted from rows (Era / EraPromise / EraReferral)
                 where rows exist, so it's right for eras that started before
