@@ -128,6 +128,12 @@ model UserPreferences {
   wake_call_enabled Boolean @default(false)
   wake_call_time    String? // "06:30" format, user-local
 
+  // Appear in the circles of people whose era link you used, or who used
+  // yours (lib/era/circle.ts). On by default, and the join page says what
+  // they'll see — a first name, the era, the day, the streak. Off hides you
+  // from every circle at once.
+  circle_visible Boolean @default(true)
+
   // User Type
   user_type String @default("professional") // "professional" | "student" | "hybrid"
 

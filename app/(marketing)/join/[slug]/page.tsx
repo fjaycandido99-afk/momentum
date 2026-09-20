@@ -88,6 +88,15 @@ export default function JoinEraPage({
         <p className="text-[11px] text-white/40">
           Free to start. The era, your promises and check-ins are free forever.
         </p>
+
+        {/* Said before they join, not after: a shared link puts them in the
+            sharer's circle (lib/era/circle.ts), and this is all it shows. */}
+        {from && (
+          <p className="text-[11px] text-white/40 -mt-4">
+            Joining from a shared link puts you in their circle: they&rsquo;ll see your first name, your era and how
+            far in you are — never what you promise. You can hide yourself any time.
+          </p>
+        )}
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] bg-gradient-to-t from-black from-70% to-transparent pointer-events-none">

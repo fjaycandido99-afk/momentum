@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { awardEraCompletionIfDue, endEra, loadEraToday, startEra } from '@/lib/era/service'
+import { prisma } from '@/lib/prisma'
+import { sendPushToUser } from '@/lib/push-service'
+import { firstName } from '@/lib/era/circle'
+import { eraName } from '@/lib/era/presets'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,6 +47,22 @@ export async function POST(request: NextRequest) {
 
     const result = await startEra(user.id, body)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+
+    // Started from someone's "Join this era" link: tell them, once. Sharing
+    // only keeps happening if the sharer ever hears that it worked. Failing
+    // to notify must never fail the era.
+    if (result.referredBy) {
+      try {
+        const joiner = await prisma.user.findUnique({ where: { id: user.id }, select: { name: true } })
+        const era = await loadEraToday(user.id)
+        await sendPushToUser(result.referredBy, 'era_join', {
+          title: `${firstName(joiner?.name)} joined your era`,
+          body: era ? `They started day 1 of ${eraName(era.title)}.` : 'They started day 1 from your link.',
+        })
+      } catch (err) {
+        console.warn('[era POST] join notice not sent:', err)
+      }
+    }
 
     return NextResponse.json({
       ok: true,

@@ -54,6 +54,9 @@ const LANE: Record<NotificationType, Lane> = {
   era_checkin: 'scheduled',
   // A time they chose to be woken at — quiet hours must not swallow a 6am call.
   era_wake: 'scheduled',
+  // Someone joined their era: a real, rare event about another person, not
+  // content we invented — but it still waits out the night.
+  era_join: 'opportunistic',
 
   // Ours to ration.
   evening_reminder: 'opportunistic',

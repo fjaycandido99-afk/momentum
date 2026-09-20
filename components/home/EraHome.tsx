@@ -18,6 +18,7 @@ import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { ShareEraSheet } from './ShareEraSheet'
 import { WakeCallSheet, type WakeCallSettings } from './WakeCallSheet'
+import { CircleSection } from './CircleSection'
 import { clockLabel } from '@/lib/era/wake'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
 import type { EraToday } from '@/hooks/useEra'
@@ -631,6 +632,10 @@ function ActiveEra({
           <span className="text-xs text-white/75 leading-snug">{alignmentLine(era.alignment)}</span>
         </Link>
       )}
+
+      {/* Your circle: the people who came through the era's link (step 2), and
+          Trending once any era has real numbers behind it. */}
+      <CircleSection onShare={() => setSharing(true)} />
 
       {/* For your era — the wake-up call, and the one soundscape and one voice
           guide this era leans on. */}

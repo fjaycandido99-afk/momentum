@@ -238,7 +238,17 @@ export async function buildEraChatContext(userId: string): Promise<string> {
 // ─── Start / end ─────────────────────────────────────────────────────────────
 
 export type StartEraResult =
-  | { ok: true; crisis: CrisisContent | null; newAchievements: AwardedAchievement[] }
+  | {
+      ok: true
+      crisis: CrisisContent | null
+      newAchievements: AwardedAchievement[]
+      /**
+       * Whose link this era started from, when it's a new credit. The route
+       * tells them someone joined — done there, not here, so this file
+       * doesn't have to import the push service that imports it.
+       */
+      referredBy: string | null
+    }
   | { ok: false; error: string }
 
 export async function startEra(
@@ -283,8 +293,8 @@ export async function startEra(
   // for them.
   const level = detectCrisisLevel(`${change} ${why ?? ''}`)
   const newAchievements = await awardEraXPOnce(userId, 'eraStart', created.id)
-  await recordReferral(userId, created.id, created.era_key, input.ref)
-  return { ok: true, crisis: crisisResourceForLevel(level, detectRegion(tz)), newAchievements }
+  const referredBy = await recordReferral(userId, created.id, created.era_key, input.ref)
+  return { ok: true, crisis: crisisResourceForLevel(level, detectRegion(tz)), newAchievements, referredBy }
 }
 
 /** Ends the active era early. The row and its promises are kept, never deleted. */
@@ -496,12 +506,19 @@ export async function eraReadFocus(userId: string): Promise<AxisId | null> {
  * sharing your own link to yourself credits nothing — and at most once per
  * invitee per shared era. Never throws: a bad ref must not stop anyone
  * starting their era.
+ *
+ * Returns the inviter's user id the FIRST time a link is credited, so they
+ * can be told someone joined — and null on a repeat, so they're told once.
  */
-async function recordReferral(userId: string, inviteeEraId: string, eraKey: string, ref: unknown): Promise<void> {
-  if (typeof ref !== 'string' || !ref || ref.length > 64) return
+async function recordReferral(userId: string, inviteeEraId: string, eraKey: string, ref: unknown): Promise<string | null> {
+  if (typeof ref !== 'string' || !ref || ref.length > 64) return null
   try {
     const inviter = await prisma.era.findUnique({ where: { id: ref }, select: { id: true, user_id: true } })
-    if (!inviter || inviter.user_id === userId) return
+    if (!inviter || inviter.user_id === userId) return null
+    const already = await prisma.eraReferral.findUnique({
+      where: { invitee_user_id_inviter_era_id: { invitee_user_id: userId, inviter_era_id: inviter.id } },
+      select: { id: true },
+    })
     await prisma.eraReferral.upsert({
       where: { invitee_user_id_inviter_era_id: { invitee_user_id: userId, inviter_era_id: inviter.id } },
       create: {
@@ -513,7 +530,9 @@ async function recordReferral(userId: string, inviteeEraId: string, eraKey: stri
       },
       update: {},
     })
+    return already ? null : inviter.user_id
   } catch (err) {
     console.warn('[era] referral not recorded:', err)
+    return null
   }
 }

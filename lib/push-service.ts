@@ -54,6 +54,7 @@ export type NotificationType =
   | 'daily_read'
   | 'era_checkin'
   | 'era_wake'
+  | 'era_join'
   | 'custom'
 
 // Notification payload structure
@@ -212,6 +213,16 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'open', title: 'Check in' },
     ],
   },
+  era_join: {
+    title: 'Someone joined your era',
+    body: 'They started day 1 from your link.',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
+    tag: 'era-join',
+    actions: [
+      { action: 'open', title: 'See' },
+    ],
+  },
   era_wake: {
     title: 'Get up.',
     body: 'Your coach left you a wake-up call.',
@@ -339,6 +350,7 @@ const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
   daily_read: '/',
   era_checkin: '/',
   era_wake: '/era/wake',
+  era_join: '/',
   motivational_nudge: '/',
   daily_motivation: '/',
   coach_checkin: '/coach',
@@ -385,6 +397,7 @@ export async function sendPushToUser(
     // Listed for the type map only: the wake-up call has its own switch
     // (UserPreferences.wake_call_enabled) and skips this filter below.
     era_wake: 'morning_reminder',
+    era_join: 'motivational_nudge_alerts',
     daily_motivation: 'daily_motivation_alerts',
 coach_checkin: 'coach_checkin_alerts',
     coach_accountability: 'coach_accountability_alerts',
