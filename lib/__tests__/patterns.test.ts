@@ -1,0 +1,175 @@
+import { describe, expect, it } from 'vitest'
+import {
+  coachPatternLine,
+  findPatterns,
+  MAX_PATTERNS,
+  MIN_ANSWERED_TOTAL,
+  PATTERN_DISCLAIMER,
+  type GuideMood,
+  type MoodLevel,
+  type PatternInput,
+  type PromiseRecord,
+} from '../patterns/rules'
+
+/** A day string N days after 2026-09-01, so consecutive runs are easy to build. */
+const day = (i: number) => new Date(Date.UTC(2026, 8, 1 + i)).toISOString().slice(0, 10)
+
+const promise = (over: Partial<PromiseRecord> & { day: string }): PromiseRecord => ({
+  hour: 7,
+  weekday: new Date(`${over.day}T00:00:00Z`).getUTCDay(),
+  kept: true,
+  answeredSameDay: true,
+  source: 'typed',
+  length: 20,
+  ...over,
+})
+
+const input = (over: Partial<PatternInput> = {}): PatternInput => ({
+  promises: [],
+  moods: [],
+  guideMoods: [],
+  ...over,
+})
+
+describe('findPatterns — silence before evidence', () => {
+  it('says nothing at all with a handful of promises', () => {
+    const promises = Array.from({ length: MIN_ANSWERED_TOTAL - 1 }, (_, i) =>
+      promise({ day: day(i), hour: i % 2 ? 6 : 20, kept: i % 2 === 0 }))
+    const report = findPatterns(input({ promises }))
+    expect(report.patterns).toEqual([])
+    expect(report.needs.answeredPromises).toBe(1)
+    expect(report.basis.answeredPromises).toBe(MIN_ANSWERED_TOTAL - 1)
+  })
+
+  it('ignores unanswered promises when counting evidence', () => {
+    const promises = Array.from({ length: 30 }, (_, i) => promise({ day: day(i), kept: null }))
+    const report = findPatterns(input({ promises }))
+    expect(report.basis.answeredPromises).toBe(0)
+    expect(report.needs.answeredPromises).toBe(MIN_ANSWERED_TOTAL)
+    expect(report.patterns).toEqual([])
+  })
+
+  it('needs both sides of a comparison, not just a big total', () => {
+    // 20 answered promises, every one made before 8am: nothing to compare.
+    const promises = Array.from({ length: 20 }, (_, i) => promise({ day: day(i), hour: 6, kept: i % 3 !== 0 }))
+    const report = findPatterns(input({ promises }))
+    expect(report.patterns.find(p => p.kind === 'timing')).toBeUndefined()
+  })
+
+  it('stays quiet when the two sides are close', () => {
+    // 10 early (80% kept) and 10 evening (70% kept): a 10-point gap, under the bar.
+    const early = Array.from({ length: 10 }, (_, i) => promise({ day: day(i), hour: 6, kept: i > 1 }))
+    const late = Array.from({ length: 10 }, (_, i) => promise({ day: day(20 + i), hour: 21, kept: i > 2 }))
+    const report = findPatterns(input({ promises: [...early, ...late] }))
+    expect(report.patterns.find(p => p.kind === 'timing')).toBeUndefined()
+  })
+})
+
+describe('findPatterns — what it says when the evidence is there', () => {
+  const early = Array.from({ length: 10 }, (_, i) => promise({ day: day(i), hour: 6, kept: i > 0 }))
+  const late = Array.from({ length: 10 }, (_, i) => promise({ day: day(20 + i), hour: 14, kept: i < 4 }))
+
+  it('reports both sides with their counts, and no verdict', () => {
+    const report = findPatterns(input({ promises: [...early, ...late] }))
+    const timing = report.patterns.find(p => p.kind === 'timing')!
+    expect(timing.headline).toBe('You keep 90% of the promises you make before 8am — and 40% of the ones you make in the afternoon.')
+    expect(timing.detail).toBe('9 of 10 against 4 of 10.')
+    expect(timing.groups.map(g => `${g.label}:${g.hits}/${g.of}`)).toEqual(['before 8am:9/10', 'in the afternoon:4/10'])
+    expect(timing.gap).toBe(50)
+    expect(timing.strength).toBe('solid')
+  })
+
+  it('carries the disclaimer and the basis every time', () => {
+    const report = findPatterns(input({ promises: [...early, ...late] }))
+    expect(report.disclaimer).toBe(PATTERN_DISCLAIMER)
+    expect(report.basis).toMatchObject({ answeredPromises: 20, rulesVersion: 1 })
+  })
+
+  it('links mood to kept promises as a link, never a cause', () => {
+    const promises = [
+      ...Array.from({ length: 8 }, (_, i) => promise({ day: day(i), kept: true })),
+      ...Array.from({ length: 8 }, (_, i) => promise({ day: day(20 + i), kept: false })),
+    ]
+    const moods: PatternInput['moods'] = [
+      ...Array.from({ length: 8 }, (_, i) => ({ day: day(i), mood: (i < 7 ? 'great' : 'okay') as MoodLevel })),
+      ...Array.from({ length: 8 }, (_, i) => ({ day: day(20 + i), mood: (i < 2 ? 'good' : 'low') as MoodLevel })),
+    ]
+    const mood = findPatterns(input({ promises, moods })).patterns.find(p => p.kind === 'mood')!
+    expect(mood.headline).toBe('You logged a good day 87.5% of the time when you kept your promise, and 25% of the time when you didn\'t.')
+    expect(mood.detail).toContain("That's a link, not a cause")
+  })
+
+  it('only counts consecutive days for momentum', () => {
+    // Kept on even days, missed on odd ones, all consecutive.
+    const promises = Array.from({ length: 24 }, (_, i) => promise({ day: day(i), kept: i % 2 === 0 }))
+    const momentum = findPatterns(input({ promises })).patterns.find(p => p.kind === 'momentum')
+    // After a kept day it's always missed and vice versa — a 100-point gap.
+    expect(momentum?.gap).toBe(100)
+    // A history with gaps between every day has no "day after" at all.
+    const spaced = Array.from({ length: 24 }, (_, i) => promise({ day: day(i * 3), kept: i % 2 === 0 }))
+    expect(findPatterns(input({ promises: spaced })).patterns.find(p => p.kind === 'momentum')).toBeUndefined()
+  })
+
+  it('reports guide days on their own, without promise data', () => {
+    const guideMoods = Array.from({ length: 10 }, (_, i) => ({
+      day: day(i),
+      before: 'low' as GuideMood,
+      after: (i < 7 ? 'high' : 'low') as GuideMood,
+    }))
+    const report = findPatterns(input({ guideMoods }))
+    const guide = report.patterns.find(p => p.kind === 'guide')!
+    expect(guide.headline).toBe('Your mood ended higher than it started on 70% of the days you ran the guide.')
+    expect(guide.groups).toHaveLength(1)
+  })
+
+  it('orders by the size of the difference and caps the list', () => {
+    const promises = [
+      ...Array.from({ length: 10 }, (_, i) => promise({ day: day(i), hour: 6, kept: i > 0, source: 'spoken', length: 10, answeredSameDay: true })),
+      ...Array.from({ length: 10 }, (_, i) => promise({ day: day(20 + i), hour: 14, kept: i < 4, source: 'typed', length: 90, answeredSameDay: false })),
+    ]
+    const report = findPatterns(input({ promises }))
+    expect(report.patterns.length).toBeLessThanOrEqual(MAX_PATTERNS)
+    const gaps = report.patterns.map(p => p.gap)
+    expect([...gaps]).toEqual([...gaps].sort((a, b) => b - a))
+  })
+
+  it('is deterministic for the same history', () => {
+    const promises = [...early, ...late]
+    expect(JSON.stringify(findPatterns(input({ promises })))).toBe(JSON.stringify(findPatterns(input({ promises }))))
+  })
+
+  it('never produces a rate that is not a number', () => {
+    const report = findPatterns(input({ promises: [], moods: [], guideMoods: [] }))
+    expect(report.patterns).toEqual([])
+    for (const p of findPatterns(input({ promises: [...early, ...late] })).patterns) {
+      for (const g of p.groups) expect(Number.isFinite(g.rate)).toBe(true)
+    }
+  })
+})
+
+describe('coachPatternLine', () => {
+  const early = Array.from({ length: 10 }, (_, i) => promise({ day: day(i), hour: 6, kept: i > 0 }))
+  const late = Array.from({ length: 10 }, (_, i) => promise({ day: day(20 + i), hour: 14, kept: i < 4 }))
+
+  it('hands the coach one solid, promise-relevant line', () => {
+    const line = coachPatternLine(findPatterns(input({ promises: [...early, ...late] })))
+    expect(line).toBe('You keep 90% of the promises you make before 8am — and 40% of the ones you make in the afternoon. (9 of 10 against 4 of 10.)')
+  })
+
+  it('gives the coach nothing when there is nothing solid to say', () => {
+    expect(coachPatternLine(findPatterns(input({ promises: [] })))).toBeNull()
+    // A weekday or mood observation is not the coach's business at 6am.
+    const moodOnly = findPatterns(input({
+      promises: [
+        ...Array.from({ length: 8 }, (_, i) => promise({ day: day(i), kept: true })),
+        ...Array.from({ length: 8 }, (_, i) => promise({ day: day(20 + i), kept: false })),
+      ],
+      moods: [
+        ...Array.from({ length: 8 }, (_, i) => ({ day: day(i), mood: 'great' as const })),
+        ...Array.from({ length: 8 }, (_, i) => ({ day: day(20 + i), mood: 'low' as const })),
+      ],
+    }))
+    expect(moodOnly.patterns.some(p => p.kind === 'mood')).toBe(true)
+    expect(coachPatternLine(moodOnly)).toBeNull()
+  })
+})

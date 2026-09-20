@@ -124,6 +124,21 @@ describe('buildWakeCall', () => {
     expect(buildWakeCall(base).script).toBe(buildWakeCall(base).script)
   })
 
+  it('speaks their record when there is one, and drops it before the call runs long', () => {
+    const line = 'You keep 90% of the promises you make before 8am — and 40% in the afternoon.'
+    expect(buildWakeCall({ ...base, patternLine: line }).script).toContain(line)
+    // A long day-one quote plus a pattern: the statistic goes, the promise ask stays.
+    const long = buildWakeCall({
+      ...base,
+      quoteDayOne: true,
+      patternLine: line,
+      era: { ...base.era, why: 'word '.repeat(80), mission: 'word '.repeat(40) },
+    })
+    expect(long.script).not.toContain(line)
+    expect(long.script).toContain('What are you promising yourself today?')
+    expect(long.script.length).toBeLessThanOrEqual(WAKE_SCRIPT_MAX)
+  })
+
   it('leaves the time out when none is set, instead of saying the current one', () => {
     const script = buildWakeCall({ ...base, wakeMinutes: null }).script
     expect(script).not.toContain("It's")

@@ -41,6 +41,13 @@ export interface PromiseReplyInput {
    * callback days it answers today's promise only.
    */
   fullMemory: boolean
+  /**
+   * One computed line about their own record (lib/patterns — e.g. "you keep
+   * 90% of the promises you make before 8am, 9 of 10"). Already carries its
+   * counts, and only ever arrives once a pattern has cleared its thresholds,
+   * so the coach can quote it verbatim without doing arithmetic.
+   */
+  patternLine?: string | null
 }
 
 /** The days the coach should quote their day-1 words back to them. */
@@ -111,6 +118,11 @@ ${input.stageNote}`
       : 'No promises answered yet in this era.',
     input.yesterday === 'kept' ? 'They kept yesterday\'s promise.' : null,
     input.yesterday === 'broken' ? 'They did not keep yesterday\'s promise.' : null,
+    // Quote it or leave it — the numbers in it are already computed, and
+    // re-deriving them is how a model invents a streak.
+    input.patternLine
+      ? `Something their own record shows, with the counts already worked out: ${input.patternLine} Use it only if it fits today's promise, and quote the numbers exactly as given.`
+      : null,
     `Today's promise: "${input.promise}"`,
   ].filter(Boolean).join('\n')
 

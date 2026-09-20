@@ -169,6 +169,12 @@ export interface WakeCallInput {
    * premium, days 1 and 7 on free.
    */
   quoteDayOne: boolean
+  /**
+   * One line about their own record (lib/patterns), already carrying its
+   * counts. First thing dropped if the script would run long: waking someone
+   * up matters more than a statistic.
+   */
+  patternLine?: string | null
 }
 
 export interface WakeCall {
@@ -213,12 +219,16 @@ export function buildWakeCall(input: WakeCallInput): WakeCall {
       : 'What are you promising yourself today?'
 
   const time = input.wakeMinutes === null ? null : `It's ${spokenTime(input.wakeMinutes)}.`
-  const parts = [title, time, where, yesterday, callback, today, voice.closer]
+  const pattern = input.patternLine?.trim() || null
+  const parts = [title, time, where, yesterday, pattern, callback, today, voice.closer]
   let script = parts.filter(Boolean).join(' ')
-  // Never over the cap: the day-one quote is the first thing to go, since the
-  // rest is what the call is for.
+  // Never over the cap, dropping the least important thing first: the
+  // statistic, then the day-one quote. The rest is what the call is for.
+  if (script.length > WAKE_SCRIPT_MAX && pattern) {
+    script = parts.filter(p => p && p !== pattern).join(' ')
+  }
   if (script.length > WAKE_SCRIPT_MAX && callback) {
-    script = parts.filter(p => p && p !== callback).join(' ')
+    script = parts.filter(p => p && p !== callback && p !== pattern).join(' ')
   }
   if (script.length > WAKE_SCRIPT_MAX) script = clip(script, WAKE_SCRIPT_MAX)
 

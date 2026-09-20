@@ -28,9 +28,25 @@ import { programFor } from './programs'
 import { alignmentLine, computeAlignment, type EraAlignment } from './alignment'
 import type { AxisId } from '@/lib/assessment/axes'
 import { ERA_MISSIONS } from './missions'
+import { loadPatterns } from '@/lib/patterns/server'
+import { coachPatternLine } from '@/lib/patterns/rules'
 
 function missionFor(eraKey: string, day: number): string | null {
   return missionForDay(ERA_MISSIONS[eraKey] ?? ERA_MISSIONS.custom, day)
+}
+
+/**
+ * One line about their own record for the coach to quote (lib/patterns), or
+ * null. Never worth failing a promise over: a reply without it is the normal
+ * reply.
+ */
+export async function patternLineFor(userId: string): Promise<string | null> {
+  try {
+    return coachPatternLine(await loadPatterns(userId))
+  } catch (err) {
+    console.warn('[era] pattern line unavailable:', err)
+    return null
+  }
 }
 
 /**
@@ -363,6 +379,7 @@ export async function makePromise(
           stageNote: eraStage(day, era.length_days).coachNote,
           mission: missionFor(era.era_key, day),
           fullMemory: await isPremiumUser(userId).catch(() => false),
+          patternLine: await patternLineFor(userId),
         },
         mindset,
         prefs?.guide_tone ?? null,

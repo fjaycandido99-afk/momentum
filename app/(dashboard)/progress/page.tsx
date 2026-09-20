@@ -17,6 +17,7 @@ import { SocialProofCard } from '@/components/progress/SocialProofCard'
 import { UnlockableRewards } from '@/components/progress/UnlockableRewards'
 import { MoodInsights } from '@/components/progress/MoodInsights'
 import { WellnessScore } from '@/components/progress/WellnessScore'
+import { RecordPatterns } from '@/components/progress/RecordPatterns'
 import { MonthlyRetrospective } from '@/components/progress/MonthlyRetrospective'
 import { MindsetEvolution } from '@/components/progress/MindsetEvolution'
 import { LetterToSelf } from '@/components/progress/LetterToSelf'
@@ -171,6 +172,12 @@ export default function ProgressPage() {
 
           {/* Wellness Score — surfaced early for visibility */}
           <WellnessScore />
+
+          {/* What your record shows — computed from the user's own promise and
+              mood history, with the counts attached. Sits under the wellness
+              score on purpose: that one is the coach's read, this one is the
+              arithmetic. */}
+          <RecordPatterns />
 
           {/* Goals — relocated here from the journal so it's actually findable */}
           <div id="goals" className="scroll-mt-24"><GoalTracker /></div>

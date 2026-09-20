@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { loadEraToday, type EraTodayWire } from './service'
+import { loadEraToday, patternLineFor, type EraTodayWire } from './service'
 import { callbackAllowed } from './coach'
 import { buildWakeCall, callName, parseWakeTime, type WakeCall } from './wake'
 
@@ -66,6 +66,7 @@ export async function loadWakeCall(userId: string): Promise<WakeCallState> {
       why: era.why,
     },
     quoteDayOne: callbackAllowed(era.day, era.lengthDays, yesterday, era.isPremium),
+    patternLine: await patternLineFor(userId),
   })
 
   return {
