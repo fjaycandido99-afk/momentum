@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { currentAdmin } from '@/lib/auth/admin'
 import {
   loadEraFunnel,
   loadMoneySignals,
@@ -11,12 +12,18 @@ import {
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
-  // CRON_SECRET bearer auth
+  // Two doors, both narrow.
+  //
+  //   1. A signed-in admin account (lib/auth/admin.ts) — what /admin uses,
+  //      so no secret ever appears in a URL.
+  //   2. CRON_SECRET, as a bearer header or ?key= — kept because scripts and
+  //      /dev-analytics use it.
   const authHeader = request.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
   const keyParam = request.nextUrl.searchParams.get('key')
+  const hasKey = !!cronSecret && (authHeader === `Bearer ${cronSecret}` || keyParam === cronSecret)
 
-  if (!cronSecret || (authHeader !== `Bearer ${cronSecret}` && keyParam !== cronSecret)) {
+  if (!hasKey && !(await currentAdmin())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
