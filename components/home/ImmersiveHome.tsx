@@ -1102,20 +1102,26 @@ export function ImmersiveHome() {
         onOpen: handlePlayTodaysAudio,
       }
     }
-    // Today's session is done. What follows used to be the era's single
-    // linked guide — the same one every day for thirty days. Alternate with
-    // the era's soundscape by day number so the card moves with the era
-    // instead of repeating itself.
+    // Today's session is done. What followed used to be the era's single
+    // linked guide — the same one every day for thirty days. Alternate by era
+    // day between a motivation video from the era's topic and the guided
+    // audio, and step through the videos so it isn't the same one twice.
+    //
+    // Soundscapes are deliberately not in this rotation.
     if (activeEra && (activeEra.day - 1) % 2 === 1) {
-      const sound = SOUNDSCAPE_ITEMS.find(s => s.id === activeEra.links.soundscapeId)
-      if (sound) {
+      const videos = motivationByTopic[featuredTopic] ?? featuredMotivationVideos
+      if (videos.length > 0) {
+        const index = (activeEra.day - 1) % videos.length
+        const video = videos[index]
         return {
-          title: sound.label,
+          title: video.title,
           subtitle: `For your ${eraName(activeEra.title)}`,
-          durationSec: null,
-          image: activeEra.image ?? null,
+          // Only when it reads as a session length; an hour-long talk would
+          // print "61:00", which tells nobody anything.
+          durationSec: video.duration && video.duration <= 3600 ? video.duration : null,
+          image: video.thumbnail ?? activeEra.image ?? null,
           segmentsDone,
-          onOpen: () => handleSoundscapePlay(sound, !isContentFree('soundscape', sound.id)),
+          onOpen: () => handlePlayMotivation(video, index, featuredTopic),
         }
       }
     }
@@ -1130,7 +1136,11 @@ export function ImmersiveHome() {
       segmentsDone,
       onOpen: () => handleGuidePlay(g.id, g.name, !isContentFree('voiceGuide', g.id)),
     }
-  }, [journalData, todaysAudio, era.era, isContentFree, handlePlayTodaysAudio, handleGuidePlay, handleSoundscapePlay])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    journalData, todaysAudio, era.era, isContentFree, handlePlayTodaysAudio, handleGuidePlay,
+    motivationByTopic, featuredMotivationVideos, featuredTopic,
+  ])
 
   // A session played to the end from Today's Audio counts exactly as it does
   // on the Daily Guide page: segment checked in, XP awarded, and home's
