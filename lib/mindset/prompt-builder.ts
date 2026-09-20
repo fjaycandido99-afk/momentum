@@ -28,12 +28,22 @@ ${config.promptReferences.join(', ')}
  */
 export function buildMindsetSystemPrompt(
   basePrompt: string,
-  mindsetId: MindsetId | null | undefined
+  mindsetId: MindsetId | null | undefined,
+  /**
+   * What to call them (lib/user/display-name.ts). Passed in rather than
+   * looked up here so this stays a pure prompt builder — and left out
+   * entirely when they haven't set a name, so the model can't invent one.
+   */
+  displayName?: string | null,
 ): string {
-  if (!mindsetId) return basePrompt
+  const named = displayName
+    ? `${basePrompt}\n\nTheir name is ${displayName}. Use it where it lands — a greeting, a hard truth, the moment that matters — and not in every sentence. Never guess at any other name.`
+    : basePrompt
+
+  if (!mindsetId) return named
 
   const modifier = getMindsetPromptModifier(mindsetId)
-  if (!modifier) return basePrompt
+  if (!modifier) return named
 
-  return `${basePrompt}\n\n${modifier}`
+  return `${named}\n\n${modifier}`
 }

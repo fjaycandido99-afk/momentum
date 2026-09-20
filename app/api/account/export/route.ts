@@ -39,7 +39,7 @@ export async function GET() {
     ] = await Promise.all([
       prisma.user.findUnique({
         where: { id: user.id },
-        select: { id: true, email: true, name: true, created_at: true },
+        select: { id: true, email: true, name: true, preferred_name: true, created_at: true },
       }),
       prisma.userPreferences.findUnique({ where: { user_id: user.id } }),
       prisma.dailyGuide.findMany({

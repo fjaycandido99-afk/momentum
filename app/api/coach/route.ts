@@ -7,6 +7,7 @@ import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 import { getCoachName } from '@/lib/mindset/configs'
 import { rateLimit } from '@/lib/rate-limit'
+import { getDisplayName } from '@/lib/user/display-name'
 
 export const dynamic = 'force-dynamic'
 
@@ -271,7 +272,7 @@ RULES:
     }
 
     // Inject mindset philosophical framework into system prompt
-    const finalPrompt = buildMindsetSystemPrompt(systemPrompt, mindset)
+    const finalPrompt = buildMindsetSystemPrompt(systemPrompt, mindset, await getDisplayName(user.id))
 
     const chatCompletion = await getGroq().chat.completions.create({
       model: GROQ_MODEL,

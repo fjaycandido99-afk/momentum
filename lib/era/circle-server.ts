@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { localDay } from '@/lib/assessment/service'
 import { computeStats, eraDayNumber } from './logic'
+import { displayNameFrom } from '@/lib/user/display-name'
 import {
   CIRCLE_MAX,
   shapeCircle,
@@ -45,7 +46,10 @@ export async function loadCircle(userId: string): Promise<CircleMember[]> {
   const [people, eras] = await Promise.all([
     prisma.user.findMany({
       where: { id: { in: ids } },
-      select: { id: true, name: true, preferences: { select: { circle_visible: true, timezone: true } } },
+      select: {
+        id: true, name: true, preferred_name: true,
+        preferences: { select: { circle_visible: true, timezone: true } },
+      },
     }),
     prisma.era.findMany({
       where: { user_id: { in: ids }, status: 'active' },
@@ -69,7 +73,9 @@ export async function loadCircle(userId: string): Promise<CircleMember[]> {
     const today = era ? localDay(p.preferences?.timezone ?? null) : ''
     return {
       userId: p.id,
-      name: p.name,
+      // The name they chose to be known by, if they set one — shapeCircle
+      // still reduces a provider name to its first word.
+      name: displayNameFrom(p) ?? p.name,
       direction: link.direction,
       joinedAt: link.joinedAt,
       era: era

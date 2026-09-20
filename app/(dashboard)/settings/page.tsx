@@ -44,6 +44,7 @@ import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { trackFeature } from '@/lib/analytics/track'
+import { PreferredNameField } from '@/components/settings/PreferredNameField'
 
 type UserType = 'professional' | 'student' | 'hybrid'
 type GuideTone = 'calm' | 'direct' | 'neutral'
@@ -888,8 +889,11 @@ function SettingsContent() {
           iconColor="text-white"
           iconBg="bg-white/20"
           title="Account"
-          description="Subscription, sign in/out"
+          description="Your name, subscription, sign in/out"
         >
+          {/* The name the coach and the journal actually use. */}
+          <PreferredNameField />
+
           {/* Subscription */}
           <div>
             <div className="flex items-center justify-between mb-3">

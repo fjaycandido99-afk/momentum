@@ -34,7 +34,11 @@ enum AlertChannel {
 model User {
   id         String   @id @default(cuid())
   email      String   @unique
-  name       String?
+  name       String? // from the auth provider — often a full legal name
+  // What the person wants to be called, set by them (Settings → Account).
+  // This is the name the coach and the journal use; `name` is only a
+  // fallback, and its first word at that.
+  preferred_name String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 

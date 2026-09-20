@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { getDisplayName } from '@/lib/user/display-name'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 import { rateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
@@ -121,7 +122,10 @@ IMPORTANT — this person has just said something that may indicate ${
       : ''
 
     const systemPrompt =
-      applyVoiceTone(buildMindsetSystemPrompt(basePrompt, mindset), prefs?.guide_tone) +
+      applyVoiceTone(
+        buildMindsetSystemPrompt(basePrompt, mindset, await getDisplayName(user.id)),
+        prefs?.guide_tone,
+      ) +
       (memory.block ? `\n\n${memory.block}` : '') +
       (eraBlock ? `\n\n${eraBlock}` : '') +
       crisisPrompt

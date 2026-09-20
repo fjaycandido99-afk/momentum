@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { loadEraToday, patternLineFor, type EraTodayWire } from './service'
 import { callbackAllowed } from './coach'
 import { buildWakeCall, callName, parseWakeTime, type WakeCall } from './wake'
+import { displayNameFrom } from '@/lib/user/display-name'
 
 /**
  * Loads a user's wake-up call: the settings, and today's call built from
@@ -44,7 +45,7 @@ export async function loadWakeCall(userId: string): Promise<WakeCallState> {
       where: { user_id: userId },
       select: { wake_call_enabled: true, wake_call_time: true, timezone: true, mindset: true },
     }),
-    prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { name: true, preferred_name: true } }),
     loadEraToday(userId),
   ])
 
@@ -59,7 +60,8 @@ export async function loadWakeCall(userId: string): Promise<WakeCallState> {
     : era.yesterday.kept ? 'kept' : 'broken'
 
   const call = buildWakeCall({
-    name: callName(user?.name),
+    // The name they chose, if they set one (lib/user/display-name.ts).
+    name: displayNameFrom(user) ?? callName(user?.name),
     mindset: prefs?.mindset ?? null,
     // No time chosen yet (a preview): leave the time out rather than say the
     // current one, which would change the text every minute and miss the
