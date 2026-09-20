@@ -28,6 +28,7 @@ import { programFor } from './programs'
 import { alignmentLine, computeAlignment, type EraAlignment } from './alignment'
 import type { AxisId } from '@/lib/assessment/axes'
 import { ERA_MISSIONS } from './missions'
+import { isBlocker, isHelper, parseConfidence } from './reasons'
 import { loadPatterns } from '@/lib/patterns/server'
 import { coachPatternLine, weakDayLine } from '@/lib/patterns/rules'
 
@@ -128,7 +129,17 @@ export interface EraTodayWire {
   stats: EraStats
   /** True from CHECK_IN_FROM_HOUR local time — the card asks plainly then. */
   checkInOpen: boolean
-  today: { text: string; coachReply: string | null; kept: boolean | null } | null
+  today: {
+    text: string
+    coachReply: string | null
+    kept: boolean | null
+    /** How sure they were before promising, 1–5, or null if not answered. */
+    confidence: number | null
+    /** What got in the way (BLOCKERS key) — only ever set on a miss. */
+    blocker: string | null
+    /** What helped (HELPERS key) — only ever set on a keep. */
+    helper: string | null
+  } | null
   yesterday: { text: string; kept: boolean | null } | null
   promiseHint: string
   /** Where in the 30 days they are, and the card's line for it. */
@@ -173,7 +184,10 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
 
   const promises = await prisma.eraPromise.findMany({
     where: { era_id: era.id },
-    select: { local_day: true, text: true, coach_reply: true, kept: true },
+    select: {
+      local_day: true, text: true, coach_reply: true, kept: true,
+      confidence: true, blocker: true, helper: true,
+    },
     orderBy: { local_day: 'asc' },
   })
 
@@ -216,7 +230,16 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     }),
     stats: computeStats(promises, today),
     checkInOpen: localHour(tz) >= CHECK_IN_FROM_HOUR,
-    today: todayRow ? { text: todayRow.text, coachReply: todayRow.coach_reply, kept: todayRow.kept } : null,
+    today: todayRow
+      ? {
+          text: todayRow.text,
+          coachReply: todayRow.coach_reply,
+          kept: todayRow.kept,
+          confidence: todayRow.confidence,
+          blocker: todayRow.blocker,
+          helper: todayRow.helper,
+        }
+      : null,
     yesterday: yesterdayRow ? { text: yesterdayRow.text, kept: yesterdayRow.kept } : null,
     promiseHint: preset?.promiseHint ?? "I'll do the one thing I keep putting off.",
     stage: { key: stage.key, label: stage.label, line: stage.line },
@@ -342,11 +365,14 @@ export type PromiseResult =
 
 export async function makePromise(
   userId: string,
-  input: { text: unknown; source?: unknown },
+  input: { text: unknown; source?: unknown; confidence?: unknown },
 ): Promise<PromiseResult> {
   const text = clean(input.text, ERA_LIMITS.promise)
   if (!text) return { ok: false, error: 'Say what you promise yourself today', status: 400 }
   const source = input.source === 'spoken' ? 'spoken' : 'typed'
+  // Optional by design: a promise is never held up by it, and a missing
+  // answer stays missing rather than becoming a middling 3.
+  const confidence = parseConfidence(input.confidence)
 
   const era = await getActiveEra(userId)
   if (!era) return { ok: false, error: 'No active era', status: 404 }
@@ -402,8 +428,9 @@ export async function makePromise(
   // check-in that has already been answered.
   const row = await prisma.eraPromise.upsert({
     where: { era_id_local_day: { era_id: era.id, local_day: today } },
-    create: { era_id: era.id, user_id: userId, local_day: today, text, source, coach_reply: coachReply },
-    update: { text, source, coach_reply: coachReply },
+    create: { era_id: era.id, user_id: userId, local_day: today, text, source, coach_reply: coachReply, confidence },
+    // Re-promising with no answer keeps the one already given.
+    update: { text, source, coach_reply: coachReply, ...(confidence !== null && { confidence }) },
     select: { id: true },
   })
 
@@ -414,7 +441,7 @@ export async function makePromise(
 
 export async function checkPromise(
   userId: string,
-  input: { which: unknown; kept: unknown },
+  input: { which: unknown; kept: unknown; reason?: unknown },
 ): Promise<{ ok: true; newAchievements: AwardedAchievement[] } | { ok: false; error: string; status: number }> {
   if (typeof input.kept !== 'boolean') return { ok: false, error: 'kept must be true or false', status: 400 }
   if (input.which !== 'today' && input.which !== 'yesterday') {
@@ -433,9 +460,17 @@ export async function checkPromise(
     select: { id: true },
   })
   if (!row) return { ok: false, error: 'No promise for that day', status: 404 }
+  // A blocker belongs to a miss and a helper to a keep, so answering the
+  // opposite way clears the other one — a stored "too tired" on a promise
+  // they later marked kept would be a wrong fact, not a stale one.
   await prisma.eraPromise.update({
     where: { id: row.id },
-    data: { kept: input.kept, checked_at: new Date() },
+    data: {
+      kept: input.kept,
+      checked_at: new Date(),
+      blocker: !input.kept && isBlocker(input.reason) ? input.reason : null,
+      helper: input.kept && isHelper(input.reason) ? input.reason : null,
+    },
   })
 
   // Kept → paid once for that promise, so flipping the answer can't farm it.

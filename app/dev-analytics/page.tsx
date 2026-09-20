@@ -40,6 +40,11 @@ interface ThoughtStats {
     moodMoved: { better: number; same: number; worse: number }
     energy: { value: string; count: number }[]
   }
+  promises: {
+    blockers: { key: string; count: number }[]
+    helpers: { key: string; count: number }[]
+    confidence: { bucket: 'sure' | 'unsure'; answered: number; kept: number; keptPercent: number | null }[]
+  }
 }
 
 interface StatsData {
@@ -306,6 +311,44 @@ function DevAnalyticsContent() {
                   {' · '}<span className="text-amber-400/80">{data.thoughts.guide.moodMoved.worse} worse</span>
                 </p>
               </div>
+
+              {/* The check-in's one-tap answers: what stops people, what
+                  helps, and whether their own certainty predicts anything. */}
+              {(data.thoughts.promises.blockers.length > 0
+                || data.thoughts.promises.helpers.length > 0
+                || data.thoughts.promises.confidence.length > 0) && (
+                <div className="space-y-3">
+                  {data.thoughts.promises.confidence.length > 0 && (
+                    <div>
+                      <p className="text-[10px] text-white/40 uppercase tracking-wider">Did their own certainty predict it?</p>
+                      <div className="mt-1.5 space-y-1">
+                        {data.thoughts.promises.confidence.map(c => (
+                          <div key={c.bucket} className="flex justify-between text-xs text-white/70">
+                            <span>{c.bucket === 'sure' ? 'Felt sure (4–5)' : "Wasn't sure (1–3)"}</span>
+                            <span className="text-white/45 tabular-nums">
+                              {c.keptPercent === null ? 'no answers' : `${c.keptPercent}% kept`} · {c.kept}/{c.answered}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {([['blockers', 'What stopped them'], ['helpers', 'What helped']] as const).map(([field, title]) =>
+                    data.thoughts.promises[field].length > 0 ? (
+                      <div key={field}>
+                        <p className="text-[10px] text-white/40 uppercase tracking-wider">{title}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {data.thoughts.promises[field].map(r => (
+                            <span key={r.key} className="text-xs bg-white/[0.06] rounded-full px-2.5 py-1">
+                              {formatFeature(r.key)} <span className="text-white/45">{r.count}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null,
+                  )}
+                </div>
+              )}
 
               {(data.thoughts.journal.tags.length > 0 || data.thoughts.journal.prompts.length > 0) && (
                 <div className="grid grid-cols-1 gap-3">

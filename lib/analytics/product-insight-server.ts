@@ -142,13 +142,27 @@ export interface ThoughtSignals {
     moodMoved: { better: number; same: number; worse: number }
     energy: { value: string; count: number }[]
   }
+  /**
+   * The check-in's one-tap answers (lib/era/reasons.ts), across everyone:
+   * what stops people, what helps, and whether their own certainty predicts
+   * anything. Keys and counts only — the lists are closed, so this is
+   * countable without reading a word anyone wrote.
+   */
+  promises: {
+    blockers: { key: string; count: number }[]
+    helpers: { key: string; count: number }[]
+    confidence: { bucket: 'sure' | 'unsure'; answered: number; kept: number; keptPercent: number | null }[]
+  }
 }
 
 /** Minimum answers behind a Daily Read signature before it's counted. */
 const SIGNATURE_MIN_ANSWERS = 5
 
 export async function loadThoughtSignals(since: Date): Promise<ThoughtSignals> {
-  const [axes, readTotals, signatures, journalTotals, moods, tags, prompts, moodPairs, energy] = await Promise.all([
+  const [
+    axes, readTotals, signatures, journalTotals, moods, tags, prompts, moodPairs, energy,
+    blockers, helpers, confidence,
+  ] = await Promise.all([
     prisma.$queryRaw<{ axis: string; answers: bigint; people: bigint; lean: number | null }[]>`
       SELECT axis, COUNT(*) AS answers, COUNT(DISTINCT user_id) AS people,
              AVG((score - 3) * direction)::float AS lean
@@ -185,6 +199,21 @@ export async function loadThoughtSignals(since: Date): Promise<ThoughtSignals> {
       SELECT energy_level AS value, COUNT(*) AS count FROM "DailyGuide"
       WHERE date >= ${since} AND energy_level IS NOT NULL
       GROUP BY energy_level ORDER BY count DESC`,
+    prisma.$queryRaw<{ key: string; count: bigint }[]>`
+      SELECT blocker AS key, COUNT(*) AS count FROM "EraPromise"
+      WHERE created_at >= ${since} AND blocker IS NOT NULL
+      GROUP BY blocker ORDER BY count DESC, blocker ASC`,
+    prisma.$queryRaw<{ key: string; count: bigint }[]>`
+      SELECT helper AS key, COUNT(*) AS count FROM "EraPromise"
+      WHERE created_at >= ${since} AND helper IS NOT NULL
+      GROUP BY helper ORDER BY count DESC, helper ASC`,
+    prisma.$queryRaw<{ bucket: string; answered: bigint; kept: bigint }[]>`
+      SELECT CASE WHEN confidence >= 4 THEN 'sure' ELSE 'unsure' END AS bucket,
+             COUNT(kept) AS answered,
+             COUNT(CASE WHEN kept THEN 1 END) AS kept
+      FROM "EraPromise"
+      WHERE created_at >= ${since} AND confidence IS NOT NULL
+      GROUP BY 1 ORDER BY 1`,
   ])
 
   const rank: Record<string, number> = { low: 1, medium: 2, high: 3 }
@@ -221,6 +250,16 @@ export async function loadThoughtSignals(since: Date): Promise<ThoughtSignals> {
     guide: {
       moodMoved,
       energy: energy.map(e => ({ value: e.value, count: n(e.count) })),
+    },
+    promises: {
+      blockers: blockers.map(b => ({ key: b.key, count: n(b.count) })),
+      helpers: helpers.map(h => ({ key: h.key, count: n(h.count) })),
+      confidence: confidence.map(c => ({
+        bucket: c.bucket === 'sure' ? 'sure' as const : 'unsure' as const,
+        answered: n(c.answered),
+        kept: n(c.kept),
+        keptPercent: keptRate(n(c.kept), n(c.answered)),
+      })),
     },
   }
 }

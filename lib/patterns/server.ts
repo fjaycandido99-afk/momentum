@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { reasonLabel } from '@/lib/era/reasons'
 import {
   findPatterns,
   type GuideMood,
@@ -32,6 +33,9 @@ interface PromiseRow {
   checked_at: Date | null
   source: string
   len: number | null
+  confidence: number | null
+  blocker: string | null
+  helper: string | null
 }
 
 /** Local hour and weekday of an instant, in the user's own timezone. */
@@ -66,7 +70,8 @@ export async function loadPatterns(userId: string): Promise<PatternReport> {
     prisma.userPreferences.findUnique({ where: { user_id: userId }, select: { timezone: true } }),
     // length(text), never text: the words never leave Postgres.
     prisma.$queryRaw<PromiseRow[]>`
-      SELECT local_day, created_at, kept, checked_at, source, length(text) AS len
+      SELECT local_day, created_at, kept, checked_at, source, length(text) AS len,
+             confidence, blocker, helper
       FROM "EraPromise"
       WHERE user_id = ${userId} AND created_at >= ${since}
       ORDER BY local_day ASC`,
@@ -91,6 +96,9 @@ export async function loadPatterns(userId: string): Promise<PatternReport> {
       answeredSameDay: r.checked_at === null ? null : localParts(r.checked_at, tz).day === r.local_day,
       source: r.source === 'spoken' ? 'spoken' : 'typed',
       length: r.len ?? 0,
+      confidence: r.confidence,
+      blocker: r.blocker,
+      helper: r.helper,
     }
   })
 
@@ -110,6 +118,7 @@ export async function loadPatterns(userId: string): Promise<PatternReport> {
         after: g.mood_after as GuideMood,
       })),
     today: localParts(new Date(), tz).day,
+    reasonLabel: key => reasonLabel(key) ?? key,
   }
 
   return findPatterns(input)

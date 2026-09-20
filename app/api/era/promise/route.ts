@@ -26,7 +26,11 @@ export async function POST(request: NextRequest) {
     if (!allowed) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 
     const body = await request.json().catch(() => null)
-    const result = await makePromise(user.id, { text: body?.text, source: body?.source })
+    const result = await makePromise(user.id, {
+      text: body?.text,
+      source: body?.source,
+      confidence: body?.confidence,
+    })
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 
     return NextResponse.json({

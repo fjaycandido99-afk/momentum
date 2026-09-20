@@ -1019,6 +1019,14 @@ model EraPromise {
   kept        Boolean?
   checked_at  DateTime?
 
+  // One tap each, all optional (lib/era/reasons.ts). They turn a record of
+  // WHAT happened into one of what was going on: how sure they were before
+  // promising, and — asked only at the check-in — what got in the way or
+  // what helped. Keys from the fixed lists, never free text.
+  confidence Int? // 1–5, before the promise
+  blocker    String? // BLOCKERS key, only on a miss
+  helper     String? // HELPERS key, only on a keep
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 

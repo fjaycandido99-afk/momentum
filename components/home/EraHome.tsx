@@ -11,6 +11,7 @@ import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBan
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { VOICE_GUIDES } from './home-types'
 import { ERA_LIMITS, eraName } from '@/lib/era/presets'
+import { BLOCKERS, CONFIDENCE_LABELS, HELPERS, reasonLabel } from '@/lib/era/reasons'
 import { alignmentLine } from '@/lib/era/alignment'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
 import { useSubscription } from '@/contexts/SubscriptionContext'
@@ -313,6 +314,10 @@ function ActiveEra({
 }) {
   const [draft, setDraft] = useState('')
   const [source, setSource] = useState<'typed' | 'spoken'>('typed')
+  /** How sure they are before promising, 1–5. Skipping it is fine. */
+  const [confidence, setConfidence] = useState<number | null>(null)
+  /** A just-answered yesterday, still owed its one-tap "why". */
+  const [pendingWhy, setPendingWhy] = useState<{ kept: boolean } | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [crisis, setCrisis] = useState<CrisisContent | null>(null)
@@ -367,12 +372,19 @@ function ActiveEra({
   const promise = async () => {
     const text = draft.trim()
     if (!text || busy) return
-    const ok = await post('/api/era/promise', { text, source })
-    if (ok) setDraft('')
+    const ok = await post('/api/era/promise', { text, source, confidence })
+    if (ok) {
+      setDraft('')
+      setConfidence(null)
+    }
   }
 
-  const check = async (which: 'today' | 'yesterday', kept: boolean) => {
-    const data = await post('/api/era/check', { which, kept })
+  const check = async (which: 'today' | 'yesterday', kept: boolean, reason?: string) => {
+    const data = await post('/api/era/check', { which, kept, reason })
+    // Answering yesterday moves the card straight on to today's promise, so
+    // the "why" would never be asked for the miss that matters most — the one
+    // they didn't answer last night. Hold it over into the next step.
+    if (data) setPendingWhy(!reason && which === 'yesterday' ? { kept } : null)
     // The trial offer's one moment: right after a win, once three promises
     // have been kept. Never on day 1, never a wall, and only ever once.
     const next = data?.era as EraToday | null | undefined
@@ -384,6 +396,72 @@ function ActiveEra({
         }
       } catch { /* storage blocked: skip the offer rather than repeat it */ }
     }
+  }
+
+  /**
+   * How sure they are, before they commit. One tap, skippable, and it's what
+   * lets the app later tell them whether their own certainty means anything
+   * (lib/patterns) — a promise they were sure about and one they weren't are
+   * not the same promise.
+   */
+  const confidenceRow = (
+    <div className="mt-3">
+      <p className="text-[11px] text-white/45">How sure are you? <span className="text-white/30">Optional</span></p>
+      <div className="flex gap-1.5 mt-1.5" role="group" aria-label="How sure are you?">
+        {[1, 2, 3, 4, 5].map(n => (
+          <button
+            key={n}
+            type="button"
+            aria-pressed={confidence === n}
+            aria-label={CONFIDENCE_LABELS[n]}
+            onClick={() => setConfidence(confidence === n ? null : n)}
+            className={`flex-1 py-2 rounded-lg text-xs border transition-all active:scale-[0.97] ${
+              confidence === n
+                ? 'bg-white text-black border-white'
+                : 'bg-white/[0.04] text-white/60 border-white/[0.12]'
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      {confidence !== null && (
+        <p className="text-[11px] text-white/45 mt-1.5">{CONFIDENCE_LABELS[confidence]}</p>
+      )}
+    </div>
+  )
+
+  /**
+   * After the check-in, one tap on why. Only ever asked once per promise,
+   * and never in the way of the answer itself: the check-in is already
+   * recorded by the time these appear.
+   */
+  const reasonChips = (which: 'today' | 'yesterday', kept: boolean, answered: string | null) => {
+    const options = kept ? HELPERS : BLOCKERS
+    if (answered) {
+      return (
+        <p className="text-[11px] text-white/45 mt-2.5">
+          {kept ? 'What helped: ' : 'What got in the way: '}{reasonLabel(answered)}
+        </p>
+      )
+    }
+    return (
+      <div className="mt-3">
+        <p className="text-[11px] text-white/45">{kept ? 'What helped?' : 'What got in the way?'} <span className="text-white/30">Optional</span></p>
+        <div className="flex flex-wrap gap-1.5 mt-1.5">
+          {options.map(o => (
+            <button
+              key={o.key}
+              disabled={busy}
+              onClick={() => { setPendingWhy(null); void check(which, kept, o.key) }}
+              className="rounded-full border border-white/[0.14] bg-white/[0.04] px-3 py-1.5 text-xs text-white/80 active:scale-[0.97] disabled:opacity-40 transition-all"
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   const yesNo = (which: 'today' | 'yesterday', quiet = false) => (
@@ -437,6 +515,14 @@ function ActiveEra({
     case 'promise':
       action = (
         <div className="card-surface-lg p-4">
+          {pendingWhy && (
+            <div className="mb-4 pb-4 border-b border-white/10">
+              <p className="text-xs text-white/60">
+                {pendingWhy.kept ? 'You kept yesterday’s promise.' : 'Yesterday didn’t happen.'}
+              </p>
+              {reasonChips('yesterday', pendingWhy.kept, null)}
+            </div>
+          )}
           {era.mission && (
             <div className="mb-4 pb-4 border-b border-white/10">
               <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
@@ -488,6 +574,8 @@ function ActiveEra({
               </button>
             </div>
           </div>
+          {/* Asked before they commit, while the answer is still honest. */}
+          {draft.trim().length > 0 && confidenceRow}
         </div>
       )
       break
@@ -535,9 +623,15 @@ function ActiveEra({
                   {yesNo('today', !era.checkInOpen)}
                 </div>
               ) : (
-                <p className={`text-sm text-white ${t?.coachReply ? 'mt-3' : ''}`}>
-                  {t?.kept ? 'Kept. That one counts.' : 'Not today. Tomorrow is a new promise.'}
-                </p>
+                <div className={t?.coachReply ? 'mt-3' : ''}>
+                  <p className="text-sm text-white">
+                    {t?.kept ? 'Kept. That one counts.' : 'Not today. Tomorrow is a new promise.'}
+                  </p>
+                  {/* The answer is already saved; this is the useful half of a
+                      miss, and it costs one tap. */}
+                  {t?.kept !== null && t !== null
+                    && reasonChips('today', t.kept === true, t.kept ? t.helper : t.blocker)}
+                </div>
               )}
             </div>
           )}

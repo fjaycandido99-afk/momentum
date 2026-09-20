@@ -55,7 +55,17 @@ export const SOLID_PER_WEEKDAY = 6
 /** A wall of statistics is noise; the strongest few are the useful ones. */
 export const MAX_PATTERNS = 4
 
-export interface PromiseRecord {
+/** The check-in's one-tap answers (lib/era/reasons.ts keys). */
+export interface PromiseExtras {
+  /** How sure they were before promising, 1–5, or null if they skipped it. */
+  confidence: number | null
+  /** What got in the way — only ever on a miss. */
+  blocker: string | null
+  /** What helped — only ever on a keep. */
+  helper: string | null
+}
+
+export interface PromiseRecord extends PromiseExtras {
   /** Local calendar day the promise belongs to (YYYY-MM-DD, user's timezone). */
   day: string
   /** Local hour 0–23 the promise was made. */
@@ -87,6 +97,11 @@ export interface PatternInput {
   guideMoods: GuideMoodDay[]
   /** Today in the user's timezone (YYYY-MM-DD) — the anchor for "recently". */
   today?: string
+  /**
+   * Turns a stored blocker/helper key into its label. Injected rather than
+   * imported so this file stays free of era concepts and testable on its own.
+   */
+  reasonLabel?: (key: string) => string
 }
 
 export interface PatternGroup {
@@ -101,6 +116,7 @@ export interface PatternGroup {
 
 export type PatternKind =
   | 'timing' | 'weekday' | 'follow_through' | 'size' | 'voice' | 'momentum' | 'mood' | 'guide'
+  | 'confidence' | 'blocker' | 'helper'
 
 export interface Pattern {
   id: string
@@ -329,6 +345,74 @@ function moodPattern(answered: PromiseRecord[], moods: MoodDay[]): Pattern | nul
   }
 }
 
+/**
+ * Does their own certainty mean anything? Kept-rate on promises they were
+ * sure about (4–5) against ones they weren't (1–3).
+ *
+ * The useful answer is sometimes the uncomfortable one — someone who keeps
+ * promises equally either way is not short of motivation, and someone who
+ * only delivers when they already felt sure knows something about how to
+ * set tomorrow's promise.
+ */
+function confidencePattern(answered: PromiseRecord[]): Pattern | null {
+  const sure = keptGroup('when you felt sure', answered.filter(p => p.confidence !== null && p.confidence >= 4))
+  const unsure = keptGroup("when you weren't", answered.filter(p => p.confidence !== null && p.confidence <= 3))
+  const c = compare([sure, unsure], MIN_PER_GROUP, MIN_GAP_POINTS)
+  if (!c) return null
+  return {
+    id: 'confidence',
+    kind: 'confidence',
+    headline: `${c.best.rate}% kept ${c.best.label}, ${c.worst.rate}% ${c.worst.label}.`,
+    detail: `${c.best.hits} of ${c.best.of} against ${c.worst.hits} of ${c.worst.of}. How sure you feel before you promise is worth listening to.`,
+    groups: [c.best, c.worst],
+    gap: c.gap,
+    strength: strengthOf(c.best, c.worst),
+  }
+}
+
+/** Minimum tagged check-ins before naming the most common one. */
+export const MIN_TAGGED = 5
+/** Times the top answer must appear before it's "the" answer. */
+export const MIN_TOP_TAG = 3
+
+/**
+ * The most common thing in the way, and the most common thing that helped.
+ * A count, not a comparison — so no best-vs-worst, and it sorts below the
+ * real comparisons.
+ */
+function reasonPattern(
+  answered: PromiseRecord[],
+  which: 'blocker' | 'helper',
+  label: (key: string) => string,
+): Pattern | null {
+  const tagged = answered
+    .filter(p => (which === 'blocker' ? p.kept === false : p.kept === true))
+    .map(p => (which === 'blocker' ? p.blocker : p.helper))
+    .filter((k): k is string => !!k)
+  if (tagged.length < MIN_TAGGED) return null
+
+  const counts = new Map<string, number>()
+  for (const key of tagged) counts.set(key, (counts.get(key) ?? 0) + 1)
+  // Ties broken by key so the same history always names the same one.
+  const [topKey, topCount] = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]
+  if (topCount < MIN_TOP_TAG) return null
+
+  const g = group(label(topKey), topCount, tagged.length)
+  return {
+    id: which,
+    kind: which,
+    headline: which === 'blocker'
+      ? `What stops you most often: ${label(topKey).toLowerCase()} — ${topCount} of the ${tagged.length} misses you told me about.`
+      : `What helps you most often: ${label(topKey).toLowerCase()} — ${topCount} of the ${tagged.length} keeps you told me about.`,
+    detail: which === 'blocker'
+      ? 'Worth designing tomorrow around, rather than pushing harder against.'
+      : 'Worth doing on purpose instead of by accident.',
+    groups: [g],
+    gap: 0,
+    strength: tagged.length >= SOLID_PER_GROUP ? 'solid' : 'thin',
+  }
+}
+
 /** Did the guide day end higher than it started? One group, so no comparison. */
 function guidePattern(guideMoods: GuideMoodDay[]): Pattern | null {
   const rank: Record<GuideMood, number> = { low: 1, medium: 2, high: 3 }
@@ -370,6 +454,9 @@ export function findPatterns(input: PatternInput): PatternReport {
         voicePattern(answered),
         momentumPattern(answered),
         moodPattern(answered, input.moods),
+        confidencePattern(answered),
+        reasonPattern(answered, 'blocker', input.reasonLabel ?? (k => k)),
+        reasonPattern(answered, 'helper', input.reasonLabel ?? (k => k)),
       ].filter((p): p is Pattern => p !== null),
     )
   }

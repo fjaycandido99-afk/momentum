@@ -23,6 +23,9 @@ const promise = (over: Partial<PromiseRecord> & { day: string }): PromiseRecord 
   answeredSameDay: true,
   source: 'typed',
   length: 20,
+  confidence: null,
+  blocker: null,
+  helper: null,
   ...over,
 })
 
@@ -146,6 +149,57 @@ describe('findPatterns — what it says when the evidence is there', () => {
     for (const p of findPatterns(input({ promises: [...early, ...late] })).patterns) {
       for (const g of p.groups) expect(Number.isFinite(g.rate)).toBe(true)
     }
+  })
+})
+
+describe('the one-tap answers', () => {
+  const label = (k: string) => ({ too_tired: 'Too tired', no_time: 'No time', the_audio: 'The audio' }[k] ?? k)
+
+  it('tells them whether their own certainty means anything', () => {
+    const promises = [
+      ...Array.from({ length: 10 }, (_, i) => promise({ day: day(i), confidence: 5, kept: i > 0 })),
+      ...Array.from({ length: 10 }, (_, i) => promise({ day: day(20 + i), confidence: 2, kept: i < 4 })),
+    ]
+    const p = findPatterns(input({ promises })).patterns.find(x => x.kind === 'confidence')!
+    expect(p.headline).toBe("90% kept when you felt sure, 40% when you weren't.")
+    expect(p.detail).toContain('9 of 10 against 4 of 10')
+  })
+
+  it('ignores promises where the scale was skipped', () => {
+    const promises = Array.from({ length: 20 }, (_, i) => promise({ day: day(i), confidence: null, kept: i % 2 === 0 }))
+    expect(findPatterns(input({ promises })).patterns.find(x => x.kind === 'confidence')).toBeUndefined()
+  })
+
+  it('names the most common blocker, from misses only', () => {
+    const promises = [
+      ...Array.from({ length: 4 }, (_, i) => promise({ day: day(i), kept: false, blocker: 'too_tired' })),
+      ...Array.from({ length: 2 }, (_, i) => promise({ day: day(10 + i), kept: false, blocker: 'no_time' })),
+      // A helper on a kept day must not be counted among the blockers.
+      ...Array.from({ length: 8 }, (_, i) => promise({ day: day(20 + i), kept: true, helper: 'the_audio' })),
+    ]
+    const report = findPatterns(input({ promises, reasonLabel: label }))
+    const blocker = report.patterns.find(x => x.kind === 'blocker')!
+    expect(blocker.headline).toBe('What stops you most often: too tired — 4 of the 6 misses you told me about.')
+    const helper = report.patterns.find(x => x.kind === 'helper')!
+    expect(helper.headline).toBe('What helps you most often: the audio — 8 of the 8 keeps you told me about.')
+  })
+
+  it('needs enough tagged check-ins before naming one', () => {
+    const promises = [
+      ...Array.from({ length: 4 }, (_, i) => promise({ day: day(i), kept: false, blocker: 'too_tired' })),
+      ...Array.from({ length: 8 }, (_, i) => promise({ day: day(20 + i), kept: true })),
+    ]
+    // Four tagged misses is under MIN_TAGGED — no "most common" yet.
+    expect(findPatterns(input({ promises, reasonLabel: label })).patterns.find(x => x.kind === 'blocker')).toBeUndefined()
+  })
+
+  it('needs one answer to actually lead, not a five-way tie', () => {
+    const keys = ['too_tired', 'no_time', 'forgot', 'put_it_off', 'too_big', 'life_happened']
+    const promises = [
+      ...keys.map((k, i) => promise({ day: day(i), kept: false, blocker: k })),
+      ...Array.from({ length: 6 }, (_, i) => promise({ day: day(20 + i), kept: true })),
+    ]
+    expect(findPatterns(input({ promises, reasonLabel: label })).patterns.find(x => x.kind === 'blocker')).toBeUndefined()
   })
 })
 
