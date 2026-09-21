@@ -49,6 +49,13 @@ export interface PromiseReplyInput {
    */
   patternLine?: string | null
   /**
+   * Standing practices due today, each with the minimum THEY set
+   * (lib/practices). The coach may hold them to their own floor — "you said
+   * thirty minutes" is the sentence that works on a tired day — but must
+   * never invent a practice, a number or a schedule that isn't in here.
+   */
+  practiceLines?: string[]
+  /**
    * They are writing TOMORROW's promise tonight. The reply has to be about
    * tomorrow, or it congratulates them for a day that hasn't happened.
    */
@@ -130,6 +137,10 @@ ${input.stageNote}`
     // re-deriving them is how a model invents a streak.
     input.patternLine
       ? `Something their own record shows, with the counts already worked out: ${input.patternLine} Use it only if it fits today's promise, and quote the numbers exactly as given.`
+      : null,
+    // Their own standing commitments, with the floors they set themselves.
+    input.practiceLines && input.practiceLines.length > 0
+      ? `Things they have committed to on a day like today, with the minimum each one THEY chose: ${input.practiceLines.join('; ')}. You may hold them to their own minimum. Never invent one, and never add a practice they have not set.`
       : null,
     input.forTomorrow
       ? `TOMORROW's promise, written tonight: "${input.promise}"`

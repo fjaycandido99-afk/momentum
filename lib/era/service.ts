@@ -33,6 +33,7 @@ import { ERA_MISSIONS } from './missions'
 import { isBlocker, isHelper, parseConfidence, reasonLabel } from './reasons'
 import { buildEraReport, type EraReport } from './report'
 import { loadPatterns } from '@/lib/patterns/server'
+import { practiceLinesForCoach } from '@/lib/practices/server'
 import { coachPatternLine, weakDayLine } from '@/lib/patterns/rules'
 
 function missionFor(eraKey: string, day: number): string | null {
@@ -515,6 +516,8 @@ export async function makePromise(
           fullMemory: await isPremiumUser(userId).catch(() => false),
           forTomorrow: ahead,
           patternLine: await patternLineFor(userId, weekdayOf(today)),
+          // Never worth failing a promise over: no practices is the normal case.
+          practiceLines: await practiceLinesForCoach(userId).catch(() => []),
         },
         mindset,
         prefs?.guide_tone ?? null,

@@ -12,6 +12,7 @@ import { programFor } from '@/lib/era/programs'
 import { alignmentLine } from '@/lib/era/alignment'
 import { trackFeature } from '@/lib/analytics/track'
 import { PracticeSection } from '@/components/exercise/PracticeSection'
+import { PracticesSection } from '@/components/practices/PracticesSection'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -426,6 +427,10 @@ function ActiveEra({
           thing you go and do in the world — two different asks, deliberately
           not merged. */}
       <PracticeSection hasEra />
+
+      {/* The disciplines they already keep. Adding happens here, not on
+          home: nothing on the home screen should be a form. */}
+      <PracticesSection canAdd />
 
       {era.mission && (
         <div className="rounded-2xl border border-white/[0.12] p-4">

@@ -10,6 +10,7 @@ import { VoiceInput } from '@/components/journal/VoiceInput'
 import { CountUp } from '@/components/ui/CountUp'
 import { EqBars } from '@/components/ui/EqBars'
 import { PracticeSection } from '@/components/exercise/PracticeSection'
+import { PracticesSection } from '@/components/practices/PracticesSection'
 import { haptic } from '@/lib/haptics'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -935,6 +936,7 @@ function ActiveEra({
           you're in. Sits after the promise deliberately: the promise is the
           era, this is the training for it. */}
       <PracticeSection hasEra />
+      <PracticesSection />
       {tomorrowBlock}
       {crisis && <CrisisBanner content={crisis} />}
       {error && <p className="text-xs text-white/70" role="alert">{error}</p>}

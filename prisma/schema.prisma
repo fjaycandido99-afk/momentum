@@ -74,6 +74,9 @@ model User {
 
   // The practice step of a day — a guided exercise Voxu ran with them
   exerciseRuns ExerciseRun[]
+
+  // Disciplines they already care about, kept consistent (lib/practices)
+  practices Practice[]
 }
 
 model Subscription {
@@ -1220,4 +1223,67 @@ model ExerciseRun {
   @@unique([user_id, local_day, exercise_id])
   @@index([user_id, local_day])
   @@index([exercise_id, completed])
+}
+
+/// A discipline someone already cares about, which Voxu keeps them
+/// consistent with — a gym split, ten pages a day, two hours of deep work.
+///
+/// Voxu stores the CADENCE and the FLOOR, never the contents: no sets, no
+/// reps, no page numbers, no routes. The moment this table holds a workout
+/// it is competing with apps built for that, and losing. `minimum` is the
+/// mechanism — the smallest version that still counts, set on a calm day to
+/// be read on a hard one.
+///
+/// Capped at three per person in code (lib/practices/presets MAX_PRACTICES):
+/// three things to keep in a day is already a lot, and thin data can never
+/// support the cross-practice patterns that make this worth having.
+model Practice {
+  id      String @id @default(cuid())
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  /// Key from lib/practices/presets.ts, or "custom". Never renamed.
+  preset_key String
+  /// What they call it. The preset's label until they change it.
+  label String
+  /// Weekdays it is expected, 0 = Sunday. Empty means every day.
+  days Int[] @default([])
+  /// The smallest version that still counts, in their own words.
+  minimum String
+
+  /// Why they usually skip it — a BLOCKERS key (lib/era/reasons.ts), reusing
+  /// that list rather than inventing a parallel vocabulary, so both can be
+  /// counted together.
+  blocker String?
+
+  status     String    @default("active") // "active" | "retired"
+  retired_at DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  logs PracticeLog[]
+
+  @@index([user_id, status])
+}
+
+/// One day's answer for one practice. `minimum_only` is a kept day, not a
+/// half-failure: doing the floor on a bad day is the behaviour the whole
+/// feature is trying to produce.
+model PracticeLog {
+  id          String   @id @default(cuid())
+  practice_id String
+  practice    Practice @relation(fields: [practice_id], references: [id], onDelete: Cascade)
+  user_id     String
+
+  local_day String // YYYY-MM-DD in the user's timezone
+  done      Boolean
+  /// They did the minimum and no more.
+  minimum_only Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([practice_id, local_day])
+  @@index([user_id, local_day])
 }
