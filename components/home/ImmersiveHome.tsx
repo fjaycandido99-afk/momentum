@@ -1352,7 +1352,10 @@ export function ImmersiveHome() {
         >
           {/* Bottom blur fade */}
           <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
-          <div className="flex items-center justify-between">
+          {/* The bar stays full-bleed (it's chrome, and the black band has to
+              reach the edges) but its contents follow the content column —
+              otherwise the title and the icons sit a tablet-width apart. */}
+          <div className="flex items-center justify-between md:max-w-[680px] md:mx-auto md:w-full">
             {/* One metric, not three.
                 This row carried the streak, an XP level bar and a daily
                 progress ring side by side — three scores before any
@@ -1699,7 +1702,13 @@ export function ImmersiveHome() {
           from home, so the button stays — 56px (past the 44px touch
           minimum), fixed right, and the content rows carry trailing
           padding so a tile can always be scrolled out from under it. */}
-      <div className="fixed right-5 bottom-28 z-30 flex items-center gap-2">
+      {/* Anchored to the CONTENT column, not the viewport: on a tablet the
+          column is centred, and a button pinned to the right edge of an
+          1,194px screen floats in empty space 200px away from anything it
+          relates to. On a phone the column is the whole width, so this is
+          the same position it always was. */}
+      <div className="fixed inset-x-0 bottom-28 z-30 pointer-events-none flex justify-end md:justify-center">
+      <div className="flex items-center gap-2 pointer-events-auto pr-5 md:pr-0 md:w-[680px] md:justify-end">
         <CoachGreetingBubble mindsetId={mindsetCtx?.mindset} onVisibleChange={setIsCoachNudging} />
         <Link
           href="/journal?mode=chat"
@@ -1710,6 +1719,7 @@ export function ImmersiveHome() {
         >
           <MessageCircle className="w-5 h-5 text-white/85" />
         </Link>
+      </div>
       </div>
 
       {/* Ambient Mixer */}

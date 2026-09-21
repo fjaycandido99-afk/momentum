@@ -75,7 +75,13 @@ export function EraHome({
   quote: { text: string; author: string } | null
 }) {
   return (
-    <div className="px-6 mt-3 space-y-3">
+    /* The era block is reading and tapping, not scenery, so it takes a
+       column on a tablet instead of stretching to 1,194px. The shelves
+       below it stay full-bleed — a horizontal row of tiles is the one
+       thing that genuinely wants the whole width. Home itself must not be
+       wrapped (see the dashboard layout's note about sticky + WKWebView),
+       so the width lives here, on the block's own container. */
+    <div className="px-6 mt-3 space-y-3 md:max-w-[680px] md:mx-auto md:px-0">
       <Greeting quote={quote} />
       {era ? <ActiveEra era={era} onChange={onChange} content={content} audio={audio} /> : (
         <>

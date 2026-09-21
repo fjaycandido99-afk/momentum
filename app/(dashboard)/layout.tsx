@@ -51,8 +51,12 @@ export default function DashboardLayout({
                 started scrolling away on device while remaining correctly
                 stuck on the web. Not worth being clever about on the
                 platform that is the actual product. */}
+            {/* md:, not lg: — an iPad in portrait is 834px wide, which sits
+                BELOW lg, so every one of these pages ran edge-to-edge on the
+                device this was supposed to fix. A tablet is exactly where a
+                1,400px line of reflection text happens. */}
             {isHome || hideChrome ? children : (
-              <div className="lg:mx-auto lg:max-w-3xl">{children}</div>
+              <div className="md:mx-auto md:max-w-2xl lg:max-w-3xl">{children}</div>
             )}
 
             {/* Bottom scrim — fades page content to black behind the
