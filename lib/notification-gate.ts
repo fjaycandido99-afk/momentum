@@ -57,6 +57,12 @@ const LANE: Record<NotificationType, Lane> = {
   // Someone joined their era: a real, rare event about another person, not
   // content we invented — but it still waits out the night.
   era_join: 'opportunistic',
+  // Thirty days finished. Once per era, and it should not be dropped
+  // because two quote pushes already went out today.
+  era_complete: 'exempt',
+  // Ours to send, and the one most worth rationing: lib/era/nudges keeps it
+  // to once a week and stops entirely after three silent weeks.
+  era_comeback: 'opportunistic',
 
   // Ours to ration.
   evening_reminder: 'opportunistic',

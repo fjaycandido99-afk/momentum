@@ -1007,6 +1007,12 @@ model Era {
   recap    String?
   recap_at DateTime?
 
+  // When we told them they'd finished (lib/era/nudges). Stamped on the ERA,
+  // not inferred from the notification log: the send gate only dedupes for
+  // 18 hours, so a finished era would be announced again every morning, and
+  // a second era later must still be able to say it.
+  completed_notified_at DateTime?
+
   ended_at   DateTime?
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt

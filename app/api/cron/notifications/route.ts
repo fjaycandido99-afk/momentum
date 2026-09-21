@@ -19,6 +19,8 @@ import {
   sendDailyReadNudges,
   sendEraCheckins,
   sendEraWakeCalls,
+  sendEraCompletions,
+  sendEraComebacks,
 } from '@/lib/push-service'
 import { cleanupExpiredAudioCache, cleanupChatVoiceCache, cleanupAiUsage } from '@/lib/daily-guide/cache-cleanup'
 
@@ -143,6 +145,14 @@ export async function GET(request: NextRequest) {
       case 'era_wake':
         await sendEraWakeCalls()
         return NextResponse.json({ success: true, type: 'era_wake' })
+
+      case 'era_complete':
+        await sendEraCompletions()
+        return NextResponse.json({ success: true, type: 'era_complete' })
+
+      case 'era_comeback':
+        await sendEraComebacks()
+        return NextResponse.json({ success: true, type: 'era_comeback' })
 
       case 'feature_discovery':
         await sendFeatureDiscovery()

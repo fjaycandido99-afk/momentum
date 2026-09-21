@@ -27,6 +27,8 @@ import { loadEraToday } from '@/lib/era/service'
 import { eraQuote } from '@/lib/era/content'
 import { programFor } from '@/lib/era/programs'
 import { isInWakeWindow, localMinutes, parseWakeTime } from '@/lib/era/wake'
+import { comebackDue, comebackMessage, completionMessage } from '@/lib/era/nudges'
+import { eraName } from '@/lib/era/presets'
 import { loadWakeCall } from '@/lib/era/wake-server'
 
 // Notification types that can be sent
@@ -55,6 +57,8 @@ export type NotificationType =
   | 'era_checkin'
   | 'era_wake'
   | 'era_join'
+  | 'era_complete'
+  | 'era_comeback'
   | 'custom'
 
 // Notification payload structure
@@ -213,6 +217,26 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
       { action: 'open', title: 'Check in' },
     ],
   },
+  era_complete: {
+    title: 'You finished it',
+    body: 'Thirty days of promises. See what they added up to.',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
+    tag: 'era-complete',
+    actions: [
+      { action: 'open', title: 'See it' },
+    ],
+  },
+  era_comeback: {
+    title: 'Your era is still open',
+    body: 'Make today’s promise small enough that you keep it.',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
+    tag: 'era-comeback',
+    actions: [
+      { action: 'open', title: 'Open Voxu' },
+    ],
+  },
   era_join: {
     title: 'Someone joined your era',
     body: 'They started day 1 from your link.',
@@ -351,6 +375,8 @@ const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
   era_checkin: '/',
   era_wake: '/era/wake',
   era_join: '/',
+  era_complete: '/',
+  era_comeback: '/',
   motivational_nudge: '/',
   daily_motivation: '/',
   coach_checkin: '/coach',
@@ -398,6 +424,10 @@ export async function sendPushToUser(
     // (UserPreferences.wake_call_enabled) and skips this filter below.
     era_wake: 'morning_reminder',
     era_join: 'motivational_nudge_alerts',
+    // Finishing is the loudest moment in the loop — it rides the streak
+    // preference, the one people keep on for things they earned.
+    era_complete: 'streak_alerts',
+    era_comeback: 'streak_alerts',
     daily_motivation: 'daily_motivation_alerts',
 coach_checkin: 'coach_checkin_alerts',
     coach_accountability: 'coach_accountability_alerts',
@@ -1919,6 +1949,129 @@ export async function sendEraCheckins(): Promise<void> {
   }
 
   console.log(`era_checkin: ${totalSent} sent, ${totalFailed} failed, ${skipped} skipped (${eligible.size} in window)`)
+}
+
+/**
+ * "You finished your era" — once, in the morning after the last day.
+ *
+ * Told once per ERA, stamped on the row (completed_notified_at): the send
+ * gate only dedupes for 18 hours, so a finished era would otherwise be
+ * announced again every morning it sat there.
+ *
+ * The stamp goes on only when a push actually went out. Someone with no
+ * device yet gets told when they have one, instead of being marked as
+ * informed by a notification that never left the building.
+ */
+export async function sendEraCompletions(): Promise<void> {
+  const eras = await prisma.era.findMany({
+    where: { status: 'active', completed_notified_at: null },
+    select: { id: true, user_id: true, title: true, start_day: true, length_days: true },
+  })
+  if (eras.length === 0) return
+
+  // 9am local: finishing something deserves the morning, not a 2am buzz.
+  const eligible = new Set(await filterUsersByLocalHour(eras.map(e => e.user_id), 9))
+  let sent = 0
+  let candidates = 0
+
+  for (const era of eras) {
+    if (!eligible.has(era.user_id)) continue
+    const tz = (await prisma.userPreferences.findUnique({
+      where: { user_id: era.user_id }, select: { timezone: true },
+    }))?.timezone ?? null
+    // Finished means the last day has PASSED, not that it's day 30 today.
+    if (eraDayNumber(era.start_day, localDay(tz)) <= era.length_days) continue
+    candidates++
+
+    const promises = await prisma.eraPromise.findMany({
+      where: { era_id: era.id }, select: { kept: true },
+    })
+    const answered = promises.filter(p => p.kept !== null).length
+    const kept = promises.filter(p => p.kept === true).length
+    const premium = await isPremiumUser(era.user_id).catch(() => false)
+    const message = completionMessage({
+      eraName: eraName(era.title), lengthDays: era.length_days, kept, answered, premium,
+    })
+
+    const result = await sendPushToUser(era.user_id, 'era_complete', message)
+    if (result.sent > 0) {
+      sent += result.sent
+      await prisma.era.update({ where: { id: era.id }, data: { completed_notified_at: new Date() } })
+    }
+  }
+
+  console.log(`era_complete: ${sent} sent, ${candidates} finished eras in the window (${eras.length} unannounced)`)
+}
+
+/**
+ * "Your era is still open" — after a few silent days, once a week at most,
+ * and never for someone whose wake-up call already says it every morning
+ * (lib/era/nudges comebackDue).
+ */
+export async function sendEraComebacks(): Promise<void> {
+  const eras = await prisma.era.findMany({
+    where: { status: 'active' },
+    select: { id: true, user_id: true, title: true, start_day: true, length_days: true },
+  })
+  if (eras.length === 0) return
+
+  // 10am local — after the morning push has had its chance.
+  const eligible = new Set(await filterUsersByLocalHour(eras.map(e => e.user_id), 10))
+  let sent = 0
+  let due = 0
+
+  for (const era of eras) {
+    if (!eligible.has(era.user_id)) continue
+
+    const prefs = await prisma.userPreferences.findUnique({
+      where: { user_id: era.user_id },
+      select: { timezone: true, wake_call_enabled: true },
+    })
+    const today = localDay(prefs?.timezone ?? null)
+    const day = eraDayNumber(era.start_day, today)
+
+    const last = await prisma.eraPromise.findFirst({
+      where: { era_id: era.id },
+      orderBy: { local_day: 'desc' },
+      select: { local_day: true },
+    })
+    // No promise ever made: the morning push is already asking for the
+    // first one, and "still open" would be a strange thing to say on day 2.
+    if (!last) continue
+
+    const lastNudge = await prisma.notificationSendLog.findFirst({
+      where: { user_id: era.user_id, type: 'era_comeback' },
+      orderBy: { sent_at: 'desc' },
+      select: { sent_at: true },
+    })
+
+    const daysBetweenLocal = (from: string, to: string) => {
+      const [ay, am, ad] = from.split('-').map(Number)
+      const [by, bm, bd] = to.split('-').map(Number)
+      return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86400000)
+    }
+
+    const ok = comebackDue({
+      daysSinceLastPromise: daysBetweenLocal(last.local_day, today),
+      daysSinceLastNudge: lastNudge
+        ? Math.floor((Date.now() - lastNudge.sent_at.getTime()) / 86400000)
+        : null,
+      wakeCallEnabled: prefs?.wake_call_enabled ?? false,
+      eraComplete: day > era.length_days,
+    })
+    if (!ok) continue
+    due++
+
+    const result = await sendPushToUser(era.user_id, 'era_comeback', comebackMessage({
+      eraName: eraName(era.title),
+      day: Math.min(day, era.length_days),
+      lengthDays: era.length_days,
+      daysSinceLastPromise: daysBetweenLocal(last.local_day, today),
+    }))
+    sent += result.sent
+  }
+
+  console.log(`era_comeback: ${sent} sent, ${due} due (${eras.length} active eras)`)
 }
 
 /**

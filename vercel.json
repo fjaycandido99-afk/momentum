@@ -91,6 +91,14 @@
     {
       "path": "/api/cron/notifications?type=era_wake",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=era_complete",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/notifications?type=era_comeback",
+      "schedule": "0 * * * *"
     }
   ]
 }
