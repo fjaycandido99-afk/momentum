@@ -297,6 +297,12 @@ export interface PracticeWire {
    * practice's. One field so the UI can never show the wrong one.
    */
   todaysMinimum: string
+  /**
+   * A pattern acted on BEFORE the day is spent: “Fridays are your hardest
+   * — today, 40 minutes counts.” Null unless this weekday has enough
+   * answered history behind it (lib/practices/intervention.ts).
+   */
+  intervention: string | null
   /** After a missed session: one line and the ways out of it. */
   recovery: {
     line: string

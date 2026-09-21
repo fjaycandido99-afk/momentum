@@ -7,6 +7,7 @@ import { MAX_PRACTICES, PRESETS_BY_KEY } from './presets'
 import { rotationCue, sessionForDomain } from './cues'
 import { cleanPlan, parsePlan, planFor, slotForToday } from './plan'
 import { findRecovery, recoveryCopy } from './recovery'
+import { findIntervention } from './intervention'
 import { exerciseById } from '@/lib/exercises/library'
 import {
   adherence,
@@ -74,10 +75,11 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
     const slot = slotForToday({ presetKey: row.preset_key, days: row.days }, today, kept)
     const todaysPlan = planFor(plan, slot)
     // After a missed session: reschedule, not "do double tomorrow".
+    const effectiveMinimum = todaysPlan?.minimum || row.minimum
     const recovery = findRecovery({ ...lite, presetKey: row.preset_key }, logs, today, kept)
     const recoveryWire = recovery
       ? {
-          ...recoveryCopy(recovery, { minimum: todaysPlan?.minimum || row.minimum }, isDueOn(lite, today)),
+          ...recoveryCopy(recovery, { minimum: effectiveMinimum }, isDueOn(lite, today)),
           slotKey: recovery.slotKey,
           slotLabel: recovery.slotLabel,
         }
@@ -99,7 +101,8 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
       slot,
       todaysPlan,
       plan,
-      todaysMinimum: todaysPlan?.minimum || row.minimum,
+      todaysMinimum: effectiveMinimum,
+      intervention: findIntervention(lite, logs, today, effectiveMinimum)?.line ?? null,
       recovery: recoveryWire,
       nextDue: nextDueDay(lite, today),
       weakDay: weakestWeekday(lite, logs, from, today),

@@ -331,10 +331,23 @@ function PracticeRow({
         </p>
       )}
 
+      {/* A pattern used forwards. On a weekday with a real history of
+          misses, this arrives BEFORE the day is spent and offers the floor
+          — the useful answer to a hard day is a smaller ask, not a firmer
+          tone. It never lowers the ask by itself: it says what it noticed
+          and the choice below is still theirs. */}
+      {choosing && practice.intervention && (
+        <p className="text-[13px] text-white/80 mt-2 leading-snug rounded-lg bg-white/[0.05] border border-white/[0.12] px-3 py-2">
+          {practice.intervention}
+        </p>
+      )}
+
       {choosing && (
         <>
           <p className="text-[13px] text-white/70 mt-2 leading-snug">
-            {minimumLine({ ...practice, minimum: practice.todaysMinimum })}
+            {/* The minimum line is redundant once the intervention has
+                already named it. */}
+            {practice.intervention ? null : minimumLine({ ...practice, minimum: practice.todaysMinimum })}
           </p>
           <div className="flex gap-2 mt-2.5">
             <button

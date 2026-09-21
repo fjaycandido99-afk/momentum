@@ -55,6 +55,9 @@ const LANE: Record<NotificationType, Lane> = {
   // About a commitment they wrote down themselves, so scheduled rather than
   // opportunistic — but it still waits out quiet hours.
   practice_checkin: 'scheduled',
+  // About a commitment they made, timed to their own record. Scheduled, so
+  // quiet hours still hold.
+  practice_heads_up: 'scheduled',
   // A time they chose to be woken at — quiet hours must not swallow a 6am call.
   era_wake: 'scheduled',
   // Someone joined their era: a real, rare event about another person, not

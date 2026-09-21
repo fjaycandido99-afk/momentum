@@ -24,6 +24,8 @@ import { loadState, localDay } from '@/lib/assessment/service'
 import { MIN_ANSWERS_FOR_READ } from '@/lib/assessment/axes'
 import { eraDayNumber } from '@/lib/era/logic'
 import { isDueOn, nightNudge } from '@/lib/practices/logic'
+import { findIntervention, interventionPush } from '@/lib/practices/intervention'
+import { parsePlan, planFor, slotForToday } from '@/lib/practices/plan'
 import { loadEraToday } from '@/lib/era/service'
 import { eraQuote } from '@/lib/era/content'
 import { programFor } from '@/lib/era/programs'
@@ -59,6 +61,9 @@ export type NotificationType =
   // "You said thirty minutes. Did it happen?" — one ask, late, only when a
   // practice that was due today has no answer (lib/practices).
   | 'practice_checkin'
+  // The morning heads-up on a weekday they have a real history of missing.
+  // Offers the floor; never warns.
+  | 'practice_heads_up'
   | 'era_wake'
   | 'era_join'
   | 'era_complete'
@@ -209,6 +214,16 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
     tag: 'daily-affirmation',
     actions: [
       { action: 'open', title: 'View' },
+    ],
+  },
+  practice_heads_up: {
+    title: 'Today might be a hard one',
+    body: 'The minimum still counts.',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
+    tag: 'practice-heads-up',
+    actions: [
+      { action: 'open', title: 'See it' },
     ],
   },
   practice_checkin: {
@@ -388,6 +403,7 @@ const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
   daily_read: '/',
   era_checkin: '/',
   practice_checkin: '/training',
+  practice_heads_up: '/training',
   era_wake: '/era/wake',
   era_join: '/',
   era_complete: '/',
@@ -438,6 +454,9 @@ export async function sendPushToUser(
     // The same evening switch as the era check-in: the same kind of ask, at
     // the same end of the day, and a new column would buy no extra control.
     practice_checkin: 'evening_reminder',
+    // A morning message, so it rides the morning switch — somebody who
+    // turned mornings off should not get one.
+    practice_heads_up: 'morning_reminder',
     // Listed for the type map only: the wake-up call has its own switch
     // (UserPreferences.wake_call_enabled) and skips this filter below.
     era_wake: 'morning_reminder',
@@ -2224,4 +2243,91 @@ export async function sendPracticeCheckins(): Promise<void> {
   }
 
   console.log(`practice_checkin: ${sent} sent, ${failed} failed, ${quiet} already answered (${dueByUser.size} due)`)
+}
+
+/**
+ * The morning heads-up: a pattern acted on before the day is spent.
+ *
+ * 9:00 local, and only for a practice that is due today on a weekday with
+ * a real history of answered misses (lib/practices/intervention.ts). It
+ * offers the floor — "Fridays are hard for you. 40 minutes counts today."
+ * — and never warns, scolds or mentions a streak.
+ *
+ * One per person per morning however many practices qualify, because two
+ * notifications about two hard days is how somebody turns them all off.
+ * The evening check-in still happens separately: this is the ask BEFORE,
+ * that one is the ask AFTER.
+ */
+export async function sendPracticeHeadsUps(): Promise<void> {
+  const practices = await prisma.practice.findMany({
+    where: { status: 'active' },
+    select: { id: true, user_id: true, label: true, days: true, minimum: true, plan: true },
+  })
+  if (practices.length === 0) return
+
+  const eligible = new Set(await filterUsersByLocalHour([...new Set(practices.map(p => p.user_id))], 9))
+  if (eligible.size === 0) return
+
+  const tzs = await prisma.userPreferences.findMany({
+    where: { user_id: { in: [...eligible] } },
+    select: { user_id: true, timezone: true },
+  })
+  const tzMap = new Map(tzs.map(t => [t.user_id, t.timezone]))
+
+  const mine = practices.filter(p => eligible.has(p.user_id))
+  // Ninety days of answers: the same window the Patterns block reads, so
+  // the push can never claim a count the screen disagrees with.
+  //
+  // One window for everybody, measured from UTC with a day of slack. Using
+  // the first user's timezone for the whole batch (as this did) is the kind
+  // of thing that reads fine and is quietly wrong.
+  const since = ninetyDaysBefore(new Date(Date.now() - 86400000).toISOString().slice(0, 10))
+  const logs = await prisma.practiceLog.findMany({
+    where: { practice_id: { in: mine.map(p => p.id) }, local_day: { gte: since } },
+    select: { practice_id: true, local_day: true, done: true, minimum_only: true },
+  })
+  const byPractice = new Map<string, { day: string; done: boolean; minimumOnly: boolean }[]>()
+  for (const log of logs) {
+    const list = byPractice.get(log.practice_id) ?? []
+    list.push({ day: log.local_day, done: log.done, minimumOnly: log.minimum_only })
+    byPractice.set(log.practice_id, list)
+  }
+
+  const sentTo = new Set<string>()
+  let sent = 0
+  let failed = 0
+
+  for (const practice of mine) {
+    if (sentTo.has(practice.user_id)) continue
+    const today = localDay(tzMap.get(practice.user_id) ?? null)
+    const lite = {
+      id: practice.id,
+      label: practice.label,
+      days: practice.days,
+      minimum: practice.minimum,
+    }
+    const plan = parsePlan(practice.plan)
+    const slot = slotForToday({ presetKey: '', days: practice.days }, today, 0)
+    const minimum = planFor(plan, slot)?.minimum || practice.minimum
+
+    const intervention = findIntervention(lite, byPractice.get(practice.id) ?? [], today, minimum)
+    if (!intervention) continue
+
+    const result = await sendPushToUser(
+      practice.user_id,
+      'practice_heads_up',
+      interventionPush(practice.label, intervention),
+    )
+    sentTo.add(practice.user_id)
+    sent += result.sent
+    failed += result.failed
+  }
+
+  console.log(`practice_heads_up: ${sent} sent, ${failed} failed (${mine.length} practices in window)`)
+}
+
+/** Ninety days before a YYYY-MM-DD. */
+function ninetyDaysBefore(day: string): string {
+  const [y, m, d] = day.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d) - 90 * 86400000).toISOString().slice(0, 10)
 }
