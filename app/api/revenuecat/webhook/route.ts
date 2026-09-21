@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { attributeReferral } from '@/lib/referral/attribute'
 import crypto from 'crypto'
 
 // Force dynamic rendering
@@ -172,6 +173,9 @@ async function handleSubscriptionActive(
       billing_period_end: expirationDate,
     },
   })
+
+  // Credit the referral link that brought them, if any (lib/referral).
+  await attributeReferral(userId, 'pro')
 }
 
 async function handleSubscriptionCanceled(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
+import { attributeReferral } from '@/lib/referral/attribute'
 import Stripe from 'stripe'
 
 // Force dynamic rendering
@@ -131,6 +132,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       billing_period_end: billingPeriodEnd,
     },
   })
+
+  // Credit the referral link that brought them, if any (lib/referral).
+  await attributeReferral(userId, 'pro')
 }
 
 async function handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription) {

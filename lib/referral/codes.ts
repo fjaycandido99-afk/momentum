@@ -57,10 +57,22 @@ export interface ReferralStat {
   code: string
   label: string
   active: boolean
+  /**
+   * Taps on the link. The closest thing to a "download" we can honestly
+   * count: Apple does not tell an app about its own installs, so nobody can
+   * report downloads per link — only the tap that preceded one.
+   */
   clicks: number
+  /** Accounts that arrived on this link. One per person, ever. */
   signups: number
+  /** Of those, how many started an era — became a user, not just an account. */
+  eras: number
+  /** Of those, how many went premium. This is the column a bonus is paid on. */
+  pro: number
   /** signups / clicks as a percentage, or null with no clicks to divide by. */
   conversion: number | null
+  /** pro / signups — the quality of a channel, not just its volume. */
+  proRate: number | null
   url: string
   createdAt: string
 }

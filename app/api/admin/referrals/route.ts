@@ -27,13 +27,20 @@ async function stats(): Promise<ReferralStat[]> {
   return codes.map(c => {
     const clicks = at(c.id, 'click')
     const signups = at(c.id, 'signup')
+    const eras = at(c.id, 'era')
+    const pro = at(c.id, 'pro')
     return {
       code: c.code,
       label: c.label,
       active: c.active,
       clicks,
       signups,
+      eras,
+      pro,
       conversion: conversionOf(signups, clicks),
+      // Quality, not volume: 40 signups and no premium is a worse channel
+      // than 6 signups and two subscriptions, and only this column says so.
+      proRate: conversionOf(pro, signups),
       url: referralUrl(c.code),
       createdAt: c.created_at.toISOString(),
     }

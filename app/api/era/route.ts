@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { sendPushToUser } from '@/lib/push-service'
 import { firstName } from '@/lib/era/circle'
 import { eraName } from '@/lib/era/presets'
+import { attributeReferral } from '@/lib/referral/attribute'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,6 +48,10 @@ export async function POST(request: NextRequest) {
 
     const result = await startEra(user.id, body)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+
+    // Starting an era is the first sign a referred visitor became a user of
+    // the thing, not just an account (lib/referral). Once per person.
+    await attributeReferral(user.id, 'era')
 
     // Started from someone's "Join this era" link: tell them, once. Sharing
     // only keeps happening if the sharer ever hears that it worked. Failing

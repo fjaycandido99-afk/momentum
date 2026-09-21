@@ -138,22 +138,25 @@ export function ReferralLinks() {
                     <span className="truncate">{c.url.replace('https://', '')}</span>
                   </button>
                 </div>
-                <div className="flex items-center gap-4 shrink-0 text-right">
-                  <div>
-                    <p className="text-lg font-bold leading-none tabular-nums">{c.clicks}</p>
-                    <p className="text-[10px] text-white/45 uppercase tracking-wider">clicks</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold leading-none tabular-nums">{c.signups}</p>
-                    <p className="text-[10px] text-white/45 uppercase tracking-wider">signups</p>
-                  </div>
-                  <div>
-                    {/* No clicks, no rate — an empty ratio is not a zero. */}
-                    <p className="text-lg font-bold leading-none tabular-nums">
-                      {c.conversion === null ? '—' : `${c.conversion}%`}
-                    </p>
-                    <p className="text-[10px] text-white/45 uppercase tracking-wider">of clicks</p>
-                  </div>
+                {/* The channel's whole funnel, left to right: who tapped,
+                    who became an account, who became a user, who paid.
+                    Volume and quality read differently, and the last column
+                    is the one worth paying a bonus on. */}
+                <div className="flex items-center gap-3 sm:gap-4 shrink-0 text-right">
+                  {([
+                    ['clicks', c.clicks, null],
+                    ['signups', c.signups, c.conversion === null ? null : `${c.conversion}% of taps`],
+                    ['started', c.eras, null],
+                    ['pro', c.pro, c.proRate === null ? null : `${c.proRate}% of signups`],
+                  ] as const).map(([label, value, sub]) => (
+                    <div key={label}>
+                      <p className={`text-lg font-bold leading-none tabular-nums ${label === 'pro' && value > 0 ? 'text-emerald-300' : ''}`}>
+                        {value}
+                      </p>
+                      <p className="text-[10px] text-white/45 uppercase tracking-wider">{label}</p>
+                      {sub && <p className="text-[9px] text-white/30 leading-tight">{sub}</p>}
+                    </div>
+                  ))}
                 </div>
               </div>
               <button
