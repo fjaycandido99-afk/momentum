@@ -203,7 +203,23 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
         height: '1', width: '1',
         playerVars: { controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0, showinfo: 0, playsinline: 1 },
         events: {
-          onReady: () => { bgPlayerReadyRef.current = true },
+          onReady: (event) => {
+            bgPlayerReadyRef.current = true
+            // A tap that arrived before YouTube's iframe API finished
+            // loading. createBgMusicPlayer used to drop it on the floor —
+            // the state machine said "playing", the nav capsule appeared,
+            // and no video was ever loaded. Play it now instead.
+            const queued = pendingVideoRef.current
+            if (queued) {
+              pendingVideoRef.current = null
+              currentBgVideoIdRef.current = queued.youtubeId
+              pendingSeekRef.current = queued.startSeconds && queued.startSeconds > 0 ? queued.startSeconds : undefined
+              try {
+                event.target.loadVideoById(queued.youtubeId)
+                event.target.setVolume(80)
+              } catch {}
+            }
+          },
           onStateChange: (event) => {
             if (event.data === 1) {
               musicRetryCountRef.current = 0
@@ -295,6 +311,8 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
   }, [])
 
   const pendingSeekRef = useRef<number | undefined>(undefined)
+  /** A video asked for before the YouTube player existed. Played on onReady. */
+  const pendingVideoRef = useRef<{ youtubeId: string; startSeconds?: number } | null>(null)
 
   const createBgMusicPlayer = useCallback((youtubeId: string, startSeconds?: number) => {
     if (bgPlayerRef.current && bgPlayerReadyRef.current) {
@@ -302,7 +320,13 @@ export function HomeAudioProvider({ children }: HomeAudioProviderProps) {
       pendingSeekRef.current = startSeconds && startSeconds > 0 ? startSeconds : undefined
       bgPlayerRef.current.loadVideoById(youtubeId)
       bgPlayerRef.current.setVolume(80)
+      return
     }
+    // The player isn't up yet — a cold load, where the YouTube API script is
+    // still downloading. Remember what was asked for; the player's onReady
+    // plays it. Silently returning here is what made the first tap after
+    // opening the app do nothing at all.
+    pendingVideoRef.current = { youtubeId, startSeconds }
   }, [])
 
   const stopBackgroundMusic = useCallback(() => {

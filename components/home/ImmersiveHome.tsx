@@ -1108,6 +1108,15 @@ export function ImmersiveHome() {
     // spine of the day, and the Daily Guide is what people pay for — but an
     // era in progress is what the session is FOR, and saying so is the
     // difference between an app with a feature and a coach.
+    // Already playing? Then the card opens the player rather than starting
+    // the same thing again — a second tap used to reload the audio from the
+    // top. guideLabel is what handleGuidePlay was given, which is this
+    // title, so it identifies the option without a second source of truth.
+    const openOrPlay = (playing: boolean, play: () => void) =>
+      playing ? () => setFullPlayerOpen(true) : play
+
+    const guidePlaying = (title: string) => audioState.guideIsPlaying && audioState.guideLabel === title
+
     const sessionOption = {
       title: todaysAudio.title,
       subtitle: activeEra ? `For your ${eraName(activeEra.title)}` : todaysAudio.subtitle,
@@ -1115,7 +1124,9 @@ export function ImmersiveHome() {
       // The session's own art (public/sessions), rotating daily.
       image: getSessionThumb(todaysAudio.session),
       segmentsDone,
-      onOpen: handlePlayTodaysAudio,
+      playing: guidePlaying(todaysAudio.title),
+      loading: !!audioState.loadingGuide && audioState.guideLabel === todaysAudio.title,
+      onOpen: openOrPlay(guidePlaying(todaysAudio.title), handlePlayTodaysAudio),
     }
 
     // Option 2: the era's guided audio.
@@ -1127,8 +1138,14 @@ export function ImmersiveHome() {
       subtitle: activeEra ? `For your ${eraName(activeEra.title)}` : g.tagline,
       durationSec: null as number | null,
       image: activeEra?.image ?? null,
-      segmentsDone,
-      onOpen: () => handleGuidePlay(g.id, g.name, !isContentFree('voiceGuide', g.id)),
+      // The four Daily Guide dots belong to the session, not to this.
+      segmentsDone: [] as boolean[],
+      playing: guidePlaying(g.name),
+      loading: !!audioState.loadingGuide && audioState.guideLabel === g.name,
+      onOpen: openOrPlay(
+        guidePlaying(g.name),
+        () => handleGuidePlay(g.id, g.name, !isContentFree('voiceGuide', g.id)),
+      ),
     }
 
     // Option 3: a motivation video from the era's topic, stepped by era day
@@ -1145,8 +1162,13 @@ export function ImmersiveHome() {
           // print "61:00", which tells nobody anything.
           durationSec: video.duration && video.duration <= 3600 ? video.duration : null,
           image: video.thumbnail ?? activeEra?.image ?? null,
-          segmentsDone,
-          onOpen: () => handlePlayMotivation(video, videoIndex, featuredTopic),
+          segmentsDone: [] as boolean[],
+          playing: audioState.musicPlaying && audioState.backgroundMusic?.youtubeId === video.youtubeId,
+          loading: false,
+          onOpen: openOrPlay(
+            audioState.musicPlaying && audioState.backgroundMusic?.youtubeId === video.youtubeId,
+            () => handlePlayMotivation(video, videoIndex, featuredTopic),
+          ),
         }
       : null
 
@@ -1170,6 +1192,8 @@ export function ImmersiveHome() {
   }, [
     journalData, todaysAudio, era.era, isContentFree, handlePlayTodaysAudio, handleGuidePlay,
     motivationByTopic, featuredMotivationVideos, featuredTopic, audioChoice,
+    audioState.guideIsPlaying, audioState.guideLabel, audioState.loadingGuide,
+    audioState.musicPlaying, audioState.backgroundMusic?.youtubeId, setFullPlayerOpen,
   ])
 
   // A session played to the end from Today's Audio counts exactly as it does

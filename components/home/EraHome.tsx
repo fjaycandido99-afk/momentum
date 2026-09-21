@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
 import { CountUp } from '@/components/ui/CountUp'
+import { EqBars } from '@/components/ui/EqBars'
 import { haptic } from '@/lib/haptics'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -70,6 +71,15 @@ export interface TodaysAudio {
   onSwap?: () => void
   /** "2 of 3" — which of today's options is showing. */
   swapLabel?: string
+  /**
+   * This exact audio is playing right now. The card showed a Play button
+   * either way, so the only way to tell was the nav capsule at the bottom of
+   * the screen — and tapping the card again restarted what was already
+   * going. While it's playing the card opens the player instead.
+   */
+  playing?: boolean
+  /** A guide's audio is being generated — the tap landed, sound is coming. */
+  loading?: boolean
 }
 
 export function EraHome({
@@ -309,7 +319,11 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
         {audio.swapLabel && <span className="tabular-nums">{audio.swapLabel}</span>}
       </button>
     )}
-    <button onClick={audio.onOpen} className="w-full text-left card-surface-lg p-4 press-scale flex items-center gap-4">
+    <button
+      onClick={audio.onOpen}
+      aria-label={audio.playing ? `Open the player — ${audio.title} is playing` : undefined}
+      className="w-full text-left card-surface-lg p-4 press-scale flex items-center gap-4"
+    >
       <div className="relative w-14 h-14 shrink-0 rounded-xl overflow-hidden border border-white/[0.12] bg-[linear-gradient(160deg,rgba(255,255,255,0.18),rgba(255,255,255,0.02))] flex items-center justify-center">
         {audio.image ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -323,22 +337,34 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">Today&rsquo;s audio</p>
+        <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">
+          {audio.playing ? 'Now playing' : audio.loading ? 'Starting…' : 'Today’s audio'}
+        </p>
         <p className="text-xl text-white leading-tight mt-0.5 truncate" style={{ ...SERIF, fontWeight: 500 }}>{audio.title}</p>
         <p className="text-xs text-white/60 mt-0.5 truncate">{audio.subtitle}</p>
         {/* The day's four Daily Guide segments as dots — the "n/4" that
             used to be squeezed onto the subtitle and cut off on a phone. */}
-        <div className="flex items-center gap-1 mt-1.5" aria-label={`${done} of 4 Daily Guide sessions done today`}>
-          {audio.segmentsDone.map((d, i) => (
-            <span key={i} className={`w-1.5 h-1.5 rounded-full ${d ? 'bg-white' : 'bg-white/20'}`} />
-          ))}
-        </div>
+        {audio.segmentsDone.length > 0 && (
+          <div className="flex items-center gap-1 mt-1.5" aria-label={`${done} of 4 Daily Guide sessions done today`}>
+            {audio.segmentsDone.map((d, i) => (
+              <span key={i} className={`w-1.5 h-1.5 rounded-full ${d ? 'bg-white' : 'bg-white/20'}`} />
+            ))}
+          </div>
+        )}
       </div>
       {audio.durationSec !== null && (
         <span className="text-xs text-white/60 tabular-nums shrink-0">{formatDuration(audio.durationSec)}</span>
       )}
-      <span className="w-10 h-10 shrink-0 rounded-full bg-white text-black flex items-center justify-center">
-        <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
+      <span className="w-10 h-10 shrink-0 rounded-full bg-white text-black flex items-center justify-center" aria-hidden>
+        {audio.playing ? (
+          // Moving bars, because a static pause icon reads as "paused".
+          // EqBars animates with rAF: CSS keyframes are unreliable here.
+          <EqBars height={14} barWidth={3} gap={2} color="black" barCount={3} />
+        ) : audio.loading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
+        )}
       </span>
     </button>
     </div>
