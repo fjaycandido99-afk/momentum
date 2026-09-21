@@ -22,6 +22,7 @@
  */
 
 export type MovementPattern =
+  // The compound patterns a session is built from.
   | 'squat'
   | 'hinge'
   | 'horizontal_push'
@@ -30,6 +31,15 @@ export type MovementPattern =
   | 'vertical_pull'
   | 'single_leg'
   | 'core'
+  | 'carry'
+  // One joint at a time. Named by the joint and the direction, because
+  // that is the honest description — "arms day" isn't a pattern.
+  | 'elbow_flexion'
+  | 'elbow_extension'
+  | 'lateral_raise'
+  | 'knee_flexion'
+  | 'knee_extension'
+  | 'calf'
 
 export type Equipment =
   | 'barbell'
@@ -59,6 +69,11 @@ export interface Movement {
   pick?: string
   /** What people also call it, for matching a typed row. */
   aliases?: string[]
+  /**
+   * Overrides the pattern's regions, for the rare movement that genuinely
+   * differs from its family. Left off almost everywhere on purpose.
+   */
+  regions?: Region[]
   /**
    * Reviewed technique guidance. Empty everywhere on purpose: writing it is
    * a qualified professional's job, and the app says so rather than
@@ -108,6 +123,107 @@ export const PATTERN_LABELS: Record<MovementPattern, string> = {
   vertical_pull: 'Vertical pull',
   single_leg: 'Single leg',
   core: 'Core',
+  carry: 'Carry',
+  elbow_flexion: 'Elbow flexion',
+  elbow_extension: 'Elbow extension',
+  lateral_raise: 'Lateral raise',
+  knee_flexion: 'Knee flexion',
+  knee_extension: 'Knee extension',
+  calf: 'Calf',
+}
+
+/**
+ * Whether more than one joint moves.
+ *
+ * A property of the pattern, not a judgement about the exercise: a squat
+ * bends the knees and the hips, a curl bends the elbow. Derived per
+ * pattern so nobody has to make forty-two separate calls — and so the
+ * answer can't be inconsistent between two squats.
+ *
+ * Says nothing about which is better. Both words appear on gym equipment
+ * and in every programme ever written; they describe the movement, not its
+ * worth.
+ */
+export type Mechanic = 'compound' | 'isolation'
+
+export const MECHANIC_BY_PATTERN: Record<MovementPattern, Mechanic> = {
+  squat: 'compound',
+  hinge: 'compound',
+  horizontal_push: 'compound',
+  horizontal_pull: 'compound',
+  vertical_push: 'compound',
+  vertical_pull: 'compound',
+  single_leg: 'compound',
+  carry: 'compound',
+  core: 'isolation',
+  elbow_flexion: 'isolation',
+  elbow_extension: 'isolation',
+  lateral_raise: 'isolation',
+  knee_flexion: 'isolation',
+  knee_extension: 'isolation',
+  calf: 'isolation',
+}
+
+/**
+ * Broad regions, and deliberately only broad ones.
+ *
+ * "Quads and glutes" is the kind of thing printed on the machine. "Vastus
+ * medialis, 34%" is a claim about a body the app cannot see, so the list
+ * stops at regions a person can point to. Also derived per pattern: a
+ * front squat and a back squat train the same thing, and two per-movement
+ * lists would eventually disagree with each other.
+ */
+export type Region =
+  | 'quads'
+  | 'glutes'
+  | 'hamstrings'
+  | 'back'
+  | 'chest'
+  | 'shoulders'
+  | 'biceps'
+  | 'triceps'
+  | 'core'
+  | 'calves'
+  | 'grip'
+
+export const REGION_LABELS: Record<Region, string> = {
+  quads: 'Quads',
+  glutes: 'Glutes',
+  hamstrings: 'Hamstrings',
+  back: 'Back',
+  chest: 'Chest',
+  shoulders: 'Shoulders',
+  biceps: 'Biceps',
+  triceps: 'Triceps',
+  core: 'Core',
+  calves: 'Calves',
+  grip: 'Grip',
+}
+
+export const PATTERN_REGIONS: Record<MovementPattern, Region[]> = {
+  squat: ['quads', 'glutes'],
+  hinge: ['hamstrings', 'glutes', 'back'],
+  single_leg: ['quads', 'glutes'],
+  horizontal_push: ['chest', 'shoulders', 'triceps'],
+  vertical_push: ['shoulders', 'triceps'],
+  horizontal_pull: ['back', 'biceps'],
+  vertical_pull: ['back', 'biceps'],
+  core: ['core'],
+  carry: ['grip', 'core'],
+  elbow_flexion: ['biceps'],
+  elbow_extension: ['triceps'],
+  lateral_raise: ['shoulders'],
+  knee_flexion: ['hamstrings'],
+  knee_extension: ['quads'],
+  calf: ['calves'],
+}
+
+export function mechanicOf(movement: Movement): Mechanic {
+  return MECHANIC_BY_PATTERN[movement.pattern]
+}
+
+export function regionsOf(movement: Movement): Region[] {
+  return movement.regions ?? PATTERN_REGIONS[movement.pattern]
 }
 
 /**
@@ -128,6 +244,13 @@ export const PATTERN_MEANS: Record<MovementPattern, string> = {
   horizontal_pull: 'Pulling toward the torso — rows.',
   vertical_pull: 'Pulling down, or pulling yourself up.',
   core: 'Holding the middle still while something pulls on it.',
+  carry: 'Holding something heavy and walking with it.',
+  elbow_flexion: 'The elbow closing — curls.',
+  elbow_extension: 'The elbow opening — pushdowns, extensions, dips.',
+  lateral_raise: 'The arm lifting out to the side.',
+  knee_flexion: 'The knee closing — leg curls.',
+  knee_extension: 'The knee opening — leg extensions.',
+  calf: 'Rising onto the toes.',
 }
 
 export const MOVEMENTS: Movement[] = [
@@ -477,6 +600,297 @@ export const MOVEMENTS: Movement[] = [
     equipment: ['cable', 'band'],
     level: 'standard',
   },
+  {
+    id: 'side_plank',
+    name: 'Side plank',
+    pattern: 'core',
+    equipment: ['bodyweight'],
+    level: 'simplest',
+  },
+  {
+    id: 'inverted_row',
+    name: 'Inverted row',
+    pattern: 'horizontal_pull',
+    equipment: ['bodyweight', 'rack'],
+    level: 'simplest',
+    aliases: ['bodyweight row'],
+    pick: 'The pull you can do with a bar and no weights.',
+  },
+  {
+    id: 'band_row_single',
+    name: 'Single-arm band row',
+    pattern: 'horizontal_pull',
+    equipment: ['band'],
+    level: 'simplest',
+  },
+  {
+    id: 'dip',
+    name: 'Dip',
+    pattern: 'horizontal_push',
+    equipment: ['bodyweight'],
+    level: 'advanced',
+    pick: 'Needs bars. The hardest push here with no weights.',
+  },
+  {
+    id: 'chin_up',
+    name: 'Chin-up',
+    pattern: 'vertical_pull',
+    equipment: ['bodyweight'],
+    level: 'advanced',
+  },
+  {
+    id: 'kettlebell_swing',
+    name: 'Kettlebell swing',
+    pattern: 'hinge',
+    equipment: ['kettlebell'],
+    level: 'standard',
+  },
+  {
+    id: 'glute_bridge',
+    name: 'Glute bridge',
+    pattern: 'hinge',
+    equipment: ['bodyweight'],
+    level: 'simplest',
+    pick: 'Floor, no kit.',
+  },
+  {
+    id: 'good_morning',
+    name: 'Good morning',
+    pattern: 'hinge',
+    equipment: ['barbell'],
+    level: 'advanced',
+  },
+  {
+    id: 'ab_wheel',
+    name: 'Ab wheel rollout',
+    pattern: 'core',
+    equipment: ['bodyweight'],
+    level: 'advanced',
+    pick: 'Needs a wheel, and a lot more than it looks like.',
+  },
+
+  // ── Carry ───────────────────────────────────────────────────────────────
+  {
+    id: 'farmers_carry',
+    name: 'Farmer’s carry',
+    pattern: 'carry',
+    equipment: ['dumbbell', 'kettlebell'],
+    level: 'simplest',
+    aliases: ['farmers walk', 'farmer walk'],
+    pick: 'Needs floor to walk on, nothing else.',
+  },
+  {
+    id: 'suitcase_carry',
+    name: 'Suitcase carry',
+    pattern: 'carry',
+    equipment: ['dumbbell', 'kettlebell'],
+    level: 'standard',
+    pick: 'One side only.',
+  },
+  {
+    id: 'front_rack_carry',
+    name: 'Front-rack carry',
+    pattern: 'carry',
+    equipment: ['kettlebell', 'dumbbell'],
+    level: 'standard',
+  },
+
+  // ── Elbow flexion ───────────────────────────────────────────────────────
+  {
+    id: 'dumbbell_curl',
+    name: 'Dumbbell curl',
+    pattern: 'elbow_flexion',
+    equipment: ['dumbbell'],
+    level: 'simplest',
+    aliases: ['bicep curl', 'biceps curl', 'db curl'],
+  },
+  {
+    id: 'barbell_curl',
+    name: 'Barbell curl',
+    pattern: 'elbow_flexion',
+    equipment: ['barbell'],
+    level: 'standard',
+  },
+  {
+    id: 'cable_curl',
+    name: 'Cable curl',
+    pattern: 'elbow_flexion',
+    equipment: ['cable'],
+    level: 'standard',
+  },
+  {
+    id: 'band_curl',
+    name: 'Band curl',
+    pattern: 'elbow_flexion',
+    equipment: ['band'],
+    level: 'simplest',
+    pick: 'Packs into a bag.',
+  },
+
+  // ── Elbow extension ─────────────────────────────────────────────────────
+  {
+    id: 'bench_dip',
+    name: 'Bench dip',
+    pattern: 'elbow_extension',
+    equipment: ['bodyweight', 'bench'],
+    level: 'simplest',
+    pick: 'Needs a bench, a chair or a step.',
+  },
+  {
+    id: 'cable_pushdown',
+    name: 'Cable pushdown',
+    pattern: 'elbow_extension',
+    equipment: ['cable'],
+    level: 'simplest',
+    aliases: ['tricep pushdown', 'triceps pushdown'],
+  },
+  {
+    id: 'overhead_cable_extension',
+    name: 'Overhead cable extension',
+    pattern: 'elbow_extension',
+    equipment: ['cable'],
+    level: 'standard',
+  },
+  {
+    id: 'skull_crusher',
+    name: 'Skull crusher',
+    pattern: 'elbow_extension',
+    equipment: ['barbell', 'dumbbell', 'bench'],
+    level: 'standard',
+  },
+  {
+    id: 'band_pushdown',
+    name: 'Band pushdown',
+    pattern: 'elbow_extension',
+    equipment: ['band'],
+    level: 'simplest',
+  },
+
+  // ── Lateral raise ───────────────────────────────────────────────────────
+  {
+    id: 'dumbbell_lateral_raise',
+    name: 'Dumbbell lateral raise',
+    pattern: 'lateral_raise',
+    equipment: ['dumbbell'],
+    level: 'simplest',
+    aliases: ['lateral raise', 'side raise', 'lat raise'],
+  },
+  {
+    id: 'cable_lateral_raise',
+    name: 'Cable lateral raise',
+    pattern: 'lateral_raise',
+    equipment: ['cable'],
+    level: 'standard',
+  },
+  {
+    id: 'band_lateral_raise',
+    name: 'Band lateral raise',
+    pattern: 'lateral_raise',
+    equipment: ['band'],
+    level: 'simplest',
+  },
+  {
+    id: 'machine_lateral_raise',
+    name: 'Machine lateral raise',
+    pattern: 'lateral_raise',
+    equipment: ['machine'],
+    level: 'simplest',
+    pick: 'The machine holds the path for you.',
+  },
+
+  // ── Knee flexion ────────────────────────────────────────────────────────
+  {
+    id: 'leg_curl',
+    name: 'Leg curl',
+    pattern: 'knee_flexion',
+    equipment: ['machine'],
+    level: 'simplest',
+    aliases: ['hamstring curl', 'seated leg curl', 'lying leg curl'],
+  },
+  {
+    id: 'slider_leg_curl',
+    name: 'Slider leg curl',
+    pattern: 'knee_flexion',
+    equipment: ['bodyweight'],
+    level: 'standard',
+    pick: 'Needs a slippery floor or a towel.',
+  },
+  {
+    id: 'nordic_curl',
+    name: 'Nordic curl',
+    pattern: 'knee_flexion',
+    equipment: ['bodyweight'],
+    level: 'advanced',
+    pick: 'Needs something to hold your ankles.',
+  },
+  {
+    id: 'band_leg_curl',
+    name: 'Band leg curl',
+    pattern: 'knee_flexion',
+    equipment: ['band'],
+    level: 'simplest',
+  },
+
+  // ── Knee extension ──────────────────────────────────────────────────────
+  {
+    id: 'leg_extension',
+    name: 'Leg extension',
+    pattern: 'knee_extension',
+    equipment: ['machine'],
+    level: 'simplest',
+  },
+  {
+    id: 'band_leg_extension',
+    name: 'Band leg extension',
+    pattern: 'knee_extension',
+    equipment: ['band'],
+    level: 'simplest',
+  },
+  {
+    id: 'reverse_nordic',
+    name: 'Reverse Nordic',
+    pattern: 'knee_extension',
+    equipment: ['bodyweight'],
+    level: 'advanced',
+  },
+  {
+    id: 'sissy_squat',
+    name: 'Sissy squat',
+    pattern: 'knee_extension',
+    equipment: ['bodyweight'],
+    level: 'advanced',
+  },
+
+  // ── Calf ────────────────────────────────────────────────────────────────
+  {
+    id: 'bodyweight_calf_raise',
+    name: 'Calf raise',
+    pattern: 'calf',
+    equipment: ['bodyweight'],
+    level: 'simplest',
+    aliases: ['standing calf raise'],
+  },
+  {
+    id: 'dumbbell_calf_raise',
+    name: 'Dumbbell calf raise',
+    pattern: 'calf',
+    equipment: ['dumbbell'],
+    level: 'simplest',
+  },
+  {
+    id: 'machine_calf_raise',
+    name: 'Machine calf raise',
+    pattern: 'calf',
+    equipment: ['machine'],
+    level: 'simplest',
+  },
+  {
+    id: 'seated_calf_raise',
+    name: 'Seated calf raise',
+    pattern: 'calf',
+    equipment: ['machine'],
+    level: 'simplest',
+  },
 ]
 
 export const MOVEMENTS_BY_ID = new Map(MOVEMENTS.map(m => [m.id, m]))
@@ -498,6 +912,15 @@ export const PATTERN_ORDER: MovementPattern[] = [
   'horizontal_pull',
   'vertical_pull',
   'core',
+  'carry',
+  // The one-joint patterns last: they're what gets added to a session, not
+  // what a session is built from.
+  'lateral_raise',
+  'elbow_flexion',
+  'elbow_extension',
+  'knee_extension',
+  'knee_flexion',
+  'calf',
 ]
 
 const LEVEL_RANK: Record<MovementLevel, number> = { simplest: 0, standard: 1, advanced: 2 }

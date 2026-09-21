@@ -10,6 +10,9 @@ import {
   PATTERN_LABELS,
   PATTERN_MEANS,
   PATTERN_ORDER,
+  REGION_LABELS,
+  mechanicOf,
+  regionsOf,
   movementsByPattern,
   type MovementPattern,
 } from '@/lib/movements/library'
@@ -107,6 +110,38 @@ describe('the library', () => {
   it('has a stop rule, which is safety and not technique', () => {
     expect(MOVEMENT_STOP_SIGNALS.length).toBeGreaterThanOrEqual(3)
     expect(MOVEMENT_STOP_SIGNALS.join(' ')).toMatch(/pain/i)
+  })
+})
+
+describe('the indicators', () => {
+  it('calls a movement compound or isolation by how many joints move', () => {
+    // Derived per pattern so two squats can never disagree, and so nobody
+    // has to make sixty separate judgement calls.
+    const squat = MOVEMENTS_BY_ID.get('back_squat')!
+    const curl = MOVEMENTS_BY_ID.get('dumbbell_curl')!
+    expect(mechanicOf(squat)).toBe('compound')
+    expect(mechanicOf(curl)).toBe('isolation')
+    for (const m of MOVEMENTS) expect(['compound', 'isolation'], m.id).toContain(mechanicOf(m))
+  })
+
+  it('names broad regions and nothing finer', () => {
+    // "Quads and glutes" is what's printed on the machine. A muscle head
+    // or a percentage would be a claim about a body the app can't see.
+    for (const m of MOVEMENTS) {
+      const regions = regionsOf(m)
+      expect(regions.length, m.id).toBeGreaterThan(0)
+      for (const region of regions) {
+        expect(REGION_LABELS[region], `${m.id}: ${region}`).toBeTruthy()
+        expect(REGION_LABELS[region]).not.toMatch(/%|vastus|medial|lateral head|rectus/i)
+      }
+    }
+  })
+
+  it('never claims one mechanic is better than the other', () => {
+    // Both words describe the movement. Neither is a recommendation, and
+    // no copy in the library says otherwise.
+    const text = [...MOVEMENTS.map(m => m.pick ?? ''), ...Object.values(PATTERN_MEANS)].join(' ')
+    expect(text).not.toMatch(/compound(s)? (are|is) better|isolation is a waste|skip isolation/i)
   })
 })
 

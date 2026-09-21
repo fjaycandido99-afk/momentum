@@ -11,6 +11,7 @@ import {
 } from '@/lib/practices/presets'
 import { daysLabel } from '@/lib/practices/logic'
 import { BLOCKERS } from '@/lib/era/reasons'
+import { domainArt } from '@/lib/practices/domain-art'
 import { haptic } from '@/lib/haptics'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -124,17 +125,43 @@ export function AddPracticeSheet({
               Voxu doesn&rsquo;t replace your gym app or your books. It keeps you consistent with them.
             </p>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {DOMAINS.map(d => (
-                <button
-                  key={d.id}
-                  onClick={() => { haptic('light'); setDomain(d.id) }}
-                  className="py-3 rounded-xl border border-white/15 text-sm text-white hover:bg-white/[0.06]"
-                >
-                  {d.label}
-                </button>
-              ))}
+              {DOMAINS.map(d => {
+                const art = domainArt(d.id)
+                return (
+                  <button
+                    key={d.id}
+                    onClick={() => { haptic('light'); setDomain(d.id) }}
+                    className="rounded-xl border border-white/15 hover:bg-white/[0.06] overflow-hidden text-left"
+                  >
+                    {/* The room, where there's a shot of it. A domain
+                        without art gets height instead of a stand-in, so
+                        the grid stays even. */}
+                    {art ? (
+                      <span className="block aspect-[16/9] relative">
+                        <img src={art} alt="" aria-hidden className="w-full h-full object-cover" loading="lazy" />
+                        <span className="absolute inset-0 bg-gradient-to-t from-black/75 to-transparent" />
+                      </span>
+                    ) : (
+                      <span className="block aspect-[16/9] bg-white/[0.03]" />
+                    )}
+                    <span className="block px-3 py-2.5 text-sm text-white">{d.label}</span>
+                  </button>
+                )
+              })}
             </div>
           </>
+        )}
+
+        {domain && !preset && domainArt(domain) && (
+          <div className="mt-4 rounded-xl overflow-hidden border border-white/[0.1]">
+            <img
+              src={domainArt(domain)!}
+              alt=""
+              aria-hidden
+              className="w-full aspect-[16/7] object-cover"
+              loading="lazy"
+            />
+          </div>
         )}
 
         {domain && !preset && (

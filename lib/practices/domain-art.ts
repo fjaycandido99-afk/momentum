@@ -18,7 +18,7 @@ export const DOMAIN_IMAGES: Partial<Record<PracticeDomain, string>> = {
   study: '/practices/study.webp',
   work: '/practices/work.webp',
   mind: '/practices/mind.webp',
-  // run: still to generate. The header stays empty until it exists.
+  run: '/practices/run.webp',
 }
 
 export function domainArt(domain: PracticeDomain | undefined): string | null {

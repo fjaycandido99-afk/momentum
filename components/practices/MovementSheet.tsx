@@ -8,6 +8,9 @@ import {
   MOVEMENT_TECHNIQUE_PENDING,
   PATTERN_LABELS,
   PATTERN_MEANS,
+  REGION_LABELS,
+  mechanicOf,
+  regionsOf,
   type Movement,
 } from '@/lib/movements/library'
 import {
@@ -95,7 +98,13 @@ export function MovementSheet({
           </button>
         </div>
 
+        {/* The indicators: what it needs, whether one joint moves or
+            several, and how much practice it asks for. Facts about the
+            movement — none of them tell anyone what to do. */}
         <div className="flex flex-wrap gap-1.5 mt-3">
+          <span className="text-[11px] text-white/65 rounded-full border border-white/15 px-2.5 py-0.5 capitalize">
+            {mechanicOf(current)}
+          </span>
           {current.equipment.map(e => (
             <span key={e} className="text-[11px] text-white/65 rounded-full border border-white/15 px-2.5 py-0.5">
               {e}
@@ -104,6 +113,23 @@ export function MovementSheet({
           <span className="text-[11px] text-white/45 rounded-full border border-white/10 px-2.5 py-0.5">
             {LEVEL_LABEL[current.level]}
           </span>
+        </div>
+
+        {/* Broad regions only. "Quads and glutes" is what's printed on the
+            machine; a percentage per muscle head would be a claim about a
+            body this app has never seen. */}
+        <div className="mt-3">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Works</p>
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            {regionsOf(current).map(region => (
+              <span
+                key={region}
+                className="text-[12px] text-white/80 rounded-lg bg-white/[0.06] border border-white/[0.1] px-2.5 py-1"
+              >
+                {REGION_LABELS[region]}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* The visual: art for the movement or its family where it exists,
@@ -225,21 +251,35 @@ export function MovementSheet({
           <>
             <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-6">Variations</p>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              {variations.slice(0, 6).map(v => (
+              {variations.slice(0, 6).map(v => {
+                const thumb = artFor(v)
+                return (
                 <button
                   key={v.id}
                   onClick={() => show(v)}
-                  className="rounded-xl border border-white/[0.12] p-3 text-left hover:bg-white/[0.04]"
+                  className="rounded-xl border border-white/[0.12] overflow-hidden text-left hover:bg-white/[0.04]"
                 >
-                  <span className="text-white/45">
-                    <PatternGlyph pattern={v.pattern} className="w-5 h-5" />
-                  </span>
-                  <span className="block text-[13px] text-white leading-snug mt-1.5">{v.name}</span>
-                  <span className="block text-[11px] text-white/40 mt-0.5 truncate">
-                    {v.equipment.join(' · ')}
+                  {/* Its own art if it has any, its family's otherwise, and
+                      the mark when there's neither. */}
+                  {thumb ? (
+                    <span className="block aspect-[16/10] relative">
+                      <img src={thumb.src} alt="" aria-hidden className="w-full h-full object-cover" loading="lazy" />
+                      <span className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    </span>
+                  ) : (
+                    <span className="flex aspect-[16/10] items-center justify-center text-white/35 bg-white/[0.03]">
+                      <PatternGlyph pattern={v.pattern} className="w-6 h-6" />
+                    </span>
+                  )}
+                  <span className="block p-3">
+                    <span className="block text-[13px] text-white leading-snug">{v.name}</span>
+                    <span className="block text-[11px] text-white/40 mt-0.5 truncate">
+                      {v.equipment.join(' · ')}
+                    </span>
                   </span>
                 </button>
-              ))}
+                )
+              })}
             </div>
           </>
         )}
