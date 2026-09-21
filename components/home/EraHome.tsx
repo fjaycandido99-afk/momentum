@@ -7,6 +7,8 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
+import { CountUp } from '@/components/ui/CountUp'
+import { haptic } from '@/lib/haptics'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { VOICE_GUIDES } from './home-types'
@@ -173,7 +175,7 @@ function StartHero() {
   )
 }
 
-function EraHero({ era, onShare }: { era: EraToday; onShare: () => void }) {
+function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => void; justKeptDay?: number | null }) {
   const pct = Math.round((era.day / era.lengthDays) * 100)
   const byDay = new Map(era.days.map(d => [d.day, d.kept]))
   return (
@@ -219,7 +221,18 @@ function EraHero({ era, onShare }: { era: EraToday; onShare: () => void }) {
                     : kept === null ? 'bg-white/60'
                     : isToday ? 'bg-white/25 animate-pulse motion-reduce:animate-none'
                     : 'bg-white/15'
-                return <span key={n} className={`flex-1 h-2.5 rounded-[2px] ${cls}`} />
+                // The day just answered gets a beat of its own: the segment
+                // scales up and settles. Everything else transitions colour,
+                // so a filled day doesn't just blink into place.
+                const justAnswered = justKeptDay === n
+                return (
+                  <span
+                    key={n}
+                    className={`flex-1 h-2.5 rounded-[2px] ${cls} transition-all duration-500 motion-reduce:transition-none ${
+                      justAnswered ? 'scale-y-[2.2] motion-reduce:scale-y-100' : ''
+                    }`}
+                  />
+                )
               })}
             </div>
             <span className="text-[11px] text-white/60 tabular-nums">{pct}%</span>
@@ -320,6 +333,8 @@ function ActiveEra({
   const [pendingWhy, setPendingWhy] = useState<{ kept: boolean } | null>(null)
   /** Writing tomorrow's promise tonight, rather than in a rushed morning. */
   const [writingAhead, setWritingAhead] = useState(false)
+  /** The day whose segment just filled, for one beat after answering. */
+  const [justKeptDay, setJustKeptDay] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [crisis, setCrisis] = useState<CrisisContent | null>(null)
@@ -395,6 +410,14 @@ function ActiveEra({
 
   const check = async (which: 'today' | 'yesterday', kept: boolean, reason?: string) => {
     const data = await post('/api/era/check', { which, kept, reason })
+    if (data) {
+      // The one beat the whole loop turns on. It used to be a silent
+      // re-render — the same feedback as submitting a form.
+      haptic(kept ? 'success' : 'light')
+      const day = which === 'today' ? era.day : Math.max(1, era.day - 1)
+      setJustKeptDay(day)
+      window.setTimeout(() => setJustKeptDay(null), 900)
+    }
     // Answering yesterday moves the card straight on to today's promise, so
     // the "why" would never be asked for the miss that matters most — the one
     // they didn't answer last night. Hold it over into the next step.
@@ -775,7 +798,7 @@ function ActiveEra({
 
   return (
     <>
-      <EraHero era={era} onShare={() => setSharing(true)} />
+      <EraHero era={era} onShare={() => setSharing(true)} justKeptDay={justKeptDay} />
 
       {/* What an era actually asks of you, for the first few days.
           Starting one used to drop you into a screen of cards — a promise, a
@@ -847,7 +870,9 @@ function ActiveEra({
           <div>
             <p className="text-[11px] text-white/55">Promises kept</p>
             <p className="text-2xl text-white leading-none mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
-              {era.stats.keptPercent === null ? '—' : `${era.stats.keptPercent}%`}
+              {era.stats.keptPercent === null
+                ? '—'
+                : <CountUp value={era.stats.keptPercent} suffix="%" />}
             </p>
             {/* A dash beside a streak of 1 reads like a contradiction; it
                 isn't, it's just waiting for the first answer. */}
