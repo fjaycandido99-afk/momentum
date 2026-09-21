@@ -114,3 +114,41 @@ Save into `public/practices/`, then add the path to `DOMAIN_IMAGES` in
 
 Add to any of these prompts if a generator returns a contact sheet:
 `single subject filling the frame, one photograph, not a collage, not a grid`.
+
+## Per-movement art — the fourteen that matter
+
+These are the movements a template can actually put in front of someone
+(`npx tsx scripts/movement-art-todo.ts` regenerates the list). They show on
+the variation cards and as the hero for that specific movement.
+
+Same tail on every one:
+
+```
+side view in near darkness, outline only, backlit haze, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 4:3 landscape, single subject filling the frame, one photograph, not a collage, no text, no labels, no watermark, no logos
+```
+
+| Save as | Subject (prepend to the tail) |
+| --- | --- |
+| `bodyweight-squat.webp` | Rim-lit silhouette of a single athlete standing with arms held forward at chest height on a bare gym floor, |
+| `dumbbell-rdl.webp` | Rim-lit silhouette of a single athlete standing holding two dumbbells at thigh height, |
+| `back-extension.webp` | Rim-lit silhouette of a single athlete face down on a back-extension bench in an empty gym, |
+| `glute-bridge.webp` | Rim-lit silhouette of a single athlete lying on a mat with the hips lifted, |
+| `reverse-lunge.webp` | Rim-lit silhouette of a single athlete in a long split stance holding two dumbbells, |
+| `floor-press.webp` | Rim-lit silhouette of a single athlete lying on a gym floor holding two dumbbells above the chest, |
+| `push-up.webp` | Rim-lit silhouette of a single athlete at the top of a push-up on a bare gym floor, |
+| `dip.webp` | Rim-lit silhouette of a single athlete supported on parallel bars, |
+| `band-row.webp` | Rim-lit silhouette of a single athlete standing holding a resistance band anchored ahead of them, |
+| `inverted-row.webp` | Rim-lit silhouette of a single athlete hanging beneath a waist-high bar in a rack, |
+| `band-pulldown.webp` | Rim-lit silhouette of a single athlete kneeling holding a band anchored overhead, |
+| `chin-up.webp` | Rim-lit silhouette of a single athlete hanging from a steel bar, seen from behind, |
+| `dumbbell-shoulder-press.webp` | Rim-lit silhouette of a single athlete seated holding two dumbbells at shoulder height, |
+| `machine-shoulder-press.webp` | Rim-lit silhouette of a single athlete seated at a shoulder press machine in an empty gym, |
+| `pike-push-up.webp` | Rim-lit silhouette of a single athlete with hands and feet on the floor and the hips high, |
+| `dead-bug.webp` | Rim-lit silhouette of a single athlete lying on their back on a mat with one arm and one leg raised, |
+
+## Still missing from the gym set
+
+| Save as | Prompt |
+| --- | --- |
+| `figure-hinge.webp` | Rim-lit silhouette of a single athlete standing over a loaded barbell, side view in near darkness, outline only, backlit haze, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 4:3 landscape, single subject filling the frame, one photograph, not a collage, no text, no labels, no watermark, no logos |
+| `kit-vertical-push.webp` | Two heavy dumbbells standing on end on a rubber floor, long shadows, empty gym, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 4:3 landscape, single subject filling the frame, one photograph, not a collage, no text, no labels, no watermark, no logos |
