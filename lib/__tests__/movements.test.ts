@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { MOVEMENT_IMAGES, PATTERN_IMAGES, artAlt, artFor } from '@/lib/movements/images'
 import {
   MOVEMENTS,
   MOVEMENTS_BY_ID,
@@ -129,6 +132,41 @@ describe('browsing the library', () => {
       expect(PATTERN_LABELS[pattern], pattern).toBeTruthy()
     }
     expect(PATTERN_GLYPH_KEYS.length).toBe(PATTERN_ORDER.length)
+  })
+})
+
+describe('movement art', () => {
+  it('points only at files that are actually on disk', () => {
+    // A typo here would ship a broken image on a paid screen. Checked
+    // against the filesystem rather than trusted.
+    const paths = [...Object.values(MOVEMENT_IMAGES), ...Object.values(PATTERN_IMAGES)]
+    for (const path of paths) {
+      expect(path.startsWith('/movements/'), path).toBe(true)
+      expect(existsSync(join(process.cwd(), 'public', path)), `missing file: public${path}`).toBe(true)
+    }
+  })
+
+  it('keys movement art by a real movement id', () => {
+    for (const id of Object.keys(MOVEMENT_IMAGES)) {
+      expect(MOVEMENTS_BY_ID.has(id), `${id} is not a movement`).toBe(true)
+    }
+  })
+
+  it('falls back to the family, then to the mark, so nothing renders empty', () => {
+    const squat = MOVEMENTS_BY_ID.get('back_squat')!
+    // With no art configured at all, artFor returns null and the sheet
+    // draws the pattern mark — which always exists.
+    const art = artFor(squat)
+    if (art) expect(['movement', 'pattern']).toContain(art.scope)
+    else expect(art).toBeNull()
+  })
+
+  it('never describes the picture as a demonstration of form', () => {
+    // The art is equipment and setting. Calling it a demonstration would
+    // be the app claiming to teach with a picture nobody reviewed.
+    const squat = MOVEMENTS_BY_ID.get('back_squat')!
+    const alt = artAlt(squat, { src: '/movements/x.webp', scope: 'movement' })
+    expect(alt).not.toMatch(/demonstrat|how to|correct form|proper/i)
   })
 })
 

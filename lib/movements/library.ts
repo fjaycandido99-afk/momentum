@@ -64,11 +64,39 @@ export interface Movement {
    * a qualified professional's job, and the app says so rather than
    * guessing (MOVEMENT_TECHNIQUE_PENDING).
    */
-  technique?: {
-    reviewedBy: string
-    reviewedOn: string
-    steps: string[]
-  }
+  technique?: MovementTechnique
+}
+
+/**
+ * The reviewed half of a movement: the words a qualified person put their
+ * name to.
+ *
+ * Shaped like the screen it fills — numbered steps, short cues, the
+ * mistakes worth naming, and the callouts pinned onto the hero image. All
+ * of it arrives together or not at all: a reviewer approves the picture and
+ * the words as one thing, because an arrow pointing at a body is a claim
+ * about that body.
+ *
+ * `reviewedBy` is a person, not a company and not "Voxu". If nobody can be
+ * named, this object doesn't exist and the screen says so.
+ */
+export interface MovementTechnique {
+  reviewedBy: string
+  /** ISO date, so the screen can show how old the guidance is. */
+  reviewedOn: string
+  steps: string[]
+  /** Three or four words each, the mockup's "key cues" row. */
+  cues?: { label: string; detail?: string }[]
+  /** What goes wrong, named without blame. */
+  mistakes?: { label: string; detail?: string }[]
+  /**
+   * Labels pinned to the hero image, positioned as percentages of it.
+   *
+   * Overlaid by the app rather than baked into the picture, so a cue can be
+   * corrected, translated or withdrawn without regenerating art — and so
+   * no text ever gets rendered by an image model.
+   */
+  callouts?: { label: string; detail?: string; x: number; y: number; side: 'left' | 'right' }[]
 }
 
 export const PATTERN_LABELS: Record<MovementPattern, string> = {
