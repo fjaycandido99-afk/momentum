@@ -129,9 +129,17 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
     }
   }
 
+  // The earliest thing they have this year: their first promise, or the day
+  // an era started. The grid opens at that month instead of 1 January.
+  const firstRecorded = [
+    ...promises.map(p => p.local_day),
+    ...eras.map(e => e.start_day),
+  ].filter(d => d >= `${year}-01-01` && d <= to).sort()[0]
+
   const grid = buildProofYear({
     year,
     today,
+    startFrom: firstRecorded,
     promises: promises.map(p => ({ day: p.local_day, kept: p.kept })),
     missionDays: missions.map(m => m.local_day),
     checkInDays: checkIns.map(c => c.local_day),

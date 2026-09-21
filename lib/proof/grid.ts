@@ -76,6 +76,8 @@ export interface ProofYear {
   comebacks: number
   firstProof: string | null
   lastProof: string | null
+  /** The first day drawn — 1 January, or the month their record starts. */
+  from: string
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -97,6 +99,14 @@ export interface ProofInput {
   checkInDays?: string[]
   /** Era spans, inclusive, clamped however the caller likes. */
   eraSpans?: { from: string; to: string }[]
+  /**
+   * The first day this person has any record of, if it falls inside the year.
+   * The grid then opens at the START OF THAT MONTH rather than 1 January:
+   * someone whose first era began in September should not meet eight rows of
+   * empty dots for months they hadn't joined yet. Nothing is hidden — there
+   * is nothing there — and the counts are unchanged either way.
+   */
+  startFrom?: string
 }
 
 /** The day of the week, 0 = Sunday, by arithmetic rather than a timezone. */
@@ -185,8 +195,15 @@ export function buildProofYear(input: ProofInput): ProofYear {
       comebacks: 0,
       firstProof: null,
       lastProof: null,
+      from: jan1,
     }
   }
+
+  // Open at the month their record starts, when that is inside this year.
+  const startsAt =
+    input.startFrom && input.startFrom > jan1 && input.startFrom <= dec31
+      ? `${input.startFrom.slice(0, 7)}-01`
+      : jan1
 
   const byDay = new Map<string, boolean | null>()
   for (const p of input.promises) byDay.set(p.day, p.kept)
@@ -198,7 +215,7 @@ export function buildProofYear(input: ProofInput): ProofYear {
   const counts = { proofs: 0, missed: 0, open: 0, inEra: 0, missions: 0 }
   const keptInYear: string[] = []
   const days: ProofDay[] = []
-  for (let cursor = jan1; cursor <= lastDay; cursor = nextDay(cursor)) {
+  for (let cursor = startsAt; cursor <= lastDay; cursor = nextDay(cursor)) {
     const hasPromise = byDay.has(cursor)
     const state = stateOf(byDay.get(cursor), hasPromise)
     if (state === 'kept') {
@@ -239,7 +256,7 @@ export function buildProofYear(input: ProofInput): ProofYear {
   }
 
   const weeks: ProofWeek[] = []
-  let week: (ProofDay | null)[] = Array(weekday(jan1)).fill(null)
+  let week: (ProofDay | null)[] = Array(weekday(startsAt)).fill(null)
   for (const day of days) {
     week.push(day)
     if (week.length === 7) {
@@ -264,6 +281,7 @@ export function buildProofYear(input: ProofInput): ProofYear {
     comebacks: countComebacks(allKept, inYear),
     firstProof: keptInYear[0] ?? null,
     lastProof: keptInYear[keptInYear.length - 1] ?? null,
+    from: startsAt,
   }
 }
 

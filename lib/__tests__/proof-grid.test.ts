@@ -127,6 +127,27 @@ describe('buildProofYear', () => {
     expect(y.counts.inEra).toBe(20)
   })
 
+  it('opens at the month the record starts, not at 1 January', () => {
+    const y = buildProofYear({ ...base, promises: [kept('2026-09-14')], startFrom: '2026-09-14' })
+    expect(y.from).toBe('2026-09-01')
+    const flat = y.weeks.flatMap(w => w.days).filter(Boolean)
+    expect(flat[0]!.day).toBe('2026-09-01')
+    // 1 September 2026 is a Tuesday: two empty boxes before it.
+    expect(y.weeks[0].days.slice(0, 2)).toEqual([null, null])
+    expect(y.weeks[0].days[2]?.day).toBe('2026-09-01')
+    expect(y.counts.proofs).toBe(1)
+  })
+
+  it('still starts in January when that is where the record starts', () => {
+    const y = buildProofYear({ ...base, promises: [kept('2026-01-05')], startFrom: '2026-01-05' })
+    expect(y.from).toBe('2026-01-01')
+  })
+
+  it('ignores a start day from another year', () => {
+    const y = buildProofYear({ ...base, promises: [], startFrom: '2025-11-02' })
+    expect(y.from).toBe('2026-01-01')
+  })
+
   it('reports the first and last proof of the year', () => {
     const y = buildProofYear({
       ...base,

@@ -97,6 +97,12 @@ export default function ProofPage() {
                 {data.year.counts.proofs === 1 ? 'day kept' : 'days kept'} in {data.year.year}
               </p>
               <p className="text-[13px] text-white/45 mt-2 leading-relaxed">{proofSummary(data.year)}</p>
+              {/* Said out loud, so an opening month is a start and not a gap. */}
+              {data.year.from !== `${data.year.year}-01-01` && (
+                <p className="text-[12px] text-white/35 mt-1">
+                  Your record starts {monthName(data.year.from)}.
+                </p>
+              )}
 
               <div className="mt-7">
                 <ProofGrid
@@ -143,6 +149,15 @@ export default function ProofPage() {
       )}
     </div>
   )
+}
+
+/** "in September" — the month a YYYY-MM-DD falls in. */
+function monthName(day: string): string {
+  const months = [
+    'in January', 'in February', 'in March', 'in April', 'in May', 'in June',
+    'in July', 'in August', 'in September', 'in October', 'in November', 'in December',
+  ]
+  return months[Number(day.slice(5, 7)) - 1] ?? ''
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
