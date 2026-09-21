@@ -114,6 +114,11 @@ export function sampleEra(key: string): EraTodayWire | null {
     step: 'check', stats: { made: 17, answered: 16, kept: 14, keptPercent: 88, promiseStreak: 17 },
     checkInOpen: false, today: null, yesterday: null, tomorrow: null, promiseHint: '',
     stage: { key: 'maintaining', label: 'Maintaining', line: "You're not starting anymore. You're becoming consistent." },
+    phase: {
+      index: 3, label: 'Maintaining', difficulty: 'hard', dayInPhase: 3, phaseDays: 7,
+      asks: 'Take on the thing you have been avoiding. This is the week that earns the era.',
+    },
+    report: null,
     mission: null, missionDone: false,
     links: { soundscapeId: 'focus', guideId: 'breathing' }, image: programFor(key).image ?? null,
     isPremium: false, memoryLockedToday: false, recap: null, alignment: null,

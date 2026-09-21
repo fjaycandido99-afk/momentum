@@ -16,6 +16,7 @@ import {
   eraStage,
   eraStep,
   missionForDay,
+  phaseRange,
   previousDay,
   nextDay,
   type EraStageKey,
@@ -29,7 +30,8 @@ import { programFor } from './programs'
 import { alignmentLine, computeAlignment, type EraAlignment } from './alignment'
 import type { AxisId } from '@/lib/assessment/axes'
 import { ERA_MISSIONS } from './missions'
-import { isBlocker, isHelper, parseConfidence } from './reasons'
+import { isBlocker, isHelper, parseConfidence, reasonLabel } from './reasons'
+import { buildEraReport, type EraReport } from './report'
 import { loadPatterns } from '@/lib/patterns/server'
 import { coachPatternLine, weakDayLine } from '@/lib/patterns/rules'
 
@@ -151,6 +153,21 @@ export interface EraTodayWire {
   promiseHint: string
   /** Where in the 30 days they are, and the card's line for it. */
   stage: { key: EraStageKey; label: string; line: string }
+  /**
+   * The phase as a programme step — which of the four, what it asks, how
+   * hard its missions should feel, and where they are inside it. The
+   * stages always worked this way; nothing ever said so on screen.
+   */
+  phase: {
+    index: 1 | 2 | 3 | 4
+    label: string
+    asks: string
+    difficulty: 'light' | 'moderate' | 'hard'
+    dayInPhase: number
+    phaseDays: number
+  }
+  /** The end-of-era arithmetic. Only once it's finished. */
+  report: EraReport | null
   /** Today's mission from the era's bank (lib/era/missions.ts). */
   mission: string | null
   /** Has today's mission been marked done? */
@@ -226,6 +243,47 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
       )
     : null
 
+  const phaseBounds = phaseRange(stage.phase, era.length_days)
+
+  // The report is only meaningful once the era is over, and it costs two
+  // extra reads — so it is built then and not before.
+  const finished = eraStep({
+    startDay: era.start_day,
+    lengthDays: era.length_days,
+    today,
+    todayPromise: todayRow,
+    yesterdayPromise: yesterdayRow,
+  }) === 'complete'
+  let report: EraReport | null = null
+  if (finished) {
+    const [missionRows, wellnessRows] = await Promise.all([
+      prisma.eraMission.findMany({ where: { era_id: era.id }, select: { day: true } }),
+      prisma.wellnessCheckIn.findMany({
+        where: { user_id: userId, local_day: { gte: era.start_day } },
+        select: { local_day: true, mood: true, energy: true },
+      }),
+    ])
+    report = buildEraReport(
+      {
+        eraTitle: era.title,
+        lengthDays: era.length_days,
+        promises: promises.map(pr => ({
+          day: eraDayNumber(era.start_day, pr.local_day),
+          kept: pr.kept,
+          blocker: pr.blocker,
+          helper: pr.helper,
+        })),
+        missionDays: missionRows.map(m => m.day),
+        wellness: wellnessRows.map(w => ({
+          day: eraDayNumber(era.start_day, w.local_day),
+          mood: w.mood,
+          energy: w.energy,
+        })),
+      },
+      key => reasonLabel(key) ?? key,
+    )
+  }
+
   return {
     id: era.id,
     key: era.era_key,
@@ -259,6 +317,15 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     tomorrow: tomorrowRow ? { text: tomorrowRow.text, coachReply: tomorrowRow.coach_reply } : null,
     promiseHint: preset?.promiseHint ?? "I'll do the one thing I keep putting off.",
     stage: { key: stage.key, label: stage.label, line: stage.line },
+    phase: {
+      index: stage.phase,
+      label: stage.label,
+      asks: stage.asks,
+      difficulty: stage.difficulty,
+      dayInPhase: Math.max(1, day - phaseBounds.from + 1),
+      phaseDays: phaseBounds.to - phaseBounds.from + 1,
+    },
+    report,
     mission: missionFor(era.era_key, day),
     missionDone: missionRow !== null,
     links: { soundscapeId: program.soundscapeId, guideId: program.guideId },

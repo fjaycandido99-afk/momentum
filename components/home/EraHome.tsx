@@ -15,6 +15,7 @@ import { VOICE_GUIDES } from './home-types'
 import { ERA_LIMITS, eraName } from '@/lib/era/presets'
 import { BLOCKERS, CONFIDENCE_LABELS, HELPERS, reasonLabel } from '@/lib/era/reasons'
 import { alignmentLine } from '@/lib/era/alignment'
+import { DIFFICULTY_DOTS } from '@/lib/era/logic'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
@@ -199,6 +200,16 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
           <p className="text-[15px] text-white/75 mt-2 leading-snug" style={SERIF}>
             {era.step === 'complete' ? `${era.lengthDays} days. You finished it.` : era.stage.line}
           </p>
+
+          {/* The era was always a four-phase programme — a week each, with
+              the coach's pitch moving through them — and nothing ever said
+              so, which is why it read as a themed streak. */}
+          {era.step !== 'complete' && (
+            <p className="text-[10px] tracking-[0.18em] uppercase text-white/45 mt-2.5">
+              Phase {['I', 'II', 'III', 'IV'][era.phase.index - 1]} · {era.phase.label}
+              <span className="text-white/30"> · day {era.phase.dayInPhase} of {era.phase.phaseDays}</span>
+            </p>
+          )}
 
           <div className="flex items-end justify-between gap-3 mt-5">
             <p className="text-2xl text-white" style={{ ...SERIF, fontWeight: 500 }}>
@@ -557,6 +568,9 @@ function ActiveEra({
             You finished your {eraName(era.title)}.
             {era.stats.keptPercent !== null && <> You kept {era.stats.kept} of {era.stats.answered} promises.</>}
           </p>
+          {/* The arithmetic, above the coach's letter: a sentence about who
+              you became lands harder next to the number that earned it. */}
+          {era.report && <EraReportCard report={era.report} />}
           <EraRecap era={era} onLocked={openUpgradeModal} />
           <Link href="/era" className="mt-3 w-full block text-center py-3 rounded-xl bg-white text-black text-sm font-medium">
             Start your next era
@@ -588,8 +602,27 @@ function ActiveEra({
           )}
           {era.mission && (
             <div className="mb-4 pb-4 border-b border-white/10">
-              <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
-                <Target className="w-3.5 h-3.5" /> Today&rsquo;s mission
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+                  <Target className="w-3.5 h-3.5" /> Today&rsquo;s mission
+                </div>
+                {/* Difficulty comes from the PHASE, not from 240 hand-written
+                    labels: the same mission is a different ask in week one
+                    and week three, and the phase is the honest answer. */}
+                <span
+                  className="flex items-center gap-1"
+                  title={`${era.phase.difficulty} — ${era.phase.asks}`}
+                  aria-label={`Difficulty: ${era.phase.difficulty}`}
+                >
+                  {[1, 2, 3].map(dot => (
+                    <span
+                      key={dot}
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        dot <= DIFFICULTY_DOTS[era.phase.difficulty] ? 'bg-white/80' : 'bg-white/20'
+                      }`}
+                    />
+                  ))}
+                </span>
               </div>
               <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>{era.mission}</p>
               <div className="flex flex-wrap items-center gap-3">
@@ -960,6 +993,76 @@ function ActiveEra({
         </div>
       )}
     </>
+  )
+}
+
+/**
+ * Thirty days, counted (lib/era/report.ts).
+ *
+ * Every line carries the numbers behind it, a figure with too little behind
+ * it is missing rather than estimated, and the gaps are named at the bottom
+ * — a report that admits what it couldn't measure is the only kind worth
+ * reading at the end of a month of honesty.
+ */
+function EraReportCard({ report }: { report: NonNullable<EraToday['report']> }) {
+  return (
+    <div className="mt-4 rounded-2xl border border-white/[0.12] bg-white/[0.03] p-4">
+      <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+        Your {eraName(report.title)} · {report.lengthDays} days
+      </p>
+
+      <dl className="mt-3 space-y-2.5">
+        {report.lines.map(line => (
+          <div key={line.label} className="flex items-baseline justify-between gap-3">
+            <dt className="text-xs text-white/60 shrink-0">{line.label}</dt>
+            <dd className="text-right min-w-0">
+              <span className="text-[17px] text-white" style={{ ...SERIF, fontWeight: 500 }}>{line.value}</span>
+              {line.detail && <span className="block text-[10px] text-white/40 leading-tight">{line.detail}</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      {report.halves && (
+        <div className="mt-4 pt-3 border-t border-white/[0.08]">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">{report.halves.label}</p>
+          <p className="text-[17px] text-white mt-1" style={{ ...SERIF, fontWeight: 500 }}>
+            {report.halves.firstHalf.percent}% → {report.halves.secondHalf.percent}%
+            <span className={`ml-2 text-xs ${report.halves.change >= 0 ? 'text-white/70' : 'text-white/50'}`}>
+              {report.halves.change >= 0 ? '+' : ''}{report.halves.change} pts
+            </span>
+          </p>
+          <p className="text-[10px] text-white/40 mt-0.5">
+            {report.halves.firstHalf.kept} of {report.halves.firstHalf.answered}, then{' '}
+            {report.halves.secondHalf.kept} of {report.halves.secondHalf.answered}
+          </p>
+        </div>
+      )}
+
+      {report.phases.some(p => p.days > 0) && (
+        <div className="mt-4 pt-3 border-t border-white/[0.08] space-y-1.5">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">By phase</p>
+          {report.phases.map(p => (
+            <div key={p.phase} className="flex items-center justify-between text-xs">
+              <span className="text-white/70">
+                {['I', 'II', 'III', 'IV'][p.phase - 1]} · {p.label}
+              </span>
+              <span className="text-white/45 tabular-nums">
+                {p.days === 0 ? 'no promises' : `${p.kept}/${p.answered} kept · ${p.days} days`}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {report.missing.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-white/[0.08]">
+          {report.missing.map(m => (
+            <p key={m} className="text-[10px] text-white/35 leading-relaxed">{m}</p>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 

@@ -142,6 +142,28 @@ export interface EraStage {
   line: string
   /** How the coach should pitch its replies at this stage. */
   coachNote: string
+  /**
+   * 1–4. The four stages were already a 30-day programme — a week each,
+   * with the coach's pitch moving through them — but nothing ever SAID so,
+   * so it read as a themed streak. The number is what makes it a phase.
+   */
+  phase: 1 | 2 | 3 | 4
+  /** What this phase asks of you, in one line, on the card. */
+  asks: string
+  /**
+   * How hard the phase's missions should feel. Derived from the phase
+   * rather than authored per mission: 240 hand-written difficulty labels
+   * would be 240 opinions to maintain, and the phase is the honest answer
+   * — the same mission is a different ask in week one and week three.
+   */
+  difficulty: 'light' | 'moderate' | 'hard'
+}
+
+/** ●●○ — how many of three dots a difficulty fills. */
+export const DIFFICULTY_DOTS: Record<EraStage['difficulty'], number> = {
+  light: 1,
+  moderate: 2,
+  hard: 3,
 }
 
 export const ERA_STAGES: Record<EraStageKey, EraStage> = {
@@ -150,25 +172,49 @@ export const ERA_STAGES: Record<EraStageKey, EraStage> = {
     label: 'Starting',
     line: 'You said it. Now you prove it.',
     coachNote: 'Stage: starting (week 1). Make it feel doable. Small wins build the habit.',
+    phase: 1,
+    asks: 'Clear the way and make one promise you cannot talk yourself out of.',
+    difficulty: 'light',
   },
   building: {
     key: 'building',
     label: 'Building',
     line: 'The first week is behind you. Keep stacking days.',
     coachNote: 'Stage: building (week 2). The novelty is wearing off — this is where it becomes real.',
+    phase: 2,
+    asks: 'Keep it going on the days you do not feel like it. That is the whole phase.',
+    difficulty: 'moderate',
   },
   maintaining: {
     key: 'maintaining',
     label: 'Maintaining',
     line: "You're not starting anymore. You're becoming consistent.",
     coachNote: 'Stage: maintaining (week 3). Expect the mid-point dip; consistency matters more than intensity now.',
+    phase: 3,
+    asks: 'Take on the thing you have been avoiding. This is the week that earns the era.',
+    difficulty: 'hard',
   },
   becoming: {
     key: 'becoming',
     label: 'Becoming',
     line: 'This is who you are now. Finish like it.',
     coachNote: 'Stage: becoming (final stretch). Speak to who they are becoming, not what they are trying.',
+    phase: 4,
+    asks: 'Finish like someone this is already true of. No new heroics — just the days.',
+    difficulty: 'moderate',
   },
+}
+
+/**
+ * The day range of a phase, 1-based and inclusive, for any era length.
+ * Mirrors the boundaries eraStage uses, so the two can never drift.
+ */
+export function phaseRange(phase: 1 | 2 | 3 | 4, lengthDays: number): { from: number; to: number } {
+  const bounds = [0, 7 / 30, 14 / 30, 21 / 30, 1]
+  const dayAt = (f: number) => Math.min(lengthDays, Math.max(1, Math.round(f * lengthDays) + 1))
+  const from = phase === 1 ? 1 : dayAt(bounds[phase - 1])
+  const to = phase === 4 ? lengthDays : dayAt(bounds[phase]) - 1
+  return { from, to: Math.max(from, to) }
 }
 
 export function eraStage(day: number, lengthDays: number): EraStage {
