@@ -286,14 +286,130 @@ export const LOCKED_IN_EXERCISES: Exercise[] = [
   },
 ]
 
+/**
+ * REGULATION — for the moments when the era is not the point.
+ *
+ * Voxu's whole job is usually to get someone to do the harder thing. These
+ * four are the exception: they are for when a person cannot, and telling
+ * them to push would be the wrong instruction and the wrong app. They are
+ * reached from Nervous-System mode (lib/reset), not from the daily rotation,
+ * so nobody is handed a calming exercise on a day they came to work.
+ *
+ * Nothing here is therapy and none of it claims to treat anything. They are
+ * four things to do with your body and your attention for a few minutes,
+ * which is what Voxu can honestly offer.
+ */
+export const REGULATION_EXERCISES: Exercise[] = [
+  {
+    id: 'regulate_grounding',
+    title: 'Five Things',
+    trains: ['emotional_control'],
+    why: 'Naming what is actually in the room interrupts the part of your mind that is somewhere else, because you cannot look for five real things and catastrophise at the same time.',
+    minutes: 3,
+    difficulty: 'light',
+    format: 'guided',
+    steps: [
+      'Look around. Name five things you can see.',
+      'Four things you can feel — the chair, your feet, the air.',
+      'Three things you can hear.',
+      'Two things you can smell, one you can taste.',
+      'Slowly. There is no score.',
+    ],
+    cues: [
+      { at: 0, say: 'Look around the room. Five things you can see — name them.' },
+      { at: 40 * SECOND, say: 'Four things you can feel. The chair. Your feet on the floor.' },
+      { at: 80 * SECOND, say: 'Three things you can hear. Including the quiet ones.' },
+      { at: 120 * SECOND, say: 'Two you can smell. One you can taste.' },
+      { at: 160 * SECOND, say: 'You are here, in this room. That is the whole exercise.' },
+    ],
+    after: 'Are you more here than you were?',
+  },
+  {
+    id: 'regulate_exhale',
+    title: 'Longer Exhale',
+    trains: ['emotional_control'],
+    why: 'You cannot decide to calm down, but you can breathe out for longer than you breathe in — and your heart rate follows the exhale whether you believe it or not.',
+    minutes: 4,
+    difficulty: 'light',
+    format: 'guided',
+    steps: [
+      'Sit or lie down. Let your shoulders drop.',
+      'In through the nose for four.',
+      'Out through the mouth for eight.',
+      'Keep going. Nothing to fix, nothing to decide.',
+    ],
+    cues: [
+      { at: 0, say: 'Shoulders down. In through your nose for four.' },
+      { at: 15 * SECOND, say: 'Out for eight. Twice as long as the in-breath.' },
+      { at: 60 * SECOND, say: 'Keep the exhale long. Let the in-breath take care of itself.' },
+      { at: 2 * MINUTE, say: 'Nothing to fix while you are in here.' },
+      { at: 3 * MINUTE, say: 'Last minute. Slower, if you can.' },
+    ],
+    after: 'Did your body settle at all?',
+  },
+  {
+    id: 'regulate_one_thing',
+    title: 'One Thing, Small',
+    trains: ['focus'],
+    why: 'Not being able to focus is usually too many open things, not a broken brain — and the way out is one item small enough to finish, not a plan.',
+    minutes: 4,
+    difficulty: 'light',
+    format: 'guided',
+    steps: [
+      'Write down everything buzzing. All of it, fast.',
+      'Circle the one that matters today.',
+      'Cut it down until it takes ten minutes.',
+      'Do that, and nothing else, until the timer ends.',
+    ],
+    cues: [
+      { at: 0, say: 'Write down everything in your head. Fast, no order.' },
+      { at: 60 * SECOND, say: 'Now circle the one that actually matters today.' },
+      { at: 100 * SECOND, say: 'Cut it down. Ten minutes, not two hours.' },
+      { at: 140 * SECOND, say: 'Start it. Only that, until the timer ends.' },
+      { at: 3 * MINUTE + 30 * SECOND, say: 'You are working. That was the hard part.' },
+    ],
+    after: 'Do you know what you are doing next?',
+  },
+  {
+    id: 'regulate_put_day_down',
+    title: 'Put the Day Down',
+    trains: ['detachment'],
+    why: 'A mind that will not sleep is usually still holding tomorrow; writing the open things down is how you stop rehearsing them at 1am.',
+    minutes: 6,
+    difficulty: 'light',
+    format: 'guided',
+    steps: [
+      'Phone down, screen away.',
+      'Write the things still open. They keep until morning.',
+      'One thing that went right today.',
+      'Then breathe out, longer than you breathe in, until the timer ends.',
+    ],
+    cues: [
+      { at: 0, say: 'Phone face down, out of reach. The day is over.' },
+      { at: 30 * SECOND, say: 'Write what is still open. It keeps until morning — that is why you are writing it.' },
+      { at: 2 * MINUTE, say: 'Now one thing that went right today. One is enough.' },
+      { at: 3 * MINUTE, say: 'Put the pen down. Out-breath longer than the in-breath.' },
+      { at: 5 * MINUTE, say: 'Nothing else is required of you tonight.' },
+    ],
+    after: 'Is your head quieter than it was?',
+  },
+]
+
 /** Era key → its own exercises. Everything else falls back to shared. */
 export const ERA_TOOLKITS: Record<string, Exercise[]> = {
   locked_in: LOCKED_IN_EXERCISES,
 }
 
+/**
+ * Everything the app can look up by id — including the regulation sessions,
+ * which are deliberately NOT in `poolFor` (see select.ts): they are reachable
+ * from Nervous-System mode, and nobody should be handed a calming exercise
+ * as their practice on a day they came to work.
+ */
 export const ALL_EXERCISES: Exercise[] = [
   ...SHARED_EXERCISES,
   ...Object.values(ERA_TOOLKITS).flat(),
+  ...REGULATION_EXERCISES,
 ]
 
 export const EXERCISES_BY_ID = new Map(ALL_EXERCISES.map(e => [e.id, e]))

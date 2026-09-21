@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind, MessageCircle, Dumbbell, X } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind, MessageCircle, Dumbbell, X, HeartPulse } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -1502,6 +1502,10 @@ export function ImmersiveHome() {
             <Link href="/training" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <Dumbbell className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Training</span>
+            </Link>
+            <Link href="/reset" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
+              <HeartPulse className="w-4 h-4 text-white/85" />
+              <span className="text-sm text-white/90">Not feeling it</span>
             </Link>
             <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <PenLine className="w-4 h-4 text-white/85" />

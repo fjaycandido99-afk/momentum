@@ -6,7 +6,14 @@ import { QUOTES, displayAuthor } from '@/lib/quotes'
 import { getNextSpark, Spark } from '@/lib/daily-sparks'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { isDismissed, localDayKey, setDismissed } from '@/lib/ui/dismiss'
-import { eraMomentCopy, momentAllowed, pickMoment, type MomentKind } from '@/lib/home/moment'
+import {
+  eraMomentCopy,
+  momentAllowed,
+  nextSparkCount,
+  parseSparkCount,
+  pickMoment,
+  type MomentKind,
+} from '@/lib/home/moment'
 import type { LoopStep } from '@/lib/era/day-loop'
 import { MomentCard } from './MomentCard'
 
@@ -44,14 +51,14 @@ const INITIAL_DELAY = 6 * 1000           // let home finish arriving first
  */
 const SHOWN_KEY = 'voxu_spark_shown'
 /**
- * The quote's own limit: once per LOCAL day, on top of the session cap.
+ * The quote's own limit: a few per LOCAL day, on top of the session cap.
  *
- * The era and journal moments are about something of theirs that is open, so
- * they earn every app open. A quote is waiting for nobody, so it gets one
- * turn a day — and when it has had it, this slot simply stays empty rather
- * than reaching for something else to say.
+ * Stored as "day:count" so the ceiling survives a reload. The era and
+ * journal moments are about something of theirs that is open, so they earn
+ * every app open; a quote is waiting for nobody, so it gets a handful a day
+ * and then this slot stays empty rather than reaching for something to say.
  */
-const SPARK_DAY_KEY = 'voxu.spark.shown-on'
+const SPARK_COUNT_KEY = 'voxu.spark.count'
 /** What the slot said last time, so it doesn't repeat itself. */
 const LAST_KIND_KEY = 'voxu.moment.last'
 /** Their permanent off switch, via the shared dismissal store. */
@@ -71,12 +78,12 @@ function shownThisSession(): boolean {
   }
 }
 
-/** Has the quote had its turn today? */
-function sparkShownToday(): boolean {
+/** How many quotes have already been shown today. */
+function sparksToday(): number {
   try {
-    return localStorage.getItem(SPARK_DAY_KEY) === localDayKey()
+    return parseSparkCount(localStorage.getItem(SPARK_COUNT_KEY), localDayKey())
   } catch {
-    return false
+    return 0
   }
 }
 
@@ -84,7 +91,12 @@ function markShown(kind: MomentKind) {
   try {
     sessionStorage.setItem(SHOWN_KEY, '1')
     localStorage.setItem(LAST_KIND_KEY, kind)
-    if (kind === 'spark') localStorage.setItem(SPARK_DAY_KEY, localDayKey())
+    if (kind === 'spark') {
+      localStorage.setItem(
+        SPARK_COUNT_KEY,
+        nextSparkCount(localStorage.getItem(SPARK_COUNT_KEY), localDayKey()),
+      )
+    }
   } catch {
     // Worst case it repeats a kind. Not worth failing the popup over.
   }
@@ -234,10 +246,10 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
       // interruptions, which is the thing we were fixing.
       if (window.__popupActive) return
       const chosen = pickMoment({ loopStep, hasJournalToday, lastKind: lastKind() })
-      // The quote is once a day; when it has had its turn, nothing shows.
+      // The quote has a daily ceiling (SPARK_PER_DAY); past it nothing shows.
       // Falling back to another kind here would mean showing the era moment
       // when the loop had nothing waiting, which is the definition of noise.
-      if (!momentAllowed(chosen, { sparkShownToday: sparkShownToday() })) return
+      if (!momentAllowed(chosen, { sparksToday: sparksToday() })) return
       markShown(chosen)
       showSpark(chosen)
     }, INITIAL_DELAY)

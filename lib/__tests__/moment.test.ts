@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { eraMomentCopy, momentAllowed, pickMoment, type MomentKind } from '@/lib/home/moment'
+import {
+  eraMomentCopy,
+  momentAllowed,
+  nextSparkCount,
+  parseSparkCount,
+  pickMoment,
+  SPARK_PER_DAY,
+  type MomentKind,
+} from '@/lib/home/moment'
 import type { LoopStep } from '@/lib/era/day-loop'
 
 const base = { loopStep: null as LoopStep | null, hasJournalToday: true, lastKind: null as MomentKind | null }
@@ -46,13 +54,37 @@ describe('pickMoment', () => {
 
 describe('momentAllowed', () => {
   it('lets the era and journal moments through on every open', () => {
-    expect(momentAllowed('era', { sparkShownToday: true })).toBe(true)
-    expect(momentAllowed('journal', { sparkShownToday: true })).toBe(true)
+    expect(momentAllowed('era', { sparksToday: 99 })).toBe(true)
+    expect(momentAllowed('journal', { sparksToday: 99 })).toBe(true)
   })
 
-  it('gives the quote one turn a day', () => {
-    expect(momentAllowed('spark', { sparkShownToday: false })).toBe(true)
-    expect(momentAllowed('spark', { sparkShownToday: true })).toBe(false)
+  it('gives the quote a daily ceiling', () => {
+    expect(momentAllowed('spark', { sparksToday: 0 })).toBe(true)
+    expect(momentAllowed('spark', { sparksToday: SPARK_PER_DAY - 1 })).toBe(true)
+    expect(momentAllowed('spark', { sparksToday: SPARK_PER_DAY })).toBe(false)
+    expect(momentAllowed('spark', { sparksToday: SPARK_PER_DAY + 3 })).toBe(false)
+  })
+})
+
+describe('the quote count', () => {
+  it('counts today and ignores other days', () => {
+    expect(parseSparkCount('2026-09-21:2', '2026-09-21')).toBe(2)
+    expect(parseSparkCount('2026-09-20:4', '2026-09-21')).toBe(0)
+  })
+
+  it('reads anything unusable as zero — one extra quote beats a dead slot', () => {
+    expect(parseSparkCount(null, '2026-09-21')).toBe(0)
+    expect(parseSparkCount('', '2026-09-21')).toBe(0)
+    expect(parseSparkCount('nonsense', '2026-09-21')).toBe(0)
+    // The value the old once-a-day version stored.
+    expect(parseSparkCount('2026-09-21', '2026-09-21')).toBe(0)
+    expect(parseSparkCount('2026-09-21:x', '2026-09-21')).toBe(0)
+  })
+
+  it('increments within the day and restarts on a new one', () => {
+    expect(nextSparkCount(null, '2026-09-21')).toBe('2026-09-21:1')
+    expect(nextSparkCount('2026-09-21:1', '2026-09-21')).toBe('2026-09-21:2')
+    expect(nextSparkCount('2026-09-20:4', '2026-09-21')).toBe('2026-09-21:1')
   })
 })
 

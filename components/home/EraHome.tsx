@@ -946,6 +946,15 @@ function ActiveEra({
         {era.loop.advice && (
           <p className="text-[13px] text-white/50 mt-1 leading-snug">{era.loop.advice}</p>
         )}
+        {/* The way out of the loop, for the days when the loop is the wrong
+            ask. Sitting here on purpose: the moment someone reads "make
+            today's promise" and can't is the moment they need this. */}
+        <Link
+          href="/reset"
+          className="inline-block text-[12px] text-white/40 hover:text-white/70 mt-1.5 underline underline-offset-4 decoration-white/20"
+        >
+          Not feeling it?
+        </Link>
       </div>
 
       <AudioCard audio={audio} />

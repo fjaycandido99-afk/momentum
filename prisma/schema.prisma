@@ -77,6 +77,9 @@ model User {
 
   // Disciplines they already care about, kept consistent (lib/practices)
   practices Practice[]
+
+  // Nervous-System mode: the times they came for regulation, not a push
+  resetSessions ResetSession[]
 }
 
 model Subscription {
@@ -1298,4 +1301,39 @@ model PracticeLog {
 
   @@unique([practice_id, local_day])
   @@index([user_id, local_day])
+}
+
+/// One visit to Nervous-System mode (lib/reset) — the times someone came to
+/// Voxu to come down rather than to be pushed.
+///
+/// Worth recording for one reason: it is the only signal the app has that
+/// the era was the wrong ask that day. The state key is behavioural, so it
+/// is always stored.
+///
+/// The 1-5 before/after numbers are SELF-REPORTED STATE, the same class of
+/// data as WellnessCheckIn, so they are only written when
+/// UserPreferences.wellness_enabled is on. Without consent the session
+/// still counts and the person still sees their own before/after on screen
+/// — it simply is not kept.
+model ResetSession {
+  id      String @id @default(cuid())
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  /// ResetStateId from lib/reset/states.ts. Never renamed.
+  state     String
+  local_day String // YYYY-MM-DD in the user's timezone
+
+  /// 1-5 before and after, only with wellness consent.
+  before Int?
+  after  Int?
+
+  /// They finished the session rather than leaving part-way.
+  completed Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([user_id, local_day])
+  @@index([state])
 }

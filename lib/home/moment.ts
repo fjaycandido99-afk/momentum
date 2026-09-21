@@ -48,12 +48,41 @@ export function pickMoment(input: MomentInput): MomentKind {
  *
  * The era and journal moments are about something of the user's that is
  * open right now, so they belong on every app open — that is the point of
- * opening the app. A quote is not waiting for anybody, so it gets one turn a
- * day and then stays quiet. Same slot, two different speeds, and the
- * difference is whether the content is about them or about us.
+ * opening the app, and both stop by themselves the moment the thing is done.
+ * A quote is waiting for nobody, so it gets a daily ceiling. The difference
+ * is whether the content is about them or about us.
  */
-export function momentAllowed(kind: MomentKind, state: { sparkShownToday: boolean }): boolean {
-  return kind === 'spark' ? !state.sparkShownToday : true
+export function momentAllowed(kind: MomentKind, state: { sparksToday: number }): boolean {
+  return kind === 'spark' ? state.sparksToday < SPARK_PER_DAY : true
+}
+
+/**
+ * How many quotes a day, at most.
+ *
+ * One per app open is already the hard limit for the slot, so this is a
+ * ceiling on top of that: four separate opens can each carry a quote, and a
+ * fifth won't. It exists so that a day spent in and out of the app does not
+ * become a day of quotes.
+ */
+export const SPARK_PER_DAY = 4
+
+/**
+ * Pure: how many quotes have been shown today, from a stored "day:count".
+ *
+ * A value from another day reads as zero, and so does anything
+ * unparseable — the failure mode is one extra quote, never a silent slot.
+ */
+export function parseSparkCount(raw: string | null, today: string): number {
+  if (!raw) return 0
+  const [day, count] = raw.split(':')
+  if (day !== today) return 0
+  const n = Number(count)
+  return Number.isInteger(n) && n > 0 ? n : 0
+}
+
+/** Pure: what to store after showing one. */
+export function nextSparkCount(raw: string | null, today: string): string {
+  return `${today}:${parseSparkCount(raw, today) + 1}`
 }
 
 /** What the era moment says, by step. One line, one action. */
