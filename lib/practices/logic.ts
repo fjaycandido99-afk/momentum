@@ -134,6 +134,44 @@ export function minimumLine(practice: PracticeLite): string {
   return `You said your minimum is ${min}. Don’t negotiate — just start that.`
 }
 
+/**
+ * The night nudge: one ask, about practices that were due today and have no
+ * answer yet.
+ *
+ * Quotes their own floor when there is one thing left, because that is the
+ * sentence that works at 9pm ("you said thirty minutes"). With more than one
+ * it names them instead of stacking floors — a notification is one line, and
+ * three minimums in it is a form.
+ *
+ * Returns null when there is nothing to ask about, so the caller can't send
+ * an empty nudge.
+ */
+export function nightNudge(
+  unanswered: PracticeLite[],
+): { title: string; body: string } | null {
+  if (unanswered.length === 0) return null
+
+  if (unanswered.length === 1) {
+    const one = unanswered[0]
+    const min = one.minimum.trim()
+    return {
+      title: one.label,
+      body: min ? `You said ${min}. Did it happen?` : 'Did it happen today?',
+    }
+  }
+
+  const labels = unanswered.map(p => p.label)
+  const list = labels.length === 2
+    ? `${labels[0]} and ${labels[1]}`
+    : `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`
+  // Two or three, because three practices is the cap.
+  const count = unanswered.length === 2 ? 'Two' : unanswered.length === 3 ? 'Three' : String(unanswered.length)
+  return {
+    title: `${count} things to close out`,
+    body: `${list} — did they happen?`,
+  }
+}
+
 /** "Mon, Tue, Thu, Fri" — or "Every day". */
 export function daysLabel(days: number[]): string {
   if (days.length === 0 || days.length === 7) return 'Every day'

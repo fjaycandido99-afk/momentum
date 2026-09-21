@@ -7,6 +7,7 @@ import {
   isCleanPractice,
   isDueOn,
   minimumLine,
+  nightNudge,
   stateOn,
   weekdayOf,
   weekStrip,
@@ -167,6 +168,38 @@ describe('minimumLine', () => {
 
   it('still says something useful with no minimum set', () => {
     expect(minimumLine({ ...gym, minimum: '  ' })).toContain('smallest')
+  })
+})
+
+describe('nightNudge', () => {
+  it('says nothing when there is nothing to ask about', () => {
+    expect(nightNudge([])).toBeNull()
+  })
+
+  it('quotes their own floor when one thing is open', () => {
+    const nudge = nightNudge([gym])!
+    expect(nudge.title).toBe('Gym — PPL')
+    expect(nudge.body).toBe('You said 30 minutes. Did it happen?')
+  })
+
+  it('still asks when no floor was set', () => {
+    const nudge = nightNudge([{ ...gym, minimum: '  ' }])!
+    expect(nudge.body).toBe('Did it happen today?')
+  })
+
+  it('names them instead of stacking floors when several are open', () => {
+    const nudge = nightNudge([gym, daily])!
+    expect(nudge.title).toBe('Two things to close out')
+    expect(nudge.body).toBe('Gym — PPL and Read — did they happen?')
+    // No minimums in the body: a notification is one line.
+    expect(nudge.body).not.toContain('30 minutes')
+  })
+
+  it('lists three with an Oxford-free comma', () => {
+    const third: PracticeLite = { id: 'p3', label: 'Deep work', days: [], minimum: '45 minutes' }
+    const nudge = nightNudge([gym, daily, third])!
+    expect(nudge.title).toBe('Three things to close out')
+    expect(nudge.body).toBe('Gym — PPL, Read and Deep work — did they happen?')
   })
 })
 

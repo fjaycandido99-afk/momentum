@@ -23,6 +23,7 @@ import { isLocalHour } from './timezone-utils'
 import { loadState, localDay } from '@/lib/assessment/service'
 import { MIN_ANSWERS_FOR_READ } from '@/lib/assessment/axes'
 import { eraDayNumber } from '@/lib/era/logic'
+import { isDueOn, nightNudge } from '@/lib/practices/logic'
 import { loadEraToday } from '@/lib/era/service'
 import { eraQuote } from '@/lib/era/content'
 import { programFor } from '@/lib/era/programs'
@@ -55,6 +56,9 @@ export type NotificationType =
   | 'feature_discovery'
   | 'daily_read'
   | 'era_checkin'
+  // "You said thirty minutes. Did it happen?" — one ask, late, only when a
+  // practice that was due today has no answer (lib/practices).
+  | 'practice_checkin'
   | 'era_wake'
   | 'era_join'
   | 'era_complete'
@@ -205,6 +209,16 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
     tag: 'daily-affirmation',
     actions: [
       { action: 'open', title: 'View' },
+    ],
+  },
+  practice_checkin: {
+    title: 'Did it happen?',
+    body: 'One tap on the practice you set.',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
+    tag: 'practice-checkin',
+    actions: [
+      { action: 'open', title: 'Answer' },
     ],
   },
   era_checkin: {
@@ -373,6 +387,7 @@ const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
   daily_affirmation: '/daily-guide?session=morning_prime',
   daily_read: '/',
   era_checkin: '/',
+  practice_checkin: '/training',
   era_wake: '/era/wake',
   era_join: '/',
   era_complete: '/',
@@ -420,6 +435,9 @@ export async function sendPushToUser(
     // Rides the evening preference: it is the evening check-in, and a new
     // PushSubscription column would need a migration for no extra control.
     era_checkin: 'evening_reminder',
+    // The same evening switch as the era check-in: the same kind of ask, at
+    // the same end of the day, and a new column would buy no extra control.
+    practice_checkin: 'evening_reminder',
     // Listed for the type map only: the wake-up call has its own switch
     // (UserPreferences.wake_call_enabled) and skips this filter below.
     era_wake: 'morning_reminder',
@@ -2135,4 +2153,75 @@ export async function sendEraWakeCalls(now: Date = new Date()): Promise<void> {
   }
 
   console.log(`era_wake: ${sent} sent, ${failed} failed, ${quiet} quiet (${users.length} with a call set)`)
+}
+
+/**
+ * "You said thirty minutes. Did it happen?" — the night ask for a practice
+ * that was due today and has no answer.
+ *
+ * 21:00 local, an hour after the era check-in, so the two never arrive
+ * together. One push per person however many practices are open: three
+ * notifications about three practices is how an app gets muted.
+ *
+ * It only ever asks about practices that were DUE today. A rest day is not
+ * something to answer for, and being asked about one would teach people that
+ * the schedule they set means nothing.
+ */
+export async function sendPracticeCheckins(): Promise<void> {
+  const practices = await prisma.practice.findMany({
+    where: { status: 'active' },
+    select: { id: true, user_id: true, label: true, days: true, minimum: true },
+  })
+  if (practices.length === 0) return
+
+  const eligible = new Set(await filterUsersByLocalHour([...new Set(practices.map(p => p.user_id))], 21))
+  if (eligible.size === 0) return
+
+  const tzs = await prisma.userPreferences.findMany({
+    where: { user_id: { in: [...eligible] } },
+    select: { user_id: true, timezone: true },
+  })
+  const tzMap = new Map(tzs.map(t => [t.user_id, t.timezone]))
+
+  // Due today, in each person's own timezone.
+  const dueByUser = new Map<string, typeof practices>()
+  for (const p of practices) {
+    if (!eligible.has(p.user_id)) continue
+    const today = localDay(tzMap.get(p.user_id) ?? null)
+    if (!isDueOn({ id: p.id, label: p.label, days: p.days, minimum: p.minimum }, today)) continue
+    const list = dueByUser.get(p.user_id) ?? []
+    list.push(p)
+    dueByUser.set(p.user_id, list)
+  }
+  if (dueByUser.size === 0) return
+
+  // One query for every answer already given today, rather than one per
+  // practice: this runs hourly for everybody who has a practice.
+  const answered = await prisma.practiceLog.findMany({
+    where: {
+      practice_id: { in: [...dueByUser.values()].flat().map(p => p.id) },
+      local_day: { in: [...new Set([...dueByUser.keys()].map(u => localDay(tzMap.get(u) ?? null)))] },
+    },
+    select: { practice_id: true, local_day: true },
+  })
+  const answeredIds = new Set(answered.map(a => `${a.practice_id}:${a.local_day}`))
+
+  let sent = 0
+  let failed = 0
+  let quiet = 0
+
+  for (const [userId, list] of dueByUser) {
+    const today = localDay(tzMap.get(userId) ?? null)
+    const open = list.filter(p => !answeredIds.has(`${p.id}:${today}`))
+    const nudge = nightNudge(open.map(p => ({ id: p.id, label: p.label, days: p.days, minimum: p.minimum })))
+    if (!nudge) {
+      quiet++
+      continue
+    }
+    const result = await sendPushToUser(userId, 'practice_checkin', nudge)
+    sent += result.sent
+    failed += result.failed
+  }
+
+  console.log(`practice_checkin: ${sent} sent, ${failed} failed, ${quiet} already answered (${dueByUser.size} due)`)
 }

@@ -39,6 +39,7 @@ import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { SettingsCategory } from '@/components/settings/SettingsCategory'
+import { HomeShelvesSetting } from '@/components/settings/HomeShelvesSetting'
 import { GuideReminderSettings } from '@/components/settings/GuideReminderSettings'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
@@ -600,7 +601,7 @@ function SettingsContent() {
           id="daily-experience"
           icon={Layers}
           title="Daily Experience"
-          description="Segments, voice tone"
+          description="Segments, voice tone, what home shows"
         >
           {/* Segments */}
           <div>
@@ -663,6 +664,10 @@ function SettingsContent() {
             </div>
             <FeatureHint id="voice-tone" text="Your tone affects how the AI speaks throughout your entire journey" mode="once" />
           </div>
+
+          {/* Which shelves home carries. A preference, so it belongs here and
+              not in the header menu among the page links. */}
+          <HomeShelvesSetting />
         </SettingsCategory>
 
         {/* Reminders section removed — merged into Notifications below */}

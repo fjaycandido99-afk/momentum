@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind, MessageCircle, Dumbbell, X, SlidersHorizontal } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind, MessageCircle, Dumbbell, X } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -60,7 +60,6 @@ import { useDailyRead } from '@/hooks/useDailyRead'
 import { useEra } from '@/hooks/useEra'
 import { useDismissed } from '@/hooks/useDismissed'
 import { useHiddenShelves } from '@/hooks/useHiddenShelves'
-import { CustomiseHomeSheet } from '@/components/home/CustomiseHomeSheet'
 import { autoplayNextEnabled } from '@/hooks/useAutoplayNext'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
@@ -109,7 +108,6 @@ export function ImmersiveHome() {
   const weekReview = useDismissed('week-in-review')
   // Which shelves this person wants on home at all.
   const shelves = useHiddenShelves()
-  const [showCustomise, setShowCustomise] = useState(false)
   const [mounted, setMounted] = useState(false)
   const audioContext = useAudioOptional()
   const mindsetCtx = useMindsetOptional()
@@ -1517,13 +1515,6 @@ export function ImmersiveHome() {
               <BarChart3 className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Progress</span>
             </Link>
-            <button
-              onClick={() => { setShowMenu(false); setShowCustomise(true) }}
-              className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-white/5 active:bg-white/5 transition-colors"
-            >
-              <SlidersHorizontal className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">What home shows</span>
-            </button>
             <div className="mx-3 my-1 border-t border-white/15" />
             <Link href="/settings" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <Settings className="w-4 h-4 text-white/85" />
@@ -1799,13 +1790,6 @@ export function ImmersiveHome() {
         }
       })}
 
-      {showCustomise && (
-        <CustomiseHomeSheet
-          hidden={shelves.hidden}
-          onToggle={shelves.toggle}
-          onClose={() => setShowCustomise(false)}
-        />
-      )}
 
       {/* Daily Spark */}
       {!showMorningFlow && <DailySpark />}

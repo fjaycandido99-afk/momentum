@@ -52,6 +52,9 @@ const LANE: Record<NotificationType, Lane> = {
   // Only ever sent about a promise the user made that morning — they asked
   // for this one, so it never queues behind content we chose to push.
   era_checkin: 'scheduled',
+  // About a commitment they wrote down themselves, so scheduled rather than
+  // opportunistic — but it still waits out quiet hours.
+  practice_checkin: 'scheduled',
   // A time they chose to be woken at — quiet hours must not swallow a 6am call.
   era_wake: 'scheduled',
   // Someone joined their era: a real, rare event about another person, not

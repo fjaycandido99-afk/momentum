@@ -18,6 +18,7 @@ import {
   sendFeatureDiscovery,
   sendDailyReadNudges,
   sendEraCheckins,
+  sendPracticeCheckins,
   sendEraWakeCalls,
   sendEraCompletions,
   sendEraComebacks,
@@ -141,6 +142,11 @@ export async function GET(request: NextRequest) {
       case 'era_checkin':
         await sendEraCheckins()
         return NextResponse.json({ success: true, type: 'era_checkin' })
+
+      // An hour after the era check-in, so the two never arrive together.
+      case 'practice_checkin':
+        await sendPracticeCheckins()
+        return NextResponse.json({ success: true, type: 'practice_checkin' })
 
       case 'era_wake':
         await sendEraWakeCalls()
