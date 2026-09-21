@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Flame, Trophy, Star, Zap, Crown, Sparkles, X, Share2 } from 'lucide-react'
+import Link from 'next/link'
+import { Flame, Trophy, Star, Zap, Crown, Sparkles, Snowflake, X, Share2 } from 'lucide-react'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { useShareCard } from '@/hooks/useShareCard'
 import { generateStreakCard } from '@/hooks/useShareCardTemplates'
@@ -251,36 +252,49 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
 }
 
 // Compact version for header
+/**
+ * The header's streak pill.
+ *
+ * It used to be three things stacked in 40 pixels: a pill, a second flame
+ * graphic floating over its top edge, and "❄1" — an emoji whose meaning
+ * ("you have one streak freeze") nobody could guess, including the person
+ * who asked for it. And none of it was tappable, so there was nowhere to go
+ * to find out.
+ *
+ * Now: one pill, one flame, the number, and a monochrome freeze mark only
+ * when a freeze actually exists — and the whole thing opens Progress, where
+ * the streak and its heatmap are explained by being shown.
+ */
 export function StreakBadge({ streak, freezeCount }: { streak: number; freezeCount?: number }) {
   const currentMilestone = getCurrentMilestone(streak)
-
-  if (streak === 0) {
-    return (
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5">
-        <Flame className="w-3.5 h-3.5 text-white/50" />
-        <span className="text-xs text-white/50">0</span>
-      </div>
-    )
-  }
+  const freezes = typeof freezeCount === 'number' ? freezeCount : 0
+  const label = streak === 0
+    ? 'No streak yet. Open Progress.'
+    : `${streak}-day streak${freezes > 0 ? `, ${freezes} freeze${freezes === 1 ? '' : 's'} in hand` : ''}. Open Progress.`
 
   return (
-    <div className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${
-      currentMilestone
-        ? `bg-gradient-to-r ${currentMilestone.bg} ${currentMilestone.border}`
-        : 'bg-white/[0.06] border-white/[0.12]'
-    }`}>
-      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-        <StreakFlame streak={streak} size="sm" />
-      </div>
-      <Flame className={`w-3.5 h-3.5 ${currentMilestone?.color || 'text-white/90'}`} />
-      <span className={`text-xs font-bold ${currentMilestone?.color || 'text-white'}`}>
+    <Link
+      href="/progress"
+      aria-label={label}
+      title={label}
+      className={`flex items-center gap-1.5 h-7 px-2.5 rounded-full border press-scale transition-colors ${
+        streak === 0
+          ? 'bg-white/[0.04] border-white/[0.10]'
+          : currentMilestone
+            ? `bg-gradient-to-r ${currentMilestone.bg} ${currentMilestone.border}`
+            : 'bg-white/[0.06] border-white/[0.12]'
+      }`}
+    >
+      <Flame className={`w-3.5 h-3.5 ${streak === 0 ? 'text-white/45' : currentMilestone?.color || 'text-white/90'}`} />
+      <span className={`text-xs font-semibold tabular-nums ${streak === 0 ? 'text-white/45' : currentMilestone?.color || 'text-white'}`}>
         {streak}
       </span>
-      {typeof freezeCount === 'number' && freezeCount > 0 && (
-        <span className="text-[10px] text-white/45" title={`${freezeCount} streak freeze${freezeCount !== 1 ? 's' : ''}`}>
-          ❄{freezeCount}
+      {freezes > 0 && (
+        <span className="flex items-center gap-0.5 text-white/45">
+          <Snowflake className="w-3 h-3" />
+          <span className="text-[10px] tabular-nums">{freezes}</span>
         </span>
       )}
-    </div>
+    </Link>
   )
 }

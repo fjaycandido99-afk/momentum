@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bell } from 'lucide-react'
+import { Bell, BellOff } from 'lucide-react'
 import { isNativeApp, isPushSupported, subscribeToPush } from '@/lib/push-notifications'
 
 type PushState = 'granted' | 'prompt' | 'denied' | 'unsupported' | 'unknown'
@@ -58,15 +58,28 @@ export function NotificationBell() {
   }, [busy, state, router])
 
   const needsAttention = state === 'prompt'
+  // Off in every sense that matters to the era's pushes: never asked, or
+  // asked and refused. 'unsupported' looks off too, because it is.
+  const off = state === 'prompt' || state === 'denied' || state === 'unsupported'
 
   return (
     <button
       onClick={onTap}
       disabled={busy}
-      aria-label={needsAttention ? 'Turn on notifications' : 'Notification settings'}
+      aria-label={
+        needsAttention ? 'Notifications are off — turn them on'
+          : state === 'denied' ? 'Notifications are blocked — open settings'
+          : 'Notification settings'
+      }
       className="relative p-2 rounded-full press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none disabled:opacity-50"
     >
-      <Bell className="w-5 h-5 text-white/80" />
+      {/* A dot on a bell reads as "you have unread things". This bell means
+          the opposite — the pushes the era loop depends on are OFF — so it
+          says that with a struck-through bell, and keeps the dot only for
+          the case where one tap can fix it. */}
+      {off
+        ? <BellOff className="w-5 h-5 text-white/55" />
+        : <Bell className="w-5 h-5 text-white/80" />}
       {needsAttention && (
         <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-white ring-2 ring-black" aria-hidden />
       )}

@@ -1379,10 +1379,19 @@ export function ImmersiveHome() {
               <NotificationBell />
               {/* Reset wind button — parked per user request. Infra
                   stays mounted; re-add this block to bring it back. */}
+              {/* The mindset mark used to be a decorative div: a symbol in
+                  the middle of the tap targets with no label and nowhere to
+                  go, so nobody could tell what it was. It's the coach's
+                  voice, so it now says so and opens the picker. */}
               {mindsetCtx && (
-                <div className="flex items-center justify-center px-1.5 py-1 rounded-full bg-white/[0.06]">
+                <Link
+                  href="/mindset-selection"
+                  aria-label={`Your coach speaks as ${mindsetCtx.mindset}. Change it.`}
+                  title={`Coach voice: ${mindsetCtx.mindset}`}
+                  className="flex items-center justify-center h-7 w-7 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
+                >
                   <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/75" />
-                </div>
+                </Link>
               )}
               <button
                 onClick={() => setShowMenu(!showMenu)}
