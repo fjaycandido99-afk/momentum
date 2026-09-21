@@ -9,6 +9,13 @@ import { CONFIDENCE_LABELS } from '@/lib/era/reasons'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
+/** The answer they gave the exercise, in words. */
+const HELPED_LABELS: Record<string, string> = {
+  no: 'not really',
+  some: 'a bit',
+  yes: 'yes',
+}
+
 /**
  * One day, opened.
  *
@@ -93,18 +100,69 @@ export function ProofDaySheet({
 
         {detail ? (
           <div className="mt-4 space-y-3">
-            <div className="rounded-2xl border border-white/[0.12] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Promise</p>
-                <StateBadge kept={detail.kept} />
+            {/* A day can have no promise and still be a day: only training,
+                or only the exercise. The promise block appears when there
+                was one. */}
+            {detail.promise && (
+              <div className="rounded-2xl border border-white/[0.12] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Promise</p>
+                  <StateBadge kept={detail.kept} />
+                </div>
+                <p className="text-[17px] text-white mt-2 leading-snug">&ldquo;{detail.promise}&rdquo;</p>
+                {detail.confidence && (
+                  <p className="text-[11px] text-white/45 mt-2">
+                    Before you started: {CONFIDENCE_LABELS[detail.confidence]?.toLowerCase() ?? `${detail.confidence}/5 sure`}
+                  </p>
+                )}
               </div>
-              <p className="text-[17px] text-white mt-2 leading-snug">&ldquo;{detail.promise}&rdquo;</p>
-              {detail.confidence && (
-                <p className="text-[11px] text-white/45 mt-2">
-                  Before you started: {CONFIDENCE_LABELS[detail.confidence]?.toLowerCase() ?? `${detail.confidence}/5 sure`}
-                </p>
-              )}
-            </div>
+            )}
+
+            {detail.practices.length > 0 && (
+              <div className="rounded-2xl border border-white/[0.12] p-4">
+                <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Practices</p>
+                <ul className="mt-2 space-y-1.5">
+                  {detail.practices.map((p, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="mt-1 shrink-0">
+                        {p.kept
+                          ? <Check className="w-3.5 h-3.5 text-white" />
+                          : <X className="w-3.5 h-3.5 text-white/40" />}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="text-[15px] text-white leading-snug">{p.label}</span>
+                        <span className="block text-[11px] text-white/45">
+                          {p.kept
+                            ? p.minimumOnly ? `The minimum — ${p.minimum}. Still a kept day.` : 'Done'
+                            : 'Not that day'}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {detail.exercise && (
+              <div className="rounded-2xl border border-white/[0.12] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Practice session</p>
+                  {detail.exercise.completed ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] text-white/70">
+                      <Check className="w-3 h-3" /> {detail.exercise.minutes} min
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-white/40">Started</span>
+                  )}
+                </div>
+                <p className="text-[15px] text-white mt-1 leading-snug">{detail.exercise.title}</p>
+                {detail.exercise.helped && (
+                  <p className="text-[11px] text-white/45 mt-1.5">
+                    Helped: {HELPED_LABELS[detail.exercise.helped] ?? detail.exercise.helped}
+                  </p>
+                )}
+              </div>
+            )}
 
             {detail.reason && (
               <div className="rounded-2xl border border-white/[0.12] p-4">

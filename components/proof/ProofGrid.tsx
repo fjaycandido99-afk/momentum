@@ -6,9 +6,10 @@ import type { ProofDay, ProofYear } from '@/lib/proof/grid'
 /**
  * The year, as rows of seven.
  *
- * Deliberately one meaning per dot: filled = you kept a promise that day.
- * Missions, check-ins and everything else live in the sheet — a grid that
- * encodes four things at once is a chart nobody reads twice.
+ * Deliberately one meaning per dot: filled = you kept something you said
+ * you'd do that day — the promise, a practice, the exercise. Which of them
+ * it was lives in the sheet; a grid that encodes four things at once is a
+ * chart nobody reads twice.
  *
  * Rows of seven (not the 53-column heatmap on /progress) because at phone
  * width 53 columns is a 6px box nobody can hit with a thumb, and because a
@@ -21,7 +22,12 @@ function dotClass(d: ProofDay): string {
   if (d.future) return 'bg-transparent'
   switch (d.state) {
     case 'kept':
-      return 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.35)]'
+      // A day with two or three kept things glows harder than a day with
+      // one. Same dot, more of it — never a different colour, because the
+      // grid has one meaning and this is still it.
+      return d.kept > 1
+        ? 'bg-white shadow-[0_0_14px_rgba(255,255,255,0.65)]'
+        : 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.35)]'
     case 'missed':
       return 'bg-transparent border border-white/30'
     case 'open':
@@ -35,7 +41,7 @@ function dotClass(d: ProofDay): string {
 function label(d: ProofDay): string {
   const date = d.day
   switch (d.state) {
-    case 'kept': return `${date} — kept`
+    case 'kept': return `${date} — ${d.kept} kept`
     case 'missed': return `${date} — missed`
     case 'open': return `${date} — no answer`
     default: return `${date} — no promise`
@@ -94,7 +100,7 @@ export function ProofGrid({
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5 text-[11px] text-white/45">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-white" /> kept
+          <span className="w-2.5 h-2.5 rounded-full bg-white" /> kept something
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full border border-white/30" /> missed

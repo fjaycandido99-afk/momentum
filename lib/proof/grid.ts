@@ -2,9 +2,10 @@
  * The year in proof.
  *
  * A streak is one number that a single missed day destroys. This is the
- * other thing: a calendar of days you actually kept a promise, which nothing
- * can take back. Miss a week and the week is blank — the 47 days before it
- * are still 47 days.
+ * other thing: a calendar of the days you kept something you said you would
+ * do — a promise, a practice, the day's exercise — which nothing can take
+ * back. Miss a week and the week is blank; the 47 days before it are still
+ * 47 days.
  *
  * Pure. Every "day" is a YYYY-MM-DD in the USER's timezone, the same
  * convention as lib/era/logic.ts, and nothing here reads a clock: today is
@@ -19,10 +20,14 @@ import { daysBetween, nextDay, previousDay } from '@/lib/era/logic'
 
 /**
  * What a day says, in falling order of how much it took:
- *  - kept    they promised and said they kept it
- *  - missed  they promised and said they didn't
- *  - open    they promised and never came back to say (not a failure)
- *  - quiet   no promise that day
+ *  - kept    they kept something they said they would do
+ *  - missed  something was asked for, and the answer was no
+ *  - open    something was asked for and never answered (not a failure)
+ *  - quiet   nothing was asked
+ *
+ * "Something" is the promise, a practice, or the day's guided exercise. It
+ * used to be the promise alone, which meant someone could train four days
+ * running and finish an exercise every morning and still have a blank year.
  */
 export type ProofState = 'kept' | 'missed' | 'open' | 'quiet'
 
@@ -32,10 +37,29 @@ export interface ProofPromise {
   kept: boolean | null
 }
 
+/** One practice's answer on one day. Several can land on the same day. */
+export interface ProofPractice {
+  day: string
+  /** True for a full session AND for the minimum — both are kept days. */
+  kept: boolean
+}
+
+/** One run of a guided exercise. */
+export interface ProofExercise {
+  day: string
+  completed: boolean
+}
+
 /** A day someone can tap. */
 export interface ProofDay {
   day: string
   state: ProofState
+  /**
+   * How many things were kept that day — a promise, each practice, the
+   * exercise. Drives how solid the dot looks: a day you did three things
+   * should not look identical to a day you did one.
+   */
+  kept: number
   /** Inside an era's 30 days — so a blank day reads as skipped, not "no era". */
   inEra: boolean
   /** The day's mission was marked done. */
@@ -58,13 +82,17 @@ export interface ProofYear {
   year: number
   weeks: ProofWeek[]
   counts: {
-    /** Days kept. THE number — the one the page leads with. */
+    /** Days on which something was kept. THE number the page leads with. */
     proofs: number
     missed: number
     open: number
     /** Days that fell inside an era, kept or not. The denominator. */
     inEra: number
     missions: number
+    /** What made up those days — each a total, not a day count. */
+    promisesKept: number
+    practicesKept: number
+    exercisesDone: number
   }
   /** Longest run of consecutive kept days. */
   longestRun: number
@@ -95,6 +123,10 @@ export interface ProofInput {
    * year's days — were quiet.
    */
   promises: ProofPromise[]
+  /** Practice answers — one per practice per day, so a day can hold several. */
+  practices?: ProofPractice[]
+  /** Guided exercise runs, finished or abandoned. */
+  exercises?: ProofExercise[]
   missionDays?: string[]
   checkInDays?: string[]
   /** Era spans, inclusive, clamped however the caller likes. */
@@ -109,17 +141,79 @@ export interface ProofInput {
   startFrom?: string
 }
 
+export const EMPTY_DAY: DayFacts = {
+  practicesKept: 0,
+  practicesMissed: 0,
+  exerciseDone: false,
+  exerciseStarted: false,
+}
+
+/** Everything the three sources say, gathered per day. */
+export function factsByDay(input: ProofInput): Map<string, DayFacts> {
+  const map = new Map<string, DayFacts>()
+  const get = (day: string): DayFacts => {
+    const existing = map.get(day)
+    if (existing) return existing
+    const fresh: DayFacts = { ...EMPTY_DAY }
+    map.set(day, fresh)
+    return fresh
+  }
+
+  for (const p of input.promises) get(p.day).promise = p.kept
+  for (const p of input.practices ?? []) {
+    const day = get(p.day)
+    if (p.kept) day.practicesKept++
+    else day.practicesMissed++
+  }
+  for (const e of input.exercises ?? []) {
+    const day = get(e.day)
+    if (e.completed) day.exerciseDone = true
+    else day.exerciseStarted = true
+  }
+  return map
+}
+
 /** The day of the week, 0 = Sunday, by arithmetic rather than a timezone. */
 function weekday(day: string): number {
   const [y, m, d] = day.split('-').map(Number)
   return new Date(Date.UTC(y, m - 1, d)).getUTCDay()
 }
 
-function stateOf(kept: boolean | null | undefined, hasPromise: boolean): ProofState {
-  if (!hasPromise) return 'quiet'
-  if (kept === true) return 'kept'
-  if (kept === false) return 'missed'
-  return 'open'
+/** Everything that happened on one day, before it becomes a dot. */
+export interface DayFacts {
+  /** The promise's answer: true kept, false missed, null never answered. */
+  promise?: boolean | null
+  practicesKept: number
+  practicesMissed: number
+  /** A guided exercise was finished. */
+  exerciseDone: boolean
+  /** One was started and left — not a refusal, and not nothing either. */
+  exerciseStarted: boolean
+}
+
+/**
+ * How many things were kept that day.
+ *
+ * A practice done at its minimum counts the same as a full session: the
+ * caller decides what "kept" means for a practice, and doing the floor on a
+ * bad day is the behaviour the app is trying to produce.
+ */
+export function keptCount(facts: DayFacts): number {
+  return (facts.promise === true ? 1 : 0) + facts.practicesKept + (facts.exerciseDone ? 1 : 0)
+}
+
+/**
+ * The state of a day.
+ *
+ * Kept wins over missed, deliberately. Someone who broke their promise but
+ * still trained had a day worth marking, and a grid that painted that day as
+ * a failure would be lying by omission.
+ */
+export function stateOf(facts: DayFacts): ProofState {
+  if (keptCount(facts) > 0) return 'kept'
+  if (facts.promise === false || facts.practicesMissed > 0) return 'missed'
+  if (facts.promise === null || facts.exerciseStarted) return 'open'
+  return 'quiet'
 }
 
 /**
@@ -190,7 +284,10 @@ export function buildProofYear(input: ProofInput): ProofYear {
     return {
       year,
       weeks: [],
-      counts: { proofs: 0, missed: 0, open: 0, inEra: 0, missions: 0 },
+      counts: {
+        proofs: 0, missed: 0, open: 0, inEra: 0, missions: 0,
+        promisesKept: 0, practicesKept: 0, exercisesDone: 0,
+      },
       longestRun: 0,
       comebacks: 0,
       firstProof: null,
@@ -205,24 +302,30 @@ export function buildProofYear(input: ProofInput): ProofYear {
       ? `${input.startFrom.slice(0, 7)}-01`
       : jan1
 
-  const byDay = new Map<string, boolean | null>()
-  for (const p of input.promises) byDay.set(p.day, p.kept)
+  const facts = factsByDay(input)
   const missions = new Set(input.missionDays ?? [])
   const checkIns = new Set(input.checkInDays ?? [])
   const spans = input.eraSpans ?? []
   const inEraOn = (day: string) => spans.some(s => day >= s.from && day <= s.to)
 
-  const counts = { proofs: 0, missed: 0, open: 0, inEra: 0, missions: 0 }
+  const counts = {
+    proofs: 0, missed: 0, open: 0, inEra: 0, missions: 0,
+    promisesKept: 0, practicesKept: 0, exercisesDone: 0,
+  }
   const keptInYear: string[] = []
   const days: ProofDay[] = []
   for (let cursor = startsAt; cursor <= lastDay; cursor = nextDay(cursor)) {
-    const hasPromise = byDay.has(cursor)
-    const state = stateOf(byDay.get(cursor), hasPromise)
+    const day = facts.get(cursor) ?? EMPTY_DAY
+    const state = stateOf(day)
+    const kept = keptCount(day)
     if (state === 'kept') {
       counts.proofs++
       keptInYear.push(cursor)
     } else if (state === 'missed') counts.missed++
     else if (state === 'open') counts.open++
+    if (day.promise === true) counts.promisesKept++
+    counts.practicesKept += day.practicesKept
+    if (day.exerciseDone) counts.exercisesDone++
     const inEra = inEraOn(cursor)
     if (inEra) counts.inEra++
     const mission = missions.has(cursor)
@@ -230,6 +333,7 @@ export function buildProofYear(input: ProofInput): ProofYear {
     days.push({
       day: cursor,
       state,
+      kept,
       inEra,
       mission,
       checkIn: checkIns.has(cursor),
@@ -245,6 +349,7 @@ export function buildProofYear(input: ProofInput): ProofYear {
       days.push({
         day: cursor,
         state: 'quiet',
+        kept: 0,
         inEra: inEraOn(cursor),
         mission: false,
         checkIn: false,
@@ -269,8 +374,12 @@ export function buildProofYear(input: ProofInput): ProofYear {
     weeks.push({ label: monthLabel(week), days: week })
   }
 
-  // Comebacks and runs read every keep we were given, in and out of the year.
-  const allKept = input.promises.filter(p => p.kept === true).map(p => p.day)
+  // Comebacks and runs read every keep we were given, in and out of the year
+  // — and every KIND of keep. Reading only the promises here is what made a
+  // month of training look like a month away.
+  const allKept = [...facts.entries()]
+    .filter(([, f]) => keptCount(f) > 0)
+    .map(([day]) => day)
   const inYear = (day: string) => day >= jan1 && day <= lastDay
 
   return {
@@ -301,7 +410,7 @@ export function proofSummary(y: ProofYear): string {
   if (y.counts.proofs === 0) {
     return y.counts.inEra > 0
       ? 'No days kept yet. The first one starts the record.'
-      : 'Start an era and every day you keep a promise lands here.'
+      : 'Every promise, practice and exercise you keep lands here.'
   }
   const parts = [`${y.counts.proofs} ${y.counts.proofs === 1 ? 'day' : 'days'} kept`]
   if (y.longestRun > 1) parts.push(`${y.longestRun} in a row at your best`)

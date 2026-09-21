@@ -182,12 +182,105 @@ describe('buildProofYear', () => {
   })
 })
 
+describe('practices and exercises count too', () => {
+  const base = { year: 2026, today: '2026-09-20' }
+
+  it('makes a day with only a practice a kept day', () => {
+    const y = buildProofYear({
+      ...base,
+      promises: [],
+      practices: [{ day: '2026-09-15', kept: true }],
+    })
+    const at = (day: string) => y.weeks.flatMap(w => w.days).find(d => d?.day === day)!
+    expect(at('2026-09-15').state).toBe('kept')
+    expect(y.counts.proofs).toBe(1)
+    expect(y.counts.practicesKept).toBe(1)
+    expect(y.counts.promisesKept).toBe(0)
+  })
+
+  it('makes a day with only a finished exercise a kept day', () => {
+    const y = buildProofYear({
+      ...base,
+      promises: [],
+      exercises: [{ day: '2026-09-16', completed: true }],
+    })
+    const at = (day: string) => y.weeks.flatMap(w => w.days).find(d => d?.day === day)!
+    expect(at('2026-09-16').state).toBe('kept')
+    expect(y.counts.exercisesDone).toBe(1)
+  })
+
+  it('lets a kept practice save a day the promise was broken on', () => {
+    // The whole reason for this change: someone who broke their promise but
+    // still trained had a day worth marking.
+    const y = buildProofYear({
+      ...base,
+      promises: [missed('2026-09-17')],
+      practices: [{ day: '2026-09-17', kept: true }],
+    })
+    const day = y.weeks.flatMap(w => w.days).find(d => d?.day === '2026-09-17')!
+    expect(day.state).toBe('kept')
+    expect(day.kept).toBe(1)
+    expect(y.counts.missed).toBe(0)
+  })
+
+  it('counts how many things were kept, for the dot’s weight', () => {
+    const y = buildProofYear({
+      ...base,
+      promises: [kept('2026-09-18')],
+      practices: [{ day: '2026-09-18', kept: true }, { day: '2026-09-18', kept: true }],
+      exercises: [{ day: '2026-09-18', completed: true }],
+    })
+    const day = y.weeks.flatMap(w => w.days).find(d => d?.day === '2026-09-18')!
+    expect(day.kept).toBe(4)
+    expect(y.counts.proofs).toBe(1) // still one DAY
+    expect(y.counts.practicesKept).toBe(2)
+  })
+
+  it('marks a day missed when a practice was skipped and nothing else happened', () => {
+    const y = buildProofYear({
+      ...base,
+      promises: [],
+      practices: [{ day: '2026-09-19', kept: false }],
+    })
+    const day = y.weeks.flatMap(w => w.days).find(d => d?.day === '2026-09-19')!
+    expect(day.state).toBe('missed')
+    expect(y.counts.missed).toBe(1)
+  })
+
+  it('treats an abandoned exercise as unanswered, not as a refusal', () => {
+    const y = buildProofYear({
+      ...base,
+      promises: [],
+      exercises: [{ day: '2026-09-19', completed: false }],
+    })
+    const day = y.weeks.flatMap(w => w.days).find(d => d?.day === '2026-09-19')!
+    expect(day.state).toBe('open')
+    expect(y.counts.exercisesDone).toBe(0)
+  })
+
+  it('runs and comebacks count practice days as well', () => {
+    const y = buildProofYear({
+      ...base,
+      promises: [kept('2026-09-01')],
+      practices: [
+        { day: '2026-09-02', kept: true },
+        { day: '2026-09-03', kept: true },
+        // then a gap, then back
+        { day: '2026-09-08', kept: true },
+      ],
+    })
+    expect(y.longestRun).toBe(3)
+    expect(y.comebacks).toBe(1)
+    expect(y.counts.proofs).toBe(4)
+  })
+})
+
 describe('proofSummary', () => {
   const year = (promises: ProofPromise[], eraSpans?: { from: string; to: string }[]) =>
     buildProofYear({ year: 2026, today: '2026-09-20', promises, eraSpans })
 
-  it('asks for the first day when there is nothing', () => {
-    expect(proofSummary(year([]))).toContain('Start an era')
+  it('says what would land here when there is nothing', () => {
+    expect(proofSummary(year([]))).toContain('practice')
   })
 
   it('does not tell someone mid-era to start one', () => {

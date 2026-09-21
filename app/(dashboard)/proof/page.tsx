@@ -112,18 +112,32 @@ export default function ProofPage() {
                 />
               </div>
 
-              {/* Counted things only — no score, no composite, no grade. */}
-              {(data.year.counts.missed > 0 || data.year.counts.open > 0 || data.year.counts.missions > 0) && (
+              {/* What those days were made of. Counted things only — no
+                  score, no composite, no grade. */}
+              {(data.year.counts.promisesKept > 0
+                || data.year.counts.practicesKept > 0
+                || data.year.counts.exercisesDone > 0) && (
                 <div className="mt-7 grid grid-cols-3 gap-2 text-center">
-                  <Stat label="Missed" value={data.year.counts.missed} />
-                  <Stat label="Never answered" value={data.year.counts.open} />
-                  <Stat label="Missions done" value={data.year.counts.missions} />
+                  <Stat label="Promises kept" value={data.year.counts.promisesKept} />
+                  <Stat label="Practices kept" value={data.year.counts.practicesKept} />
+                  <Stat label="Sessions done" value={data.year.counts.exercisesDone} />
                 </div>
               )}
 
+              {/* The misses stay on the page. A record that only counts the
+                  good days is a highlight reel, not a record. */}
+              {(data.year.counts.missed > 0 || data.year.counts.open > 0) && (
+                <p className="text-[11px] text-white/35 mt-3 tabular-nums">
+                  {data.year.counts.missed} day{data.year.counts.missed === 1 ? '' : 's'} nothing was kept
+                  {data.year.counts.open > 0 && ` · ${data.year.counts.open} never answered`}
+                  {data.year.counts.missions > 0 && ` · ${data.year.counts.missions} missions done`}
+                </p>
+              )}
+
               <p className="text-[12px] text-white/40 mt-7 leading-relaxed">
-                Don&rsquo;t track time. Collect proof. A missed day leaves a gap and takes nothing away —
-                the days you kept stay kept.
+                Don&rsquo;t track time. Collect proof. A day counts when you keep something you said
+                you&rsquo;d do — a promise, a practice, a session. A missed day leaves a gap and takes
+                nothing away.
               </p>
 
               {data.year.counts.proofs === 0 && data.year.counts.inEra === 0 && (
