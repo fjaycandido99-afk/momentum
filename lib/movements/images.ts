@@ -27,9 +27,41 @@ export const MOVEMENT_IMAGES: Record<string, string> = {
   // Filled as art arrives, e.g. back_squat: '/movements/back-squat.webp'
 }
 
-/** Art for a whole family, used by every movement in it without its own. */
+/**
+ * Art for a whole family, used by every movement in it without its own.
+ *
+ * Rim-lit and near-dark by design. Each one is a hold or a start position
+ * rather than a rep at its extreme, so there is no joint angle on screen
+ * for anyone to copy — which is what keeps a picture from becoming form
+ * instruction. Hinge uses its kit shot until a figure exists for it.
+ */
 export const PATTERN_IMAGES: Partial<Record<MovementPattern, string>> = {
-  // e.g. squat: '/movements/pattern-squat.webp'
+  squat: '/movements/figure-squat.webp',
+  hinge: '/movements/kit-hinge.webp',
+  single_leg: '/movements/figure-single-leg.webp',
+  horizontal_push: '/movements/figure-horizontal-push.webp',
+  vertical_push: '/movements/figure-vertical-push.webp',
+  horizontal_pull: '/movements/figure-horizontal-pull.webp',
+  vertical_pull: '/movements/figure-vertical-pull.webp',
+  core: '/movements/figure-core.webp',
+}
+
+/**
+ * The kit each family needs, for browsing.
+ *
+ * A quieter second set: no body at all, just what's waiting on the floor.
+ * Used where someone is choosing rather than reading, so a list of eight
+ * patterns doesn't turn into eight photographs of people.
+ */
+export const KIT_IMAGES: Partial<Record<MovementPattern, string>> = {
+  squat: '/movements/kit-squat.webp',
+  hinge: '/movements/kit-hinge.webp',
+  single_leg: '/movements/kit-single-leg.webp',
+  horizontal_push: '/movements/kit-horizontal-push.webp',
+  horizontal_pull: '/movements/kit-horizontal-pull.webp',
+  vertical_pull: '/movements/kit-vertical-pull.webp',
+  core: '/movements/kit-core.webp',
+  // vertical_push: still to generate — the picker falls back to the mark.
 }
 
 export interface MovementArt {

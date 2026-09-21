@@ -9,6 +9,7 @@ import {
   type Movement,
   type MovementPattern,
 } from '@/lib/movements/library'
+import { KIT_IMAGES } from '@/lib/movements/images'
 import { PatternGlyph } from './PatternGlyph'
 import { haptic } from '@/lib/haptics'
 
@@ -74,9 +75,25 @@ export function MovementPicker({
                   aria-expanded={isOpen}
                   className="w-full flex items-center gap-3 px-3.5 py-3 text-left"
                 >
-                  <span className="text-white/70 shrink-0">
-                    <PatternGlyph pattern={group.pattern} className="w-6 h-6" />
-                  </span>
+                  {/* The kit, where there's a shot of it; the mark otherwise. */}
+                  {KIT_IMAGES[group.pattern] ? (
+                    <span className="shrink-0 w-14 h-11 rounded-lg overflow-hidden relative">
+                      <img
+                        src={KIT_IMAGES[group.pattern]!}
+                        alt=""
+                        aria-hidden
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center text-white/85">
+                        <PatternGlyph pattern={group.pattern} className="w-4 h-4" />
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="shrink-0 w-14 h-11 rounded-lg border border-white/[0.12] flex items-center justify-center text-white/70">
+                      <PatternGlyph pattern={group.pattern} className="w-5 h-5" />
+                    </span>
+                  )}
                   <span className="min-w-0 flex-1">
                     <span className="block text-[14px] text-white leading-snug">
                       {PATTERN_LABELS[group.pattern]}

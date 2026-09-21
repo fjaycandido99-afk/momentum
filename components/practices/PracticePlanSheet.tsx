@@ -18,6 +18,7 @@ import { PracticeGuideSheet } from './PracticeGuideSheet'
 import { matchMovement } from '@/lib/movements/swap'
 import { MovementSheet } from './MovementSheet'
 import { MovementPicker } from '@/components/movements/MovementPicker'
+import { TemplatePicker } from '@/components/movements/TemplatePicker'
 import { PatternGlyph } from '@/components/movements/PatternGlyph'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -92,6 +93,9 @@ export function PracticePlanSheet({
    */
   const [pickingFor, setPickingFor] = useState<string | null>(null)
   const canPick = domain === 'gym'
+  const [templating, setTemplating] = useState(false)
+  /** Set after a template fills the days, so the change is visible not silent. */
+  const [applied, setApplied] = useState<string | null>(null)
 
   const setItem = (slotKey: string, index: number, patch: Partial<PlanItem>) => {
     setDraft(d => {
@@ -196,6 +200,29 @@ export function PracticePlanSheet({
             Read the steps
           </button>
         </div>
+
+        {/* Writing your own is still the default. This is for the person
+            staring at an empty row who just wants a session. */}
+        {canPick && (
+          <div className="mt-3 rounded-xl border border-white/[0.12] p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[13px] text-white/80 leading-snug">Don’t want to write it?</p>
+                <p className="text-[11px] text-white/45 mt-0.5 leading-snug">
+                  {applied
+                    ? `${applied} filled the empty days. Change any row.`
+                    : 'Start from a session shape and change what you like.'}
+                </p>
+              </div>
+              <button
+                onClick={() => { haptic('light'); setTemplating(true) }}
+                className="text-[12px] text-black bg-white rounded-full px-3 py-1.5 font-medium shrink-0"
+              >
+                {applied ? 'Change' : 'Browse'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mt-5 space-y-6">
           {slots.map(slot => {
@@ -354,6 +381,35 @@ export function PracticePlanSheet({
             setPickingFor(null)
           }}
           onClose={() => setPickingFor(null)}
+        />
+      )}
+
+      {/* A template only ever fills rows that are empty, in the days that
+          are empty. Nothing somebody typed is replaced by a tap, and
+          nothing is saved until they press Save. */}
+      {templating && (
+        <TemplatePicker
+          slotLabels={slots.map(s => s.label)}
+          onApply={(sessions, templateName) => {
+            setDraft(d => {
+              const next = { ...d }
+              slots.forEach((slot, i) => {
+                const names = sessions[i]?.names ?? []
+                if (names.length === 0) return
+                const current = next[slot.key]
+                const typed = current.items.filter(item => item.name.trim())
+                if (typed.length > 0) return
+                next[slot.key] = {
+                  ...current,
+                  items: names.slice(0, PLAN_MAX_ITEMS).map(name => ({ name })),
+                }
+              })
+              return next
+            })
+            setApplied(templateName)
+            setTemplating(false)
+          }}
+          onClose={() => setTemplating(false)}
         />
       )}
     </div>
