@@ -305,22 +305,12 @@ function formatDuration(sec: number): string {
 function AudioCard({ audio }: { audio: TodaysAudio }) {
   const done = audio.segmentsDone.filter(Boolean).length
   return (
-    <div className="relative">
-    {/* The swap sits OUTSIDE the card's button, as a sibling — a button
-        inside a button is invalid, and tapping "another audio" must never
-        also start the one showing. Same arrangement as the era hero's
-        share control. */}
-    {audio.onSwap && (
-      <button
-        onClick={audio.onSwap}
-        aria-label="Show another audio for today"
-        title={`Another audio for today${audio.swapLabel ? ` (${audio.swapLabel})` : ''}`}
-        className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full border border-white/[0.14] bg-black/50 backdrop-blur-sm px-2 py-1 text-[10px] text-white/70 press-scale"
-      >
-        <Shuffle className="w-3 h-3" />
-        {audio.swapLabel && <span className="tabular-nums">{audio.swapLabel}</span>}
-      </button>
-    )}
+    <div>
+    {/* The swap used to float in the card's top-right corner, where it
+        crowded the play button and covered the label. It is now its own row
+        under the card: still a sibling of the card's button (a button inside
+        a button is invalid, and swapping must never start playback), but with
+        room to be read and hit. */}
     <button
       onClick={audio.onOpen}
       aria-label={audio.playing ? `Open the player — ${audio.title} is playing` : undefined}
@@ -354,21 +344,38 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
           </div>
         )}
       </div>
-      {audio.durationSec !== null && (
-        <span className="text-xs text-white/60 tabular-nums shrink-0">{formatDuration(audio.durationSec)}</span>
-      )}
-      <span className="w-10 h-10 shrink-0 rounded-full bg-white text-black flex items-center justify-center" aria-hidden>
-        {audio.playing ? (
-          // Moving bars, because a static pause icon reads as "paused".
-          // EqBars animates with rAF: CSS keyframes are unreliable here.
-          <EqBars height={14} barWidth={3} gap={2} color="black" barCount={3} />
-        ) : audio.loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
+      {/* Duration above the button rather than beside it: three things in a
+          row left 40px for a title on a 390px screen. */}
+      <div className="shrink-0 flex flex-col items-center gap-1.5">
+        <span className="w-11 h-11 rounded-full bg-white text-black flex items-center justify-center" aria-hidden>
+          {audio.playing ? (
+            // Moving bars, because a static pause icon reads as "paused".
+            // EqBars animates with rAF: CSS keyframes are unreliable here.
+            <EqBars height={14} barWidth={3} gap={2} color="black" barCount={3} />
+          ) : audio.loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
+          )}
+        </span>
+        {audio.durationSec !== null && (
+          <span className="text-[11px] text-white/50 tabular-nums">{formatDuration(audio.durationSec)}</span>
         )}
-      </span>
+      </div>
     </button>
+
+    {audio.onSwap && (
+      <div className="flex justify-end mt-1.5">
+        <button
+          onClick={audio.onSwap}
+          className="flex items-center gap-1.5 rounded-full border border-white/[0.12] px-2.5 py-1 text-[11px] text-white/55 hover:text-white/85 press-scale"
+        >
+          <Shuffle className="w-3 h-3" />
+          Something else
+          {audio.swapLabel && <span className="tabular-nums text-white/35">{audio.swapLabel}</span>}
+        </button>
+      </div>
+    )}
     </div>
   )
 }

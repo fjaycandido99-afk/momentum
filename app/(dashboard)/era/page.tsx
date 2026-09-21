@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Compass, Flame, Grid3x3, Loader2 } from 'lucide-react'
+import { ChevronLeft, Compass, Dumbbell, Flame, Grid3x3, Loader2 } from 'lucide-react'
 import { useEra, type EraToday } from '@/hooks/useEra'
 import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY, eraName } from '@/lib/era/presets'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
@@ -11,8 +11,6 @@ import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { programFor } from '@/lib/era/programs'
 import { alignmentLine } from '@/lib/era/alignment'
 import { trackFeature } from '@/lib/analytics/track'
-import { PracticeSection } from '@/components/exercise/PracticeSection'
-import { PracticesSection } from '@/components/practices/PracticesSection'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -426,11 +424,6 @@ function ActiveEra({
       {/* Practice: the exercise Voxu runs WITH you. The mission below is the
           thing you go and do in the world — two different asks, deliberately
           not merged. */}
-      <PracticeSection hasEra />
-
-      {/* The disciplines they already keep. Adding happens here, not on
-          home: nothing on the home screen should be a form. */}
-      <PracticesSection canAdd />
 
       {era.mission && (
         <div className="rounded-2xl border border-white/[0.12] p-4">
@@ -444,6 +437,18 @@ function ActiveEra({
         <p className="text-[15px] text-white mt-1 leading-snug">&ldquo;{era.change}&rdquo;</p>
         {era.why && <p className="text-sm text-white/65 mt-2 leading-snug">Because &ldquo;{era.why}&rdquo;</p>}
       </div>
+
+      {/* Today's practice and the disciplines they keep both live on
+          /training now — an era is what you're working on, that page is
+          the work. */}
+      <Link href="/training" className="block rounded-2xl border border-white/[0.12] p-4 hover:bg-white/[0.03]">
+        <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+          <Dumbbell className="w-3.5 h-3.5" /> Training
+        </div>
+        <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>
+          Today&rsquo;s practice, and the things you keep.
+        </p>
+      </Link>
 
       {/* The record this era is adding to — days kept, across every era. */}
       <Link href="/proof" className="block rounded-2xl border border-white/[0.12] p-4 hover:bg-white/[0.03]">
