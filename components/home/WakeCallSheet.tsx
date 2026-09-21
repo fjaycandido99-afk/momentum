@@ -114,7 +114,7 @@ export function WakeCallSheet({
               Let your coach wake you up.
             </h2>
           </div>
-          <button onClick={onClose} aria-label="Close" className="p-2 -mr-1 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
+          <button onClick={onClose} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
             <X className="w-4 h-4 text-white" />
           </button>
         </div>

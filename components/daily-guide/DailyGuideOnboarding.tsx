@@ -744,7 +744,7 @@ export function DailyGuideOnboarding() {
       </div>
 
       {/* Content */}
-      <div className={`flex-1 flex flex-col min-h-0 overflow-y-auto pb-32 ${step === 0 ? 'px-0' : 'px-6'}`}>
+      <div className={`flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden pb-32 ${step === 0 ? 'px-0' : 'px-6'}`}>
         <div
           key={step}
           className={`w-full my-auto ${step === 0 ? '' : 'max-w-sm mx-auto'} ${animating ? 'animate-slide-down-exit' : 'animate-slide-up-enter'}`}

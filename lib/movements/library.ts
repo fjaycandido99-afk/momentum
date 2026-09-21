@@ -434,6 +434,36 @@ export const MOVEMENTS: Movement[] = [
 export const MOVEMENTS_BY_ID = new Map(MOVEMENTS.map(m => [m.id, m]))
 
 /**
+ * The library grouped for browsing, simplest option first inside each
+ * pattern.
+ *
+ * Ordered by pattern the way a session tends to be built — legs, then
+ * pushes and pulls, then the middle. Not a recommendation about order: it's
+ * a list, and the person picks.
+ */
+export const PATTERN_ORDER: MovementPattern[] = [
+  'squat',
+  'hinge',
+  'single_leg',
+  'horizontal_push',
+  'vertical_push',
+  'horizontal_pull',
+  'vertical_pull',
+  'core',
+]
+
+const LEVEL_RANK: Record<MovementLevel, number> = { simplest: 0, standard: 1, advanced: 2 }
+
+export function movementsByPattern(): { pattern: MovementPattern; movements: Movement[] }[] {
+  return PATTERN_ORDER.map(pattern => ({
+    pattern,
+    movements: MOVEMENTS
+      .filter(m => m.pattern === pattern)
+      .sort((a, b) => LEVEL_RANK[a.level] - LEVEL_RANK[b.level] || a.name.localeCompare(b.name)),
+  })).filter(group => group.movements.length > 0)
+}
+
+/**
  * Shown wherever technique would go.
  *
  * Said plainly rather than left blank, because a blank space reads as "this

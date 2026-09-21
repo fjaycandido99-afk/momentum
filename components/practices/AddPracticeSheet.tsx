@@ -92,7 +92,7 @@ export function AddPracticeSheet({
     >
       <button className="flex-1" aria-label="Close" onClick={onClose} />
       <div
-        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto"
+        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto overflow-x-hidden"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
       >
         <div className="flex items-start justify-between gap-3">
@@ -101,7 +101,7 @@ export function AddPracticeSheet({
               <button
                 onClick={() => (presetKey ? setPresetKey(null) : setDomain(null))}
                 aria-label="Back"
-                className="p-1.5 -ml-1.5 rounded-full hover:bg-white/10"
+                className="p-1.5 rounded-full hover:bg-white/10"
               >
                 <ChevronLeft className="w-4 h-4 text-white/70" />
               </button>
@@ -113,7 +113,7 @@ export function AddPracticeSheet({
               </h2>
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close" className="p-2 -mr-1 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
+          <button onClick={onClose} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
             <X className="w-4 h-4 text-white" />
           </button>
         </div>

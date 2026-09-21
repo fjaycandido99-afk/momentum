@@ -11,6 +11,7 @@ import { trackFeature } from '@/lib/analytics/track'
 import { matchMovement } from '@/lib/movements/swap'
 import type { Movement } from '@/lib/movements/library'
 import { MovementSheet } from './MovementSheet'
+import { PatternGlyph } from '@/components/movements/PatternGlyph'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -323,9 +324,14 @@ function PracticeRow({
                   {matched ? (
                     <button
                       onClick={() => { haptic('light'); setMovement(matched) }}
-                      className="min-w-0 text-left underline underline-offset-4 decoration-white/15 hover:decoration-white/50"
+                      className="min-w-0 text-left flex items-center gap-1.5"
                     >
-                      {item.name}
+                      <span className="text-white/35 shrink-0">
+                        <PatternGlyph pattern={matched.pattern} className="w-3.5 h-3.5" />
+                      </span>
+                      <span className="min-w-0 underline underline-offset-4 decoration-white/15">
+                        {item.name}
+                      </span>
                     </button>
                   ) : (
                     <span className="min-w-0">{item.name}</span>

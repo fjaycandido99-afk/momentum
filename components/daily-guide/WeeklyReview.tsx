@@ -510,7 +510,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
       role="dialog"
       aria-modal="true"
       aria-label="Weekly journal entries"
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto overflow-x-hidden"
       onClick={() => setShowFullJournal(false)}
     >
       <div
@@ -538,7 +538,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         </div>
 
         {/* Daily Entries */}
-        <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
+        <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto overflow-x-hidden">
           {stats.dailyEntries.map((day, index) => (
             <div
               key={index}
@@ -626,7 +626,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
   if (isModal) {
     return (
       <>
-        <div role="dialog" aria-modal="true" aria-label="Weekly review" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+        <div role="dialog" aria-modal="true" aria-label="Weekly review" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto overflow-x-hidden">
           <div className="w-full max-w-md my-8 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] overflow-hidden">
             {content}
           </div>

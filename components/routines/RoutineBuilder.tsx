@@ -87,7 +87,7 @@ export function RoutineBuilder({ onClose, onCreated }: RoutineBuilderProps) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-20 space-y-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pb-20 space-y-4">
         <input
           value={name}
           onChange={e => setName(e.target.value)}

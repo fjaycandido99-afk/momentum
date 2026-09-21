@@ -10,6 +10,7 @@ import {
   type Movement,
 } from '@/lib/movements/library'
 import { HURTS_NOTE, SWAP_REASONS, swapIntro, swapsFor, type SwapReason } from '@/lib/movements/swap'
+import { PatternGlyph } from '@/components/movements/PatternGlyph'
 import { haptic } from '@/lib/haptics'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -47,19 +48,25 @@ export function MovementSheet({
     >
       <button className="flex-1" aria-label="Close" onClick={onClose} />
       <div
-        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto"
+        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto overflow-x-hidden"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
       >
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
-              {PATTERN_LABELS[movement.pattern]}
-            </p>
-            <h2 className="text-[26px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
-              {movement.name}
-            </h2>
+          <div className="flex items-start gap-3 min-w-0">
+            {/* The mark for the pattern, not a picture of the lift. */}
+            <span className="shrink-0 mt-0.5 w-11 h-11 rounded-xl border border-white/[0.14] bg-white/[0.04] flex items-center justify-center text-white/70">
+              <PatternGlyph pattern={movement.pattern} className="w-6 h-6" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+                {PATTERN_LABELS[movement.pattern]}
+              </p>
+              <h2 className="text-[26px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+                {movement.name}
+              </h2>
+            </div>
           </div>
-          <button onClick={onClose} aria-label="Close" className="p-2 -mr-1 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
+          <button onClick={onClose} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
             <X className="w-4 h-4 text-white" />
           </button>
         </div>
@@ -130,7 +137,12 @@ export function MovementSheet({
                 {swaps.map(swap => (
                   <div key={swap.id} className="rounded-xl border border-white/[0.12] p-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-[15px] text-white leading-snug">{swap.name}</p>
+                      <p className="text-[15px] text-white leading-snug flex items-center gap-2 min-w-0">
+                        <span className="text-white/45 shrink-0">
+                          <PatternGlyph pattern={swap.pattern} className="w-4 h-4" />
+                        </span>
+                        <span className="min-w-0">{swap.name}</span>
+                      </p>
                       {onSwap && (
                         <button
                           onClick={() => { haptic('medium'); onSwap(swap) }}

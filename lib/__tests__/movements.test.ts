@@ -5,8 +5,11 @@ import {
   MOVEMENT_STOP_SIGNALS,
   MOVEMENT_TECHNIQUE_PENDING,
   PATTERN_LABELS,
+  PATTERN_ORDER,
+  movementsByPattern,
   type MovementPattern,
 } from '@/lib/movements/library'
+import { PATTERN_GLYPH_KEYS } from '@/components/movements/PatternGlyph'
 import {
   HURTS_NOTE,
   SWAP_REASONS,
@@ -88,6 +91,31 @@ describe('the library', () => {
   it('has a stop rule, which is safety and not technique', () => {
     expect(MOVEMENT_STOP_SIGNALS.length).toBeGreaterThanOrEqual(3)
     expect(MOVEMENT_STOP_SIGNALS.join(' ')).toMatch(/pain/i)
+  })
+})
+
+describe('browsing the library', () => {
+  it('lists every movement exactly once, and every pattern', () => {
+    const groups = movementsByPattern()
+    const ids = groups.flatMap(g => g.movements.map(m => m.id))
+    expect(new Set(ids).size).toBe(MOVEMENTS.length)
+    expect(groups.map(g => g.pattern).sort()).toEqual([...new Set(MOVEMENTS.map(m => m.pattern))].sort())
+  })
+
+  it('puts the simplest option first in every pattern', () => {
+    for (const group of movementsByPattern()) {
+      expect(group.movements[0].level, group.pattern).toBe('simplest')
+    }
+  })
+
+  it('has a mark and a label for every pattern in the order', () => {
+    // A pattern added to the library without a glyph would render a blank
+    // square, so this is the guard that keeps the two files in step.
+    for (const pattern of PATTERN_ORDER) {
+      expect(PATTERN_GLYPH_KEYS, pattern).toContain(pattern)
+      expect(PATTERN_LABELS[pattern], pattern).toBeTruthy()
+    }
+    expect(PATTERN_GLYPH_KEYS.length).toBe(PATTERN_ORDER.length)
   })
 })
 

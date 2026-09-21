@@ -374,7 +374,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
             {/* Journal Content */}
             <div className="p-4">
               {hasJournalEntry(selectedDayData) ? (
-                <div className="space-y-3 max-h-[50vh] overflow-y-auto">
+                <div className="space-y-3 max-h-[50vh] overflow-y-auto overflow-x-hidden">
                   {selectedDayData.journal_win && (
                     <div>
                       <div className="flex items-center gap-2 text-white mb-1.5">

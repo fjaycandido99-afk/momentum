@@ -132,13 +132,13 @@ export function ExercisePlayer({
         <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
           {phase === 'done' ? 'Practice done' : 'Today’s practice'}
         </p>
-        <button onClick={leave} aria-label="Close" className="p-2 -mr-1 rounded-full bg-white/10 hover:bg-white/20">
+        <button onClick={leave} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20">
           <X className="w-4 h-4 text-white" />
         </button>
       </div>
 
       {phase === 'intro' && (
-        <div className="flex-1 overflow-y-auto px-5 pt-6 pb-8">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 pt-6 pb-8">
           <h2 className="text-[32px] text-white leading-tight" style={{ ...SERIF, fontWeight: 600 }}>
             {exercise.title}
           </h2>

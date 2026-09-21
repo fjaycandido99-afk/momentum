@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Plus, X } from 'lucide-react'
+import { Dumbbell, Loader2, Plus, X } from 'lucide-react'
 import {
   PLAN_MAX_DETAIL_LENGTH,
   PLAN_MAX_ITEMS,
@@ -17,6 +17,8 @@ import { guideForDomain } from '@/lib/practices/guides'
 import { PracticeGuideSheet } from './PracticeGuideSheet'
 import { matchMovement } from '@/lib/movements/swap'
 import { MovementSheet } from './MovementSheet'
+import { MovementPicker } from '@/components/movements/MovementPicker'
+import { PatternGlyph } from '@/components/movements/PatternGlyph'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -82,6 +84,14 @@ export function PracticePlanSheet({
    */
   const [swapRow, setSwapRow] = useState<{ slotKey: string; index: number } | null>(null)
   const swapping = swapRow ? matchMovement(draft[swapRow.slotKey]?.items[swapRow.index]?.name ?? '') : null
+  /**
+   * Which slot is picking from the library, if any.
+   *
+   * Gym only: the library is movements. Offering "pick an exercise" while
+   * someone plans a book would be the app not knowing what it's looking at.
+   */
+  const [pickingFor, setPickingFor] = useState<string | null>(null)
+  const canPick = domain === 'gym'
 
   const setItem = (slotKey: string, index: number, patch: Partial<PlanItem>) => {
     setDraft(d => {
@@ -156,7 +166,7 @@ export function PracticePlanSheet({
     >
       <button className="flex-1" aria-label="Close" onClick={onClose} />
       <div
-        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto"
+        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto overflow-x-hidden"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
       >
         <div className="flex items-start justify-between gap-3">
@@ -166,7 +176,7 @@ export function PracticePlanSheet({
               {copy.ask}
             </h2>
           </div>
-          <button onClick={onClose} aria-label="Close" className="p-2 -mr-1 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
+          <button onClick={onClose} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
             <X className="w-4 h-4 text-white" />
           </button>
         </div>
@@ -226,15 +236,19 @@ export function PracticePlanSheet({
                         <X className="w-4 h-4" />
                       </button>
                     </div>
-                    {/* Only for a name the library actually recognises. It
-                        offers other movements that train the same thing —
-                        it does not teach this one. */}
+                    {/* Only for a name the library actually recognises: the
+                        mark for what it trains, and a way to other
+                        movements that train the same thing. Not a way to
+                        learn this one. */}
                     {matched && (
                       <button
                         onClick={() => { haptic('light'); setSwapRow({ slotKey: slot.key, index: i }) }}
-                        className="text-[11px] text-white/40 hover:text-white/80 mt-1 ml-1 underline underline-offset-4 decoration-white/15"
+                        className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/80 mt-1 ml-1"
                       >
-                        No {matched.equipment[0]}? Something else instead
+                        <PatternGlyph pattern={matched.pattern} className="w-4 h-4 shrink-0" />
+                        <span className="underline underline-offset-4 decoration-white/15">
+                          No {matched.equipment[0]}? Something else instead
+                        </span>
                       </button>
                     )}
                     </div>
@@ -243,12 +257,24 @@ export function PracticePlanSheet({
                 </div>
 
                 {slotDraft.items.length < PLAN_MAX_ITEMS && (
-                  <button
-                    onClick={() => addRow(slot.key)}
-                    className="flex items-center gap-1 text-[12px] text-white/55 hover:text-white mt-2"
-                  >
-                    <Plus className="w-3 h-3" /> Add {copy.noun}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                    <button
+                      onClick={() => addRow(slot.key)}
+                      className="flex items-center gap-1 text-[12px] text-white/55 hover:text-white"
+                    >
+                      <Plus className="w-3 h-3" /> Add {copy.noun}
+                    </button>
+                    {/* For the person who doesn't know what to write. It
+                        writes a name into a row and nothing else. */}
+                    {canPick && (
+                      <button
+                        onClick={() => { haptic('light'); setPickingFor(slot.key) }}
+                        className="flex items-center gap-1 text-[12px] text-white/45 hover:text-white"
+                      >
+                        <Dumbbell className="w-3 h-3" /> Pick from the library
+                      </button>
+                    )}
+                  </div>
                 )}
 
                 {/* This day's own floor. Optional — without one, the
@@ -303,6 +329,31 @@ export function PracticePlanSheet({
             setSwapRow(null)
           }}
           onClose={() => setSwapRow(null)}
+        />
+      )}
+
+      {/* Picking writes the name into the first empty row of that day, or
+          adds a row if every one is used — so nothing they typed is ever
+          overwritten by a tap. */}
+      {pickingFor && (
+        <MovementPicker
+          onPick={movement => {
+            const slotKey = pickingFor
+            setDraft(d => {
+              const slot = d[slotKey]
+              const blank = slot.items.findIndex(item => !item.name.trim())
+              if (blank >= 0) {
+                const items = slot.items.map((item, i) =>
+                  i === blank ? { ...item, name: movement.name } : item
+                )
+                return { ...d, [slotKey]: { ...slot, items } }
+              }
+              if (slot.items.length >= PLAN_MAX_ITEMS) return d
+              return { ...d, [slotKey]: { ...slot, items: [...slot.items, { name: movement.name }] } }
+            })
+            setPickingFor(null)
+          }}
+          onClose={() => setPickingFor(null)}
         />
       )}
     </div>
