@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Compass, Flame, Loader2 } from 'lucide-react'
+import { ChevronLeft, Compass, Flame, Grid3x3, Loader2 } from 'lucide-react'
 import { useEra, type EraToday } from '@/hooks/useEra'
 import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY, eraName } from '@/lib/era/presets'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
@@ -433,6 +433,19 @@ function ActiveEra({
         <p className="text-[15px] text-white mt-1 leading-snug">&ldquo;{era.change}&rdquo;</p>
         {era.why && <p className="text-sm text-white/65 mt-2 leading-snug">Because &ldquo;{era.why}&rdquo;</p>}
       </div>
+
+      {/* The record this era is adding to — days kept, across every era. */}
+      <Link href="/proof" className="block rounded-2xl border border-white/[0.12] p-4 hover:bg-white/[0.03]">
+        <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+          <Grid3x3 className="w-3.5 h-3.5" /> Your year in proof
+        </div>
+        <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>
+          Every day you kept a promise, on one page.
+        </p>
+        <p className="text-[11px] text-white/45 mt-2">
+          Tap a day to see the promise, the mission and how you were.
+        </p>
+      </Link>
 
       {/* Is the Daily Read moving toward who this era is about? */}
       {era.alignment && (

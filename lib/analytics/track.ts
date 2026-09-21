@@ -22,7 +22,7 @@ export type FeatureName =
   // The era loop. Most of it is countable from rows (Era, EraPromise,
   // EraReferral), so only the steps that leave no row behind are tracked:
   // metadata says which — 'picker', 'share_opened', 'share_sent',
-  // 'join_page', 'wake_call'.
+  // 'join_page', 'wake_call', 'proof_year'.
   | 'era'
   // A push that got opened — the only proof a notification did anything.
   // metadata is the notification type ('era_wake', 'daily_quote', …).
