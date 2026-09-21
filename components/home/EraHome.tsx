@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  AlarmClock, ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Play, Share2, Target, X,
+  AlarmClock, ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Moon, Play, Share2, Target, X,
   type LucideIcon,
 } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
@@ -318,6 +318,8 @@ function ActiveEra({
   const [confidence, setConfidence] = useState<number | null>(null)
   /** A just-answered yesterday, still owed its one-tap "why". */
   const [pendingWhy, setPendingWhy] = useState<{ kept: boolean } | null>(null)
+  /** Writing tomorrow's promise tonight, rather than in a rushed morning. */
+  const [writingAhead, setWritingAhead] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [crisis, setCrisis] = useState<CrisisContent | null>(null)
@@ -380,13 +382,14 @@ function ActiveEra({
     }
   }
 
-  const promise = async () => {
+  const promise = async (forDay: 'today' | 'tomorrow' = 'today') => {
     const text = draft.trim()
     if (!text || busy) return
-    const ok = await post('/api/era/promise', { text, source, confidence })
+    const ok = await post('/api/era/promise', { text, source, confidence, forDay })
     if (ok) {
       setDraft('')
       setConfidence(null)
+      setWritingAhead(false)
     }
   }
 
@@ -599,7 +602,7 @@ function ActiveEra({
                 }}
               />
               <button
-                onClick={promise}
+                onClick={() => promise('today')}
                 disabled={busy || !draft.trim()}
                 aria-label="Make this promise"
                 className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center disabled:opacity-30 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none"
@@ -691,8 +694,84 @@ function ActiveEra({
     : era.step === 'promise' ? 'Make today’s promise. One thing, small enough that you’ll keep it.'
     : era.step === 'check' && !era.checkInOpen ? 'Go do it. Come back tonight and say whether you kept it.'
     : era.step === 'check' ? 'Say whether you kept today’s promise.'
-    : era.step === 'done' ? 'Done for today. Your next promise is tomorrow morning.'
+    : era.step === 'done' && era.tomorrow ? 'Done for today, and tomorrow is already written.'
+    : era.step === 'done' ? 'Done for today. Write tomorrow’s promise now, or in the morning.'
     : null
+
+  /**
+   * Tomorrow's promise, written tonight.
+   *
+   * A busy morning shouldn't be the reason a day has no promise — and for
+   * some people the evening is the better moment to decide anyway. Offered
+   * once today is settled, never instead of today.
+   */
+  const tomorrowBlock = era.step === 'complete' || era.step === 'promise' || era.step === 'check_yesterday'
+    ? null
+    : era.tomorrow && !writingAhead ? (
+      <div className="card-surface-lg p-4">
+        <p className="text-[10px] tracking-[0.2em] uppercase text-white/50 flex items-center gap-1.5">
+          <Moon className="w-3.5 h-3.5" /> Tomorrow
+        </p>
+        <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>{era.tomorrow.text}</p>
+        {era.tomorrow.coachReply && (
+          <p className="text-sm text-white/75 mt-2.5 leading-relaxed border-l-2 border-white/25 pl-3">
+            {era.tomorrow.coachReply}
+          </p>
+        )}
+        <button
+          onClick={() => { setDraft(era.tomorrow!.text); setSource('typed'); setWritingAhead(true) }}
+          className="mt-3 text-xs text-white/60 underline underline-offset-2"
+        >
+          Change it
+        </button>
+      </div>
+    ) : writingAhead ? (
+      <div className="card-surface-lg p-4">
+        <label htmlFor="era-tomorrow" className="text-[10px] tracking-[0.2em] uppercase text-white/50 flex items-center gap-1.5">
+          <Moon className="w-3.5 h-3.5" /> Tomorrow’s promise
+        </label>
+        <div className="mt-2 flex items-end gap-2">
+          <textarea
+            id="era-tomorrow"
+            rows={2}
+            value={draft}
+            maxLength={ERA_LIMITS.promise}
+            onChange={e => { setDraft(e.target.value); setSource('typed') }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); promise('tomorrow') } }}
+            placeholder={era.promiseHint}
+            disabled={busy}
+            className="flex-1 resize-none rounded-xl bg-white/[0.05] border border-white/[0.15] px-3 py-2.5 text-base text-white placeholder:text-white/35 focus:outline-none focus:border-white/40 disabled:opacity-50"
+          />
+          <div className="flex flex-col gap-2 items-center">
+            <VoiceInput
+              disabled={busy}
+              onTranscript={txt => {
+                setDraft(prev => (prev ? `${prev} ${txt}` : txt).slice(0, ERA_LIMITS.promise))
+                setSource('spoken')
+              }}
+            />
+            <button
+              onClick={() => promise('tomorrow')}
+              disabled={busy || !draft.trim()}
+              aria-label="Promise this for tomorrow"
+              className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center disabled:opacity-30 active:scale-95 transition-all"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+        <button
+          onClick={() => { setWritingAhead(false); setDraft('') }}
+          className="mt-2 text-xs text-white/50"
+        >
+          Not now
+        </button>
+      </div>
+    ) : (
+      <button className={chip} onClick={() => setWritingAhead(true)}>
+        <Moon className="w-3 h-3" /> Write tomorrow’s promise
+      </button>
+    )
 
   return (
     <>
@@ -736,6 +815,7 @@ function ActiveEra({
 
       <AudioCard audio={audio} />
       {action}
+      {tomorrowBlock}
       {crisis && <CrisisBanner content={crisis} />}
       {error && <p className="text-xs text-white/70" role="alert">{error}</p>}
       {trialOffer && (

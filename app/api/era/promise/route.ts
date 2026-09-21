@@ -30,6 +30,9 @@ export async function POST(request: NextRequest) {
       text: body?.text,
       source: body?.source,
       confidence: body?.confidence,
+      // 'tomorrow' writes the promise for the day ahead — for anyone whose
+      // morning is too busy to decide anything.
+      forDay: body?.forDay,
     })
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 

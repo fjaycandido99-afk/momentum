@@ -48,6 +48,11 @@ export interface PromiseReplyInput {
    * so the coach can quote it verbatim without doing arithmetic.
    */
   patternLine?: string | null
+  /**
+   * They are writing TOMORROW's promise tonight. The reply has to be about
+   * tomorrow, or it congratulates them for a day that hasn't happened.
+   */
+  forTomorrow?: boolean
 }
 
 /** The days the coach should quote their day-1 words back to them. */
@@ -103,6 +108,9 @@ ${callback
 ${input.yesterday === 'broken'
     ? "- They didn't keep yesterday's promise. Don't scold and don't excuse it. Today is the answer to yesterday."
     : ''}
+${input.forTomorrow
+    ? '- They are writing this TONIGHT, for TOMORROW. Speak about tomorrow, not today: they have not done it yet, and deciding the night before is worth a word.'
+    : ''}
 - Output ONLY the reply text.
 
 ${input.coachFocus}
@@ -123,7 +131,9 @@ ${input.stageNote}`
     input.patternLine
       ? `Something their own record shows, with the counts already worked out: ${input.patternLine} Use it only if it fits today's promise, and quote the numbers exactly as given.`
       : null,
-    `Today's promise: "${input.promise}"`,
+    input.forTomorrow
+      ? `TOMORROW's promise, written tonight: "${input.promise}"`
+      : `Today's promise: "${input.promise}"`,
   ].filter(Boolean).join('\n')
 
   return {

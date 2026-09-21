@@ -26,6 +26,11 @@ export function previousDay(day: string): string {
   return new Date(dayToUtc(day) - DAY_MS).toISOString().slice(0, 10)
 }
 
+/** The day after. For a promise written the night before it's due. */
+export function nextDay(day: string): string {
+  return new Date(dayToUtc(day) + DAY_MS).toISOString().slice(0, 10)
+}
+
 /** 1-based day of the era. Day 1 is the day it started. */
 export function eraDayNumber(startDay: string, today: string): number {
   return Math.max(1, daysBetween(startDay, today) + 1)

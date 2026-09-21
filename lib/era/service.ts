@@ -17,6 +17,7 @@ import {
   eraStep,
   missionForDay,
   previousDay,
+  nextDay,
   type EraStageKey,
   type EraStats,
   type EraStep,
@@ -141,6 +142,12 @@ export interface EraTodayWire {
     helper: string | null
   } | null
   yesterday: { text: string; kept: boolean | null } | null
+  /**
+   * Tomorrow's promise, if they wrote it tonight. Its own field rather than
+   * a flag: the card shows the words back, and the morning must not ask for
+   * a promise that already exists.
+   */
+  tomorrow: { text: string; coachReply: string | null } | null
   promiseHint: string
   /** Where in the 30 days they are, and the card's line for it. */
   stage: { key: EraStageKey; label: string; line: string }
@@ -200,6 +207,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
 
   const todayRow = promises.find(p => p.local_day === today) ?? null
   const yesterdayRow = promises.find(p => p.local_day === yesterday) ?? null
+  const tomorrowRow = promises.find(p => p.local_day === nextDay(today)) ?? null
   const preset = ERA_PRESETS_BY_KEY.get(era.era_key)
   const premium = await isPremiumUser(userId).catch(() => false)
   const yesterdayOutcome = !yesterdayRow ? null : yesterdayRow.kept === null ? 'unanswered' : yesterdayRow.kept ? 'kept' : 'broken'
@@ -248,6 +256,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
         }
       : null,
     yesterday: yesterdayRow ? { text: yesterdayRow.text, kept: yesterdayRow.kept } : null,
+    tomorrow: tomorrowRow ? { text: tomorrowRow.text, coachReply: tomorrowRow.coach_reply } : null,
     promiseHint: preset?.promiseHint ?? "I'll do the one thing I keep putting off.",
     stage: { key: stage.key, label: stage.label, line: stage.line },
     mission: missionFor(era.era_key, day),
@@ -373,7 +382,7 @@ export type PromiseResult =
 
 export async function makePromise(
   userId: string,
-  input: { text: unknown; source?: unknown; confidence?: unknown },
+  input: { text: unknown; source?: unknown; confidence?: unknown; forDay?: unknown },
 ): Promise<PromiseResult> {
   const text = clean(input.text, ERA_LIMITS.promise)
   if (!text) return { ok: false, error: 'Say what you promise yourself today', status: 400 }
@@ -381,14 +390,26 @@ export async function makePromise(
   // Optional by design: a promise is never held up by it, and a missing
   // answer stays missing rather than becoming a middling 3.
   const confidence = parseConfidence(input.confidence)
+  // Written the night before. A busy morning shouldn't be the reason a day
+  // has no promise, and deciding tonight is arguably the better decision.
+  const ahead = input.forDay === 'tomorrow'
 
   const era = await getActiveEra(userId)
   if (!era) return { ok: false, error: 'No active era', status: 404 }
 
   const tz = await userTimezone(userId)
-  const today = localDay(tz)
+  const todayLocal = localDay(tz)
+  // Everything below is "the day this promise is FOR", which is tomorrow when
+  // they're writing ahead.
+  const today = ahead ? nextDay(todayLocal) : todayLocal
   const day = eraDayNumber(era.start_day, today)
-  if (day > era.length_days) return { ok: false, error: 'This era is complete', status: 409 }
+  if (day > era.length_days) {
+    return {
+      ok: false,
+      error: ahead ? 'Tomorrow is past the end of this era' : 'This era is complete',
+      status: 409,
+    }
+  }
 
   const promises = await prisma.eraPromise.findMany({
     where: { era_id: era.id },
@@ -425,6 +446,7 @@ export async function makePromise(
           stageNote: eraStage(day, era.length_days).coachNote,
           mission: missionFor(era.era_key, day),
           fullMemory: await isPremiumUser(userId).catch(() => false),
+          forTomorrow: ahead,
           patternLine: await patternLineFor(userId, weekdayOf(today)),
         },
         mindset,

@@ -693,6 +693,21 @@ export async function sendMorningReminders(): Promise<void> {
         totalFailed += result.failed
         continue
       }
+
+      // Today's promise already exists — often written the night before, for
+      // a morning too busy to decide anything. Asking "what are you
+      // promising?" would be asking for something they already gave.
+      if (era && era.step === 'check' && era.today) {
+        const promise = era.today.text.length > 90 ? `${era.today.text.slice(0, 87)}…` : era.today.text
+        const result = await sendPushToUser(user_id, 'morning_reminder', {
+          title: `${era.title} · Day ${era.day}`,
+          body: `"${promise}" — that's today. Go keep it.`,
+          data: { type: 'morning_reminder', url: '/' },
+        })
+        totalSent += result.sent
+        totalFailed += result.failed
+        continue
+      }
     } catch {
       // Fall through to the regular morning reminder.
     }
