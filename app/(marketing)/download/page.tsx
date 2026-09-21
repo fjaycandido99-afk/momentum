@@ -51,56 +51,58 @@ function AppStoreBadge() {
   )
 }
 
+/**
+ * What the app actually is now.
+ *
+ * This page was still selling the pre-era product — guided sessions,
+ * soundscapes, an adaptive daily guide — with no mention of the loop
+ * everything is now built on. The library is real and stays, but it is the
+ * supporting cast, not the pitch.
+ */
 const FEATURES = [
   {
-    icon: Mic,
-    title: 'Guided Voice Sessions',
-    description: 'Breathing exercises, affirmations, gratitude meditations, and more — narrated in your chosen voice tone.',
-  },
-  {
-    icon: Music,
-    title: 'Ambient Soundscapes',
-    description: 'Rain, ocean waves, forest sounds, and lo-fi beats to help you focus, relax, or sleep.',
+    icon: Sparkles,
+    title: 'Pick your era',
+    description: 'Locked In, Discipline, Comeback, Gym Arc, Stoic Mode, Confidence, Study, 5AM — or name your own. Thirty days, four phases, one written mission a day.',
   },
   {
     icon: Brain,
-    title: 'AI Daily Coach',
-    description: 'Personalized daily guides that adapt to your schedule, mood, and journal entries.',
+    title: 'One promise a day',
+    description: 'Each morning you promise yourself one thing and your coach answers it — quoting what you said on day one, on the days that lands hardest.',
   },
   {
-    icon: Sparkles,
-    title: 'Motivation Library',
-    description: 'Curated motivational content to fuel your morning routine and keep momentum all day.',
-  },
-  {
-    icon: Moon,
-    title: 'Sleep & Wind Down',
-    description: 'Evening routines with sleep meditations, progressive relaxation, and calming audio.',
+    icon: Mic,
+    title: 'A wake-up call in your coach\'s voice',
+    description: 'Set a time and your coach calls you by name, tells you where you are in your era, and asks for the day\'s promise out loud.',
   },
   {
     icon: Shield,
-    title: '8 Mindset Philosophies',
-    description: 'Choose from Stoic, Existentialist, Cynic, Hedonist, Samurai Code, Scholar, Manifestor, or Hustler — shaping your entire experience.',
+    title: 'Eight voices, not eight themes',
+    description: 'Stoic, Existentialist, Cynic, Hedonist, Samurai, Scholar, Manifestor or Hustler. The mindset is how your coach talks to you — the era is what you are working on.',
+  },
+  {
+    icon: Moon,
+    title: 'Your own record, counted honestly',
+    description: 'Promises kept, the weekday you slip on, whether your certainty means anything. Every figure shows the numbers behind it, and says nothing until there is enough to say.',
+  },
+  {
+    icon: Music,
+    title: 'The library it all runs on',
+    description: 'Guided sessions, ambient soundscapes, motivation and sleep audio — chosen to suit the era you are in, not a catalogue to browse.',
   },
 ]
 
-const TESTIMONIALS = [
-  {
-    text: "I've tried every meditation app. Voxu is the first one that actually fits into my day without feeling like a chore.",
-    name: 'Early Tester',
-    role: 'Beta User',
-  },
-  {
-    text: "The guided breathing before work completely changed my mornings. I feel focused instead of rushed.",
-    name: 'Beta Tester',
-    role: 'Professional',
-  },
-  {
-    text: "Love that I can pick a mindset philosophy. The Stoic path resonates with me deeply.",
-    name: 'Beta User',
-    role: 'Student',
-  },
-]
+/**
+ * The testimonials that were here were written in-house and attributed to
+ * "Early Tester" and "Beta User" — quotes from nobody, under five-star
+ * ratings, on a public page. The app spends its whole product refusing to
+ * invent a number; it cannot invent a person on the way in.
+ *
+ * When real users say something real, with a name they agreed to, this
+ * comes back. Until then the page says what the app does and lets that
+ * stand.
+ */
+const TESTIMONIALS: { text: string; name: string; role: string }[] = []
 
 function FloatingOrb({ delay, size, x }: { delay: number; size: number; x: number }) {
   return (
@@ -221,16 +223,16 @@ export default function DownloadPage() {
           </div>
 
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6 animate-fade-up-delay-1">
-            Your AI
+            Who are you
             <br />
             <span className="bg-gradient-to-r from-white via-white/90 to-white/70 bg-clip-text text-transparent">
-              Audio Coach
+              becoming?
             </span>
           </h1>
 
           <p className="text-lg sm:text-xl text-white/60 max-w-xl mx-auto mb-10 leading-relaxed animate-fade-up-delay-2">
-            Motivation, mindfulness, and focus — delivered through guided sessions,
-            ambient soundscapes, and personalized AI coaching.
+            Pick a 30-day era. Make one promise a day. Your coach answers it, asks at
+            night whether you kept it, and keeps count — out loud, in a voice you choose.
           </p>
 
           <div className="animate-fade-up-delay-3 flex flex-col items-center gap-4">
@@ -247,29 +249,28 @@ export default function DownloadPage() {
 
       {/* Social proof bar */}
       <section className="border-y border-white/5 bg-white/[0.02]">
+        {/* Counted things only. The five gold stars that used to sit here
+            were captioned "Loved by beta testers" — a rating from nobody,
+            with no review behind it. */}
         <div className="max-w-6xl mx-auto px-4 py-8 flex flex-wrap items-center justify-center gap-8 sm:gap-16 text-center">
           <div>
-            <div className="text-2xl font-bold">9+</div>
-            <div className="text-sm text-white/50">Guided voice types</div>
+            <div className="text-2xl font-bold">8</div>
+            <div className="text-sm text-white/50">Eras to choose from</div>
+          </div>
+          <div className="w-px h-8 bg-white/10 hidden sm:block" />
+          <div>
+            <div className="text-2xl font-bold">30</div>
+            <div className="text-sm text-white/50">Written missions per era</div>
           </div>
           <div className="w-px h-8 bg-white/10 hidden sm:block" />
           <div>
             <div className="text-2xl font-bold">8</div>
-            <div className="text-sm text-white/50">Mindset philosophies</div>
+            <div className="text-sm text-white/50">Coach voices</div>
           </div>
           <div className="w-px h-8 bg-white/10 hidden sm:block" />
           <div>
             <div className="text-2xl font-bold">70+</div>
-            <div className="text-sm text-white/50">Pre-recorded sessions</div>
-          </div>
-          <div className="w-px h-8 bg-white/10 hidden sm:block" />
-          <div>
-            <div className="flex gap-0.5 justify-center mb-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-white/80 text-white/80" />
-              ))}
-            </div>
-            <div className="text-sm text-white/50">Loved by beta testers</div>
+            <div className="text-sm text-white/50">Audio sessions</div>
           </div>
         </div>
       </section>
@@ -289,20 +290,20 @@ export default function DownloadPage() {
               {
                 step: '01',
                 icon: Headphones,
-                title: 'Choose Your Path',
-                desc: 'Pick your mindset philosophy and voice tone. Voxu shapes every session around your preferences.',
+                title: 'Start an era',
+                desc: 'Choose who you are becoming for the next thirty days, and the voice your coach speaks in.',
               },
               {
                 step: '02',
                 icon: Play,
-                title: 'Press Play',
-                desc: 'Start your daily guide with breathing, affirmations, motivation, and more — all in one flow.',
+                title: 'Promise one thing',
+                desc: 'Each morning, one promise — small enough to keep. Your coach answers it, and the day has its audio.',
               },
               {
                 step: '03',
                 icon: Zap,
-                title: 'Build Momentum',
-                desc: 'Journal your wins, track your streak, and watch AI personalize your journey over time.',
+                title: 'Say whether you kept it',
+                desc: 'At night you answer honestly. Thirty days later the app can tell you what you actually do — and what stops you.',
               },
             ].map((item) => (
               <div key={item.step} className="text-center group">
@@ -376,7 +377,8 @@ export default function DownloadPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Testimonials — rendered only when there are real ones. */}
+      {TESTIMONIALS.length > 0 && (
       <section className="py-24 px-4 bg-white/[0.02]">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-16">
@@ -406,6 +408,7 @@ export default function DownloadPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Pricing teaser */}
       <section className="py-24 px-4">
@@ -414,8 +417,10 @@ export default function DownloadPage() {
             Start Free Today
           </h2>
           <p className="text-white/50 mb-8 leading-relaxed">
-            Get daily guided sessions, soundscapes, and motivation at no cost.
-            Upgrade to Premium for unlimited access, AI coaching, and all voice tones.
+            The era, your daily promise, the missions and the check-in are free, forever —
+            a paywall in front of a habit means the habit never forms. Premium is the depth:
+            your coach remembering day one every time it matters, spoken replies, and the
+            letter it writes you at day 30.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
