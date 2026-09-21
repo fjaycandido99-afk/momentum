@@ -810,17 +810,14 @@ function ActiveEra({
   const chip =
     'inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1.5 text-xs text-white/85 hover:bg-white/[0.1] active:scale-[0.97] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none'
 
-  // One sentence for the one thing to do now. Every card on this screen is
-  // live at once, which reads as a to-do list where everything is urgent;
-  // this says which one is actually next.
-  const nextStep =
-    era.step === 'check_yesterday' ? 'Answer yesterday first — then today’s promise.'
-    : era.step === 'promise' ? 'Make today’s promise. One thing, small enough that you’ll keep it.'
-    : era.step === 'check' && !era.checkInOpen ? 'Go do it. Come back tonight and say whether you kept it.'
-    : era.step === 'check' ? 'Say whether you kept today’s promise.'
-    : era.step === 'done' && era.tomorrow ? 'Done for today, and tomorrow is already written.'
-    : era.step === 'done' ? 'Done for today. Write tomorrow’s promise now, or in the morning.'
-    : null
+  /*
+   * The one thing to do now, and where it sits in the day.
+   *
+   * This line used to be derived here from era.step. It now comes from the
+   * loop (lib/era/day-loop.ts), which knows about the morning state check-in
+   * and about tomorrow being set up — so the sentence and the little
+   * progress row can never disagree about which step someone is on.
+   */
 
   /**
    * Tomorrow's promise, written tonight.
@@ -928,14 +925,28 @@ function ActiveEra({
         </div>
       )}
 
-      {/* The single next thing, in order, so the cards below have a reading
-          order instead of being a wall of equals. */}
-      {nextStep && (
-        <p className="px-1 text-sm text-white/70">
-          <span className="text-[10px] tracking-[0.2em] uppercase text-white/45 mr-2">Next</span>
-          {nextStep}
-        </p>
-      )}
+      {/* The day as a sequence: where you are, what to do now, and — when
+          they told us how they are — one line of their own words about it.
+          The cards below stop being a wall of equals. */}
+      <div className="px-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] tracking-[0.2em] uppercase text-white/45">{era.loop.label}</span>
+          <span className="flex items-center gap-1" aria-label={`Step ${era.loop.index} of ${era.loop.of} today`}>
+            {Array.from({ length: era.loop.of }, (_, i) => (
+              <span
+                key={i}
+                className={`h-[3px] w-4 rounded-full ${
+                  i < era.loop.index ? 'bg-white/70' : 'bg-white/15'
+                }`}
+              />
+            ))}
+          </span>
+        </div>
+        <p className="text-sm text-white/80 mt-1.5 leading-snug">{era.loop.line}</p>
+        {era.loop.advice && (
+          <p className="text-[13px] text-white/50 mt-1 leading-snug">{era.loop.advice}</p>
+        )}
+      </div>
 
       <AudioCard audio={audio} />
       {action}

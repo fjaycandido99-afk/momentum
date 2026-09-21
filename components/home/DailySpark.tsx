@@ -5,26 +5,36 @@ import { Sparkles, X, Heart, Send } from 'lucide-react'
 import { QUOTES, displayAuthor } from '@/lib/quotes'
 import { getNextSpark, Spark } from '@/lib/daily-sparks'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
-import { isDismissed, localDayKey, setDismissed } from '@/lib/ui/dismiss'
+import { isDismissed, setDismissed } from '@/lib/ui/dismiss'
+import { eraMomentCopy, pickMoment, type MomentKind } from '@/lib/home/moment'
+import type { LoopStep } from '@/lib/era/day-loop'
+import { MomentCard } from './MomentCard'
 
 /**
- * ONCE A DAY, and not for the first few seconds.
+ * ONE MOMENT PER APP OPEN — and not always the same kind of moment.
  *
- * This used to show two seconds after home mounted, then re-arm itself
- * forever: a 30–60 minute recurring timer AND a 10-minute idle watcher,
- * whichever came first, re-armed on every dismissal and reset from scratch
- * every time you navigated back to home. Sitting with the app open meant a
- * quote every ten minutes, and there was no way to stop it.
+ * History, because it explains the shape: this used to show two seconds
+ * after home mounted and then re-arm itself forever (a 30–60 minute
+ * recurring timer AND a 10-minute idle watcher, both re-armed on every
+ * dismissal and reset on every return to home), which meant a quote every
+ * ten minutes with no way to stop it. That got cut to one a day.
  *
- * Now: at most one per local day, only once the screen has settled, never
- * on top of another popup, and with a permanent "don't show these" for
- * anyone who doesn't want it at all.
+ * But the slot was never the problem — the content was, because it was
+ * always a quote. So: one per app open, and what it says is whatever is
+ * actually open (lib/home/moment.ts): something your era is waiting for,
+ * then the journal if today is unwritten, then the quote.
+ *
+ * Still: never on top of another popup, never on a timer, never twice in a
+ * session, and a permanent "don't show these" for anyone who wants none of
+ * it.
  */
 const AUTO_DISMISS = 60 * 1000           // 60 seconds
 const INITIAL_DELAY = 6 * 1000           // let home finish arriving first
 
-/** Once per local day. */
-const SHOWN_KEY = 'voxu.spark.shown-on'
+/** Once per app open — sessionStorage, so a cold launch gets a new one. */
+const SHOWN_KEY = 'voxu_spark_shown'
+/** What the slot said last time, so it doesn't repeat itself. */
+const LAST_KIND_KEY = 'voxu.moment.last'
 /** Their permanent off switch, via the shared dismissal store. */
 const OFF_ID = 'daily-spark'
 
@@ -33,25 +43,44 @@ declare global {
   interface Window { __popupActive?: boolean }
 }
 
-/** Has today's already been shown? Local day, so it rolls at midnight here. */
-function shownToday(): boolean {
+/** Already shown since the app was opened? */
+function shownThisSession(): boolean {
   try {
-    return localStorage.getItem(SHOWN_KEY) === localDayKey()
+    return sessionStorage.getItem(SHOWN_KEY) === '1'
   } catch {
     return false
   }
 }
 
-function markShownToday() {
+function markShown(kind: MomentKind) {
   try {
-    localStorage.setItem(SHOWN_KEY, localDayKey())
+    sessionStorage.setItem(SHOWN_KEY, '1')
+    localStorage.setItem(LAST_KIND_KEY, kind)
   } catch {
-    // Worst case it shows once more this session.
+    // Worst case it repeats a kind. Not worth failing the popup over.
   }
 }
 
-export function DailySpark() {
+function lastKind(): MomentKind | null {
+  try {
+    const value = localStorage.getItem(LAST_KIND_KEY)
+    return value === 'era' || value === 'journal' || value === 'spark' ? value : null
+  } catch {
+    return null
+  }
+}
+
+export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday = true }: {
+  /** Their era's loop step, or null with no era (lib/era/day-loop.ts). */
+  loopStep?: LoopStep | null
+  /** "Locked In · Day 2" — the era moment names where they are. */
+  eraLabel?: string | null
+  /** Whether today's journal is already written. */
+  hasJournalToday?: boolean
+} = {}) {
   const [visible, setVisible] = useState(false)
+  /** Which kind of moment this is. Decided when it's shown. */
+  const [kind, setKind] = useState<MomentKind>('spark')
   const [animating, setAnimating] = useState(false)
   const [dismissing, setDismissing] = useState(false)
   const [spark, setSpark] = useState<Spark | null>(null)
@@ -69,16 +98,26 @@ export function DailySpark() {
   const autoDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isShowingRef = useRef(false)
 
-  const showSpark = useCallback(async () => {
+  const showSpark = useCallback(async (chosen: MomentKind) => {
     if (isShowingRef.current || window.__popupActive) return
     isShowingRef.current = true
     window.__popupActive = true
+    setKind(chosen)
     setDismissing(false)
     setSaved(false)
     setSaving(false)
     setSaveError(false)
     setAnswer('')
     setAnswerFocused(false)
+
+    // The era and journal moments carry their own words — no fetch, and
+    // nothing to auto-dismiss into a queue behind.
+    if (chosen !== 'spark') {
+      setVisible(true)
+      requestAnimationFrame(() => setAnimating(true))
+      autoDismissTimer.current = setTimeout(() => dismiss(), AUTO_DISMISS)
+      return
+    }
 
     // Try AI-powered spark API first, fall back to local
     let picked: Spark | null = null
@@ -145,7 +184,7 @@ export function DailySpark() {
       setDismissing(false)
       isShowingRef.current = false
       window.__popupActive = false
-      // Deliberately does NOT schedule another. One a day.
+      // Deliberately does NOT schedule another. One per app open.
       onComplete?.()
     }, 300)
   }, [])
@@ -156,16 +195,18 @@ export function DailySpark() {
     dismiss()
   }, [dismiss])
 
-  // Once a day, after the screen has settled, and never over another popup.
+  // Once per app open, after the screen has settled, never over another popup.
   useEffect(() => {
-    if (isDismissed(OFF_ID) || shownToday()) return
+    if (isDismissed(OFF_ID) || shownThisSession()) return
 
     const timer = setTimeout(() => {
-      // Another popup owns the screen (the morning hero, say): today's spark
-      // simply doesn't happen. Queueing it behind would be two interruptions.
+      // Another popup owns the screen (the morning hero, say): this one
+      // simply doesn't happen. Queueing behind it would be two
+      // interruptions, which is the thing we were fixing.
       if (window.__popupActive) return
-      markShownToday()
-      showSpark()
+      const chosen = pickMoment({ loopStep, hasJournalToday, lastKind: lastKind() })
+      markShown(chosen)
+      showSpark(chosen)
     }, INITIAL_DELAY)
 
     return () => {
@@ -265,7 +306,34 @@ export function DailySpark() {
   // this the app-shell container behind it still scrolls under the finger.
   useBodyScrollLock(visible)
 
-  if (!visible || !spark) return null
+  if (!visible) return null
+  if (kind !== 'spark') {
+    const era = loopStep ? eraMomentCopy(loopStep) : null
+    // The era moment's button dismisses rather than navigates: this only
+    // renders on home, where the card it's about is directly behind it.
+    // A button that claimed to take you somewhere and didn't would be worse
+    // than one that just gets out of the way.
+    const label = kind === 'era' ? (eraLabel ?? 'Your era') : 'Today\u2019s journal'
+    const line = kind === 'era'
+      ? (era?.line ?? 'Something\u2019s waiting in your era.')
+      : 'Nothing written today yet. One honest line is enough.'
+    const action = kind === 'era' ? (era?.action ?? 'Go to it') : 'Write it'
+
+    return (
+      <MomentCard
+        label={label}
+        line={line}
+        action={action}
+        href={kind === 'journal' ? '/journal' : undefined}
+        onAction={() => dismiss()}
+        onClose={() => dismiss()}
+        onOff={turnOff}
+        dismissing={dismissing}
+        animating={animating}
+      />
+    )
+  }
+  if (!spark) return null
 
   return (
     <div

@@ -25,6 +25,15 @@ interface MorningHeroPopupProps {
   morningPrimeDone: boolean
   /** Triggered when the user taps the hero's Begin CTA — opens Daily Guide. */
   onBegin: () => void
+  /**
+   * The era, when there is one: what it's called, which day, and what the
+   * loop wants next. The popup then speaks about THAT instead of about
+   * Morning Prime — a morning interstitial that names a feature to someone
+   * on day 2 of an era is the app talking about itself.
+   */
+  era?: { title: string; day: number; line: string } | null
+  /** Tapping the era CTA just closes: the card it's about is behind it. */
+  onEraBegin?: () => void
 }
 
 const DISMISS_KEY = 'voxu.morning-hero.dismissed-on'
@@ -44,7 +53,7 @@ function todayLocalKey(): string {
   return `${y}-${m}-${day}`
 }
 
-export function MorningHeroPopup({ morningPrimeDone, onBegin }: MorningHeroPopupProps) {
+export function MorningHeroPopup({ morningPrimeDone, onBegin, era = null, onEraBegin }: MorningHeroPopupProps) {
   // Start closed; flip open after we've mounted + checked the conditions.
   // Mounting-gated so SSR never tries to read localStorage.
   const [open, setOpen] = useState(false)
@@ -76,6 +85,12 @@ export function MorningHeroPopup({ morningPrimeDone, onBegin }: MorningHeroPopup
   const handleBegin = () => {
     dismiss()
     onBegin()
+  }
+
+  /** Closes for the day and hands back to the era card behind the popup. */
+  const handleEraBegin = () => {
+    dismiss()
+    onEraBegin?.()
   }
 
   if (!open || typeof document === 'undefined') return null
@@ -111,7 +126,13 @@ export function MorningHeroPopup({ morningPrimeDone, onBegin }: MorningHeroPopup
         <ImmersiveHero
           session="morning_prime"
           isCompleted={false}
-          onBegin={handleBegin}
+          onBegin={era ? handleEraBegin : handleBegin}
+          override={era ? {
+            eyebrow: `Day ${era.day} · ${era.title}`,
+            title: era.line,
+            subtitle: 'Your era first. The session is here if you want it.',
+            cta: 'Start the day',
+          } : undefined}
         />
       </div>
     </div>,

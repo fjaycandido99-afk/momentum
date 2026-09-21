@@ -28,6 +28,13 @@ interface ImmersiveHeroProps {
   isCompleted: boolean
   /** Tap to begin (opens the Daily Guide flow — passed from ImmersiveHome). */
   onBegin: () => void
+  /**
+   * Replaces the session copy when something else matters more this
+   * morning — the era's next step. The morning popup used to talk about
+   * Morning Prime to someone on day 2 of an era, which is the app talking
+   * about itself instead of about them.
+   */
+  override?: { eyebrow: string; title: string; subtitle: string; cta: string }
 }
 
 // State-of-mind copy. Each session reads as a *condition* the user is in,
@@ -73,11 +80,11 @@ const DONE_COPY: Record<SessionType, { eyebrow: string; title: string; subtitle:
   bedtime_story:  { eyebrow: 'Tonight',       title: 'You showed up.',          subtitle: 'Bedtime Story complete. Sleep well.' },
 }
 
-export function ImmersiveHero({ session, isCompleted, onBegin }: ImmersiveHeroProps) {
+export function ImmersiveHero({ session, isCompleted, onBegin , override }: ImmersiveHeroProps) {
   // Keep both branches at full type so the CTA narrows correctly below.
   const active = HERO_COPY[session]
   const done = DONE_COPY[session]
-  const copy = isCompleted ? done : active
+  const copy = override ?? (isCompleted ? done : active)
   const image = getSessionImage(session)
 
   return (

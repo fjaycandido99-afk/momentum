@@ -1531,6 +1531,9 @@ export function ImmersiveHome() {
       <MorningHeroPopup
         morningPrimeDone={!!journalData?.morning_prime_done}
         onBegin={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
+        // With an era running, the morning popup is about the era's next
+        // step, not about Morning Prime.
+        era={era.era ? { title: era.era.title, day: era.era.day, line: era.era.loop.line } : null}
       />
 
       {/* Tier-aware instruction banner */}
@@ -1792,7 +1795,15 @@ export function ImmersiveHome() {
 
 
       {/* Daily Spark */}
-      {!showMorningFlow && <DailySpark />}
+      {/* One moment per app open, about whatever is actually open: the era's
+          next step, then the journal, then a quote. */}
+      {!showMorningFlow && (
+        <DailySpark
+          loopStep={era.era?.loop.step ?? null}
+          eraLabel={era.era ? `${era.era.title} · Day ${era.era.day}` : null}
+          hasJournalToday={hasJournaledToday}
+        />
+      )}
 
       {/* Floating way into the coach chat, and its greeting.
           The cartoon robot avatar is gone: the coach is a voice with a

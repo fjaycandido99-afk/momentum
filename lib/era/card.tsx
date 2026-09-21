@@ -113,6 +113,7 @@ export function sampleEra(key: string): EraTodayWire | null {
     id: 'sample', key, title: preset.title, change: '', why: null, startDay: '', lengthDays: 30, day: 17,
     step: 'check', stats: { made: 17, answered: 16, kept: 14, keptPercent: 88, promiseStreak: 17 },
     checkInOpen: false, today: null, yesterday: null, tomorrow: null, promiseHint: '',
+    loop: { step: 'promise', label: 'Next', line: 'Make today’s promise.', index: 1, of: 4, advice: null },
     stage: { key: 'maintaining', label: 'Maintaining', line: "You're not starting anymore. You're becoming consistent." },
     phase: {
       index: 3, label: 'Maintaining', difficulty: 'hard', dayInPhase: 3, phaseDays: 7,

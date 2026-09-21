@@ -24,6 +24,7 @@ import {
   type EraStep,
 } from './logic'
 import { formatEraChatBlock, generatePromiseReply, generateRecap, isMemoryLockedToday } from './coach'
+import { loopCopy, loopProgress, loopStep, stateAdvice, type LoopStep } from './day-loop'
 import { isPremiumUser } from '@/lib/subscription-check'
 import { awardEraXPOnce, ERA_COMPLETE_MIN_PROMISES, type AwardedAchievement } from '@/lib/achievements-server'
 import { programFor } from './programs'
@@ -133,6 +134,21 @@ export interface EraTodayWire {
   stats: EraStats
   /** True from CHECK_IN_FROM_HOUR local time — the card asks plainly then. */
   checkInOpen: boolean
+  /**
+   * Today as one sequence rather than five cards of equal weight
+   * (lib/era/day-loop.ts): which step they are on, how far through the day
+   * that is, the one line to show, and any advice from their own morning
+   * check-in.
+   */
+  loop: {
+    step: LoopStep
+    label: string
+    line: string
+    index: number
+    of: number
+    /** Only ever quoted from their own state check-in; null otherwise. */
+    advice: string | null
+  }
   today: {
     text: string
     coachReply: string | null
@@ -203,7 +219,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
 
   const prefs = await prisma.userPreferences.findUnique({
     where: { user_id: userId },
-    select: { timezone: true, wake_call_enabled: true, wake_call_time: true },
+    select: { timezone: true, wake_call_enabled: true, wake_call_time: true, wellness_enabled: true },
   })
   const tz = prefs?.timezone ?? null
   const today = localDay(tz)
@@ -226,6 +242,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
   const todayRow = promises.find(p => p.local_day === today) ?? null
   const yesterdayRow = promises.find(p => p.local_day === yesterday) ?? null
   const tomorrowRow = promises.find(p => p.local_day === nextDay(today)) ?? null
+  const wellnessOn = !!prefs?.wellness_enabled
   const preset = ERA_PRESETS_BY_KEY.get(era.era_key)
   const premium = await isPremiumUser(userId).catch(() => false)
   const yesterdayOutcome = !yesterdayRow ? null : yesterdayRow.kept === null ? 'unanswered' : yesterdayRow.kept ? 'kept' : 'broken'
@@ -285,6 +302,40 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     )
   }
 
+  // Today's sequence. The state check-in is only part of someone's loop when
+  // they turned wellness on, and its rows are only read in that case — an off
+  // switch that still reads the rows is not an off switch.
+  const stateToday = wellnessOn
+    ? await prisma.wellnessCheckIn.findUnique({
+        where: { user_id_local_day: { user_id: userId, local_day: today } },
+        select: { mood: true, energy: true, stress: true, rested: true },
+      })
+    : null
+  const step = eraStep({
+    startDay: era.start_day,
+    lengthDays: era.length_days,
+    today,
+    todayPromise: todayRow,
+    yesterdayPromise: yesterdayRow,
+  })
+  const loopStepNow = loopStep({
+    hour: localHour(tz),
+    eraStep: step,
+    wantsState: wellnessOn,
+    hasState: !!stateToday,
+    hasTomorrow: !!tomorrowRow,
+  })
+  const progress = loopProgress(loopStepNow, wellnessOn)
+  const copy = loopCopy(loopStepNow)
+  const loopWire = {
+    step: loopStepNow,
+    label: copy.label,
+    line: copy.line,
+    index: progress.index,
+    of: progress.of,
+    advice: stateAdvice(stateToday),
+  }
+
   return {
     id: era.id,
     key: era.era_key,
@@ -304,6 +355,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     }),
     stats: computeStats(promises, today),
     checkInOpen: localHour(tz) >= CHECK_IN_FROM_HOUR,
+    loop: loopWire,
     today: todayRow
       ? {
           text: todayRow.text,
