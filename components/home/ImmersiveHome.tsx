@@ -1371,7 +1371,17 @@ export function ImmersiveHome() {
                 state the ring did. */}
             <div className="flex items-center gap-2.5 min-w-0">
               <h1 className={`font-bold shimmer-text transition-all duration-300 shrink-0 tracking-tight ${headerScrolled ? 'text-xl' : 'text-2xl'}`}>Explore</h1>
-              <StreakBadge streak={streak} freezeCount={streakFreezes} />
+              {/* One streak per screen.
+                  This badge counts days the app was USED (current_streak);
+                  the era card counts days a promise was MADE. Two numbers
+                  both called "streak", disagreeing, a thumb apart — the
+                  reader has no way to know which is which and no reason to
+                  care about the weaker one. While an era is running the
+                  era's number wins, because it's the one the loop is about
+                  and it says what it counts. With no era this is the only
+                  streak there is, so it stays. The used-days streak keeps
+                  its full home on Progress either way. */}
+              {!era.era && <StreakBadge streak={streak} freezeCount={streakFreezes} />}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {/* Dot until notifications are on — the era's morning and 8pm
@@ -1393,12 +1403,22 @@ export function ImmersiveHome() {
                   <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/75" />
                 </Link>
               )}
+              {/* The mark is the menu, and a logo does not look tappable —
+                  the only hint it was a control arrived after you'd already
+                  tapped it (the spiral starts spinning). It keeps its size
+                  and its job, but wears the same ring as the controls
+                  beside it, so the row reads as three buttons instead of
+                  two buttons and a piece of branding. */}
               <button
                 onClick={() => setShowMenu(!showMenu)}
                 aria-label={showMenu ? 'Close menu' : 'Open menu'}
-                className="p-1 press-scale"
+                aria-expanded={showMenu}
+                title={showMenu ? 'Close menu' : 'Menu'}
+                className={`flex items-center justify-center h-10 w-10 rounded-full border press-scale transition-colors ${
+                  showMenu ? 'bg-white/[0.12] border-white/25' : 'bg-white/[0.06] border-white/[0.12]'
+                }`}
               >
-                <SpiralLogo open={showMenu} size={48} />
+                <SpiralLogo open={showMenu} size={30} />
               </button>
             </div>
           </div>
