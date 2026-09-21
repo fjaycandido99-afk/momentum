@@ -5,6 +5,7 @@ import { ChevronLeft } from 'lucide-react'
 import { useEra } from '@/hooks/useEra'
 import { PracticeSection } from '@/components/exercise/PracticeSection'
 import { PracticesSection } from '@/components/practices/PracticesSection'
+import { PatternsBlock } from '@/components/practices/PatternsBlock'
 import { attributeLabel, attributesForEra } from '@/lib/exercises/attributes'
 import { eraName } from '@/lib/era/presets'
 
@@ -70,16 +71,26 @@ export default function TrainingPage() {
             </p>
           </div>
           <PracticesSection canAdd />
-
-          {!era && loaded && (
-            <Link
-              href="/era"
-              className="block text-center py-3 rounded-xl bg-white text-black text-sm font-medium"
-            >
-              Start an era
-            </Link>
-          )}
         </div>
+
+        {/* What it has noticed. Last on the page on purpose: the answer for
+            today comes before any observation about the last three months. */}
+        <div className="mt-7 space-y-3">
+          <div>
+            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Patterns</p>
+            <p className="text-[12px] text-white/45 mt-0.5">What Voxu is learning about you.</p>
+          </div>
+          <PatternsBlock />
+        </div>
+
+        {!era && loaded && (
+          <Link
+            href="/era"
+            className="block text-center mt-7 py-3 rounded-xl bg-white text-black text-sm font-medium"
+          >
+            Start an era
+          </Link>
+        )}
       </div>
     </div>
   )
