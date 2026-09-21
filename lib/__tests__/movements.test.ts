@@ -5,6 +5,7 @@ import {
   MOVEMENT_STOP_SIGNALS,
   MOVEMENT_TECHNIQUE_PENDING,
   PATTERN_LABELS,
+  PATTERN_MEANS,
   PATTERN_ORDER,
   movementsByPattern,
   type MovementPattern,
@@ -85,6 +86,18 @@ describe('the library', () => {
     for (const m of MOVEMENTS) {
       const hit = (m.pick ?? '').match(banned)
       expect(hit?.[0], `${m.id} claims "${hit?.[0]}"`).toBeUndefined()
+    }
+  })
+
+  it('describes each pattern without telling anyone what to do with their body', () => {
+    // PATTERN_MEANS is taxonomy — which movements are relatives. It is the
+    // most tempting place in the codebase to slip in a cue, so: no
+    // imperatives, no "keep your", no breathing.
+    const cue = /\b(keep|brace|squeeze|drive|inhale|exhale|tighten|control|tuck|don’t|do not|make sure)\b/i
+    for (const pattern of PATTERN_ORDER) {
+      const line = PATTERN_MEANS[pattern]
+      expect(line, pattern).toBeTruthy()
+      expect(cue.test(line), `${pattern}: ${line}`).toBe(false)
     }
   })
 

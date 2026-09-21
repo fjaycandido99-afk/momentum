@@ -82,6 +82,26 @@ export const PATTERN_LABELS: Record<MovementPattern, string> = {
   core: 'Core',
 }
 
+/**
+ * What belongs in each family.
+ *
+ * Taxonomy, not coaching: each line says which movements are relatives of
+ * each other, which is the fact that makes a swap possible. No imperative,
+ * no cue, nothing anyone is told to do with their body — a test enforces
+ * that, because this is the exact place a "keep your chest up" would feel
+ * natural to write.
+ */
+export const PATTERN_MEANS: Record<MovementPattern, string> = {
+  squat: 'Bending at the knees and hips — squats and their relatives.',
+  hinge: 'Bending at the hips — deadlifts and their relatives.',
+  single_leg: 'One leg at a time — lunges, step-ups, split squats.',
+  horizontal_push: 'Pushing away from the chest — presses and push-ups.',
+  vertical_push: 'Pressing overhead.',
+  horizontal_pull: 'Pulling toward the torso — rows.',
+  vertical_pull: 'Pulling down, or pulling yourself up.',
+  core: 'Holding the middle still while something pulls on it.',
+}
+
 export const MOVEMENTS: Movement[] = [
   // ── Squat ───────────────────────────────────────────────────────────────
   {

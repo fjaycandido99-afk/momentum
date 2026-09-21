@@ -7,24 +7,43 @@ import {
   MOVEMENT_STOP_SIGNALS,
   MOVEMENT_TECHNIQUE_PENDING,
   PATTERN_LABELS,
+  PATTERN_MEANS,
   type Movement,
 } from '@/lib/movements/library'
-import { HURTS_NOTE, SWAP_REASONS, swapIntro, swapsFor, type SwapReason } from '@/lib/movements/swap'
+import {
+  HURTS_NOTE,
+  SWAP_REASONS,
+  samePattern,
+  swapIntro,
+  swapsFor,
+  type SwapReason,
+} from '@/lib/movements/swap'
 import { PatternGlyph } from '@/components/movements/PatternGlyph'
 import { haptic } from '@/lib/haptics'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
+const LEVEL_LABEL: Record<Movement['level'], string> = {
+  simplest: 'Simplest of its kind',
+  standard: 'Standard',
+  advanced: 'Asks the most skill',
+}
+
 /**
- * One movement: what it trains, and what you can do instead.
+ * One movement: what it trains, what its relatives are, and what to do
+ * instead.
  *
- * The useful half of a movement library. It answers the question people
- * actually have mid-session — the bench is taken, the gym is shut, this
- * hurts — and it answers with other movements that train the same pattern.
+ * Laid out like a movement page should be — identity, a visual, how to do
+ * it, variations, safety — with one difference from the mockup: the
+ * how-to-do-it block is empty and says why. Everything else on this screen
+ * is a fact about the library (pattern, equipment, level, relatives). Form
+ * cues, common mistakes and demo footage are the parts that need a real
+ * body on camera and a qualified name attached, so they're a gap the app
+ * admits to rather than content it invents.
  *
- * It does NOT teach the movement. Where technique would go it says so and
- * points elsewhere, because unreviewed form instruction is the one thing
- * this app could do that would actually hurt somebody.
+ * Variations are navigable: tapping one re-opens this sheet on that
+ * movement, which is how someone walks from a barbell squat to the version
+ * they can actually do today.
  */
 export function MovementSheet({
   movement,
@@ -36,15 +55,24 @@ export function MovementSheet({
   onSwap?: (replacement: Movement) => void
   onClose: () => void
 }) {
+  /** The movement being shown, which variations can change. */
+  const [current, setCurrent] = useState(movement)
   const [reason, setReason] = useState<SwapReason | null>(null)
-  const swaps = reason ? swapsFor(movement.id, reason) : []
+  const swaps = reason ? swapsFor(current.id, reason) : []
+  const variations = samePattern(current)
+
+  const show = (next: Movement) => {
+    haptic('light')
+    setCurrent(next)
+    setReason(null)
+  }
 
   return (
     <div
       className="fixed inset-0 z-[75] bg-black/90 backdrop-blur-sm flex flex-col justify-end"
       role="dialog"
       aria-modal="true"
-      aria-label={movement.name}
+      aria-label={current.name}
     >
       <button className="flex-1" aria-label="Close" onClick={onClose} />
       <div
@@ -52,19 +80,13 @@ export function MovementSheet({
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0">
-            {/* The mark for the pattern, not a picture of the lift. */}
-            <span className="shrink-0 mt-0.5 w-11 h-11 rounded-xl border border-white/[0.14] bg-white/[0.04] flex items-center justify-center text-white/70">
-              <PatternGlyph pattern={movement.pattern} className="w-6 h-6" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
-                {PATTERN_LABELS[movement.pattern]}
-              </p>
-              <h2 className="text-[26px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
-                {movement.name}
-              </h2>
-            </div>
+          <div className="min-w-0">
+            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+              {PATTERN_LABELS[current.pattern]}
+            </p>
+            <h2 className="text-[28px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+              {current.name}
+            </h2>
           </div>
           <button onClick={onClose} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
             <X className="w-4 h-4 text-white" />
@@ -72,40 +94,76 @@ export function MovementSheet({
         </div>
 
         <div className="flex flex-wrap gap-1.5 mt-3">
-          {movement.equipment.map(e => (
-            <span key={e} className="text-[11px] text-white/65 rounded-full border border-white/15 px-2 py-0.5">
+          {current.equipment.map(e => (
+            <span key={e} className="text-[11px] text-white/65 rounded-full border border-white/15 px-2.5 py-0.5">
               {e}
             </span>
           ))}
-          <span className="text-[11px] text-white/45 rounded-full border border-white/10 px-2 py-0.5">
-            {movement.level === 'simplest' ? 'simplest of its kind'
-              : movement.level === 'advanced' ? 'asks the most skill'
-              : 'standard'}
+          <span className="text-[11px] text-white/45 rounded-full border border-white/10 px-2.5 py-0.5">
+            {LEVEL_LABEL[current.level]}
           </span>
         </div>
 
-        {movement.pick && <p className="text-[13px] text-white/60 mt-2.5 leading-snug">{movement.pick}</p>}
+        {/* The visual. A mark for the family, on the family's own
+            direction — not a person demonstrating the lift. */}
+        <div className="mt-4 rounded-2xl border border-white/[0.1] bg-gradient-to-b from-white/[0.07] to-white/[0.01] px-5 py-7 flex flex-col items-center text-center">
+          <span className="text-white/75">
+            <PatternGlyph pattern={current.pattern} className="w-16 h-16" />
+          </span>
+          <p className="text-[13px] text-white/60 mt-3 leading-snug max-w-[26ch]">
+            {PATTERN_MEANS[current.pattern]}
+          </p>
+        </div>
 
-        {/* Where technique would be. Said out loud rather than left blank:
-            an empty space reads as "nothing to say", this reads as "we
-            won't guess". */}
-        {movement.technique ? (
-          <div className="mt-4 rounded-2xl border border-white/[0.12] p-4">
-            <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">
-              How to do it · reviewed by {movement.technique.reviewedBy}
+        {current.pick && <p className="text-[13px] text-white/60 mt-3 leading-snug">{current.pick}</p>}
+
+        {/* How to do it: content with a reviewer's name on it, or the
+            reason there isn't any. Never invented. */}
+        <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-6">How to do it</p>
+        {current.technique ? (
+          <div className="mt-2 rounded-2xl border border-white/[0.12] p-4">
+            <p className="text-[10px] tracking-[0.18em] uppercase text-white/40">
+              Reviewed by {current.technique.reviewedBy} · {current.technique.reviewedOn}
             </p>
-            <ol className="mt-2 space-y-1.5">
-              {movement.technique.steps.map((step, i) => (
-                <li key={i} className="text-[14px] text-white/80 leading-snug">{step}</li>
+            <ol className="mt-2.5 space-y-2">
+              {current.technique.steps.map((step, i) => (
+                <li key={i} className="text-[14px] text-white/80 leading-snug flex gap-2.5">
+                  <span className="text-[11px] text-white/35 tabular-nums mt-0.5 shrink-0">{i + 1}</span>
+                  <span className="min-w-0">{step}</span>
+                </li>
               ))}
             </ol>
           </div>
         ) : (
-          <p className="text-[12px] text-white/40 mt-4 leading-relaxed">{MOVEMENT_TECHNIQUE_PENDING}</p>
+          <p className="text-[12px] text-white/40 mt-2 leading-relaxed">{MOVEMENT_TECHNIQUE_PENDING}</p>
+        )}
+
+        {/* Variations: the relatives, navigable. */}
+        {variations.length > 0 && (
+          <>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-6">Variations</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {variations.slice(0, 6).map(v => (
+                <button
+                  key={v.id}
+                  onClick={() => show(v)}
+                  className="rounded-xl border border-white/[0.12] p-3 text-left hover:bg-white/[0.04]"
+                >
+                  <span className="text-white/45">
+                    <PatternGlyph pattern={v.pattern} className="w-5 h-5" />
+                  </span>
+                  <span className="block text-[13px] text-white leading-snug mt-1.5">{v.name}</span>
+                  <span className="block text-[11px] text-white/40 mt-0.5 truncate">
+                    {v.equipment.join(' · ')}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
         )}
 
         {/* The substitution engine. */}
-        <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-6">Do something else</p>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-6">Swap movement</p>
         <div className="flex flex-wrap gap-1.5 mt-2">
           {SWAP_REASONS.map(r => (
             <button
@@ -131,18 +189,21 @@ export function MovementSheet({
 
         {reason && (
           <div className="mt-3">
-            <p className="text-[12px] text-white/50">{swapIntro(reason, movement)}</p>
+            <p className="text-[12px] text-white/50">{swapIntro(reason, current)}</p>
             {swaps.length > 0 ? (
               <div className="mt-2 space-y-2">
                 {swaps.map(swap => (
                   <div key={swap.id} className="rounded-xl border border-white/[0.12] p-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-[15px] text-white leading-snug flex items-center gap-2 min-w-0">
+                      <button
+                        onClick={() => show(swap)}
+                        className="text-[15px] text-white leading-snug flex items-center gap-2 min-w-0 text-left"
+                      >
                         <span className="text-white/45 shrink-0">
                           <PatternGlyph pattern={swap.pattern} className="w-4 h-4" />
                         </span>
                         <span className="min-w-0">{swap.name}</span>
-                      </p>
+                      </button>
                       {onSwap && (
                         <button
                           onClick={() => { haptic('medium'); onSwap(swap) }}
