@@ -243,6 +243,11 @@ export function ImmersiveHome() {
   // The full-screen players open on request now (the bottom bar), never
   // because something started playing — see HomeAudioContext.fullPlayerOpen.
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null)
+  /**
+   * Which of today's audios to show, when the user asked for another one.
+   * Null means "whatever the day says".
+   */
+  const [audioChoice, setAudioChoice] = useState<number | null>(null)
   // Mirrored in a ref so the "played to the end" event can name the guide
   // without adding it to handleGuideEnded's deps (the player holds that
   // callback for the length of a session).
@@ -1097,59 +1102,74 @@ export function ImmersiveHome() {
     ]
     const doneIndex: Record<SessionType, number> = { morning_prime: 0, midday_reset: 1, wind_down: 2, bedtime_story: 3 }
     const activeEra = era.era
-    if (!segmentsDone[doneIndex[todaysAudio.session]]) {
-      return {
-        title: todaysAudio.title,
-        // The clock still chooses the session — it's the spine of the day —
-        // but an era in progress is what the session is FOR, and saying so
-        // is the difference between an app with a feature and a coach.
-        subtitle: activeEra ? `For your ${eraName(activeEra.title)}` : todaysAudio.subtitle,
-        durationSec: SESSION_DURATIONS[todaysAudio.session] as number | null,
-        // The session's own art (public/sessions), rotating daily — it was
-        // on disk all along while this card showed generic bars.
-        image: getSessionThumb(todaysAudio.session),
-        segmentsDone,
-        onOpen: handlePlayTodaysAudio,
-      }
+    const sessionDone = segmentsDone[doneIndex[todaysAudio.session]]
+
+    // Option 1: the day's session. The clock still chooses it — it is the
+    // spine of the day, and the Daily Guide is what people pay for — but an
+    // era in progress is what the session is FOR, and saying so is the
+    // difference between an app with a feature and a coach.
+    const sessionOption = {
+      title: todaysAudio.title,
+      subtitle: activeEra ? `For your ${eraName(activeEra.title)}` : todaysAudio.subtitle,
+      durationSec: SESSION_DURATIONS[todaysAudio.session] as number | null,
+      // The session's own art (public/sessions), rotating daily.
+      image: getSessionThumb(todaysAudio.session),
+      segmentsDone,
+      onOpen: handlePlayTodaysAudio,
     }
-    // Today's session is done. What followed used to be the era's single
-    // linked guide — the same one every day for thirty days. Alternate by era
-    // day between a motivation video from the era's topic and the guided
-    // audio, and step through the videos so it isn't the same one twice.
-    //
-    // Soundscapes are deliberately not in this rotation.
-    if (activeEra && (activeEra.day - 1) % 2 === 1) {
-      const videos = motivationByTopic[featuredTopic] ?? featuredMotivationVideos
-      if (videos.length > 0) {
-        const index = (activeEra.day - 1) % videos.length
-        const video = videos[index]
-        return {
-          title: video.title,
-          subtitle: `For your ${eraName(activeEra.title)}`,
-          // Only when it reads as a session length; an hour-long talk would
-          // print "61:00", which tells nobody anything.
-          durationSec: video.duration && video.duration <= 3600 ? video.duration : null,
-          image: video.thumbnail ?? activeEra.image ?? null,
-          segmentsDone,
-          onOpen: () => handlePlayMotivation(video, index, featuredTopic),
-        }
-      }
-    }
+
+    // Option 2: the era's guided audio.
     const eraGuideId = activeEra?.links.guideId
     const pickId = eraGuideId && isContentFree('voiceGuide', eraGuideId) ? eraGuideId : 'breathing'
     const g = VOICE_GUIDES.find(v => v.id === pickId) ?? VOICE_GUIDES[0]
-    return {
+    const guideOption = {
       title: g.name,
       subtitle: activeEra ? `For your ${eraName(activeEra.title)}` : g.tagline,
-      durationSec: null,
+      durationSec: null as number | null,
       image: activeEra?.image ?? null,
       segmentsDone,
       onOpen: () => handleGuidePlay(g.id, g.name, !isContentFree('voiceGuide', g.id)),
     }
+
+    // Option 3: a motivation video from the era's topic, stepped by era day
+    // so it isn't the same talk twice running. Soundscapes are deliberately
+    // not in here — they're buggy, per Francis.
+    const videos = motivationByTopic[featuredTopic] ?? featuredMotivationVideos
+    const videoIndex = videos.length > 0 ? ((activeEra?.day ?? 1) - 1) % videos.length : 0
+    const video = videos[videoIndex]
+    const videoOption = video
+      ? {
+          title: video.title,
+          subtitle: activeEra ? `For your ${eraName(activeEra.title)}` : featuredTopic,
+          // Only when it reads as a session length; an hour-long talk would
+          // print "61:00", which tells nobody anything.
+          durationSec: video.duration && video.duration <= 3600 ? video.duration : null,
+          image: video.thumbnail ?? activeEra?.image ?? null,
+          segmentsDone,
+          onOpen: () => handlePlayMotivation(video, videoIndex, featuredTopic),
+        }
+      : null
+
+    const options = [sessionOption, guideOption, ...(videoOption ? [videoOption] : [])]
+
+    // What the day says when nobody has asked for anything else: the session
+    // until it's done, then the era's own content alternating by day. The
+    // swap exists because that made the era's audio unreachable at 10pm on
+    // day one — it's an escape hatch, not a new default.
+    const dayDefault = !sessionDone ? 0 : (videoOption && ((activeEra?.day ?? 1) % 2 === 0) ? 2 : 1)
+    const current = audioChoice === null ? dayDefault : audioChoice % options.length
+
+    return {
+      ...options[current],
+      onSwap: options.length > 1
+        ? () => setAudioChoice((current + 1) % options.length)
+        : undefined,
+      swapLabel: options.length > 1 ? `${current + 1} of ${options.length}` : undefined,
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     journalData, todaysAudio, era.era, isContentFree, handlePlayTodaysAudio, handleGuidePlay,
-    motivationByTopic, featuredMotivationVideos, featuredTopic,
+    motivationByTopic, featuredMotivationVideos, featuredTopic, audioChoice,
   ])
 
   // A session played to the end from Today's Audio counts exactly as it does

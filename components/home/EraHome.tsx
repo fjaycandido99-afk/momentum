@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  AlarmClock, ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Moon, Play, Share2, Target, X,
+  AlarmClock, ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Moon, Play, Share2, Shuffle, Target, X,
   type LucideIcon,
 } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
@@ -60,6 +60,16 @@ export interface TodaysAudio {
   /** Morning, Midday, Wind Down, Bedtime — done or not. */
   segmentsDone: boolean[]
   onOpen: () => void
+  /**
+   * Cycle to another audio for today — the day's session, the era's guided
+   * audio, a motivation video from the era's topic. The era's own content
+   * used to be reachable only AFTER finishing the day's session, so at 10pm
+   * on day one there was no way to hear it. Absent when there's nothing to
+   * swap to (no era, or its content hasn't loaded).
+   */
+  onSwap?: () => void
+  /** "2 of 3" — which of today's options is showing. */
+  swapLabel?: string
 }
 
 export function EraHome({
@@ -283,6 +293,22 @@ function formatDuration(sec: number): string {
 function AudioCard({ audio }: { audio: TodaysAudio }) {
   const done = audio.segmentsDone.filter(Boolean).length
   return (
+    <div className="relative">
+    {/* The swap sits OUTSIDE the card's button, as a sibling — a button
+        inside a button is invalid, and tapping "another audio" must never
+        also start the one showing. Same arrangement as the era hero's
+        share control. */}
+    {audio.onSwap && (
+      <button
+        onClick={audio.onSwap}
+        aria-label="Show another audio for today"
+        title={`Another audio for today${audio.swapLabel ? ` (${audio.swapLabel})` : ''}`}
+        className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full border border-white/[0.14] bg-black/50 backdrop-blur-sm px-2 py-1 text-[10px] text-white/70 press-scale"
+      >
+        <Shuffle className="w-3 h-3" />
+        {audio.swapLabel && <span className="tabular-nums">{audio.swapLabel}</span>}
+      </button>
+    )}
     <button onClick={audio.onOpen} className="w-full text-left card-surface-lg p-4 press-scale flex items-center gap-4">
       <div className="relative w-14 h-14 shrink-0 rounded-xl overflow-hidden border border-white/[0.12] bg-[linear-gradient(160deg,rgba(255,255,255,0.18),rgba(255,255,255,0.02))] flex items-center justify-center">
         {audio.image ? (
@@ -315,6 +341,7 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
         <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
       </span>
     </button>
+    </div>
   )
 }
 
