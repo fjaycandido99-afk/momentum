@@ -6,6 +6,8 @@ import { PLAN_MAX_ITEMS, PLAN_MAX_ITEM_LENGTH, planCopy, slotsFor } from '@/lib/
 import { PRESETS_BY_KEY } from '@/lib/practices/presets'
 import type { PracticeWire } from '@/lib/practices/logic'
 import { haptic } from '@/lib/haptics'
+import { guideForDomain } from '@/lib/practices/guides'
+import { PracticeGuideSheet } from './PracticeGuideSheet'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -33,6 +35,7 @@ export function PracticePlanSheet({
   const domain = PRESETS_BY_KEY.get(practice.presetKey)?.domain
   const copy = planCopy(domain)
   const slots = slotsFor({ presetKey: practice.presetKey, days: practice.days })
+  const guide = guideForDomain(domain)
 
   const [draft, setDraft] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {}
@@ -40,6 +43,7 @@ export function PracticePlanSheet({
     return initial
   })
   const [busy, setBusy] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const save = async () => {
@@ -97,6 +101,17 @@ export function PracticePlanSheet({
 
         <p className="text-sm text-white/60 leading-relaxed mt-2">{copy.hint}</p>
 
+        {/* The how-to, right where someone is deciding what their sessions
+            are. Writing "run 4 miles" and being told how to breathe while
+            doing it belong on the same screen. */}
+        <div className="mt-3 rounded-xl bg-white/[0.04] border border-white/[0.1] p-3">
+          <p className="text-[13px] text-white/75 leading-snug">{guide.title}</p>
+          <p className="text-[12px] text-white/45 mt-0.5 leading-snug">{guide.keystone}</p>
+          <button onClick={() => setShowGuide(true)} className="text-[12px] text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 mt-1.5">
+            Read the steps
+          </button>
+        </div>
+
         <div className="mt-4 space-y-4">
           {slots.map(slot => (
             <div key={slot.key}>
@@ -136,6 +151,14 @@ export function PracticePlanSheet({
           Save
         </button>
       </div>
+
+      {showGuide && (
+        <PracticeGuideSheet
+          presetKey={practice.presetKey}
+          label={practice.label}
+          onClose={() => setShowGuide(false)}
+        />
+      )}
     </div>
   )
 }

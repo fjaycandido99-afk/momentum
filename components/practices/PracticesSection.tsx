@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Check, ChevronDown, ChevronUp, Minus, Plus, Repeat2 } from 'lucide-react'
 import { AddPracticeSheet } from './AddPracticeSheet'
 import { PracticePlanSheet } from './PracticePlanSheet'
+import { PracticeGuideSheet } from './PracticeGuideSheet'
 import { dayName, daysLabel, minimumLine, type PracticesPayload, type PracticeWire } from '@/lib/practices/logic'
 import { haptic } from '@/lib/haptics'
 import { trackFeature } from '@/lib/analytics/track'
@@ -26,6 +27,8 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
   const [data, setData] = useState<PracticesPayload | null>(null)
   const [adding, setAdding] = useState(false)
   const [planning, setPlanning] = useState<PracticeWire | null>(null)
+  /** Which discipline's how-to is open. */
+  const [guiding, setGuiding] = useState<PracticeWire | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
   const load = useCallback(() => {
@@ -125,6 +128,7 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
                 onLog={(done, minimumOnly) => log(p, done, minimumOnly)}
                 onRetire={canAdd ? () => retire(p) : undefined}
                 onPlan={canAdd ? () => setPlanning(p) : undefined}
+                onGuide={() => setGuiding(p)}
                 today={data.today}
               />
             ))}
@@ -138,6 +142,13 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
       </div>
 
       {adding && <AddPracticeSheet onClose={() => setAdding(false)} onAdded={load} />}
+      {guiding && (
+        <PracticeGuideSheet
+          presetKey={guiding.presetKey}
+          label={guiding.label}
+          onClose={() => setGuiding(null)}
+        />
+      )}
       {planning && (
         <PracticePlanSheet
           practice={planning}
@@ -155,6 +166,7 @@ function PracticeRow({
   onLog,
   onRetire,
   onPlan,
+  onGuide,
   today,
 }: {
   practice: PracticeWire
@@ -166,6 +178,9 @@ function PracticeRow({
   onRetire?: () => void
   /** Opens the plan editor. Also only where they are managed. */
   onPlan?: () => void
+  /** Opens the how-to for this discipline's domain. Everywhere, not just
+   * where they are managed: the guidance is for the day, not for setup. */
+  onGuide?: () => void
 }) {
   const [confirmRetire, setConfirmRetire] = useState(false)
   /** The detail, closed by default: the row is a daily answer, not a report. */
@@ -347,6 +362,13 @@ function PracticeRow({
                 value={practice.of > 0 ? `${practice.done} of ${practice.of} kept` : 'Nothing due yet'}
               />
               {practice.run > 0 && <Row label="Current run" value={`${practice.run} in a row`} />}
+              {onGuide && (
+                <div className="pt-1">
+                  <button onClick={onGuide} className="text-[12px] text-white/60 hover:text-white underline underline-offset-4 decoration-white/20">
+                    How to do this well
+                  </button>
+                </div>
+              )}
               {practice.weakDay && (
                 <Row
                   label="Hardest day"
