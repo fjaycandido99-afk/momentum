@@ -3,12 +3,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind, MessageCircle, Dumbbell, X, HeartPulse } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Wind, MessageCircle, Dumbbell, X, HeartPulse } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { useHomeAudio } from '@/contexts/HomeAudioContext'
-import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
 import { BottomPlayerBar } from './BottomPlayerBar'
 import { DailySpark } from './DailySpark'
@@ -30,7 +29,7 @@ import { AchievementShelf } from './AchievementShelf'
 import { mutate as mutateSWR } from 'swr'
 import { logXPEventServer } from '@/lib/gamification'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
-import { SESSION_DURATIONS, type SessionType } from '@/lib/daily-guide/decision-tree'
+import { getSessionConfig, SESSION_DURATIONS, type SessionType } from '@/lib/daily-guide/decision-tree'
 import { getDailyMindsetQuote } from '@/lib/mindset/quotes'
 import type { MindsetId } from '@/lib/mindset/types'
 import { MorningHeroPopup } from './MorningHeroPopup'
@@ -97,6 +96,11 @@ function getTodaysAudio(): TodaysAudioSlot {
   if (hour >= 11 && hour < 16) return { session: 'midday_reset', title: 'Midday Reset', subtitle: 'Pause. Breathe. Refocus.' }
   if (hour >= 16 && hour < 21) return { session: 'wind_down', title: 'Wind Down', subtitle: 'Let the day go.' }
   return { session: 'bedtime_story', title: 'Bedtime Story', subtitle: 'A story to fall asleep to.' }
+}
+
+/** What a session is called — one source: the Daily Guide's own config. */
+function sessionTitle(session: SessionType): string {
+  return getSessionConfig(session).name
 }
 
 export function ImmersiveHome() {
@@ -246,32 +250,14 @@ export function ImmersiveHome() {
   const [showMenu, setShowMenu] = useState(false)
 
   // Overlays
-  const [showMorningFlow, setShowMorningFlow] = useState(false)
+
   /**
    * ?session=<id> from a push notification. The Daily Guide page used to
-   * read this; home does now, and opens the flow straight onto that card —
-   * a Midday Reset push tapped at 6pm still lands on Midday Reset.
+   * read this and open its own screen; home reads it now and PLAYS that
+   * session — a Midday Reset push tapped at 6pm starts Midday Reset.
    */
   const requestedSession = useSessionParam()
 
-  /*
-   * A tapped reminder opens the flow on the card it was about.
-   *
-   * Without this the param would be read and ignored: the overlay only shows
-   * when showMorningFlow is set, and nobody taps "Midday Reset" hoping to
-   * arrive at a home screen and find it themselves.
-   */
-  useEffect(() => {
-    if (!requestedSession) return
-    stopBackgroundMusic()
-    setShowMorningFlow(true)
-    // The param has been spent; a later reload shouldn't reopen it.
-    try {
-      window.history.replaceState({}, '', window.location.pathname)
-    } catch {
-      // Not worth a message. The overlay is open either way.
-    }
-  }, [requestedSession, stopBackgroundMusic])
   // The full-screen players open on request now (the bottom bar), never
   // because something started playing — see HomeAudioContext.fullPlayerOpen.
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null)
@@ -1106,19 +1092,42 @@ export function ImmersiveHome() {
   // types), and the same tier rule: Morning Prime is voiced for everyone, the
   // other segments are premium voice — free users get the preview + paywall
   // the voice guides already use, not a dead end.
-  const handlePlayTodaysAudio = useCallback(() => {
+  const playSession = useCallback((session: SessionType, title: string) => {
     const voiceType: Record<SessionType, string> = {
       morning_prime: 'affirmation',
       midday_reset: 'midday_reset',
       wind_down: 'wind_down',
       bedtime_story: 'bedtime_story',
     }
-    const session = todaysAudio.session
     const locked = !isPremium && !checkAccess('ai_voice') && session !== 'morning_prime'
     stopBackgroundMusic()
     pendingSessionRef.current = session
-    handleGuidePlay(voiceType[session], todaysAudio.title, locked)
+    handleGuidePlay(voiceType[session], title, locked)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPremium, checkAccess, stopBackgroundMusic, handleGuidePlay])
+
+  const handlePlayTodaysAudio = useCallback(() => {
+    playSession(todaysAudio.session, todaysAudio.title)
   }, [todaysAudio, isPremium, checkAccess, stopBackgroundMusic, handleGuidePlay])
+
+  /*
+   * A tapped reminder PLAYS its session.
+   *
+   * It used to open the four-segment screen, which is the screen we just
+   * retired — reaching it from a notification would have been the same
+   * ritual through a side door. Tapping "Midday Reset" now starts Midday
+   * Reset, on home, with the player bar carrying it.
+   */
+  useEffect(() => {
+    if (!requestedSession) return
+    playSession(requestedSession, sessionTitle(requestedSession))
+    // The param has been spent; a reload shouldn't replay it.
+    try {
+      window.history.replaceState({}, '', window.location.pathname)
+    } catch {
+      // Not worth a message. The audio is playing either way.
+    }
+  }, [requestedSession, playSession])
 
   // What Today's Audio offers: the one thing worth listening to right now.
   // The Daily Guide segment for the time of day until it's done; after that
@@ -1318,7 +1327,7 @@ export function ImmersiveHome() {
     <FirstMomentOverlay />
     <div
       ref={scrollRef}
-      className={`relative h-full text-white pb-28 ${showMorningFlow || fullPlayerOpen || audioState.showSoundscapePlayer ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
+      className={`relative h-full text-white pb-28 ${fullPlayerOpen || audioState.showSoundscapePlayer ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
     
       data-app-shell
     >
@@ -1397,33 +1406,17 @@ export function ImmersiveHome() {
         />
       )}
 
-      {/* Morning Flow Overlay */}
-      {showMorningFlow && (
-        <div className="fixed inset-0 z-[60] bg-black flex flex-col animate-fade-in-down">
-          <div className="flex-1 overflow-y-auto pb-20">
-            <DailyGuideHome embedded initialSession={requestedSession} />
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 z-[70] flex justify-center pb-6 pt-3 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
-            <button
-              onClick={() => {
-                audioContext?.setSessionActive(false)
-                setShowMorningFlow(false)
-                // Re-trigger restore on next render by resetting refs
-                hasRestoredRef.current = false
-                hasPlaylistRestoredRef.current = false
-              }}
-              className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/15 hover:bg-white/15 active:bg-white/15 backdrop-blur-sm transition-colors"
-            >
-              <Home className="w-4 h-4 text-white" />
-              <span className="text-sm text-white">Home</span>
-            </button>
-          </div>
-        </div>
-      )}
+      {/* The four-segment "Daily Guide" screen used to live here as an
+          overlay, and on its own page before that. Both are gone: it was a
+          second daily ritual beside the era loop, with its own greeting,
+          mood check, briefing and tabs. The session AUDIOS are unaffected —
+          Today's Audio plays the one for the time of day, a tapped reminder
+          plays the one it was about, and finishing either still checks the
+          segment in and awards the XP. */}
 
 
       {/* Header — hidden when any fullscreen overlay is active */}
-      {!showMorningFlow && !audioState.playingSound && !audioState.showSoundscapePlayer && (
+      {!audioState.playingSound && !audioState.showSoundscapePlayer && (
         <div className="sticky top-0 z-50 px-5 safe-area-pt pb-3.5 animate-fade-in-down bg-black before:absolute before:content-[''] before:-top-20 before:left-0 before:right-0 before:h-20 before:bg-black"
         >
           {/* Bottom blur fade */}
@@ -1518,16 +1511,6 @@ export function ImmersiveHome() {
             className="fixed right-6 z-[60] w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up"
             style={{ top: 'calc(env(safe-area-inset-top, 0px) + 4.5rem)' }}
           >
-            {/* The four Daily Guide segments, as an overlay. The page they
-                used to live on is retired — this is the deliberate way in,
-                for when the morning popup has already been dismissed. */}
-            <button
-              onClick={() => { setShowMenu(false); stopBackgroundMusic(); setShowMorningFlow(true) }}
-              className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-white/5 active:bg-white/5 transition-colors"
-            >
-              <Headphones className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">Sessions</span>
-            </button>
             <Link href="/training" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <Dumbbell className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Training</span>
@@ -1563,7 +1546,7 @@ export function ImmersiveHome() {
           ImmersiveHero component so the design lives in one place. */}
       <MorningHeroPopup
         morningPrimeDone={!!journalData?.morning_prime_done}
-        onBegin={() => { stopBackgroundMusic(); setShowMorningFlow(true) }}
+        onBegin={() => playSession('morning_prime', sessionTitle('morning_prime'))}
         // With an era running, the morning popup is about the era's next
         // step, not about Morning Prime.
         era={era.era ? { title: era.era.title, day: era.era.day, line: era.era.loop.line } : null}
@@ -1830,7 +1813,7 @@ export function ImmersiveHome() {
       {/* Daily Spark */}
       {/* One moment per app open, about whatever is actually open: the era's
           next step, then the journal, then a quote. */}
-      {!showMorningFlow && (
+      {(
         <DailySpark
           loopStep={era.era?.loop.step ?? null}
           eraLabel={era.era ? `${era.era.title} · Day ${era.era.day}` : null}

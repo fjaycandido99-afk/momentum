@@ -48,10 +48,10 @@
       ]
     },
     {
-      "name": "Daily Guide",
-      "short_name": "Guide",
-      "description": "Open your Daily Guide",
-      "url": "/daily-guide",
+      "name": "Training",
+      "short_name": "Training",
+      "description": "Today's practice and your disciplines",
+      "url": "/training",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -65,7 +65,7 @@
     {
       "name": "Daily Progress",
       "short_name": "Progress",
-      "description": "Your daily guide progress",
+      "description": "Your promises and practices",
       "tag": "daily-progress",
       "ms_ac_template": "widget-template.json",
       "icons": [

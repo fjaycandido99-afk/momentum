@@ -12,10 +12,11 @@ import { LoadingScreen } from '@/components/ui/LoadingSpinner'
  * home screen that now carries the era loop. Two rituals in one app means
  * neither is THE thing you open it for.
  *
- * The sessions themselves are not going anywhere: the same flow runs on home
- * as an overlay (ImmersiveHome + DailyGuideHome embedded), Today's Audio
- * plays the segment for the time of day, and the four reminders still arrive.
- * It is the surface that went, not the content.
+ * The sessions themselves are not going anywhere: Today's Audio on home
+ * plays the segment for the time of day, a tapped reminder plays the one it
+ * was about, finishing either still checks the segment in and awards the XP,
+ * and the four reminders still arrive. It is the surface that went, not the
+ * content — the screen and its components are deleted, not hidden.
  *
  * This file stays as a redirect instead of being deleted, because five kinds
  * of push notification and any number of native shells point here, and a
