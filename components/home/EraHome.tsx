@@ -324,6 +324,17 @@ function ActiveEra({
   const [trialOffer, setTrialOffer] = useState(false)
   const [sharing, setSharing] = useState(false)
   const [wakeOpen, setWakeOpen] = useState(false)
+  // The "how an era works" primer: shown for the first three days of an era,
+  // dismissed for good per era once they say they've got it.
+  const primerKey = `voxu-era-primer-${era.id}`
+  const [primerDismissed, setPrimerDismissed] = useState(true)
+  useEffect(() => {
+    try { setPrimerDismissed(!!localStorage.getItem(primerKey)) } catch { setPrimerDismissed(false) }
+  }, [primerKey])
+  const dismissPrimer = () => {
+    setPrimerDismissed(true)
+    try { localStorage.setItem(primerKey, '1') } catch { /* storage blocked */ }
+  }
   const [wake, setWake] = useState<WakeCallSettings>(era.wakeCall)
   useEffect(() => { setWake(era.wakeCall) }, [era.wakeCall.enabled, era.wakeCall.time]) // eslint-disable-line react-hooks/exhaustive-deps
   const wakeLabel = wake.enabled ? clockLabel(wake.time) : null
@@ -642,7 +653,9 @@ function ActiveEra({
               {era.step === 'check' ? (
                 <div className={t?.coachReply ? 'mt-4' : ''}>
                   <p className="text-xs text-white/60">
-                    {era.checkInOpen ? 'Did you keep it?' : 'Check in tonight — or now, if it’s already done.'}
+                    {/* Naming the time of day stops this reading as a demand
+                        made seconds after the promise was written. */}
+                    {era.checkInOpen ? 'Tonight — did you keep it?' : 'Check in tonight — or now, if it’s already done.'}
                   </p>
                   {yesNo('today', !era.checkInOpen)}
                 </div>
@@ -670,9 +683,57 @@ function ActiveEra({
   const chip =
     'inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1.5 text-xs text-white/85 hover:bg-white/[0.1] active:scale-[0.97] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none'
 
+  // One sentence for the one thing to do now. Every card on this screen is
+  // live at once, which reads as a to-do list where everything is urgent;
+  // this says which one is actually next.
+  const nextStep =
+    era.step === 'check_yesterday' ? 'Answer yesterday first — then today’s promise.'
+    : era.step === 'promise' ? 'Make today’s promise. One thing, small enough that you’ll keep it.'
+    : era.step === 'check' && !era.checkInOpen ? 'Go do it. Come back tonight and say whether you kept it.'
+    : era.step === 'check' ? 'Say whether you kept today’s promise.'
+    : era.step === 'done' ? 'Done for today. Your next promise is tomorrow morning.'
+    : null
+
   return (
     <>
       <EraHero era={era} onShare={() => setSharing(true)} />
+
+      {/* What an era actually asks of you, for the first few days.
+          Starting one used to drop you into a screen of cards — a promise, a
+          mission, a check-in, an audio — with nothing saying which is the
+          thing to do or how they relate. Three lines, once per era. */}
+      {era.day <= 3 && era.step !== 'complete' && !primerDismissed && (
+        <div className="card-surface-lg p-4">
+          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">How an era works</p>
+          <ol className="mt-2.5 space-y-2">
+            {[
+              ['Each morning', 'you promise yourself one thing. Your coach answers it.'],
+              ['During the day', 'you do it. The mission is a suggestion if you want one.'],
+              ['At night', 'you say whether you kept it. That is the whole loop.'],
+            ].map(([when, what]) => (
+              <li key={when} className="text-sm text-white/75 leading-snug">
+                <span className="text-white">{when}</span> {what}
+              </li>
+            ))}
+          </ol>
+          <p className="text-[11px] text-white/45 mt-3">
+            Miss a day and the era carries on — {era.lengthDays} days either way.
+          </p>
+          <button onClick={dismissPrimer} className="mt-2 text-xs text-white/60 underline underline-offset-2">
+            Got it
+          </button>
+        </div>
+      )}
+
+      {/* The single next thing, in order, so the cards below have a reading
+          order instead of being a wall of equals. */}
+      {nextStep && (
+        <p className="px-1 text-sm text-white/70">
+          <span className="text-[10px] tracking-[0.2em] uppercase text-white/45 mr-2">Next</span>
+          {nextStep}
+        </p>
+      )}
+
       <AudioCard audio={audio} />
       {action}
       {crisis && <CrisisBanner content={crisis} />}
@@ -708,6 +769,11 @@ function ActiveEra({
             <p className="text-2xl text-white leading-none mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
               {era.stats.keptPercent === null ? '—' : `${era.stats.keptPercent}%`}
             </p>
+            {/* A dash beside a streak of 1 reads like a contradiction; it
+                isn't, it's just waiting for the first answer. */}
+            {era.stats.keptPercent === null && (
+              <p className="text-[10px] text-white/40 mt-1">after your first check-in</p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3 pl-4">
@@ -716,6 +782,11 @@ function ActiveEra({
             <p className="text-[11px] text-white/55">Streak</p>
             <p className="text-2xl text-white leading-none mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
               {era.stats.promiseStreak}
+            </p>
+            {/* Says what the number counts: days with a promise MADE, which
+                is not the same as days kept (lib/era/logic computeStats). */}
+            <p className="text-[10px] text-white/40 mt-1">
+              {era.stats.promiseStreak === 1 ? 'day with a promise' : 'days with a promise'}
             </p>
           </div>
         </div>

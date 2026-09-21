@@ -1752,7 +1752,17 @@ export function ImmersiveHome() {
         </div>
       )}
 
-      {/* Bottom Player Bar */}
+      {/* Bottom Player Bar — only when there is a live session.
+          It used to render always, so a fresh home screen showed
+          "Paused · Relax" for audio that was never started: the restore
+          logic pre-fills the label from last time (see the PLAY_MUSIC
+          restore above), and an always-on bar turned that into a player
+          that lies. Now it appears when something is playing, loading, or
+          the user paused it themselves — a restored label nobody has
+          touched shows nothing. */}
+      {(audioState.musicPlaying || audioState.guideIsPlaying || audioState.soundscapeIsPlaying
+        || audioState.loadingGuide
+        || audioState.userPausedMusic || audioState.userPausedGuide || audioState.userPausedSoundscape) && (
       <BottomPlayerBar
         mode={activeMode}
         isPlaying={
@@ -1792,6 +1802,11 @@ export function ImmersiveHome() {
           }
         })}
         onOpenPlayer={() => {
+          // Tapping the bar is the way to the full player now that playing
+          // doesn't open it. Without this the music branch dispatched
+          // OPEN_FULLSCREEN_PLAYER and nothing appeared, because the overlay
+          // also waits on this flag.
+          setFullPlayerOpen(true)
           if (audioState.backgroundMusic && audioState.currentPlaylist) {
             const pl = audioState.currentPlaylist
             const currentVideo = pl.videos[pl.index]
@@ -1836,6 +1851,7 @@ export function ImmersiveHome() {
         }
         audioElement={audioState.guideLabel ? guideAudioElement : null}
       />
+      )}
 
 
     </div>
