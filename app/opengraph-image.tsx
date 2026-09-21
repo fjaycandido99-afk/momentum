@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises'
 import { join } from 'path'
 
 export const runtime = 'nodejs'
-export const alt = 'Voxu - Your AI Audio Coach'
+export const alt = 'Voxu'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -132,7 +132,7 @@ export default async function Image() {
               marginTop: 8,
             }}
           >
-            Your AI Audio Coach
+            30 days, one promise a day
           </div>
 
           {/* Tagline */}

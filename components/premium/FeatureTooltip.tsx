@@ -51,11 +51,15 @@ const FEATURE_REGISTRY: Record<FeatureId, FeatureInfo> = {
   },
   journal_history: {
     name: 'Journal History',
-    description: 'Access your complete journal archive and search entries',
+    description: 'Your whole archive, not just the last seven days',
   },
   all_content: {
-    name: 'All Content',
-    description: 'Unlock every soundscape, genre, and guided session',
+    name: 'Every Guided Session',
+    // NOT 'all content': music, motivation and soundscapes are free for
+    // everyone by design (isContentFree) — YouTube's terms don't allow
+    // charging for its content, and claiming we do would be worse than
+    // wrong.
+    description: 'Every AI-voiced session, not just Morning Prime and Breathing',
   },
   save_progress: {
     name: 'Save Progress',

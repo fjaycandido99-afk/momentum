@@ -9,10 +9,14 @@ const inter = Inter({ subsets: ['latin'] })
 // 300 for the splash wordmark; 500/600 for the era hero's display type.
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], weight: ['300', '500', '600'], variable: '--font-cormorant' })
 
+// The title and description used to describe the pre-era library
+// ("guided sessions, ambient soundscapes"), which the landing page had
+// already stopped selling — the app and its own marketing disagreed about
+// what the product is.
 export const metadata: Metadata = {
   metadataBase: new URL('https://voxu.app'),
-  title: 'Voxu - Your AI Audio Coach',
-  description: 'Motivation, mindfulness, and focus — delivered automatically through guided sessions, ambient soundscapes, and AI coaching.',
+  title: 'Voxu — 30 days, one promise a day',
+  description: 'Pick a 30-day era, make one promise a day, and keep a record of the days you kept it. Your coach remembers what you said on day one.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -20,8 +24,8 @@ export const metadata: Metadata = {
     title: 'Voxu',
   },
   openGraph: {
-    title: 'Voxu - Your AI Audio Coach',
-    description: 'Motivation, mindfulness, and focus — delivered automatically through guided sessions, ambient soundscapes, and AI coaching.',
+    title: 'Voxu — 30 days, one promise a day',
+    description: 'Pick a 30-day era, make one promise a day, and keep a record of the days you kept it. Your coach remembers what you said on day one.',
     url: 'https://voxu.app',
     siteName: 'Voxu',
     type: 'website',
@@ -33,8 +37,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Voxu - Your AI Audio Coach',
-    description: 'Motivation, mindfulness, and focus — delivered automatically.',
+    title: 'Voxu — 30 days, one promise a day',
+    description: 'Pick an era. One promise a day. Keep the record.',
     images: ['/api/og/default'],
   },
   robots: {

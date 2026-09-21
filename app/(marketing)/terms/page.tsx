@@ -56,14 +56,14 @@ export default function TermsOfServicePage() {
             Free Tier
           </h3>
           <p className="text-sm text-white/70 leading-relaxed mb-4">
-            Voxu offers a free tier, available indefinitely at no cost. It includes unlimited sessions with no time limit, the Daily Guide, journaling, saved content, rotating daily music, and a limited daily allowance of the AI features. Premium removes the AI allowances, extends how much of your history the AI can draw on, and adds journal history, all music genres and offline downloads. Specific allowances may change as the product develops.
+            Voxu offers a free tier, available indefinitely at no cost. It includes your era and its daily promises, missions and check-ins; your disciplines and daily practice; your record of days kept; unlimited sessions with no time limit; all music, motivation and soundscapes; the last seven days of your own journal; and a daily allowance of the AI features. Premium lifts the AI allowances, extends how much of your history the AI may draw on, unlocks every AI-voiced session, and adds your full journal history, a year of progress and the Era Recap. Specific allowances may change as the product develops.
           </p>
 
           <h3 className="text-base font-medium text-white mb-2">
             Premium Subscription
           </h3>
           <p className="text-sm text-white/70 leading-relaxed mb-4">
-            Premium subscriptions unlock unlimited sessions, all music genres, journal history, checkpoints, and additional features. Premium is available as a monthly or yearly plan.
+            Premium subscriptions lift the daily AI allowances, let the AI draw on your recent history rather than only today, unlock every AI-voiced session, and add your full journal history, a year of progress and the Era Recap. Premium is available as a monthly or yearly plan. Voxu does not currently offer offline downloads.
           </p>
 
           <h3 className="text-base font-medium text-white mb-2">

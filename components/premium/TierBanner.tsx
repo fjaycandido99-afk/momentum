@@ -12,7 +12,7 @@ type TierPage = 'home' | 'coach' | 'journal' | 'focus' | 'progress' | 'settings'
 const MESSAGES: Record<TierPage, { guest: string; free: string }> = {
   home: {
     guest: 'Sign in to save your streaks, progress, and personalize Voxu',
-    free: 'Upgrade to unlock AI coaching, all content, and guided voices',
+    free: 'Upgrade for a coach that remembers day one, and every guided voice',
   },
   coach: {
     guest: 'Sign in to access AI coaching conversations',
@@ -24,7 +24,7 @@ const MESSAGES: Record<TierPage, { guest: string; free: string }> = {
   },
   focus: {
     guest: 'Sign in to track your focus sessions and earn XP',
-    free: 'Upgrade for all voice guides and voice tones',
+    free: 'Upgrade for every guided voice session',
   },
   progress: {
     guest: 'Sign in to save your streaks, achievements, and XP',

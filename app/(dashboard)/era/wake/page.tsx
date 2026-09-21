@@ -164,7 +164,7 @@ export default function WakeCallPage() {
                 {voice === 'loading' ? 'Your coach is getting ready…'
                   : voice === 'playing' ? 'Your coach is talking.'
                   : voice === 'ready' ? 'Tap to hear it.'
-                  : voice === 'locked' ? 'You’ve used today’s spoken message. It’s all written above — or get unlimited voice with Premium.'
+                  : voice === 'locked' ? 'You’ve used today’s spoken message. It’s all written above — Premium gets 30 a day.'
                   : 'Voice isn’t available right now — it’s all written above.'}
               </p>
             </div>

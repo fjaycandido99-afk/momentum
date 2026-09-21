@@ -2,6 +2,7 @@
 
 import { Crown, Clock } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { TRIAL_DAYS } from '@/lib/subscription-constants'
 
 interface TrialBannerProps {
   variant?: 'full' | 'compact' | 'minimal'
@@ -58,12 +59,15 @@ export function TrialBanner({ variant = 'compact' }: TrialBannerProps) {
           </div>
         </div>
 
-        {/* Progress bar */}
+        {/* Progress bar — against TRIAL_DAYS, not a hardcoded 7. The trial
+            is 14 days, so this bar read as half-spent on day one. */}
         <div className="mt-3">
           <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all"
-              style={{ width: `${((7 - trialDaysLeft) / 7) * 100}%` }}
+              style={{
+                width: `${Math.min(100, Math.max(0, ((TRIAL_DAYS - trialDaysLeft) / TRIAL_DAYS) * 100))}%`,
+              }}
             />
           </div>
         </div>

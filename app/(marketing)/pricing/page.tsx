@@ -11,7 +11,6 @@ import {
   Music,
   Sparkles,
   Book,
-  Download,
   ChevronDown,
   Loader2,
   Shield,
@@ -25,18 +24,38 @@ const YEARLY_PRICE = 49.99
 const YEARLY_MONTHLY = (YEARLY_PRICE / 12).toFixed(2)
 const SAVINGS_PERCENT = Math.round((1 - YEARLY_PRICE / (MONTHLY_PRICE * 12)) * 100)
 
-// Feature comparison data
+/**
+ * The comparison table.
+ *
+ * EVERY ROW HERE MUST BE ENFORCED SOMEWHERE IN THE CODE. That is not a
+ * style note — this table was advertising two features that do not exist
+ * ("Offline downloads", "All backgrounds": `offline_enabled` and
+ * `voiceTones` are declared in lib/subscription-constants.ts and read by
+ * nothing, and there is no download UI in the app), and marking journal
+ * history as a flat ✗ for free when the code gives free users seven days
+ * of it, server-enforced.
+ *
+ * So: the free column is FREE_TIER_LIMITS and AI_FEATURE_LIMITS[x].free,
+ * the premium column is what the gate actually lifts, and nothing appears
+ * in either that a reader could not go and verify in the app.
+ */
 const FEATURES = [
+  {
+    name: 'Your era, promises & missions',
+    free: 'Everything',
+    premium: 'Everything',
+    icon: Zap,
+  },
+  {
+    name: 'Disciplines, practice & your year in proof',
+    free: 'Everything',
+    premium: 'Everything',
+    icon: Sparkles,
+  },
   {
     name: 'Daily sessions',
     free: 'Unlimited',
     premium: 'Unlimited',
-    icon: Zap,
-  },
-  {
-    name: 'Session duration',
-    free: 'No limit',
-    premium: 'No limit',
     icon: Clock,
   },
   {
@@ -46,43 +65,55 @@ const FEATURES = [
     icon: Music,
   },
   {
-    name: 'Checkpoints',
-    free: true,
-    premium: true,
-    icon: Sparkles,
-  },
-  {
-    name: 'Journal history',
-    free: false,
-    premium: true,
-    icon: Book,
-  },
-  {
-    name: 'Offline downloads',
-    free: false,
-    premium: true,
-    icon: Download,
-  },
-  {
-    name: 'AI features',
-    free: 'A few per day',
+    name: 'Coach messages',
+    free: '5 a day',
     premium: 'Unlimited',
     icon: Sparkles,
   },
   {
-    name: 'AI memory',
-    free: 'Today only',
-    premium: '30 days',
-    icon: Book,
-  },
-  {
-    name: 'Weekly review',
-    free: 'Summary only',
-    premium: 'Full insights',
+    name: 'Spoken replies',
+    free: '1 a day',
+    premium: '30 a day',
     icon: Sparkles,
   },
   {
-    name: 'All backgrounds',
+    name: 'Your coach remembering day one',
+    free: 'Day 1 & day 7',
+    premium: 'Every callback day',
+    icon: Book,
+  },
+  {
+    name: 'What the AI can read',
+    free: 'Today',
+    premium: 'Your last 30 days',
+    icon: Book,
+  },
+  {
+    name: 'Guided voice sessions',
+    free: 'Morning Prime & Breathing',
+    premium: 'All of them',
+    icon: Music,
+  },
+  {
+    name: 'Journal history',
+    free: 'Last 7 days',
+    premium: 'Everything you’ve written',
+    icon: Book,
+  },
+  {
+    name: 'Progress history',
+    free: 'Last 7 days',
+    premium: 'A full year',
+    icon: Clock,
+  },
+  {
+    name: 'The Era Recap at day 30',
+    free: false,
+    premium: true,
+    icon: Book,
+  },
+  {
+    name: 'Goals & the weekly AI summary',
     free: false,
     premium: true,
     icon: Sparkles,
@@ -160,10 +191,12 @@ export default function PricingPage() {
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Unlock Your Full Potential
+            The era is free. Premium is the coach.
           </h1>
           <p className="text-lg text-white/70 max-w-2xl mx-auto mb-8">
-            Get unlimited access to all premium features and take your focus sessions to the next level.
+            Your era, your promises, your disciplines and your record are free, forever. Premium is
+            depth: a coach that remembers what you said on day one, as many words as you need, and
+            the letter it writes you at day 30.
           </p>
 
           {/* Quick pricing preview */}
@@ -211,7 +244,7 @@ export default function PricingPage() {
             <div className="relative p-6 rounded-2xl bg-white/[0.02] border border-white/15">
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-white mb-2">Free</h3>
-                <p className="text-white/70 text-sm">Perfect for trying out Voxu</p>
+                <p className="text-white/70 text-sm">The whole loop, forever</p>
               </div>
 
               <div className="mb-6">
@@ -231,35 +264,35 @@ export default function PricingPage() {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
+                  <span>Your era: 30 days, one promise a day</span>
+                </li>
+                <li className="flex items-center gap-3 text-white/70 text-sm">
+                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
+                  <span>Disciplines, daily practice &amp; your year in proof</span>
+                </li>
+                <li className="flex items-center gap-3 text-white/70 text-sm">
+                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
                   <span>Unlimited sessions, no time limit</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>Daily Guide with checkpoints</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>Journaling, saved quotes &amp; streaks</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>A daily taste of the AI features</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
                   <span>All music, motivation &amp; soundscapes</span>
                 </li>
-                <li className="flex items-center gap-3 text-white/40 text-sm">
-                  <X className="w-4 h-4 flex-shrink-0" />
-                  <span>Unlimited AI &amp; full memory</span>
+                <li className="flex items-center gap-3 text-white/70 text-sm">
+                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
+                  <span>5 coach messages and a spoken reply, every day</span>
+                </li>
+                <li className="flex items-center gap-3 text-white/70 text-sm">
+                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
+                  <span>The last 7 days of your journal</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/40 text-sm">
                   <X className="w-4 h-4 flex-shrink-0" />
-                  <span>Journal history</span>
+                  <span>A coach that remembers more than today</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/40 text-sm">
                   <X className="w-4 h-4 flex-shrink-0" />
-                  <span>Offline downloads</span>
+                  <span>The Era Recap at day 30</span>
                 </li>
               </ul>
 
@@ -285,7 +318,7 @@ export default function PricingPage() {
                   <Crown className="w-5 h-5 text-amber-400" />
                   <h3 className="text-xl font-semibold text-white">Premium</h3>
                 </div>
-                <p className="text-white/70 text-sm">The full Voxu experience</p>
+                <p className="text-white/70 text-sm">The coach with a memory</p>
               </div>
 
               <div className="mb-6">
@@ -305,42 +338,52 @@ export default function PricingPage() {
                 )}
               </div>
 
+              {/* Only what the gate ACTUALLY lifts. Three of the six that
+                  used to be here were wrong: "Unlimited daily sessions" and
+                  "No time limits" are free already, and "voice tones" and
+                  "Offline downloads" are not features that exist. */}
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
-                  <span>Unlimited daily sessions</span>
+                  <span>A coach that remembers day one, every callback day</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
-                  <span>No time limits</span>
+                  <span>Unlimited coach messages, and 30 spoken replies a day</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
-                  <span>All voice guides &amp; voice tones</span>
+                  <span>AI that reads your last 30 days, not just today</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
-                  <span>All checkpoints & features</span>
+                  <span>Every guided voice session</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
-                  <span>Full journal history</span>
+                  <span>Your full journal history and a year of progress</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
-                  <span>Offline downloads</span>
+                  <span>The Era Recap &mdash; the letter at day 30</span>
+                </li>
+                <li className="flex items-center gap-3 text-white/70 text-sm">
+                  <div className="p-0.5 rounded bg-amber-500/20">
+                    <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                  </div>
+                  <span>Goals, the weekly AI summary and unlimited routines</span>
                 </li>
               </ul>
 
@@ -486,7 +529,11 @@ export default function PricingPage() {
             Ready to upgrade your focus?
           </h3>
           <p className="text-white/70 mb-8">
-            Join thousands of users who have transformed their productivity with Voxu Premium.
+            {/* "Join thousands of users who have transformed their
+                productivity" was a number we don't have and a claim nobody
+                made. Same rule as the testimonials that came off the
+                landing page. */}
+            Start an era today. Upgrade when you want the coach to remember more than today.
           </p>
 
           <button

@@ -12,13 +12,28 @@ interface UpgradeModalProps {
   onClose: () => void
 }
 
+/**
+ * What premium actually buys.
+ *
+ * Four of the six that used to be here were not premium at all: unlimited
+ * sessions and no time limits are free (FREE_TIER_LIMITS is 99/999),
+ * checkpoints are free (`checkpoints_enabled: true`), voice TONES are not
+ * gated anywhere, and offline downloads are not a feature that exists —
+ * `offline_enabled` is declared in lib/subscription-constants.ts and read by
+ * nothing. Selling someone a list of things they already have is how a
+ * paywall teaches people to distrust the app.
+ *
+ * Every line below maps to a gate: FREE_CALLBACK_DAYS, AI_FEATURE_LIMITS
+ * (chat, chat_voice), AI_MEMORY_DEPTH, the voiceGuides free ids, the journal
+ * and progress windows, and the Era Recap check in lib/era/service.ts.
+ */
 const PREMIUM_BENEFITS = [
-  { icon: Zap, text: 'Unlimited daily sessions' },
-  { icon: Clock, text: 'No time limits' },
-  { icon: Music, text: 'All voice guides & voice tones' },
-  { icon: Sparkles, text: 'All checkpoints & features' },
-  { icon: Book, text: 'Full journal history' },
-  { icon: Download, text: 'Offline downloads' },
+  { icon: Book, text: 'A coach that remembers day one, every callback day' },
+  { icon: Sparkles, text: 'Unlimited coach messages (free: 5 a day)' },
+  { icon: Music, text: '30 spoken replies a day (free: 1)' },
+  { icon: Zap, text: 'AI that reads your last 30 days, not just today' },
+  { icon: Clock, text: 'Your full journal and a year of progress' },
+  { icon: Crown, text: 'The Era Recap — the letter at day 30' },
 ]
 
 export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {

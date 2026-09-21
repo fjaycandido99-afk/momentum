@@ -282,7 +282,7 @@ export default function DownloadPage() {
             How Voxu Works
           </h2>
           <p className="text-white/50 text-center mb-16 max-w-lg mx-auto">
-            Three simple steps to a calmer, more focused you.
+            Three steps, then thirty days.
           </p>
 
           <div className="grid sm:grid-cols-3 gap-8 sm:gap-12">
@@ -325,10 +325,10 @@ export default function DownloadPage() {
       <section className="py-24 px-4 bg-white/[0.02]">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-            Everything You Need
+            What&rsquo;s Inside
           </h2>
           <p className="text-white/50 text-center mb-16 max-w-lg mx-auto">
-            A complete wellness toolkit in your pocket.
+            The era is the product. Everything else serves it.
           </p>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -427,7 +427,7 @@ export default function DownloadPage() {
             <div className="px-6 py-4 rounded-2xl bg-white/[0.03] border border-white/10">
               <div className="text-sm text-white/50 mb-1">Free</div>
               <div className="text-2xl font-bold">$0</div>
-              <div className="text-xs text-white/40 mt-1">Daily sessions included</div>
+              <div className="text-xs text-white/40 mt-1">The whole era loop</div>
             </div>
             <div className="px-6 py-4 rounded-2xl bg-white/[0.03] border border-white/10">
               <div className="text-sm text-white/50 mb-1">Monthly</div>
@@ -463,7 +463,7 @@ export default function DownloadPage() {
             Ready to begin?
           </h2>
           <p className="text-white/50 mb-8 text-lg">
-            Download Voxu and start your first session in under a minute.
+            Download Voxu and pick an era and make your first promise in under a minute.
           </p>
           <AppStoreBadge />
         </div>

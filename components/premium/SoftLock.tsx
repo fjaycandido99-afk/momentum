@@ -143,7 +143,7 @@ export function PreviewPaywall({
           <div className="p-3 rounded-xl bg-white/5 border border-white/15">
             <p className="text-white/75 text-xs text-center">
               <Sparkles className="w-3 h-3 inline-block mr-1 text-amber-400" />
-              Premium unlocks all content, AI features & more
+              Premium unlocks every guided voice session and the coach&rsquo;s memory
             </p>
           </div>
         </div>

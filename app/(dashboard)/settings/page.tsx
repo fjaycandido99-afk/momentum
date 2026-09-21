@@ -990,23 +990,31 @@ function SettingsContent() {
               </div>
             ) : (
               <div className="space-y-4">
+                {/* This card was stale by two generations of the product:
+                    "1 session/day · 10-min limit", "Daily checkpoints
+                    locked", "Genre selection locked", "Journal history
+                    locked" — none of which is true. Free is 99 sessions a
+                    day with no duration cap, checkpoints are on, genres are
+                    free for everyone, and free journal history is seven
+                    days. It was talking people out of a better free tier
+                    than they had. What it says now is what the code does. */}
                 <div className="p-4 rounded-xl bg-white/5 border border-white/15">
                   <p className="text-white font-medium mb-1">Free Plan</p>
                   <p className="text-sm text-white/70 mb-3">
-                    1 session/day · 10-min limit · Limited features
+                    Your era, your disciplines and unlimited sessions — no time limit.
                   </p>
                   <ul className="space-y-2 text-sm text-white/70">
                     <li className="flex items-center gap-2">
                       <Lock className="w-3.5 h-3.5" />
-                      Daily checkpoints locked
+                      Coach messages capped at 5 a day
                     </li>
                     <li className="flex items-center gap-2">
                       <Lock className="w-3.5 h-3.5" />
-                      Genre selection locked
+                      One spoken reply a day
                     </li>
                     <li className="flex items-center gap-2">
                       <Lock className="w-3.5 h-3.5" />
-                      Journal history locked
+                      The coach reads today, not your last 30 days
                     </li>
                   </ul>
                 </div>
@@ -1147,7 +1155,7 @@ function SettingsContent() {
           {/* App Info */}
           <div className="text-center pt-2 pb-2">
             <p className="text-white/50 text-sm">Voxu v0.1.0</p>
-            <p className="text-white/50 text-xs mt-1">Your AI Audio Coach</p>
+            <p className="text-white/50 text-xs mt-1">30 days, one promise a day</p>
           </div>
         </SettingsCategory>
       </div>
