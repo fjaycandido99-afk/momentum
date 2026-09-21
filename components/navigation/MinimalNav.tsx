@@ -22,6 +22,8 @@ export function MinimalNav() {
   const pageLabel = PAGE_LABELS[pathname] || ''
   const homeAudio = useHomeAudioOptional()
   const { openReset } = useReset()
+  // The retired Daily Guide route, which now just redirects to home:
+  // no player capsule during that hop.
   const isDailyGuide = pathname === '/daily-guide'
 
   // A guide's audio is generated before it can play, which can take a few

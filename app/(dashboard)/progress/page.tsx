@@ -108,7 +108,7 @@ export default function ProgressPage() {
           </div>
           <p className="text-white/70 text-sm font-medium mb-1">No progress data yet</p>
           <p className="text-white/40 text-xs mb-6">Complete a session or journal entry to start tracking your progress</p>
-          <Link href="/daily-guide" className="px-5 py-2.5 rounded-xl bg-white/10 text-sm text-white font-medium hover:bg-white/15 transition-colors">
+          <Link href="/" className="px-5 py-2.5 rounded-xl bg-white/10 text-sm text-white font-medium hover:bg-white/15 transition-colors">
             Start your first session
           </Link>
         </div>

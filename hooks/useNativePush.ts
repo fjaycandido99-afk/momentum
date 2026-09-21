@@ -26,7 +26,8 @@ export function useNativePush() {
 
     // Route map for notification tap deep links
     const routeMap: Record<string, string> = {
-      '/guide': '/daily-guide',
+      // The Daily Guide page is retired; home runs the session flow.
+      '/guide': '/',
       '/journal': '/journal',
       '/coach': '/coach',
       '/progress': '/progress',

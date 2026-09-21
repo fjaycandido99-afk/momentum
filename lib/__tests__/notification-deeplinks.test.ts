@@ -38,7 +38,10 @@ describe('notification deep links', () => {
     it(`${type} opens its own segment, not whatever the clock picks`, () => {
       const line = urlMap.split(/\r?\n/).find(l => l.trim().startsWith(`${type}:`))
       expect(line, `no url mapping for ${type}`).toBeTruthy()
-      expect(line).toContain('/daily-guide')
+      // Home runs the session flow now — the page is retired (it still
+      // redirects, but new pushes should not aim at a redirect).
+      expect(line).not.toContain('/daily-guide')
+      expect(line).toContain("'/?")
       expect(line).toContain(param)
     })
   }

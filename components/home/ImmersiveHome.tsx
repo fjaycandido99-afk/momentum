@@ -59,6 +59,7 @@ import { DailyReadCard } from './DailyReadCard'
 import { useDailyRead } from '@/hooks/useDailyRead'
 import { useEra } from '@/hooks/useEra'
 import { useDismissed } from '@/hooks/useDismissed'
+import { useSessionParam } from '@/hooks/useSessionParam'
 import { useHiddenShelves } from '@/hooks/useHiddenShelves'
 import { autoplayNextEnabled } from '@/hooks/useAutoplayNext'
 import { SmartHomeNudge } from './SmartHomeNudge'
@@ -246,6 +247,31 @@ export function ImmersiveHome() {
 
   // Overlays
   const [showMorningFlow, setShowMorningFlow] = useState(false)
+  /**
+   * ?session=<id> from a push notification. The Daily Guide page used to
+   * read this; home does now, and opens the flow straight onto that card —
+   * a Midday Reset push tapped at 6pm still lands on Midday Reset.
+   */
+  const requestedSession = useSessionParam()
+
+  /*
+   * A tapped reminder opens the flow on the card it was about.
+   *
+   * Without this the param would be read and ignored: the overlay only shows
+   * when showMorningFlow is set, and nobody taps "Midday Reset" hoping to
+   * arrive at a home screen and find it themselves.
+   */
+  useEffect(() => {
+    if (!requestedSession) return
+    stopBackgroundMusic()
+    setShowMorningFlow(true)
+    // The param has been spent; a later reload shouldn't reopen it.
+    try {
+      window.history.replaceState({}, '', window.location.pathname)
+    } catch {
+      // Not worth a message. The overlay is open either way.
+    }
+  }, [requestedSession, stopBackgroundMusic])
   // The full-screen players open on request now (the bottom bar), never
   // because something started playing — see HomeAudioContext.fullPlayerOpen.
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null)
@@ -1375,7 +1401,7 @@ export function ImmersiveHome() {
       {showMorningFlow && (
         <div className="fixed inset-0 z-[60] bg-black flex flex-col animate-fade-in-down">
           <div className="flex-1 overflow-y-auto pb-20">
-            <DailyGuideHome embedded />
+            <DailyGuideHome embedded initialSession={requestedSession} />
           </div>
           <div className="absolute bottom-0 left-0 right-0 z-[70] flex justify-center pb-6 pt-3 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none">
             <button
@@ -1492,13 +1518,16 @@ export function ImmersiveHome() {
             className="fixed right-6 z-[60] w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up"
             style={{ top: 'calc(env(safe-area-inset-top, 0px) + 4.5rem)' }}
           >
-            {/* Goes to the Daily Guide PAGE. It used to open the morning
-                flow overlay, so the one menu entry named after the page
-                never took you to it. */}
-            <Link href="/daily-guide" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 w-full hover:bg-white/5 active:bg-white/5 transition-colors">
+            {/* The four Daily Guide segments, as an overlay. The page they
+                used to live on is retired — this is the deliberate way in,
+                for when the morning popup has already been dismissed. */}
+            <button
+              onClick={() => { setShowMenu(false); stopBackgroundMusic(); setShowMorningFlow(true) }}
+              className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-white/5 active:bg-white/5 transition-colors"
+            >
               <Headphones className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">Daily Guide</span>
-            </Link>
+              <span className="text-sm text-white/90">Sessions</span>
+            </button>
             <Link href="/training" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
               <Dumbbell className="w-4 h-4 text-white/85" />
               <span className="text-sm text-white/90">Training</span>

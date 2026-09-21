@@ -47,9 +47,9 @@ function pickNudge(props: SmartHomeNudgeProps): NudgeContent | null {
   if (props.modulesCompletedToday === 0 && new Date().getHours() >= 13) {
     return {
       icon: Target,
-      message: "Your Daily Guide is waiting — just 3 minutes",
-      action: 'Start guide',
-      href: '/daily-guide',
+      message: "Today's session is waiting — just 3 minutes",
+      action: 'Start it',
+      href: '/',
       color: 'text-white',
     }
   }
@@ -60,7 +60,9 @@ function pickNudge(props: SmartHomeNudgeProps): NudgeContent | null {
       icon: Wind,
       message: 'A short breathing session could help right now',
       action: 'Try it',
-      href: '/daily-guide',
+      // Nervous-System mode is exactly this, and it asks first rather than
+      // dropping someone into a four-segment guide.
+      href: '/reset',
       color: 'text-white',
     }
   }
@@ -71,7 +73,7 @@ function pickNudge(props: SmartHomeNudgeProps): NudgeContent | null {
       icon: Zap,
       message: `Don't break your ${props.streak}-day streak — do something quick`,
       action: 'Keep going',
-      href: '/daily-guide',
+      href: '/',
       color: 'text-white',
     }
   }

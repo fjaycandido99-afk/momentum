@@ -35,7 +35,7 @@ interface NavItem {
 // lives inside Journal.
 const NAV: NavItem[] = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '/daily-guide', label: 'Daily Guide', icon: Sparkles, matchPrefix: true },
+  { href: '/training', label: 'Training', icon: Sparkles, matchPrefix: true },
   { href: '/journal', label: 'Journal', icon: BookOpen, matchPrefix: true },
   { href: '/saved', label: 'Saved', icon: Bookmark, matchPrefix: true },
   { href: '/progress', label: 'Progress', icon: TrendingUp, matchPrefix: true },

@@ -173,7 +173,7 @@ export async function scheduleEveningReminder(hour: number, minute: number): Pro
     hour,
     minute,
     actionTypeId: 'JOURNAL_REMINDER',
-    extra: { route: '/daily-guide', action: 'evening' },
+    extra: { route: '/', action: 'evening' },
   })
 }
 
@@ -237,7 +237,7 @@ export async function scheduleBedtimeReminder(hour: number, minute: number): Pro
     hour,
     minute,
     actionTypeId: 'DAILY_REMINDER',
-    extra: { route: '/daily-guide', action: 'bedtime' },
+    extra: { route: '/', action: 'bedtime' },
   })
 }
 

@@ -1,85 +1,38 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { DailyGuideHome } from '@/components/daily-guide/DailyGuideHome'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { authFetch } from '@/lib/auth-fetch'
-import { isSessionType } from '@/lib/daily-guide/decision-tree'
 
-function DailyGuideContent() {
+/**
+ * /daily-guide — retired, and redirecting.
+ *
+ * The page was a second daily ritual: its own greeting, its own mood check,
+ * its own quote, its own briefing and its own four segments, all beside a
+ * home screen that now carries the era loop. Two rituals in one app means
+ * neither is THE thing you open it for.
+ *
+ * The sessions themselves are not going anywhere: the same flow runs on home
+ * as an overlay (ImmersiveHome + DailyGuideHome embedded), Today's Audio
+ * plays the segment for the time of day, and the four reminders still arrive.
+ * It is the surface that went, not the content.
+ *
+ * This file stays as a redirect instead of being deleted, because five kinds
+ * of push notification and any number of native shells point here, and a
+ * 404 is a terrible thing to hand someone who tapped a reminder. The
+ * ?session= param travels with them so they land on the card they were
+ * promised.
+ *
+ * /daily-guide/onboarding is untouched — that is the setup flow, and it is
+ * still where a new person configures their sessions.
+ */
+export default function RetiredDailyGuidePage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const [isLoading, setIsLoading] = useState(true)
-  const [isOnboarded, setIsOnboarded] = useState(false)
 
   useEffect(() => {
-    const checkOnboarding = async () => {
-      const minDelay = new Promise(resolve => setTimeout(resolve, 2500))
-      try {
-        const [response] = await Promise.all([
-          authFetch('/api/daily-guide/preferences'),
-          minDelay,
-        ])
-        if (response.ok) {
-          const data = await response.json()
-
-          // Guests can use app immediately
-          if (data.isGuest) {
-            setIsOnboarded(true)
-            setIsLoading(false)
-            return
-          }
-
-          if (data.guide_onboarding_done) {
-            setIsOnboarded(true)
-          } else {
-            router.push('/daily-guide/onboarding')
-            return
-          }
-        } else {
-          router.push('/daily-guide/onboarding')
-          return
-        }
-      } catch (error) {
-        console.error('Error checking onboarding:', error)
-        router.push('/daily-guide/onboarding')
-        return
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    checkOnboarding()
+    const session = new URLSearchParams(window.location.search).get('session')
+    router.replace(session ? `/?session=${encodeURIComponent(session)}` : '/')
   }, [router])
 
-  if (isLoading) {
-    return <LoadingScreen />
-  }
-
-  if (!isOnboarded) {
-    return null
-  }
-
-  // ?session=<id> lets a notification open the card it was about, rather
-  // than whichever one the clock happens to land on.
-  const requested = searchParams.get('session')
-  const initialSession = isSessionType(requested) ? requested : null
-
-  return (
-    <ErrorBoundary>
-      <DailyGuideHome initialSession={initialSession} />
-    </ErrorBoundary>
-  )
-}
-
-export default function DailyGuidePage() {
-  // useSearchParams needs a Suspense boundary to avoid opting the whole
-  // route into client-side-only rendering.
-  return (
-    <Suspense fallback={<LoadingScreen />}>
-      <DailyGuideContent />
-    </Suspense>
-  )
+  return <LoadingScreen />
 }

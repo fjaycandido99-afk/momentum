@@ -7,10 +7,10 @@
  */
 const ROUTES: Record<string, string> = {
   // Daily challenges
-  morning_module: '/daily-guide?session=morning_prime',
-  evening_module: '/daily-guide?session=wind_down',
-  all_modules: '/daily-guide',
-  modules_complete: '/daily-guide',
+  morning_module: '/?session=morning_prime',
+  evening_module: '/?session=wind_down',
+  all_modules: '/',
+  modules_complete: '/',
   journal_entry: '/journal',
   gratitude_entry: '/journal',
   journal_words: '/journal',
@@ -23,7 +23,7 @@ const ROUTES: Record<string, string> = {
   xp_earned: '/',
   // Weekly missions
   journal_days: '/journal',
-  modules_total: '/daily-guide',
+  modules_total: '/',
   breathing_sessions: '/?play=guide:breathing',
   mood_logs: '/journal',
   streak_maintain: '/',
