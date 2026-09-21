@@ -1024,6 +1024,52 @@ model Era {
   @@index([era_key, status])
 }
 
+// A shareable marketing link: voxu.app/i/<code>.
+//
+// NOT the same thing as EraReferral, which credits a friend for the era you
+// joined from their card. This is the affiliate/partner channel: a code
+// Francis hands out, with clicks and signups counted against it so a bonus
+// can be paid on something verifiable.
+model ReferralCode {
+  id   String @id @default(cuid())
+  code String @unique // what appears in the URL, e.g. "gymtok"
+
+  // Who or what it was given to — "TikTok bio", a creator's name. Free text
+  // because this is Francis's own bookkeeping, not user input.
+  label String
+
+  // Off without deleting: the link stops attributing, and the numbers it
+  // already earned stay intact.
+  active Boolean @default(true)
+
+  hits ReferralHit[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([active])
+}
+
+// One event on a referral link: the click, and the signup it led to.
+//
+// A signup row carries the user, with one per user per code, so refreshing
+// or reinstalling can never inflate a payout. Clicks are anonymous by
+// nature — nobody is signed in yet.
+model ReferralHit {
+  id      String       @id @default(cuid())
+  code_id String
+  code    ReferralCode @relation(fields: [code_id], references: [id], onDelete: Cascade)
+
+  kind    String // "click" | "signup"
+  user_id String? // signups only
+
+  created_at DateTime @default(now())
+
+  @@unique([code_id, kind, user_id])
+  @@index([code_id, kind])
+  @@index([created_at])
+}
+
 // One day's self-reported state (lib/wellness/scales.ts).
 //
 // Four numbers the user taps — how they feel, energy, stress, how rested —

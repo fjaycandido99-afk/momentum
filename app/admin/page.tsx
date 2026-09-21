@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { currentAdmin } from '@/lib/auth/admin'
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard'
+import { ReferralLinks } from '@/components/admin/ReferralLinks'
 
 /**
  * /admin — the owner's dashboard, opened by signing in rather than by
@@ -41,6 +42,12 @@ export default async function AdminPage() {
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Signed in as {admin.email}</p>
           <Link href="/" className="text-xs text-white/60 underline underline-offset-2">Back to Voxu</Link>
+        </div>
+      </div>
+      {/* Above the numbers: the links are a thing to DO here, not just read. */}
+      <div className="bg-black text-white px-4 pt-4">
+        <div className="max-w-2xl mx-auto">
+          <ReferralLinks />
         </div>
       </div>
       <AnalyticsDashboard />

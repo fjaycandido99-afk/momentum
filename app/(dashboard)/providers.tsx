@@ -11,6 +11,7 @@ import { OfflineProvider } from '@/contexts/OfflineContext'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { NativePushRegistrar } from '@/components/notifications/NativePushRegistrar'
 import { NotificationOpenTracker } from '@/components/notifications/NotificationOpenTracker'
+import { ReferralClaim } from '@/components/referral/ReferralClaim'
 import { UpgradeModalWithContext } from '@/components/premium/UpgradeModal'
 import { FeatureTooltipProvider } from '@/components/premium/FeatureTooltip'
 import { ToastProvider } from '@/contexts/ToastContext'
@@ -37,6 +38,8 @@ export function Providers({ children }: ProvidersProps) {
                         <OfflineBanner />
                         <NativePushRegistrar />
                         <NotificationOpenTracker />
+                        {/* Attributes a signup to the /i/<code> link they came from. */}
+                        <ReferralClaim />
                         {children}
                         <UpgradeModalWithContext />
                         <ToastContainer />
