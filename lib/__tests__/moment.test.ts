@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { eraMomentCopy, pickMoment, type MomentKind } from '@/lib/home/moment'
+import { eraMomentCopy, momentAllowed, pickMoment, type MomentKind } from '@/lib/home/moment'
 import type { LoopStep } from '@/lib/era/day-loop'
 
 const base = { loopStep: null as LoopStep | null, hasJournalToday: true, lastKind: null as MomentKind | null }
@@ -41,6 +41,18 @@ describe('pickMoment', () => {
 
   it('works for someone with no era at all', () => {
     expect(pickMoment({ loopStep: null, hasJournalToday: false, lastKind: null })).toBe('journal')
+  })
+})
+
+describe('momentAllowed', () => {
+  it('lets the era and journal moments through on every open', () => {
+    expect(momentAllowed('era', { sparkShownToday: true })).toBe(true)
+    expect(momentAllowed('journal', { sparkShownToday: true })).toBe(true)
+  })
+
+  it('gives the quote one turn a day', () => {
+    expect(momentAllowed('spark', { sparkShownToday: false })).toBe(true)
+    expect(momentAllowed('spark', { sparkShownToday: true })).toBe(false)
   })
 })
 

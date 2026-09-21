@@ -43,6 +43,19 @@ export function pickMoment(input: MomentInput): MomentKind {
   return 'spark'
 }
 
+/**
+ * How often each kind may appear.
+ *
+ * The era and journal moments are about something of the user's that is
+ * open right now, so they belong on every app open — that is the point of
+ * opening the app. A quote is not waiting for anybody, so it gets one turn a
+ * day and then stays quiet. Same slot, two different speeds, and the
+ * difference is whether the content is about them or about us.
+ */
+export function momentAllowed(kind: MomentKind, state: { sparkShownToday: boolean }): boolean {
+  return kind === 'spark' ? !state.sparkShownToday : true
+}
+
 /** What the era moment says, by step. One line, one action. */
 export function eraMomentCopy(step: LoopStep): { line: string; action: string } | null {
   switch (step) {

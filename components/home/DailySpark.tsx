@@ -5,8 +5,8 @@ import { Sparkles, X, Heart, Send } from 'lucide-react'
 import { QUOTES, displayAuthor } from '@/lib/quotes'
 import { getNextSpark, Spark } from '@/lib/daily-sparks'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
-import { isDismissed, setDismissed } from '@/lib/ui/dismiss'
-import { eraMomentCopy, pickMoment, type MomentKind } from '@/lib/home/moment'
+import { isDismissed, localDayKey, setDismissed } from '@/lib/ui/dismiss'
+import { eraMomentCopy, momentAllowed, pickMoment, type MomentKind } from '@/lib/home/moment'
 import type { LoopStep } from '@/lib/era/day-loop'
 import { MomentCard } from './MomentCard'
 
@@ -24,6 +24,12 @@ import { MomentCard } from './MomentCard'
  * actually open (lib/home/moment.ts): something your era is waiting for,
  * then the journal if today is unwritten, then the quote.
  *
+ * Two speeds, because the kinds aren't equal. The era and journal moments
+ * are about something of the user's that is open, so they earn every app
+ * open. A quote is waiting for nobody, so it keeps the one-a-day limit —
+ * and once it has had its turn this slot stays empty rather than reaching
+ * for something else to say.
+ *
  * Still: never on top of another popup, never on a timer, never twice in a
  * session, and a permanent "don't show these" for anyone who wants none of
  * it.
@@ -31,8 +37,21 @@ import { MomentCard } from './MomentCard'
 const AUTO_DISMISS = 60 * 1000           // 60 seconds
 const INITIAL_DELAY = 6 * 1000           // let home finish arriving first
 
-/** Once per app open — sessionStorage, so a cold launch gets a new one. */
+/**
+ * Once per app open — sessionStorage, so a cold launch gets a new one.
+ *
+ * This caps the SLOT: never two moments in one session, whatever they are.
+ */
 const SHOWN_KEY = 'voxu_spark_shown'
+/**
+ * The quote's own limit: once per LOCAL day, on top of the session cap.
+ *
+ * The era and journal moments are about something of theirs that is open, so
+ * they earn every app open. A quote is waiting for nobody, so it gets one
+ * turn a day — and when it has had it, this slot simply stays empty rather
+ * than reaching for something else to say.
+ */
+const SPARK_DAY_KEY = 'voxu.spark.shown-on'
 /** What the slot said last time, so it doesn't repeat itself. */
 const LAST_KIND_KEY = 'voxu.moment.last'
 /** Their permanent off switch, via the shared dismissal store. */
@@ -52,10 +71,20 @@ function shownThisSession(): boolean {
   }
 }
 
+/** Has the quote had its turn today? */
+function sparkShownToday(): boolean {
+  try {
+    return localStorage.getItem(SPARK_DAY_KEY) === localDayKey()
+  } catch {
+    return false
+  }
+}
+
 function markShown(kind: MomentKind) {
   try {
     sessionStorage.setItem(SHOWN_KEY, '1')
     localStorage.setItem(LAST_KIND_KEY, kind)
+    if (kind === 'spark') localStorage.setItem(SPARK_DAY_KEY, localDayKey())
   } catch {
     // Worst case it repeats a kind. Not worth failing the popup over.
   }
@@ -205,6 +234,10 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
       // interruptions, which is the thing we were fixing.
       if (window.__popupActive) return
       const chosen = pickMoment({ loopStep, hasJournalToday, lastKind: lastKind() })
+      // The quote is once a day; when it has had its turn, nothing shows.
+      // Falling back to another kind here would mean showing the era moment
+      // when the loop had nothing waiting, which is the definition of noise.
+      if (!momentAllowed(chosen, { sparkShownToday: sparkShownToday() })) return
       markShown(chosen)
       showSpark(chosen)
     }, INITIAL_DELAY)
