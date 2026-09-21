@@ -61,7 +61,7 @@ export function PracticeCard({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">
-            {done ? 'Practice done' : 'Today’s practice'}
+            {done ? 'Done today' : 'Today'}
           </p>
           {!done && (
             <span className="flex items-center gap-[3px]" aria-label={`Difficulty: ${difficulty}`}>

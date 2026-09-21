@@ -3,7 +3,10 @@ import {
   adherence,
   cleanPractice,
   currentRun,
+  dayName,
   daysLabel,
+  nextDueDay,
+  weakestWeekday,
   isCleanPractice,
   isDueOn,
   minimumLine,
@@ -168,6 +171,68 @@ describe('minimumLine', () => {
 
   it('still says something useful with no minimum set', () => {
     expect(minimumLine({ ...gym, minimum: '  ' })).toContain('smallest')
+  })
+})
+
+describe('nextDueDay and dayName', () => {
+  it('finds the next scheduled day', () => {
+    // Sunday 20th; gym is Mon/Tue/Thu/Fri.
+    expect(nextDueDay(gym, '2026-09-20')).toBe('2026-09-21')
+    // Monday → Tuesday.
+    expect(nextDueDay(gym, '2026-09-21')).toBe('2026-09-22')
+    // Tuesday → skips Wednesday.
+    expect(nextDueDay(gym, '2026-09-22')).toBe('2026-09-24')
+  })
+
+  it('is always tomorrow for an every-day practice', () => {
+    expect(nextDueDay(daily, '2026-09-20')).toBe('2026-09-21')
+  })
+
+  it('says "Tomorrow" when it is tomorrow, and the weekday otherwise', () => {
+    expect(dayName('2026-09-21', '2026-09-20')).toBe('Tomorrow')
+    expect(dayName('2026-09-24', '2026-09-22')).toBe('Thursday')
+  })
+})
+
+describe('weakestWeekday', () => {
+  const mondays = ['2026-08-31', '2026-09-07', '2026-09-14', '2026-09-21']
+
+  it('says nothing until there are enough answered days on that weekday', () => {
+    const logs = [log(mondays[0], false), log(mondays[1], false)]
+    expect(weakestWeekday(gym, logs, '2026-08-25', '2026-09-21')).toBeNull()
+  })
+
+  it('names the weekday with the counts behind it', () => {
+    const logs = [
+      log(mondays[0], false), log(mondays[1], false), log(mondays[2], false), log(mondays[3], true),
+      // Tuesdays all kept, so Monday is the one worth naming.
+      log('2026-09-01', true), log('2026-09-08', true), log('2026-09-15', true),
+    ]
+    const weak = weakestWeekday(gym, logs, '2026-08-25', '2026-09-21')
+    expect(weak).toEqual({ weekday: 1, missed: 3, of: 4 })
+  })
+
+  it('stays quiet when the misses are not the majority of that day', () => {
+    const logs = [log(mondays[0], true), log(mondays[1], true), log(mondays[2], false), log(mondays[3], true)]
+    const weak = weakestWeekday(gym, logs, '2026-08-25', '2026-09-21')
+    expect(weak?.weekday).not.toBe(1)
+  })
+
+  it('never builds a claim out of silence', () => {
+    // A brand-new discipline with no answers at all used to be told it
+    // missed every Friday. Unanswered is unknown, not a miss.
+    expect(weakestWeekday(gym, [], '2026-08-25', '2026-09-21')).toBeNull()
+  })
+
+  it('counts only the days they actually answered', () => {
+    const logs = [
+      log(mondays[0], false), log(mondays[1], false), log(mondays[2], false),
+      // A Tuesday and a Thursday answered once each — not enough to name.
+      log('2026-09-01', false), log('2026-09-03', false),
+    ]
+    expect(weakestWeekday(gym, logs, '2026-08-25', '2026-09-21')).toEqual({
+      weekday: 1, missed: 3, of: 3,
+    })
   })
 })
 

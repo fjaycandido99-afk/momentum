@@ -1,4 +1,4 @@
-import { previousDay } from '@/lib/era/logic'
+import { nextDay, previousDay } from '@/lib/era/logic'
 import { PRACTICE_LIMITS, PRESETS_BY_KEY } from './presets'
 
 /**
@@ -123,6 +123,82 @@ export function weekStrip(practice: PracticeLite, logs: LogLite[], today: string
 }
 
 /**
+ * The next day this is expected, within the coming week.
+ *
+ * So a rest day can say which day you DO show up, instead of the old "Rest
+ * is part of the schedule" — which was true and told nobody anything.
+ */
+export function nextDueDay(practice: PracticeLite, today: string): string | null {
+  let day = nextDay(today)
+  for (let i = 0; i < 7; i++) {
+    if (isDueOn(practice, day)) return day
+    day = nextDay(day)
+  }
+  return null
+}
+
+/**
+ * "Tomorrow", or the weekday's name — for saying which day you do show up.
+ *
+ * Says "Tomorrow" when it is tomorrow, because that is what a person would
+ * say, and the weekday otherwise. Never "in 3 days": a name is something you
+ * can picture.
+ */
+export function dayName(day: string, today: string): string {
+  if (day === nextDay(today)) return 'Tomorrow'
+  const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  return names[weekdayOf(day)]
+}
+
+/**
+ * The weekday they miss most, with the counts that say it.
+ *
+ * Only ANSWERED days count, on both sides of the fraction. An unanswered
+ * day is genuinely unknown, and treating it as a miss meant a brand-new
+ * discipline was immediately told it misses every Friday — an accusation
+ * built entirely out of silence.
+ *
+ * Returned only when there is enough to be worth saying: at least
+ * WEAK_DAY_MIN_DUE answered occurrences of that weekday, and more misses
+ * than keeps among them. It is a COUNT, not a claim — the UI prints "missed
+ * 3 of your last 4 Fridays", which someone can check against their own
+ * memory. No significance test is pretended and no cause is implied.
+ */
+export const WEAK_DAY_MIN_DUE = 3
+
+export function weakestWeekday(
+  practice: PracticeLite,
+  logs: LogLite[],
+  from: string,
+  to: string,
+): { weekday: number; missed: number; of: number } | null {
+  const byDay = new Map(logs.map(l => [l.day, l]))
+  const tally = new Map<number, { missed: number; of: number }>()
+
+  for (let day = to; day >= from; day = previousDay(day)) {
+    if (!isDueOn(practice, day)) continue
+    const log = byDay.get(day)
+    // Unanswered is unknown, not a miss. Silence must never become a claim.
+    if (!log) continue
+    const weekday = weekdayOf(day)
+    const row = tally.get(weekday) ?? { missed: 0, of: 0 }
+    row.of++
+    if (!log.done) row.missed++
+    tally.set(weekday, row)
+  }
+
+  let worst: { weekday: number; missed: number; of: number } | null = null
+  for (const [weekday, row] of tally) {
+    if (row.of < WEAK_DAY_MIN_DUE) continue
+    if (row.missed * 2 <= row.of) continue // not the majority of that weekday
+    if (!worst || row.missed / row.of > worst.missed / worst.of) {
+      worst = { weekday, missed: row.missed, of: row.of }
+    }
+  }
+  return worst
+}
+
+/**
  * The line that does the work.
  *
  * Not encouragement — a reminder of the floor THEY set, when they set it
@@ -218,6 +294,10 @@ export interface PracticeWire {
   todaysPlan: string[]
   /** The whole plan, for the editor. */
   plan: Record<string, string[]> | null
+  /** The next day it is expected, for a rest day to point at. */
+  nextDue: string | null
+  /** The weekday they miss most, with its counts. Null until it is worth saying. */
+  weakDay: { weekday: number; missed: number; of: number } | null
 }
 
 export interface PracticesPayload {

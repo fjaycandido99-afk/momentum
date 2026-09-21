@@ -11,6 +11,8 @@ import {
   adherence,
   cleanPractice,
   currentRun,
+  nextDueDay,
+  weakestWeekday,
   weekStrip,
   isCleanPractice,
   isDueOn,
@@ -89,6 +91,8 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
       slot,
       todaysPlan: planFor(plan, slot),
       plan,
+      nextDue: nextDueDay(lite, today),
+      weakDay: weakestWeekday(lite, logs, from, today),
     }
   })
 

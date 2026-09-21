@@ -1,10 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Check, Minus, Plus, Repeat2 } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Minus, Plus, Repeat2 } from 'lucide-react'
 import { AddPracticeSheet } from './AddPracticeSheet'
 import { PracticePlanSheet } from './PracticePlanSheet'
-import { daysLabel, minimumLine, type PracticesPayload, type PracticeWire } from '@/lib/practices/logic'
+import { dayName, daysLabel, minimumLine, type PracticesPayload, type PracticeWire } from '@/lib/practices/logic'
 import { haptic } from '@/lib/haptics'
 import { trackFeature } from '@/lib/analytics/track'
 
@@ -92,7 +92,7 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
       <div className="card-surface-lg p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
-            <Repeat2 className="w-3.5 h-3.5" /> Your practices
+            <Repeat2 className="w-3.5 h-3.5" /> Your disciplines
           </div>
           {canAdd && data.remaining > 0 && (
             <button
@@ -110,8 +110,9 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
               What do you already care about?
             </p>
             <p className="text-[13px] text-white/60 mt-1.5 leading-snug">
-              A gym split, ten pages a day, two hours of deep work. Voxu won&rsquo;t replace those apps —
-              it keeps you consistent with them. Up to {data.max}.
+              The long-term things you stay consistent with — a gym split, ten pages a day, two
+              hours of deep work. Voxu won&rsquo;t replace those apps; it keeps you showing up for
+              them. Up to {data.max}.
             </p>
           </>
         ) : (
@@ -124,11 +125,12 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
                 onLog={(done, minimumOnly) => log(p, done, minimumOnly)}
                 onRetire={canAdd ? () => retire(p) : undefined}
                 onPlan={canAdd ? () => setPlanning(p) : undefined}
+                today={data.today}
               />
             ))}
             {canAdd && data.remaining === 0 && (
               <p className="text-[11px] text-white/35">
-                Three at a time. Retire one to swap it — its record is kept.
+                Three at a time. Pause one to swap it — its record is kept.
               </p>
             )}
           </div>
@@ -153,9 +155,12 @@ function PracticeRow({
   onLog,
   onRetire,
   onPlan,
+  today,
 }: {
   practice: PracticeWire
   busy: boolean
+  /** The user's local day, for naming the next due one. */
+  today: string
   onLog: (done: boolean, minimumOnly?: boolean) => void
   /** Only where practices are managed (/training), never on home. */
   onRetire?: () => void
@@ -163,6 +168,8 @@ function PracticeRow({
   onPlan?: () => void
 }) {
   const [confirmRetire, setConfirmRetire] = useState(false)
+  /** The detail, closed by default: the row is a daily answer, not a report. */
+  const [open, setOpen] = useState(false)
   // "Change" reopens the three choices rather than flipping the answer:
   // a tap that silently turns a kept day into a missed one is a trap.
   const [editing, setEditing] = useState(false)
@@ -239,7 +246,12 @@ function PracticeRow({
       )}
 
       {practice.state === 'rest' && !answered && (
-        <p className="text-[12px] text-white/40 mt-2">Not today. Rest is part of the schedule.</p>
+        <p className="text-[12px] text-white/40 mt-2">
+          Rest today.{' '}
+          {practice.nextDue
+            ? `${dayName(practice.nextDue, today)} you show up.`
+            : 'Next one is up to you.'}
+        </p>
       )}
 
       {choosing && (
@@ -276,7 +288,12 @@ function PracticeRow({
         <div className="flex items-center justify-between gap-2 mt-2">
           <p className="text-[13px] text-white/70 flex items-center gap-1.5">
             {practice.state === 'missed' ? (
-              <>Not today. {practice.run > 0 ? `Your run of ${practice.run} stands until tomorrow.` : 'Tomorrow is a due day.'}</>
+              <>
+                Not today.{' '}
+                {practice.nextDue
+                  ? `${dayName(practice.nextDue, today)} you show up.`
+                  : 'Back when you say so.'}
+              </>
             ) : (
               <>
                 <Check className="w-3.5 h-3.5" />
@@ -295,18 +312,64 @@ function PracticeRow({
         </div>
       )}
 
-      {onRetire && (
+      {/* The detail, on a tap. Everything in here is something the app
+          actually knows: the schedule, their floor, kept-of-due over four
+          weeks, and — only once there is enough of it — the weekday they
+          miss most, said as a count they can check against their own
+          memory. No score, and no "Voxu strategy" it hasn't built. */}
+      {onPlan && (
+        <>
+          <button
+            onClick={() => setOpen(o => !o)}
+            aria-expanded={open}
+            className="flex items-center gap-1 text-[11px] text-white/40 hover:text-white/70 mt-2.5"
+          >
+            {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            {open ? 'Less' : 'Details'}
+          </button>
+
+          {open && (
+            <dl className="mt-2 space-y-1.5 text-[12px]">
+              <Row label="Schedule" value={daysLabel(practice.days)} />
+              <Row
+                label="Next session"
+                value={
+                  practice.state === 'due'
+                    ? 'Today'
+                    : practice.nextDue
+                      ? `${dayName(practice.nextDue, today)}${practice.cue ? ` · ${practice.cue}` : ''}`
+                      : '—'
+                }
+              />
+              <Row label="Your minimum" value={practice.minimum} />
+              <Row
+                label="Last four weeks"
+                value={practice.of > 0 ? `${practice.done} of ${practice.of} kept` : 'Nothing due yet'}
+              />
+              {practice.run > 0 && <Row label="Current run" value={`${practice.run} in a row`} />}
+              {practice.weakDay && (
+                <Row
+                  label="Hardest day"
+                  value={`Missed ${practice.weakDay.missed} of your last ${practice.weakDay.of} ${WEEKDAYS[practice.weakDay.weekday]}s`}
+                />
+              )}
+            </dl>
+          )}
+        </>
+      )}
+
+      {onRetire && open && (
         confirmRetire ? (
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
             <p className="text-[12px] text-white/70 flex-1">
-              Stop asking for this? Everything it recorded is kept.
+              Pause this? Everything it recorded is kept.
             </p>
             <button
               onClick={() => { setConfirmRetire(false); onRetire() }}
               disabled={busy}
               className="text-[12px] text-white rounded-lg border border-white/20 px-2.5 py-1 disabled:opacity-40"
             >
-              Retire
+              Pause it
             </button>
             <button
               onClick={() => setConfirmRetire(false)}
@@ -320,10 +383,22 @@ function PracticeRow({
             onClick={() => setConfirmRetire(true)}
             className="text-[11px] text-white/30 hover:text-white/60 mt-2.5"
           >
-            Retire this practice
+            Pause this discipline
           </button>
         )
       )}
+    </div>
+  )
+}
+
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+/** One line of the detail: label left, fact right. */
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="text-white/40">{label}</dt>
+      <dd className="text-white/80 text-right">{value}</dd>
     </div>
   )
 }

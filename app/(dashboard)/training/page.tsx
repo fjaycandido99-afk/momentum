@@ -50,12 +50,25 @@ export default function TrainingPage() {
           ) : null}
         </div>
 
-        <div className="mt-6 space-y-3">
-          {/* Today's guided exercise — only exists inside an era. */}
-          <PracticeSection hasEra={!!era} />
+        {/* Two things on this page, and they are not the same kind of thing:
+            ONE exercise for today, and the disciplines you keep for months.
+            They used to be called "Today's practice" and "Your practices",
+            which made the reader work out the difference. */}
+        <div className="mt-7">
+          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Today</p>
+          <p className="text-[12px] text-white/45 mt-0.5">Your one mindset exercise for today.</p>
+          <div className="mt-2.5">
+            <PracticeSection hasEra={!!era} />
+          </div>
+        </div>
 
-          {/* The disciplines they already keep. This is where they're added,
-              renamed and retired. */}
+        <div className="mt-7 space-y-3">
+          <div>
+            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Disciplines</p>
+            <p className="text-[12px] text-white/45 mt-0.5">
+              The long-term things you&rsquo;re staying consistent with.
+            </p>
+          </div>
           <PracticesSection canAdd />
 
           {!era && loaded && (
