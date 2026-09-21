@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
-import { createPractice, loadPractices, logPractice, retirePractice } from '@/lib/practices/server'
+import { createPractice, loadPractices, logPractice, retirePractice, savePlan } from '@/lib/practices/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,6 +60,15 @@ export async function POST(request: NextRequest) {
         minimumOnly: body?.minimumOnly === true,
         day: typeof body?.day === 'string' ? body.day : undefined,
       })
+      if (!result.ok) return NextResponse.json({ error: result.reason }, { status: 400 })
+      return NextResponse.json({ ok: true })
+    }
+
+    if (action === 'plan') {
+      if (typeof body?.practiceId !== 'string') {
+        return NextResponse.json({ error: 'Which practice?' }, { status: 400 })
+      }
+      const result = await savePlan(user.id, body.practiceId, body?.plan)
       if (!result.ok) return NextResponse.json({ error: result.reason }, { status: 400 })
       return NextResponse.json({ ok: true })
     }

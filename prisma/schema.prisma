@@ -1251,6 +1251,18 @@ model Practice {
   /// The smallest version that still counts, in their own words.
   minimum String
 
+  /// What THEY do on each day of this practice — slot key to their own
+  /// lines: { "pull": ["Lat pulldown", "Rows"] } or { "any": ["Rich Dad
+  /// Poor Dad"] }. Slots come from the practice (lib/practices/plan.ts):
+  /// a named split rotates, anything else gets one slot per scheduled day.
+  ///
+  /// Free text Voxu stores and shows back on the right day. It is never
+  /// parsed, counted, progressed or graded — "Bench 4x8" is a note to
+  /// themselves, which is why holding it does not make this a workout
+  /// tracker. Voxu writes no programmes: it does not know anyone's
+  /// injuries, equipment or experience.
+  plan Json?
+
   /// Why they usually skip it — a BLOCKERS key (lib/era/reasons.ts), reusing
   /// that list rather than inventing a parallel vocabulary, so both can be
   /// counted together.

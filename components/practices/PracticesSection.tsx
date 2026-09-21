@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Check, Minus, Plus, Repeat2 } from 'lucide-react'
 import { AddPracticeSheet } from './AddPracticeSheet'
+import { PracticePlanSheet } from './PracticePlanSheet'
 import { daysLabel, minimumLine, type PracticesPayload, type PracticeWire } from '@/lib/practices/logic'
 import { haptic } from '@/lib/haptics'
 import { trackFeature } from '@/lib/analytics/track'
@@ -24,6 +25,7 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
   const [data, setData] = useState<PracticesPayload | null>(null)
   const [adding, setAdding] = useState(false)
+  const [planning, setPlanning] = useState<PracticeWire | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
   const load = useCallback(() => {
@@ -121,6 +123,7 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
                 busy={busyId === p.id}
                 onLog={(done, minimumOnly) => log(p, done, minimumOnly)}
                 onRetire={canAdd ? () => retire(p) : undefined}
+                onPlan={canAdd ? () => setPlanning(p) : undefined}
               />
             ))}
             {canAdd && data.remaining === 0 && (
@@ -133,6 +136,13 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
       </div>
 
       {adding && <AddPracticeSheet onClose={() => setAdding(false)} onAdded={load} />}
+      {planning && (
+        <PracticePlanSheet
+          practice={planning}
+          onClose={() => setPlanning(null)}
+          onSaved={load}
+        />
+      )}
     </>
   )
 }
@@ -142,12 +152,15 @@ function PracticeRow({
   busy,
   onLog,
   onRetire,
+  onPlan,
 }: {
   practice: PracticeWire
   busy: boolean
   onLog: (done: boolean, minimumOnly?: boolean) => void
-  /** Only where practices are managed (/era), never on home. */
+  /** Only where practices are managed (/training), never on home. */
   onRetire?: () => void
+  /** Opens the plan editor. Also only where they are managed. */
+  onPlan?: () => void
 }) {
   const [confirmRetire, setConfirmRetire] = useState(false)
   // "Change" reopens the three choices rather than flipping the answer:
@@ -197,6 +210,33 @@ function PracticeRow({
           />
         ))}
       </div>
+
+      {/* Their own plan for today — the exercises, the run, the book. Shown,
+          never graded: the single Done/Minimum/No answer below is still the
+          only thing recorded. */}
+      {practice.slot && (practice.todaysPlan.length > 0 || onPlan) && practice.state !== 'rest' && (
+        <div className="mt-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] tracking-[0.18em] uppercase text-white/40">
+              {practice.cue ?? practice.slot.label}
+            </p>
+            {onPlan && (
+              <button onClick={onPlan} className="text-[11px] text-white/45 hover:text-white/80">
+                {practice.todaysPlan.length > 0 ? 'Edit' : 'Add'}
+              </button>
+            )}
+          </div>
+          {practice.todaysPlan.length > 0 ? (
+            <ul className="mt-1 space-y-0.5">
+              {practice.todaysPlan.map((item, i) => (
+                <li key={i} className="text-[13px] text-white/80 leading-snug">{item}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[12px] text-white/35 mt-1">Nothing written for this one yet.</p>
+          )}
+        </div>
+      )}
 
       {practice.state === 'rest' && !answered && (
         <p className="text-[12px] text-white/40 mt-2">Not today. Rest is part of the schedule.</p>

@@ -1,8 +1,12 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { localDay } from '@/lib/assessment/service'
 import { previousDay } from '@/lib/era/logic'
 import { isBlocker } from '@/lib/era/reasons'
-import { MAX_PRACTICES } from './presets'
+import { MAX_PRACTICES, PRESETS_BY_KEY } from './presets'
+import { rotationCue, sessionForDomain } from './cues'
+import { cleanPlan, parsePlan, planFor, slotForToday } from './plan'
+import { exerciseById } from '@/lib/exercises/library'
 import {
   adherence,
   cleanPractice,
@@ -41,7 +45,7 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
     where: { user_id: userId, status: 'active' },
     orderBy: { created_at: 'asc' },
     select: {
-      id: true, preset_key: true, label: true, days: true, minimum: true, blocker: true,
+      id: true, preset_key: true, label: true, days: true, minimum: true, blocker: true, plan: true,
       logs: {
         where: { local_day: { gte: from } },
         select: { local_day: true, done: true, minimum_only: true },
@@ -49,10 +53,25 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
     },
   })
 
+  // Sessions kept over the practice's whole life, not just the window: the
+  // rotation has to keep its place after a quiet month.
+  const keptCounts = await prisma.practiceLog.groupBy({
+    by: ['practice_id'],
+    where: { user_id: userId, done: true, practice_id: { in: rows.map(r => r.id) } },
+    _count: { _all: true },
+  })
+  const keptByPractice = new Map(keptCounts.map(k => [k.practice_id, k._count._all]))
+
   const practices = rows.map(row => {
     const lite = { id: row.id, label: row.label, days: row.days, minimum: row.minimum }
     const logs = row.logs.map(l => ({ day: l.local_day, done: l.done, minimumOnly: l.minimum_only }))
     const counts = adherence(lite, logs, from, today)
+    const plan = parsePlan(row.plan)
+    const slot = slotForToday(
+      { presetKey: row.preset_key, days: row.days },
+      today,
+      keptByPractice.get(row.id) ?? 0,
+    )
     return {
       id: row.id,
       presetKey: row.preset_key,
@@ -65,6 +84,11 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
       of: counts.of,
       run: currentRun(lite, logs, today),
       week: weekStrip(lite, logs, today),
+      cue: rotationCue(row.preset_key, keptByPractice.get(row.id) ?? 0),
+      session: sessionFor(row.preset_key),
+      slot,
+      todaysPlan: planFor(plan, slot),
+      plan,
     }
   })
 
@@ -80,6 +104,20 @@ function windowStart(today: string): string {
   let day = today
   for (let i = 0; i < WINDOW_DAYS; i++) day = previousDay(day)
   return day
+}
+
+/**
+ * The Voxu session that fits a practice, resolved from its preset's domain.
+ * Null wherever the app has nothing honest to offer — reading and training,
+ * where a suggestion Voxu can't stand behind is worse than silence.
+ */
+function sessionFor(presetKey: string) {
+  const domain = PRESETS_BY_KEY.get(presetKey)?.domain
+  const id = domain ? sessionForDomain(domain) : null
+  const exercise = id ? exerciseById(id) : null
+  return exercise
+    ? { exerciseId: exercise.id, title: exercise.title, minutes: exercise.minutes }
+    : null
 }
 
 export async function createPractice(
@@ -152,6 +190,36 @@ export async function logPractice(args: {
 }
 
 /**
+ * Save the plan — what they do on each day of this practice.
+ *
+ * Their own lines, cleaned (unknown slots dropped, blanks removed, capped in
+ * length and number) and stored as-is. Voxu never parses them: "Lat pulldown
+ * 4×8" is a note to themselves, and reading it as data is how this would
+ * turn into a workout tracker.
+ */
+export async function savePlan(
+  userId: string,
+  practiceId: string,
+  rawPlan: unknown,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const practice = await prisma.practice.findFirst({
+    where: { id: practiceId, user_id: userId },
+    select: { id: true, preset_key: true, days: true },
+  })
+  if (!practice) return { ok: false, reason: 'No such practice' }
+
+  const plan = cleanPlan(rawPlan, { presetKey: practice.preset_key, days: practice.days })
+  await prisma.practice.update({
+    where: { id: practice.id },
+    // An empty plan clears the column rather than storing {}, so "has a
+    // plan" stays a simple null check. Prisma needs DbNull for a nullable
+    // Json column — a bare null would mean "the JSON value null".
+    data: { plan: Object.keys(plan).length > 0 ? plan : Prisma.DbNull },
+  })
+  return { ok: true }
+}
+
+/**
  * Retiring keeps the logs. The history of a practice someone did for two
  * months is theirs, and deleting it to tidy a list would be data loss.
  */
@@ -163,10 +231,22 @@ export async function retirePractice(userId: string, practiceId: string): Promis
   return { ok: result.count > 0 }
 }
 
-/** Today's practices for a coach prompt: name, floor and whether it's due. */
+/**
+ * Today's practices for a coach prompt: name, floor, what they planned for
+ * today, and whether it's done.
+ *
+ * The plan is included because it is the most specific true thing the coach
+ * can hold someone to — "you wrote squats for today" beats any sentence it
+ * could invent. The prompt (lib/era/coach.ts) is told it may use these and
+ * must never add to them.
+ */
 export async function practiceLinesForCoach(userId: string): Promise<string[]> {
   const { practices, today } = await loadPractices(userId)
   return practices
     .filter(p => isDueOn({ id: p.id, label: p.label, days: p.days, minimum: p.minimum }, today))
-    .map(p => `${p.label} — minimum ${p.minimum}${p.state === 'done' || p.state === 'minimum' ? ' (done today)' : ''}`)
+    .map(p => {
+      const plan = p.todaysPlan.length > 0 ? `, their own plan for today: ${p.todaysPlan.join(', ')}` : ''
+      const done = p.state === 'done' || p.state === 'minimum' ? ' (done today)' : ''
+      return `${p.label} — minimum ${p.minimum}${plan}${done}`
+    })
 }

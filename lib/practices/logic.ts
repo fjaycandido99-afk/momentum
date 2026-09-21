@@ -205,6 +205,19 @@ export interface PracticeWire {
   run: number
   /** The last seven days, oldest first. */
   week: { day: string; state: PracticeState }[]
+  /**
+   * Which session of their own split is next ("Pull"), where the preset
+   * defines a rotation. Never programming — see lib/practices/cues.ts.
+   */
+  cue: string | null
+  /** A Voxu session that fits this practice, when the app actually has one. */
+  session: { exerciseId: string; title: string; minutes: number } | null
+  /** Today's slot in their own plan — "Pull", "Monday", "Every day". */
+  slot: { key: string; label: string } | null
+  /** What they wrote for today. Their words; Voxu never parses them. */
+  todaysPlan: string[]
+  /** The whole plan, for the editor. */
+  plan: Record<string, string[]> | null
 }
 
 export interface PracticesPayload {
