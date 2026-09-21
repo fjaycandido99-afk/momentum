@@ -15,6 +15,8 @@ import type { PracticeWire } from '@/lib/practices/logic'
 import { haptic } from '@/lib/haptics'
 import { guideForDomain } from '@/lib/practices/guides'
 import { PracticeGuideSheet } from './PracticeGuideSheet'
+import { matchMovement } from '@/lib/movements/swap'
+import { MovementSheet } from './MovementSheet'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -71,6 +73,15 @@ export function PracticePlanSheet({
   const [busy, setBusy] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /**
+   * The row whose movement sheet is open.
+   *
+   * Only ever a row whose typed name matched the library exactly, so the
+   * affordance never appears next to "3 rounds of whatever" — offering
+   * swaps for a movement nobody named would be a guess.
+   */
+  const [swapRow, setSwapRow] = useState<{ slotKey: string; index: number } | null>(null)
+  const swapping = swapRow ? matchMovement(draft[swapRow.slotKey]?.items[swapRow.index]?.name ?? '') : null
 
   const setItem = (slotKey: string, index: number, patch: Partial<PlanItem>) => {
     setDraft(d => {
@@ -184,8 +195,11 @@ export function PracticePlanSheet({
                 <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">{slot.label}</p>
 
                 <div className="mt-2 space-y-2">
-                  {slotDraft.items.map((item, i) => (
-                    <div key={i} className="flex gap-2">
+                  {slotDraft.items.map((item, i) => {
+                    const matched = matchMovement(item.name)
+                    return (
+                    <div key={i}>
+                    <div className="flex gap-2">
                       <input
                         value={item.name}
                         onChange={e => setItem(slot.key, i, { name: e.target.value })}
@@ -212,7 +226,20 @@ export function PracticePlanSheet({
                         <X className="w-4 h-4" />
                       </button>
                     </div>
-                  ))}
+                    {/* Only for a name the library actually recognises. It
+                        offers other movements that train the same thing —
+                        it does not teach this one. */}
+                    {matched && (
+                      <button
+                        onClick={() => { haptic('light'); setSwapRow({ slotKey: slot.key, index: i }) }}
+                        className="text-[11px] text-white/40 hover:text-white/80 mt-1 ml-1 underline underline-offset-4 decoration-white/15"
+                      >
+                        No {matched.equipment[0]}? Something else instead
+                      </button>
+                    )}
+                    </div>
+                    )
+                  })}
                 </div>
 
                 {slotDraft.items.length < PLAN_MAX_ITEMS && (
@@ -262,6 +289,20 @@ export function PracticePlanSheet({
           presetKey={practice.presetKey}
           label={practice.label}
           onClose={() => setShowGuide(false)}
+        />
+      )}
+
+      {/* A swap replaces the text in the row and nothing else: the plan is
+          still whatever they saved, and it still isn't saved until they
+          press Save. */}
+      {swapRow && swapping && (
+        <MovementSheet
+          movement={swapping}
+          onSwap={replacement => {
+            setItem(swapRow.slotKey, swapRow.index, { name: replacement.name })
+            setSwapRow(null)
+          }}
+          onClose={() => setSwapRow(null)}
         />
       )}
     </div>

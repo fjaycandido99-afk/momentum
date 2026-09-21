@@ -8,6 +8,9 @@ import { PracticeGuideSheet } from './PracticeGuideSheet'
 import { dayName, daysLabel, minimumLine, type PracticesPayload, type PracticeWire } from '@/lib/practices/logic'
 import { haptic } from '@/lib/haptics'
 import { trackFeature } from '@/lib/analytics/track'
+import { matchMovement } from '@/lib/movements/swap'
+import type { Movement } from '@/lib/movements/library'
+import { MovementSheet } from './MovementSheet'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -192,6 +195,8 @@ function PracticeRow({
    */
   const [recoveryChoice, setRecoveryChoice] = useState<string | null>(null)
   const [shownSlot, setShownSlot] = useState<string | null>(null)
+  /** The movement whose alternatives are open, if any. */
+  const [movement, setMovement] = useState<Movement | null>(null)
   /** The detail, closed by default: the row is a daily answer, not a report. */
   const [open, setOpen] = useState(false)
   // "Change" reopens the three choices rather than flipping the answer:
@@ -307,14 +312,30 @@ function PracticeRow({
           </div>
           {shownContent.items.length > 0 ? (
             <ul className="mt-1 space-y-0.5">
-              {shownContent.items.map((item, i) => (
+              {shownContent.items.map((item, i) => {
+                const matched = matchMovement(item.name)
+                return (
                 <li key={i} className="text-[13px] text-white/80 leading-snug flex justify-between gap-3">
-                  <span className="min-w-0">{item.name}</span>
+                  {/* A recognised movement opens its alternatives. Read-only
+                      here on purpose: swapping mid-session is for today, and
+                      rewriting the day's list would change every future
+                      Monday too. */}
+                  {matched ? (
+                    <button
+                      onClick={() => { haptic('light'); setMovement(matched) }}
+                      className="min-w-0 text-left underline underline-offset-4 decoration-white/15 hover:decoration-white/50"
+                    >
+                      {item.name}
+                    </button>
+                  ) : (
+                    <span className="min-w-0">{item.name}</span>
+                  )}
                   {item.detail && (
                     <span className="text-white/45 tabular-nums shrink-0">{item.detail}</span>
                   )}
                 </li>
-              ))}
+                )
+              })}
             </ul>
           ) : (
             <p className="text-[12px] text-white/35 mt-1">Nothing written for this one yet.</p>
@@ -486,6 +507,8 @@ function PracticeRow({
           </button>
         )
       )}
+
+      {movement && <MovementSheet movement={movement} onClose={() => setMovement(null)} />}
     </div>
   )
 }
