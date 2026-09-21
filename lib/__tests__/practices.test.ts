@@ -9,6 +9,7 @@ import {
   minimumLine,
   stateOn,
   weekdayOf,
+  weekStrip,
   type LogLite,
   type PracticeLite,
 } from '@/lib/practices/logic'
@@ -135,6 +136,26 @@ describe('currentRun', () => {
   it('counts a minimum-only day as kept', () => {
     const logs = [log('2026-09-21', true, true), log('2026-09-22', true)]
     expect(currentRun(gym, logs, '2026-09-22')).toBe(2)
+  })
+})
+
+describe('weekStrip', () => {
+  it('returns seven days, oldest first, ending today', () => {
+    const strip = weekStrip(gym, [], '2026-09-20')
+    expect(strip).toHaveLength(7)
+    expect(strip[0].day).toBe('2026-09-14')
+    expect(strip[6].day).toBe('2026-09-20')
+  })
+
+  it('marks each day with what happened', () => {
+    const logs = [log('2026-09-21', true), log('2026-09-22', true, true), log('2026-09-24', false)]
+    const strip = weekStrip(gym, logs, '2026-09-25')
+    const at = (day: string) => strip.find(d => d.day === day)!.state
+    expect(at('2026-09-21')).toBe('done')
+    expect(at('2026-09-22')).toBe('minimum')
+    expect(at('2026-09-23')).toBe('rest') // Wednesday, not a training day
+    expect(at('2026-09-24')).toBe('missed')
+    expect(at('2026-09-25')).toBe('due') // today, unanswered
   })
 })
 

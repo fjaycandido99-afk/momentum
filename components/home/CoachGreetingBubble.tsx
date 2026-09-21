@@ -134,35 +134,17 @@ export function CoachGreetingBubble({ mindsetId, onVisibleChange }: CoachGreetin
     return () => clearTimeout(timer)
   }, [showBubble, pickLocalGreeting])
 
-  // ── Periodic nudge (every ~17 min) ────────────────────────
-  useEffect(() => {
-    nudgeTimerRef.current = setInterval(async () => {
-      if (!mountedRef.current) return
-      // Skip if popup active or bubble already showing
-      if ((window as any).__popupActive || visible) return
-
-      let nudgeMsg: string | null = null
-      try {
-        const res = await fetch('/api/daily-guide/smart-nudge')
-        if (res.ok) {
-          const data = await res.json()
-          if (data.type !== 'none' && data.message) {
-            nudgeMsg = data.message
-          }
-        }
-      } catch {
-        // silent
-      }
-
-      if (mountedRef.current) {
-        showBubble(nudgeMsg || pickLocalGreeting())
-      }
-    }, NUDGE_INTERVAL_MS)
-
-    return () => {
-      if (nudgeTimerRef.current) clearInterval(nudgeTimerRef.current)
-    }
-  }, [visible, showBubble, pickLocalGreeting])
+  /*
+   * There used to be a nudge here every ~17 minutes, for as long as the app
+   * stayed open, each one fetching /api/daily-guide/smart-nudge. Two
+   * problems: leaving Voxu open for an hour meant three unasked-for
+   * interruptions from a coach nobody had spoken to, and the request ran on
+   * a timer for every open tab of every user.
+   *
+   * SmartHomeNudge already makes exactly one contextual suggestion, with a
+   * dismissal that now sticks for the day. One system is enough, so the
+   * greeting below is all this component does: once per session, on arrival.
+   */
 
   // ── Cleanup on unmount ────────────────────────────────────
   useEffect(() => {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Zap, Wind, PenLine, Target, X } from 'lucide-react'
+import { useDismissed } from '@/hooks/useDismissed'
 
 interface SmartHomeNudgeProps {
   /** Is any audio currently playing? */
@@ -82,6 +83,7 @@ export function SmartHomeNudge(props: SmartHomeNudgeProps) {
   const [visible, setVisible] = useState(false)
   const [dismissed, setDismissed] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const { hidden, dismissForToday } = useDismissed('smart-home-nudge')
 
   const nudge = pickNudge(props)
 
@@ -103,7 +105,9 @@ export function SmartHomeNudge(props: SmartHomeNudgeProps) {
     if (props.isAudioActive) setVisible(false)
   }, [props.isAudioActive])
 
-  if (!visible || !nudge) return null
+  // A nudge dismissed at 9am came back every time home remounted, because
+  // "dismissed" was component state. It now stays gone for the day.
+  if (!visible || !nudge || hidden) return null
 
   const Icon = nudge.icon
 
@@ -111,7 +115,7 @@ export function SmartHomeNudge(props: SmartHomeNudgeProps) {
     <div className="px-6 mb-6 animate-fade-in-up">
       <div className="relative p-4 card-surface-lg">
         <button
-          onClick={() => setDismissed(true)}
+          onClick={() => { setDismissed(true); dismissForToday() }}
           className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors"
           aria-label="Dismiss"
         >

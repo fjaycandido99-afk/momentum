@@ -1,6 +1,6 @@
 'use client'
 
-import { Sunrise, Moon } from 'lucide-react'
+import { Sunrise, Moon, X } from 'lucide-react'
 
 interface WelcomeBackCardProps {
   daysAway: number
@@ -15,7 +15,17 @@ export function WelcomeBackCard({ daysAway, lastStreak, onDismiss }: WelcomeBack
   return (
     <div className="px-6 mt-4 mb-6 liquid-reveal section-fade-bg">
       <div className="relative p-5 card-surface-lg">
-        <div className="flex items-center gap-3 mb-3">
+        {/* An X, because "Let's do this" was the only way to close a card
+            about having been away — which made acknowledging it a
+            commitment. */}
+        <button
+          onClick={onDismiss}
+          aria-label="Dismiss"
+          className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors"
+        >
+          <X className="w-3.5 h-3.5 text-white/50" />
+        </button>
+        <div className="flex items-center gap-3 mb-3 pr-6">
           <div className="p-2 rounded-xl bg-[#111113] border border-white/15">
             <Icon className="w-5 h-5 text-amber-400/90" />
           </div>

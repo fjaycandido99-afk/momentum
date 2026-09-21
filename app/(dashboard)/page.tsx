@@ -15,7 +15,10 @@ export default function HomePage() {
 
   useEffect(() => {
     async function checkOnboarding() {
-      const minDelay = new Promise(resolve => setTimeout(resolve, 2800))
+      // A floor on the loading screen so it doesn't flash — 400ms, not the
+      // 2800 it was. That floor sat on TOP of the 3.5s splash, so opening
+      // Voxu took six seconds before anything could be read, every time.
+      const minDelay = new Promise(resolve => setTimeout(resolve, 400))
       try {
         const [response] = await Promise.all([
           authFetch('/api/daily-guide/preferences'),

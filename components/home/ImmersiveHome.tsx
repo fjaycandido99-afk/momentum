@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind, MessageCircle , Dumbbell } from 'lucide-react'
+import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Headphones, Wind, MessageCircle, Dumbbell, X } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
 import { SpiralLogo } from './SpiralLogo'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -58,6 +58,7 @@ import { WellnessWidget } from './WellnessWidget'
 import { DailyReadCard } from './DailyReadCard'
 import { useDailyRead } from '@/hooks/useDailyRead'
 import { useEra } from '@/hooks/useEra'
+import { useDismissed } from '@/hooks/useDismissed'
 import { autoplayNextEnabled } from '@/hooks/useAutoplayNext'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
@@ -102,6 +103,8 @@ export function ImmersiveHome() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [todaysAudio, setTodaysAudio] = useState<TodaysAudioSlot>({ session: 'morning_prime', title: 'Daily Guide', subtitle: 'Your session for today' })
   const [isWeekend, setIsWeekend] = useState(false)
+  // The weekend Week in Review card, dismissable for the day.
+  const weekReview = useDismissed('week-in-review')
   const [mounted, setMounted] = useState(false)
   const audioContext = useAudioOptional()
   const mindsetCtx = useMindsetOptional()
@@ -1584,20 +1587,31 @@ export function ImmersiveHome() {
           <DailyReadCard data={dailyRead.data} onAnswered={dailyRead.recordLocally} />
         )}
 
-        {/* Weekend: surface the Week in Review (otherwise buried in the journal). */}
-        {isWeekend && (
-          <Link href="/journal?review=1" className="block group">
-            <div className="relative p-5 card-surface-lg press-scale flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
-                <BarChart3 className="w-5 h-5 text-white" />
+        {/* Weekend: surface the Week in Review (otherwise buried in the
+            journal). Dismissable for the day — it used to reappear on every
+            open, both days, with no way to say no. */}
+        {isWeekend && !weekReview.hidden && (
+          <div className="relative">
+            <Link href="/journal?review=1" className="block group">
+              <div className="relative p-5 card-surface-lg press-scale flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
+                  <BarChart3 className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0 pr-6">
+                  <h2 className="text-base font-medium text-white">Your Week in Review</h2>
+                  <p className="text-xs text-white/70">Patterns, wins &amp; a fresh focus</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-white/80" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-base font-medium text-white">Your Week in Review</h2>
-                <p className="text-xs text-white/70">Patterns, wins &amp; a fresh focus</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-white/80" />
-            </div>
-          </Link>
+            </Link>
+            <button
+              onClick={weekReview.dismissForToday}
+              aria-label="Dismiss"
+              className="absolute top-2 right-2 p-1.5 rounded-full text-white/40 hover:text-white/80 hover:bg-white/10"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         )}
       </div>
 

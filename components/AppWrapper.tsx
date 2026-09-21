@@ -9,6 +9,7 @@ import { useHardwareBack } from '@/hooks/useHardwareBack'
 import { useNativePush } from '@/hooks/useNativePush'
 import { installAuthInterceptor } from '@/lib/auth-interceptor'
 import { createClient } from '@/lib/supabase/client'
+import { sweepDismissals } from '@/lib/ui/dismiss'
 import { initRevenueCat } from '@/lib/revenuecat'
 import { isNative as isNativePlatform, updateRemindersFromPreferences, getPendingReminders } from '@/lib/notifications'
 
@@ -111,6 +112,12 @@ export function AppWrapper({ children }: AppWrapperProps) {
         })
       } catch {}
     })
+  }, [])
+
+  // Yesterday's "dismissed for today" keys, cleared once per launch. One per
+  // card per day accumulates in a store shared with everything else we keep.
+  useEffect(() => {
+    sweepDismissals()
   }, [])
 
   // Sync timezone to server for timezone-aware notifications

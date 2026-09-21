@@ -5,6 +5,7 @@ import { X, UserPlus, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useTierOptional, type Tier } from '@/hooks/useTier'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { isDismissed, setDismissed as storeDismissal } from '@/lib/ui/dismiss'
 
 type TierPage = 'home' | 'coach' | 'journal' | 'focus' | 'progress' | 'settings'
 
@@ -35,8 +36,15 @@ const MESSAGES: Record<TierPage, { guest: string; free: string }> = {
   },
 }
 
-function getStorageKey(page: TierPage, tier: Tier) {
-  return `voxu_tier_banner_${page}_${tier}`
+/**
+ * Dismissed for the DAY, not the session.
+ *
+ * It used to live in sessionStorage, so someone on the free plan who closed
+ * this banner met it again on every cold launch, for ever. A day is long
+ * enough to be respectful and short enough that the offer still exists.
+ */
+function dismissId(page: TierPage, tier: Tier) {
+  return `tier-banner-${page}-${tier}`
 }
 
 interface TierBannerProps {
@@ -51,9 +59,7 @@ export function TierBanner({ page }: TierBannerProps) {
   useEffect(() => {
     if (tier === 'premium') return
     try {
-      const key = getStorageKey(page, tier)
-      const wasDismissed = sessionStorage.getItem(key) === '1'
-      setDismissed(wasDismissed)
+      setDismissed(isDismissed(dismissId(page, tier)))
     } catch {
       setDismissed(false)
     }
@@ -65,9 +71,7 @@ export function TierBanner({ page }: TierBannerProps) {
 
   const handleDismiss = () => {
     setDismissed(true)
-    try {
-      sessionStorage.setItem(getStorageKey(page, tier), '1')
-    } catch {}
+    storeDismissal(dismissId(page, tier), 'today')
   }
 
   return (

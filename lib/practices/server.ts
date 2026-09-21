@@ -7,6 +7,7 @@ import {
   adherence,
   cleanPractice,
   currentRun,
+  weekStrip,
   isCleanPractice,
   isDueOn,
   stateOn,
@@ -63,6 +64,7 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
       done: counts.done,
       of: counts.of,
       run: currentRun(lite, logs, today),
+      week: weekStrip(lite, logs, today),
     }
   })
 

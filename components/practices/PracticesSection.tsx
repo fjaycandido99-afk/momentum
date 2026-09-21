@@ -179,6 +179,25 @@ function PracticeRow({
         )}
       </div>
 
+      {/* The last seven days. Same language as the year grid on /proof:
+          filled means kept, an outline means it was asked for and missed,
+          and a faint dot is a day off. */}
+      <div className="flex items-center gap-1 mt-2" aria-hidden>
+        {practice.week.map(d => (
+          <span
+            key={d.day}
+            title={d.day}
+            className={`h-1.5 flex-1 rounded-full ${
+              d.state === 'done' ? 'bg-white'
+                : d.state === 'minimum' ? 'bg-white/60'
+                : d.state === 'missed' ? 'bg-transparent border border-white/25'
+                : d.state === 'due' ? 'bg-white/[0.18]'
+                : 'bg-white/[0.07]'
+            }`}
+          />
+        ))}
+      </div>
+
       {practice.state === 'rest' && !answered && (
         <p className="text-[12px] text-white/40 mt-2">Not today. Rest is part of the schedule.</p>
       )}

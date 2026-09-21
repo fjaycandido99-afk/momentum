@@ -107,6 +107,22 @@ export function currentRun(practice: PracticeLite, logs: LogLite[], today: strin
 }
 
 /**
+ * The last seven days, oldest first — what the strip on the card draws.
+ *
+ * Seven dots say more than a percentage: you can see that the misses were
+ * Monday and Tuesday, which is the thing worth knowing.
+ */
+export function weekStrip(practice: PracticeLite, logs: LogLite[], today: string): { day: string; state: PracticeState }[] {
+  const days: string[] = []
+  let day = today
+  for (let i = 0; i < 7; i++) {
+    days.unshift(day)
+    day = previousDay(day)
+  }
+  return days.map(d => ({ day: d, state: stateOn(practice, logs, d) }))
+}
+
+/**
  * The line that does the work.
  *
  * Not encouragement — a reminder of the floor THEY set, when they set it
@@ -149,6 +165,8 @@ export interface PracticeWire {
   of: number
   /** Consecutive due days kept. */
   run: number
+  /** The last seven days, oldest first. */
+  week: { day: string; state: PracticeState }[]
 }
 
 export interface PracticesPayload {

@@ -5,20 +5,49 @@ import { Sparkles, X, Heart, Send } from 'lucide-react'
 import { QUOTES, displayAuthor } from '@/lib/quotes'
 import { getNextSpark, Spark } from '@/lib/daily-sparks'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
+import { isDismissed, localDayKey, setDismissed } from '@/lib/ui/dismiss'
 
-const IDLE_TIMEOUT = 10 * 60 * 1000     // 10 minutes of no interaction
-const MIN_RECURRING = 30 * 60 * 1000     // 30 minutes
-const MAX_RECURRING = 60 * 60 * 1000     // 60 minutes
+/**
+ * ONCE A DAY, and not for the first few seconds.
+ *
+ * This used to show two seconds after home mounted, then re-arm itself
+ * forever: a 30–60 minute recurring timer AND a 10-minute idle watcher,
+ * whichever came first, re-armed on every dismissal and reset from scratch
+ * every time you navigated back to home. Sitting with the app open meant a
+ * quote every ten minutes, and there was no way to stop it.
+ *
+ * Now: at most one per local day, only once the screen has settled, never
+ * on top of another popup, and with a permanent "don't show these" for
+ * anyone who doesn't want it at all.
+ */
 const AUTO_DISMISS = 60 * 1000           // 60 seconds
-const INITIAL_DELAY = 2 * 1000           // 2 seconds on first mount
+const INITIAL_DELAY = 6 * 1000           // let home finish arriving first
+
+/** Once per local day. */
+const SHOWN_KEY = 'voxu.spark.shown-on'
+/** Their permanent off switch, via the shared dismissal store. */
+const OFF_ID = 'daily-spark'
 
 // Shared popup lock — prevents AffirmationPopup and DailySpark from overlapping
 declare global {
   interface Window { __popupActive?: boolean }
 }
 
-function randomBetween(min: number, max: number) {
-  return min + Math.random() * (max - min)
+/** Has today's already been shown? Local day, so it rolls at midnight here. */
+function shownToday(): boolean {
+  try {
+    return localStorage.getItem(SHOWN_KEY) === localDayKey()
+  } catch {
+    return false
+  }
+}
+
+function markShownToday() {
+  try {
+    localStorage.setItem(SHOWN_KEY, localDayKey())
+  } catch {
+    // Worst case it shows once more this session.
+  }
 }
 
 export function DailySpark() {
@@ -103,28 +132,6 @@ export function DailySpark() {
     autoDismissTimer.current = null
   }, [])
 
-  const scheduleNext = useCallback(() => {
-    // Start both a recurring timer and idle watcher — whichever fires first wins
-    recurringTimer.current = setTimeout(() => {
-      if (idleTimer.current) clearTimeout(idleTimer.current)
-      idleTimer.current = null
-      showSpark()
-    }, randomBetween(MIN_RECURRING, MAX_RECURRING))
-
-    resetIdleTimer()
-  }, [showSpark])
-
-  const resetIdleTimer = useCallback(() => {
-    // Don't reset idle while a spark is showing
-    if (isShowingRef.current) return
-    if (idleTimer.current) clearTimeout(idleTimer.current)
-    idleTimer.current = setTimeout(() => {
-      if (recurringTimer.current) clearTimeout(recurringTimer.current)
-      recurringTimer.current = null
-      showSpark()
-    }, IDLE_TIMEOUT)
-  }, [showSpark])
-
   const dismiss = useCallback((onComplete?: () => void) => {
     if (!isShowingRef.current) return
     setDismissing(true)
@@ -138,37 +145,32 @@ export function DailySpark() {
       setDismissing(false)
       isShowingRef.current = false
       window.__popupActive = false
-      // Schedule next spark after dismissal
-      scheduleNext()
+      // Deliberately does NOT schedule another. One a day.
       onComplete?.()
     }, 300)
-  }, [scheduleNext])
+  }, [])
 
-  // Initial spark on mount + activity listeners
+  /** "Don't show these" — off for good, from inside the popup itself. */
+  const turnOff = useCallback(() => {
+    setDismissed(OFF_ID, 'forever')
+    dismiss()
+  }, [dismiss])
+
+  // Once a day, after the screen has settled, and never over another popup.
   useEffect(() => {
-    let initialTimer: ReturnType<typeof setTimeout> | null = null
-    const alreadyShown = sessionStorage.getItem('voxu_spark_shown')
+    if (isDismissed(OFF_ID) || shownToday()) return
 
-    if (!alreadyShown) {
-      // First time this session — show after delay
-      initialTimer = setTimeout(() => {
-        sessionStorage.setItem('voxu_spark_shown', '1')
-        showSpark()
-      }, INITIAL_DELAY)
-    } else {
-      // Already shown this session — just start idle/recurring timers
-      scheduleNext()
-    }
-
-    // Track user activity for idle detection
-    const onActivity = () => resetIdleTimer()
-    const events = ['pointerdown', 'scroll', 'keydown'] as const
-    events.forEach(e => window.addEventListener(e, onActivity, { passive: true }))
+    const timer = setTimeout(() => {
+      // Another popup owns the screen (the morning hero, say): today's spark
+      // simply doesn't happen. Queueing it behind would be two interruptions.
+      if (window.__popupActive) return
+      markShownToday()
+      showSpark()
+    }, INITIAL_DELAY)
 
     return () => {
-      if (initialTimer) clearTimeout(initialTimer)
+      clearTimeout(timer)
       clearAllTimers()
-      events.forEach(e => window.removeEventListener(e, onActivity))
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -440,6 +442,16 @@ export function DailySpark() {
               </button>
             </div>
           )}
+
+          {/* The off switch, where someone who is tired of these will look
+              for it. Small, but present — a popup with no way to stop it is
+              the reason people close an app instead of a card. */}
+          <button
+            onClick={turnOff}
+            className="block mx-auto mt-4 text-[11px] text-white/35 hover:text-white/60"
+          >
+            Don&rsquo;t show these
+          </button>
         </div>
       </div>
     </div>

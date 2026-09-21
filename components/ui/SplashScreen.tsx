@@ -7,13 +7,21 @@ interface SplashScreenProps {
   minDuration?: number
 }
 
-export function SplashScreen({ onComplete, minDuration = 3500 }: SplashScreenProps) {
+/**
+ * 1.8s, not 3.5s.
+ *
+ * The splash covers the app's first paint, and it was holding the screen for
+ * three and a half seconds — with the home screen's own 2.8s floor behind it.
+ * Six seconds of branding before a single word could be read, every single
+ * launch, on the app someone opens to be told what to do today.
+ */
+export function SplashScreen({ onComplete, minDuration = 1800 }: SplashScreenProps) {
   const [fadeOut, setFadeOut] = useState(false)
   const [showText, setShowText] = useState(false)
 
   // Show text after delay
   useEffect(() => {
-    const textTimer = setTimeout(() => setShowText(true), 500)
+    const textTimer = setTimeout(() => setShowText(true), 300)
     return () => clearTimeout(textTimer)
   }, [])
 
