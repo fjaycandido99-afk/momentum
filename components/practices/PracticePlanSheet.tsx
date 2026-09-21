@@ -1,8 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, X } from 'lucide-react'
-import { PLAN_MAX_ITEMS, PLAN_MAX_ITEM_LENGTH, planCopy, slotsFor } from '@/lib/practices/plan'
+import { Loader2, Plus, X } from 'lucide-react'
+import {
+  PLAN_MAX_DETAIL_LENGTH,
+  PLAN_MAX_ITEMS,
+  PLAN_MAX_ITEM_LENGTH,
+  planCopy,
+  slotsFor,
+  type PlanItem,
+} from '@/lib/practices/plan'
 import { PRESETS_BY_KEY } from '@/lib/practices/presets'
 import type { PracticeWire } from '@/lib/practices/logic'
 import { haptic } from '@/lib/haptics'
@@ -11,17 +18,28 @@ import { PracticeGuideSheet } from './PracticeGuideSheet'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
+/** A slot as the editor holds it while it's being typed. */
+interface DraftSlot {
+  items: PlanItem[]
+  minimum: string
+}
+
 /**
- * The plan: what THEY do on each day of a practice.
+ * The builder: what YOU do on each day of a discipline.
  *
- * One box per slot — a named split gets Push/Pull/Legs, anything else gets
- * its scheduled days, and an every-day practice gets a single box. The
- * wording follows the domain, because a training day is a list of exercises
- * and a run is one goal; asking "what exercises?" about a book would be the
- * app not knowing what it's looking at.
+ * It was a textarea, which read as a notes field — so it got treated like
+ * one. Each day is now rows: what it is, and optionally how much ("3 x 8",
+ * "20 pages", "easy pace"), plus this day's own floor, because a Friday
+ * after a long week is not the same ask as a Monday.
  *
- * Voxu never suggests the contents and never reads them back as data. It
- * stores the lines and shows the right ones on the right day.
+ * One list per slot: a named split gets Push/Pull/Legs, anything else gets
+ * its scheduled days, and an every-day practice gets a single list. The
+ * wording follows the domain — asking "what exercises?" about a book would
+ * be the app not knowing what it's looking at.
+ *
+ * Voxu stores every word verbatim and parses none of it. It writes no
+ * programmes, suggests no exercises, and reads no set, rep or load: it
+ * doesn't know anyone's body, and PracticeGuideSheet says that out loud.
  */
 export function PracticePlanSheet({
   practice,
@@ -37,23 +55,66 @@ export function PracticePlanSheet({
   const slots = slotsFor({ presetKey: practice.presetKey, days: practice.days })
   const guide = guideForDomain(domain)
 
-  const [draft, setDraft] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {}
-    for (const slot of slots) initial[slot.key] = (practice.plan?.[slot.key] ?? []).join('\n')
+  const [draft, setDraft] = useState<Record<string, DraftSlot>>(() => {
+    const initial: Record<string, DraftSlot> = {}
+    for (const slot of slots) {
+      const stored = practice.plan?.[slot.key]
+      initial[slot.key] = {
+        // One empty row to type into, so the first thing on screen is a
+        // place to start rather than a button to find.
+        items: stored?.items.length ? stored.items : [{ name: '' }],
+        minimum: stored?.minimum ?? '',
+      }
+    }
     return initial
   })
   const [busy, setBusy] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const setItem = (slotKey: string, index: number, patch: Partial<PlanItem>) => {
+    setDraft(d => {
+      const slot = d[slotKey]
+      const items = slot.items.map((item, i) => (i === index ? { ...item, ...patch } : item))
+      return { ...d, [slotKey]: { ...slot, items } }
+    })
+  }
+
+  const addRow = (slotKey: string) => {
+    haptic('light')
+    setDraft(d => {
+      const slot = d[slotKey]
+      if (slot.items.length >= PLAN_MAX_ITEMS) return d
+      return { ...d, [slotKey]: { ...slot, items: [...slot.items, { name: '' }] } }
+    })
+  }
+
+  const removeRow = (slotKey: string, index: number) => {
+    haptic('light')
+    setDraft(d => {
+      const slot = d[slotKey]
+      const items = slot.items.filter((_, i) => i !== index)
+      return { ...d, [slotKey]: { ...slot, items: items.length ? items : [{ name: '' }] } }
+    })
+  }
+
   const save = async () => {
     setBusy(true)
     setError(null)
-    const plan: Record<string, string[]> = {}
-    for (const [key, text] of Object.entries(draft)) {
-      const lines = text.split('\n').map(l => l.trim()).filter(Boolean).slice(0, PLAN_MAX_ITEMS)
-      if (lines.length > 0) plan[key] = lines
+    // Blank rows are dropped here and again on the server; the server's
+    // pass is the one that counts.
+    const plan: Record<string, { items: PlanItem[]; minimum?: string }> = {}
+    for (const [key, slot] of Object.entries(draft)) {
+      const items = slot.items
+        .map(item => {
+          const detail = item.detail?.trim()
+          return detail ? { name: item.name.trim(), detail } : { name: item.name.trim() }
+        })
+        .filter(item => item.name.length > 0)
+      const minimum = slot.minimum.trim()
+      if (items.length > 0 || minimum) plan[key] = minimum ? { items, minimum } : { items }
     }
+
     try {
       const res = await fetch('/api/practices', {
         method: 'POST',
@@ -107,36 +168,80 @@ export function PracticePlanSheet({
         <div className="mt-3 rounded-xl bg-white/[0.04] border border-white/[0.1] p-3">
           <p className="text-[13px] text-white/75 leading-snug">{guide.title}</p>
           <p className="text-[12px] text-white/45 mt-0.5 leading-snug">{guide.keystone}</p>
-          <button onClick={() => setShowGuide(true)} className="text-[12px] text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 mt-1.5">
+          <button
+            onClick={() => setShowGuide(true)}
+            className="text-[12px] text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 mt-1.5"
+          >
             Read the steps
           </button>
         </div>
 
-        <div className="mt-4 space-y-4">
-          {slots.map(slot => (
-            <div key={slot.key}>
-              <label
-                htmlFor={`plan-${slot.key}`}
-                className="block text-[11px] uppercase tracking-[0.2em] text-white/45"
-              >
-                {slot.label}
-              </label>
-              <textarea
-                id={`plan-${slot.key}`}
-                value={draft[slot.key] ?? ''}
-                onChange={e => setDraft(d => ({ ...d, [slot.key]: e.target.value }))}
-                rows={copy.multiline ? 4 : 2}
-                maxLength={PLAN_MAX_ITEMS * (PLAN_MAX_ITEM_LENGTH + 1)}
-                placeholder={copy.placeholder}
-                className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/25 leading-relaxed resize-none"
-              />
-            </div>
-          ))}
+        <div className="mt-5 space-y-6">
+          {slots.map(slot => {
+            const slotDraft = draft[slot.key]
+            return (
+              <div key={slot.key}>
+                <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">{slot.label}</p>
+
+                <div className="mt-2 space-y-2">
+                  {slotDraft.items.map((item, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        value={item.name}
+                        onChange={e => setItem(slot.key, i, { name: e.target.value })}
+                        maxLength={PLAN_MAX_ITEM_LENGTH}
+                        placeholder={copy.rowPlaceholder}
+                        aria-label={`${slot.label}: ${copy.noun} ${i + 1}`}
+                        className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/25"
+                      />
+                      {copy.showsDetail && (
+                        <input
+                          value={item.detail ?? ''}
+                          onChange={e => setItem(slot.key, i, { detail: e.target.value })}
+                          maxLength={PLAN_MAX_DETAIL_LENGTH}
+                          placeholder={copy.detailPlaceholder}
+                          aria-label={`${slot.label}: how much, row ${i + 1}`}
+                          className="w-24 shrink-0 px-2.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[14px] text-white placeholder:text-white/25 text-center"
+                        />
+                      )}
+                      <button
+                        onClick={() => removeRow(slot.key, i)}
+                        aria-label={`Remove ${item.name || 'this row'}`}
+                        className="shrink-0 px-2 rounded-xl text-white/30 hover:text-white/70 hover:bg-white/[0.06]"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {slotDraft.items.length < PLAN_MAX_ITEMS && (
+                  <button
+                    onClick={() => addRow(slot.key)}
+                    className="flex items-center gap-1 text-[12px] text-white/55 hover:text-white mt-2"
+                  >
+                    <Plus className="w-3 h-3" /> Add {copy.noun}
+                  </button>
+                )}
+
+                {/* This day's own floor. Optional — without one, the
+                    practice's minimum applies. */}
+                <input
+                  value={slotDraft.minimum}
+                  onChange={e => setDraft(d => ({ ...d, [slot.key]: { ...d[slot.key], minimum: e.target.value } }))}
+                  maxLength={PLAN_MAX_ITEM_LENGTH}
+                  placeholder={`Minimum for ${slot.label.toLowerCase()} — else “${practice.minimum}”`}
+                  aria-label={`Minimum for ${slot.label}`}
+                  className="w-full mt-3 px-3 py-2 rounded-xl bg-transparent border border-white/[0.12] text-[13px] text-white/80 placeholder:text-white/25"
+                />
+              </div>
+            )
+          })}
         </div>
 
         {error && <p className="text-sm text-white/80 mt-3" role="alert">{error}</p>}
 
-        <p className="text-[11px] text-white/35 mt-3 leading-relaxed">
+        <p className="text-[11px] text-white/35 mt-4 leading-relaxed">
           Your words, shown back on the day. Voxu doesn&rsquo;t grade them, count them or write
           them for you — it doesn&rsquo;t know your body{domain === 'gym' ? ', your gym' : ''} or
           your shelf.

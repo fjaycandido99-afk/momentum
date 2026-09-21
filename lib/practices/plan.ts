@@ -23,9 +23,35 @@ import { daysLabel, weekdayOf, type PracticeLite } from './logic'
 
 export const PLAN_MAX_ITEMS = 12
 export const PLAN_MAX_ITEM_LENGTH = 80
+/** "3 x 8 at 60kg" is a note, not a paragraph. */
+export const PLAN_MAX_DETAIL_LENGTH = 40
 
 /** A plan is slot key → the lines for that slot. */
-export type PracticePlan = Record<string, string[]>
+/**
+ * One row of a day: what it is, and optionally how much.
+ *
+ * `detail` is free text the user types ("3 x 8", "20 pages", "easy pace").
+ * Voxu stores and shows it and NEVER parses it — the moment the app reads
+ * "3 x 8" as data it is a workout tracker with an opinion about your
+ * programme, which is the line we are not crossing.
+ */
+export interface PlanItem {
+  name: string
+  detail?: string
+}
+
+/** What one slot holds: its rows, and its own floor if it has one. */
+export interface PlanSlotContent {
+  items: PlanItem[]
+  /**
+   * The minimum for THIS day, overriding the practice's own ("first two
+   * exercises", "20 minutes counts"). A Friday after a long week is not
+   * the same ask as a Monday, and one global floor could not say that.
+   */
+  minimum?: string
+}
+
+export type PracticePlan = Record<string, PlanSlotContent>
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -75,15 +101,18 @@ export function slotForToday(
 }
 
 /** The lines for a slot, or an empty list. */
-export function planFor(plan: PracticePlan | null | undefined, slot: PlanSlot | null): string[] {
-  if (!plan || !slot) return []
-  return plan[slot.key] ?? []
+export function planFor(
+  plan: PracticePlan | null | undefined,
+  slot: PlanSlot | null,
+): PlanSlotContent | null {
+  if (!plan || !slot) return null
+  return plan[slot.key] ?? null
 }
 
 /** Does this practice have anything written down at all? */
 export function hasPlan(plan: PracticePlan | null | undefined): boolean {
   if (!plan) return false
-  return Object.values(plan).some(items => items.length > 0)
+  return Object.values(plan).some(slot => slot.items.length > 0)
 }
 
 /**
@@ -103,24 +132,59 @@ export function cleanPlan(
 
   for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
     if (!allowed.has(key)) continue
-    const items = (Array.isArray(value) ? value : [])
-      .filter((item): item is string => typeof item === 'string')
-      .map(item => item.trim().replace(/\s+/g, ' ').slice(0, PLAN_MAX_ITEM_LENGTH))
-      .filter(item => item.length > 0)
-      .slice(0, PLAN_MAX_ITEMS)
-    if (items.length > 0) out[key] = items
+    const content = readSlot(value)
+    if (content) out[key] = content
   }
   return out
+}
+
+/** A single field, trimmed and capped. */
+function text(value: unknown, max = PLAN_MAX_ITEM_LENGTH): string {
+  return typeof value === 'string' ? value.trim().replace(/\s+/g, ' ').slice(0, max) : ''
+}
+
+/**
+ * One slot, from any shape we have ever stored or been sent:
+ *  - ["Squat", "Bench"]                       (the first version)
+ *  - [{ name: 'Squat', detail: '3 x 8' }]     (rows)
+ *  - { items: [...], minimum: '20 minutes' }  (rows with their own floor)
+ *
+ * Returns null for a slot with nothing in it, so empty slots never take up
+ * space in storage.
+ */
+function readSlot(value: unknown): PlanSlotContent | null {
+  const raw = Array.isArray(value)
+    ? { items: value }
+    : (value && typeof value === 'object' ? value as { items?: unknown; minimum?: unknown } : null)
+  if (!raw) return null
+
+  const items: PlanItem[] = (Array.isArray(raw.items) ? raw.items : [])
+    .map(item => {
+      // A bare string is the old format, and still what the simpler
+      // domains send: a book title has no "detail".
+      if (typeof item === 'string') return { name: text(item) }
+      if (item && typeof item === 'object') {
+        const row = item as { name?: unknown; detail?: unknown }
+        const detail = text(row.detail, PLAN_MAX_DETAIL_LENGTH)
+        return detail ? { name: text(row.name), detail } : { name: text(row.name) }
+      }
+      return { name: '' }
+    })
+    .filter(item => item.name.length > 0)
+    .slice(0, PLAN_MAX_ITEMS)
+
+  const minimum = text(raw.minimum, PLAN_MAX_ITEM_LENGTH)
+  if (items.length === 0 && !minimum) return null
+  return minimum ? { items, minimum } : { items }
 }
 
 /** Parse a stored JSON value back into a plan, ignoring anything odd. */
 export function parsePlan(value: unknown): PracticePlan | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   const out: PracticePlan = {}
-  for (const [key, items] of Object.entries(value as Record<string, unknown>)) {
-    if (!Array.isArray(items)) continue
-    const lines = items.filter((i): i is string => typeof i === 'string')
-    if (lines.length > 0) out[key] = lines
+  for (const [key, slot] of Object.entries(value as Record<string, unknown>)) {
+    const content = readSlot(slot)
+    if (content) out[key] = content
   }
   return Object.keys(out).length > 0 ? out : null
 }
@@ -137,7 +201,7 @@ export function scheduleLabel(practice: PracticeLite): string {
  * would be the app not knowing what it's looking at.
  */
 export interface PlanCopy {
-  /** The question above the boxes. */
+  /** The question above the rows. */
   ask: string
   /** One line under it. */
   hint: string
@@ -147,6 +211,16 @@ export interface PlanCopy {
   noun: string
   /** Most domains are one line; training is a list. */
   multiline: boolean
+  /** Placeholder for a row's name. */
+  rowPlaceholder: string
+  /**
+   * Whether the "how much" field appears at all. A gym set needs one; a
+   * book title does not, and an empty box beside a book is a question the
+   * screen is asking for no reason.
+   */
+  showsDetail: boolean
+  /** Placeholder for that field. */
+  detailPlaceholder: string
 }
 
 export const PLAN_COPY: Record<string, PlanCopy> = {
@@ -156,6 +230,9 @@ export const PLAN_COPY: Record<string, PlanCopy> = {
     placeholder: 'Lat pulldown\nSquat\nDumbbell press',
     noun: 'exercise',
     multiline: true,
+    rowPlaceholder: 'Squat',
+    showsDetail: true,
+    detailPlaceholder: '3 x 8',
   },
   run: {
     ask: 'What’s the run?',
@@ -163,6 +240,9 @@ export const PLAN_COPY: Record<string, PlanCopy> = {
     placeholder: '4 miles in an hour',
     noun: 'goal',
     multiline: false,
+    rowPlaceholder: 'Easy run',
+    showsDetail: true,
+    detailPlaceholder: '4 miles',
   },
   read: {
     ask: 'What are you reading?',
@@ -170,6 +250,9 @@ export const PLAN_COPY: Record<string, PlanCopy> = {
     placeholder: 'Rich Dad Poor Dad',
     noun: 'book',
     multiline: false,
+    rowPlaceholder: 'Rich Dad Poor Dad',
+    showsDetail: true,
+    detailPlaceholder: '20 pages',
   },
   study: {
     ask: 'What are you studying?',
@@ -177,6 +260,9 @@ export const PLAN_COPY: Record<string, PlanCopy> = {
     placeholder: 'Chapter 4 problem set',
     noun: 'subject',
     multiline: true,
+    rowPlaceholder: 'Chapter 4 problem set',
+    showsDetail: true,
+    detailPlaceholder: '45 min',
   },
   work: {
     ask: 'What’s the work?',
@@ -184,6 +270,9 @@ export const PLAN_COPY: Record<string, PlanCopy> = {
     placeholder: 'Ship the landing page',
     noun: 'task',
     multiline: true,
+    rowPlaceholder: 'Ship the landing page',
+    showsDetail: true,
+    detailPlaceholder: '45 min',
   },
   mind: {
     ask: 'What are you practising?',
@@ -191,6 +280,9 @@ export const PLAN_COPY: Record<string, PlanCopy> = {
     placeholder: 'Box breathing, 5 minutes',
     noun: 'practice',
     multiline: false,
+    rowPlaceholder: 'Box breathing',
+    showsDetail: true,
+    detailPlaceholder: '5 min',
   },
   custom: {
     ask: 'What does it involve?',
@@ -198,6 +290,9 @@ export const PLAN_COPY: Record<string, PlanCopy> = {
     placeholder: 'Scales for 10 minutes',
     noun: 'item',
     multiline: true,
+    rowPlaceholder: 'Scales',
+    showsDetail: true,
+    detailPlaceholder: '10 min',
   },
 }
 

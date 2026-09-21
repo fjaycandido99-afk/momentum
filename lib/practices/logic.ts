@@ -290,10 +290,22 @@ export interface PracticeWire {
   session: { exerciseId: string; title: string; minutes: number } | null
   /** Today's slot in their own plan — "Pull", "Monday", "Every day". */
   slot: { key: string; label: string } | null
-  /** What they wrote for today. Their words; Voxu never parses them. */
-  todaysPlan: string[]
+  /** What they wrote for today: rows and, if set, this day's own floor. */
+  todaysPlan: { items: { name: string; detail?: string }[]; minimum?: string } | null
+  /**
+   * The floor that applies TODAY — the day's own if it has one, else the
+   * practice's. One field so the UI can never show the wrong one.
+   */
+  todaysMinimum: string
+  /** After a missed session: one line and the ways out of it. */
+  recovery: {
+    line: string
+    options: { key: string; label: string }[]
+    slotKey: string | null
+    slotLabel: string | null
+  } | null
   /** The whole plan, for the editor. */
-  plan: Record<string, string[]> | null
+  plan: Record<string, { items: { name: string; detail?: string }[]; minimum?: string }> | null
   /** The next day it is expected, for a rest day to point at. */
   nextDue: string | null
   /** The weekday they miss most, with its counts. Null until it is worth saying. */

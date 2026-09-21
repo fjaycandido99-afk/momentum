@@ -183,6 +183,15 @@ function PracticeRow({
   onGuide?: () => void
 }) {
   const [confirmRetire, setConfirmRetire] = useState(false)
+  /**
+   * Which recovery option they picked, and which slot to show because of it.
+   *
+   * Deliberately view-only state: "do Monday instead" changes which list is
+   * in front of them, not the record. The record is still one answer for
+   * today, so there is no new per-day state to keep in step.
+   */
+  const [recoveryChoice, setRecoveryChoice] = useState<string | null>(null)
+  const [shownSlot, setShownSlot] = useState<string | null>(null)
   /** The detail, closed by default: the row is a daily answer, not a report. */
   const [open, setOpen] = useState(false)
   // "Change" reopens the three choices rather than flipping the answer:
@@ -191,6 +200,20 @@ function PracticeRow({
   const answered = !editing
     && (practice.state === 'done' || practice.state === 'minimum' || practice.state === 'missed')
   const choosing = editing || practice.state === 'due'
+
+  // The moved-to day if they asked for one, otherwise today's.
+  const movedItems = shownSlot ? practice.plan?.[shownSlot]?.items ?? [] : null
+  const shownContent = shownSlot
+    ? {
+        slot: true,
+        label: practice.recovery?.slotLabel ?? shownSlot,
+        items: movedItems ?? [],
+      }
+    : {
+        slot: !!practice.slot,
+        label: practice.cue ?? practice.slot?.label ?? '',
+        items: practice.todaysPlan?.items ?? [],
+      }
 
   const choose = (done: boolean, minimumOnly?: boolean) => {
     setEditing(false)
@@ -203,7 +226,7 @@ function PracticeRow({
         <div className="min-w-0">
           <p className="text-[15px] text-white leading-snug truncate">{practice.label}</p>
           <p className="text-[11px] text-white/45 mt-0.5">
-            {daysLabel(practice.days)} · minimum {practice.minimum}
+            {daysLabel(practice.days)} · minimum {practice.todaysMinimum}
           </p>
         </div>
         {/* Counts with their denominator in view — never a bare percentage. */}
@@ -233,25 +256,64 @@ function PracticeRow({
         ))}
       </div>
 
-      {/* Their own plan for today — the exercises, the run, the book. Shown,
-          never graded: the single Done/Minimum/No answer below is still the
-          only thing recorded. */}
-      {practice.slot && (practice.todaysPlan.length > 0 || onPlan) && practice.state !== 'rest' && (
+      {/* After a missed session: scheduling answers, not a lecture. Never
+          "you broke your streak", and never "do double today" — moving it,
+          carrying on and doing the floor are all fine answers. Choosing one
+          is a VIEW choice: it changes which list is shown, and the single
+          Done / Minimum / Not today is still the only thing recorded. */}
+      {practice.recovery && !answered && (
+        <div className="mt-2.5 rounded-lg bg-white/[0.05] border border-white/[0.14] px-3 py-2.5">
+          <p className="text-[13px] text-white/85 leading-snug">{practice.recovery.line}</p>
+          {practice.recovery.options.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {practice.recovery.options.map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => {
+                    haptic('light')
+                    setRecoveryChoice(opt.key)
+                    if (opt.key === 'move' && practice.recovery?.slotKey) {
+                      setShownSlot(practice.recovery.slotKey)
+                    }
+                  }}
+                  className={`text-[12px] rounded-full px-2.5 py-1 border ${
+                    recoveryChoice === opt.key
+                      ? 'bg-white text-black border-white'
+                      : 'border-white/20 text-white/75'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Their own plan for the day being shown — the exercises with whatever
+          detail they typed, the run, the book. Shown, never graded, and
+          never parsed: "3 x 8" is a note to themselves. */}
+      {shownContent.slot && (shownContent.items.length > 0 || onPlan) && practice.state !== 'rest' && (
         <div className="mt-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] px-3 py-2">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[10px] tracking-[0.18em] uppercase text-white/40">
-              {practice.cue ?? practice.slot.label}
+              {shownContent.label}
             </p>
             {onPlan && (
               <button onClick={onPlan} className="text-[11px] text-white/45 hover:text-white/80">
-                {practice.todaysPlan.length > 0 ? 'Edit' : 'Add'}
+                {shownContent.items.length > 0 ? 'Edit' : 'Add'}
               </button>
             )}
           </div>
-          {practice.todaysPlan.length > 0 ? (
+          {shownContent.items.length > 0 ? (
             <ul className="mt-1 space-y-0.5">
-              {practice.todaysPlan.map((item, i) => (
-                <li key={i} className="text-[13px] text-white/80 leading-snug">{item}</li>
+              {shownContent.items.map((item, i) => (
+                <li key={i} className="text-[13px] text-white/80 leading-snug flex justify-between gap-3">
+                  <span className="min-w-0">{item.name}</span>
+                  {item.detail && (
+                    <span className="text-white/45 tabular-nums shrink-0">{item.detail}</span>
+                  )}
+                </li>
               ))}
             </ul>
           ) : (
@@ -271,7 +333,9 @@ function PracticeRow({
 
       {choosing && (
         <>
-          <p className="text-[13px] text-white/70 mt-2 leading-snug">{minimumLine(practice)}</p>
+          <p className="text-[13px] text-white/70 mt-2 leading-snug">
+            {minimumLine({ ...practice, minimum: practice.todaysMinimum })}
+          </p>
           <div className="flex gap-2 mt-2.5">
             <button
               onClick={() => choose(true)}

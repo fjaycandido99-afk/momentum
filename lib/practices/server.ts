@@ -6,6 +6,7 @@ import { isBlocker } from '@/lib/era/reasons'
 import { MAX_PRACTICES, PRESETS_BY_KEY } from './presets'
 import { rotationCue, sessionForDomain } from './cues'
 import { cleanPlan, parsePlan, planFor, slotForToday } from './plan'
+import { findRecovery, recoveryCopy } from './recovery'
 import { exerciseById } from '@/lib/exercises/library'
 import {
   adherence,
@@ -69,11 +70,18 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
     const logs = row.logs.map(l => ({ day: l.local_day, done: l.done, minimumOnly: l.minimum_only }))
     const counts = adherence(lite, logs, from, today)
     const plan = parsePlan(row.plan)
-    const slot = slotForToday(
-      { presetKey: row.preset_key, days: row.days },
-      today,
-      keptByPractice.get(row.id) ?? 0,
-    )
+    const kept = keptByPractice.get(row.id) ?? 0
+    const slot = slotForToday({ presetKey: row.preset_key, days: row.days }, today, kept)
+    const todaysPlan = planFor(plan, slot)
+    // After a missed session: reschedule, not "do double tomorrow".
+    const recovery = findRecovery({ ...lite, presetKey: row.preset_key }, logs, today, kept)
+    const recoveryWire = recovery
+      ? {
+          ...recoveryCopy(recovery, { minimum: todaysPlan?.minimum || row.minimum }, isDueOn(lite, today)),
+          slotKey: recovery.slotKey,
+          slotLabel: recovery.slotLabel,
+        }
+      : null
     return {
       id: row.id,
       presetKey: row.preset_key,
@@ -86,11 +94,13 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
       of: counts.of,
       run: currentRun(lite, logs, today),
       week: weekStrip(lite, logs, today),
-      cue: rotationCue(row.preset_key, keptByPractice.get(row.id) ?? 0),
+      cue: rotationCue(row.preset_key, kept),
       session: sessionFor(row.preset_key),
       slot,
-      todaysPlan: planFor(plan, slot),
+      todaysPlan,
       plan,
+      todaysMinimum: todaysPlan?.minimum || row.minimum,
+      recovery: recoveryWire,
       nextDue: nextDueDay(lite, today),
       weakDay: weakestWeekday(lite, logs, from, today),
     }
@@ -218,7 +228,11 @@ export async function savePlan(
     // An empty plan clears the column rather than storing {}, so "has a
     // plan" stays a simple null check. Prisma needs DbNull for a nullable
     // Json column — a bare null would mean "the JSON value null".
-    data: { plan: Object.keys(plan).length > 0 ? plan : Prisma.DbNull },
+    data: {
+      plan: Object.keys(plan).length > 0
+        ? (plan as unknown as Prisma.InputJsonValue)
+        : Prisma.DbNull,
+    },
   })
   return { ok: true }
 }
@@ -249,7 +263,10 @@ export async function practiceLinesForCoach(userId: string): Promise<string[]> {
   return practices
     .filter(p => isDueOn({ id: p.id, label: p.label, days: p.days, minimum: p.minimum }, today))
     .map(p => {
-      const plan = p.todaysPlan.length > 0 ? `, their own plan for today: ${p.todaysPlan.join(', ')}` : ''
+      const items = p.todaysPlan?.items ?? []
+      const plan = items.length > 0
+        ? `, their own plan for today: ${items.map(i => (i.detail ? `${i.name} (${i.detail})` : i.name)).join(', ')}`
+        : ''
       const done = p.state === 'done' || p.state === 'minimum' ? ' (done today)' : ''
       return `${p.label} — minimum ${p.minimum}${plan}${done}`
     })
