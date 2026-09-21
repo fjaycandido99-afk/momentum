@@ -11,6 +11,7 @@ import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { programFor } from '@/lib/era/programs'
 import { alignmentLine } from '@/lib/era/alignment'
 import { trackFeature } from '@/lib/analytics/track'
+import { PracticeSection } from '@/components/exercise/PracticeSection'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -420,6 +421,11 @@ function ActiveEra({
           })}
         </div>
       </div>
+
+      {/* Practice: the exercise Voxu runs WITH you. The mission below is the
+          thing you go and do in the world — two different asks, deliberately
+          not merged. */}
+      <PracticeSection hasEra />
 
       {era.mission && (
         <div className="rounded-2xl border border-white/[0.12] p-4">

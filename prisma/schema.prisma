@@ -71,6 +71,9 @@ model User {
 
   // Era
   eras Era[]
+
+  // The practice step of a day — a guided exercise Voxu ran with them
+  exerciseRuns ExerciseRun[]
 }
 
 model Subscription {
@@ -1173,4 +1176,48 @@ model EraReferral {
   @@unique([invitee_user_id, inviter_era_id])
   @@index([inviter_user_id])
   @@index([inviter_era_id])
+}
+
+/// One run of a guided exercise — the practice step of a day.
+///
+/// A row is written when someone STARTS, and updated when they finish, so
+/// the ones people abandon are visible: "which exercises do users quit" is
+/// the question that makes this table worth having, and only recording
+/// completions would answer it with silence.
+///
+/// `helped` is deliberately not a mood rating. It asks about the EXERCISE
+/// ("did that settle you?"), not about the person's mental state, so it
+/// needs no wellness consent and cannot be read as a self-diagnosis — see
+/// lib/wellness/scales.ts for why that line matters.
+model ExerciseRun {
+  id      String @id @default(cuid())
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  /// The era it was practised in, if any. Kept nullable: an era can end
+  /// while its rows stay, and exercises will outlive eras.
+  era_id String?
+
+  /// Key from lib/exercises/library.ts. Never renamed, so old rows keep
+  /// pointing at something real.
+  exercise_id String
+  local_day   String // YYYY-MM-DD in the user's timezone
+
+  /// How long it was meant to run, so a shortened exercise is still
+  /// comparable later.
+  seconds_planned Int
+  seconds_done    Int     @default(0)
+  completed       Boolean @default(false)
+
+  /// "no" | "some" | "yes" — asked once at the end, optional.
+  helped String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  /// One run per exercise per day: repeating the same practice twice in a
+  /// day should update the row, not stack duplicates.
+  @@unique([user_id, local_day, exercise_id])
+  @@index([user_id, local_day])
+  @@index([exercise_id, completed])
 }

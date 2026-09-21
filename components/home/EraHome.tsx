@@ -9,6 +9,7 @@ import {
 import { VoiceInput } from '@/components/journal/VoiceInput'
 import { CountUp } from '@/components/ui/CountUp'
 import { EqBars } from '@/components/ui/EqBars'
+import { PracticeSection } from '@/components/exercise/PracticeSection'
 import { haptic } from '@/lib/haptics'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -930,6 +931,10 @@ function ActiveEra({
 
       <AudioCard audio={audio} />
       {action}
+      {/* The practice — an exercise Voxu runs with you, sized to the phase
+          you're in. Sits after the promise deliberately: the promise is the
+          era, this is the training for it. */}
+      <PracticeSection hasEra />
       {tomorrowBlock}
       {crisis && <CrisisBanner content={crisis} />}
       {error && <p className="text-xs text-white/70" role="alert">{error}</p>}
