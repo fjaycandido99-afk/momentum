@@ -3,6 +3,7 @@
 import { X } from 'lucide-react'
 import { GUIDE_LIMIT_NOTE, guideForDomain } from '@/lib/practices/guides'
 import { PRESETS_BY_KEY } from '@/lib/practices/presets'
+import { domainArt, domainArtAlt } from '@/lib/practices/domain-art'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -27,6 +28,7 @@ export function PracticeGuideSheet({
 }) {
   const domain = PRESETS_BY_KEY.get(presetKey)?.domain
   const guide = guideForDomain(domain)
+  const art = domainArt(domain)
 
   return (
     <div
@@ -52,7 +54,20 @@ export function PracticeGuideSheet({
           </button>
         </div>
 
-        <p className="text-sm text-white/60 leading-relaxed mt-2">{guide.why}</p>
+        {/* The place, where there's a shot of it. Nothing where there
+            isn't — an empty header is quieter than a wrong one. */}
+        {art && (
+          <div className="mt-4 rounded-2xl overflow-hidden border border-white/[0.1]">
+            <img
+              src={art}
+              alt={domainArtAlt(label)}
+              className="w-full aspect-[16/9] object-cover"
+              loading="lazy"
+            />
+          </div>
+        )}
+
+        <p className="text-sm text-white/60 leading-relaxed mt-4">{guide.why}</p>
 
         <ol className="mt-5 space-y-3.5">
           {guide.steps.map((step, i) => (

@@ -93,3 +93,24 @@ Their deliverable per movement, in `technique`:
 
 Until that object exists the screen says Voxu doesn't teach technique and
 points at a coach or physio. That line is load-bearing, not a placeholder.
+
+## The other kinds of training
+
+Same house style, 16:9 rather than 4:3 — these sit as a header strip, not a
+hero. Objects and rooms, no people: a picture of somebody else studying is
+a picture of somebody else's life, and that screen belongs to the person
+holding the phone.
+
+Save into `public/practices/`, then add the path to `DOMAIN_IMAGES` in
+`lib/practices/domain-art.ts`.
+
+| Save as | Prompt |
+| --- | --- |
+| `run.webp` | Empty asphalt road at first light disappearing into mist, wet surface, no cars, no people, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 16:9, no text, no labels, no watermark, no logos |
+| `read.webp` | Worn hardback book lying open on a dark wooden table under a single lamp, dust in the beam, no hands, no people, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 16:9, no text, no labels, no watermark, no logos |
+| `study.webp` | Bare desk in a dark room with an open notebook, a pen and a lamp, one chair pushed back, no people, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 16:9, no text, no labels, no watermark, no logos |
+| `work.webp` | Closed laptop and a cold cup of coffee on a dark desk, low light, no people, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 16:9, no text, no labels, no watermark, no logos |
+| `mind.webp` | Single low cushion on a bare wooden floor beside a window at dawn, empty room, no people, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 16:9, no text, no labels, no watermark, no logos |
+
+Add to any of these prompts if a generator returns a contact sheet:
+`single subject filling the frame, one photograph, not a collage, not a grid`.
