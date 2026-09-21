@@ -31,6 +31,23 @@ workflows:
           include: true
       cancel_previous_builds: true
 
+    # The app is a shell that loads https://voxu.app, so a web change is live
+    # the moment Vercel deploys it — it is not in the binary at all. Building
+    # on every master push meant ten builds and ten TestFlight uploads in a
+    # day for changes the shell doesn't contain.
+    #
+    # Automatic builds now run only when something that IS in the binary
+    # changes. Manual builds from the Codemagic UI ignore this and always
+    # run, so a release is never blocked by it.
+    when:
+      changeset:
+        includes:
+          - 'ios'
+          - 'capacitor.config.ts'
+          - 'package.json'
+          - 'package-lock.json'
+          - 'codemagic.yaml'
+
     scripts:
       - name: Install dependencies
         script: npm install
@@ -110,7 +127,10 @@ workflows:
           # Bump this whenever you push a release to App Store; for
           # TestFlight-only re-spins you can keep it and just increment
           # the build #.
-          agvtool new-marketing-version 1.2.1
+          #
+          # 1.2.1 is approved and live, so uploads under it were being
+          # rejected — every build since then had nowhere to land.
+          agvtool new-marketing-version 1.2.2
           agvtool new-version -all $(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0) + 1))
 
       - name: Build iOS
