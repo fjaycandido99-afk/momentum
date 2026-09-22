@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AlertTriangle, X } from 'lucide-react'
 import {
   MOVEMENT_STOP_NOTE,
@@ -12,6 +12,7 @@ import {
   mechanicOf,
   regionsOf,
   type Movement,
+  type MovementTechnique,
 } from '@/lib/movements/library'
 import {
   HURTS_NOTE,
@@ -62,9 +63,33 @@ export function MovementSheet({
   /** The movement being shown, which variations can change. */
   const [current, setCurrent] = useState(movement)
   const [reason, setReason] = useState<SwapReason | null>(null)
+  /**
+   * Reviewed guidance, fetched once per open.
+   *
+   * Almost every movement has none, so this is deliberately quiet: no
+   * spinner, no empty state of its own. The screen already says what it
+   * says when there's nothing, and if the request fails that's the state
+   * it stays in — a network error must never be mistaken for guidance.
+   */
+  const [reviewed, setReviewed] = useState<Record<string, MovementTechnique>>({})
+
+  useEffect(() => {
+    let live = true
+    fetch('/api/movements/technique')
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (live && data?.technique && typeof data.technique === 'object') setReviewed(data.technique)
+      })
+      .catch(() => {})
+    return () => {
+      live = false
+    }
+  }, [])
   const swaps = reason ? swapsFor(current.id, reason) : []
   const variations = samePattern(current)
   const art = artFor(current)
+  /** Static library technique is always undefined; the reviewed row is the real source. */
+  const technique = reviewed[current.id] ?? current.technique
 
   const show = (next: Movement) => {
     haptic('light')
@@ -161,7 +186,7 @@ export function MovementSheet({
             {/* Callouts: labels pinned to the picture, drawn by the app and
                 only ever from reviewed guidance. No arrow points at a body
                 on this screen unless a named person said it should. */}
-            {current.technique?.callouts?.map(callout => (
+            {technique?.callouts?.map(callout => (
               <div
                 key={callout.label}
                 className={`absolute max-w-[42%] ${callout.side === 'right' ? 'text-right' : 'text-left'}`}
@@ -212,13 +237,13 @@ export function MovementSheet({
         {/* How to do it: content with a reviewer's name on it, or the
             reason there isn't any. Never invented. */}
         <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-6">How to do it</p>
-        {current.technique ? (
+        {technique ? (
           <div className="mt-2 rounded-2xl border border-white/[0.12] p-4">
             <p className="text-[10px] tracking-[0.18em] uppercase text-white/40">
-              Reviewed by {current.technique.reviewedBy} · {current.technique.reviewedOn}
+              Reviewed by {technique.reviewedBy} · {technique.reviewedOn}
             </p>
             <ol className="mt-2.5 space-y-2">
-              {current.technique.steps.map((step, i) => (
+              {technique.steps.map((step, i) => (
                 <li key={i} className="text-[14px] text-white/80 leading-snug flex gap-2.5">
                   <span className="text-[11px] text-white/35 tabular-nums mt-0.5 shrink-0">{i + 1}</span>
                   <span className="min-w-0">{step}</span>
@@ -226,11 +251,11 @@ export function MovementSheet({
               ))}
             </ol>
 
-            {current.technique.cues && current.technique.cues.length > 0 && (
+            {technique.cues && technique.cues.length > 0 && (
               <div className="mt-4 pt-3 border-t border-white/[0.08]">
                 <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Key cues</p>
                 <div className="mt-2 grid grid-cols-1 gap-1.5">
-                  {current.technique.cues.map(cue => (
+                  {technique.cues.map(cue => (
                     <div key={cue.label}>
                       <p className="text-[13px] text-white/85 leading-snug">{cue.label}</p>
                       {cue.detail && (
@@ -242,11 +267,11 @@ export function MovementSheet({
               </div>
             )}
 
-            {current.technique.mistakes && current.technique.mistakes.length > 0 && (
+            {technique.mistakes && technique.mistakes.length > 0 && (
               <div className="mt-4 pt-3 border-t border-white/[0.08]">
                 <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Common mistakes</p>
                 <div className="mt-2 space-y-1.5">
-                  {current.technique.mistakes.map(m => (
+                  {technique.mistakes.map(m => (
                     <div key={m.label}>
                       <p className="text-[13px] text-white/85 leading-snug">{m.label}</p>
                       {m.detail && <p className="text-[11px] text-white/45 leading-snug">{m.detail}</p>}

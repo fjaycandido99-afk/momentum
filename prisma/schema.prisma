@@ -1337,3 +1337,36 @@ model ResetSession {
   @@index([user_id, local_day])
   @@index([state])
 }
+/// Reviewed technique guidance for one movement in lib/movements/library.ts.
+///
+/// Voxu writes no form cues. This table is the only way they get in, and
+/// lib/movements/technique.ts guards the door: a real person's name, a date,
+/// and no dose, evidence claim or medical claim. A movement with no row here
+/// shows MOVEMENT_TECHNIQUE_PENDING instead — which is the honest state, not
+/// a placeholder.
+///
+/// Not per-user and not user-generated: written by whoever reviews, read by
+/// everyone.
+model MovementTechnique {
+  id String @id @default(cuid())
+
+  /// Movement id from the library. Never renamed, so this stays valid.
+  movement_id String @unique
+
+  /// The person standing behind these words. Shown on the screen.
+  reviewed_by String
+  /// YYYY-MM-DD. The screen shows how old the guidance is.
+  reviewed_on String
+
+  /// string[] — the numbered how-to.
+  steps Json
+  /// { label, detail? }[] — the short cues.
+  cues Json?
+  /// { label, detail? }[] — what goes wrong, named without blame.
+  mistakes Json?
+  /// { label, detail?, x, y, side }[] — labels pinned to the hero image.
+  callouts Json?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
