@@ -106,7 +106,7 @@ export default function SavedPage() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white pb-24"
+    <div className="h-[100dvh] overflow-y-auto overflow-x-hidden overscroll-contain text-white pb-24"
       data-app-shell
     >
       {/* App-shell scroll: this container scrolls, the document does not.
