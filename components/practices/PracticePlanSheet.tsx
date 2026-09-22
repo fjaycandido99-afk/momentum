@@ -291,9 +291,14 @@ export function PracticePlanSheet({
                     >
                       <Plus className="w-3 h-3" /> Add {copy.noun}
                     </button>
-                    {/* For the person who doesn't know what to write. It
-                        writes a name into a row and nothing else. */}
-                    {canPick && (
+                    {/* For the person who doesn't know what to write — and
+                        only while that is still true.
+
+                        Three doors to the same idea were on this screen at
+                        once: Browse at the top, this, and the per-row swap.
+                        Once a day has something in it the library has been
+                        answered, so it gets out of the way. */}
+                    {canPick && slotDraft.items.every(item => !item.name.trim()) && (
                       <button
                         onClick={() => { haptic('light'); setPickingFor(slot.key) }}
                         className="flex items-center gap-1 text-[12px] text-white/45 hover:text-white"
