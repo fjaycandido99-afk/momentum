@@ -6,6 +6,7 @@ import {
   dayName,
   daysLabel,
   nextDueDay,
+  practiceHistory,
   weakestWeekday,
   isCleanPractice,
   isDueOn,
@@ -313,5 +314,110 @@ describe('cleanPractice', () => {
   it('refuses a name or minimum that is too long', () => {
     expect(isCleanPractice(cleanPractice({ presetKey: 'custom', label: 'x'.repeat(41), minimum: '5 min' }))).toBe(false)
     expect(isCleanPractice(cleanPractice({ presetKey: 'custom', label: 'ok', minimum: 'y'.repeat(41) }))).toBe(false)
+  })
+})
+
+describe('practiceHistory — what the achievements count', () => {
+  // Mon 2026-09-07 through Sun 2026-09-13, then the following week.
+  const mon = '2026-09-07'
+  const tue = '2026-09-08'
+  const thu = '2026-09-10'
+  const fri = '2026-09-11'
+  const nextMon = '2026-09-14'
+
+  const log = (day: string, done: boolean, minimumOnly = false) => ({ day, done, minimumOnly })
+
+  it('counts kept days and minimum days separately', () => {
+    const got = practiceHistory(gym, [
+      log(mon, true),
+      log(tue, true, true),
+      log(thu, false),
+    ])
+    expect(got.kept).toBe(2)
+    expect(got.minimumDays).toBe(1)
+  })
+
+  it('treats the minimum as KEPT, not as a half-failure', () => {
+    // The whole reason the floor exists. A day on the minimum must never
+    // break a run.
+    const got = practiceHistory(gym, [
+      log(mon, true),
+      log(tue, true, true),
+      log(thu, true),
+      log(fri, true),
+    ])
+    expect(got.longestRun).toBe(4)
+  })
+
+  it('does not break a run on a day the discipline was never due', () => {
+    // Gym is Mon/Tue/Thu/Fri. Wednesday missing is not a miss — it was
+    // never asked for. A run that breaks on a rest day would punish
+    // somebody for following their own schedule.
+    const wed = '2026-09-09'
+    const got = practiceHistory(gym, [
+      log(mon, true),
+      log(tue, true),
+      log(wed, false), // logged but not due
+      log(thu, true),
+      log(fri, true),
+    ])
+    expect(got.longestRun).toBe(4)
+  })
+
+  it('breaks the run on a missed DUE day', () => {
+    const got = practiceHistory(gym, [
+      log(mon, true),
+      log(tue, false),
+      log(thu, true),
+      log(fri, true),
+    ])
+    expect(got.longestRun).toBe(2)
+  })
+
+  it('counts a comeback: the next due day kept after one missed', () => {
+    const got = practiceHistory(gym, [
+      log(mon, true),
+      log(tue, false),
+      log(thu, true),
+    ])
+    expect(got.comebacks).toBe(1)
+  })
+
+  it('counts one comeback per return, not one per missed day', () => {
+    const got = practiceHistory(gym, [
+      log(mon, false),
+      log(tue, false),
+      log(thu, true), // one comeback, after two misses
+      log(fri, false),
+      log(nextMon, true), // a second
+    ])
+    expect(got.comebacks).toBe(2)
+  })
+
+  it('gives a first-ever kept day no comeback', () => {
+    // Nothing to come back from. Somebody's very first day should not be
+    // dressed up as a recovery.
+    expect(practiceHistory(gym, [log(mon, true)]).comebacks).toBe(0)
+  })
+
+  it('handles an every-day discipline', () => {
+    const got = practiceHistory(daily, [
+      log(mon, true),
+      log(tue, true),
+      log('2026-09-09', true),
+    ])
+    expect(got.longestRun).toBe(3)
+  })
+
+  it('returns zeroes for no history at all', () => {
+    expect(practiceHistory(gym, [])).toEqual({
+      kept: 0, minimumDays: 0, longestRun: 0, comebacks: 0,
+    })
+  })
+
+  it('does not care what order the logs arrive in', () => {
+    const ordered = practiceHistory(gym, [log(mon, true), log(tue, true), log(thu, true)])
+    const shuffled = practiceHistory(gym, [log(thu, true), log(mon, true), log(tue, true)])
+    expect(shuffled).toEqual(ordered)
   })
 })

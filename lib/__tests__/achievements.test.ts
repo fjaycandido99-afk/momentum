@@ -9,6 +9,7 @@ import {
   achievementMark,
   achievementProgress,
   type EraAchievementStats,
+  type PracticeAchievementStats,
 } from '../achievements'
 import { SERVER_ONLY_XP_EVENTS, XP_REWARDS } from '../gamification'
 
@@ -128,5 +129,69 @@ describe('achievementProgress', () => {
   it('never guesses: no progress for time-of-day ones or unloaded stats', () => {
     expect(achievementProgress(byId('night_owl'), baseStats)).toBeNull()
     expect(achievementProgress(byId('era_kept_7'), baseStats)).toBeNull()
+  })
+})
+
+const noPractice: PracticeAchievementStats = {
+  practicesKept: 0, minimumDays: 0, longestPracticeRun: 0, disciplinesKept: 0,
+  practiceComebacks: 0, exercisesDone: 0, exerciseDays: 0, exerciseVariety: 0,
+}
+
+function practiceUnlocks(practice: Partial<PracticeAchievementStats>): string[] {
+  return checkNewAchievements({ ...baseStats, practice: { ...noPractice, ...practice } }, new Set())
+    .filter(a => a.id.startsWith('practice_') || a.id.startsWith('exercise_'))
+    .map(a => a.id)
+    .sort()
+}
+
+describe('practice and exercise achievements', () => {
+  it('unlock from practice stats at the right thresholds', () => {
+    expect(practiceUnlocks({ practicesKept: 1 })).toEqual(['practice_first_kept'])
+    expect(practiceUnlocks({ practicesKept: 10 })).toEqual(['practice_first_kept', 'practice_kept_10'])
+    expect(practiceUnlocks({ practiceComebacks: 1 })).toEqual(['practice_back_on'])
+    expect(practiceUnlocks({ longestPracticeRun: 14 })).toEqual(['practice_run_14'])
+    expect(practiceUnlocks({ disciplinesKept: 3 })).toEqual(['practice_three'])
+  })
+
+  it('rewards doing the minimum, because that is the whole point of a floor', () => {
+    // "Just the minimum" is a KEPT day, not a half-failure — the one
+    // behaviour the practices feature exists to produce, and for months it
+    // was the only thing in the app that earned nothing.
+    expect(practiceUnlocks({ minimumDays: 1 })).toContain('practice_floor')
+  })
+
+  it('unlock from exercise stats', () => {
+    expect(practiceUnlocks({ exercisesDone: 1 })).toEqual(['exercise_first'])
+    expect(practiceUnlocks({ exercisesDone: 10 })).toEqual(['exercise_10', 'exercise_first'])
+    expect(practiceUnlocks({ exerciseVariety: 5 })).toEqual(['exercise_variety_5'])
+    expect(practiceUnlocks({ exerciseDays: 30 })).toEqual(['exercise_days_30'])
+  })
+
+  it("can't unlock without practice stats", () => {
+    const ids = checkNewAchievements({ ...baseStats }, new Set()).map(a => a.id)
+    expect(ids.some(id => id.startsWith('practice_') || id.startsWith('exercise_'))).toBe(false)
+  })
+
+  it('reports progress with its denominator, never a bare number', () => {
+    const a = ACHIEVEMENTS.find(x => x.id === 'practice_kept_10')!
+    const progress = achievementProgress(a, { ...baseStats, practice: { ...noPractice, practicesKept: 4 } })
+    expect(progress).toEqual({ current: 4, target: 10 })
+  })
+
+  it('never reports progress past the target', () => {
+    const a = ACHIEVEMENTS.find(x => x.id === 'practice_kept_10')!
+    const progress = achievementProgress(a, { ...baseStats, practice: { ...noPractice, practicesKept: 99 } })
+    expect(progress).toEqual({ current: 10, target: 10 })
+  })
+
+  it('shows no progress at all when the stats were not loaded', () => {
+    const a = ACHIEVEMENTS.find(x => x.id === 'practice_kept_10')!
+    expect(achievementProgress(a, { ...baseStats })).toBeNull()
+  })
+
+  it('covers both of the features that used to earn nothing', () => {
+    const ids = ACHIEVEMENTS.map(a => a.id)
+    expect(ids.filter(id => id.startsWith('practice_')).length).toBeGreaterThanOrEqual(5)
+    expect(ids.filter(id => id.startsWith('exercise_')).length).toBeGreaterThanOrEqual(3)
   })
 })

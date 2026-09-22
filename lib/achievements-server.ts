@@ -1,6 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { XP_REWARDS, type XPEventType, getLevelFromXP } from '@/lib/gamification'
-import { checkNewAchievements, type AchievementStats, type EraAchievementStats } from '@/lib/achievements'
+import {
+  checkNewAchievements,
+  type AchievementStats,
+  type EraAchievementStats,
+  type PracticeAchievementStats,
+} from '@/lib/achievements'
+import { practiceHistory } from '@/lib/practices/logic'
 import { localDay } from '@/lib/assessment/service'
 import { eraDayNumber, previousDay } from '@/lib/era/logic'
 
@@ -92,7 +98,7 @@ export async function gatherAchievementStats(
   const { current } = getLevelFromXP(opts.totalXP)
 
   // Count various stats for achievements
-  const [journalCount, breathingCount, moduleCount, moodLogCount, routineCount, genreCount, guides, completedGoals, soundscapeEvents, era, tzPrefs] = await Promise.all([
+  const [journalCount, breathingCount, moduleCount, moodLogCount, routineCount, genreCount, guides, completedGoals, soundscapeEvents, era, practice, tzPrefs] = await Promise.all([
     prisma.dailyGuide.count({
       where: { user_id: userId, OR: [{ journal_freetext: { not: null } }, { journal_win: { not: null } }, { journal_gratitude: { not: null } }] },
     }),
@@ -119,6 +125,7 @@ export async function gatherAchievementStats(
     prisma.goal.count({ where: { user_id: userId, status: 'completed' } }),
     prisma.xPEvent.count({ where: { user_id: userId, event_type: 'focusSession' } }),
     gatherEraAchievementStats(userId),
+    gatherPracticeAchievementStats(userId),
     prisma.userPreferences.findUnique({ where: { user_id: userId }, select: { timezone: true } }),
   ])
 
@@ -171,6 +178,7 @@ export async function gatherAchievementStats(
     currentHour: userLocalHour(tzPrefs?.timezone ?? null),
     consecutiveFullDays,
     era,
+    practice,
   }
 }
 
@@ -268,4 +276,68 @@ export async function awardEraXPOnce(
     console.warn(`[era] XP award ${eventType} failed:`, err)
     return []
   }
+}
+
+/**
+ * What the disciplines and the exercises have actually produced.
+ *
+ * Counted from rows, never from anything a client sends — same rule as the
+ * era stats above. `isDueOn` decides what a run means: a discipline due on
+ * Mondays and Fridays keeps its run when Tuesday is skipped, because
+ * Tuesday was never asked for.
+ *
+ * Retired disciplines are included. Somebody who kept a practice for two
+ * months and then turned it off still kept it for two months.
+ */
+export async function gatherPracticeAchievementStats(
+  userId: string,
+): Promise<PracticeAchievementStats> {
+  const [practices, runs] = await Promise.all([
+    prisma.practice.findMany({
+      where: { user_id: userId },
+      select: {
+        id: true,
+        label: true,
+        days: true,
+        minimum: true,
+        logs: {
+          select: { local_day: true, done: true, minimum_only: true },
+          orderBy: { local_day: 'asc' },
+        },
+      },
+    }),
+    prisma.exerciseRun.findMany({
+      where: { user_id: userId, completed: true },
+      select: { exercise_id: true, local_day: true },
+    }),
+  ])
+
+  const stats: PracticeAchievementStats = {
+    practicesKept: 0,
+    minimumDays: 0,
+    longestPracticeRun: 0,
+    disciplinesKept: 0,
+    practiceComebacks: 0,
+    exercisesDone: runs.length,
+    exerciseDays: new Set(runs.map(r => r.local_day)).size,
+    exerciseVariety: new Set(runs.map(r => r.exercise_id)).size,
+  }
+
+  for (const practice of practices) {
+    const history = practiceHistory(
+      { id: practice.id, label: practice.label, days: practice.days, minimum: practice.minimum },
+      practice.logs.map(l => ({ day: l.local_day, done: l.done, minimumOnly: l.minimum_only })),
+    )
+
+    // A discipline created and never kept is not a discipline yet.
+    if (history.kept === 0) continue
+
+    stats.disciplinesKept++
+    stats.practicesKept += history.kept
+    stats.minimumDays += history.minimumDays
+    stats.practiceComebacks += history.comebacks
+    stats.longestPracticeRun = Math.max(stats.longestPracticeRun, history.longestRun)
+  }
+
+  return stats
 }

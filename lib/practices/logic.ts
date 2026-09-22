@@ -367,3 +367,51 @@ export function cleanPractice(input: PracticeInput): CleanPractice | { error: st
 export function isCleanPractice(value: CleanPractice | { error: string }): value is CleanPractice {
   return !('error' in value)
 }
+
+/**
+ * Everything the achievements need from one discipline's history.
+ *
+ * Pure, and separate from the loader on purpose: a run is the thing most
+ * likely to be subtly wrong, and it cannot be checked by reading a Prisma
+ * query. The rules:
+ *
+ *  - A run counts only DUE days. A discipline due Mondays and Fridays keeps
+ *    its run when Tuesday is skipped, because Tuesday was never asked for.
+ *  - A missed due day breaks the run, and the next due day kept is a
+ *    comeback. That is the number worth showing someone: not that they
+ *    slipped, but that they came back.
+ *  - `minimum_only` is a KEPT day. Doing the floor when you didn't want to
+ *    is the behaviour the whole feature exists to produce.
+ */
+export function practiceHistory(
+  practice: PracticeLite,
+  logs: LogLite[],
+): { kept: number; minimumDays: number; longestRun: number; comebacks: number } {
+  const kept = logs.filter(l => l.done)
+  const byDay = new Map(logs.map(l => [l.day, l]))
+  const dueDays = [...byDay.keys()].filter(day => isDueOn(practice, day)).sort()
+
+  let run = 0
+  let longestRun = 0
+  let comebacks = 0
+  let missedLast = false
+
+  for (const day of dueDays) {
+    if (byDay.get(day)?.done) {
+      run++
+      longestRun = Math.max(longestRun, run)
+      if (missedLast) comebacks++
+      missedLast = false
+    } else {
+      run = 0
+      missedLast = true
+    }
+  }
+
+  return {
+    kept: kept.length,
+    minimumDays: kept.filter(l => l.minimumOnly).length,
+    longestRun,
+    comebacks,
+  }
+}

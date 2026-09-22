@@ -29,6 +29,41 @@ export interface EraAchievementStats {
   comebacks: number
 }
 
+/**
+ * What a practice achievement counts.
+ *
+ * The two features closest to the point of the app — the disciplines someone
+ * keeps and the exercises Voxu runs with them — earned nothing for months.
+ * Fifty-five achievements, and none of them could be reached by showing up.
+ *
+ * Counted from Practice/PracticeLog/ExerciseRun on the server, never from
+ * anything the client sends, exactly like the era metrics above.
+ */
+export type PracticeMetric =
+  | 'practices_kept'
+  /** Days kept on the minimum. The behaviour the whole feature exists for. */
+  | 'minimum_days'
+  /** Longest run of consecutive DUE days kept, for any one discipline. */
+  | 'practice_run'
+  | 'disciplines_kept'
+  /** Kept the next due day after one that was missed. */
+  | 'practice_comebacks'
+  | 'exercises_done'
+  | 'exercise_days'
+  | 'exercise_variety'
+
+export interface PracticeAchievementStats {
+  practicesKept: number
+  minimumDays: number
+  longestPracticeRun: number
+  /** Disciplines with at least one kept day — not merely created. */
+  disciplinesKept: number
+  practiceComebacks: number
+  exercisesDone: number
+  exerciseDays: number
+  exerciseVariety: number
+}
+
 export interface Achievement {
   id: string
   title: string
@@ -49,6 +84,7 @@ export type AchievementCondition =
   | { type: 'time_range'; start: number; end: number; action: string }
   | { type: 'consecutive_days'; days: number; action: string }
   | { type: 'era'; metric: EraMetric; count: number }
+  | { type: 'practice'; metric: PracticeMetric; count: number }
 
 // Rarity is monochrome, like the rest of Voxu: it reads as how much light a
 // badge gives off — a faint ring, a clear one, a bright one, one that glows —
@@ -129,6 +165,24 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'era_complete', title: 'Era Complete', description: 'Finish a 30-day era', icon: '🏛️', category: 'era', rarity: 'epic', xpReward: 300, condition: { type: 'era', metric: 'eras_completed', count: 1 } },
   { id: 'era_three', title: 'Three Eras', description: 'Finish three eras', icon: '🗿', category: 'era', rarity: 'legendary', xpReward: 800, condition: { type: 'era', metric: 'eras_completed', count: 3 } },
   { id: 'era_flawless', title: 'Flawless Era', description: 'Finish an era keeping every promise you checked in on (20+)', icon: '💠', category: 'era', rarity: 'legendary', xpReward: 1000, condition: { type: 'era', metric: 'perfect_eras', count: 1 } },
+
+  // --- Practice (7) — the disciplines someone keeps ---
+  // "The Floor" is the one that matters. Doing the minimum on a day you
+  // didn't want to is the exact behaviour the whole feature exists to
+  // produce, and it was the only thing in the app that earned nothing.
+  { id: 'practice_first_kept', title: 'Kept It', description: 'Keep a discipline for the first time', icon: '🪨', category: 'consistency', rarity: 'common', xpReward: 25, condition: { type: 'practice', metric: 'practices_kept', count: 1 } },
+  { id: 'practice_floor', title: 'The Floor', description: 'Do the minimum on a day you didn\'t want to', icon: '🧱', category: 'consistency', rarity: 'rare', xpReward: 60, condition: { type: 'practice', metric: 'minimum_days', count: 1 } },
+  { id: 'practice_kept_10', title: 'Ten Days In', description: 'Keep a discipline 10 times', icon: '🔟', category: 'consistency', rarity: 'common', xpReward: 50, condition: { type: 'practice', metric: 'practices_kept', count: 10 } },
+  { id: 'practice_back_on', title: 'Back On It', description: 'Keep a discipline the next day it was due, after missing one', icon: '↩️', category: 'consistency', rarity: 'rare', xpReward: 60, condition: { type: 'practice', metric: 'practice_comebacks', count: 1 } },
+  { id: 'practice_run_14', title: 'Fourteen Straight', description: 'Keep one discipline every day it was due, 14 times running', icon: '⛓️', category: 'consistency', rarity: 'epic', xpReward: 250, condition: { type: 'practice', metric: 'practice_run', count: 14 } },
+  { id: 'practice_three', title: 'Three Disciplines', description: 'Keep three different disciplines', icon: '🏗️', category: 'consistency', rarity: 'rare', xpReward: 80, condition: { type: 'practice', metric: 'disciplines_kept', count: 3 } },
+  { id: 'practice_kept_100', title: 'A Hundred Days', description: 'Keep a discipline 100 times', icon: '🗿', category: 'consistency', rarity: 'legendary', xpReward: 900, condition: { type: 'practice', metric: 'practices_kept', count: 100 } },
+
+  // --- Exercises (4) — the ones Voxu runs with you ---
+  { id: 'exercise_first', title: 'Sat With It', description: 'Finish your first mindset exercise', icon: '🧘', category: 'growth', rarity: 'common', xpReward: 25, condition: { type: 'practice', metric: 'exercises_done', count: 1 } },
+  { id: 'exercise_10', title: 'Ten Sessions', description: 'Finish 10 mindset exercises', icon: '🌱', category: 'growth', rarity: 'rare', xpReward: 80, condition: { type: 'practice', metric: 'exercises_done', count: 10 } },
+  { id: 'exercise_variety_5', title: 'Range', description: 'Finish 5 different mindset exercises', icon: '🎚️', category: 'growth', rarity: 'rare', xpReward: 80, condition: { type: 'practice', metric: 'exercise_variety', count: 5 } },
+  { id: 'exercise_days_30', title: 'Thirty Days of It', description: 'Do a mindset exercise on 30 separate days', icon: '🌳', category: 'growth', rarity: 'epic', xpReward: 300, condition: { type: 'practice', metric: 'exercise_days', count: 30 } },
 
   // --- Consistency (7) ---
   { id: 'streak_3', title: 'Getting Started', description: 'Reach a 3-day streak', icon: '🔥', category: 'consistency', rarity: 'common', xpReward: 25, condition: { type: 'streak', days: 3 } },
@@ -228,6 +282,8 @@ export interface AchievementStats {
     consecutiveFullDays: number
     /** Optional so callers that don't load era rows can't unlock era badges by accident. */
     era?: EraAchievementStats
+    /** Same reasoning: absent means no practice badge can be awarded. */
+    practice?: PracticeAchievementStats
 }
 
 export function checkNewAchievements(
@@ -300,6 +356,21 @@ export function checkNewAchievements(
       qualified = value[c.metric] >= c.count
     }
 
+    if (c.type === 'practice' && stats.practice) {
+      const p = stats.practice
+      const value: Record<PracticeMetric, number> = {
+        practices_kept: p.practicesKept,
+        minimum_days: p.minimumDays,
+        practice_run: p.longestPracticeRun,
+        disciplines_kept: p.disciplinesKept,
+        practice_comebacks: p.practiceComebacks,
+        exercises_done: p.exercisesDone,
+        exercise_days: p.exerciseDays,
+        exercise_variety: p.exerciseVariety,
+      }
+      qualified = value[c.metric] >= c.count
+    }
+
     if (qualified) {
       newlyUnlocked.push(achievement)
     }
@@ -329,6 +400,7 @@ export function achievementMark(a: Achievement): string | null {
     case 'xp_total': return compact(c.amount)
     case 'level': return `L${c.level}`
     case 'era': return c.count > 1 ? String(c.count) : null
+    case 'practice': return c.count > 1 ? String(c.count) : null
     default: return null
   }
 }
@@ -370,6 +442,21 @@ export function achievementProgress(a: Achievement, stats: AchievementStats): { 
         perfect_eras: e.perfectEras,
         custom_eras: e.customEras,
         comebacks: e.comebacks,
+      }
+      return of(v[c.metric], c.count)
+    }
+    case 'practice': {
+      if (!stats.practice) return null
+      const p = stats.practice
+      const v: Record<PracticeMetric, number> = {
+        practices_kept: p.practicesKept,
+        minimum_days: p.minimumDays,
+        practice_run: p.longestPracticeRun,
+        disciplines_kept: p.disciplinesKept,
+        practice_comebacks: p.practiceComebacks,
+        exercises_done: p.exercisesDone,
+        exercise_days: p.exerciseDays,
+        exercise_variety: p.exerciseVariety,
       }
       return of(v[c.metric], c.count)
     }
