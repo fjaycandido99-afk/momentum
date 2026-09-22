@@ -7,7 +7,7 @@ import { PenLine, Sparkles, Heart, Sun, Feather } from 'lucide-react'
 // each prompt reads as a distinct, inviting starting point (not a wall of text).
 const CHIP_ICONS = [Sparkles, Heart, Sun, Feather] as const
 import { MINDSET_QUOTES } from '@/lib/mindset/quotes'
-import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
+import { dailyStarters } from '@/lib/journal/starters'
 import type { MindsetId } from '@/lib/mindset/types'
 
 interface EmptyWritingStateProps {
@@ -23,13 +23,6 @@ function dateSeedIndex(length: number): number {
   return seed % length
 }
 
-const GENERIC_CHIPS = [
-  '3 things I\'m grateful for',
-  'Today I noticed...',
-  'A moment that mattered',
-  'What\'s on my mind right now',
-]
-
 export function EmptyWritingState({ mindsetId, onStartWriting, visible }: EmptyWritingStateProps) {
   const quote = useMemo(() => {
     const id = mindsetId || 'stoic'
@@ -38,26 +31,9 @@ export function EmptyWritingState({ mindsetId, onStartWriting, visible }: EmptyW
     return pool[dateSeedIndex(pool.length)]
   }, [mindsetId])
 
-  const chips = useMemo(() => {
-    const id = mindsetId || 'stoic'
-    const mindsetQs = MINDSET_DAILY_QUESTIONS[id] || []
-    // Pick 2 mindset questions (date-seeded) + 2 generic
-    const picked: string[] = []
-    if (mindsetQs.length >= 2) {
-      const idx = dateSeedIndex(mindsetQs.length)
-      picked.push(mindsetQs[idx])
-      picked.push(mindsetQs[(idx + 1) % mindsetQs.length])
-    } else if (mindsetQs.length === 1) {
-      picked.push(mindsetQs[0])
-    }
-    // Add generic chips to fill to 4
-    const genericIdx = dateSeedIndex(GENERIC_CHIPS.length)
-    for (let i = 0; picked.length < 4 && i < GENERIC_CHIPS.length; i++) {
-      const chip = GENERIC_CHIPS[(genericIdx + i) % GENERIC_CHIPS.length]
-      if (!picked.includes(chip)) picked.push(chip)
-    }
-    return picked.slice(0, 4)
-  }, [mindsetId])
+  // Shared with the Chat tab (lib/journal/starters.ts), so the same day
+  // never offers two different sets of questions.
+  const chips = useMemo(() => dailyStarters(mindsetId), [mindsetId])
 
   return (
     <div

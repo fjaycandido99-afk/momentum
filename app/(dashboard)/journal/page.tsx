@@ -35,6 +35,7 @@ import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useEra } from '@/hooks/useEra'
+import { chatStarters } from '@/lib/journal/starters'
 import { eraJournalPrompt } from '@/lib/era/content'
 
 interface JournalEntry {
@@ -1122,7 +1123,44 @@ function JournalContent() {
                   <div className="text-center py-6">
                     <MessageCircle className="w-8 h-8 text-white/50 mx-auto mb-2" />
                     <p className="text-sm text-white/85">Start a conversation</p>
-                    <p className="text-xs text-white/70 mt-1">Share what&apos;s on your mind — or tap a prompt below to dive in.</p>
+                    <p className="text-xs text-white/70 mt-1">Share what&apos;s on your mind — or answer one of today&apos;s questions.</p>
+
+                    {/* Today's questions, as questions the COACH asks.
+                        On the Free tab these same prompts start a written
+                        entry; here they open the conversation, which is the
+                        difference between a prompt and being asked.
+
+                        The question goes in as the assistant's turn, not as
+                        a draft in the user's mouth — "What excuse did you
+                        destroy today?" said BY the reader to their coach is
+                        nonsense. Written client-side with no model call, so
+                        opening one costs nothing until they reply, and
+                        `hasContent` still needs two turns before anything is
+                        saved. */}
+                    {(() => {
+                      const starters = chatStarters(
+                        mindsetCtx?.mindset ?? undefined,
+                        isToday && era.era && era.era.step !== 'complete'
+                          ? eraJournalPrompt(era.era)
+                          : null,
+                      )
+                      if (starters.length === 0) return null
+                      return (
+                        <div className="mt-4 space-y-2 max-w-md mx-auto text-left">
+                          {starters.map(q => (
+                            <button
+                              key={q}
+                              onClick={() => setConversation([{ role: 'assistant', content: q }])}
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.12] text-[13px] text-white/85 leading-snug hover:bg-white/[0.09] transition-colors press-scale text-left"
+                            >
+                              {q}
+                            </button>
+                          ))}
+                        </div>
+                      )
+                    })()}
+
+                    <p className="text-[11px] text-white/45 mt-4">Or say where you are:</p>
                     {/* Coach-style quick prompts — moved here from the
                         retired /coach page so the chat home has a
                         zero-friction starting point. */}
