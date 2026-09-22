@@ -21,8 +21,9 @@ import {
   swapsFor,
   type SwapReason,
 } from '@/lib/movements/swap'
-import { artAlt, artFor } from '@/lib/movements/images'
+import { artAlt, artFor, ownArt } from '@/lib/movements/images'
 import { PatternGlyph } from '@/components/movements/PatternGlyph'
+import { RegionMap } from '@/components/movements/RegionMap'
 import { haptic } from '@/lib/haptics'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -120,14 +121,20 @@ export function MovementSheet({
             body this app has never seen. */}
         <div className="mt-3">
           <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Works</p>
-          <div className="flex flex-wrap gap-1.5 mt-1.5">
+          <div className="flex flex-wrap gap-2 mt-1.5">
             {regionsOf(current).map(region => (
-              <span
+              <div
                 key={region}
-                className="text-[12px] text-white/80 rounded-lg bg-white/[0.06] border border-white/[0.1] px-2.5 py-1"
+                className="rounded-lg bg-white/[0.05] border border-white/[0.1] px-3 py-2 flex flex-col items-center gap-1"
               >
-                {REGION_LABELS[region]}
-              </span>
+                {/* Where it is, at one weight. Never a heat map — how much
+                    a region does varies by person and load, and the app
+                    knows neither. */}
+                <span className="text-white/80">
+                  <RegionMap region={region} className="w-7 h-16" />
+                </span>
+                <span className="text-[11px] text-white/70">{REGION_LABELS[region]}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -252,7 +259,7 @@ export function MovementSheet({
             <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-6">Variations</p>
             <div className="mt-2 grid grid-cols-2 gap-2">
               {variations.slice(0, 6).map(v => {
-                const thumb = artFor(v)
+                const thumb = ownArt(v)
                 return (
                 <button
                   key={v.id}

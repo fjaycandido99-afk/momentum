@@ -22,9 +22,29 @@ import type { Movement, MovementPattern } from './library'
  * checks every path here is present on disk.
  */
 
-/** Art for a specific movement, keyed by movement id. */
+/**
+ * Art for a specific movement, keyed by movement id.
+ *
+ * These are the movements a template can actually put in front of someone
+ * — the short list from scripts/movement-art-todo.ts — which is why they're
+ * the ones worth shooting. Anything else falls back to its family.
+ */
 export const MOVEMENT_IMAGES: Record<string, string> = {
-  // Filled as art arrives, e.g. back_squat: '/movements/back-squat.webp'
+  bodyweight_squat: '/movements/bodyweight-squat.webp',
+  dumbbell_rdl: '/movements/dumbbell-rdl.webp',
+  back_extension: '/movements/back-extension.webp',
+  glute_bridge: '/movements/glute-bridge.webp',
+  reverse_lunge: '/movements/reverse-lunge.webp',
+  floor_press: '/movements/floor-press.webp',
+  dip: '/movements/dip.webp',
+  band_row: '/movements/band-row.webp',
+  inverted_row: '/movements/inverted-row.webp',
+  band_pulldown: '/movements/band-pulldown.webp',
+  chin_up: '/movements/chin-up.webp',
+  dumbbell_shoulder_press: '/movements/dumbbell-shoulder-press.webp',
+  machine_shoulder_press: '/movements/machine-shoulder-press.webp',
+  pike_push_up: '/movements/pike-push-up.webp',
+  // push_up and dead_bug still to come.
 }
 
 /**
@@ -68,6 +88,20 @@ export interface MovementArt {
   src: string
   /** Whether this is the movement's own art or its family's. */
   scope: 'movement' | 'pattern'
+}
+
+/**
+ * Only the movement's OWN art, never its family's.
+ *
+ * For anywhere several movements are shown side by side. The family
+ * fallback is right for a hero — one screen, one picture — but in a grid of
+ * six squat variations it renders the same photograph six times, which
+ * reads as broken. A mark repeated is a pattern; a photograph repeated is
+ * a mistake.
+ */
+export function ownArt(movement: Movement): MovementArt | null {
+  const own = MOVEMENT_IMAGES[movement.id]
+  return own ? { src: own, scope: 'movement' } : null
 }
 
 export function artFor(movement: Movement): MovementArt | null {

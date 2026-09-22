@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { MOVEMENT_IMAGES, PATTERN_IMAGES, artAlt, artFor } from '@/lib/movements/images'
 import {
@@ -17,6 +17,7 @@ import {
   type MovementPattern,
 } from '@/lib/movements/library'
 import { PATTERN_GLYPH_KEYS } from '@/components/movements/PatternGlyph'
+import { REGION_MAP_KEYS } from '@/components/movements/RegionMap'
 import {
   HURTS_NOTE,
   SWAP_REASONS,
@@ -312,5 +313,26 @@ describe('samePattern', () => {
     const ids = samePattern(MOVEMENTS_BY_ID.get('lat_pulldown')!).map(m => m.id)
     expect(ids).toContain('pull_up')
     expect(ids).not.toContain('bench_press')
+  })
+})
+
+describe('the region map', () => {
+  it('can draw every region the library uses', () => {
+    // A region without a shape would render an empty figure, so this keeps
+    // the diagram and the data in step.
+    const used = new Set(MOVEMENTS.flatMap(m => regionsOf(m)))
+    for (const region of used) {
+      expect(REGION_MAP_KEYS, region).toContain(region)
+    }
+  })
+
+  it('draws every region at the same weight', () => {
+    // No heat map, no primary-versus-secondary: how much a region does
+    // varies by person, load and how they move, and the app knows none of
+    // those. Checked in the source because it's an assertion about intent.
+    const src = readFileSync(join(process.cwd(), 'components/movements/RegionMap.tsx'), 'utf8')
+    const zoneOpacities = src.match(/opacity="0\.\d+"/g) ?? []
+    // Exactly two: the base figure, and the highlight.
+    expect(new Set(zoneOpacities).size).toBe(2)
   })
 })
