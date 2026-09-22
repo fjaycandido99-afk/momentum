@@ -16,7 +16,6 @@ export type ChallengeCondition =
   | { type: 'mood_log' }
   | { type: 'all_modules' }
   | { type: 'soundscape_listen' }
-  | { type: 'routine_complete' }
   | { type: 'coach_chat' }
   | { type: 'journal_entry' }
   | { type: 'xp_earned'; amount: number }
@@ -33,7 +32,6 @@ const CHALLENGE_POOL: DailyChallenge[] = [
   { id: 'mood', title: 'Check In', description: 'Log your mood today', icon: '🧠', xpReward: 10, condition: { type: 'mood_log' } },
   { id: 'all_modules', title: 'Full Sweep', description: 'Complete all daily modules', icon: '🏆', xpReward: 50, condition: { type: 'all_modules' } },
   { id: 'soundscape', title: 'Sound Bath', description: 'Listen to a soundscape', icon: '🎧', xpReward: 15, condition: { type: 'soundscape_listen' } },
-  { id: 'routine', title: 'Follow the Plan', description: 'Complete a routine', icon: '📋', xpReward: 20, condition: { type: 'routine_complete' } },
   { id: 'coach', title: 'Ask the Coach', description: 'Have a coaching session', icon: '💬', xpReward: 15, condition: { type: 'coach_chat' } },
   { id: 'journal', title: 'Express Yourself', description: 'Write a journal entry', icon: '📝', xpReward: 15, condition: { type: 'journal_entry' } },
   { id: 'earn_50', title: 'XP Hunter', description: 'Earn 50 XP today', icon: '⚡', xpReward: 20, condition: { type: 'xp_earned', amount: 50 } },
@@ -65,7 +63,6 @@ const MINDSET_CHALLENGE_POOL: Record<MindsetId, DailyChallenge[]> = {
     { id: 'cynic_journal', title: 'Radical Honesty', description: 'Write a raw, unfiltered journal entry', icon: '🔥', xpReward: 20, condition: { type: 'journal_entry' }, mindsetTag: 'Cynic' },
     { id: 'cynic_morning', title: 'Strip It Down', description: 'Start with the essentials — complete morning module', icon: '🔥', xpReward: 20, condition: { type: 'morning_module' }, mindsetTag: 'Cynic' },
     { id: 'cynic_xp', title: 'Prove It', description: 'Earn 50 XP through action, not words', icon: '🔥', xpReward: 25, condition: { type: 'xp_earned', amount: 50 }, mindsetTag: 'Cynic' },
-    { id: 'cynic_routine', title: 'No Excuses', description: 'Complete a routine without skipping', icon: '🔥', xpReward: 20, condition: { type: 'routine_complete' }, mindsetTag: 'Cynic' },
     { id: 'cynic_breathe', title: 'Stripped Silence', description: 'Complete a breathing session — no distractions', icon: '🔥', xpReward: 15, condition: { type: 'breathing_session' }, mindsetTag: 'Cynic' },
   ],
   hedonist: [
@@ -126,12 +123,14 @@ function dateToSeed(dateStr: string): number {
  *  When mindsetId is provided: 1 mindset-specific + 2 generic.
  *  Without mindsetId: 3 generic (same as before). */
 /**
- * Challenge types with no screen to do them on. Routines have a builder and a
- * player in components/routines, but neither is mounted anywhere — so a
- * "complete a routine" challenge could never be completed. Kept out of the
- * rotation until routines have a real home.
+ * Challenge types with no screen to do them on.
+ *
+ * Empty now: routines were the only entry, and the feature is deleted rather
+ * than waiting for a home. The list stays because it is the mechanism that
+ * keeps an impossible challenge out of somebody's day, and the next
+ * half-finished feature will need it.
  */
-export const UNAVAILABLE_CHALLENGE_TYPES: readonly string[] = ['routine_complete']
+export const UNAVAILABLE_CHALLENGE_TYPES: readonly string[] = []
 
 const doable = (c: DailyChallenge) => !UNAVAILABLE_CHALLENGE_TYPES.includes(c.condition.type)
 
@@ -200,7 +199,6 @@ export function checkChallengeCondition(
     case 'mood_log': return !!(g?.mood_before || g?.mood_after)
     case 'all_modules': return !!allModulesDone
     case 'soundscape_listen': return xpEvents.some(e => e.event_type === 'focusSession')
-    case 'routine_complete': return xpEvents.some(e => e.event_type === 'routineComplete')
     case 'coach_chat': return xpEvents.some(e => e.event_type === 'coachChat' || e.event_type === 'accountabilityCheckIn')
     case 'journal_entry': return hasJournal
     case 'xp_earned': return todaysXP >= condition.amount

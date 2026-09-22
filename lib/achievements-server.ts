@@ -98,7 +98,7 @@ export async function gatherAchievementStats(
   const { current } = getLevelFromXP(opts.totalXP)
 
   // Count various stats for achievements
-  const [journalCount, breathingCount, moduleCount, moodLogCount, routineCount, genreCount, guides, completedGoals, soundscapeEvents, era, practice, tzPrefs] = await Promise.all([
+  const [journalCount, breathingCount, moduleCount, moodLogCount, genreCount, guides, completedGoals, soundscapeEvents, era, practice, tzPrefs] = await Promise.all([
     prisma.dailyGuide.count({
       where: { user_id: userId, OR: [{ journal_freetext: { not: null } }, { journal_win: { not: null } }, { journal_gratitude: { not: null } }] },
     }),
@@ -107,7 +107,6 @@ export async function gatherAchievementStats(
     prisma.dailyGuide.count({
       where: { user_id: userId, OR: [{ mood_before: { not: null } }, { mood_after: { not: null } }] },
     }),
-    prisma.routine.count({ where: { user_id: userId } }),
     prisma.dailyGuide.findMany({
       where: { user_id: userId, music_genre_used: { not: null } },
       select: { music_genre_used: true },
@@ -169,7 +168,10 @@ export async function gatherAchievementStats(
     uniqueModuleTypes: moduleTypesSeen.size,
     hasFirstJournal: journalCount > 0,
     hasFirstSoundscape: soundscapeEvents > 0,
-    hasFirstRoutine: routineCount > 0,
+    // Routines are deleted: no screen could create one, so nothing counts
+    // the table any more. The retired 'first_routine' badge still shows for
+    // the one account that holds it — see lib/achievements.ts.
+    hasFirstRoutine: false,
     hasCompletedGoal: completedGoals > 0,
     hasFirstPathComplete: false,
     pathCompleteCount: 0,

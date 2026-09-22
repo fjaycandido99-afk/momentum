@@ -383,7 +383,10 @@ export default function PricingPage() {
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
-                  <span>Goals, the weekly AI summary and unlimited routines</span>
+                  {/* "unlimited routines" was here. Routines had no screen
+                      anyone could reach and the feature is now deleted, so
+                      selling it was selling something that did not exist. */}
+                  <span>Goals and the weekly AI summary</span>
                 </li>
               </ul>
 

@@ -16,7 +16,6 @@ export type MissionCondition =
   | { type: 'breathing_sessions'; count: number }
   | { type: 'mood_logs'; count: number }
   | { type: 'active_days'; days: number }
-  | { type: 'routines_complete'; count: number }
 
 const MISSION_POOL: WeeklyMission[] = [
   { id: 'journal_5', title: 'Journal Journey', description: 'Write in your journal 5 days this week', icon: '📝', xpReward: 100, target: 5, condition: { type: 'journal_days', days: 5 } },
@@ -26,7 +25,6 @@ const MISSION_POOL: WeeklyMission[] = [
   { id: 'breathe_5', title: 'Zen Master', description: 'Do 5 breathing sessions this week', icon: '🌬️', xpReward: 75, target: 5, condition: { type: 'breathing_sessions', count: 5 } },
   { id: 'mood_5', title: 'Self Check', description: 'Log your mood 5 times this week', icon: '🧠', xpReward: 60, target: 5, condition: { type: 'mood_logs', count: 5 } },
   { id: 'active_6', title: 'Six-Pack', description: 'Be active 6 days this week', icon: '💪', xpReward: 120, target: 6, condition: { type: 'active_days', days: 6 } },
-  { id: 'routines_3', title: 'Routine Master', description: 'Complete 3 routines this week', icon: '📋', xpReward: 80, target: 3, condition: { type: 'routines_complete', count: 3 } },
 ]
 
 function seededRandom(seed: number): () => number {
@@ -57,7 +55,7 @@ export function getWeekString(date: Date): string {
 
 /** Get 2 deterministic weekly missions for a given week string */
 /** Missions with no screen to complete them on — see UNAVAILABLE_CHALLENGE_TYPES. */
-export const UNAVAILABLE_MISSION_TYPES: readonly string[] = ['routines_complete']
+export const UNAVAILABLE_MISSION_TYPES: readonly string[] = []
 
 export function getWeeklyMissions(weekStr: string): WeeklyMission[] {
   const rand = seededRandom(weekToSeed(weekStr))
@@ -82,7 +80,6 @@ export function checkMissionProgress(
     breathingSessions: number
     moodLogs: number
     activeDays: number
-    routinesCompleted: number
   }
 ): { progress: number; target: number; completed: boolean } {
   let progress = 0
@@ -103,8 +100,6 @@ export function checkMissionProgress(
       progress = weekData.moodLogs; target = condition.count; break
     case 'active_days':
       progress = weekData.activeDays; target = condition.days; break
-    case 'routines_complete':
-      progress = weekData.routinesCompleted; target = condition.count; break
   }
 
   return { progress: Math.min(progress, target), target, completed: progress >= target }

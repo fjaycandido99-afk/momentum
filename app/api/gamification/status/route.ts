@@ -31,7 +31,7 @@ export async function GET() {
     weekStart.setHours(0, 0, 0, 0)
 
     // Fetch all needed data in parallel
-    const [prefs, todaysEvents, weekEvents, achievements, todayGuide, weekGuides, routinesCompleted, goals, journalCount, modulesCompleted] = await Promise.all([
+    const [prefs, todaysEvents, weekEvents, achievements, todayGuide, weekGuides, goals, journalCount, modulesCompleted] = await Promise.all([
       prisma.userPreferences.findUnique({ where: { user_id: user.id } }),
       prisma.xPEvent.findMany({
         where: { user_id: user.id, created_at: { gte: todayStart } },
@@ -73,9 +73,6 @@ export async function GET() {
           mood_before: true, mood_after: true,
           music_genre_used: true,
         },
-      }),
-      prisma.xPEvent.count({
-        where: { user_id: user.id, event_type: 'routineComplete', created_at: { gte: weekStart } },
       }),
       prisma.goal.count({ where: { user_id: user.id, status: 'completed' } }),
       prisma.dailyGuide.count({
@@ -152,7 +149,6 @@ export async function GET() {
         breathingSessions: weekBreathing,
         moodLogs: weekMoodLogs,
         activeDays: weekActiveDays,
-        routinesCompleted,
       }),
     }))
 
