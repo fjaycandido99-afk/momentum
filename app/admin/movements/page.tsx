@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { currentAdmin } from '@/lib/auth/admin'
 import { MOVEMENTS, PATTERN_LABELS, PATTERN_ORDER } from '@/lib/movements/library'
-import { allTechnique } from '@/lib/movements/technique-server'
+import { allTechniqueForEditor } from '@/lib/movements/technique-server'
 import { TechniqueEditor } from '@/components/admin/TechniqueEditor'
 
 /**
@@ -34,15 +34,19 @@ export default async function AdminMovementsPage() {
     )
   }
 
-  const technique = await allTechnique()
+  const technique = await allTechniqueForEditor()
   const movements = PATTERN_ORDER.flatMap(pattern =>
     MOVEMENTS.filter(m => m.pattern === pattern).map(m => ({
       id: m.id,
       name: m.name,
       pattern: PATTERN_LABELS[m.pattern],
-      reviewedBy: technique[m.id]?.reviewedBy ?? null,
+      reviewedBy: technique[m.id]?.reviewedBy || null,
+      published: technique[m.id]?.published ?? false,
     })),
   )
+
+  const publishedCount = Object.values(technique).filter(t => t.published).length
+  const draftCount = Object.values(technique).filter(t => !t.published).length
 
   return (
     <div className="min-h-screen bg-black text-white px-5 py-8">
@@ -52,7 +56,8 @@ export default async function AdminMovementsPage() {
         </Link>
         <h1 className="text-2xl mt-3">Movement guidance</h1>
         <p className="text-sm text-white/55 mt-2 leading-relaxed">
-          {Object.keys(technique).length} of {MOVEMENTS.length} movements have reviewed guidance. The
+          {publishedCount} of {MOVEMENTS.length} movements have published guidance, {draftCount} have an
+          unsigned draft waiting. The
           rest show &ldquo;Voxu doesn&rsquo;t teach technique&rdquo;, which is the honest state until
           somebody qualified fills them in.
         </p>

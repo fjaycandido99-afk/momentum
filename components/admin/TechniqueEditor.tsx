@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
-import type { MovementTechnique } from '@/lib/movements/library'
+import { MOVEMENTS_BY_ID, type MovementTechnique } from '@/lib/movements/library'
+import { MovementHero } from '@/components/movements/MovementHero'
 import {
   TECHNIQUE_LIMITS,
   calloutLines,
@@ -16,6 +17,7 @@ interface Row {
   name: string
   pattern: string
   reviewedBy: string | null
+  published: boolean
 }
 
 /**
@@ -32,7 +34,7 @@ export function TechniqueEditor({
   existing,
 }: {
   movements: Row[]
-  existing: Record<string, MovementTechnique>
+  existing: Record<string, MovementTechnique & { published: boolean }>
 }) {
   const [movementId, setMovementId] = useState(movements[0]?.id ?? '')
   const current = existing[movementId]
@@ -49,8 +51,12 @@ export function TechniqueEditor({
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [bulk, setBulk] = useState<{ done: number; total: number; rejected: number } | null>(null)
+  const stopRef = useRef(false)
 
-  const done = useMemo(() => movements.filter(m => m.reviewedBy).length, [movements])
+  const done = useMemo(() => movements.filter(m => m.published).length, [movements])
+  const isDraft = !!current && !current.published
+  const preview = MOVEMENTS_BY_ID.get(movementId) ?? null
 
   /** Load whichever movement was picked, so switching doesn't lose work silently. */
   const pick = (id: string) => {
@@ -97,6 +103,76 @@ export function TechniqueEditor({
     }
   }
 
+  /**
+   * Ask the model for a first draft.
+   *
+   * It writes an unsigned row and fills the form. Nothing is visible to a
+   * reader — the reviewer field is still empty, and the read path only
+   * returns published rows. The person reads, corrects, signs.
+   */
+  const draft = async () => {
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const res = await fetch('/api/movements/technique/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ movementId }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setError(data?.error ?? 'Could not draft that.')
+        return
+      }
+      setSteps((data.draft.steps ?? []).join('\n'))
+      setCues(pairLines(data.draft.cues))
+      setMistakes(pairLines(data.draft.mistakes))
+      setCallouts(calloutLines(data.draft.callouts))
+      setMessage('Drafted. Nobody can see it — read it, fix it, then put your name on it.')
+    } catch {
+      setError('Could not reach the server.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /**
+   * Draft everything that has nothing.
+   *
+   * One call per movement, in series, so a single bad answer is one
+   * rejected draft rather than a failed batch — and so it can be watched
+   * and stopped. Still nothing published: this fills the queue, a person
+   * empties it.
+   */
+  const draftAll = async () => {
+    const todo = movements.filter(m => !existing[m.id])
+    setBulk({ done: 0, total: todo.length, rejected: 0 })
+    setError(null)
+    setMessage(null)
+
+    let done = 0
+    let rejected = 0
+    for (const movement of todo) {
+      if (stopRef.current) break
+      const res = await fetch('/api/movements/technique/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ movementId: movement.id }),
+      }).catch(() => null)
+
+      if (res?.ok) done += 1
+      else rejected += 1
+      setBulk({ done, total: todo.length, rejected })
+    }
+
+    stopRef.current = false
+    setBulk(null)
+    setMessage(
+      `${done} drafted, ${rejected} skipped. Nobody can see any of it — reload, then read and sign them.`,
+    )
+  }
+
   const remove = async () => {
     setBusy(true)
     setError(null)
@@ -134,11 +210,60 @@ export function TechniqueEditor({
       >
         {movements.map(m => (
           <option key={m.id} value={m.id} className="bg-[#0b0b0b]">
-            {m.reviewedBy ? '✓ ' : '· '}
+            {m.published ? '✓ ' : existing[m.id] ? '◌ ' : '· '}
             {m.name} — {m.pattern}
           </option>
         ))}
       </select>
+      <p className="text-[11px] text-white/35 mt-1.5">
+        ✓ published · ◌ drafted, nobody can see it · · nothing yet
+      </p>
+
+      {/* A draft is loud about being a draft. Somebody skim-reading this
+          page should never mistake the model's words for a person's. */}
+      {isDraft && (
+        <div className="mt-3 rounded-xl border border-amber-300/30 bg-amber-300/[0.06] p-3">
+          <p className="text-[13px] text-amber-100/90 leading-snug">
+            This is an unsigned draft. No reader has seen a word of it.
+          </p>
+          <p className="text-[12px] text-amber-100/60 mt-1 leading-snug">
+            Written by the model to save you typing. It is wrong until you have checked it — and
+            whoever you name below is the person a paying customer will hold to it.
+          </p>
+        </div>
+      )}
+
+      <div className="flex items-center gap-4 mt-3">
+        <button
+          onClick={draft}
+          disabled={busy || !!bulk || (!!current && current.published)}
+          className="text-[12px] text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 disabled:opacity-40"
+        >
+          {current?.published ? 'Already published — withdraw to redraft' : 'Draft this one with AI'}
+        </button>
+
+        {bulk ? (
+          <span className="flex items-center gap-2 text-[12px] text-white/60">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            Drafting {bulk.done + bulk.rejected} of {bulk.total}
+            {bulk.rejected > 0 ? ` · ${bulk.rejected} skipped` : ''}
+            <button
+              onClick={() => { stopRef.current = true }}
+              className="underline underline-offset-4 decoration-white/20 hover:text-white"
+            >
+              stop
+            </button>
+          </span>
+        ) : (
+          <button
+            onClick={draftAll}
+            disabled={busy}
+            className="text-[12px] text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 disabled:opacity-40"
+          >
+            Draft all {movements.filter(m => !existing[m.id]).length} missing
+          </button>
+        )}
+      </div>
 
       <label className={label} htmlFor="reviewed-by">
         Reviewed by — a person, shown on screen
@@ -210,9 +335,27 @@ export function TechniqueEditor({
         className={`${field} mt-1.5 font-mono text-[13px]`}
       />
       <p className="text-[11px] text-white/35 mt-1.5 leading-snug">
-        x and y are percentages of the image — 0,0 is top left. These are the arrows on the hero, and
-        they only appear once this movement has a reviewer.
+        x and y are percentages of the image — 0,0 is top left. The dot in the preview marks the
+        point each label refers to, so you can tell whether it landed on the right part of the body.
       </p>
+
+      {/* The preview, through the same component the app uses. A preview
+          that renders through different code is a preview that lies. */}
+      {preview && (
+        <>
+          <p className={label}>Preview — exactly what a reader sees</p>
+          <MovementHero
+            movement={preview}
+            technique={{
+              reviewedBy: reviewedBy || 'unsigned',
+              reviewedOn,
+              steps: [],
+              callouts: parseCalloutLines(callouts),
+            }}
+            className="mt-2"
+          />
+        </>
+      )}
 
       {error && <p className="text-[13px] text-red-300 mt-4">{error}</p>}
       {message && <p className="text-[13px] text-white/70 mt-4">{message}</p>}

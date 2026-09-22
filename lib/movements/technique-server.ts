@@ -102,6 +102,60 @@ export async function saveTechnique(
 }
 
 /**
+ * Store an unsigned draft.
+ *
+ * Deliberately a different function from saveTechnique: this one cannot
+ * publish, so no amount of wrong arguments makes a draft go live. The
+ * reviewer field stays empty — the editor's Publish button is the only
+ * thing that fills it, and validateTechnique refuses to publish without it.
+ */
+export async function saveDraft(
+  movementId: string,
+  body: {
+    steps: string[]
+    cues?: { label: string; detail?: string }[]
+    mistakes?: { label: string; detail?: string }[]
+    callouts?: { label: string; detail?: string; x: number; y: number; side: 'left' | 'right' }[]
+  },
+): Promise<void> {
+  const data = {
+    published: false,
+    reviewed_by: '',
+    reviewed_on: '',
+    steps: body.steps as unknown as Prisma.InputJsonValue,
+    cues: (body.cues ?? []) as unknown as Prisma.InputJsonValue,
+    mistakes: (body.mistakes ?? []) as unknown as Prisma.InputJsonValue,
+    callouts: (body.callouts ?? []) as unknown as Prisma.InputJsonValue,
+  }
+
+  const existing = await prisma.movementTechnique.findUnique({
+    where: { movement_id: movementId },
+    select: { published: true },
+  })
+
+  // Never overwrite something a person already signed. A draft is only
+  // ever offered for a movement nobody has reviewed yet.
+  if (existing?.published) return
+
+  await prisma.movementTechnique.upsert({
+    where: { movement_id: movementId },
+    create: { movement_id: movementId, ...data },
+    update: data,
+  })
+}
+
+/** Movement ids that already have a row, published or draft. */
+export async function techniqueRowIds(): Promise<{ published: string[]; drafts: string[] }> {
+  const rows = await prisma.movementTechnique.findMany({
+    select: { movement_id: true, published: true },
+  })
+  return {
+    published: rows.filter(r => r.published).map(r => r.movement_id),
+    drafts: rows.filter(r => !r.published).map(r => r.movement_id),
+  }
+}
+
+/**
  * Remove guidance for a movement.
  *
  * Withdrawing has to be as easy as publishing: if a reviewer changes their

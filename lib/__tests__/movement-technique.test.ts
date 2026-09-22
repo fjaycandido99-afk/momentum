@@ -9,6 +9,11 @@ import {
   validateTechnique,
   type TechniqueDraft,
 } from '@/lib/movements/technique'
+import {
+  DRAFT_SYSTEM_PROMPT,
+  draftUserPrompt,
+  parseDraft,
+} from '@/lib/movements/technique-draft'
 
 const ok: TechniqueDraft = {
   movementId: 'back_squat',
@@ -156,5 +161,91 @@ describe('the editor’s line format', () => {
   it('ignores blank lines', () => {
     expect(parsePairLines('\n\n  \n')).toEqual([])
     expect(parseCalloutLines('\n \n')).toEqual([])
+  })
+})
+
+describe('AI drafts', () => {
+  const today = '2026-09-21'
+
+  it('parses a clean draft', () => {
+    const json = JSON.stringify({
+      steps: ['Set the bar across your shoulders.', 'Stand up out of the rack.'],
+      cues: [{ label: 'Chest proud', detail: 'Ribs down, eyes forward.' }],
+      mistakes: [{ label: 'Knees falling in', detail: 'Let them track over your toes.' }],
+      callouts: [{ label: 'Chest proud', detail: 'Ribs down', x: 30, y: 25, side: 'left' }],
+    })
+    const result = parseDraft('back_squat', json, today)!
+    expect(result.rejected).toBeUndefined()
+    expect(result.draft.steps).toHaveLength(2)
+    expect(result.draft.callouts?.[0].side).toBe('left')
+  })
+
+  it('digs the JSON out of whatever the model wrapped it in', () => {
+    const wrapped = 'Sure! Here you go:\n```json\n{"steps":["Stand up."]}\n```\nHope that helps.'
+    expect(parseDraft('back_squat', wrapped, today)!.draft.steps).toEqual(['Stand up.'])
+  })
+
+  it('rejects a draft that prescribes a dose, rather than storing it', () => {
+    // The model is told not to. This is what happens when it does anyway —
+    // a rejected draft is never written, because a stored one would sit
+    // there waiting for somebody to skim-read and publish it.
+    const json = JSON.stringify({ steps: ['Do 3 x 8 with two minutes rest.'] })
+    const result = parseDraft('back_squat', json, today)!
+    expect(result.rejected).toMatch(/dose_not_allowed/)
+  })
+
+  it('rejects medical and evidence claims the same way', () => {
+    expect(parseDraft('back_squat', JSON.stringify({ steps: ['This treats knee pain.'] }), today)!.rejected)
+      .toMatch(/medical/)
+    expect(parseDraft('back_squat', JSON.stringify({ steps: ['Studies show this is best.'] }), today)!.rejected)
+      .toMatch(/evidence/)
+  })
+
+  it('survives junk without throwing', () => {
+    expect(parseDraft('back_squat', 'I cannot help with that.', today)!.rejected).toMatch(/JSON/)
+    expect(parseDraft('back_squat', '{', today)!.rejected).toMatch(/JSON/)
+    expect(parseDraft('not_a_movement', '{}', today)).toBeNull()
+  })
+
+  it('clamps a callout that lands off the picture instead of binning the draft', () => {
+    const json = JSON.stringify({ steps: ['Stand up.'], callouts: [{ label: 'Up', x: 140, y: -20, side: 'x' }] })
+    const result = parseDraft('back_squat', json, today)!
+    expect(result.rejected).toBeUndefined()
+    expect(result.draft.callouts?.[0]).toMatchObject({ x: 100, y: 0, side: 'left' })
+  })
+
+  it('caps what the model returns rather than trusting the count', () => {
+    const json = JSON.stringify({
+      steps: Array(20).fill('Stand up.'),
+      cues: Array(20).fill({ label: 'Up' }),
+    })
+    const result = parseDraft('back_squat', json, today)!
+    expect(result.rejected).toBeUndefined()
+    expect(result.draft.steps.length).toBeLessThanOrEqual(8)
+    expect(result.draft.cues?.length).toBeLessThanOrEqual(4)
+  })
+
+  it('never lets the model name the reviewer', () => {
+    // Whatever it returns, the draft carries no signature: the editor's
+    // Publish button is the only thing that sets one.
+    const json = JSON.stringify({ steps: ['Stand up.'], reviewedBy: 'Dr AI, PhD' })
+    const result = parseDraft('back_squat', json, today)!
+    expect((result.draft as Record<string, unknown>).reviewedBy).toBeUndefined()
+  })
+
+  it('tells the model the rules it will be judged by', () => {
+    // If the prompt and the validator drift apart, the model wastes calls
+    // producing drafts that are thrown away.
+    expect(DRAFT_SYSTEM_PROMPT).toMatch(/No sets, reps, weights/i)
+    expect(DRAFT_SYSTEM_PROMPT).toMatch(/No medical language/i)
+    expect(DRAFT_SYSTEM_PROMPT).toMatch(/research|studies/i)
+    expect(DRAFT_SYSTEM_PROMPT).toMatch(/never shown to anyone until a named person/i)
+  })
+
+  it('tells the model what movement it is drafting, and refuses an unknown one', () => {
+    const prompt = draftUserPrompt('back_squat')!
+    expect(prompt).toMatch(/Back squat/)
+    expect(prompt).toMatch(/barbell/)
+    expect(draftUserPrompt('not_a_movement')).toBeNull()
   })
 })
