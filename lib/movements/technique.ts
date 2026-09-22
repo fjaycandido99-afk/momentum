@@ -187,6 +187,35 @@ export function calloutLines(callouts: TechniqueDraft['callouts']): string {
     .join('\n')
 }
 
+/** Where a callout label can sit, as a percentage of the image height. */
+export const CALLOUT_BAND = { top: 5, bottom: 62, gap: 13 } as const
+
+/**
+ * Move labels so they don't land on each other, or under the caption.
+ *
+ * The point each label refers to stays exactly where the reviewer put it —
+ * only the LABEL slides. The bottom of the hero carries a gradient and a
+ * line of text, and in the first real draft two labels sat on top of it and
+ * were unreadable.
+ *
+ * Deliberately not clever: sort by the point's height, then push each label
+ * down far enough to clear the one above. With four labels maximum there is
+ * always room.
+ */
+export function layoutCallouts<T extends { x: number; y: number }>(
+  callouts: T[],
+): (T & { labelY: number })[] {
+  const sorted = [...callouts].sort((a, b) => a.y - b.y)
+  let previous = -Infinity
+
+  return sorted.map(callout => {
+    const wanted = Math.min(Math.max(callout.y, CALLOUT_BAND.top), CALLOUT_BAND.bottom)
+    const labelY = Math.max(wanted, previous + CALLOUT_BAND.gap)
+    previous = labelY
+    return { ...callout, labelY }
+  })
+}
+
 /** `label | detail` per line, for cues and mistakes. */
 export function parsePairLines(text: string): { label: string; detail?: string }[] {
   return text

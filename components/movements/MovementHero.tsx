@@ -6,6 +6,7 @@ import {
   type MovementTechnique,
 } from '@/lib/movements/library'
 import { artAlt, artFor } from '@/lib/movements/images'
+import { layoutCallouts } from '@/lib/movements/technique'
 import { PatternGlyph } from './PatternGlyph'
 
 /**
@@ -62,14 +63,16 @@ export function MovementHero({
           The leader line runs from the label's edge toward the point, and
           the dot marks the point itself — so a reviewer can tell whether
           x and y landed where they meant. */}
-      {technique?.callouts?.map(callout => (
+      {layoutCallouts(technique?.callouts ?? []).map(callout => (
         <div key={callout.label}>
           <div
             className={`absolute max-w-[42%] ${callout.side === 'right' ? 'text-right' : 'text-left'}`}
             style={{
               left: callout.side === 'left' ? '4%' : undefined,
               right: callout.side === 'right' ? '4%' : undefined,
-              top: `${callout.y}%`,
+              // The LABEL is nudged to clear its neighbours and the
+              // caption; the dot below still marks the real point.
+              top: `${callout.labelY}%`,
             }}
           >
             <p className="text-[11px] text-white leading-tight font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">

@@ -20,6 +20,7 @@ import { PATTERN_GLYPH_KEYS } from '@/components/movements/PatternGlyph'
 import {
   HURTS_NOTE,
   SWAP_REASONS,
+  matchKey,
   matchMovement,
   normaliseName,
   samePattern,
@@ -225,6 +226,42 @@ describe('matchMovement', () => {
   it('normalises punctuation and case', () => {
     expect(normaliseName('One-Arm  Dumbbell Row!')).toBe('one arm dumbbell row')
     expect(matchMovement('One-arm dumbbell row')?.id).toBe('dumbbell_row')
+  })
+
+  it('matches the plural, because that is what people type', () => {
+    // Every one of these missed the library before matchKey existed, which
+    // meant no swap offered on the most likely thing anyone writes.
+    expect(matchMovement('squats')?.id).toBe('back_squat')
+    expect(matchMovement('push ups')?.id).toBe('push_up')
+    expect(matchMovement('pushups')?.id).toBe('push_up')
+    expect(matchMovement('Push-Ups')?.id).toBe('push_up')
+    expect(matchMovement('dips')?.id).toBe('dip')
+    expect(matchMovement('pull ups')?.id).toBe('pull_up')
+    expect(matchMovement('rdls')?.id).toBe('romanian_deadlift')
+    expect(matchMovement('lat pulldowns')?.id).toBe('lat_pulldown')
+    expect(matchMovement('benchpress')?.id).toBe('bench_press')
+  })
+
+  it('still refuses the words that mean three different movements', () => {
+    // Widening the match must not turn into guessing.
+    expect(matchMovement('rows')).toBeNull()
+    expect(matchMovement('curls')).toBeNull()
+    expect(matchMovement('press')).toBeNull()
+    expect(matchMovement('raises')).toBeNull()
+  })
+
+  it('has no two movements collapsing to the same key', () => {
+    // The guard on widening: if two names or aliases flatten to one key,
+    // whichever comes first in the file silently shadows the other.
+    const seen = new Map<string, string>()
+    for (const m of MOVEMENTS) {
+      for (const text of [m.name, ...(m.aliases ?? [])]) {
+        const key = matchKey(text)
+        const owner = seen.get(key)
+        expect(owner ?? m.id, `${key}: ${owner} and ${m.id}`).toBe(m.id)
+        seen.set(key, m.id)
+      }
+    }
   })
 })
 

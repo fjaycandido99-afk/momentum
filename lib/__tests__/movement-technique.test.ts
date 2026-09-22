@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
+  CALLOUT_BAND,
   TECHNIQUE_ERRORS,
+  layoutCallouts,
   calloutLines,
   pairLines,
   parseCalloutLines,
@@ -272,5 +274,37 @@ describe('the stutter the model makes', () => {
     })
     const result = parseDraft('back_squat', json, '2026-09-21')!
     expect(result.draft.cues?.[0].detail).toBe('Ribs down, eyes forward.')
+  })
+})
+
+describe('laying out the callouts', () => {
+  it('keeps labels off the caption at the bottom of the hero', () => {
+    // The first real draft put two labels on top of the gradient and the
+    // pattern line, where they could not be read at all.
+    const laid = layoutCallouts([{ x: 50, y: 95 }, { x: 40, y: 88 }])
+    for (const c of laid) expect(c.labelY).toBeLessThanOrEqual(CALLOUT_BAND.bottom + CALLOUT_BAND.gap)
+  })
+
+  it('pushes labels apart so two never sit on each other', () => {
+    const laid = layoutCallouts([{ x: 30, y: 20 }, { x: 60, y: 22 }, { x: 40, y: 23 }])
+    for (let i = 1; i < laid.length; i++) {
+      expect(laid[i].labelY - laid[i - 1].labelY).toBeGreaterThanOrEqual(CALLOUT_BAND.gap - 0.001)
+    }
+  })
+
+  it('leaves the point alone — only the label moves', () => {
+    const laid = layoutCallouts([{ x: 30, y: 90 }])
+    expect(laid[0].y).toBe(90)
+    expect(laid[0].labelY).toBeLessThan(90)
+  })
+
+  it('does not drag a high label down to meet a low one', () => {
+    const laid = layoutCallouts([{ x: 30, y: 10 }, { x: 60, y: 55 }])
+    expect(laid[0].labelY).toBe(10)
+    expect(laid[1].labelY).toBe(55)
+  })
+
+  it('handles none without throwing', () => {
+    expect(layoutCallouts([])).toEqual([])
   })
 })

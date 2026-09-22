@@ -497,7 +497,10 @@ export const MOVEMENTS: Movement[] = [
     pattern: 'vertical_pull',
     equipment: ['bodyweight'],
     level: 'advanced',
-    aliases: ['pullup', 'chin up', 'chinup'],
+    // "chin up" is NOT an alias here. It was, before the chin-up existed as
+    // its own movement — and then it quietly shadowed the real one, so
+    // somebody typing "chin ups" got sent to the pull-up's screen.
+    aliases: ['pullup'],
   },
   {
     id: 'assisted_pull_up',

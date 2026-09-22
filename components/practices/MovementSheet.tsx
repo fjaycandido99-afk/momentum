@@ -141,6 +141,11 @@ export function MovementSheet({
           </span>
         </div>
 
+        {/* The visual, with the reviewer's callouts if there are any. Shared
+            with the editor's preview so what a reviewer sees is what a
+            reader gets. */}
+        <MovementHero movement={current} technique={technique} />
+
         {/* Where it works.
 
             Art when every region of this movement has art, words when they
@@ -172,10 +177,6 @@ export function MovementSheet({
           </p>
         )}
 
-        {/* The visual, with the reviewer's callouts if there are any. Shared
-            with the editor's preview so what a reviewer sees is what a
-            reader gets. */}
-        <MovementHero movement={current} technique={technique} />
 
         {current.pick && <p className="text-[13px] text-white/60 mt-3 leading-snug">{current.pick}</p>}
 

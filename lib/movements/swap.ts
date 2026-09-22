@@ -57,6 +57,24 @@ export function normaliseName(text: string): string {
 }
 
 /**
+ * The form two spellings of the same movement collapse to.
+ *
+ * Spaces and punctuation go, and a trailing "s" with them — because people
+ * type "push ups", "pushups", "Push-Ups" and "dips", and every one of those
+ * was missing the library before this existed. It is still an EXACT match,
+ * just on a canonical form: "rows" collapses to "row", which matches
+ * nothing, because three different movements are called a row and guessing
+ * between them is worse than saying nothing.
+ *
+ * A test asserts no two movements collapse to the same key, so widening the
+ * match can't quietly make one name shadow another.
+ */
+export function matchKey(text: string): string {
+  const flat = normaliseName(text).replace(/\s+/g, '')
+  return flat.endsWith('s') ? flat.slice(0, -1) : flat
+}
+
+/**
  * The movement a typed row refers to, or null.
  *
  * Exact match on the name or an alias only. No fuzzy scoring on purpose: a
@@ -65,11 +83,11 @@ export function normaliseName(text: string): string {
  * a scoring function would guess.
  */
 export function matchMovement(text: string): Movement | null {
-  const needle = normaliseName(text)
+  const needle = matchKey(text)
   if (!needle) return null
   for (const movement of MOVEMENTS) {
-    if (normaliseName(movement.name) === needle) return movement
-    if (movement.aliases?.some(alias => normaliseName(alias) === needle)) return movement
+    if (matchKey(movement.name) === needle) return movement
+    if (movement.aliases?.some(alias => matchKey(alias) === needle)) return movement
   }
   return null
 }
