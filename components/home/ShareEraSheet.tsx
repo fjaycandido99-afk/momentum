@@ -18,11 +18,23 @@ import { trackFeature } from '@/lib/analytics/track'
  * Falls back to sharing the link as text, then to copying it, so it never
  * dead-ends on a phone or browser that can't share images.
  */
+const NUMBERS_KEY = 'voxu.share.numbers'
+
 export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => void }) {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [loadFailed, setLoadFailed] = useState(false)
   const [status, setStatus] = useState<'idle' | 'copied'>('idle')
+  // Whether the record goes on the card. Their call, remembered on this
+  // device only: someone at 4 of 12 shouldn't have to advertise it to share.
+  const [showNumbers, setShowNumbers] = useState(() => {
+    try { return localStorage.getItem(NUMBERS_KEY) !== 'off' } catch { return true }
+  })
+  const toggleNumbers = () => {
+    const next = !showNumbers
+    setShowNumbers(next)
+    try { localStorage.setItem(NUMBERS_KEY, next ? 'on' : 'off') } catch { /* stays for this sheet */ }
+  }
 
   const url = joinUrl(era.key, era.id)
   const text = shareText({ key: era.key, title: era.title, day: era.day, lengthDays: era.lengthDays, complete: era.step === 'complete' })
@@ -34,7 +46,11 @@ export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => 
   useEffect(() => {
     let cancelled = false
     let objectUrl: string | null = null
-    fetch('/api/era/card', { cache: 'no-store' })
+    // The old card must not be shareable while the new one loads.
+    setFile(null)
+    setPreview(null)
+    setLoadFailed(false)
+    fetch(showNumbers ? '/api/era/card' : '/api/era/card?numbers=0', { cache: 'no-store' })
       .then(r => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
       .then(blob => {
         if (cancelled) return
@@ -47,7 +63,7 @@ export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => 
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [era.key, era.day])
+  }, [era.key, era.day, showNumbers])
 
   const copy = async () => {
     try {
@@ -95,6 +111,20 @@ export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => 
       </div>
 
       <div className="px-5 space-y-2.5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}>
+        <div className="flex items-center justify-between gap-3 px-1 pb-1">
+          <p className="text-sm text-white/80">Show my numbers</p>
+          <button
+            onClick={toggleNumbers}
+            role="switch"
+            aria-checked={showNumbers}
+            aria-label="Show my numbers on the card"
+            className={`h-6 w-11 shrink-0 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+              showNumbers ? 'bg-white' : 'bg-white/10'
+            }`}
+          >
+            <div className={`h-4 w-4 rounded-full shadow-lg transition-transform ${showNumbers ? 'translate-x-6 bg-black' : 'translate-x-1 bg-white'}`} />
+          </button>
+        </div>
         <button
           onClick={share}
           disabled={!file && !loadFailed}
@@ -109,7 +139,9 @@ export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => 
           {status === 'copied' ? <><Check className="w-4 h-4" /> Link copied</> : <><Link2 className="w-4 h-4" /> Copy the join link</>}
         </button>
         <p className="text-[11px] text-white/40 text-center pt-1">
-          The card shows your era and your record — never what you promised.
+          {showNumbers
+            ? 'The card shows your era and your record — never what you promised.'
+            : 'The card shows your era and the day — no numbers, never what you promised.'}
         </p>
       </div>
     </div>

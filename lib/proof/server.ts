@@ -246,3 +246,19 @@ function addDays(day: string, n: number): string {
   for (let i = 0; i < n; i++) out = nextDay(out)
   return out
 }
+
+/**
+ * The days in [from, to] with anything kept on them — the same rule as a
+ * filled dot on /proof (keptCount > 0): a kept promise, a practice done (its
+ * minimum counts), or a finished exercise. Three narrow reads of local_day
+ * only; the share card needs the count, not the year.
+ */
+export async function loadProofDaysBetween(userId: string, from: string, to: string): Promise<Set<string>> {
+  const window = { user_id: userId, local_day: { gte: from, lte: to } }
+  const [promises, practices, exercises] = await Promise.all([
+    prisma.eraPromise.findMany({ where: { ...window, kept: true }, select: { local_day: true } }),
+    prisma.practiceLog.findMany({ where: { ...window, done: true }, select: { local_day: true } }),
+    prisma.exerciseRun.findMany({ where: { ...window, completed: true }, select: { local_day: true } }),
+  ])
+  return new Set([...promises, ...practices, ...exercises].map(r => r.local_day))
+}

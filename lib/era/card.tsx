@@ -4,6 +4,7 @@ import { ERA_COMPLETE_IMAGE, programFor } from './programs'
 import { eraSlug } from './share'
 import { ERA_PRESETS_BY_KEY } from './presets'
 import { ogFonts, typeset } from '@/lib/og-fonts'
+import { cardStatLines, type CardStatsInput } from './card-stats'
 
 /**
  * The era share card — Story-sized (1080×1920). Pure given the era: the API
@@ -11,19 +12,21 @@ import { ogFonts, typeset } from '@/lib/og-fonts'
  * sample era to check the layout.
  *
  * No name and no promise text on it: it shows the era and the record, never
- * what someone privately promised.
+ * what someone privately promised. The record is optional: `stats` null
+ * means they chose to share without numbers.
  */
 const W = 1080
 const H = 1920
 const SERIF = 'Cormorant'
 
-export async function eraCardImage(era: EraTodayWire, origin: string): Promise<ImageResponse> {
+export async function eraCardImage(era: EraTodayWire, origin: string, stats: CardStatsInput | null): Promise<ImageResponse> {
   const complete = era.step === 'complete'
   const art = new URL(complete ? ERA_COMPLETE_IMAGE : programFor(era.key).image ?? '/era/custom.jpg', origin).toString()
   const byDay = new Map(era.days.map(d => [d.day, d.kept]))
   const joinable = ERA_PRESETS_BY_KEY.has(era.key)
   const title = typeset(era.title.toUpperCase())
   const titleSize = title.length > 14 ? 118 : title.length > 10 ? 138 : 158
+  const statLines = stats ? cardStatLines(stats, true) : []
 
   return new ImageResponse(
     (
@@ -67,11 +70,10 @@ export async function eraCardImage(era: EraTodayWire, origin: string): Promise<I
             })}
           </div>
 
-          <div style={{ display: 'flex', fontSize: 36, color: 'rgba(255,255,255,0.8)', marginTop: 34 }}>
-            {[
-              era.stats.keptPercent !== null ? `${era.stats.keptPercent}% of promises kept` : null,
-              era.stats.promiseStreak > 1 ? `${era.stats.promiseStreak}-day streak` : null,
-            ].filter(Boolean).join('   ·   ') || 'One promise a day'}
+          <div style={{ display: 'flex', flexDirection: 'column', fontSize: 36, color: 'rgba(255,255,255,0.8)', marginTop: 34 }}>
+            {statLines.length > 0
+              ? statLines.map((line, i) => <span key={line} style={{ display: 'flex', marginTop: i === 0 ? 0 : 10 }}>{line}</span>)
+              : <span style={{ display: 'flex' }}>One promise a day</span>}
           </div>
 
           <div style={{ display: 'flex', height: 2, background: 'rgba(255,255,255,0.15)', marginTop: 64, marginBottom: 48 }} />
@@ -95,6 +97,9 @@ export async function eraCardImage(era: EraTodayWire, origin: string): Promise<I
     },
   )
 }
+
+/** The sample era's record: 14 of 16 promises kept, proof on 15 of 16 days. */
+export const SAMPLE_STATS: CardStatsInput = { promisesKept: 14, promisesAnswered: 16, proofDays: 15, daysSoFar: 16 }
 
 /**
  * A made-up era for previews (?sample=<key> on the card route): day 17, a
