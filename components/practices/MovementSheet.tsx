@@ -246,12 +246,12 @@ export function MovementSheet({
                   {/* Its own art if it has any, its family's otherwise, and
                       the mark when there's neither. */}
                   {thumb ? (
-                    <span className="block aspect-[16/10] relative">
+                    <span className="block aspect-[4/3] relative">
                       <img src={thumb.src} alt="" aria-hidden className="w-full h-full object-cover" loading="lazy" />
                       <span className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     </span>
                   ) : (
-                    <span className="flex aspect-[16/10] items-center justify-center text-white/25 bg-gradient-to-br from-white/[0.05] to-transparent">
+                    <span className="flex aspect-[4/3] items-center justify-center text-white/25 bg-gradient-to-br from-white/[0.05] to-transparent">
                       <PatternGlyph pattern={v.pattern} className="w-4 h-4" />
                     </span>
                   )}

@@ -18,11 +18,20 @@ import { REGION_LABELS, type Region } from '../lib/movements/library'
  *   npx tsx scripts/movement-art-prompts.ts --limit 8  # a batch at a time
  */
 
+/**
+ * The shared tail.
+ *
+ * "Whole body in frame, head to feet, with space around them" is there
+ * because a picture cropped at the shins is useless on a screen that is
+ * naming an exercise — and because the card it sits in is 4:3, so anything
+ * tighter loses the ends of the movement rather than the background.
+ */
 const TAIL =
   'side view in near darkness, outline only, backlit haze, matte near-black background, ' +
   'single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, ' +
-  'photographic, 85mm look, 4:3 landscape, single subject filling the frame, one photograph, ' +
-  'not a collage, no text, no labels, no watermark, no logos'
+  'photographic, 85mm look, 4:3 landscape, whole body in frame from head to feet with space ' +
+  'around the subject, nothing cropped, one photograph, not a collage, no text, no labels, ' +
+  'no watermark, no logos'
 
 /**
  * Subjects where the movement's name alone would send an image model

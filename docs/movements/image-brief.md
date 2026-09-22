@@ -124,7 +124,7 @@ the variation cards and as the hero for that specific movement.
 Same tail on every one:
 
 ```
-side view in near darkness, outline only, backlit haze, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 4:3 landscape, single subject filling the frame, one photograph, not a collage, no text, no labels, no watermark, no logos
+side view in near darkness, outline only, backlit haze, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 4:3 landscape, whole body in frame from head to feet with space around the subject, nothing cropped, one photograph, not a collage, no text, no labels, no watermark, no logos
 ```
 
 | Save as | Subject (prepend to the tail) |
@@ -150,5 +150,5 @@ side view in near darkness, outline only, backlit haze, matte near-black backgro
 
 | Save as | Prompt |
 | --- | --- |
-| `figure-hinge.webp` | Rim-lit silhouette of a single athlete standing over a loaded barbell, side view in near darkness, outline only, backlit haze, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 4:3 landscape, single subject filling the frame, one photograph, not a collage, no text, no labels, no watermark, no logos |
-| `kit-vertical-push.webp` | Two heavy dumbbells standing on end on a rubber floor, long shadows, empty gym, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 4:3 landscape, single subject filling the frame, one photograph, not a collage, no text, no labels, no watermark, no logos |
+| `figure-hinge.webp` | Rim-lit silhouette of a single athlete standing over a loaded barbell, side view in near darkness, outline only, backlit haze, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 4:3 landscape, whole body in frame from head to feet with space around the subject, nothing cropped, one photograph, not a collage, no text, no labels, no watermark, no logos |
+| `kit-vertical-push.webp` | Two heavy dumbbells standing on end on a rubber floor, long shadows, empty gym, matte near-black background, single hard key light from upper left, deep shadow falloff, fine film grain, desaturated, photographic, 85mm look, 4:3 landscape, whole body in frame from head to feet with space around the subject, nothing cropped, one photograph, not a collage, no text, no labels, no watermark, no logos |
