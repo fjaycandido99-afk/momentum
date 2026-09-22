@@ -55,6 +55,8 @@ export const MOVEMENT_IMAGES: Record<string, string> = {
   overhead_press: '/movements/overhead-press.webp',
   pull_up: '/movements/pull-up.webp',
   lat_pulldown: '/movements/lat-pulldown.webp',
+  split_squat: '/movements/split-squat.webp',
+  walking_lunge: '/movements/walking-lunge.webp',
 }
 
 /**
