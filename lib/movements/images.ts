@@ -101,7 +101,7 @@ export const KIT_IMAGES: Partial<Record<MovementPattern, string>> = {
   elbow_extension: '/movements/kit-elbow-extension.webp',
   knee_extension: '/movements/kit-knee-extension.webp',
   knee_flexion: '/movements/kit-knee-flexion.webp',
-  // calf: still to generate — the picker falls back to the mark.
+  calf: '/movements/kit-calf.webp',
 }
 
 /**
