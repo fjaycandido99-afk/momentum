@@ -67,8 +67,10 @@ describe('poolFor', () => {
     expect(pool.length).toBeGreaterThan(own.length)
   })
 
-  it('falls back to the shared ones for an era with no toolkit yet', () => {
-    const pool = poolFor('gym_arc')
+  it('falls back to the shared ones for an era with no toolkit of its own', () => {
+    // A custom era is the real case: someone names their own, so there is
+    // nothing authored for it and there never will be.
+    const pool = poolFor(CUSTOM_ERA_KEY)
     expect(pool.length).toBeGreaterThan(0)
     expect(pool.every(e => !ERA_TOOLKITS.locked_in.includes(e))).toBe(true)
   })
@@ -110,9 +112,9 @@ describe('pickExercise', () => {
   })
 
   it('works for an era with no toolkit of its own', () => {
-    const pick = pickExercise({ eraKey: 'study', day: 1, lengthDays: 30 })
+    const pick = pickExercise({ eraKey: CUSTOM_ERA_KEY, day: 1, lengthDays: 30 })
     expect(pick?.exercise).toBeTruthy()
-    expect(pick?.trains).toEqual(ERA_ATTRIBUTES.study)
+    expect(pick?.trains).toEqual(attributesForEra(CUSTOM_ERA_KEY))
   })
 
   it('carries the era’s attributes, not the exercise’s', () => {
@@ -149,5 +151,66 @@ describe('cueAt', () => {
   it('keeps the last cue to the end', () => {
     const last = exercise.cues[exercise.cues.length - 1]
     expect(cueAt(exercise, exerciseSeconds(exercise))).toBe(last.say)
+  })
+})
+
+describe('every era has its own toolkit', () => {
+  it('leaves no preset era running on the shared two', () => {
+    // An era whose "practice" is the same breathing exercise as every other
+    // era isn't an era, it's a label. Custom eras are the exception: someone
+    // names their own, so nothing can be authored for it.
+    for (const preset of ERA_PRESETS) {
+      const own = ERA_TOOLKITS[preset.key] ?? []
+      expect(own.length, `${preset.key} has no exercises of its own`).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('covers all three phases, so week three is not still on week one', () => {
+    // pickExercise asks for the phase's difficulty first. Without one in
+    // each band an era quietly falls back to a shared exercise on the days
+    // that are meant to ask more.
+    for (const preset of ERA_PRESETS) {
+      const own = ERA_TOOLKITS[preset.key] ?? []
+      const bands = new Set(own.map(e => e.difficulty))
+      for (const band of ['light', 'moderate', 'hard']) {
+        expect(bands.has(band as never), `${preset.key} has nothing ${band}`).toBe(true)
+      }
+    }
+  })
+
+  it('gives every era something of its own on day 1, 10 and 25', () => {
+    for (const preset of ERA_PRESETS) {
+      const own = new Set((ERA_TOOLKITS[preset.key] ?? []).map(e => e.id))
+      for (const day of [1, 10, 25]) {
+        const pick = pickExercise({ eraKey: preset.key, day, lengthDays: 30 })!
+        expect(own.has(pick.exercise.id), `${preset.key} day ${day} → ${pick.exercise.id}`).toBe(true)
+      }
+    }
+  })
+
+  it('prescribes no dose and diagnoses nothing, in any of them', () => {
+    // Same line as the movement library: these are things to do with your
+    // attention for a few minutes. Not sets, not medicine.
+    // A dose needs a NUMBER. The first version of this banned the bare word
+    // "set" and flagged "a standard you set on a good day" — and it would
+    // have banned the title "The Smallest Rep", which is the whole metaphor.
+    // What isn't allowed is a prescription: 3 x 8, 20kg, 140bpm.
+    const dose = /\b\d+\s*(x\s*\d+|sets?|reps?|kg|lbs?|bpm|calories)\b|\b(sets?|reps?) of \d|heart rate zone/i
+    const medical = /\b(cortisol|dopamine|vagus|vagal|anxiety disorder|depression|cures?|treats?|clinically)\b/i
+    for (const e of ALL_EXERCISES) {
+      const text = [e.title, e.why, ...e.steps, ...e.cues.map(c => c.say), e.after].join(' ')
+      expect(text.match(dose)?.[0], `${e.id} prescribes "${text.match(dose)?.[0]}"`).toBeUndefined()
+      expect(text.match(medical)?.[0], `${e.id} claims "${text.match(medical)?.[0]}"`).toBeUndefined()
+    }
+  })
+
+  it('never tells anyone their feeling is wrong', () => {
+    // "Stop overthinking", "don't be so sensitive" — the app doesn't get to
+    // say that. It can ask someone to act anyway; it can't dismiss them.
+    const dismissive = /\b(stop (over)?thinking|don’t be (so )?(sensitive|dramatic|weak)|man up|no excuses|stop feeling)\b/i
+    for (const e of ALL_EXERCISES) {
+      const text = [e.title, e.why, ...e.steps, ...e.cues.map(c => c.say), e.after].join(' ')
+      expect(dismissive.test(text), `${e.id}: ${text.match(dismissive)?.[0]}`).toBe(false)
+    }
   })
 })

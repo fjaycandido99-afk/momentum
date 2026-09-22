@@ -23,7 +23,6 @@ import {
 } from '@/lib/movements/swap'
 import { artAlt, artFor, ownArt } from '@/lib/movements/images'
 import { PatternGlyph } from '@/components/movements/PatternGlyph'
-import { RegionMap } from '@/components/movements/RegionMap'
 import { haptic } from '@/lib/haptics'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -116,28 +115,17 @@ export function MovementSheet({
           </span>
         </div>
 
-        {/* Broad regions only. "Quads and glutes" is what's printed on the
-            machine; a percentage per muscle head would be a claim about a
-            body this app has never seen. */}
-        <div className="mt-3">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Works</p>
-          <div className="flex flex-wrap gap-2 mt-1.5">
-            {regionsOf(current).map(region => (
-              <div
-                key={region}
-                className="rounded-lg bg-white/[0.05] border border-white/[0.1] px-3 py-2 flex flex-col items-center gap-1"
-              >
-                {/* Where it is, at one weight. Never a heat map — how much
-                    a region does varies by person and load, and the app
-                    knows neither. */}
-                <span className="text-white/80">
-                  <RegionMap region={region} className="w-7 h-16" />
-                </span>
-                <span className="text-[11px] text-white/70">{REGION_LABELS[region]}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Said in words, not drawn.
+
+            This was a little figure with the region lit up, and it looked
+            like a broken icon next to a photograph — a hand-drawn body at
+            thumbnail size can't hold its own on this screen. The words
+            carry the same fact with none of the crudeness, and the moment
+            there's anatomy art worth looking at it goes here instead. */}
+        <p className="text-[13px] text-white/60 mt-2.5">
+          <span className="text-white/40">Works </span>
+          {regionsOf(current).map(r => REGION_LABELS[r].toLowerCase()).join(' · ')}
+        </p>
 
         {/* The visual: art for the movement or its family where it exists,
             the pattern mark where it doesn't. Never a person mid-lift —
@@ -274,8 +262,8 @@ export function MovementSheet({
                       <span className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     </span>
                   ) : (
-                    <span className="flex aspect-[16/10] items-center justify-center text-white/35 bg-white/[0.03]">
-                      <PatternGlyph pattern={v.pattern} className="w-6 h-6" />
+                    <span className="flex aspect-[16/10] items-center justify-center text-white/25 bg-gradient-to-br from-white/[0.05] to-transparent">
+                      <PatternGlyph pattern={v.pattern} className="w-4 h-4" />
                     </span>
                   )}
                   <span className="block p-3">
