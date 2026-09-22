@@ -63,7 +63,7 @@ const FEATURES = [
   {
     icon: Sparkles,
     title: 'Pick your era',
-    description: 'Locked In, Discipline, Comeback, Gym Arc, Stoic Mode, Confidence, Study, 5AM — or name your own. Thirty days, four phases, one written mission a day.',
+    description: 'Locked In, Discipline, Comeback, Gym Arc, Stoic Mode, Confidence, Study, 5AM — or name your own. Thirty days, four chapters, one written mission a day.',
   },
   {
     icon: Brain,

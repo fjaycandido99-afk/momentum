@@ -228,7 +228,7 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
               so, which is why it read as a themed streak. */}
           {era.step !== 'complete' && (
             <p className="text-[10px] tracking-[0.18em] uppercase text-white/45 mt-2.5">
-              Phase {['I', 'II', 'III', 'IV'][era.phase.index - 1]} · {era.phase.label}
+              Chapter {['I', 'II', 'III', 'IV'][era.phase.index - 1]} · {era.phase.label}
               <span className="text-white/30"> · day {era.phase.dayInPhase} of {era.phase.phaseDays}</span>
             </p>
           )}
@@ -1128,7 +1128,7 @@ function EraReportCard({ report }: { report: NonNullable<EraToday['report']> }) 
 
       {report.phases.some(p => p.days > 0) && (
         <div className="mt-4 pt-3 border-t border-white/[0.08] space-y-1.5">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">By phase</p>
+          <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">By chapter</p>
           {report.phases.map(p => (
             <div key={p.phase} className="flex items-center justify-between text-xs">
               <span className="text-white/70">
