@@ -36,9 +36,6 @@ const DEFAULT_PREFERENCES = {
   bedtime_reminder_enabled: false,
   current_streak: 0,
   last_active_date: null,
-  // Astrology preferences
-  astrology_enabled: false,
-  zodiac_sign: null,
   // Mindset
   mindset: 'stoic',
   mindset_selected_at: null,
@@ -108,10 +105,6 @@ export async function GET() {
         current_streak: true,
         last_active_date: true,
 
-        // Astrology preferences
-        astrology_enabled: true,
-        zodiac_sign: true,
-
         // Mindset
         mindset: true,
         mindset_selected_at: true,
@@ -167,9 +160,6 @@ export async function GET() {
         current_streak: 0,
         last_active_date: null,
 
-        // Astrology preferences
-        astrology_enabled: false,
-        zodiac_sign: null,
 
         // Mindset
         mindset: 'stoic',
@@ -277,9 +267,6 @@ export async function POST(request: NextRequest) {
       winddown_reminder_enabled,
       winddown_reminder_time,
 
-      // Astrology preferences
-      astrology_enabled,
-      zodiac_sign,
 
       // Mindset
       mindset,
@@ -409,9 +396,6 @@ export async function POST(request: NextRequest) {
         ...(reminder_time !== undefined && { reminder_time }),
         ...(bedtime_reminder_enabled !== undefined && { bedtime_reminder_enabled }),
 
-        // Astrology preferences
-        ...(astrology_enabled !== undefined && { astrology_enabled }),
-        ...(zodiac_sign !== undefined && { zodiac_sign }),
 
         // Mindset
         ...(mindset !== undefined && { mindset, mindset_selected_at: new Date() }),
@@ -474,9 +458,6 @@ export async function POST(request: NextRequest) {
         reminder_time: reminder_time || '07:00',
         bedtime_reminder_enabled: bedtime_reminder_enabled ?? false,
 
-        // Astrology preferences
-        astrology_enabled: astrology_enabled ?? false,
-        zodiac_sign: zodiac_sign || null,
 
         // Mindset
         mindset: mindset || 'stoic',

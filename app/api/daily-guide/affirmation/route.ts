@@ -50,17 +50,13 @@ export async function GET() {
     }
 
     // Premium: AI-generated with deep context + mindset injection
-    const [recentJournals, goals, prefs] = await Promise.all([
+    const [recentJournals, goals] = await Promise.all([
       getRecentJournals(user.id, 3, 3),
       prisma.goal.findMany({
         where: { user_id: user.id, status: 'active' },
         select: { title: true },
         take: 3,
       }).catch(() => [] as { title: string }[]),
-      prisma.userPreferences.findUnique({
-        where: { user_id: user.id },
-        select: { zodiac_sign: true },
-      }).catch(() => null),
     ])
 
     const journalContext = formatJournalContext(recentJournals)
@@ -71,10 +67,9 @@ export async function GET() {
       guide?.mood_before ? `Current mood: ${guide.mood_before}` : null,
       journalContext ? `Recent journal reflections:\n${journalContext}` : null,
       goals.length > 0 ? `Active goals: ${goals.map(g => g.title).join(', ')}` : null,
-      prefs?.zodiac_sign ? `Zodiac sign: ${prefs.zodiac_sign}` : null,
     ].filter(Boolean).join('\n')
 
-    const baseSystemPrompt = `You are a deeply personal wellness coach who knows this user's journey. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. Reference their specific goals, journal themes, or zodiac energy if available — but subtly, not by name-dropping. No quotes, no attribution.\n\nUser context:\n${context || 'No specific context available.'}`
+    const baseSystemPrompt = `You are a deeply personal wellness coach who knows this user's journey. Generate a single, short, powerful daily affirmation (1-2 sentences max). It should be personal ("I am...", "I choose...", "Today I..."), warm, and actionable. Reference their specific goals, journal themes if available — but subtly, not by name-dropping. No quotes, no attribution.\n\nUser context:\n${context || 'No specific context available.'}`
 
     try {
       const completion = await getGroq().chat.completions.create({

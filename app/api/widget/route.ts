@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getDayOfYearQuote } from '@/lib/quotes'
-import { getDailyTarotCard } from '@/lib/astrology/tarot-data'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -103,23 +102,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         quote: quote.text,
         author: quote.author,
-      })
-    }
-
-    if (widgetType === 'tarot') {
-      // Use a default sign if user hasn't set one
-      const userPrefs = await prisma.userPreferences.findUnique({
-        where: { user_id: user.id },
-        select: { zodiac_sign: true },
-      }).catch(() => null)
-      const sign = (userPrefs as { zodiac_sign?: string | null } | null)?.zodiac_sign || 'aries'
-      const { card, elementHint } = getDailyTarotCard(sign)
-      return NextResponse.json({
-        cardName: card.name,
-        numeral: card.numeral,
-        keywords: card.keywords,
-        meaning: card.uprightMeaning,
-        elementHint,
       })
     }
 

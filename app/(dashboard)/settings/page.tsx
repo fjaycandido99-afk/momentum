@@ -79,7 +79,6 @@ const SEGMENT_OPTIONS = [
   { id: 'bedtime_story', label: 'Bedtime Story', icon: Moon, required: true },
 ]
 
-import { ZODIAC_SIGNS } from '@/lib/astrology/constants'
 import { LanguageSelector } from '@/components/settings/LanguageSelector'
 import { Globe } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
@@ -136,9 +135,7 @@ function SettingsContent() {
   const [middayTime, setMiddayTime] = useState('13:00')
   const [winddownEnabled, setWinddownEnabled] = useState(true)
   const [winddownTime, setWinddownTime] = useState('19:00')
-  const [astrologyEnabled, setAstrologyEnabled] = useState(false)
   const [aiMemoryEnabled, setAiMemoryEnabled] = useState(false)
-  const [zodiacSign, setZodiacSign] = useState<string | null>(null)
   const [locale, setLocale] = useState('en')
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -194,9 +191,7 @@ function SettingsContent() {
           if (data.midday_reminder_time) setMiddayTime(data.midday_reminder_time)
           if (data.winddown_reminder_enabled !== undefined) setWinddownEnabled(data.winddown_reminder_enabled)
           if (data.winddown_reminder_time) setWinddownTime(data.winddown_reminder_time)
-          if (data.astrology_enabled !== undefined) setAstrologyEnabled(data.astrology_enabled)
           if (data.ai_memory_enabled !== undefined) setAiMemoryEnabled(data.ai_memory_enabled)
-          if (data.zodiac_sign !== undefined) setZodiacSign(data.zodiac_sign)
         }
       } catch (error) {
         console.error('Failed to load preferences:', error)
@@ -248,9 +243,7 @@ function SettingsContent() {
           midday_reminder_time: middayTime || null,
           winddown_reminder_enabled: winddownEnabled,
           winddown_reminder_time: winddownTime || null,
-          astrology_enabled: astrologyEnabled,
           ai_memory_enabled: aiMemoryEnabled,
-          zodiac_sign: zodiacSign,
           workout_enabled: true, // legacy
           micro_lesson_enabled: true, // legacy
           breath_cues_enabled: true, // legacy
@@ -288,7 +281,7 @@ function SettingsContent() {
     } finally {
       setIsSaving(false)
     }
-  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, bedtimeReminderEnabled, bedtimeTime, middayEnabled, middayTime, winddownEnabled, winddownTime, astrologyEnabled, zodiacSign, aiMemoryEnabled])
+  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, bedtimeReminderEnabled, bedtimeTime, middayEnabled, middayTime, winddownEnabled, winddownTime, aiMemoryEnabled])
 
   // Debounced auto-save when any preference changes
   useEffect(() => {
@@ -697,74 +690,6 @@ function SettingsContent() {
             </Link>
           </div>
         </SettingsCategory>
-
-        {/* ═══════════════ 4b. Cosmic (Scholar only) ═══════════════ */}
-        {mindsetCtx?.isScholar && (
-          <SettingsCategory
-            id="cosmic"
-            icon={Star}
-            iconColor="text-white"
-            iconBg="bg-gradient-to-br from-white/20 to-white/20"
-            title="Cosmic"
-            description="Astrology mode, zodiac sign"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="font-medium text-white text-sm">Astrology Mode</p>
-                  <p className="text-white/75 text-xs">Cosmic insights & zodiac wisdom</p>
-                </div>
-                <button
-                  onClick={() => setAstrologyEnabled(!astrologyEnabled)}
-                  role="switch"
-                  aria-checked={astrologyEnabled}
-                  aria-label="Astrology mode"
-                  className={`w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    astrologyEnabled ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.25)]' : 'bg-white/10'
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full shadow-lg transition-transform ${
-                      astrologyEnabled ? 'bg-white translate-x-6' : 'bg-white translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {astrologyEnabled && (
-                <div className="space-y-4">
-                  <p className="text-sm text-white/85">Select your zodiac sign for personalized cosmic insights</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {ZODIAC_SIGNS.map((sign) => (
-                      <button
-                        key={sign.id}
-                        onClick={() => setZodiacSign(sign.id)}
-                        aria-pressed={zodiacSign === sign.id}
-                        className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                          zodiacSign === sign.id
-                            ? 'bg-white/20 border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.15)]'
-                            : 'bg-white/5 border border-transparent hover:bg-white/10'
-                        }`}
-                      >
-                        <span className="text-xl block mb-0.5">{sign.symbol}</span>
-                        <p className={`text-xs font-medium ${zodiacSign === sign.id ? 'text-white' : 'text-white/70'}`}>{sign.label}</p>
-                        <p className="text-[9px] text-white/75 mt-0.5">{sign.dates}</p>
-                      </button>
-                    ))}
-                  </div>
-                  {zodiacSign && (
-                    <div className="p-3 rounded-xl bg-gradient-to-r from-white/10 to-white/10 border border-white/20">
-                      <p className="text-sm text-white/80">
-                        <span className="text-white font-medium">{ZODIAC_SIGNS.find(s => s.id === zodiacSign)?.label}</span> selected.
-                        You&apos;ll receive cosmic insights tailored to your sign in your Morning Flow.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </SettingsCategory>
-        )}
 
         {/* ═══════════════ 5. Notifications ═══════════════ */}
         <SettingsCategory
