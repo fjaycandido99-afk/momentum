@@ -20,6 +20,56 @@ const PREFIX = 'voxu.dismissed.'
 /** Dismissed for good. */
 export const FOREVER = 'forever'
 
+/** Prefix for "hide this until it changes". */
+const SIGNAL_PREFIX = 'voxu.quiet.'
+
+/**
+ * Hide something until it has news.
+ *
+ * Between "dismiss for today" and "dismiss for ever" there is a third thing
+ * a person actually wants: *I have read this, don't show it again until
+ * something in it changes.* Achievements with nothing newly earned, a circle
+ * with nobody in it — dead weight on the screen, but you do want to know the
+ * day somebody joins.
+ *
+ * So the dismissal remembers the STATE it was dismissed at. While the state
+ * matches, the block stays quiet. The moment it differs, the block comes
+ * back on its own, with no nagging in between.
+ *
+ * The signal is the caller's business — a count, a date, anything that
+ * changes when there is news. Keep it cheap and derived, never a timestamp,
+ * or the block returns every render.
+ */
+export function quietedAt(id: string): string | null {
+  try {
+    return localStorage.getItem(SIGNAL_PREFIX + id)
+  } catch {
+    // Storage unavailable: show it. Never hide content because storage threw.
+    return null
+  }
+}
+
+export function isQuiet(id: string, signal: string): boolean {
+  if (!signal) return false
+  return quietedAt(id) === signal
+}
+
+export function setQuiet(id: string, signal: string): void {
+  try {
+    localStorage.setItem(SIGNAL_PREFIX + id, signal)
+  } catch {
+    // Nothing to do. The block stays visible, which is the safe failure.
+  }
+}
+
+export function clearQuiet(id: string): void {
+  try {
+    localStorage.removeItem(SIGNAL_PREFIX + id)
+  } catch {
+    // Nothing to do.
+  }
+}
+
 /** YYYY-MM-DD in the device's own timezone. */
 export function localDayKey(date = new Date()): string {
   const y = date.getFullYear()

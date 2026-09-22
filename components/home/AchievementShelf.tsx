@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useQuiet } from '@/hooks/useQuiet'
 import { ChevronRight } from 'lucide-react'
 import type { AchievementCategory, AchievementRarity } from '@/lib/achievements'
 import { AchievementBadge } from '@/components/progress/AchievementBadge'
@@ -32,9 +33,18 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 export function AchievementShelf() {
   const { gamificationData } = useGamificationStatus()
   const all = (gamificationData?.achievements ?? []) as StatusAchievement[]
-  if (all.length === 0) return null
-
   const unlocked = all.filter(a => a.unlocked)
+
+  // Hidden until it has news. The signal is what has been earned — the
+  // moment that number moves, the shelf comes back on its own.
+  //
+  // Before the early returns on purpose: a hook after a conditional return
+  // is a hook that sometimes doesn't run, and React counts them.
+  const { hidden, hide } = useQuiet('achievements', `${unlocked.length}/${all.length}`)
+
+  if (all.length === 0) return null
+  if (hidden) return null
+
   // Closest first, by fraction done; secrets stay secret; untouched ones
   // (0 progress) only fill in if nothing has been started.
   const candidates = all.filter(a => !a.unlocked && a.category !== 'secret' && a.progress)
@@ -57,9 +67,18 @@ export function AchievementShelf() {
             {unlocked.length} <span className="text-white/40">of {all.length} earned</span>
           </p>
         </div>
-        <Link href="/progress" className="flex items-center gap-0.5 text-xs text-white/60 hover:text-white pb-1">
-          See all <ChevronRight className="w-3.5 h-3.5" />
-        </Link>
+        <div className="flex items-center gap-3 pb-1">
+          <button
+            onClick={hide}
+            className="text-xs text-white/40 hover:text-white/80"
+            aria-label="Hide until something new is earned"
+          >
+            Hide
+          </button>
+          <Link href="/progress" className="flex items-center gap-0.5 text-xs text-white/60 hover:text-white">
+            See all <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
 
       {next.length > 0 && (

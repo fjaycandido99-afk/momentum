@@ -130,7 +130,10 @@ export function ExercisePlayer({
     >
       <div className="flex items-center justify-between px-5 pt-4">
         <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
-          {phase === 'done' ? 'Practice done' : 'Today’s practice'}
+          {/* Not "practice" any more: a practice is a discipline you keep
+              for months, and /training renamed the pair so a reader doesn't
+              have to work out the difference. This is the one exercise. */}
+          {phase === 'done' ? 'Exercise done' : 'Today’s exercise'}
         </p>
         <button onClick={leave} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20">
           <X className="w-4 h-4 text-white" />

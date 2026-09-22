@@ -1,5 +1,6 @@
 'use client'
 
+import { useQuiet } from '@/hooks/useQuiet'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, Flame, Share2, Users } from 'lucide-react'
@@ -28,6 +29,8 @@ interface CircleResponse {
 export function CircleSection({ onShare }: { onShare: () => void }) {
   const [data, setData] = useState<CircleResponse | null>(null)
   const [saving, setSaving] = useState(false)
+  // The signal is who is in the circle. Someone joining brings it back.
+  const { hidden, hide } = useQuiet('era-circle', String(data?.circle.length ?? 'loading'))
 
   useEffect(() => {
     let cancelled = false

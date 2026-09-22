@@ -2,10 +2,13 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import {
   FOREVER,
   clearDismissed,
+  clearQuiet,
   hiddenByValue,
   isDismissed,
+  isQuiet,
   localDayKey,
   setDismissed,
+  setQuiet,
   sweepDismissals,
   valueFor,
 } from '@/lib/ui/dismiss'
@@ -91,5 +94,48 @@ describe('with storage', () => {
     expect(isDismissed('recent', today)).toBe(true)
     expect(isDismissed('gone', today)).toBe(true)
     expect(localStorage.getItem('voxu_mindset')).toBe('stoic')
+  })
+})
+
+describe('hide until it changes', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('stays hidden while the signal is the same', () => {
+    setQuiet('achievements', '37/55')
+    expect(isQuiet('achievements', '37/55')).toBe(true)
+  })
+
+  it('comes back the moment the signal moves', () => {
+    // The whole point: no nagging in between, but the day something is
+    // earned the block returns by itself.
+    setQuiet('achievements', '37/55')
+    expect(isQuiet('achievements', '38/55')).toBe(false)
+  })
+
+  it('shows anything never hidden', () => {
+    expect(isQuiet('achievements', '37/55')).toBe(false)
+  })
+
+  it('shows when the signal is empty, rather than hiding on nothing', () => {
+    // A block that hasn't loaded its data yet has no signal. Hiding then
+    // would hide it for ever, because the empty string never changes.
+    setQuiet('era-circle', '')
+    expect(isQuiet('era-circle', '')).toBe(false)
+  })
+
+  it('keeps each block separate', () => {
+    setQuiet('achievements', '37/55')
+    expect(isQuiet('era-circle', '37/55')).toBe(false)
+  })
+
+  it('can be cleared', () => {
+    setQuiet('era-circle', '0')
+    clearQuiet('era-circle')
+    expect(isQuiet('era-circle', '0')).toBe(false)
+  })
+
+  it('does not collide with the day-based dismissals', () => {
+    setQuiet('achievements', '37/55')
+    expect(isDismissed('achievements')).toBe(false)
   })
 })
