@@ -1,4 +1,4 @@
-import type { Movement, MovementPattern } from './library'
+import type { Movement, MovementPattern, Region } from './library'
 
 /**
  * Art for the movement screen.
@@ -44,7 +44,8 @@ export const MOVEMENT_IMAGES: Record<string, string> = {
   dumbbell_shoulder_press: '/movements/dumbbell-shoulder-press.webp',
   machine_shoulder_press: '/movements/machine-shoulder-press.webp',
   pike_push_up: '/movements/pike-push-up.webp',
-  // push_up and dead_bug still to come.
+  push_up: '/movements/push-up.webp',
+  dead_bug: '/movements/dead-bug.webp',
 }
 
 /**
@@ -82,6 +83,31 @@ export const KIT_IMAGES: Partial<Record<MovementPattern, string>> = {
   vertical_pull: '/movements/kit-vertical-pull.webp',
   core: '/movements/kit-core.webp',
   // vertical_push: still to generate — the picker falls back to the mark.
+}
+
+/**
+ * A figure with one region lit, for the "works" panel.
+ *
+ * The first attempt at this was hand-drawn SVG and looked like a broken
+ * icon beside a photograph, so it's art like everything else here —
+ * silhouette with the region glowing, front or back as the region needs.
+ *
+ * Still only a LOCATION. No percentages, no primary-versus-secondary, no
+ * heat map: every region is lit the same way, because how much each one
+ * does varies by person and by load and the app knows neither. A region
+ * without art falls back to its name in words, which is never wrong.
+ */
+export const REGION_IMAGES: Partial<Record<Region, string>> = {
+  // e.g. quads: '/movements/region-quads.webp'
+}
+
+export function regionArt(region: Region): string | null {
+  return REGION_IMAGES[region] ?? null
+}
+
+/** True when every region of a movement has art, so the panel is even. */
+export function hasFullRegionArt(regions: Region[]): boolean {
+  return regions.length > 0 && regions.every(r => REGION_IMAGES[r])
 }
 
 export interface MovementArt {

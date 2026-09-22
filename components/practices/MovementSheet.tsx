@@ -21,7 +21,7 @@ import {
   swapsFor,
   type SwapReason,
 } from '@/lib/movements/swap'
-import { artAlt, artFor, ownArt } from '@/lib/movements/images'
+import { artAlt, artFor, hasFullRegionArt, ownArt, regionArt } from '@/lib/movements/images'
 import { PatternGlyph } from '@/components/movements/PatternGlyph'
 import { haptic } from '@/lib/haptics'
 
@@ -115,17 +115,36 @@ export function MovementSheet({
           </span>
         </div>
 
-        {/* Said in words, not drawn.
+        {/* Where it works.
 
-            This was a little figure with the region lit up, and it looked
-            like a broken icon next to a photograph — a hand-drawn body at
-            thumbnail size can't hold its own on this screen. The words
-            carry the same fact with none of the crudeness, and the moment
-            there's anatomy art worth looking at it goes here instead. */}
-        <p className="text-[13px] text-white/60 mt-2.5">
-          <span className="text-white/40">Works </span>
-          {regionsOf(current).map(r => REGION_LABELS[r].toLowerCase()).join(' · ')}
-        </p>
+            Art when every region of this movement has art, words when they
+            don't — never half a row of pictures and half a row of gaps. The
+            hand-drawn version of this looked like a broken icon beside a
+            photograph, which is why it's photographed now.
+
+            Every region is lit the same. No percentages, no
+            primary-versus-secondary: how much each one does varies by
+            person and by load, and the app knows neither. */}
+        {hasFullRegionArt(regionsOf(current)) ? (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {regionsOf(current).map(region => (
+              <div key={region} className="w-[72px] rounded-xl border border-white/[0.1] overflow-hidden">
+                <img
+                  src={regionArt(region)!}
+                  alt={`${REGION_LABELS[region]}, shown on the body`}
+                  className="w-full aspect-[3/4] object-cover"
+                  loading="lazy"
+                />
+                <p className="text-[10px] text-white/70 text-center py-1.5">{REGION_LABELS[region]}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[13px] text-white/60 mt-2.5">
+            <span className="text-white/40">Works </span>
+            {regionsOf(current).map(r => REGION_LABELS[r].toLowerCase()).join(' · ')}
+          </p>
+        )}
 
         {/* The visual: art for the movement or its family where it exists,
             the pattern mark where it doesn't. Never a person mid-lift —
