@@ -80,9 +80,16 @@ export const KIT_IMAGES: Partial<Record<MovementPattern, string>> = {
   single_leg: '/movements/kit-single-leg.webp',
   horizontal_push: '/movements/kit-horizontal-push.webp',
   horizontal_pull: '/movements/kit-horizontal-pull.webp',
+  vertical_push: '/movements/kit-vertical-push.webp',
   vertical_pull: '/movements/kit-vertical-pull.webp',
   core: '/movements/kit-core.webp',
-  // vertical_push: still to generate — the picker falls back to the mark.
+  carry: '/movements/kit-carry.webp',
+  lateral_raise: '/movements/kit-lateral-raise.webp',
+  elbow_flexion: '/movements/kit-elbow-flexion.webp',
+  elbow_extension: '/movements/kit-elbow-extension.webp',
+  knee_extension: '/movements/kit-knee-extension.webp',
+  knee_flexion: '/movements/kit-knee-flexion.webp',
+  // calf: still to generate — the picker falls back to the mark.
 }
 
 /**
