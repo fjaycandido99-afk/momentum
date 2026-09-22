@@ -97,6 +97,10 @@
       "schedule": "0 * * * *"
     },
     {
+      "path": "/api/cron/notifications?type=exercise_nudge",
+      "schedule": "0 * * * *"
+    },
+    {
       "path": "/api/cron/notifications?type=era_wake",
       "schedule": "*/5 * * * *"
     },

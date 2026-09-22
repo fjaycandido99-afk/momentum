@@ -14,6 +14,7 @@ import { getDateString } from '@/lib/daily-guide/day-type'
 import { getGroq, GROQ_MODEL } from './groq'
 import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
+import { pickExercise } from '@/lib/exercises/select'
 import { buildMindsetSystemPrompt } from '@/lib/mindset/prompt-builder'
 import { getDailyAffirmation } from '@/lib/mindset/affirmations'
 import { getCoachName, MINDSET_CONFIGS } from '@/lib/mindset/configs'
@@ -64,6 +65,7 @@ export type NotificationType =
   // The morning heads-up on a weekday they have a real history of missing.
   // Offers the floor; never warns.
   | 'practice_heads_up'
+  | 'exercise_nudge'
   | 'era_wake'
   | 'era_join'
   | 'era_complete'
@@ -224,6 +226,18 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, Omit<NotificationP
     tag: 'practice-heads-up',
     actions: [
       { action: 'open', title: 'See it' },
+    ],
+  },
+  exercise_nudge: {
+    // Overridden per send with the actual exercise and its length — this is
+    // the fallback if a pick ever fails, and it still says something true.
+    title: 'Two minutes, if you have them',
+    body: 'Your one exercise for today is waiting.',
+    icon: '/icon-192.svg',
+    badge: '/apple-touch-icon.png',
+    tag: 'exercise-nudge',
+    actions: [
+      { action: 'open', title: 'Do it' },
     ],
   },
   practice_checkin: {
@@ -404,6 +418,7 @@ const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
   era_checkin: '/',
   practice_checkin: '/training',
   practice_heads_up: '/training',
+  exercise_nudge: '/training',
   era_wake: '/era/wake',
   era_join: '/',
   era_complete: '/',
@@ -457,6 +472,9 @@ export async function sendPushToUser(
     // A morning message, so it rides the morning switch — somebody who
     // turned mornings off should not get one.
     practice_heads_up: 'morning_reminder',
+    // Content WE chose to send, so it rides the nudge switch rather than a
+    // time the user set — somebody who turned nudges off gets none.
+    exercise_nudge: 'motivational_nudge_alerts',
     // Listed for the type map only: the wake-up call has its own switch
     // (UserPreferences.wake_call_enabled) and skips this filter below.
     era_wake: 'morning_reminder',
@@ -2330,4 +2348,100 @@ export async function sendPracticeHeadsUps(): Promise<void> {
 function ninetyDaysBefore(day: string): string {
   const [y, m, d] = day.split('-').map(Number)
   return new Date(Date.UTC(y, m - 1, d) - 90 * 86400000).toISOString().slice(0, 10)
+}
+
+/**
+ * One nudge for today's mindset exercise, at 17:00 local.
+ *
+ * The exercise is the practice step of an era and the first thing /training
+ * opens with — and until now it was the only part of the loop with no nudge
+ * at all. Twenty-six notification types and not one of them mentioned it,
+ * which is a plausible reason it had never been run.
+ *
+ * Four rules, all of them about not being a nuisance:
+ *
+ *  - Only for someone in an ACTIVE era. Outside an era there is no exercise
+ *    to do, so there is nothing to say.
+ *  - Never if they already did one today. Answered is answered; a reminder
+ *    afterwards is just noise that teaches people to ignore the next one.
+ *  - 17:00 local — after the working day, well before the era and practice
+ *    check-ins at 20:00, so the evening does not arrive as a pile.
+ *  - Opportunistic lane, so it shares the small daily allowance and can
+ *    never starve a reminder the user set for themselves.
+ *
+ * It names the actual exercise and its length, because "do your exercise"
+ * is a chore and "Two minutes: The One Task" is a decision someone can make
+ * in the notification shade.
+ */
+export async function sendExerciseNudges(): Promise<void> {
+  const eras = await prisma.era.findMany({
+    where: { status: 'active' },
+    select: { user_id: true, era_key: true, start_day: true, length_days: true },
+  })
+  if (eras.length === 0) return
+
+  const eligible = new Set(await filterUsersByLocalHour(eras.map(e => e.user_id), 17))
+  if (eligible.size === 0) return
+
+  const mine = eras.filter(e => eligible.has(e.user_id))
+  const tzs = await prisma.userPreferences.findMany({
+    where: { user_id: { in: mine.map(e => e.user_id) } },
+    select: { user_id: true, timezone: true },
+  })
+  const tzMap = new Map(tzs.map(t => [t.user_id, t.timezone]))
+
+  // Recent runs, for two things at once: skipping anybody who has already
+  // done today's, and telling the picker what not to repeat.
+  const since = new Date(Date.now() - 8 * 86400000).toISOString().slice(0, 10)
+  const runs = await prisma.exerciseRun.findMany({
+    where: { user_id: { in: mine.map(e => e.user_id) }, local_day: { gte: since } },
+    select: { user_id: true, exercise_id: true, local_day: true },
+  })
+  const runsByUser = new Map<string, { exerciseId: string; day: string }[]>()
+  for (const run of runs) {
+    const list = runsByUser.get(run.user_id) ?? []
+    list.push({ exerciseId: run.exercise_id, day: run.local_day })
+    runsByUser.set(run.user_id, list)
+  }
+
+  const sentTo = new Set<string>()
+  let sent = 0
+  let failed = 0
+  let alreadyDone = 0
+
+  for (const era of mine) {
+    if (sentTo.has(era.user_id)) continue
+    const today = localDay(tzMap.get(era.user_id) ?? null)
+    const history = runsByUser.get(era.user_id) ?? []
+
+    // Already did one today — including one they started. Nothing to say.
+    if (history.some(r => r.day === today)) {
+      alreadyDone++
+      continue
+    }
+
+    const day = eraDayNumber(era.start_day, today)
+    if (day < 1 || day > era.length_days) continue
+
+    const pick = pickExercise({
+      eraKey: era.era_key,
+      day,
+      lengthDays: era.length_days,
+      recentIds: history.map(r => r.exerciseId),
+    })
+    if (!pick) continue
+
+    const result = await sendPushToUser(era.user_id, 'exercise_nudge', {
+      title: `${pick.exercise.minutes} min: ${pick.exercise.title}`,
+      body: pick.exercise.why,
+    })
+    sentTo.add(era.user_id)
+    sent += result.sent
+    failed += result.failed
+  }
+
+  console.log(
+    `exercise_nudge: ${sent} sent, ${failed} failed, ${alreadyDone} already done today ` +
+      `(${mine.length} active eras in window)`,
+  )
 }

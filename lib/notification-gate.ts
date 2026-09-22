@@ -58,6 +58,11 @@ const LANE: Record<NotificationType, Lane> = {
   // About a commitment they made, timed to their own record. Scheduled, so
   // quiet hours still hold.
   practice_heads_up: 'scheduled',
+
+  // The exercise nudge is OURS, not a time anybody picked, so it is
+  // opportunistic: it shares the small daily allowance and can never
+  // starve the reminders the user configured themselves.
+  exercise_nudge: 'opportunistic',
   // A time they chose to be woken at — quiet hours must not swallow a 6am call.
   era_wake: 'scheduled',
   // Someone joined their era: a real, rare event about another person, not

@@ -20,6 +20,7 @@ import {
   sendEraCheckins,
   sendPracticeCheckins,
   sendPracticeHeadsUps,
+  sendExerciseNudges,
   sendEraWakeCalls,
   sendEraCompletions,
   sendEraComebacks,
@@ -149,6 +150,12 @@ export async function GET(request: NextRequest) {
       case 'practice_heads_up':
         await sendPracticeHeadsUps()
         return NextResponse.json({ success: true, type: 'practice_heads_up' })
+
+      // 17:00 local: after the working day, hours before the evening
+      // check-ins, and only for somebody who has not already done one.
+      case 'exercise_nudge':
+        await sendExerciseNudges()
+        return NextResponse.json({ success: true, type: 'exercise_nudge' })
 
       case 'practice_checkin':
         await sendPracticeCheckins()
