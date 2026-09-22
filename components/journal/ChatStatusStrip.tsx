@@ -83,9 +83,12 @@ export function ChatStatusStrip({ quota, memoryConsented, isPremium, blocked, on
           className="inline-flex items-center gap-1.5 text-[11px] text-white/55 underline-offset-2 transition-colors hover:text-white/80 hover:underline"
         >
           <BookLock className="h-3 w-3" />
+          {/* Names both halves: the memory covers what you wrote AND how
+              often you kept things. A nudge that only mentions the journal
+              would be asking for consent to less than it uses. */}
           {isPremium
-            ? 'Let it remember your journal'
-            : 'Let it remember today’s entry'}
+            ? 'Let it remember your journal and what you kept'
+            : 'Let it remember today’s entry and what you kept'}
         </Link>
       )}
     </div>

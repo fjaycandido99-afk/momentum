@@ -19,6 +19,8 @@
 
 import { prisma } from '@/lib/prisma'
 import { AI_MEMORY_DEPTH, type AiMemoryDepth } from '@/lib/subscription-constants'
+import { behaviourSection } from './behaviour-context'
+import { loadBehaviourFacts } from './behaviour-context-server'
 
 /** Per-entry character cap. Enough to carry the gist, not a whole essay. */
 const ENTRY_CHARS = 320
@@ -85,7 +87,10 @@ export async function buildUserContext(
   const since = new Date()
   since.setDate(since.getDate() - depth.journalDays)
 
-  const [entries, saved, goals] = await Promise.all([
+  // What they DID, alongside what they wrote. The chat used to read only
+  // the journal, so it could discuss someone's week without knowing whether
+  // they had shown up for it.
+  const [entries, saved, goals, behaviour] = await Promise.all([
     prisma.dailyGuide.findMany({
       where: {
         user_id: userId,
@@ -123,9 +128,17 @@ export async function buildUserContext(
           take: 5,
         })
       : Promise.resolve([]),
+    // Never fail a conversation over context. A missing behaviour block is
+    // the old behaviour, which was fine; a 500 on the chat is not.
+    loadBehaviourFacts(userId, isoDay(new Date()), depth.journalDays).catch(() => null),
   ])
 
   const sections: string[] = []
+
+  // First, deliberately: it is the part that should shape the reply, and a
+  // block at the end of a long prompt gets skimmed.
+  const behaviourBlock = behaviour ? behaviourSection(behaviour) : null
+  if (behaviourBlock) sections.push(behaviourBlock)
 
   if (entries.length) {
     const lines = entries.map(e => {

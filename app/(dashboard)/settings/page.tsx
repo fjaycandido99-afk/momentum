@@ -847,13 +847,20 @@ function SettingsContent() {
             <div className="flex items-center justify-between mb-3">
               <div className="pr-4">
                 <p className="font-medium text-white text-sm">Let the chat remember me</p>
-                <p className="text-white/75 text-xs">It can read your journal entries and saved quotes</p>
+                {/* This line is the consent. It has to name everything the
+                    chat reads — the behaviour counts were added after the
+                    original wording, and a toggle that says "journal" while
+                    the prompt also carries what you kept is not consent. */}
+                <p className="text-white/75 text-xs">
+                  Your journal, your saved quotes, and how often you kept your promises and
+                  disciplines
+                </p>
               </div>
               <button
                 onClick={() => setAiMemoryEnabled(!aiMemoryEnabled)}
                 role="switch"
                 aria-checked={aiMemoryEnabled}
-                aria-label="Let the AI chat remember your journal and saved quotes"
+                aria-label="Let the AI chat remember your journal, saved quotes and how often you kept your promises and disciplines"
                 className={`shrink-0 w-12 h-7 rounded-full transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                   aiMemoryEnabled ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.25)]' : 'bg-white/10'
                 }`}
@@ -867,8 +874,8 @@ function SettingsContent() {
             </div>
             <p className="text-xs text-white/55 leading-relaxed">
               {aiMemoryEnabled
-                ? 'The chat can refer back to what you’ve written and saved, so it notices patterns instead of meeting you fresh each time. Turn this off at any time — it stops reading immediately, and nothing you wrote is deleted.'
-                : 'Off. The chat sees only the conversation in front of it — it cannot read your journal or your saved quotes.'}
+                ? 'The chat can refer back to what you’ve written and saved, and to how often you kept your promises and disciplines — counts only, never a score. So it notices patterns instead of meeting you fresh each time. Turn this off at any time: it stops reading immediately, and nothing you wrote is deleted.'
+                : 'Off. The chat sees only the conversation in front of it — it cannot read your journal, your saved quotes, or whether you kept anything.'}
             </p>
           </div>
         </SettingsCategory>
