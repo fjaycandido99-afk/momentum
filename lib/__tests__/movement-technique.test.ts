@@ -249,3 +249,28 @@ describe('AI drafts', () => {
     expect(draftUserPrompt('not_a_movement')).toBeNull()
   })
 })
+
+describe('the stutter the model makes', () => {
+  it('drops a detail that just repeats its label', () => {
+    // Seen in the wild: {"label":"Bar on upper traps","detail":"Bar on upper
+    // traps"}. On screen that reads as a stutter, and a reviewer should not
+    // have to delete it by hand on seventy-nine movements.
+    const json = JSON.stringify({
+      steps: ['Stand up.'],
+      cues: [{ label: 'Bar on upper traps', detail: 'Bar on upper traps' }],
+      callouts: [{ label: 'Chest up', detail: 'Chest up.', x: 30, y: 25, side: 'left' }],
+    })
+    const result = parseDraft('back_squat', json, '2026-09-21')!
+    expect(result.draft.cues?.[0]).toEqual({ label: 'Bar on upper traps' })
+    expect(result.draft.callouts?.[0].detail).toBeUndefined()
+  })
+
+  it('keeps a detail that actually says something more', () => {
+    const json = JSON.stringify({
+      steps: ['Stand up.'],
+      cues: [{ label: 'Chest up', detail: 'Ribs down, eyes forward.' }],
+    })
+    const result = parseDraft('back_squat', json, '2026-09-21')!
+    expect(result.draft.cues?.[0].detail).toBe('Ribs down, eyes forward.')
+  })
+})

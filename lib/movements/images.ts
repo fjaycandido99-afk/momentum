@@ -46,6 +46,15 @@ export const MOVEMENT_IMAGES: Record<string, string> = {
   pike_push_up: '/movements/pike-push-up.webp',
   push_up: '/movements/push-up.webp',
   dead_bug: '/movements/dead-bug.webp',
+  barbell_row: '/movements/barbell-row.webp',
+  dumbbell_row: '/movements/dumbbell-row.webp',
+  cable_row: '/movements/cable-row.webp',
+  chest_supported_row: '/movements/chest-supported-row.webp',
+  machine_chest_press: '/movements/machine-chest-press.webp',
+  landmine_press: '/movements/landmine-press.webp',
+  overhead_press: '/movements/overhead-press.webp',
+  pull_up: '/movements/pull-up.webp',
+  lat_pulldown: '/movements/lat-pulldown.webp',
 }
 
 /**

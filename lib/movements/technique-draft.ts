@@ -77,6 +77,19 @@ function extractJson(text: string): unknown {
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '')
+
+/**
+ * Drop a detail that just repeats its label.
+ *
+ * The model does this: "Bar on upper traps / Bar on upper traps". On screen
+ * it reads as a stutter, and a reviewer shouldn't have to delete it by hand
+ * on every movement.
+ */
+const detailFor = (label: string, detail: string): string | undefined => {
+  if (!detail) return undefined
+  const same = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, '')
+  return same(detail) === same(label) ? undefined : detail
+}
 const num = (v: unknown, fallback: number): number =>
   typeof v === 'number' && Number.isFinite(v) ? v : fallback
 
@@ -98,8 +111,9 @@ export function parseDraft(movementId: string, text: string, today: string): Dra
       .slice(0, max)
       .map(item => {
         const obj = (item ?? {}) as Record<string, unknown>
-        const detail = str(obj.detail)
-        return detail ? { label: str(obj.label), detail } : { label: str(obj.label) }
+        const label = str(obj.label)
+        const detail = detailFor(label, str(obj.detail))
+        return detail ? { label, detail } : { label }
       })
       .filter(p => p.label)
 
@@ -114,10 +128,10 @@ export function parseDraft(movementId: string, text: string, today: string): Dra
       .slice(0, TECHNIQUE_LIMITS.callouts.max)
       .map(item => {
         const obj = (item ?? {}) as Record<string, unknown>
-        const detail = str(obj.detail)
+        const label = str(obj.label)
         return {
-          label: str(obj.label),
-          detail: detail || undefined,
+          label,
+          detail: detailFor(label, str(obj.detail)),
           // Clamped rather than rejected: a callout a few percent off the
           // edge is a nudge for the reviewer, not a reason to bin the draft.
           x: Math.min(100, Math.max(0, num(obj.x, 50))),
