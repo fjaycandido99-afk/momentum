@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { getLevelFromXP } from '@/lib/gamification'
-import { ACHIEVEMENTS, achievementMark, achievementProgress } from '@/lib/achievements'
+import { achievementMark, achievementProgress, visibleAchievements } from '@/lib/achievements'
 import { gatherAchievementStats } from '@/lib/achievements-server'
 import { getDailyChallenges, checkChallengeCondition } from '@/lib/daily-challenges'
 import { getWeekString, getWeeklyMissions, checkMissionProgress } from '@/lib/weekly-missions'
@@ -101,7 +101,8 @@ export async function GET() {
       totalXP,
       streak: prefs?.current_streak || 0,
     }).catch(() => null)
-    const achievementData = ACHIEVEMENTS.map(a => {
+    // Retired ones only appear for the accounts that already hold them.
+    const achievementData = visibleAchievements(unlockedSet).map(a => {
       const unlocked = unlockedSet.has(a.id)
       return {
         ...a,

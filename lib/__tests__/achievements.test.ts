@@ -8,6 +8,7 @@ import {
   checkNewAchievements,
   achievementMark,
   achievementProgress,
+  visibleAchievements,
   type EraAchievementStats,
   type PracticeAchievementStats,
 } from '../achievements'
@@ -193,5 +194,55 @@ describe('practice and exercise achievements', () => {
     const ids = ACHIEVEMENTS.map(a => a.id)
     expect(ids.filter(id => id.startsWith('practice_')).length).toBeGreaterThanOrEqual(5)
     expect(ids.filter(id => id.startsWith('exercise_')).length).toBeGreaterThanOrEqual(3)
+  })
+})
+
+describe('retired achievements', () => {
+  const RETIRED = ACHIEVEMENTS.filter(a => a.retired).map(a => a.id)
+
+  it('marks the ones whose feature no longer exists', () => {
+    // Path and virtue stopped being written in February 2026; routines have
+    // no UI that can create one. Nothing should count them any more.
+    expect(RETIRED).toContain('path_first')
+    expect(RETIRED).toContain('virtue_tracker')
+    expect(RETIRED).toContain('first_routine')
+  })
+
+  it('hides them from anyone who has not earned them', () => {
+    // Seven badges permanently stuck at zero in "Next up", counting against
+    // a denominator nobody could ever close.
+    const visible = visibleAchievements(new Set()).map(a => a.id)
+    for (const id of RETIRED) expect(visible, id).not.toContain(id)
+  })
+
+  it('still shows one to the person who holds it', () => {
+    // Six of these are held by a real account, earned while the feature was
+    // live. Deleting the definition would have erased them.
+    const visible = visibleAchievements(new Set(['path_21'])).map(a => a.id)
+    expect(visible).toContain('path_21')
+    expect(visible).not.toContain('path_7')
+  })
+
+  it('never awards one again, whatever the leftover data says', () => {
+    // The columns still exist and 7 old rows still carry values. An unlock
+    // now would be an accident of history, not an achievement.
+    const stats = {
+      ...baseStats,
+      hasFirstRoutine: true,
+      hasFirstPathComplete: true,
+      pathCompleteCount: 99,
+      consecutivePathDays: 99,
+      consecutiveVirtueDays: 99,
+    }
+    const ids = checkNewAchievements(stats, new Set()).map(a => a.id)
+    for (const id of RETIRED) expect(ids, id).not.toContain(id)
+  })
+
+  it('leaves every live achievement earnable', () => {
+    // The point of retiring is to stop lying about what is reachable — not
+    // to quietly shrink the list.
+    const live = ACHIEVEMENTS.filter(a => !a.retired)
+    expect(live.length).toBeGreaterThan(50)
+    expect(visibleAchievements(new Set()).length).toBe(live.length)
   })
 })

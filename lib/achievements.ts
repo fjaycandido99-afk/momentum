@@ -73,6 +73,17 @@ export interface Achievement {
   rarity: AchievementRarity
   xpReward: number
   condition: AchievementCondition
+  /**
+   * Retired: the feature it counted no longer exists, so nobody new can earn
+   * it.
+   *
+   * NOT deleted. Six of these are held by a real account — the path and
+   * virtue features were live until February 2026 — and removing the
+   * definition would erase badges somebody actually earned. Retired ones are
+   * hidden from the list, the denominator and the "next up" queue for anyone
+   * who does not already hold them, and still render for anyone who does.
+   */
+  retired?: boolean
 }
 
 export type AchievementCondition =
@@ -196,7 +207,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   // --- Explorer (5) ---
   { id: 'first_journal', title: 'Dear Diary', description: 'Write your first journal entry', icon: '📝', category: 'explorer', rarity: 'common', xpReward: 20, condition: { type: 'first_action', action: 'journal' } },
   { id: 'first_soundscape', title: 'Sound Explorer', description: 'Listen to your first soundscape', icon: '🎧', category: 'explorer', rarity: 'common', xpReward: 20, condition: { type: 'first_action', action: 'soundscape' } },
-  { id: 'first_routine', title: 'Routine Builder', description: 'Create your first routine', icon: '📋', category: 'explorer', rarity: 'common', xpReward: 20, condition: { type: 'first_action', action: 'routine' } },
+  { retired: true, id: 'first_routine', title: 'Routine Builder', description: 'Create your first routine', icon: '📋', category: 'explorer', rarity: 'common', xpReward: 20, condition: { type: 'first_action', action: 'routine' } },
   { id: 'genre_explorer', title: 'Genre Explorer', description: 'Listen to 5 different music genres', icon: '🎵', category: 'explorer', rarity: 'rare', xpReward: 75, condition: { type: 'count', action: 'unique_genres', count: 5 } },
   { id: 'all_modules', title: 'Full Experience', description: 'Complete all session types at least once', icon: '🌟', category: 'explorer', rarity: 'rare', xpReward: 100, condition: { type: 'count', action: 'unique_modules', count: 4 } },
 
@@ -221,12 +232,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'goal_complete', title: 'Goal Getter', description: 'Complete your first goal', icon: '🎯', category: 'growth', rarity: 'common', xpReward: 50, condition: { type: 'first_action', action: 'goal_complete' } },
 
   // --- Path (6) ---
-  { id: 'path_first', title: 'Path Finder', description: 'Complete your first path day (4/4)', icon: '🧭', category: 'explorer', rarity: 'common', xpReward: 30, condition: { type: 'first_action', action: 'path_complete' } },
-  { id: 'path_7', title: 'Path Walker', description: 'Complete 7 full path days', icon: '🛤️', category: 'consistency', rarity: 'rare', xpReward: 100, condition: { type: 'count', action: 'path_complete', count: 7 } },
-  { id: 'path_21', title: 'Path Master', description: 'Complete 21 full path days', icon: '🏔️', category: 'consistency', rarity: 'epic', xpReward: 250, condition: { type: 'count', action: 'path_complete', count: 21 } },
-  { id: 'path_streak_7', title: 'Devoted Seeker', description: 'Reach a 7-day path streak', icon: '🔗', category: 'consistency', rarity: 'rare', xpReward: 75, condition: { type: 'consecutive_days', days: 7, action: 'path_activity' } },
-  { id: 'path_streak_30', title: 'Unwavering', description: 'Reach a 30-day path streak', icon: '⛓️', category: 'consistency', rarity: 'epic', xpReward: 300, condition: { type: 'consecutive_days', days: 30, action: 'path_activity' } },
-  { id: 'virtue_tracker', title: 'Virtue Seeker', description: 'Track a virtue for 7 days', icon: '🌿', category: 'growth', rarity: 'rare', xpReward: 75, condition: { type: 'consecutive_days', days: 7, action: 'virtue_track' } },
+  { retired: true, id: 'path_first', title: 'Path Finder', description: 'Complete your first path day (4/4)', icon: '🧭', category: 'explorer', rarity: 'common', xpReward: 30, condition: { type: 'first_action', action: 'path_complete' } },
+  { retired: true, id: 'path_7', title: 'Path Walker', description: 'Complete 7 full path days', icon: '🛤️', category: 'consistency', rarity: 'rare', xpReward: 100, condition: { type: 'count', action: 'path_complete', count: 7 } },
+  { retired: true, id: 'path_21', title: 'Path Master', description: 'Complete 21 full path days', icon: '🏔️', category: 'consistency', rarity: 'epic', xpReward: 250, condition: { type: 'count', action: 'path_complete', count: 21 } },
+  { retired: true, id: 'path_streak_7', title: 'Devoted Seeker', description: 'Reach a 7-day path streak', icon: '🔗', category: 'consistency', rarity: 'rare', xpReward: 75, condition: { type: 'consecutive_days', days: 7, action: 'path_activity' } },
+  { retired: true, id: 'path_streak_30', title: 'Unwavering', description: 'Reach a 30-day path streak', icon: '⛓️', category: 'consistency', rarity: 'epic', xpReward: 300, condition: { type: 'consecutive_days', days: 30, action: 'path_activity' } },
+  { retired: true, id: 'virtue_tracker', title: 'Virtue Seeker', description: 'Track a virtue for 7 days', icon: '🌿', category: 'growth', rarity: 'rare', xpReward: 75, condition: { type: 'consecutive_days', days: 7, action: 'virtue_track' } },
 
   // --- Secret (2) ---
   { id: 'midnight_owl', title: 'Midnight Owl', description: 'Use the app at exactly midnight', icon: '🌑', category: 'secret', rarity: 'epic', xpReward: 100, condition: { type: 'time_range', start: 0, end: 1, action: 'any' } },
@@ -286,6 +297,17 @@ export interface AchievementStats {
     practice?: PracticeAchievementStats
 }
 
+/**
+ * The achievements a given reader should see.
+ *
+ * Retired ones are dropped unless they already hold them — otherwise seven
+ * badges sat permanently at zero in "Next up", counting against a
+ * denominator nobody could ever close.
+ */
+export function visibleAchievements(unlockedIds: Set<string>): Achievement[] {
+  return ACHIEVEMENTS.filter(a => !a.retired || unlockedIds.has(a.id))
+}
+
 export function checkNewAchievements(
   stats: AchievementStats,
   unlockedIds: Set<string>
@@ -294,6 +316,9 @@ export function checkNewAchievements(
 
   for (const achievement of ACHIEVEMENTS) {
     if (unlockedIds.has(achievement.id)) continue
+    // A retired achievement can never be newly awarded: the thing it counted
+    // is gone, so any unlock now would be an accident of leftover data.
+    if (achievement.retired) continue
 
     const c = achievement.condition
     let qualified = false

@@ -22,7 +22,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Mic, Square, Loader2, RefreshCw, Sparkles, AlertTriangle, ArrowRight, Flame, MessageCircle } from 'lucide-react'
+import { Mic, Square, Loader2, RefreshCw, Sparkles, AlertTriangle, Flame, MessageCircle } from 'lucide-react'
 
 interface Minute {
   transcript: string
@@ -342,26 +342,17 @@ export function MorningMinute() {
             Talk it through
           </Link>
 
-          {/* Depth handoff — Daily Guide's Morning Prime now opens
-              by calling back to what the user just shared. One tap
-              from the ritual into the deeper session. */}
-          <Link
-            href="/daily-guide"
-            className="mt-5 flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] transition-colors press-scale group"
-          >
-            <div className="min-w-0">
-              <p className="card-eyebrow">
-                Go deeper
-              </p>
-              <p className="mt-0.5 text-[13.5px] text-white/85 leading-tight">
-                Take 5 minutes with today&apos;s Morning Prime
-              </p>
-              <p className="mt-0.5 text-[11px] text-white/45 italic">
-                Built around what you just said
-              </p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-white/55 group-hover:text-white shrink-0" />
-          </Link>
+          {/* The "go deeper" link is gone.
+
+              It pointed at /daily-guide, which has been a redirect since
+              that screen was retired — and the redirect lands on home,
+              which is the page this component already renders on. So the
+              link promised "today's Morning Prime" and delivered a
+              navigation to where you already were.
+
+              The session itself did not go anywhere: Today's Audio on home
+              plays the segment for the time of day, which is this one, a
+              few inches further down the same screen. */}
 
           {/* Year portrait — surfaces only after the user has built
               something worth seeing. Threshold of 7 = one week of
