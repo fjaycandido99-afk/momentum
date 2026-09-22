@@ -35,7 +35,7 @@ import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useEra } from '@/hooks/useEra'
-import { chatStarters } from '@/lib/journal/starters'
+import { chatStarters, dailyStarters, splitAnsweredPrompt } from '@/lib/journal/starters'
 import { eraJournalPrompt } from '@/lib/era/content'
 
 interface JournalEntry {
@@ -724,7 +724,18 @@ function JournalContent() {
   }, [])
 
   // Conversational journal handlers
-  const sendChatMessage = useCallback(async (spokenText?: string) => {
+  const sendChatMessage = useCallback(async (
+    spokenText?: string,
+    /**
+     * History to send instead of what is in state.
+     *
+     * Needed when a conversation is opened and sent in the same tick — a
+     * setConversation() above this call has not landed yet, so reading
+     * state here would send an empty history and lose the question the app
+     * had just asked.
+     */
+    seedHistory?: ConversationMessage[],
+  ) => {
     const source = (spokenText ?? chatInput).trim()
     if (!source || chatLoading || chatBlocked) return
     const userMessage = source
@@ -732,7 +743,8 @@ function JournalContent() {
     setSpokeLastTurn(!!spokenText)
     if (!spokenText) setChatInput('')
 
-    const newConversation = [...conversation, { role: 'user' as const, content: userMessage }]
+    const history = seedHistory ?? conversation
+    const newConversation = [...history, { role: 'user' as const, content: userMessage }]
     setConversation(newConversation)
     setChatLoading(true)
     setChatDegraded(false)
@@ -741,7 +753,7 @@ function JournalContent() {
       const res = await fetch('/api/ai/journal-conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage, conversation }),
+        body: JSON.stringify({ message: userMessage, conversation: history }),
       })
 
       // 403 means the metered allowance is gone (or this tier never had
@@ -772,6 +784,33 @@ function JournalContent() {
       setChatLoading(false)
     }
   }, [chatInput, chatLoading, chatBlocked, conversation])
+
+  /**
+   * Take an answered prompt into a conversation.
+   *
+   * The app asked something, they answered it in the writing box, and until
+   * now that was the end of it — the answer sat in an entry nobody would
+   * ever respond to. This opens Chat with the exchange that actually
+   * happened: the app's question as the coach's turn, their words as the
+   * reply, and one send so the coach answers.
+   *
+   * It costs one chat message, and it should: it IS a chat message. Routing
+   * it through the journal to dodge the free tier's five a day would make
+   * the limit a lie.
+   */
+  const talkItThrough = useCallback(() => {
+    const prompts = [
+      ...dailyStarters(mindsetCtx?.mindset ?? undefined),
+      ...(isToday && era.era && era.era.step !== 'complete' ? [eraJournalPrompt(era.era)] : []),
+    ]
+    const { question, answer } = splitAnsweredPrompt(freeText, prompts)
+    if (!answer) return
+
+    const seed: ConversationMessage[] = question ? [{ role: 'assistant', content: question }] : []
+    setConversation(seed)
+    setMode('conversational')
+    void sendChatMessage(answer, seed)
+  }, [freeText, mindsetCtx, isToday, era, sendChatMessage])
 
   const saveConversation = useCallback(async () => {
     if (conversation.length < 2) return
@@ -1583,7 +1622,25 @@ function JournalContent() {
                 {interimText && (
                   <p className="text-xs text-white/75 italic mt-1 px-1">{interimText}</p>
                 )}
-                <p className="text-right text-[10px] text-white/30 mt-1">{freeText.length}/5000</p>
+                <div className="flex items-center justify-between gap-3 mt-1">
+                  {/* The app asked, they answered — this is the reply.
+                      Without it an answer to Voxu's own question sits in an
+                      entry nothing ever responds to, which is the whole
+                      thing somebody noticed. */}
+                  {freeText.trim().length > 0 ? (
+                    <button
+                      onClick={talkItThrough}
+                      disabled={chatLoading}
+                      className="flex items-center gap-1.5 text-[11px] text-white/55 hover:text-white disabled:opacity-40 transition-colors"
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                      Talk it through
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+                  <p className="text-[10px] text-white/30">{freeText.length}/5000</p>
+                </div>
               </div>
             )}
           </div>

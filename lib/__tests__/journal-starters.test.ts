@@ -4,6 +4,7 @@ import {
   chatStarters,
   dailyStarters,
   isConversational,
+  splitAnsweredPrompt,
 } from '@/lib/journal/starters'
 import { MINDSET_DAILY_QUESTIONS } from '@/lib/mindset/daily-questions'
 import type { MindsetId } from '@/lib/mindset/types'
@@ -97,5 +98,61 @@ describe('which ones the coach can ask', () => {
         expect(asked, `${id}: ${generic}`).not.toContain(generic)
       }
     }
+  })
+})
+
+describe('taking an answered prompt into the conversation', () => {
+  const prompts = [
+    'Are you working as hard as you tell people you are?',
+    'What belief about yourself would you like to let go of?',
+    'Day 3 of Locked In. Where did you hold your focus today, and where did it slip?',
+    'Today I noticed...',
+  ]
+
+  it('splits the app’s question from the person’s answer', () => {
+    // Straight from the screenshot: the prompt seeded the box, "No" is the
+    // whole answer, and both halves matter.
+    const got = splitAnsweredPrompt(
+      'Are you working as hard as you tell people you are?\nNo',
+      prompts,
+    )
+    expect(got.question).toBe('Are you working as hard as you tell people you are?')
+    expect(got.answer).toBe('No')
+  })
+
+  it('handles the era prompt, which is the longest thing anyone is asked', () => {
+    const got = splitAnsweredPrompt(
+      'Day 3 of Locked In. Where did you hold your focus today, and where did it slip?\nHeld it all morning. Lost it after lunch.',
+      prompts,
+    )
+    expect(got.question).toMatch(/^Day 3 of Locked In/)
+    expect(got.answer).toBe('Held it all morning. Lost it after lunch.')
+  })
+
+  it('treats a question with nothing after it as an opener, not an answer', () => {
+    // They tapped the prompt and wrote nothing. Sending that as their reply
+    // would have them asking themselves a question.
+    const got = splitAnsweredPrompt('Today I noticed...', prompts)
+    expect(got.question).toBeNull()
+    expect(got.answer).toBe('Today I noticed...')
+  })
+
+  it('leaves free writing alone', () => {
+    const got = splitAnsweredPrompt('Had a strange day. Not sure why.', prompts)
+    expect(got.question).toBeNull()
+    expect(got.answer).toBe('Had a strange day. Not sure why.')
+  })
+
+  it('is not fooled by a prompt that is a prefix of a longer one', () => {
+    const overlapping = ['Where did you hold your focus?', 'Where did you hold your focus? And then?']
+    const got = splitAnsweredPrompt('Where did you hold your focus? And then? Nowhere', overlapping)
+    expect(got.question).toBe('Where did you hold your focus? And then?')
+    expect(got.answer).toBe('Nowhere')
+  })
+
+  it('matches however they capitalised it, and survives empty input', () => {
+    expect(splitAnsweredPrompt('today i noticed... the quiet', prompts).answer).toBe('the quiet')
+    expect(splitAnsweredPrompt('   ', prompts)).toEqual({ question: null, answer: '' })
+    expect(splitAnsweredPrompt('anything', [])).toEqual({ question: null, answer: 'anything' })
   })
 })
