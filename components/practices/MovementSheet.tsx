@@ -23,6 +23,7 @@ import {
   type SwapReason,
 } from '@/lib/movements/swap'
 import { artAlt, artFor, hasFullRegionArt, ownArt, regionArt } from '@/lib/movements/images'
+import { MovementHero } from '@/components/movements/MovementHero'
 import { PatternGlyph } from '@/components/movements/PatternGlyph'
 import { haptic } from '@/lib/haptics'
 
@@ -171,66 +172,10 @@ export function MovementSheet({
           </p>
         )}
 
-        {/* The visual: art for the movement or its family where it exists,
-            the pattern mark where it doesn't. Never a person mid-lift —
-            see lib/movements/images.ts for why. */}
-        {art ? (
-          <div className="mt-4 rounded-2xl border border-white/[0.1] overflow-hidden relative">
-            <img
-              src={art.src}
-              alt={artAlt(current, art)}
-              className="w-full aspect-[4/3] object-cover"
-              loading="lazy"
-            />
-
-            {/* Callouts: labels pinned to the picture, drawn by the app and
-                only ever from reviewed guidance. No arrow points at a body
-                on this screen unless a named person said it should. */}
-            {technique?.callouts?.map(callout => (
-              <div
-                key={callout.label}
-                className={`absolute max-w-[42%] ${callout.side === 'right' ? 'text-right' : 'text-left'}`}
-                style={{
-                  left: callout.side === 'left' ? '4%' : undefined,
-                  right: callout.side === 'right' ? '4%' : undefined,
-                  top: `${callout.y}%`,
-                }}
-              >
-                <p className="text-[11px] text-white leading-tight font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-                  {callout.label}
-                </p>
-                {callout.detail && (
-                  <p className="text-[10px] text-white/70 leading-snug mt-0.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-                    {callout.detail}
-                  </p>
-                )}
-                <span
-                  aria-hidden
-                  className={`block h-px bg-white/45 mt-1 ${callout.side === 'right' ? 'ml-auto' : ''}`}
-                  style={{ width: `${Math.max(12, Math.abs(callout.x - (callout.side === 'left' ? 4 : 96)))}%` }}
-                />
-              </div>
-            ))}
-
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-4 pt-8 pb-3 flex items-end gap-2">
-              <span className="text-white/70 shrink-0">
-                <PatternGlyph pattern={current.pattern} className="w-5 h-5" />
-              </span>
-              <p className="text-[12px] text-white/75 leading-snug">
-                {PATTERN_MEANS[current.pattern]}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-4 rounded-2xl border border-white/[0.1] bg-gradient-to-b from-white/[0.07] to-white/[0.01] px-5 py-7 flex flex-col items-center text-center">
-            <span className="text-white/75">
-              <PatternGlyph pattern={current.pattern} className="w-16 h-16" />
-            </span>
-            <p className="text-[13px] text-white/60 mt-3 leading-snug max-w-[26ch]">
-              {PATTERN_MEANS[current.pattern]}
-            </p>
-          </div>
-        )}
+        {/* The visual, with the reviewer's callouts if there are any. Shared
+            with the editor's preview so what a reviewer sees is what a
+            reader gets. */}
+        <MovementHero movement={current} technique={technique} />
 
         {current.pick && <p className="text-[13px] text-white/60 mt-3 leading-snug">{current.pick}</p>}
 

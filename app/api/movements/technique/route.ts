@@ -57,7 +57,8 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: TECHNIQUE_ERRORS[problem], code: problem }, { status: 400 })
   }
 
-  const technique = await saveTechnique(draft)
+  // Written straight to published: this route is a person pressing save.
+  const technique = await saveTechnique(draft, true)
   return NextResponse.json({ technique })
 }
 

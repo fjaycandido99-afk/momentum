@@ -33,23 +33,57 @@ function fromRow(row: {
   }
 }
 
-/** Every movement that has reviewed guidance, keyed by movement id. */
+/**
+ * Every movement with PUBLISHED guidance, keyed by movement id.
+ *
+ * The published filter is the whole guarantee. A draft is a row in this
+ * table, so if this query ever stops filtering, unsigned text appears on
+ * a paying customer screen — which is why the filter lives here, in the
+ * one function every reader path goes through, and is asserted in a test.
+ */
 export async function allTechnique(): Promise<Record<string, MovementTechnique>> {
-  const rows = await prisma.movementTechnique.findMany()
+  const rows = await prisma.movementTechnique.findMany({ where: { published: true } })
   const out: Record<string, MovementTechnique> = {}
   for (const row of rows) out[row.movement_id] = fromRow(row)
   return out
 }
 
+/** Published guidance for one movement. */
 export async function techniqueFor(movementId: string): Promise<MovementTechnique | null> {
-  const row = await prisma.movementTechnique.findUnique({ where: { movement_id: movementId } })
+  const row = await prisma.movementTechnique.findFirst({
+    where: { movement_id: movementId, published: true },
+  })
   return row ? fromRow(row) : null
 }
 
-/** Write a draft that has already passed validateTechnique. */
-export async function saveTechnique(draft: TechniqueDraft): Promise<MovementTechnique> {
+/**
+ * Everything in the table including drafts — for the editor only.
+ *
+ * Separate function rather than a flag on the one above, so a reader path
+ * cannot reach a draft by passing the wrong argument.
+ */
+export async function allTechniqueForEditor(): Promise<
+  Record<string, MovementTechnique & { published: boolean }>
+> {
+  const rows = await prisma.movementTechnique.findMany()
+  const out: Record<string, MovementTechnique & { published: boolean }> = {}
+  for (const row of rows) out[row.movement_id] = { ...fromRow(row), published: row.published }
+  return out
+}
+
+/**
+ * Write guidance.
+ *
+ * Publishing is explicit at every call site, with no default — a default
+ * would eventually publish something nobody meant to.
+ */
+export async function saveTechnique(
+  draft: TechniqueDraft,
+  published: boolean,
+): Promise<MovementTechnique> {
   const technique = toTechnique(draft)
   const data = {
+    published,
     reviewed_by: technique.reviewedBy,
     reviewed_on: technique.reviewedOn,
     steps: technique.steps as unknown as Prisma.InputJsonValue,

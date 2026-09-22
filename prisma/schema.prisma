@@ -1353,7 +1353,14 @@ model MovementTechnique {
   /// Movement id from the library. Never renamed, so this stays valid.
   movement_id String @unique
 
-  /// The person standing behind these words. Shown on the screen.
+  /// Published rows are the only ones any reader sees. A draft — written by
+  /// the model to save a reviewer typing — stays invisible until a person
+  /// puts their name on it. The read path filters on this, so there is no
+  /// route by which an unsigned draft reaches a screen.
+  published Boolean @default(false)
+
+  /// The person standing behind these words. Shown on the screen. Empty
+  /// while a draft is waiting for one.
   reviewed_by String
   /// YYYY-MM-DD. The screen shows how old the guidance is.
   reviewed_on String
