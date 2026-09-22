@@ -49,7 +49,6 @@ model User {
   subscription      Subscription?
   goals             Goal[]
   playlists         Playlist[]
-  routines          Routine[]
   pushSubscriptions PushSubscription[]
   xpEvents          XPEvent[]
   achievements      UserAchievement[]
@@ -694,22 +693,6 @@ model PlaylistItem {
   @@index([playlist_id])
 }
 
-model Routine {
-  id              String        @id @default(cuid())
-  user_id         String
-  user            User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  name            String
-  description     String?
-  icon            String?
-  steps           RoutineStep[]
-  times_completed Int           @default(0)
-  last_completed  DateTime?
-  created_at      DateTime      @default(now())
-  updated_at      DateTime      @updatedAt
-
-  @@index([user_id])
-}
-
 model XPEvent {
   id         String   @id @default(cuid())
   user_id    String
@@ -745,21 +728,6 @@ model UserAchievement {
 
   @@unique([user_id, achievement_id])
   @@index([user_id])
-}
-
-model RoutineStep {
-  id               String   @id @default(cuid())
-  routine_id       String
-  routine          Routine  @relation(fields: [routine_id], references: [id], onDelete: Cascade)
-  activity_type    String // "soundscape" | "breathing" | "motivation" | "music" | "focus"
-  activity_id      String
-  title            String
-  subtitle         String?
-  duration_minutes Int?
-  position         Int      @default(0)
-  created_at       DateTime @default(now())
-
-  @@index([routine_id])
 }
 
 // ═══════════════ Priority Alerts System ═══════════════

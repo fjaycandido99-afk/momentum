@@ -34,7 +34,7 @@ export async function GET() {
     // Everything is scoped to user.id. No route param decides whose data
     // this is, so there is no way to ask for somebody else's.
     const [
-      account, preferences, guides, favorites, goals, routines, playlists, assessment, eras,
+      account, preferences, guides, favorites, goals, playlists, assessment, eras,
       wellness, missions,
     ] = await Promise.all([
       prisma.user.findUnique({
@@ -73,7 +73,6 @@ export async function GET() {
         select: { content_type: true, content_text: true, content_title: true, created_at: true },
       }),
       prisma.goal.findMany({ where: { user_id: user.id } }),
-      prisma.routine.findMany({ where: { user_id: user.id }, include: { steps: true } }),
       prisma.playlist.findMany({ where: { user_id: user.id }, include: { items: true } }),
       // Daily Read. This is a record of how someone thinks, scored over time —
       // exactly the kind of personal data an export exists for, and it was
@@ -124,7 +123,6 @@ export async function GET() {
       journal: guides,
       saved: favorites,
       goals,
-      routines,
       playlists,
       daily_read: assessment.map(a => ({
         ...a,

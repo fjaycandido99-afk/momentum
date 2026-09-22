@@ -56,9 +56,6 @@ export async function POST() {
       // 6. Playlists (cascade deletes PlaylistItems)
       await tx.playlist.deleteMany({ where: { user_id: userId } })
 
-      // 7. Routines (cascade deletes RoutineSteps)
-      await tx.routine.deleteMany({ where: { user_id: userId } })
-
       // 8. XP events
       await tx.xPEvent.deleteMany({ where: { user_id: userId } })
 
