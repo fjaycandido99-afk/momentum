@@ -24,6 +24,26 @@
 
         </activity>
 
+        <!--
+          FCM presentation defaults.
+
+          All three are read by the Firebase messaging service when a push
+          arrives while the app is NOT in the foreground — which is when it
+          matters. Without them: the launcher icon is used as a silhouette
+          and renders as a white square, the tint is the system default, and
+          on Android 8+ a notification with no channel is dropped without a
+          trace.
+        -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_voxu" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/voxu_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/default_notification_channel_id" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

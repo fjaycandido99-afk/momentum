@@ -92,11 +92,39 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
-try {
-    def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
-        apply plugin: 'com.google.gms.google-services'
+/**
+ * Firebase Cloud Messaging — the only way a push reaches an Android device.
+ *
+ * This block used to swallow a missing google-services.json into
+ * `logger.info`, which nobody reads: a release AAB built clean, uploaded
+ * clean, installed clean, and then never received a single notification. For
+ * an app whose whole loop is a daily nudge, that is the worst possible
+ * failure — silent, and only discoverable by a user who wonders why the app
+ * went quiet.
+ *
+ * A debug build still just warns, so `npx cap run android` works without
+ * Firebase. A RELEASE build fails, because shipping an Android build with
+ * dead push is worse than not shipping one. Override deliberately with
+ * `-PallowNoPush=true` if you genuinely want to ship the quiet version.
+ *
+ * The file itself cannot live in this repo's history usefully — download it
+ * from Firebase Console (Project settings → Your apps → Android app
+ * com.voxu.app) to android/app/google-services.json, or let CI write it from
+ * the GOOGLE_SERVICES_JSON variable. It is not a secret: it ships inside the
+ * APK, and its API key is restricted to this package name.
+ */
+def servicesJSON = file('google-services.json')
+if (servicesJSON.exists() && servicesJSON.length() > 0) {
+    apply plugin: 'com.google.gms.google-services'
+} else {
+    def message = 'google-services.json is missing — Android push notifications will NOT work.'
+    if (gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+            && !project.hasProperty('allowNoPush')) {
+        throw new GradleException(
+            message + '\n' +
+            'Download it from Firebase Console (Project settings -> Your apps -> com.voxu.app) ' +
+            'to android/app/google-services.json, or pass -PallowNoPush=true to ship without push.'
+        )
     }
-} catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+    logger.warn('VOXU: ' + message)
 }

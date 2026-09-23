@@ -178,12 +178,46 @@ Back the keystore up somewhere that is not this machine.
    That is weeks, not an afternoon. An account that has already published a
    production app is past this gate.
 
-### Known gap, not a blocker for the first upload
+### Android push — everything except the two things only Google can give you
 
-`android/app/google-services.json` is absent, and `build.gradle` skips the
-Google Services plugin when it is missing — so **push notifications will not
-work on Android at all**. Every nudge the app relies on (the promise reminder,
-the exercise nudge, the wake-up call) is silent there. Fix by adding the
-Android app to the Firebase project and dropping the file in; it does not
-block shipping, but an Android user gets a materially quieter product until
-it is done.
+The server half has been built the whole time: `lib/fcm.ts` sends through
+firebase-admin, `PushSubscription.platform` already distinguishes
+`web` / `ios` / `android`, and the client calls `Capacitor.getPlatform()`,
+which returns `android`. iOS does **not** go through Firebase at all — it
+uses APNs directly via `lib/apns.ts` — so this is an Android-only gap.
+
+Done 2026-09-22:
+- `ic_stat_voxu.xml` — a monochrome status-bar icon. Android 5+ draws this as
+  a silhouette, and the launcher icon used in its place renders as a white
+  square, so this had to exist before push was worth turning on.
+- `colors.xml` + `default_notification_channel_id` in strings, and all three
+  `com.google.firebase.messaging.default_notification_*` meta-data entries in
+  the manifest. **Android 8+ silently drops a notification that arrives with
+  no channel**, which is the failure nobody can debug.
+- `build.gradle` no longer swallows a missing google-services.json into
+  `logger.info`. A **release** build now FAILS; debug only warns, so
+  `npx cap run android` still works. Override with `-PallowNoPush=true`.
+- CI writes the file from a `GOOGLE_SERVICES_JSON` variable, and fails if
+  neither that nor a committed copy is present.
+- `POST_NOTIFICATIONS` was already declared — Android 13+ needs it.
+
+**The two things I cannot produce, because only Google issues them:**
+
+1. **`android/app/google-services.json`** — Firebase Console → Project
+   settings → Your apps → Add app → Android → package name `com.voxu.app` →
+   download. Save to `android/app/google-services.json`. It contains a real
+   `mobilesdk_app_id`, project number and API key that only Google can mint;
+   a hand-written one fails at registration, so there is no way to stub it.
+   Not a secret — it ships inside the APK and its key is restricted to the
+   package name — so committing it is fine, and simpler than the CI variable.
+
+2. **`FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`**
+   in Vercel — from a service account JSON (Firebase Console → Project
+   settings → Service accounts → Generate new private key). `isFCMConfigured()`
+   returns false without all three, and `lib/push-service.ts` then skips every
+   Android subscription. **None of the three is set in local `.env`, and the
+   Vercel token here is 403 on reading project env vars, so production could
+   not be checked** — confirm it yourself in the Vercel dashboard.
+
+Until both halves exist, an Android install registers, stores no token, and
+receives nothing.

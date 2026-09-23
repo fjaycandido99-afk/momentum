@@ -263,6 +263,27 @@ workflows:
           echo "$VOXU_KEYSTORE" | base64 --decode > "$CM_BUILD_DIR/android/upload.jks"
           ls -l "$CM_BUILD_DIR/android/upload.jks"
 
+      - name: Write google-services.json
+        script: |
+          set -e
+          # Without this file the Google Services plugin is not applied and the
+          # app can never obtain an FCM token — push is dead on every install.
+          # build.gradle fails a release build rather than let that ship
+          # silently, so this step has to succeed. Skipped only if the file is
+          # committed to the repo.
+          TARGET="$CM_BUILD_DIR/android/app/google-services.json"
+          if [ -s "$TARGET" ]; then
+            echo "google-services.json is committed in the repo — using that."
+          elif [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" | base64 --decode > "$TARGET"
+            echo "Wrote google-services.json ($(wc -c < "$TARGET") bytes)"
+          else
+            echo "Neither a committed google-services.json nor GOOGLE_SERVICES_JSON is present."
+            echo "Android push would be dead in this build. Add the variable to the google_play group,"
+            echo "or build with -PallowNoPush=true if you really mean to ship without push."
+            exit 1
+          fi
+
       - name: Set version
         script: |
           set -e

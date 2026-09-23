@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The accent Android tints the notification icon and title with.
+
+      NOT #0a0a0f, the app's theme colour: that is near-black, and the system
+      draws this against the notification shade's own background, which is
+      near-black in dark mode. The icon would disappear. White reads on both
+      shades, which is the only requirement this colour has.
+    -->
+    <color name="voxu_notification">#FFFFFFFF</color>
+</resources>

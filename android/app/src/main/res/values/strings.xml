@@ -1,5 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+    <!-- The channel a push lands in when the payload does not name one.
+         Without this, Android 8+ drops notifications that arrive while the
+         app is backgrounded, silently. -->
+    <string name="default_notification_channel_id">voxu_default</string>
     <string name="app_name">Voxu</string>
     <string name="title_activity_main">Voxu</string>
     <string name="package_name">com.voxu.app</string>
