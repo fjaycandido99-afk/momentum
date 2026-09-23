@@ -5,6 +5,7 @@ import { ChevronLeft } from 'lucide-react'
 import { useEra } from '@/hooks/useEra'
 import { PracticeSection } from '@/components/exercise/PracticeSection'
 import { PracticesSection } from '@/components/practices/PracticesSection'
+import { Shelf } from '@/components/books/Shelf'
 import { PatternsBlock } from '@/components/practices/PatternsBlock'
 import { attributeLabel, attributesForEra } from '@/lib/exercises/attributes'
 import { eraName } from '@/lib/era/presets'
@@ -72,6 +73,10 @@ export default function TrainingPage() {
           </div>
           <PracticesSection canAdd />
         </div>
+
+        {/* Renders nothing until a book has been finished, so it never
+            advertises itself at somebody who reads without resolving one. */}
+        <Shelf />
 
         {/* What it has noticed. Last on the page on purpose: the answer for
             today comes before any observation about the last three months. */}

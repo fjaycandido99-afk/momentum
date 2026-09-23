@@ -90,7 +90,7 @@ export async function buildUserContext(
   // What they DID, alongside what they wrote. The chat used to read only
   // the journal, so it could discuss someone's week without knowing whether
   // they had shown up for it.
-  const [entries, saved, goals, behaviour] = await Promise.all([
+  const [entries, saved, goals, behaviour, books] = await Promise.all([
     prisma.dailyGuide.findMany({
       where: {
         user_id: userId,
@@ -131,6 +131,20 @@ export async function buildUserContext(
     // Never fail a conversation over context. A missing behaviour block is
     // the old behaviour, which was fine; a 500 on the chat is not.
     loadBehaviourFacts(userId, isoDay(new Date()), depth.journalDays).catch(() => null),
+    // What they are reading.
+    //
+    // Here rather than in behaviour-context, which bans text outright — "not
+    // a promise, not a journal line, not a plan row" — and a book title is
+    // text they typed about themselves. So it sits behind the same memory
+    // consent as the journal, which is where user-entered words belong.
+    prisma.book
+      .findMany({
+        where: { user_id: userId, finished_at: null },
+        select: { title: true, author: true, pages: true, current_page: true },
+        orderBy: { updated_at: 'desc' },
+        take: 3,
+      })
+      .catch(() => []),
   ])
 
   const sections: string[] = []
@@ -167,6 +181,18 @@ export async function buildUserContext(
   if (goals.length) {
     const lines = goals.map(g => `- ${g.title} (${g.current_count}/${g.target_count})`)
     sections.push(`What they're working toward:\n${lines.join('\n')}`)
+  }
+
+  if (books.length) {
+    // The page is included only when it means something. Without a total
+    // "page 140" is a number with no scale, and the coach would either
+    // ignore it or say something about it that isn't true.
+    const lines = books.map(b => {
+      const who = b.author ? ` by ${b.author}` : ''
+      const where = b.current_page != null && b.pages ? ` (page ${b.current_page} of ${b.pages})` : ''
+      return `- ${b.title}${who}${where}`
+    })
+    sections.push(`What they're reading:\n${lines.join('\n')}`)
   }
 
   if (depth.moodTrend && entries.length > 1) {

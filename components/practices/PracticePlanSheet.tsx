@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Dumbbell, Loader2, Plus, X } from 'lucide-react'
+import { BookOpen, Dumbbell, Loader2, Plus, X } from 'lucide-react'
 import {
   PLAN_MAX_DETAIL_LENGTH,
   PLAN_MAX_ITEMS,
@@ -20,6 +20,7 @@ import { MovementSheet } from './MovementSheet'
 import { MovementPicker } from '@/components/movements/MovementPicker'
 import { TemplatePicker } from '@/components/movements/TemplatePicker'
 import { PatternGlyph } from '@/components/movements/PatternGlyph'
+import { BookSheet } from '@/components/books/BookSheet'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -84,6 +85,8 @@ export function PracticePlanSheet({
    * swaps for a movement nobody named would be a guess.
    */
   const [swapRow, setSwapRow] = useState<{ slotKey: string; index: number } | null>(null)
+  /** The typed title whose book is open. Reading domain only. */
+  const [bookTitle, setBookTitle] = useState<string | null>(null)
   const swapping = swapRow ? matchMovement(draft[swapRow.slotKey]?.items[swapRow.index]?.name ?? '') : null
   /**
    * Which slot is picking from the library, if any.
@@ -278,6 +281,22 @@ export function PracticePlanSheet({
                         </span>
                       </button>
                     )}
+                    {/* The same shape as the movement swap above, for the
+                        other domain where the typed line names a real thing
+                        in the world. The row stays free text — this is an
+                        offer to resolve it, which buys a cover, a page count
+                        and what the book has to do with their era. */}
+                    {domain === 'read' && item.name.trim().length > 2 && (
+                      <button
+                        onClick={() => { haptic('light'); setBookTitle(item.name.trim()) }}
+                        className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/80 mt-1 ml-1"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                        <span className="underline underline-offset-4 decoration-white/15">
+                          Find this book
+                        </span>
+                      </button>
+                    )}
                     </div>
                     )
                   })}
@@ -363,6 +382,10 @@ export function PracticePlanSheet({
           onClose={() => setSwapRow(null)}
         />
       )}
+
+      {/* The book behind the title. It never edits the row: resolving a book
+          is a thing that happens beside the plan, not to it. */}
+      {bookTitle && <BookSheet title={bookTitle} onClose={() => setBookTitle(null)} />}
 
       {/* Picking writes the name into the first empty row of that day, or
           adds a row if every one is used — so nothing they typed is ever
