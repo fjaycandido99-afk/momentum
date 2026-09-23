@@ -213,18 +213,23 @@ workflows:
 
     environment:
       node: 22
-      # Upload the keystore ONCE in Codemagic: Teams/Personal account ->
-      # Code signing identities -> Android keystores, with reference name
-      # `voxu_upload`. Codemagic then sets CM_KEYSTORE_PATH,
-      # CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS and CM_KEY_PASSWORD itself, and
+      # The keystore DLCWorker already signs with, reused deliberately
+      # (Francis, 2026-09-23) — it is already uploaded and working, so Voxu
+      # needs no JDK, no keytool and no new secret to back up. One upload key
+      # covers both apps; if it ever leaked, both would need resetting, and
+      # Play does allow rotating an upload key later. To split them, upload a
+      # Voxu keystore under Code signing identities and change this one line.
+      #
+      # Codemagic sets CM_KEYSTORE_PATH, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS
+      # and CM_KEY_PASSWORD from this reference, and
       # android/app/build.gradle reads them directly.
       #
       # This replaced a `groups: [google_play]` reference that failed the
       # build at startup — "references to unknown variable group(s)" — and
       # which also meant base64-ing a signing key through a clipboard. No
-      # group is needed now, so there is nothing to misname.
+      # group is referenced now, so there is nothing to misname.
       android_signing:
-        - voxu_upload
+        - shiftflow_keystore
       vars:
         PACKAGE_NAME: com.voxu.app
 
@@ -269,8 +274,9 @@ workflows:
           # no path here, and the build would produce an unsigned AAB that
           # Play refuses with an error that never mentions signing.
           if [ -z "$CM_KEYSTORE_PATH" ] || [ ! -s "$CM_KEYSTORE_PATH" ]; then
-            echo "No keystore. Upload one in Codemagic under Code signing identities ->"
-            echo "Android keystores with the reference name 'voxu_upload'."
+            echo "No keystore. This workflow references 'shiftflow_keystore' under"
+            echo "Code signing identities -> Android keystores. Check it is still there,"
+            echo "and that the reference name matches exactly."
             exit 1
           fi
           echo "Keystore present ($(wc -c < "$CM_KEYSTORE_PATH") bytes), alias ${CM_KEY_ALIAS}"
@@ -286,13 +292,29 @@ workflows:
           TARGET="$CM_BUILD_DIR/android/app/google-services.json"
           if [ -s "$TARGET" ]; then
             echo "google-services.json is committed in the repo — using that."
+            echo "PUSH_FLAG=" >> $CM_ENV
           elif [ -n "$GOOGLE_SERVICES_JSON" ]; then
             echo "$GOOGLE_SERVICES_JSON" | base64 --decode > "$TARGET"
             echo "Wrote google-services.json ($(wc -c < "$TARGET") bytes)"
+            echo "PUSH_FLAG=" >> $CM_ENV
+          elif [ -n "$VOXU_ALLOW_NO_PUSH" ]; then
+            # The deliberate escape. Set VOXU_ALLOW_NO_PUSH=1 in the Codemagic
+            # UI to prove the pipeline works before Firebase exists. It is an
+            # environment variable rather than a default so that shipping
+            # without push is always something somebody chose, and the choice
+            # is visible in the build log.
+            echo "================================================================"
+            echo " VOXU_ALLOW_NO_PUSH is set. Building WITHOUT Firebase."
+            echo " Android push will not work in this build AT ALL: no promise"
+            echo " reminder, no exercise nudge, no wake-up call. Do not put this"
+            echo " build in front of a real user."
+            echo "================================================================"
+            echo "PUSH_FLAG=-PallowNoPush=true" >> $CM_ENV
           else
-            echo "Neither a committed google-services.json nor GOOGLE_SERVICES_JSON is present."
-            echo "Android push would be dead in this build. Add the variable to the google_play group,"
-            echo "or build with -PallowNoPush=true if you really mean to ship without push."
+            echo "No google-services.json, so Android push would be dead in this build."
+            echo "Fix it: Firebase Console -> Project settings -> Your apps -> Add app"
+            echo "-> Android -> com.voxu.app, then commit the file to android/app/."
+            echo "Or set VOXU_ALLOW_NO_PUSH=1 in Codemagic to build without push on purpose."
             exit 1
           fi
 
@@ -342,10 +364,14 @@ workflows:
           # before Play has ever seen it. Signing comes from the CM_KEYSTORE_*
           # variables Codemagic set — build.gradle reads them, so there is
           # nothing to pass here.
+          # $PUSH_FLAG is set by the google-services step: empty normally, or
+          # -PallowNoPush=true when VOXU_ALLOW_NO_PUSH was used. Unquoted on
+          # purpose so that empty expands to nothing rather than an empty arg.
           ./gradlew assembleRelease bundleRelease --no-daemon \
             -Dorg.gradle.java.home="$JAVA_HOME" \
             -PvoxuVersionCode="$VOXU_VERSION_CODE" \
-            -PvoxuVersionName="1.2.2"
+            -PvoxuVersionName="1.2.2" \
+            $PUSH_FLAG
 
     artifacts:
       - android/app/build/outputs/**/*.aab

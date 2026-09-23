@@ -26,11 +26,11 @@ let blocked = 0
 
 console.log('\n--- Codemagic (the CI build) ---\n')
 
-console.log('1. Upload the keystore ONCE, in Codemagic:')
-console.log('     Code signing identities -> Android keystores')
-console.log('     Reference name: voxu_upload   <- must match exactly')
-console.log('   Nothing to encode, and no variable group. The workflow reads')
-console.log('   the CM_KEYSTORE_* variables Codemagic sets from that upload.\n')
+console.log('1. Keystore: nothing to do. The workflow signs with')
+console.log('   `shiftflow_keystore`, already uploaded to Codemagic for')
+console.log('   DLCWorker. No JDK, no keytool, no new secret to back up.')
+console.log('   To give Voxu its own key later, upload one under Code signing')
+console.log('   identities and change that one line in codemagic.yaml.\n')
 
 if (fs.existsSync(SERVICES) && fs.statSync(SERVICES).size > 0) {
   const committed = require('child_process')
@@ -60,7 +60,12 @@ if (fs.existsSync(SERVICES) && fs.statSync(SERVICES).size > 0) {
   console.log(`   Save to ${rel(SERVICES)}`)
   console.log('   Then commit it: git add -f android/app/google-services.json')
   console.log('   (Not a secret: it ships inside the APK and its key is')
-  console.log('    restricted to the package name.)\n')
+  console.log('    restricted to the package name.)')
+  console.log('')
+  console.log('   TO BUILD TONIGHT WITHOUT IT: set VOXU_ALLOW_NO_PUSH=1 in')
+  console.log('   Codemagic (the app -> Settings -> Environment variables, no')
+  console.log('   group needed). The build then succeeds and prints a banner')
+  console.log('   saying push is dead in it. Do not hand that build to a user.\n')
 }
 
 console.log('--- Building locally (optional) ---\n')
