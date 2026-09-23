@@ -215,6 +215,7 @@ export type AiFeatureKey =
   | 'wellness'
   | 'briefing'
   | 'quote_explain'
+  | 'book_summary'
   | 'goal_decompose'
   | 'letter'
   | 'retrospective'
@@ -244,6 +245,11 @@ export const AI_FEATURE_LIMITS: Record<AiFeatureKey, AiFeatureLimit> = {
   // taste can never eat into what a paying subscriber has left.
   chat_voice:        { free: 1, premium: 30, label: 'Spoken replies' },
   quote_explain:     { free: 3, premium: null, label: 'Quote insights' },
+  // Per BOOK, not per day, in practice — you change books every week or
+  // two, and the result is cached per book and era day, so opening the same
+  // card again costs nothing. One a day is therefore effectively "whenever
+  // you start a book" for a free user.
+  book_summary:      { free: 1, premium: null, label: 'Book summaries' },
   reflections:       { free: 2, premium: null, label: 'AI reflections' },
   dream:             { free: 1, premium: null, label: 'Dream interpretation' },
   smart_session:     { free: 1, premium: null, label: 'Smart sessions' },
