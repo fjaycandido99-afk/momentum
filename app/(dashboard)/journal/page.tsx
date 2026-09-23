@@ -165,7 +165,7 @@ function JournalContent() {
   const [chatMemoryConsented, setChatMemoryConsented] = useState<boolean | null>(null)
   const [chatCrisis, setChatCrisis] = useState<CrisisContent | null>(null)
   const [chatDegraded, setChatDegraded] = useState(false)
-  const [chatBlocked, setChatBlocked] = useState<{ reason?: 'locked' | 'exhausted'; limit: number | null } | null>(null)
+  const [chatBlocked, setChatBlocked] = useState<{ reason?: 'locked' | 'exhausted' | 'signin'; limit: number | null } | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   // Dream journal state
@@ -764,6 +764,27 @@ function JournalContent() {
         setConversation(prev => prev.slice(0, -1))
         setChatInput(userMessage)
         setChatBlocked({ reason: err?.reason, limit: err?.limit ?? null })
+        return
+      }
+
+      // 401 means nobody is signed in. Guests can reach this page, so this
+      // is a real path, not a bug — and it used to fall straight through
+      // every branch below: the message stayed in the thread, no reply ever
+      // came, and nothing said why. Same rollback, different ask: an
+      // account, not a subscription.
+      if (res.status === 401) {
+        setConversation(prev => prev.slice(0, -1))
+        setChatInput(userMessage)
+        setChatBlocked({ reason: 'signin', limit: null })
+        return
+      }
+
+      // Anything else — rate limited, the model down, a 500 — also fell
+      // through silently. Say it plainly instead; `chatDegraded` already
+      // renders the honest line.
+      if (!res.ok) {
+        setConversation(prev => [...prev, { role: 'assistant', content: 'Take a moment to sit with that thought. What comes to mind?' }])
+        setChatDegraded(true)
         return
       }
 

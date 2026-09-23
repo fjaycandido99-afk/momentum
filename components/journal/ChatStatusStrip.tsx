@@ -15,7 +15,7 @@
  */
 
 import Link from 'next/link'
-import { Sparkles, BookLock } from 'lucide-react'
+import { Sparkles, BookLock, UserPlus } from 'lucide-react'
 
 export interface ChatQuota {
   remaining: number | null
@@ -28,11 +28,47 @@ interface Props {
   memoryConsented: boolean | null
   isPremium: boolean
   /** Set when the server refused the last send. */
-  blocked: { reason?: 'locked' | 'exhausted'; limit: number | null } | null
+  blocked: { reason?: 'locked' | 'exhausted' | 'signin'; limit: number | null } | null
   onUpgrade: () => void
 }
 
 export function ChatStatusStrip({ quota, memoryConsented, isPremium, blocked, onUpgrade }: Props) {
+  /**
+   * Nobody is signed in.
+   *
+   * Guests can open this page — /journal is not a protected route — but the
+   * chat endpoint answers 401, and until now the UI did nothing with that:
+   * the message sat in the thread with no reply and no reason. A guest could
+   * only conclude the app was broken.
+   *
+   * The ask is an account, not money, so this does NOT open the paywall.
+   * Selling Premium to somebody who has not signed up yet is asking for the
+   * second step before the first.
+   */
+  if (blocked?.reason === 'signin') {
+    return (
+      <div className="rounded-2xl border border-white/20 bg-white/[0.06] p-4 space-y-3">
+        <div className="flex items-start gap-2.5">
+          <UserPlus className="mt-0.5 h-4 w-4 shrink-0 text-white/70" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-white">Create an account to talk to your coach</p>
+            <p className="text-xs leading-relaxed text-white/70">
+              A conversation needs somewhere to live — it is your entries the
+              coach reads back to you. Free accounts get five messages a day.
+              Your message is still in the box.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/signup"
+          className="block w-full rounded-xl bg-white px-4 py-2.5 text-center text-sm font-medium text-black transition-opacity hover:opacity-90 press-scale"
+        >
+          Create a free account
+        </Link>
+      </div>
+    )
+  }
+
   if (blocked) {
     const exhausted = blocked.reason === 'exhausted'
     return (

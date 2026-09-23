@@ -14,9 +14,10 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { Volume2, Loader2, VolumeX } from 'lucide-react'
 
-type State = 'idle' | 'loading' | 'playing' | 'unavailable'
+type State = 'idle' | 'loading' | 'playing' | 'unavailable' | 'signin'
 
 export function SpeakReplyButton({
   text,
@@ -69,6 +70,13 @@ export function SpeakReplyButton({
         if (userInitiated) onUpgrade?.()
         return
       }
+      // Nobody is signed in. "Voice unavailable" would blame the product
+      // for a missing account, so name the actual reason — and only when
+      // they reached for it, same rule as the upgrade pitch.
+      if (res.status === 401) {
+        setState(userInitiated ? 'signin' : 'idle')
+        return
+      }
       if (!res.ok) {
         setState('unavailable')
         return
@@ -99,6 +107,18 @@ export function SpeakReplyButton({
     void play(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPlay])
+
+  if (state === 'signin') {
+    return (
+      <Link
+        href="/signup"
+        className="inline-flex items-center gap-1 text-[10px] text-white/45 underline-offset-2 hover:text-white/80 hover:underline"
+      >
+        <Volume2 className="h-3 w-3" />
+        sign up to hear this
+      </Link>
+    )
+  }
 
   if (state === 'unavailable') {
     return (
