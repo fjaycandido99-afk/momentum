@@ -132,7 +132,7 @@ export default async function Image() {
               marginTop: 8,
             }}
           >
-            30 days, one promise a day
+            Build your mindset
           </div>
 
           {/* Tagline */}
@@ -143,7 +143,10 @@ export default async function Image() {
               marginTop: 16,
             }}
           >
-            Motivation, mindfulness, and focus — delivered automatically
+            {/* Was "Motivation, mindfulness, and focus — delivered
+                automatically", which described the pre-era library this app
+                no longer is. */}
+            30 days, one promise a day — and a record of the days you kept it
           </div>
         </div>
       </div>

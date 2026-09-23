@@ -9,14 +9,22 @@ const inter = Inter({ subsets: ['latin'] })
 // 300 for the splash wordmark; 500/600 for the era hero's display type.
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], weight: ['300', '500', '600'], variable: '--font-cormorant' })
 
-// The title and description used to describe the pre-era library
-// ("guided sessions, ambient soundscapes"), which the landing page had
-// already stopped selling — the app and its own marketing disagreed about
-// what the product is.
+/**
+ * The tab title, and the line that shows in a search result or an address
+ * bar's history.
+ *
+ * It described the pre-era library first ("guided sessions, ambient
+ * soundscapes"), then the era mechanic ("30 days, one promise a day") —
+ * which is how the app WORKS, not what it is. Somebody seeing the name for
+ * the first time got a rule without a reason.
+ *
+ * It leads with the product now — the mindset you are building. The
+ * mechanic follows in the description, where it belongs.
+ */
 export const metadata: Metadata = {
   metadataBase: new URL('https://voxu.app'),
-  title: 'Voxu — 30 days, one promise a day',
-  description: 'Pick a 30-day era, make one promise a day, and keep a record of the days you kept it. Your coach remembers what you said on day one.',
+  title: 'Voxu — Build your mindset',
+  description: 'An AI coach that helps you build the mindset you want — and remembers what you said on day one. Pick a 30-day era, make one promise a day, and keep the record.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -24,8 +32,8 @@ export const metadata: Metadata = {
     title: 'Voxu',
   },
   openGraph: {
-    title: 'Voxu — 30 days, one promise a day',
-    description: 'Pick a 30-day era, make one promise a day, and keep a record of the days you kept it. Your coach remembers what you said on day one.',
+    title: 'Voxu — Build your mindset',
+    description: 'An AI coach that helps you build the mindset you want — and remembers what you said on day one. Pick a 30-day era, make one promise a day, and keep the record.',
     url: 'https://voxu.app',
     siteName: 'Voxu',
     type: 'website',
@@ -37,8 +45,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Voxu — 30 days, one promise a day',
-    description: 'Pick an era. One promise a day. Keep the record.',
+    title: 'Voxu — Build your mindset',
+    description: 'Pick an era. One promise a day. Your coach keeps count.',
     images: ['/api/og/default'],
   },
   robots: {
