@@ -200,14 +200,19 @@ workflows:
   android-build:
     name: Voxu Android Build
     max_build_duration: 45
-    instance_type: linux_x2
+    # macOS, not linux_x2 — copied from DLCWorker's working Android workflow,
+    # which learned it the hard way: the Linux image defaulted to an older JDK
+    # and Capacitor 8 failed with "invalid source release: 21". `java: 21` in
+    # the environment is not a documented value (the docs' examples stop at
+    # 17), so this does not gamble on it; the build step picks JDK 21
+    # explicitly instead.
+    instance_type: mac_mini_m2
     working_directory: .
     labels:
       - capacitor
 
     environment:
       node: 22
-      java: 21
       # Upload the keystore ONCE in Codemagic: Teams/Personal account ->
       # Code signing identities -> Android keystores, with reference name
       # `voxu_upload`. Codemagic then sets CM_KEYSTORE_PATH,
@@ -294,34 +299,57 @@ workflows:
       - name: Set version
         script: |
           set -e
-          # Play refuses a versionCode it has already accepted, so take the
-          # highest already on Play and add one. PROJECT_BUILD_NUMBER is
-          # Codemagic's own counter and is the fallback for the very first
-          # upload, when Play has nothing to report.
-          LATEST=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks internal 2>/dev/null || echo "")
-          if [ -z "$LATEST" ]; then
-            echo "Nothing on Play yet — using Codemagic build number."
-            NEXT=$PROJECT_BUILD_NUMBER
-          else
-            NEXT=$((LATEST + 1))
-          fi
-          echo "versionCode -> $NEXT"
+          # Play refuses a versionCode it has already accepted, and the only
+          # unrecoverable mistake here is going DOWN. So take the highest of
+          # three numbers rather than trusting any one of them:
+          #
+          #   - what Play reports, plus one. Needs working Play credentials;
+          #     until those exist the command errors and returns nothing, so
+          #     it must never be allowed to become 0.
+          #   - Codemagic's own build counter, which only ever increases.
+          #   - the floor committed in build.gradle.
+          #
+          # This is DLCWorker's logic. Its comment records why: falling back
+          # to 0 gave versionCode 1 and Play answered "already used".
+          LATEST=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME" 2>/dev/null || echo "0")
+          LATEST=${LATEST:-0}
+          NEXT=$((LATEST + 1))
+          PBN=${PROJECT_BUILD_NUMBER:-0}
+          [ "$PBN" -gt "$NEXT" ] && NEXT=$PBN
+          FLOOR=$(grep -oE 'voxuVersionCode.*: *[0-9]+' android/app/build.gradle | grep -oE '[0-9]+' | head -1)
+          FLOOR=${FLOOR:-1}
+          [ "$FLOOR" -gt "$NEXT" ] && NEXT=$FLOOR
+          echo "versionCode -> $NEXT (play=$LATEST, ci=$PBN, floor=$FLOOR)"
           echo "VOXU_VERSION_CODE=$NEXT" >> $CM_ENV
 
       - name: Build AAB
         script: |
           set -e
           cd android
+          # Capacitor 8 needs JDK 21+ to compile, and the image's default is
+          # older. Pick the first available 21+ explicitly and force Gradle
+          # onto it — straight from DLCWorker's workflow, where not doing
+          # this produced "invalid source release: 21".
+          echo "Available JDKs:"; /usr/libexec/java_home -V 2>&1 || true
+          export JAVA_HOME=$(/usr/libexec/java_home -v 21 2>/dev/null || /usr/libexec/java_home -v 22 2>/dev/null || /usr/libexec/java_home -v 23 2>/dev/null || /usr/libexec/java_home)
+          echo "Using JAVA_HOME=$JAVA_HOME"
+          "$JAVA_HOME/bin/java" -version
+          # A fresh checkout does not always carry the executable bit.
+          chmod +x gradlew
           # An AAB, not an APK: Play has required the App Bundle format for
-          # new apps since August 2021. Signing comes from the CM_KEYSTORE_*
+          # new apps since August 2021. An APK too, because it is the only
+          # artifact you can sideload onto a phone to check the thing works
+          # before Play has ever seen it. Signing comes from the CM_KEYSTORE_*
           # variables Codemagic set — build.gradle reads them, so there is
           # nothing to pass here.
-          ./gradlew bundleRelease \
+          ./gradlew assembleRelease bundleRelease --no-daemon \
+            -Dorg.gradle.java.home="$JAVA_HOME" \
             -PvoxuVersionCode="$VOXU_VERSION_CODE" \
             -PvoxuVersionName="1.2.2"
 
     artifacts:
-      - android/app/build/outputs/bundle/release/*.aab
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/*.apk
       - android/app/build/outputs/**/mapping.txt
 
     # Publishing is left OFF until the Play Console app record exists and the
