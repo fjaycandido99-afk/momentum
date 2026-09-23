@@ -20,10 +20,14 @@ export const XP_REWARDS = {
   eraPromise: 5,
   eraKept: 10,
   eraComplete: 100,
+  // Finishing a book. Server-only for the same reason as the era events:
+  // the client could otherwise claim it in a loop, and this one is worth
+  // more than a session.
+  bookFinished: 60,
 } as const
 
 /** XP events only the server may log — the client XP endpoint rejects them. */
-export const SERVER_ONLY_XP_EVENTS: readonly string[] = ['eraStart', 'eraPromise', 'eraKept', 'eraComplete']
+export const SERVER_ONLY_XP_EVENTS: readonly string[] = ['eraStart', 'eraPromise', 'eraKept', 'eraComplete', 'bookFinished']
 
 export type XPEventType = keyof typeof XP_REWARDS
 

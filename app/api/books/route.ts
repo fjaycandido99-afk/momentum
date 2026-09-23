@@ -18,6 +18,7 @@ import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
 import { nextPageSample } from '@/lib/books/progress'
 import { validateSummary, type SummaryDraft } from '@/lib/books/summary'
+import { awardXP } from '@/lib/achievements-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -183,7 +184,32 @@ export async function PATCH(request: NextRequest) {
     }
 
     const book = await prisma.book.update({ where: { id }, data, select: SELECT })
-    return NextResponse.json({ book })
+
+    /**
+     * Finishing a book pays out, here and now.
+     *
+     * Not left to the next time some other XP event happens to fire:
+     * logPractice never evaluates achievements, so practice-shaped badges
+     * only unlock opportunistically, and "Finished It" arriving two days
+     * after you finished the book is not a reward, it is a puzzle.
+     *
+     * Only on the transition INTO finished — `!existing.finished_at` — so
+     * unfinishing and re-finishing the same book cannot be farmed for XP.
+     * Best-effort: a failure here must not lose the person their book.
+     */
+    const justFinished = body.finished === true && !existing.finished_at
+    let awarded: { id: string; title: string; xpReward: number }[] = []
+    if (justFinished) {
+      try {
+        // awardXP evaluates achievements itself and hands back the new ones,
+        // so there is no second pass to make here.
+        awarded = (await awardXP(user.id, 'bookFinished', 'book')).achievements
+      } catch (error) {
+        console.error('[books] award failed', error)
+      }
+    }
+
+    return NextResponse.json({ book, awarded })
   } catch (error) {
     console.error('Books PATCH error:', error)
     return NextResponse.json({ error: 'Could not save that' }, { status: 500 })

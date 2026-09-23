@@ -6,6 +6,7 @@ import {
   mergeMatches,
   normalizeGoogle,
   normalizeOpenLibrary,
+  bookForTitles,
   type BookMatch,
 } from '@/lib/books/lookup'
 
@@ -228,6 +229,41 @@ describe('merging the two providers', () => {
   it('handles being given nothing', () => {
     expect(mergeMatches([], [])).toEqual([])
     expect(mergeMatches()).toEqual([])
+  })
+})
+
+describe('finding the book behind a typed line', () => {
+  const shelf = [
+    { id: '1', title: 'Rich Dad, Poor Dad' },
+    { id: '2', title: 'The Hobbit' },
+  ]
+
+  it('matches however the plan row was typed', () => {
+    expect(bookForTitles(['rich dad poor dad'], shelf)?.id).toBe('1')
+    expect(bookForTitles(['RICH DAD   POOR DAD'], shelf)?.id).toBe('1')
+  })
+
+  it('survives a leading article on either side', () => {
+    expect(bookForTitles(['Hobbit'], shelf)?.id).toBe('2')
+  })
+
+  it('takes the first line that matches, and ignores the rest', () => {
+    expect(bookForTitles(['20 minutes of something', 'The Hobbit'], shelf)?.id).toBe('2')
+  })
+
+  it('returns nothing when no line matches — the normal case', () => {
+    // Somebody who never resolved a book must never be prompted about one.
+    expect(bookForTitles(['Some book I typed'], shelf)).toBeNull()
+    expect(bookForTitles([], shelf)).toBeNull()
+    expect(bookForTitles(['  '], shelf)).toBeNull()
+    expect(bookForTitles(['The Hobbit'], [])).toBeNull()
+  })
+
+  it('does not match on a shared word', () => {
+    // Not fuzzy on purpose: the cost of a wrong match is a summary about
+    // the wrong book.
+    expect(bookForTitles(['Dad'], shelf)).toBeNull()
+    expect(bookForTitles(['Rich'], shelf)).toBeNull()
   })
 })
 

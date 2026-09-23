@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Check, ChevronDown, ChevronUp, Minus, Plus, Repeat2 } from 'lucide-react'
+import { BookOpen, Check, ChevronDown, ChevronUp, Minus, Plus, Repeat2 } from 'lucide-react'
 import { AddPracticeSheet } from './AddPracticeSheet'
 import { PracticePlanSheet } from './PracticePlanSheet'
 import { PracticeGuideSheet } from './PracticeGuideSheet'
@@ -12,6 +12,18 @@ import { matchMovement } from '@/lib/movements/swap'
 import type { Movement } from '@/lib/movements/library'
 import { MovementSheet } from './MovementSheet'
 import { PatternGlyph } from '@/components/movements/PatternGlyph'
+import { BookSheet } from '@/components/books/BookSheet'
+import { PagePrompt } from '@/components/books/PagePrompt'
+import { bookForTitles } from '@/lib/books/lookup'
+import { PRESETS_BY_KEY } from '@/lib/practices/presets'
+
+/** What the section needs of a book. */
+interface BookLite {
+  id: string
+  title: string
+  pages: number | null
+  current_page: number | null
+}
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -29,18 +41,42 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
  */
 export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
   const [data, setData] = useState<PracticesPayload | null>(null)
+  /**
+   * Resolved books, fetched only when a reading discipline is on screen.
+   *
+   * Once for the section rather than once per card, and never at all for
+   * somebody with no reading practice — this renders on home, and an extra
+   * request on every home open for a feature most people are not using is
+   * exactly the kind of thing that turns into a bill.
+   */
+  const [books, setBooks] = useState<BookLite[]>([])
   const [adding, setAdding] = useState(false)
   const [planning, setPlanning] = useState<PracticeWire | null>(null)
   /** Which discipline's how-to is open. */
   const [guiding, setGuiding] = useState<PracticeWire | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
+  const loadBooks = useCallback(() => {
+    fetch('/api/books')
+      .then(r => (r.ok ? r.json() : null))
+      .then(payload => setBooks(payload?.reading ?? []))
+      .catch(() => {})
+  }, [])
+
   const load = useCallback(() => {
     fetch('/api/practices')
       .then(r => (r.ok ? r.json() : null))
-      .then(payload => { if (payload) setData(payload) })
+      .then((payload: PracticesPayload | null) => {
+        if (!payload) return
+        setData(payload)
+        // Only if there is something to read for.
+        const reads = payload.practices.some(
+          p => PRESETS_BY_KEY.get(p.presetKey)?.domain === 'read',
+        )
+        if (reads) loadBooks()
+      })
       .catch(() => {})
-  }, [])
+  }, [loadBooks])
 
   useEffect(() => { load() }, [load])
 
@@ -133,6 +169,8 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
                 onRetire={canAdd ? () => retire(p) : undefined}
                 onPlan={canAdd ? () => setPlanning(p) : undefined}
                 onGuide={() => setGuiding(p)}
+                books={books}
+                onBooksChanged={loadBooks}
                 today={data.today}
               />
             ))}
@@ -172,9 +210,14 @@ function PracticeRow({
   onPlan,
   onGuide,
   today,
+  books,
+  onBooksChanged,
 }: {
   practice: PracticeWire
   busy: boolean
+  /** Resolved books, for a reading practice. Empty for every other domain. */
+  books: BookLite[]
+  onBooksChanged: () => void
   /** The user's local day, for naming the next due one. */
   today: string
   onLog: (done: boolean, minimumOnly?: boolean) => void
@@ -198,6 +241,10 @@ function PracticeRow({
   const [shownSlot, setShownSlot] = useState<string | null>(null)
   /** The movement whose alternatives are open, if any. */
   const [movement, setMovement] = useState<Movement | null>(null)
+  /** The typed title whose book sheet is open. */
+  const [bookTitle, setBookTitle] = useState<string | null>(null)
+  /** Whether to ask for the page, right after a reading day is marked done. */
+  const [askingPage, setAskingPage] = useState(false)
   /** The detail, closed by default: the row is a daily answer, not a report. */
   const [open, setOpen] = useState(false)
   // "Change" reopens the three choices rather than flipping the answer:
@@ -221,9 +268,20 @@ function PracticeRow({
         items: practice.todaysPlan?.items ?? [],
       }
 
+  /** The book behind today's lines, if one has been resolved. */
+  const isReading = PRESETS_BY_KEY.get(practice.presetKey)?.domain === 'read'
+  const todaysBook = isReading
+    ? bookForTitles(shownContent.items.map(i => i.name), books)
+    : null
+
   const choose = (done: boolean, minimumOnly?: boolean) => {
     setEditing(false)
     onLog(done, minimumOnly)
+    // The one moment the page number is known without having to remember it:
+    // they have just put the book down. Asked AFTER the answer is recorded,
+    // so ignoring it costs nothing — and never on "Not today", when there is
+    // nothing to have read.
+    if (done && todaysBook) setAskingPage(true)
   }
 
   return (
@@ -329,6 +387,26 @@ function PracticeRow({
                       <span className="text-white/35 shrink-0">
                         <PatternGlyph pattern={matched.pattern} className="w-3.5 h-3.5" />
                       </span>
+                      <span className="min-w-0 underline underline-offset-4 decoration-white/15">
+                        {item.name}
+                      </span>
+                    </button>
+                  ) : isReading && item.name.trim().length > 2 ? (
+                    /* A reading line opens its book — whether or not one has
+                       been resolved yet, because the sheet does both: it
+                       shows the book if there is one and searches if there
+                       is not.
+
+                       Here rather than only in the plan editor, which is the
+                       whole point: the editor is gated behind `onPlan`, and
+                       `onPlan` is undefined on home. So the entire books
+                       feature was unreachable from the screen people
+                       actually open. */
+                    <button
+                      onClick={() => { haptic('light'); setBookTitle(item.name.trim()) }}
+                      className="min-w-0 text-left flex items-center gap-1.5"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 shrink-0 text-white/35" />
                       <span className="min-w-0 underline underline-offset-4 decoration-white/15">
                         {item.name}
                       </span>
@@ -514,7 +592,24 @@ function PracticeRow({
         )
       )}
 
+      {askingPage && todaysBook && (
+        <PagePrompt
+          bookId={todaysBook.id}
+          title={todaysBook.title}
+          pages={todaysBook.pages}
+          currentPage={todaysBook.current_page}
+          onDone={() => { setAskingPage(false); onBooksChanged() }}
+        />
+      )}
+
       {movement && <MovementSheet movement={movement} onClose={() => setMovement(null)} />}
+      {bookTitle && (
+        <BookSheet
+          title={bookTitle}
+          onClose={() => setBookTitle(null)}
+          onChanged={onBooksChanged}
+        />
+      )}
     </div>
   )
 }

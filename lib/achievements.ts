@@ -51,6 +51,14 @@ export type PracticeMetric =
   | 'exercises_done'
   | 'exercise_days'
   | 'exercise_variety'
+  /**
+   * Books finished.
+   *
+   * The only book number worth an achievement. Not pages read, not a
+   * reading pace, not books per month — those are all speed, and rewarding
+   * speed in reading rewards the wrong thing. Getting to the end of one.
+   */
+  | 'books_finished'
 
 export interface PracticeAchievementStats {
   practicesKept: number
@@ -62,6 +70,7 @@ export interface PracticeAchievementStats {
   exercisesDone: number
   exerciseDays: number
   exerciseVariety: number
+  booksFinished: number
 }
 
 export interface Achievement {
@@ -194,6 +203,14 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'exercise_10', title: 'Ten Sessions', description: 'Finish 10 mindset exercises', icon: '🌱', category: 'growth', rarity: 'rare', xpReward: 80, condition: { type: 'practice', metric: 'exercises_done', count: 10 } },
   { id: 'exercise_variety_5', title: 'Range', description: 'Finish 5 different mindset exercises', icon: '🎚️', category: 'growth', rarity: 'rare', xpReward: 80, condition: { type: 'practice', metric: 'exercise_variety', count: 5 } },
   { id: 'exercise_days_30', title: 'Thirty Days of It', description: 'Do a mindset exercise on 30 separate days', icon: '🌳', category: 'growth', rarity: 'epic', xpReward: 300, condition: { type: 'practice', metric: 'exercise_days', count: 30 } },
+
+  // --- Books (3) ---
+  // Finishing, never speed. Rewarding pages-per-day would push people to
+  // read faster, which is the opposite of the point — and the reading sheet
+  // already says ten pages you remember beats fifty you skimmed.
+  { id: 'book_first', title: 'Finished It', description: 'Get to the end of a book', icon: '📖', category: 'growth', rarity: 'common', xpReward: 50, condition: { type: 'practice', metric: 'books_finished', count: 1 } },
+  { id: 'book_5', title: 'Five Books', description: 'Finish five books', icon: '📚', category: 'growth', rarity: 'rare', xpReward: 150, condition: { type: 'practice', metric: 'books_finished', count: 5 } },
+  { id: 'book_12', title: 'A Book a Month', description: 'Finish twelve books', icon: '🏛️', category: 'growth', rarity: 'epic', xpReward: 400, condition: { type: 'practice', metric: 'books_finished', count: 12 } },
 
   // --- Consistency (7) ---
   { id: 'streak_3', title: 'Getting Started', description: 'Reach a 3-day streak', icon: '🔥', category: 'consistency', rarity: 'common', xpReward: 25, condition: { type: 'streak', days: 3 } },
@@ -392,6 +409,7 @@ export function checkNewAchievements(
         exercises_done: p.exercisesDone,
         exercise_days: p.exerciseDays,
         exercise_variety: p.exerciseVariety,
+        books_finished: p.booksFinished,
       }
       qualified = value[c.metric] >= c.count
     }
@@ -482,6 +500,7 @@ export function achievementProgress(a: Achievement, stats: AchievementStats): { 
         exercises_done: p.exercisesDone,
         exercise_days: p.exerciseDays,
         exercise_variety: p.exerciseVariety,
+        books_finished: p.booksFinished,
       }
       return of(v[c.metric], c.count)
     }

@@ -77,6 +77,15 @@ const FEATURES = [
     icon: Sparkles,
   },
   {
+    // AI_FEATURE_LIMITS.book_summary. This page's own comment says it MUST
+    // track that record, and book summaries shipped without being added —
+    // a metered feature nobody buying the plan could see they were getting.
+    name: 'What a book has to do with your era',
+    free: '1 a day',
+    premium: 'Unlimited',
+    icon: Book,
+  },
+  {
     name: 'Your coach remembering day one',
     free: 'Day 1 & day 7',
     premium: 'Every callback day',

@@ -136,6 +136,7 @@ describe('achievementProgress', () => {
 const noPractice: PracticeAchievementStats = {
   practicesKept: 0, minimumDays: 0, longestPracticeRun: 0, disciplinesKept: 0,
   practiceComebacks: 0, exercisesDone: 0, exerciseDays: 0, exerciseVariety: 0,
+  booksFinished: 0,
 }
 
 function practiceUnlocks(practice: Partial<PracticeAchievementStats>): string[] {

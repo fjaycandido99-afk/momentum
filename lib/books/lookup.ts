@@ -46,16 +46,50 @@ export function believablePages(value: unknown): number | null {
   return pages
 }
 
+/**
+ * A title flattened for matching.
+ *
+ * The one place this is decided. A plan row says "rich dad poor dad", the
+ * catalogue says "Rich Dad, Poor Dad", and the shelf has to recognise them as
+ * the same book — so case, punctuation and spacing all go. A leading article
+ * goes too, because the same book arrives titled two ways ("Hobbit, The").
+ *
+ * Deliberately not fuzzy. Anything cleverer starts matching books that are
+ * not the same book, and the cost of a wrong match here is a summary about
+ * the wrong book.
+ */
+export function titleKey(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+    .replace(/^(the|a|an)/, '')
+}
+
 /** Flattened title+author, for deciding two results are the same book. */
 export function bookKey(title: string, author: string | null): string {
-  const flat = (s: string) =>
-    s
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '')
-      // A trailing "the"/"a" is how the same book arrives titled two ways
-      // ("Hobbit, The"). Cheap to strip, and only used for matching.
-      .replace(/^(the|a|an)/, '')
-  return flat(title) + '|' + (author ? flat(author) : '')
+  return titleKey(title) + '|' + (author ? titleKey(author) : '')
+}
+
+/**
+ * The resolved book behind a set of typed lines, if there is one.
+ *
+ * A reading day's plan is free text and may hold more than one line. This
+ * finds the first line that matches a book already on the shelf, and returns
+ * nothing when none do — which is the normal case for somebody who never
+ * resolved one, and must stay silent rather than prompt about a book that
+ * does not exist.
+ */
+export function bookForTitles<T extends { title: string }>(
+  titles: readonly string[],
+  books: readonly T[],
+): T | null {
+  for (const raw of titles) {
+    const key = titleKey(raw.trim())
+    if (!key) continue
+    const hit = books.find(b => titleKey(b.title) === key)
+    if (hit) return hit
+  }
+  return null
 }
 
 interface GoogleVolume {

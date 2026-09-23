@@ -21,6 +21,7 @@ import {
 import {
   MAX_PRACTICES,
   PRACTICE_PRESETS,
+  isCustomPreset,
   PRESETS_BY_KEY,
   presetsForDomain,
   DOMAINS,
@@ -37,9 +38,13 @@ describe('the presets', () => {
     for (const d of DOMAINS) expect(presetsForDomain(d.id).length, d.id).toBeGreaterThan(0)
   })
 
-  it('gives every preset a floor except the custom one, which asks', () => {
+  it('gives every preset a floor except the custom ones, which ask', () => {
     for (const p of PRACTICE_PRESETS) {
-      if (p.key === 'custom') expect(p.minimum).toBe('')
+      // Plural now: there is a "Something else" inside every domain, so a
+      // custom reading habit keeps domain 'read' and still gets the reading
+      // wording, the reading guide and the book link. Keyed off
+      // isCustomPreset rather than `=== 'custom'` for exactly that reason.
+      if (isCustomPreset(p.key)) expect(p.minimum, p.key).toBe('')
       else expect(p.minimum.length, p.key).toBeGreaterThan(0)
       expect(p.hint.length, p.key).toBeGreaterThan(5)
       for (const d of p.days) expect(d).toBeGreaterThanOrEqual(0)

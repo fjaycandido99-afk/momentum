@@ -294,7 +294,7 @@ export async function awardEraXPOnce(
 export async function gatherPracticeAchievementStats(
   userId: string,
 ): Promise<PracticeAchievementStats> {
-  const [practices, runs] = await Promise.all([
+  const [practices, runs, booksFinished] = await Promise.all([
     prisma.practice.findMany({
       where: { user_id: userId },
       select: {
@@ -312,6 +312,10 @@ export async function gatherPracticeAchievementStats(
       where: { user_id: userId, completed: true },
       select: { exercise_id: true, local_day: true },
     }),
+    // Counted, not listed — the number is all any achievement needs, and
+    // pulling titles here would put what somebody reads into a code path
+    // that has no business holding it.
+    prisma.book.count({ where: { user_id: userId, finished_at: { not: null } } }),
   ])
 
   const stats: PracticeAchievementStats = {
@@ -323,6 +327,7 @@ export async function gatherPracticeAchievementStats(
     exercisesDone: runs.length,
     exerciseDays: new Set(runs.map(r => r.local_day)).size,
     exerciseVariety: new Set(runs.map(r => r.exercise_id)).size,
+    booksFinished,
   }
 
   for (const practice of practices) {

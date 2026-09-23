@@ -6,6 +6,7 @@ import {
   DOMAINS,
   PRACTICE_LIMITS,
   PRESETS_BY_KEY,
+  isCustomPreset,
   presetsForDomain,
   type PracticeDomain,
 } from '@/lib/practices/presets'
@@ -48,7 +49,7 @@ export function AddPracticeSheet({
     haptic('light')
     const p = PRESETS_BY_KEY.get(key)
     setPresetKey(key)
-    setLabel(p?.key === 'custom' ? '' : p?.label ?? '')
+    setLabel(isCustomPreset(p?.key ?? '') ? '' : p?.label ?? '')
     setMinimum(p?.minimum ?? '')
     setDays(p?.days ?? [])
     setError(null)
@@ -194,7 +195,7 @@ export function AddPracticeSheet({
                 value={label}
                 onChange={e => setLabel(e.target.value)}
                 maxLength={PRACTICE_LIMITS.label}
-                placeholder={preset.key === 'custom' ? 'Piano, cold showers, Spanish…' : preset.label}
+                placeholder={isCustomPreset(preset.key) ? 'Piano, cold showers, Spanish…' : preset.label}
                 className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/30"
               />
             </div>

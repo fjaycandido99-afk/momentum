@@ -230,11 +230,45 @@ export const PRACTICE_PRESETS: PracticePreset[] = [
     minimum: '',
     hint: 'Name it yourself, and say what the minimum is.',
   },
+  /**
+   * "Something else" INSIDE each domain.
+   *
+   * There was only the one above, and it belongs to the `custom` domain — so
+   * somebody who reads but wanted their own wording had to pick "Something
+   * else" at the first step and lost the domain entirely. The cost was not
+   * just the missing "Find this book": the domain drives the plan wording
+   * (PLAN_COPY asks "What are you reading?") and the how-to guide, so a
+   * custom reading habit was asked the generic question and offered the
+   * generic advice.
+   *
+   * Generated rather than written out six times. The keys are stable and,
+   * like every key here, never renamed.
+   */
+  ...(['gym', 'run', 'read', 'study', 'work', 'mind'] as const).map(domain => ({
+    key: `${domain}_custom`,
+    domain,
+    label: 'Something else',
+    days: EVERY_DAY,
+    minimum: '',
+    hint: 'Name it yourself, and say what the minimum is.',
+  })),
 ]
 
 export const PRESETS_BY_KEY = new Map(PRACTICE_PRESETS.map(p => [p.key, p]))
 
 export const CUSTOM_PRACTICE_KEY = 'custom'
+
+/**
+ * Is this the "Something else" preset, whichever domain's it is?
+ *
+ * Callers used to test `key === 'custom'` to decide whether to blank the
+ * label and show a "name it yourself" placeholder. With a custom preset per
+ * domain, that check would silently stop working for five of the seven —
+ * prefilling "Something else" as somebody's habit name.
+ */
+export function isCustomPreset(key: string): boolean {
+  return key === CUSTOM_PRACTICE_KEY || key.endsWith('_custom')
+}
 
 export function presetsForDomain(domain: PracticeDomain): PracticePreset[] {
   return PRACTICE_PRESETS.filter(p => p.domain === domain)
