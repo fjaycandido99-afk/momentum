@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BookOpen, Check, Loader2, Search, Sparkles, X } from 'lucide-react'
 import { haptic } from '@/lib/haptics'
+import { trackFeature } from '@/lib/analytics/track'
 import type { BookMatch } from '@/lib/books/lookup'
 import { finishEstimate, progressLine } from '@/lib/books/progress'
 import type { BookSummary } from '@/lib/books/summary'
@@ -98,9 +99,15 @@ export function BookSheet({
         const data = await search.json()
         setMatches(data.books ?? [])
         setDegraded(!!data.degraded)
+        // A search that found nothing leaves no row behind, so without this
+        // the funnel would show only the people it worked for.
+        if (!data.books?.length) {
+          trackFeature('books', 'use', data.degraded ? 'search_degraded' : 'no_match')
+        }
       } else {
         setMatches([])
         setDegraded(true)
+        trackFeature('books', 'use', 'search_failed')
       }
     } catch {
       setMatches([])
@@ -133,6 +140,7 @@ export function BookSheet({
         setBook(data.book)
         setMatches(null)
         onChanged?.()
+        trackFeature('books', 'use', 'resolved')
       }
     } finally {
       setBusy(false)
@@ -179,16 +187,21 @@ export function BookSheet({
       if (data?.unknown) {
         // The model said it does not know this book. That is an answer, and
         // it is shown as one rather than retried into something invented.
+        // Counted separately so the rate is visible — if most books come
+        // back unknown the feature is not working, even though no error is.
+        trackFeature('books', 'use', 'summary_unknown')
         setSummaryState('unknown')
         return
       }
       if (!res.ok || !data?.summary) {
+        trackFeature('books', 'use', data?.problem ? `summary_refused:${data.problem}` : 'summary_failed')
         setSummaryState('failed')
         return
       }
       // Cached on the row so reopening costs nothing, with the era day it
       // was written for.
       await patch({ summary: data.summary, summaryDay: data.era?.day ?? null })
+      trackFeature('books', 'complete', 'summary')
       setSummaryState('idle')
     } catch {
       setSummaryState('failed')
@@ -199,16 +212,33 @@ export function BookSheet({
   const finish = book ? finishEstimate(stateOf(book)) : null
 
   return (
+    /*
+      Centred, not a bottom sheet.
+
+      It was `justify-end` like the movement sheet it was modelled on, and
+      that is right for a tall panel you scroll — but this one is short, so it
+      sat as a small strip pinned to the very bottom of the screen, under the
+      plan sheet it opened from, reading as something that had fallen off
+      rather than something that had opened. The app already has a centred
+      pattern for short pop-ups (MomentCard, DailySpark); this joins it.
+
+      `max-h-[85dvh] overflow-y-auto overflow-x-hidden` stays: dvh rather than
+      vh because a phone's URL bar makes vh taller than the screen, and the
+      x-hidden is what stops the panel sliding sideways under a thumb.
+    */
     <div
-      className="fixed inset-0 z-[75] bg-black/90 backdrop-blur-sm flex flex-col justify-end"
+      className="fixed inset-0 z-[75] flex items-center justify-center px-4"
       role="dialog"
       aria-modal="true"
       aria-label={book?.title ?? title}
     >
-      <button className="flex-1" aria-label="Close" onClick={onClose} />
+      <button
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        aria-label="Close"
+        onClick={onClose}
+      />
       <div
-        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto overflow-x-hidden"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
+        className="relative w-full max-w-sm rounded-3xl border border-white/15 bg-[#0b0b0b] px-5 pt-5 pb-5 max-h-[85dvh] overflow-y-auto overflow-x-hidden"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -230,8 +260,14 @@ export function BookSheet({
         </div>
 
         {loading && (
-          <div className="flex items-center gap-2 text-white/45 text-sm py-8">
-            <Loader2 className="w-4 h-4 animate-spin" /> Looking it up…
+          <div className="py-8 space-y-1.5">
+            <div className="flex items-center gap-2 text-white/45 text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" /> Looking it up…
+            </div>
+            {/* Said out loud because it is true: the catalogue takes four to
+                nine seconds to answer. A spinner with no explanation for that
+                long reads as broken. */}
+            <p className="text-[11px] text-white/30">The book catalogue is slow. A few seconds.</p>
           </div>
         )}
 
@@ -351,6 +387,30 @@ export function BookSheet({
                 <p className="text-[11px] text-white/30 leading-relaxed">
                   Voxu hasn’t read this book — that’s a pointer, not a substitute.
                 </p>
+                {/*
+                  What `summary_day` is for. It was being written and never
+                  read, so a card composed on day 3 sat unchanged on day 27
+                  — and the middle paragraph is explicitly about the day
+                  somebody is on, which makes a stale one quietly wrong.
+
+                  It says when it was written and offers a rewrite; it does
+                  not refresh itself. A card that silently changed under
+                  somebody would be worse, and each rewrite costs a call.
+                */}
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  {book.summary_day != null ? (
+                    <p className="text-[11px] text-white/30">Written on day {book.summary_day}.</p>
+                  ) : (
+                    <span />
+                  )}
+                  <button
+                    onClick={() => { setSummaryState('idle'); void patch({ summary: null }) }}
+                    disabled={busy}
+                    className="text-[11px] text-white/45 underline underline-offset-4 decoration-white/15 disabled:opacity-40 shrink-0"
+                  >
+                    Write it again
+                  </button>
+                </div>
               </div>
             ) : summaryState === 'unknown' ? (
               <p className="text-sm text-white/55 leading-relaxed">

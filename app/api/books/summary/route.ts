@@ -98,6 +98,10 @@ export async function POST(request: NextRequest) {
     try {
       draft = JSON.parse(raw)
     } catch {
+      // Our failure, not theirs — give the allowance back. On a feature with
+      // one a day, a bad roll here would otherwise cost a free user their
+      // summary until tomorrow.
+      await gate.refund()
       console.error('[book-summary] unparseable response', { title, length: raw.length })
       return NextResponse.json({ error: 'Voxu could not read that back', retryable: true }, { status: 502 })
     }
@@ -117,6 +121,11 @@ export async function POST(request: NextRequest) {
       // A rule was broken. Refuse rather than show it: every one of these
       // rules exists because the version that breaks it is worse than
       // nothing. Logged so the rate is visible in the AI call log.
+      //
+      // Refunded, unlike UNKNOWN_BOOK above: the model breaking a content
+      // rule is our problem to solve, and charging somebody for it is
+      // charging them for our prompt not holding.
+      await gate.refund()
       console.error('[book-summary] refused', { title, problem })
       return NextResponse.json({ error: 'Voxu had nothing useful to say about that', problem }, { status: 422 })
     }

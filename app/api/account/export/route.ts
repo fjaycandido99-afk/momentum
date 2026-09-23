@@ -35,7 +35,7 @@ export async function GET() {
     // this is, so there is no way to ask for somebody else's.
     const [
       account, preferences, guides, favorites, goals, playlists, assessment, eras,
-      wellness, missions,
+      wellness, missions, books, practices, practiceLogs, exerciseRuns, resetSessions,
     ] = await Promise.all([
       prisma.user.findUnique({
         where: { id: user.id },
@@ -113,6 +113,20 @@ export async function GET() {
         orderBy: { local_day: 'asc' },
         select: { local_day: true, day: true, completed_at: true },
       }),
+      // Five tables that were missing, found by auditing this list against
+      // the schema rather than trusting it. The comment above says "anything
+      // new goes here too" and it had already stopped being true: what
+      // somebody reads, the disciplines they keep, every day they logged one,
+      // every exercise they ran and every time they came here to calm down
+      // are all records of a person, and none of them could be exported.
+      prisma.book.findMany({ where: { user_id: user.id }, orderBy: { created_at: 'asc' } }),
+      prisma.practice.findMany({ where: { user_id: user.id }, orderBy: { created_at: 'asc' } }),
+      prisma.practiceLog.findMany({
+        where: { practice: { user_id: user.id } },
+        orderBy: { local_day: 'asc' },
+      }),
+      prisma.exerciseRun.findMany({ where: { user_id: user.id }, orderBy: { created_at: 'asc' } }),
+      prisma.resetSession.findMany({ where: { user_id: user.id }, orderBy: { created_at: 'asc' } }),
     ])
 
     const payload = {
@@ -133,6 +147,11 @@ export async function GET() {
       eras,
       era_missions: missions,
       wellness_checkins: wellness,
+      books,
+      practices,
+      practice_logs: practiceLogs,
+      exercise_runs: exerciseRuns,
+      reset_sessions: resetSessions,
     }
 
     const filename = `voxu-export-${new Date().toISOString().slice(0, 10)}.json`

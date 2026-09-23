@@ -17,11 +17,30 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { isPremiumUser } from '@/lib/subscription-check'
-import { consumeAiQuota, type QuotaVerdict } from '@/lib/ai/quota'
+import { consumeAiQuota, refundAiQuota, type QuotaVerdict } from '@/lib/ai/quota'
 import type { AiFeatureKey } from '@/lib/subscription-constants'
 
 export type AiGateResult =
-  | { ok: true; isPremium: boolean; quota: QuotaVerdict }
+  | {
+      ok: true
+      isPremium: boolean
+      quota: QuotaVerdict
+      /**
+       * Give this call's allowance back, for a failure that is OURS — an
+       * unparseable model response, an answer refused by a content rule.
+       *
+       * A closure rather than an exported function the caller assembles,
+       * because a refund has to hit the same AiUsageDaily row the charge
+       * did, and that row is keyed by the user's LOCAL day. The timezone is
+       * read in here and never handed out, so a caller passing the wrong one
+       * (or none, and silently decrementing UTC's row) is not a mistake that
+       * can be made.
+       *
+       * Not for a model that answered honestly and unhelpfully: "I don't
+       * know that book" is a real answer and costs what any answer costs.
+       */
+      refund: () => Promise<void>
+    }
   | { ok: false; response: NextResponse }
 
 export async function aiGate(userId: string, feature: AiFeatureKey): Promise<AiGateResult> {
@@ -51,5 +70,10 @@ export async function aiGate(userId: string, feature: AiFeatureKey): Promise<AiG
     }
   }
 
-  return { ok: true, isPremium, quota }
+  return {
+    ok: true,
+    isPremium,
+    quota,
+    refund: () => refundAiQuota(userId, feature, isPremium, prefs?.timezone),
+  }
 }

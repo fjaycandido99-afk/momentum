@@ -68,6 +68,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   overscroll-behavior: none;
+  /* Nothing in this app should ever scroll sideways.
+
+     There was no guard at all, which means one element a few pixels too
+     wide — anywhere, on any screen — made the WHOLE page scroll
+     horizontally, and then every modal on top of it drifted with the page
+     underneath. Francis saw it leaking into the book sheet.
+
+     `clip`, not `hidden`, deliberately: `hidden` makes this a scroll
+     container, and a scroll container breaks `position: sticky` on every
+     descendant — which home relies on. `clip` crops without that side
+     effect. Chrome 90+ and Safari 16+; iOS web push already requires
+     16.4, so the floor is met.
+
+     Tables, diagrams and rows of covers still scroll sideways inside their
+     OWN `overflow-x-auto` container. This only stops the page doing it. */
+  overflow-x: clip;
 }
 
 ::selection {

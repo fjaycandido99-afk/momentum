@@ -127,3 +127,41 @@ export async function peekAiQuota(
     label,
   }
 }
+
+/**
+ * Give a consumed call back.
+ *
+ * The allowance is spent before the model runs, because that is the only
+ * point at which spending can be enforced. So when the call then fails for a
+ * reason that is OURS — an unparseable response, an answer that broke a
+ * content rule and was refused — the user has paid for nothing. On a feature
+ * with an allowance of one a day, that means no summary until tomorrow
+ * because of a bad roll on our side.
+ *
+ * Refund only for our failures. NOT for a model that answered honestly: a
+ * summary that says "I don't know this book" is a correct, useful answer and
+ * costs what any answer costs. Refunding that would also make the meter
+ * gameable by anyone who could provoke it.
+ *
+ * Never throws and never goes below zero. A failed refund is a user keeping
+ * a cost they should not have paid, which is bad; a failed REQUEST because
+ * the refund threw is worse.
+ */
+export async function refundAiQuota(
+  userId: string,
+  feature: AiFeatureKey,
+  isPremium: boolean,
+  timezone?: string | null
+): Promise<void> {
+  // Unlimited tiers never had a row to decrement.
+  if (aiFeatureAllowance(feature, isPremium) === null) return
+
+  try {
+    const where = { user_id_feature_day: { user_id: userId, feature, day: dayKeyFor(timezone) } }
+    const row = await prisma.aiUsageDaily.findUnique({ where, select: { count: true } })
+    if (!row || row.count <= 0) return
+    await prisma.aiUsageDaily.update({ where, data: { count: { decrement: 1 } } })
+  } catch (error) {
+    console.error('[quota] refund failed', { feature, error })
+  }
+}

@@ -27,6 +27,16 @@ export type FeatureName =
   // A push that got opened — the only proof a notification did anything.
   // metadata is the notification type ('era_wake', 'daily_quote', …).
   | 'notification'
+  // Reading. Rows in the Book table only show what stuck, not where people
+  // fall out: a search that found nothing and a summary the validator
+  // refused both leave no row behind. metadata says which step —
+  // 'resolved', 'no_match', 'page', 'summary', 'summary_unknown',
+  // 'finished'.
+  //
+  // NOT called 'reading' or 'read', because `daily_read` already means the
+  // assessment. One more collision in that space and nobody will be able to
+  // read a funnel correctly.
+  | 'books'
 
 // enable/disable exist so opt-OUT is measurable, not just adoption. Two new
 // daily pushes shipped with no way to see who turned them off.
