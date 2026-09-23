@@ -144,20 +144,47 @@ IMPORTANT — this person has just said something that may indicate ${
     // Add the new user message
     messages.push({ role: 'user', content: message })
 
-    const completion = await getGroq('journal-conversation').chat.completions.create({
+    /**
+     * 350, not 100.
+     *
+     * This was the lowest budget of any endpoint in the app by a factor of
+     * three, and the serving model is a REASONING model: it spends tokens
+     * thinking before it writes a word. At 100 the reasoning could eat the
+     * whole budget and `content` came back empty — so the reply was the
+     * canned line and the reader was told "couldn't reach your coach",
+     * while the call itself logged as a success. It was not unreachable; it
+     * was cut off mid-thought.
+     *
+     * The reply stays short because the prompt says so, not because the
+     * budget strangles it.
+     */
+    const speak = () => getGroq('journal-conversation').chat.completions.create({
       model: GROQ_MODEL,
       messages,
-      max_tokens: 100,
+      max_tokens: 350,
       temperature: 0.7,
     })
+
+    let completion = await speak()
+    let generated = completion.choices[0]?.message?.content?.trim()
+
+    // One retry on an empty answer. A reasoning model that overspends its
+    // budget on one attempt usually does not on the next, and a second call
+    // is far cheaper than telling somebody their coach is unreachable.
+    if (!generated) {
+      console.error('[journal-conversation] empty completion, retrying once', {
+        model: GROQ_MODEL,
+      })
+      completion = await speak()
+      generated = completion.choices[0]?.message?.content?.trim()
+    }
 
     // An empty completion is a failure, not an answer. Track it so the
     // response can say so rather than passing the canned line off as the
     // coach's considered reply.
-    const generated = completion.choices[0]?.message?.content?.trim()
     const reply = generated || FALLBACK_REPLY
     if (!generated) {
-      console.error('[journal-conversation] empty completion from model', {
+      console.error('[journal-conversation] empty completion after retry', {
         model: GROQ_MODEL,
       })
     }
@@ -176,7 +203,10 @@ IMPORTANT — this person has just said something that may indicate ${
             },
             { role: 'user', content: allUserMessages },
           ],
-          max_tokens: 60,
+          // Same reasoning-model problem, smaller stakes: at 60 tokens the
+          // JSON came back empty or truncated, the parse threw, and the
+          // catch below swallowed it — so tags silently never appeared.
+          max_tokens: 200,
           temperature: 0.3,
         })
         const tagRaw = tagCompletion.choices[0]?.message?.content?.trim() || '[]'

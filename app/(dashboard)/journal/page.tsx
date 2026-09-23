@@ -35,7 +35,7 @@ import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useEra } from '@/hooks/useEra'
-import { chatStarters, dailyStarters, splitAnsweredPrompt } from '@/lib/journal/starters'
+import { chatStarters, dailyStarters, isConversational, splitAnsweredPrompt } from '@/lib/journal/starters'
 import { eraJournalPrompt } from '@/lib/era/content'
 
 interface JournalEntry {
@@ -799,8 +799,13 @@ function JournalContent() {
    * the limit a lie.
    */
   const talkItThrough = useCallback(() => {
+    // Only QUESTIONS can become the coach's turn. "What's on my mind right
+    // now" is the reader's own first-person framing — put in the coach's
+    // mouth it reads as the coach talking about itself, which is exactly
+    // what happened the first time this shipped. Anything that is not a
+    // question goes to the coach as part of what the reader said.
     const prompts = [
-      ...dailyStarters(mindsetCtx?.mindset ?? undefined),
+      ...dailyStarters(mindsetCtx?.mindset ?? undefined).filter(isConversational),
       ...(isToday && era.era && era.era.step !== 'complete' ? [eraJournalPrompt(era.era)] : []),
     ]
     const { question, answer } = splitAnsweredPrompt(freeText, prompts)
