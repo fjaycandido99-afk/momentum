@@ -79,6 +79,9 @@ model User {
 
   // Nervous-System mode: the times they came for regulation, not a push
   resetSessions ResetSession[]
+
+  // What they are reading, and what they finished
+  books Book[]
 }
 
 model Subscription {
@@ -1348,4 +1351,61 @@ model MovementTechnique {
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+/// A book somebody is reading, or finished.
+///
+/// The reading practice already holds a typed title in Practice.plan, and
+/// that stays: it is a note to themselves on the right day, and it is never
+/// parsed (see the comment on Practice.plan). This model is the other thing —
+/// the book RESOLVED against a catalogue, so the app knows it is 323 pages by
+/// James Clear and can say something true about it.
+///
+/// Both exist on purpose. Typing a title must keep working with no lookup, no
+/// network and no account of what you read; resolving one is an upgrade you
+/// choose.
+model Book {
+  id      String @id @default(cuid())
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  title  String
+  author String?
+
+  /// Total pages from the catalogue. NULL when unknown, and it often is —
+  /// half of Open Library's results have no page count. Never estimated:
+  /// a made-up total turns every progress line into fiction.
+  pages Int?
+
+  cover_url String?
+
+  /// Provider id, e.g. "openlibrary:/works/OL17930368W". Kept so the same
+  /// book can be recognised again and re-fetched if the record improves.
+  source_id String?
+
+  /// The page they say they are on. Their own number, typed by them.
+  current_page    Int?
+  current_page_at DateTime?
+
+  /// The previous reading, kept so a pace can be computed from two real
+  /// points instead of guessed. Two samples is a rough pace and is
+  /// described as one; it is still their own data rather than an average
+  /// somebody invented.
+  prev_page    Int?
+  prev_page_at DateTime?
+
+  /// The era-connected summary, cached so reopening the card costs nothing,
+  /// with the era day it was written for — the "for your era" half is about
+  /// a specific day, so a stale one should be refreshable.
+  summary     Json?
+  summary_day Int?
+
+  started_at  DateTime  @default(now())
+  finished_at DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  /// The shelf query: unfinished first, newest first.
+  @@index([user_id, finished_at])
 }
