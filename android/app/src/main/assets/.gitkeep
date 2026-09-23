@@ -1,0 +1,8 @@
+Capacitor writes capacitor.config.json and capacitor.plugins.json here on
+`cap sync android`, and it will NOT create this directory itself — `cap sync`
+fails with ENOENT if it is missing. Git does not track empty directories, so
+this file is what keeps it in the repository.
+
+Without it the Android build has no Capacitor config, which means no
+server.url — the app would install and open to a blank screen. iOS never hit
+this because its equivalent (ios/App/App) is committed with real files in it.
