@@ -26,6 +26,7 @@ import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { ShareEraSheet } from './ShareEraSheet'
 import { WakeCallSheet, type WakeCallSettings } from './WakeCallSheet'
 import { CircleSection } from './CircleSection'
+import { ReminderAsk } from '@/components/notifications/ReminderAsk'
 import { clockLabel } from '@/lib/era/wake'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
 import type { EraToday } from '@/hooks/useEra'
@@ -756,6 +757,12 @@ function ActiveEra({
               </Tile>
             )}
           </div>
+          {/* The one ask for notifications, under the promise it would serve.
+              Every nudge the app sends has been reaching a single device —
+              not because push is broken, but because nothing ever asked
+              outside a toggle most of the way down Settings. Once, ever,
+              and it renders nothing when there is nothing to offer. */}
+          <ReminderAsk hasPromise={!!t?.text} />
           {(t?.coachReply || era.step === 'check' || t?.kept !== null) && (
             <div className="card-surface-lg p-4">
               {t?.coachReply && (
