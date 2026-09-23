@@ -53,8 +53,7 @@ if (fs.existsSync(SERVICES) && fs.statSync(SERVICES).size > 0) {
     console.log(`     ${rel(out)} — open it, copy it, then delete it\n`)
   }
 } else {
-  blocked++
-  console.log('2. google-services.json: MISSING  <- blocks the build')
+  console.log('2. google-services.json: MISSING  <- push is dead, build still runs')
   console.log('   Firebase Console -> Project settings -> Your apps -> Add app')
   console.log('   -> Android -> package name com.voxu.app -> download')
   console.log(`   Save to ${rel(SERVICES)}`)
@@ -62,10 +61,12 @@ if (fs.existsSync(SERVICES) && fs.statSync(SERVICES).size > 0) {
   console.log('   (Not a secret: it ships inside the APK and its key is')
   console.log('    restricted to the package name.)')
   console.log('')
-  console.log('   TO BUILD TONIGHT WITHOUT IT: set VOXU_ALLOW_NO_PUSH=1 in')
-  console.log('   Codemagic (the app -> Settings -> Environment variables, no')
-  console.log('   group needed). The build then succeeds and prints a banner')
-  console.log('   saying push is dead in it. Do not hand that build to a user.\n')
+  console.log('   The build does NOT fail on this. It prints a banner saying')
+  console.log('   push is dead and carries on, because nothing CI produces can')
+  console.log('   reach a user — publishing is off and the first Play upload is')
+  console.log('   manual. Fine for the pipeline and for sideloading the APK.')
+  console.log('   Before you upload to Play, set VOXU_REQUIRE_PUSH=1 in')
+  console.log('   Codemagic so a missing file fails the build instead.\n')
 }
 
 console.log('--- Building locally (optional) ---\n')

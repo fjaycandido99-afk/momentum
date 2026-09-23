@@ -168,6 +168,24 @@ keyPassword=...
 Back the keystore up somewhere that is not this machine. Run
 `node scripts/android-secrets.cjs` to see what is still missing.
 
+### Before uploading ANY build to Play
+
+Run the build with `VOXU_REQUIRE_PUSH=1` set in Codemagic. Without it the
+workflow builds happily when `google-services.json` is absent — deliberately,
+so a platform that has never shipped is not blocked by an errand in the
+Firebase console — and prints a banner saying push is dead in that build.
+That is fine for checking the pipeline and sideloading the APK. It is not
+fine to upload: the nudges are most of what the product does.
+
+So the gate is here, not in the build:
+
+- [ ] `android/app/google-services.json` committed
+- [ ] `FIREBASE_PROJECT_ID` / `FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY`
+      set in Vercel (the server half — `isFCMConfigured()` is false without
+      all three)
+- [ ] a build run with `VOXU_REQUIRE_PUSH=1` that went green
+- [ ] a real notification received on a real Android device
+
 ### Play Console — only Francis can do these
 
 1. Create the app record under `com.voxu.app`.

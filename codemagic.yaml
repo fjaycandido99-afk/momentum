@@ -284,11 +284,22 @@ workflows:
       - name: Write google-services.json
         script: |
           set -e
-          # Without this file the Google Services plugin is not applied and the
-          # app can never obtain an FCM token — push is dead on every install.
-          # build.gradle fails a release build rather than let that ship
-          # silently, so this step has to succeed. Skipped only if the file is
-          # committed to the repo.
+          # Without this file the Google Services plugin is not applied and
+          # the app can never obtain an FCM token — push is dead on every
+          # install. build.gradle fails a RELEASE build rather than let that
+          # ship silently.
+          #
+          # This step used to fail too, and that was the wrong place for the
+          # gate. Nothing here can reach a user: `publishing:` is off, Play
+          # will not accept an API upload to an app with no manual release,
+          # and every artifact is something Francis downloads and inspects.
+          # All the hard failure achieved was blocking a platform that has
+          # never shipped at all, on an errand in another console.
+          #
+          # So the default is loud, not fatal. The gate that matters is
+          # before the manual Play upload — see store-metadata/play-store.md.
+          # Set VOXU_REQUIRE_PUSH=1 to make it fatal again, which is what you
+          # want on the build you actually intend to upload.
           TARGET="$CM_BUILD_DIR/android/app/google-services.json"
           if [ -s "$TARGET" ]; then
             echo "google-services.json is committed in the repo — using that."
@@ -297,25 +308,27 @@ workflows:
             echo "$GOOGLE_SERVICES_JSON" | base64 --decode > "$TARGET"
             echo "Wrote google-services.json ($(wc -c < "$TARGET") bytes)"
             echo "PUSH_FLAG=" >> $CM_ENV
-          elif [ -n "$VOXU_ALLOW_NO_PUSH" ]; then
-            # The deliberate escape. Set VOXU_ALLOW_NO_PUSH=1 in the Codemagic
-            # UI to prove the pipeline works before Firebase exists. It is an
-            # environment variable rather than a default so that shipping
-            # without push is always something somebody chose, and the choice
-            # is visible in the build log.
+          elif [ -n "$VOXU_REQUIRE_PUSH" ]; then
+            echo "VOXU_REQUIRE_PUSH is set and there is no google-services.json."
+            echo "Firebase Console -> Project settings -> Your apps -> Add app"
+            echo "-> Android -> com.voxu.app, then: git add -f android/app/google-services.json"
+            exit 1
+          else
             echo "================================================================"
-            echo " VOXU_ALLOW_NO_PUSH is set. Building WITHOUT Firebase."
-            echo " Android push will not work in this build AT ALL: no promise"
-            echo " reminder, no exercise nudge, no wake-up call. Do not put this"
-            echo " build in front of a real user."
+            echo " No google-services.json. Building WITHOUT Firebase."
+            echo ""
+            echo " Android push does not work in this build AT ALL: no promise"
+            echo " reminder, no exercise nudge, no wake-up call. The app itself"
+            echo " is fine — it loads voxu.app like the iOS shell does — but it"
+            echo " is the silent version of the product."
+            echo ""
+            echo " Fine for checking the pipeline and sideloading the APK."
+            echo " Not fine to upload to Play. Get the file first:"
+            echo "   Firebase Console -> Project settings -> Your apps"
+            echo "   -> Add app -> Android -> com.voxu.app"
+            echo "   git add -f android/app/google-services.json"
             echo "================================================================"
             echo "PUSH_FLAG=-PallowNoPush=true" >> $CM_ENV
-          else
-            echo "No google-services.json, so Android push would be dead in this build."
-            echo "Fix it: Firebase Console -> Project settings -> Your apps -> Add app"
-            echo "-> Android -> com.voxu.app, then commit the file to android/app/."
-            echo "Or set VOXU_ALLOW_NO_PUSH=1 in Codemagic to build without push on purpose."
-            exit 1
           fi
 
       - name: Set version
