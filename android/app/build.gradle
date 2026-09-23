@@ -1,5 +1,29 @@
 apply plugin: 'com.android.application'
 
+/**
+ * Release signing, without a key in the repository.
+ *
+ * Two sources, checked in this order:
+ *   1. android/key.properties — for building on this machine. Gitignored.
+ *   2. Environment variables — for CI, where the keystore arrives as a
+ *      base64 secret and is written to disk by the build step.
+ *
+ * If neither is present, `release` is left UNSIGNED rather than falling back
+ * to the debug key. A debug-signed AAB is refused by Play, and finding that
+ * out in the upload form is worse than a build that says so.
+ */
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def resolvedStoreFile = keystoreProperties['storeFile'] ?: System.getenv('VOXU_KEYSTORE_PATH')
+def resolvedStorePassword = keystoreProperties['storePassword'] ?: System.getenv('VOXU_KEYSTORE_PASSWORD')
+def resolvedKeyAlias = keystoreProperties['keyAlias'] ?: System.getenv('VOXU_KEY_ALIAS')
+def resolvedKeyPassword = keystoreProperties['keyPassword'] ?: System.getenv('VOXU_KEY_PASSWORD')
+def canSignRelease = resolvedStoreFile != null && file(resolvedStoreFile).exists()
+
 android {
     namespace = "com.voxu.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +31,13 @@ android {
         applicationId "com.voxu.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Play refuses a versionCode it has already seen, so CI overrides
+        // this with ORG_GRADLE_PROJECT_voxuVersionCode on every upload. The
+        // literal below is only the floor for a local build.
+        versionCode project.hasProperty('voxuVersionCode') ? project.voxuVersionCode.toInteger() : 1
+        // The version people read. Kept in step with the iOS marketing
+        // version so one product does not have two version numbers.
+        versionName project.hasProperty('voxuVersionName') ? project.voxuVersionName : "1.2.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +45,29 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (canSignRelease) {
+            release {
+                storeFile file(resolvedStoreFile)
+                storePassword resolvedStorePassword
+                keyAlias resolvedKeyAlias
+                keyPassword resolvedKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (canSignRelease) {
+                signingConfig signingConfigs.release
+            } else {
+                // Deliberately unsigned, and loud about it. Left on the debug
+                // key instead, the AAB builds fine and Play rejects it at
+                // upload with a message that does not mention signing.
+                logger.warn('VOXU: no keystore found (android/key.properties or VOXU_KEYSTORE_PATH) — release will be UNSIGNED and Play will refuse it.')
+            }
         }
     }
 }

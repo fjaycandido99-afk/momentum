@@ -111,28 +111,79 @@ release build:
 `targetSdkVersion = 36` and `minSdkVersion = 24` are fine — Play's floor for
 new apps is well below 36.
 
-### What has to happen, in order
+### Build plumbing — DONE 2026-09-22
 
-Code (can be done here):
-1. An upload keystore, generated locally and **never committed**. Reference it
-   from `build.gradle` through Gradle properties / CI environment variables.
-2. `signingConfigs.release` wired into `buildTypes.release`.
-3. `versionCode` / `versionName` set deliberately — and a rule for bumping
-   `versionCode` on every upload, since Play refuses a repeat.
-4. An `android-build` workflow in codemagic.yaml producing an **AAB**, not an
-   APK. Play has required AAB for new apps since August 2021.
+- `android/app/build.gradle` now has a `signingConfigs.release` fed from
+  `android/key.properties` (local) or `VOXU_KEYSTORE_*` environment variables
+  (CI). With neither, `release` is left **unsigned and logs a warning** rather
+  than silently falling back to the debug key — a debug-signed AAB is refused
+  by Play with a message that does not mention signing.
+- `versionCode` comes from `-PvoxuVersionCode`, `versionName` from
+  `-PvoxuVersionName` (default `1.2.2`, matching iOS). Play refuses a
+  versionCode it has already accepted, so CI computes the next one.
+- `android/.gitignore` — `*.jks`, `*.keystore` and `key.properties` are now
+  ignored. **They arrived from the template commented out**, so a keystore
+  generated in that directory would have been committed by the next
+  `git add -A`. An upload key in a git history has to be replaced, and Play
+  will not then accept builds signed with the old one.
+- `codemagic.yaml` has an `android-build` workflow producing an **AAB**
+  (required for new apps since August 2021), with the same changeset guard as
+  iOS so web-only pushes do not trigger a build.
 
-Play Console (only Francis can do these):
-5. Create the app record under `com.voxu.app`.
-6. **Data safety form** — must declare every data type collected and match
+### The keystore — generate it yourself, once
+
+Never let this file into git, and do not lose it: Play ties the app to this
+key forever, and losing it means asking Google to reset your upload key.
+
+```
+keytool -genkey -v -keystore upload.jks -keyalg RSA -keysize 2048 \
+  -validity 10000 -alias voxu-upload
+```
+
+Then either put `android/key.properties` (gitignored) beside it —
+
+```
+storeFile=/absolute/path/to/upload.jks
+storePassword=...
+keyAlias=voxu-upload
+keyPassword=...
+```
+
+— or, for CI, create a Codemagic variable group named `google_play` holding
+`VOXU_KEYSTORE` (the output of `base64 -w0 upload.jks`),
+`VOXU_KEYSTORE_PASSWORD`, `VOXU_KEY_ALIAS` and `VOXU_KEY_PASSWORD`, all marked
+secure. The workflow will fail loudly if `VOXU_KEYSTORE` is missing rather
+than produce an unsigned bundle.
+
+Back the keystore up somewhere that is not this machine.
+
+### Play Console — only Francis can do these
+
+1. Create the app record under `com.voxu.app`.
+2. **Data safety form** — must declare every data type collected and match
    https://voxu.app/privacy exactly. This is where most submissions stall.
-7. Content rating questionnaire.
-8. Play Billing: create the subscription group and both product IDs, then map
-   them in RevenueCat to the `premium` entitlement.
-9. Graphics: 512×512 icon, 1024×500 feature graphic, at least 2 phone
-   screenshots (the iOS set does not satisfy Play's aspect requirements).
-10. Closed testing before production. **If the Play developer account is a
-    personal/individual account created after November 2023, Google requires
-    12 testers for 14 continuous days before production access is granted.**
-    That is weeks, not an afternoon. An account that has already published a
-    production app is past this gate.
+3. Content rating questionnaire.
+4. Play Billing: create the subscription group and both product IDs
+   (`voxu_premium_month`, `voxu_premium_yearly`), then map them in RevenueCat
+   to the `premium` entitlement. **Until this exists, premium is unbuyable on
+   Android** — the paywall will open and fail.
+5. Graphics: 512×512 icon, 1024×500 feature graphic, at least 2 phone
+   screenshots. The iOS set does not satisfy Play's requirements.
+6. **Upload the first AAB by hand.** Play will not accept an API upload to an
+   app that has never had a manual release, which is why `publishing:` is
+   commented out in the workflow. Turn it on after the first upload.
+7. Closed testing before production. **If the Play developer account is a
+   personal/individual account created after November 2023, Google requires
+   12 testers for 14 continuous days before production access is granted.**
+   That is weeks, not an afternoon. An account that has already published a
+   production app is past this gate.
+
+### Known gap, not a blocker for the first upload
+
+`android/app/google-services.json` is absent, and `build.gradle` skips the
+Google Services plugin when it is missing — so **push notifications will not
+work on Android at all**. Every nudge the app relies on (the promise reminder,
+the exercise nudge, the wake-up call) is silent there. Fix by adding the
+Android app to the Firebase project and dropping the file in; it does not
+block shipping, but an Android user gets a materially quieter product until
+it is done.

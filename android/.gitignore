@@ -53,9 +53,13 @@ captures/
 .idea/navEditor.xml
 
 # Keystore files
-# Uncomment the following lines if you do not want to check your keystore files in.
-#*.jks
-#*.keystore
+# These arrived from the template COMMENTED OUT. A keystore generated in this
+# directory would have been committed by the next `git add -A`, and an upload
+# key in a public history is an upload key you have to replace — after which
+# Play will not accept a build signed with it. Uncommented deliberately.
+*.jks
+*.keystore
+key.properties
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild

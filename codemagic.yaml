@@ -195,3 +195,118 @@ workflows:
         auth: integration
         submit_to_testflight: true
         submit_to_app_store: false
+
+  # ─────────────────────────────────────────────────────────────────────────
+  android-build:
+    name: Voxu Android Build
+    max_build_duration: 45
+    instance_type: linux_x2
+    working_directory: .
+    labels:
+      - capacitor
+
+    environment:
+      node: 22
+      java: 21
+      groups:
+        # Codemagic group holding, as encrypted variables:
+        #   VOXU_KEYSTORE        base64 of the upload keystore (.jks)
+        #   VOXU_KEYSTORE_PASSWORD
+        #   VOXU_KEY_ALIAS
+        #   VOXU_KEY_PASSWORD
+        # The keystore never exists in this repository — see
+        # android/.gitignore and android/app/build.gradle.
+        - google_play
+      vars:
+        PACKAGE_NAME: com.voxu.app
+
+    cache:
+      cache_paths:
+        - $HOME/.npm
+        - $HOME/.gradle/caches
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: master
+          include: true
+      cancel_previous_builds: true
+
+    # Same reasoning as ios-build: the app is a shell that loads
+    # https://voxu.app, so a web change is already live and is not in the
+    # binary. Only build when something that IS in the binary changes.
+    # Manual builds from the UI ignore this.
+    when:
+      changeset:
+        includes:
+          - 'android'
+          - 'capacitor.config.ts'
+          - 'package.json'
+          - 'package-lock.json'
+          - 'codemagic.yaml'
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Capacitor sync
+        script: npx cap sync android
+
+      - name: Write keystore from the encrypted variable
+        script: |
+          set -e
+          if [ -z "$VOXU_KEYSTORE" ]; then
+            echo "VOXU_KEYSTORE is not set — a release build would be unsigned and Play would refuse it."
+            exit 1
+          fi
+          echo "$VOXU_KEYSTORE" | base64 --decode > "$CM_BUILD_DIR/android/upload.jks"
+          ls -l "$CM_BUILD_DIR/android/upload.jks"
+
+      - name: Set version
+        script: |
+          set -e
+          # Play refuses a versionCode it has already accepted, so take the
+          # highest already on Play and add one. PROJECT_BUILD_NUMBER is
+          # Codemagic's own counter and is the fallback for the very first
+          # upload, when Play has nothing to report.
+          LATEST=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks internal 2>/dev/null || echo "")
+          if [ -z "$LATEST" ]; then
+            echo "Nothing on Play yet — using Codemagic build number."
+            NEXT=$PROJECT_BUILD_NUMBER
+          else
+            NEXT=$((LATEST + 1))
+          fi
+          echo "versionCode -> $NEXT"
+          echo "VOXU_VERSION_CODE=$NEXT" >> $CM_ENV
+
+      - name: Build AAB
+        script: |
+          set -e
+          # Exported here rather than in a per-script `environment:` block —
+          # Codemagic script steps do not take one, so it would have been
+          # silently ignored and the build would have come out unsigned.
+          export VOXU_KEYSTORE_PATH="$CM_BUILD_DIR/android/upload.jks"
+          cd android
+          # An AAB, not an APK: Play has required the App Bundle format for
+          # new apps since August 2021.
+          ./gradlew bundleRelease \
+            -PvoxuVersionCode="$VOXU_VERSION_CODE" \
+            -PvoxuVersionName="1.2.2"
+
+      - name: Remove the keystore from the workspace
+        script: rm -f "$CM_BUILD_DIR/android/upload.jks"
+
+    artifacts:
+      - android/app/build/outputs/bundle/release/*.aab
+      - android/app/build/outputs/**/mapping.txt
+
+    # Publishing is left OFF until the Play Console app record exists and the
+    # first AAB has been uploaded by hand — Play will not accept an API upload
+    # to an app that has never had a manual release. Turn this on afterwards:
+    #
+    # publishing:
+    #   google_play:
+    #     credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+    #     track: internal
+    #     submit_as_draft: true
