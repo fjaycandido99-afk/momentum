@@ -220,7 +220,11 @@ model UserPreferences {
   // Bedtime reminder
   bedtime_reminder_enabled Boolean @default(false)
 
-  // Astrology preferences
+  // DEAD. Astrology was deleted; these two columns are kept only because
+  // dropping a column here means a `db push` against the single production
+  // database, and there is nothing to gain. Nothing reads or writes them —
+  // do not wire anything to them, and do not take their presence as a sign
+  // the feature is coming back.
   astrology_enabled Boolean @default(false)
   zodiac_sign       String?
 

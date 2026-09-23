@@ -79,11 +79,11 @@ export function MindsetProvider({ children }: { children: ReactNode }) {
       await authFetch('/api/daily-guide/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mindset: id,
-          // Auto-enable astrology for Scholar mindset
-          ...(id === 'scholar' ? { astrology_enabled: true } : { astrology_enabled: false }),
-        }),
+        // Just the mindset. This used to also post `astrology_enabled`,
+        // which the preferences route does not even read — it was writing a
+        // flag for a feature that no longer exists, to an endpoint that was
+        // already ignoring it.
+        body: JSON.stringify({ mindset: id }),
       })
     } catch (error) {
       console.error('Failed to save mindset:', error)

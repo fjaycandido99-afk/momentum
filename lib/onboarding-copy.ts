@@ -29,10 +29,10 @@ export const ONBOARDING_COPY = {
       },
     },
   },
-  step2: {
-    title: 'Set Your Scene',
-    subtitle: 'Your environment shapes your mindset',
-  },
+  // `step2` — "Set Your Scene" — lived here for a theme/background step the
+  // wizard does not have and has never rendered. Removed rather than left
+  // looking like a step somebody forgot to wire, because the next person to
+  // read this file would try to wire it.
   step3: {
     title: "You're Ready",
     affirmation: "Every day, you're becoming the person you want to be",

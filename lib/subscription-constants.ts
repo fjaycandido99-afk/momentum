@@ -29,7 +29,9 @@ export const FREEMIUM_LIMITS = {
   previewSeconds: 30,
   coachNudgeDelayMs: 5 * 60 * 1000, // 5 minutes
   playlists: { freeCount: 1 },
-  routines: { freeCount: 1 },
+  // `routines: { freeCount: 1 }` was here. Routines are deleted — no screen
+  // can create one — so a free limit on them described a restriction on
+  // nothing.
 }
 
 // Content type for freemium checks

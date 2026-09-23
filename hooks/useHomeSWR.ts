@@ -7,7 +7,6 @@ export function usePreferences() {
   const { data, error, isLoading, mutate } = useSWR<any>('/api/daily-guide/preferences')
   return {
     streak: data?.current_streak || 0,
-    astrologyEnabled: data?.mindset === 'scholar',
     preferencesError: error,
     preferencesLoading: isLoading,
     mutatePreferences: mutate,

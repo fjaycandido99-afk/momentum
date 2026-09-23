@@ -586,7 +586,10 @@ function SettingsContent() {
               </>
             )}
           </div>
-          <FeatureHint id="schedule" text="Your schedule controls when modules unlock each day" mode="once" />
+          {/* "modules unlock" was Daily-Guide vocabulary, and that screen is
+              retired. The sessions are still real — they are Today's Audio on
+              home — so the hint says what the schedule actually does. */}
+          <FeatureHint id="schedule" text="Your schedule sets when each audio session is ready" mode="once" />
         </SettingsCategory>
 
         {/* ═══════════════ 2. Daily Experience ═══════════════ */}

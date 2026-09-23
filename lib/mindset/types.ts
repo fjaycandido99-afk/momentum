@@ -14,8 +14,6 @@ export interface MindsetConfig {
   promptReferences: string[]
   /** Background animation IDs this mindset rotates through */
   backgroundPool: string[]
-  /** Only Scholar mindset enables astrology features */
-  astrologyEnabled: boolean
   /** Mindset-themed name for the coach feature */
   coachName: string
   /** Mindset-themed name for AI-generated reflections */

@@ -63,7 +63,11 @@ export function FirstMomentOverlay() {
             </div>
             <p className="text-[11px] uppercase tracking-wider text-white/50 font-semibold">A moment to begin</p>
             <h1 className="text-2xl font-bold text-white mt-2 tracking-tight">I&rsquo;m {coach}.</h1>
-            <p className="text-sm text-white/70 mt-2 leading-relaxed">Your guide on the {name} path. Before the noise, one quiet moment.</p>
+            {/* Not "your guide on the {name} path" — a mindset stopped being
+                a path when eras arrived. It is the VOICE the coach speaks
+                in; the era is the thing you are working on. This overlay was
+                the last screen still using the old framing. */}
+            <p className="text-sm text-white/70 mt-2 leading-relaxed">Your {name} voice. Before the noise, one quiet moment.</p>
             {quote && (
               <>
                 <p className="text-base italic text-white/85 mt-6 leading-relaxed">&ldquo;{quote.text}&rdquo;</p>

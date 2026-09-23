@@ -17,6 +17,7 @@ import {
   Headphones,
   Sparkles,
   PenLine,
+  Flame,
   X,
   Play,
   Pause,
@@ -66,7 +67,28 @@ const TONES: { value: GuideTone; label: string; description: string }[] = [
   },
 ]
 
+/**
+ * What the app introduces itself as.
+ *
+ * Two things were wrong with this list. The era — a 30-day run where you
+ * make one promise a day and your coach keeps count — was missing entirely,
+ * while the mindset screens the user just came through already talk about
+ * "your era" as though it had been explained. And a card sold "Daily Guide
+ * & AI / Morning Modules", a screen that is now a redirect: the sessions
+ * survived as Today's Audio on home, the screen and the word "modules" did
+ * not.
+ *
+ * So: the era leads, because it is the thing, and the audio card says what
+ * the user will actually find.
+ */
 const PREVIEW_CARDS = [
+  {
+    title: 'Your Era',
+    tagline: '30 days. One promise a day. Your coach keeps count.',
+    image: '/era/locked_in.jpg',
+    icon: Flame,
+    pills: ['30 Days', 'Daily Promise'],
+  },
   {
     title: 'Motivation',
     tagline: 'Powerful speeches to fuel your day',
@@ -95,20 +117,20 @@ const PREVIEW_CARDS = [
     sampleStart: 30,
   },
   {
-    title: 'Daily Guide & AI',
-    tagline: 'Personalized modules & smart coaching',
+    title: 'Today’s Audio',
+    tagline: 'Morning, midday and wind-down, read in the voice you pick',
     image: '/backgrounds/bg22.jpg',
     icon: Sparkles,
-    pills: ['Morning Modules', 'AI Coaching'],
+    pills: ['4 Sessions', 'Your Guide’s Voice'],
     sampleYoutubeId: '77ZozI0rw7w',
     sampleStart: 60,
   },
   {
-    title: 'Journal & Progress',
-    tagline: 'Reflect daily, track your growth & earn XP',
+    title: 'Journal & Coach',
+    tagline: 'Write it, or talk it through with a coach that answers',
     image: '/backgrounds/bg18.jpg',
     icon: PenLine,
-    pills: ['Guided Prompts', 'Mood & Streaks'],
+    pills: ['Guided Prompts', 'Chat & Voice'],
   },
 ]
 
@@ -720,11 +742,24 @@ export function DailyGuideOnboarding() {
 
   return (
     <div className="min-h-screen bg-black flex flex-col relative">
-      {/* Skip button */}
+      {/*
+        Skip — which did not skip anything.
+
+        It used to push /daily-guide. That page was later retired to a
+        redirect onto /, and / sends anyone with guide_onboarding_done=false
+        straight back here. So the X was a loop: tap it, watch a spinner,
+        land back on step one. The only way out of setup was to finish it.
+
+        It now saves whatever they have filled in — every field already has a
+        sensible default, so a skip on step one is a real, working
+        configuration — and marks setup done on the way to home. Skipping
+        should cost you the questions, not the app.
+      */}
       <button
-        onClick={() => router.push('/daily-guide')}
-        className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors press-scale"
-        aria-label="Skip onboarding"
+        onClick={handleComplete}
+        disabled={isSubmitting}
+        className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors press-scale disabled:opacity-50"
+        aria-label="Skip setup"
       >
         <X className="w-4 h-4 text-white/70" />
       </button>

@@ -6,7 +6,6 @@ export const XP_REWARDS = {
   breathingSession: 15,
   focusSession: 25,
   coachChat: 10,
-  routineComplete: 30,
   accountabilityCheckIn: 10,
   pathActivity: 10,
   streakRecovery: 10,

@@ -45,7 +45,7 @@ export const MINDSET_DETAILS: Record<MindsetId, MindsetDetail> = {
       'AI coach speaks with calm, measured wisdom — like a mentor who has weathered many storms',
       'Quotes drawn from Marcus Aurelius, Seneca, and Epictetus',
       'Journal prompts focus on emotional control, virtue, and inner strength',
-      'Geometric, structured background visuals',
+      'Affirmations and daily sparks in the Stoic register — reason, not reassurance',
     ],
   },
   existentialist: {
@@ -77,7 +77,7 @@ export const MINDSET_DETAILS: Record<MindsetId, MindsetDetail> = {
       'AI coach speaks with raw honesty and poetic depth — illuminating, never sugarcoating',
       'Quotes from Camus, Sartre, Simone de Beauvoir, and Kierkegaard',
       'Journal prompts explore meaning-making, freedom, and authentic choices',
-      'Fluid, organic background visuals',
+      'Affirmations and daily sparks that put the choice back on you',
     ],
   },
   cynic: {
@@ -109,7 +109,7 @@ export const MINDSET_DETAILS: Record<MindsetId, MindsetDetail> = {
       'AI coach is blunt, witty, and cuts through your excuses like a sharp friend',
       'Quotes from Diogenes, Antisthenes, and Crates of Thebes',
       'Journal prompts challenge your assumptions and strip away pretense',
-      'Minimal, clean background visuals',
+      'Affirmations and daily sparks with nothing decorative left in them',
     ],
   },
   hedonist: {
@@ -141,7 +141,7 @@ export const MINDSET_DETAILS: Record<MindsetId, MindsetDetail> = {
       'AI coach is warm, gentle, and gratitude-focused — like sharing wisdom over a long meal',
       'Quotes from Epicurus, Lucretius, and Metrodorus',
       'Journal prompts explore pleasure, gratitude, and savoring the present',
-      'Warm, nature-inspired background visuals',
+      'Affirmations and daily sparks that point you at what is already good',
     ],
   },
   samurai: {
@@ -173,7 +173,7 @@ export const MINDSET_DETAILS: Record<MindsetId, MindsetDetail> = {
       'AI coach is precise, disciplined, and action-oriented — every word placed with intention',
       'Quotes from Musashi, Hagakure, and Zen masters',
       'Journal prompts focus on discipline, mastery, presence, and honor',
-      'Clean, cosmic background visuals',
+      'Affirmations and daily sparks framed as training, not encouragement',
     ],
   },
   scholar: {
@@ -205,7 +205,7 @@ export const MINDSET_DETAILS: Record<MindsetId, MindsetDetail> = {
       'AI coach weaves psychology, mythology, and cosmic insight into every interaction',
       'Quotes from Jung, Carl Sagan, Joseph Campbell, and Alan Watts',
       'Journal prompts explore archetypes, dreams, symbols, and inner patterns',
-      'Cosmic backgrounds + astrology features unlocked',
+      'Affirmations and daily sparks drawn from archetype and pattern',
     ],
   },
   manifestor: {
@@ -237,7 +237,7 @@ export const MINDSET_DETAILS: Record<MindsetId, MindsetDetail> = {
       'AI coach is empowering and affirming — speaks to your highest potential',
       'Quotes from Neville Goddard, Joe Dispenza, Florence Scovel Shinn, and Wayne Dyer',
       'Journal prompts focus on visualization, intention-setting, and gratitude',
-      'Cosmic, luminous background visuals',
+      'Affirmations and daily sparks written as though it is already true',
     ],
   },
   hustler: {
@@ -269,7 +269,7 @@ export const MINDSET_DETAILS: Record<MindsetId, MindsetDetail> = {
       'AI coach is direct, intense, and won\'t let you make excuses',
       'Quotes from Goggins, Jocko Willink, Alex Hormozi, and Gary Vee',
       'Journal prompts push accountability, execution, and mental toughness',
-      'Bold, high-energy background visuals',
+      'Affirmations and daily sparks that read like a push, not a pat on the back',
     ],
   },
 }
