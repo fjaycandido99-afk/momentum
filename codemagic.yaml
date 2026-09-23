@@ -208,15 +208,18 @@ workflows:
     environment:
       node: 22
       java: 21
-      groups:
-        # Codemagic group holding, as encrypted variables:
-        #   VOXU_KEYSTORE        base64 of the upload keystore (.jks)
-        #   VOXU_KEYSTORE_PASSWORD
-        #   VOXU_KEY_ALIAS
-        #   VOXU_KEY_PASSWORD
-        # The keystore never exists in this repository — see
-        # android/.gitignore and android/app/build.gradle.
-        - google_play
+      # Upload the keystore ONCE in Codemagic: Teams/Personal account ->
+      # Code signing identities -> Android keystores, with reference name
+      # `voxu_upload`. Codemagic then sets CM_KEYSTORE_PATH,
+      # CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS and CM_KEY_PASSWORD itself, and
+      # android/app/build.gradle reads them directly.
+      #
+      # This replaced a `groups: [google_play]` reference that failed the
+      # build at startup — "references to unknown variable group(s)" — and
+      # which also meant base64-ing a signing key through a clipboard. No
+      # group is needed now, so there is nothing to misname.
+      android_signing:
+        - voxu_upload
       vars:
         PACKAGE_NAME: com.voxu.app
 
@@ -253,15 +256,19 @@ workflows:
       - name: Capacitor sync
         script: npx cap sync android
 
-      - name: Write keystore from the encrypted variable
+      - name: Check the keystore arrived
         script: |
           set -e
-          if [ -z "$VOXU_KEYSTORE" ]; then
-            echo "VOXU_KEYSTORE is not set — a release build would be unsigned and Play would refuse it."
+          # Codemagic places the keystore itself from the android_signing
+          # reference above. If the reference is missing or misnamed there is
+          # no path here, and the build would produce an unsigned AAB that
+          # Play refuses with an error that never mentions signing.
+          if [ -z "$CM_KEYSTORE_PATH" ] || [ ! -s "$CM_KEYSTORE_PATH" ]; then
+            echo "No keystore. Upload one in Codemagic under Code signing identities ->"
+            echo "Android keystores with the reference name 'voxu_upload'."
             exit 1
           fi
-          echo "$VOXU_KEYSTORE" | base64 --decode > "$CM_BUILD_DIR/android/upload.jks"
-          ls -l "$CM_BUILD_DIR/android/upload.jks"
+          echo "Keystore present ($(wc -c < "$CM_KEYSTORE_PATH") bytes), alias ${CM_KEY_ALIAS}"
 
       - name: Write google-services.json
         script: |
@@ -304,19 +311,14 @@ workflows:
       - name: Build AAB
         script: |
           set -e
-          # Exported here rather than in a per-script `environment:` block —
-          # Codemagic script steps do not take one, so it would have been
-          # silently ignored and the build would have come out unsigned.
-          export VOXU_KEYSTORE_PATH="$CM_BUILD_DIR/android/upload.jks"
           cd android
           # An AAB, not an APK: Play has required the App Bundle format for
-          # new apps since August 2021.
+          # new apps since August 2021. Signing comes from the CM_KEYSTORE_*
+          # variables Codemagic set — build.gradle reads them, so there is
+          # nothing to pass here.
           ./gradlew bundleRelease \
             -PvoxuVersionCode="$VOXU_VERSION_CODE" \
             -PvoxuVersionName="1.2.2"
-
-      - name: Remove the keystore from the workspace
-        script: rm -f "$CM_BUILD_DIR/android/upload.jks"
 
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab

@@ -3,10 +3,12 @@ apply plugin: 'com.android.application'
 /**
  * Release signing, without a key in the repository.
  *
- * Two sources, checked in this order:
+ * Three sources, checked in this order:
  *   1. android/key.properties — for building on this machine. Gitignored.
- *   2. Environment variables — for CI, where the keystore arrives as a
- *      base64 secret and is written to disk by the build step.
+ *   2. VOXU_KEYSTORE_* environment variables — a manual/other-CI escape hatch.
+ *   3. CM_KEYSTORE_* — what Codemagic sets on its own when the workflow
+ *      declares `environment.android_signing`. Nothing to wire: no base64,
+ *      no variable group, no step that writes a key to disk.
  *
  * If neither is present, `release` is left UNSIGNED rather than falling back
  * to the debug key. A debug-signed AAB is refused by Play, and finding that
@@ -18,10 +20,14 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
-def resolvedStoreFile = keystoreProperties['storeFile'] ?: System.getenv('VOXU_KEYSTORE_PATH')
-def resolvedStorePassword = keystoreProperties['storePassword'] ?: System.getenv('VOXU_KEYSTORE_PASSWORD')
-def resolvedKeyAlias = keystoreProperties['keyAlias'] ?: System.getenv('VOXU_KEY_ALIAS')
-def resolvedKeyPassword = keystoreProperties['keyPassword'] ?: System.getenv('VOXU_KEY_PASSWORD')
+// CM_* are the names Codemagic sets itself when the workflow references an
+// uploaded keystore via `environment.android_signing`. Reading them directly
+// means CI needs no glue step and no variable group — the group reference was
+// failing the build before a single step ran.
+def resolvedStoreFile = keystoreProperties['storeFile'] ?: System.getenv('VOXU_KEYSTORE_PATH') ?: System.getenv('CM_KEYSTORE_PATH')
+def resolvedStorePassword = keystoreProperties['storePassword'] ?: System.getenv('VOXU_KEYSTORE_PASSWORD') ?: System.getenv('CM_KEYSTORE_PASSWORD')
+def resolvedKeyAlias = keystoreProperties['keyAlias'] ?: System.getenv('VOXU_KEY_ALIAS') ?: System.getenv('CM_KEY_ALIAS')
+def resolvedKeyPassword = keystoreProperties['keyPassword'] ?: System.getenv('VOXU_KEY_PASSWORD') ?: System.getenv('CM_KEY_PASSWORD')
 def canSignRelease = resolvedStoreFile != null && file(resolvedStoreFile).exists()
 
 android {

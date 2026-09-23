@@ -140,7 +140,23 @@ keytool -genkey -v -keystore upload.jks -keyalg RSA -keysize 2048 \
   -validity 10000 -alias voxu-upload
 ```
 
-Then either put `android/key.properties` (gitignored) beside it —
+`keytool` ships with a JDK; there is none on the dev machine as of
+2026-09-23 (`winget install EclipseAdoptium.Temurin.21.JDK`).
+
+**For CI: upload it in Codemagic, do not encode it.** Code signing
+identities → Android keystores, reference name **`voxu_upload`** — which is
+what `environment.android_signing` names in codemagic.yaml. Codemagic then
+sets `CM_KEYSTORE_PATH`, `CM_KEYSTORE_PASSWORD`, `CM_KEY_ALIAS` and
+`CM_KEY_PASSWORD`, and `android/app/build.gradle` reads them directly.
+
+The first attempt used a `google_play` variable group holding a base64 of the
+keystore. It failed the build at startup — *"Codemagic.yaml references to
+unknown variable group(s): google_play"*, before any step ran — and it meant
+pushing a signing key through a clipboard. No group is referenced any more,
+so there is nothing to misname.
+
+For a signed build on this machine, put `android/key.properties` (gitignored)
+beside the keystore:
 
 ```
 storeFile=/absolute/path/to/upload.jks
@@ -149,13 +165,8 @@ keyAlias=voxu-upload
 keyPassword=...
 ```
 
-— or, for CI, create a Codemagic variable group named `google_play` holding
-`VOXU_KEYSTORE` (the output of `base64 -w0 upload.jks`),
-`VOXU_KEYSTORE_PASSWORD`, `VOXU_KEY_ALIAS` and `VOXU_KEY_PASSWORD`, all marked
-secure. The workflow will fail loudly if `VOXU_KEYSTORE` is missing rather
-than produce an unsigned bundle.
-
-Back the keystore up somewhere that is not this machine.
+Back the keystore up somewhere that is not this machine. Run
+`node scripts/android-secrets.cjs` to see what is still missing.
 
 ### Play Console — only Francis can do these
 
