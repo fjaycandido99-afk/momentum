@@ -60,6 +60,9 @@ captures/
 *.jks
 *.keystore
 key.properties
+# base64 of the above, written by scripts/android-secrets.cjs. Same secret,
+# different encoding — committing it would be exactly as bad.
+*.b64
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
