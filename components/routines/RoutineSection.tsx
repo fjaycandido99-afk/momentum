@@ -70,6 +70,8 @@ export interface RoutineWire {
     position: number
     inMinimum: boolean
     weight: StepWeight
+    /** Their coach's line for this step, when it has been voiced. */
+    cue: string | null
   }[]
 }
 
@@ -101,6 +103,8 @@ export function RoutineSection() {
   const [seed, setSeed] = useState<RoutineDraft | null>(null)
   /** The routine is saved but the phone will not deliver it. */
   const [remindersOff, setRemindersOff] = useState(false)
+  /** The week's line from their coach, or nothing. */
+  const [observation, setObservation] = useState<string | null>(null)
   /** They are describing their day for Voxu to draft. */
   const [describing, setDescribing] = useState(false)
   /** Which version is being walked through, if any. */
@@ -122,6 +126,26 @@ export function RoutineSection() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  /**
+   * The week's observation — asked for only when there is a week to observe.
+   *
+   * This condition is the whole cost argument. A cron writing everybody a
+   * line every Monday is one model call per person per week whether they
+   * read it or not; this fires when somebody has a routine they have
+   * actually started, on a screen they have actually opened, and the answer
+   * is cached for the week on the routine itself. Ten opens, one call. Never
+   * opened, no call.
+   */
+  useEffect(() => {
+    if (!review || review.started === 0) return
+    let stale = false
+    fetch('/api/routines/observation')
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => { if (!stale) setObservation(data?.observation ?? null) })
+      .catch(() => {})
+    return () => { stale = true }
+  }, [review])
 
   /**
    * Keep the phone in step with what is saved.
@@ -407,6 +431,19 @@ export function RoutineSection() {
         </div>
       )}
 
+      {/*
+        The week's observation, under the counts it is about.
+
+        Fetched only when there is a review to attach it to — which is what
+        keeps this one call per person per week they actually LOOK, rather
+        than a cron writing everybody a line whether they read it or not. It
+        renders nothing when the week had nothing worth saying, which is most
+        weeks for most people.
+      */}
+      {observation && (
+        <p className="text-[12px] text-white/55 leading-relaxed italic">{observation}</p>
+      )}
+
       {/* Paused is a state worth seeing: a timeline that looks live and
           reminds you of nothing is the thing to avoid. */}
       {routine && !routine.enabled && steps.length > 0 && (
@@ -519,6 +556,22 @@ export function RoutineSection() {
             // reminded at 07:00, so "allow notifications?" answers a question
             // they already have. No-op on web and when already granted.
             await askRoutinePermission()
+            /*
+              Write the notification lines in their coach's voice.
+
+              After the save, deliberately, and not awaited into the save
+              itself: the routine must be saved and reminding them whether or
+              not this succeeds. Every step it cannot voice keeps the kind's
+              own line, so the worst case is the routine everybody had before
+              this existed.
+
+              `load()` then re-reads the steps with their cues, and the
+              schedule effect reapplies the plan — so the notifications sit
+              on the phone already wearing the new words.
+            */
+            fetch('/api/routines/voice', { method: 'POST' })
+              .catch(() => {})
+              .finally(() => load())
             load()
           }}
         />

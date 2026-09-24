@@ -1459,6 +1459,13 @@ model Routine {
   /// Off without deleting, so the steps and their times survive a pause.
   enabled Boolean @default(true)
 
+  /// The week's observation, and which week it is for ("YYYY-MM-DD" of the
+  /// Monday). Computed only when somebody OPENS their review and cached
+  /// here, so a person who never looks costs nothing — the alternative, a
+  /// cron, is one model call per user per week whether they read it or not.
+  observation      String?
+  observation_week String?
+
   steps RoutineStep[]
   runs  RoutineRun[]
 
@@ -1536,6 +1543,15 @@ model RoutineStep {
   ///
   /// Defaults to "required", which is what every step was before this field.
   weight String @default("required")
+
+  /// The notification line, written once in their coach's voice and cached.
+  ///
+  /// Cached because it HAS to be: notifications are scheduled on the device
+  /// by Capacitor and fire offline, so nothing can call a model when one
+  /// goes off. Written at save, read by the scheduler, and null for every
+  /// step that has never been voiced — which falls back to the kind's own
+  /// cue, exactly as before.
+  cue String?
 
   created_at DateTime @default(now())
 

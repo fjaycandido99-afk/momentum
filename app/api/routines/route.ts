@@ -45,6 +45,7 @@ const STEP_SELECT = {
   position: true,
   in_minimum: true,
   weight: true,
+  cue: true,
 } as const
 
 const ROUTINE_SELECT = {

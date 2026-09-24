@@ -135,6 +135,14 @@ export interface StepLite {
   minimum?: string | null
   /** How much it asks for. Absent means 'required'. */
   weight?: StepWeight
+  /**
+   * The notification line in their coach's voice, written once and stored.
+   *
+   * Null for every step that has never been voiced, which falls back to the
+   * kind's own cue — so this can only ever improve a notification, never
+   * empty one.
+   */
+  cue?: string | null
 }
 
 /**
@@ -346,6 +354,13 @@ export function stepNotification(
   const own = step.label?.trim()
 
   const title = own || meta.label
+
+  // Their coach's own words for this step, if it has ever been voiced. First
+  // because it is the most specific thing available; a stored cue was
+  // written about THIS step, and everything below is a fallback.
+  const voiced = step.cue?.trim()
+  if (voiced) return { title, body: voiced }
+
   const body = own && meta.cue && step.kind !== 'own'
     ? meta.cue
     : eraTitle
