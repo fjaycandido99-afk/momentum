@@ -112,8 +112,14 @@ export function Shelf() {
 
       {/* A row of covers, scrolling sideways — it is a shelf, and a shelf is
           the one thing on this page that should look like its subject. Its
-          own overflow container, so the page body never scrolls sideways. */}
-      <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-5 px-5" hidden={!finished.length}>
+          own overflow container, so the page body never scrolls sideways.
+
+          Conditionally rendered, NOT `hidden`: this is a Tailwind `flex`
+          container, and `.flex { display: flex }` is an author rule that
+          beats the browser's `[hidden] { display: none }`. The attribute
+          would have done nothing and left an empty row holding its gap. */}
+      {finished.length > 0 && (
+      <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-5 px-5">
         {finished.map(book => (
           <button
             key={book.id}
@@ -137,6 +143,7 @@ export function Shelf() {
           </button>
         ))}
       </div>
+      )}
 
       {open && <BookSheet title={open} onClose={() => setOpen(null)} onChanged={load} />}
     </div>
