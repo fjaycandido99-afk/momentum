@@ -1460,6 +1460,7 @@ model Routine {
   enabled Boolean @default(true)
 
   steps RoutineStep[]
+  runs  RoutineRun[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -1522,4 +1523,39 @@ model RoutineStep {
   created_at DateTime @default(now())
 
   @@index([routine_id])
+}
+
+/// One time through a routine.
+///
+/// This records the ROUTINE, never the habits inside it. A discipline keeps
+/// its own record of whether you did it; this keeps whether you ran the day.
+/// That is the whole reason both can exist without duplicating each other,
+/// and it is what makes Review honest later: "5 of 7 days started" is a count
+/// of these rows, not an inference about anybody's behaviour.
+model RoutineRun {
+  id         String  @id @default(cuid())
+  routine_id String
+  routine    Routine @relation(fields: [routine_id], references: [id], onDelete: Cascade)
+
+  /// YYYY-MM-DD in their timezone. One run per day per routine: starting it
+  /// twice is the same day, not two.
+  local_day String
+
+  /// True when they ran the MINIMUM version. Stored because "kept the routine
+  /// alive on a bad day" and "did the whole thing" are different facts, and
+  /// counting them together would erase the idea.
+  minimum Boolean @default(false)
+
+  /// How many steps the run asked for, and how many they got through. Counts
+  /// with their denominator — never a percentage, never a score.
+  steps_total Int @default(0)
+  steps_done  Int @default(0)
+
+  started_at   DateTime  @default(now())
+  /// Set when they reach the end. Null means started and not finished, which
+  /// is a real and common outcome rather than a failure.
+  completed_at DateTime?
+
+  @@unique([routine_id, local_day])
+  @@index([routine_id, local_day])
 }

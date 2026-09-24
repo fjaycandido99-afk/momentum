@@ -14,7 +14,7 @@
  */
 
 import { useState } from 'react'
-import { Loader2, Plus, X } from 'lucide-react'
+import { Check, Loader2, Plus, X } from 'lucide-react'
 import { haptic } from '@/lib/haptics'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import {
@@ -22,8 +22,10 @@ import {
   ROUTINE_LIMITS,
   ROUTINE_STEP_KINDS,
   STEP_KINDS,
+  parseTime,
   sortSteps,
   validateSteps,
+  type RoutineMode,
   type RoutineStepKind,
 } from '@/lib/routines/steps'
 import type { PracticeLite } from './RoutineSection'
@@ -36,17 +38,29 @@ export interface DraftStep {
   ref: string | null
   label: string
   minimum: string
-  time: string
+  /** Null in sequence mode, where a step has no clock time. */
+  time: string | null
+  /** Does it survive a bad day? */
+  inMinimum: boolean
 }
 
 export interface RoutineDraft {
   label: string
+  mode: RoutineMode
+  startTime: string | null
   days: number[]
   steps: DraftStep[]
 }
 
 /** A sensible first step rather than an empty row nobody knows how to fill. */
-const FIRST_STEP: DraftStep = { kind: 'promise', ref: null, label: '', minimum: '', time: '07:30' }
+const FIRST_STEP: DraftStep = {
+  kind: 'promise', ref: null, label: '', minimum: '', time: '07:30', inMinimum: false,
+}
+
+const MODES: { id: RoutineMode; label: string; line: string }[] = [
+  { id: 'timed', label: 'By the clock', line: 'Each step has a time, and a reminder at it.' },
+  { id: 'sequence', label: 'In order', line: 'You tap Start and Voxu walks you through it.' },
+]
 
 export function RoutineEditor({
   initial,
@@ -60,6 +74,8 @@ export function RoutineEditor({
   onSaved: () => void
 }) {
   const [label, setLabel] = useState(initial?.label ?? 'My routine')
+  const [mode, setMode] = useState<RoutineMode>(initial?.mode ?? 'timed')
+  const [startTime, setStartTime] = useState<string>(initial?.startTime ?? '07:00')
   const [days, setDays] = useState<number[]>(initial?.days ?? [])
   const [steps, setSteps] = useState<DraftStep[]>(initial?.steps?.length ? initial.steps : [FIRST_STEP])
   const [busy, setBusy] = useState(false)
@@ -73,12 +89,42 @@ export function RoutineEditor({
     haptic('light')
     setSteps(prev => {
       if (prev.length >= MAX_ROUTINE_STEPS) return prev
+      // In sequence mode a step has no clock time at all — it happens when
+      // the one before it is done — so it joins the end of the list.
+      if (mode === 'sequence') return [...prev, { ...FIRST_STEP, kind: 'own', time: null }]
       // An hour after the last one, so a new row already has a plausible
       // time instead of landing on top of an existing step.
-      const last = sortSteps(prev).at(-1)
-      const hour = last ? Math.min(23, Number(last.time.slice(0, 2)) + 1) : 7
+      const last = sortSteps(prev, 'timed').at(-1)
+      const hour = last?.time ? Math.min(23, Number(last.time.slice(0, 2)) + 1) : 7
       return [...prev, { ...FIRST_STEP, kind: 'own', time: `${String(hour).padStart(2, '0')}:00` }]
     })
+  }
+
+  /**
+   * Changing mode, without losing the day they already built.
+   *
+   * To sequence: the clock becomes the order — sorted by time first, then the
+   * times dropped, so the list they were looking at is the list they get.
+   * Back to timed: every step needs a time again, and inventing none would
+   * leave a routine that cannot be saved. So they are spread half-hourly from
+   * the start time, in the order they were in, as a starting point to edit.
+   */
+  const switchMode = (next: RoutineMode) => {
+    haptic('light')
+    if (next === mode) return
+    setSteps(prev => {
+      const ordered = sortSteps(prev, mode)
+      if (next === 'sequence') return ordered.map(s => ({ ...s, time: null }))
+      const from = parseTime(startTime)
+      const base = from ? from.hour * 60 + from.minute : 7 * 60
+      return ordered.map((s, i) => {
+        const minutes = Math.min(23 * 60 + 59, base + i * 30)
+        const hh = String(Math.floor(minutes / 60)).padStart(2, '0')
+        const mm = String(minutes % 60).padStart(2, '0')
+        return { ...s, time: `${hh}:${mm}` }
+      })
+    })
+    setMode(next)
   }
 
   const removeStep = (i: number) => {
@@ -97,7 +143,7 @@ export function RoutineEditor({
 
     // Checked here with the same function the server uses, so the message
     // arrives before a round trip.
-    const problem = validateSteps(steps)
+    const problem = validateSteps(steps, mode)
     if (problem === 'BAD_TIME') return setError('Every step needs a time')
     if (problem === 'MISSING_REF') return setError('Pick which discipline each discipline step is')
     if (problem === 'MISSING_LABEL') return setError('Name every step of your own')
@@ -108,7 +154,7 @@ export function RoutineEditor({
       const res = await fetch('/api/routines', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: label.trim(), days, steps }),
+        body: JSON.stringify({ label: label.trim(), mode, startTime: mode === 'sequence' ? startTime : null, days, steps }),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) {
@@ -150,8 +196,10 @@ export function RoutineEditor({
         </div>
 
         <p className="text-sm text-white/60 leading-relaxed mt-2">
-          Each step gets a time, and Voxu reminds you at it. It never asks whether you did them —
-          your disciplines do that.
+          {mode === 'timed'
+            ? 'Each step gets a time, and Voxu reminds you at it.'
+            : 'The steps happen in order, and Voxu walks you through them when you start.'}{' '}
+          It never asks whether you did them — your disciplines do that.
         </p>
 
         <div className="mt-4">
@@ -167,6 +215,48 @@ export function RoutineEditor({
             className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/30"
           />
         </div>
+
+        {/*
+          The mode, and it is the most consequential choice on this screen.
+          By the clock: each step has a time and its own reminder, and the
+          clock is the order. In order: they tap Start and are walked
+          through it, so the order is theirs and the times are gone.
+        */}
+        <div className="mt-4">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">How it runs</p>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {MODES.map(m => (
+              <button
+                key={m.id}
+                onClick={() => switchMode(m.id)}
+                aria-pressed={mode === m.id}
+                className={`rounded-xl border p-3 text-left ${
+                  mode === m.id ? 'bg-white/[0.08] border-white/40' : 'border-white/15 hover:bg-white/[0.04]'
+                }`}
+              >
+                <span className="block text-[14px] text-white">{m.label}</span>
+                <span className="block text-[11px] text-white/50 mt-1 leading-snug">{m.line}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* One nudge to begin, for a sequence routine. Optional: some people
+            start their morning without being told to. */}
+        {mode === 'sequence' && (
+          <div className="mt-4">
+            <label htmlFor="routine-start" className="block text-[11px] uppercase tracking-[0.2em] text-white/45">
+              Nudge me to start at
+            </label>
+            <input
+              id="routine-start"
+              type="time"
+              value={startTime}
+              onChange={e => setStartTime(e.target.value)}
+              className="w-[124px] mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white"
+            />
+          </div>
+        )}
 
         <div className="mt-4">
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">Which days</p>
@@ -195,13 +285,23 @@ export function RoutineEditor({
           {steps.map((step, i) => (
             <div key={i} className="rounded-xl border border-white/[0.12] bg-white/[0.03] p-3">
               <div className="flex gap-2">
-                <input
-                  type="time"
-                  value={step.time}
-                  onChange={e => setStep(i, { time: e.target.value })}
-                  aria-label={`Step ${i + 1} time`}
-                  className="w-[104px] shrink-0 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-[14px] text-white"
-                />
+                {/* Only by the clock. In sequence mode a step happens when
+                    the one before it is done, so the position takes this
+                    column and asking for a time would make people invent
+                    ones for a routine that has none. */}
+                {mode === 'timed' ? (
+                  <input
+                    type="time"
+                    value={step.time ?? ''}
+                    onChange={e => setStep(i, { time: e.target.value })}
+                    aria-label={`Step ${i + 1} time`}
+                    className="w-[104px] shrink-0 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-[14px] text-white"
+                  />
+                ) : (
+                  <span className="w-[34px] shrink-0 grid place-items-center text-[13px] tabular-nums text-white/40">
+                    {i + 1}.
+                  </span>
+                )}
                 <select
                   value={step.kind}
                   onChange={e => setStep(i, { kind: e.target.value as RoutineStepKind, ref: null })}
@@ -278,6 +378,59 @@ export function RoutineEditor({
             </button>
           )}
         </div>
+
+        {/*
+          "What happens on a bad day?" — Francis's framing, and better than
+          anything I wrote. This is where the routine stops being a schedule
+          and becomes the thing the app is actually for: never break the
+          identity, shrink the routine.
+
+          Nothing is ticked by default. A minimum day that asked for
+          everything would be no minimum at all, so the subset is theirs to
+          choose — and until they choose one, the Minimum Day button is not
+          offered rather than running an empty day.
+        */}
+        {steps.length > 0 && (
+          <div className="mt-5">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">When life gets messy</p>
+            <p className="text-[12px] text-white/50 mt-1 leading-relaxed">
+              Which of these survive a bad day? Voxu can run just those, at whatever the smallest
+              version is.
+            </p>
+            <div className="mt-2.5 space-y-1.5">
+              {steps.map((step, i) => {
+                const name = step.label.trim() || STEP_KINDS[step.kind].label
+                return (
+                  <button
+                    key={i}
+                    onClick={() => { haptic('light'); setStep(i, { inMinimum: !step.inMinimum }) }}
+                    role="switch"
+                    aria-checked={step.inMinimum}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border border-white/[0.1] bg-white/[0.03] text-left active:scale-[0.99]"
+                  >
+                    <span
+                      aria-hidden
+                      className={`h-4 w-4 shrink-0 rounded grid place-items-center border ${
+                        step.inMinimum ? 'bg-white border-white' : 'border-white/25'
+                      }`}
+                    >
+                      {step.inMinimum && <Check className="w-3 h-3 text-black" />}
+                    </span>
+                    <span className="min-w-0 flex-1 text-[13px] text-white/80 truncate">{name}</span>
+                    {step.minimum.trim() && (
+                      <span className="shrink-0 text-[11px] text-white/40">{step.minimum.trim()}</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-[11px] text-white/30 mt-2 leading-relaxed">
+              {steps.some(s => s.inMinimum)
+                ? 'A minimum day still counts as keeping the routine.'
+                : 'Pick none and there is no minimum day to offer.'}
+            </p>
+          </div>
+        )}
 
         {error && <p className="text-[12px] text-amber-300/90 mt-3">{error}</p>}
 

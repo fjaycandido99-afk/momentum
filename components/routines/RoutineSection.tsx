@@ -20,7 +20,16 @@ import {
 } from 'lucide-react'
 import { daysLabel } from '@/lib/practices/logic'
 import { haptic } from '@/lib/haptics'
-import { STEP_KINDS, sortSteps, timeLabel, type RoutineStepKind } from '@/lib/routines/steps'
+import {
+  STEP_KINDS,
+  canRunMinimum,
+  minimumSteps,
+  sortSteps,
+  timeLabel,
+  type RoutineMode,
+  type RoutineStepKind,
+} from '@/lib/routines/steps'
+import { RoutineRunner } from './RoutineRunner'
 import { RoutineEditor, type RoutineDraft } from './RoutineEditor'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -39,6 +48,8 @@ const ICONS: Record<RoutineStepKind, LucideIcon> = {
 export interface RoutineWire {
   id: string
   label: string
+  mode: RoutineMode
+  start_time: string | null
   days: number[]
   enabled: boolean
   steps: {
@@ -47,8 +58,9 @@ export interface RoutineWire {
     ref: string | null
     label: string | null
     minimum: string | null
-    time: string
+    time: string | null
     position: number
+    inMinimum: boolean
   }[]
 }
 
@@ -64,6 +76,8 @@ export function RoutineSection() {
   const [practices, setPractices] = useState<PracticeLite[]>([])
   const [loaded, setLoaded] = useState(false)
   const [editing, setEditing] = useState(false)
+  /** Which version is being walked through, if any. */
+  const [running, setRunning] = useState<'full' | 'minimum' | null>(null)
 
   const load = useCallback(() => {
     fetch('/api/routines')
@@ -83,8 +97,22 @@ export function RoutineSection() {
   // do not have yet is worse than the wait.
   if (!loaded) return null
 
-  const steps = routine ? sortSteps(routine.steps) : []
+  // Already ordered by the server for this routine's mode; sorted again here
+  // so the list is right the moment a save returns, without a refetch.
+  const steps = routine ? sortSteps(routine.steps, routine.mode) : []
   const byId = new Map(practices.map(p => [p.id, p]))
+  const minimumAvailable = canRunMinimum(steps)
+
+  /** The steps a run walks through, with each discipline's own words filled in. */
+  const runSteps = (useMinimum: boolean) =>
+    (useMinimum ? minimumSteps(steps, routine?.mode) : steps).map(s => {
+      const practice = s.ref ? byId.get(s.ref) : undefined
+      return {
+        ...s,
+        practiceLabel: practice?.label ?? null,
+        practiceMinimum: practice?.minimum ?? null,
+      }
+    })
 
   /** A step's title and floor — a discipline step reads from the discipline. */
   const describe = (step: RoutineWire['steps'][number]) => {
@@ -158,9 +186,12 @@ export function RoutineSection() {
             const body = (
               <>
                 {/* The time down the left is what makes this a day rather
-                    than a list of things you owe. */}
+                    than a list of things you owe. In sequence mode there are
+                    no times — a step happens when the last one is done — so
+                    the position takes that column instead, and the shape of
+                    the list survives. */}
                 <span className="w-[62px] shrink-0 text-[11px] tabular-nums text-white/45 pt-0.5">
-                  {timeLabel(step.time)}
+                  {step.time ? timeLabel(step.time) : `${i + 1}.`}
                 </span>
                 <span className="shrink-0 pt-0.5">
                   <Icon className="w-3.5 h-3.5 text-white/35" />
@@ -195,12 +226,58 @@ export function RoutineSection() {
         </div>
       )}
 
+      {/*
+        Starting it.
+
+        In SEQUENCE mode this is the whole point — the routine is a thing you
+        begin and are walked through, so the button is primary. In TIMED mode
+        the reminders do the walking, so running it manually is offered
+        quietly underneath rather than competing with them.
+
+        The minimum day sits beside it whenever they have marked steps that
+        survive one. Not as a lesser option: "keep the routine alive" is the
+        idea, and a bad day is when somebody most needs it to be one tap.
+      */}
+      {steps.length > 0 && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => { haptic('medium'); setRunning('full') }}
+            className={`flex-1 py-3 rounded-xl text-sm font-medium active:scale-[0.99] ${
+              routine?.mode === 'sequence'
+                ? 'bg-white text-black'
+                : 'border border-white/15 text-white/85'
+            }`}
+          >
+            {routine?.mode === 'sequence' ? `Start ${routine.label}` : 'Walk me through it'}
+          </button>
+          {minimumAvailable && (
+            <button
+              onClick={() => { haptic('light'); setRunning('minimum') }}
+              className="px-4 py-3 rounded-xl border border-white/15 text-sm text-white/70 active:scale-[0.99]"
+            >
+              Minimum day
+            </button>
+          )}
+        </div>
+      )}
+
+      {running && routine && (
+        <RoutineRunner
+          routineLabel={routine.label}
+          steps={runSteps(running === 'minimum')}
+          minimum={running === 'minimum'}
+          onClose={() => { setRunning(null); load() }}
+        />
+      )}
+
       {editing && (
         <RoutineEditor
           initial={
             routine
               ? ({
                   label: routine.label,
+                  mode: routine.mode,
+                  startTime: routine.start_time,
                   days: routine.days,
                   steps: steps.map(s => ({
                     kind: s.kind,
@@ -208,6 +285,7 @@ export function RoutineSection() {
                     label: s.label ?? '',
                     minimum: s.minimum ?? '',
                     time: s.time,
+                    inMinimum: s.inMinimum,
                   })),
                 } satisfies RoutineDraft)
               : null
