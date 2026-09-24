@@ -24,6 +24,7 @@ import { aiGate } from '@/lib/ai/gate'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { loadEraToday } from '@/lib/era/service'
 import { isGrounded } from '@/lib/books/lookup'
+import { parseModelJson } from '@/lib/ai/json'
 import {
   SUMMARY_SYSTEM_PROMPT,
   buildSummaryPrompt,
@@ -90,14 +91,30 @@ export async function POST(request: NextRequest) {
       // content rather than a short answer. See journal-conversation.
       max_tokens: 700,
       temperature: 0.5,
-      response_format: { type: 'json_object' },
+      /**
+       * No `response_format: json_object`.
+       *
+       * It looked like the safe choice and it was the opposite. Measured in
+       * production on the day this shipped: half the calls came back
+       *
+       *   400 Failed to validate JSON. Please adjust your prompt.
+       *
+       * The serving model is a REASONING model — it emits thinking before it
+       * writes — and the provider's validator rejects the whole response
+       * rather than handing over the object that is in there. The same error
+       * accounts for the failures on the untagged `unknown` endpoint.
+       *
+       * The prompt asks for JSON and parseModelJson reads it tolerantly,
+       * which also survives a ```json fence or a "Sure!" in front.
+       */
     })
 
     const raw = completion.choices[0]?.message?.content?.trim() ?? ''
+    const parsed = parseModelJson<SummaryDraft>(raw)
     let draft: SummaryDraft
-    try {
-      draft = JSON.parse(raw)
-    } catch {
+    if (parsed) {
+      draft = parsed
+    } else {
       // Our failure, not theirs — give the allowance back. On a feature with
       // one a day, a bad roll here would otherwise cost a free user their
       // summary until tomorrow.
