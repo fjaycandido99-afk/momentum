@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { ChevronLeft } from 'lucide-react'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MINDSET_IDS, type MindsetId } from '@/lib/mindset/types'
 import { MINDSET_VOICES } from '@/lib/mindset/voice-samples'
@@ -91,6 +92,27 @@ export function MindsetSelectionScreen({ isReset }: MindsetSelectionScreenProps)
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center px-5 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-12 relative overflow-hidden">
+      {/*
+        A way out, but only when there is one.
+
+        The dashboard layout hides its nav on this route, so a change-your-
+        coach visit had no exit at all: you either picked a mindset or you
+        were stuck. router.back(), matching the detail screen next door, so
+        it returns to wherever they came from — Settings, home's header, or
+        Mindset Evolution.
+
+        Absent during onboarding on purpose. There is nothing behind that
+        step, and a back button that goes nowhere is worse than none.
+      */}
+      {isReset && (
+        <button
+          onClick={() => router.back()}
+          aria-label="Back"
+          className="absolute left-3 top-[calc(env(safe-area-inset-top)+1.75rem)] p-2 rounded-full text-white/60 hover:text-white hover:bg-white/10 z-10"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+      )}
       <div className={`text-center mb-8 transition-all duration-700 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
         <p className="text-white/55 text-[10px] font-medium tracking-[0.28em] uppercase mb-3">
           {isReset ? 'Change your coach' : 'Your coach'}
