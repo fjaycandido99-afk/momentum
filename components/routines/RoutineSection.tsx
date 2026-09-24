@@ -36,6 +36,7 @@ import { planRoutine } from '@/lib/routines/schedule'
 import { reviewLine, type RoutineReview } from '@/lib/routines/review'
 import type { PickerBook } from '@/lib/routines/picker'
 import { applyRoutineSchedule, askRoutinePermission } from '@/lib/routines/native'
+import { DescribeDay } from './DescribeDay'
 import { RoutineRunner } from './RoutineRunner'
 import { RoutineEditor, type RoutineDraft } from './RoutineEditor'
 
@@ -100,6 +101,8 @@ export function RoutineSection() {
   const [seed, setSeed] = useState<RoutineDraft | null>(null)
   /** The routine is saved but the phone will not deliver it. */
   const [remindersOff, setRemindersOff] = useState(false)
+  /** They are describing their day for Voxu to draft. */
+  const [describing, setDescribing] = useState(false)
   /** Which version is being walked through, if any. */
   const [running, setRunning] = useState<'full' | 'minimum' | null>(null)
 
@@ -303,6 +306,18 @@ export function RoutineSection() {
               <Plus className="w-3 h-3" /> Blank
             </button>
           </div>
+          {/*
+            The third way in, for everybody whose day is not one of eight
+            eras. Underneath rather than beside: the era's routine is the
+            fastest answer for most people, and this is the better one for
+            anybody whose day has a shape of its own.
+          */}
+          <button
+            onClick={() => { haptic('light'); setDescribing(true) }}
+            className="mt-2 w-full py-2.5 rounded-xl border border-white/[0.1] text-[12.5px] text-white/60 active:scale-[0.99] inline-flex items-center justify-center gap-1.5"
+          >
+            <Sparkles className="w-3 h-3" /> Tell Voxu about your day instead
+          </button>
         </div>
       ) : (
         <div className="rounded-xl border border-white/[0.12] overflow-hidden">
@@ -450,6 +465,25 @@ export function RoutineSection() {
           steps={runSteps(running === 'minimum')}
           minimum={running === 'minimum'}
           onClose={() => { setRunning(null); load() }}
+        />
+      )}
+
+      {describing && (
+        <DescribeDay
+          onClose={() => setDescribing(false)}
+          onDrafted={draft => {
+            // Straight into the editor, unsaved. They see their own day
+            // before anything starts reminding them about it.
+            setDescribing(false)
+            setSeed({
+              label: draft.label,
+              mode: draft.mode,
+              startTime: draft.startTime,
+              days: draft.days,
+              steps: draft.steps,
+            })
+            setEditing(true)
+          }}
         />
       )}
 

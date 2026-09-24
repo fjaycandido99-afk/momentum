@@ -217,6 +217,8 @@ export type AiFeatureKey =
   | 'quote_explain'
   | 'book_summary'
   | 'goal_decompose'
+  | 'routine_draft'
+  | 'routine_observation'
   | 'letter'
   | 'retrospective'
   | 'mindset_evolution'
@@ -256,6 +258,14 @@ export const AI_FEATURE_LIMITS: Record<AiFeatureKey, AiFeatureLimit> = {
   wellness:          { free: 1, premium: null, label: 'Wellness score' },
   briefing:          { free: 1, premium: null, label: 'Morning briefing' },
   goal_decompose:    { free: 1, premium: null, label: 'Goal breakdown' },
+  // Building a routine is a thing you do once and then edit by hand for
+  // months, so one a day is effectively unlimited for a free user — and the
+  // draft is the moment the builder stops being a form.
+  routine_draft:     { free: 1, premium: null, label: 'Routine drafts' },
+  // Computed only when somebody OPENS their review and cached for the week,
+  // so this is one call per person per week they actually look — never a
+  // cron fanning out to everybody.
+  routine_observation: { free: 1, premium: null, label: 'Routine observations' },
   letter:            { free: 0, premium: null, label: 'Letter to self' },
   retrospective:     { free: 0, premium: null, label: 'Monthly retrospective' },
   mindset_evolution: { free: 0, premium: null, label: 'Mindset evolution' },
