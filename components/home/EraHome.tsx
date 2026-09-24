@@ -11,6 +11,7 @@ import { CountUp } from '@/components/ui/CountUp'
 import { EqBars } from '@/components/ui/EqBars'
 import { PracticeSection } from '@/components/exercise/PracticeSection'
 import { PracticesSection } from '@/components/practices/PracticesSection'
+import { RoutineLine } from '@/components/routines/RoutineLine'
 import { haptic } from '@/lib/haptics'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -136,6 +137,10 @@ export function EraHome({
             user sees exactly what they saw before.
           */}
           <PracticesSection />
+          {/* Same reasoning as the disciplines above: a routine is a
+              schedule the person set, and it does not pause because an era
+              ended. Renders nothing when there is no routine. */}
+          <RoutineLine />
         </>
       )}
     </div>
@@ -1030,6 +1035,18 @@ function ActiveEra({
           Not feeling it?
         </Link>
       </div>
+
+      {/*
+        The routine, one line, right under what the loop says to do now.
+
+        The loop says what this moment is for; the routine says what the
+        shape of the day is and what is next in it. Above the audio and the
+        promise deliberately: it is the frame those sit inside, and somebody
+        who built a routine should not have to go to /training to remember
+        what they put in it. It renders nothing when there is nothing to
+        say.
+      */}
+      <RoutineLine />
 
       <AudioCard audio={audio} />
       {action}
