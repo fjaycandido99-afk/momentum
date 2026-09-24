@@ -399,7 +399,10 @@ function initWebPush(): boolean {
  */
 // Default deep-link per type — points each push at its most relevant screen
 // instead of the home feed. A per-send customPayload.data.url still overrides.
-const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
+// Exported so a gate test can assert every one of these is a real page:
+// nothing else checks, and a push that opens a 404 looks like the app
+// being broken rather than the URL being wrong.
+export const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
   // ?session= so the card that opens is the one the notification was about.
   // Without it /daily-guide picks a segment from the clock, so a Midday
   // Reset push opened at 6pm landed on Wind Down.

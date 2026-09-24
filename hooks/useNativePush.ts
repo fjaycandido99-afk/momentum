@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { isNativeApp, setupNativeNotificationListeners, subscribeToPush } from '@/lib/push-notifications'
 import { addNotificationTapListener } from '@/lib/notifications'
+import { resolveNotificationRoute } from '@/lib/notifications/route'
 import { trackFeature } from '@/lib/analytics/track'
 
 /**
@@ -24,22 +25,12 @@ export function useNativePush() {
 
     initialized.current = true
 
-    // Route map for notification tap deep links
-    const routeMap: Record<string, string> = {
-      // The Daily Guide page is retired; home runs the session flow.
-      '/guide': '/',
-      '/journal': '/journal',
-      '/coach': '/coach',
-      '/progress': '/progress',
-    }
-
     // Handle local notification taps (morning, evening, bedtime, etc.)
     const removeLocalListener = addNotificationTapListener((data) => {
       console.log('[NativePush] Local notification tapped:', data)
-      const route = data.extra?.route
-      if (route) {
-        router.push(routeMap[route] || route)
-      }
+      // Resolved by the same function the push handler uses, so a local
+      // notification and a server one can never follow different rules.
+      router.push(resolveNotificationRoute(data.extra?.route))
     })
 
     // Handle push notification taps (server-sent)
@@ -54,16 +45,10 @@ export function useNativePush() {
         // this only ever read `route`, so every server push tap opened home
         // — a Midday Reset push never opened Midday Reset. Same-app paths only.
         const target = data?.route || data?.url
-        const route = typeof target === 'string' && target.startsWith('/') && !target.startsWith('//') ? target : null
         // Which pushes actually get opened — the only measure of whether a
         // notification did anything. The type travels in the payload.
         trackFeature('notification', 'open', typeof data?.type === 'string' ? data.type : 'unknown')
-        if (route) {
-          router.push(routeMap[route] || route)
-        } else {
-          // Default: open home
-          router.push('/')
-        }
+        router.push(resolveNotificationRoute(target))
       }
     )
 
