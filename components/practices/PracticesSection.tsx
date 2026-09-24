@@ -513,9 +513,19 @@ function PracticeRow({
           actually knows: the schedule, their floor, kept-of-due over four
           weeks, and — only once there is enough of it — the weekday they
           miss most, said as a count they can check against their own
-          memory. No score, and no "Voxu strategy" it hasn't built. */}
-      {onPlan && (
-        <>
+          memory. No score, and no "Voxu strategy" it hasn't built.
+
+          No longer gated on `onPlan`. That prop means "this surface can
+          MANAGE practices", and it was doing double duty as "this surface
+          can EXPLAIN them" — so on home you could not see your own
+          schedule, your own floor, your record, or "How to do this well",
+          whose own note says it should be everywhere because the guidance
+          is for the day rather than for setup.
+
+          Closed by default, so home gains one grey word per card and
+          nothing else. The management action inside — Edit the plan — is
+          still gated where it belongs. */}
+      <>
           <button
             onClick={() => setOpen(o => !o)}
             aria-expanded={open}
@@ -559,8 +569,7 @@ function PracticeRow({
               )}
             </dl>
           )}
-        </>
-      )}
+      </>
 
       {onRetire && open && (
         confirmRetire ? (
