@@ -86,15 +86,22 @@ export function AddPracticeSheet({
   }
 
   return (
+    /* Centred, and 85dvh — the same reasoning as PracticePlanSheet: this
+       asks for a name and a minimum, so the keyboard must not be allowed to
+       sit on top of the fields. */
     <div
-      className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex flex-col justify-end"
+      className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-6"
       role="dialog"
       aria-modal="true"
       aria-label="Add a practice"
     >
-      <button className="flex-1" aria-label="Close" onClick={onClose} />
+      <button
+        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+        aria-label="Close"
+        onClick={onClose}
+      />
       <div
-        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto overflow-x-hidden"
+        className="relative w-full max-w-md rounded-3xl border border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[85dvh] overflow-y-auto overflow-x-hidden"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
       >
         <div className="flex items-start justify-between gap-3">

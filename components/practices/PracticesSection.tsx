@@ -167,7 +167,7 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
                 busy={busyId === p.id}
                 onLog={(done, minimumOnly) => log(p, done, minimumOnly)}
                 onRetire={canAdd ? () => retire(p) : undefined}
-                onPlan={canAdd ? () => setPlanning(p) : undefined}
+                onEditPlan={canAdd ? () => setPlanning(p) : undefined}
                 onGuide={() => setGuiding(p)}
                 books={books}
                 onBooksChanged={loadBooks}
@@ -207,7 +207,7 @@ function PracticeRow({
   busy,
   onLog,
   onRetire,
-  onPlan,
+  onEditPlan,
   onGuide,
   today,
   books,
@@ -224,7 +224,7 @@ function PracticeRow({
   /** Only where practices are managed (/training), never on home. */
   onRetire?: () => void
   /** Opens the plan editor. Also only where they are managed. */
-  onPlan?: () => void
+  onEditPlan?: () => void
   /** Opens the how-to for this discipline's domain. Everywhere, not just
    * where they are managed: the guidance is for the day, not for setup. */
   onGuide?: () => void
@@ -357,14 +357,14 @@ function PracticeRow({
       {/* Their own plan for the day being shown — the exercises with whatever
           detail they typed, the run, the book. Shown, never graded, and
           never parsed: "3 x 8" is a note to themselves. */}
-      {shownContent.slot && (shownContent.items.length > 0 || onPlan) && practice.state !== 'rest' && (
+      {shownContent.slot && (shownContent.items.length > 0 || onEditPlan) && practice.state !== 'rest' && (
         <div className="mt-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] px-3 py-2">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[10px] tracking-[0.18em] uppercase text-white/40">
               {shownContent.label}
             </p>
-            {onPlan && (
-              <button onClick={onPlan} className="text-[11px] text-white/45 hover:text-white/80">
+            {onEditPlan && (
+              <button onClick={onEditPlan} className="text-[11px] text-white/45 hover:text-white/80">
                 {shownContent.items.length > 0 ? 'Edit' : 'Add'}
               </button>
             )}
@@ -398,8 +398,8 @@ function PracticeRow({
                        is not.
 
                        Here rather than only in the plan editor, which is the
-                       whole point: the editor is gated behind `onPlan`, and
-                       `onPlan` is undefined on home. So the entire books
+                       whole point: the editor is gated behind `onEditPlan`, and
+                       `onEditPlan` is undefined on home. So the entire books
                        feature was unreachable from the screen people
                        actually open. */
                     <button
@@ -515,7 +515,7 @@ function PracticeRow({
           miss most, said as a count they can check against their own
           memory. No score, and no "Voxu strategy" it hasn't built.
 
-          No longer gated on `onPlan`. That prop means "this surface can
+          No longer gated on `onEditPlan`. That prop means "this surface can
           MANAGE practices", and it was doing double duty as "this surface
           can EXPLAIN them" — so on home you could not see your own
           schedule, your own floor, your record, or "How to do this well",

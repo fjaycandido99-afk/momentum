@@ -9,6 +9,7 @@ import { HomeAudioProvider } from '@/contexts/HomeAudioContext'
 import { AchievementProvider } from '@/contexts/AchievementContext'
 import { OfflineProvider } from '@/contexts/OfflineContext'
 import { OfflineBanner } from '@/components/OfflineBanner'
+import { KeyboardAware } from '@/components/ui/KeyboardAware'
 import { NativePushRegistrar } from '@/components/notifications/NativePushRegistrar'
 import { NotificationOpenTracker } from '@/components/notifications/NotificationOpenTracker'
 import { ReferralClaim } from '@/components/referral/ReferralClaim'
@@ -36,6 +37,11 @@ export function Providers({ children }: ProvidersProps) {
                     <ToastProvider>
                       <FeatureTooltipProvider>
                         <OfflineBanner />
+                        {/* Keeps the focused field above the keyboard. Here
+                            rather than per-sheet: seven surfaces have text
+                            fields, and the next one somebody writes would
+                            not have remembered. */}
+                        <KeyboardAware />
                         <NativePushRegistrar />
                         <NotificationOpenTracker />
                         {/* Attributes a signup to the /i/<code> link they came from. */}

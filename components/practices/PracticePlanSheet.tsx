@@ -165,15 +165,32 @@ export function PracticePlanSheet({
   }
 
   return (
+    /*
+      Centred, because this is a FORM.
+
+      As a bottom sheet the phone keyboard opened straight over all three
+      inputs and the Save button — you could not see the field you were
+      typing in. Centred, the panel has room above and below it, so the
+      focused field can be scrolled into view (components/ui/KeyboardAware)
+      instead of being pinned under the keyboard.
+
+      85dvh, not 88vh: on a phone vh includes the space behind the URL bar,
+      so a "88vh" panel is taller than the screen and its last row is
+      unreachable. dvh is the height that actually exists.
+    */
     <div
-      className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex flex-col justify-end"
+      className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-6"
       role="dialog"
       aria-modal="true"
       aria-label={`Plan for ${practice.label}`}
     >
-      <button className="flex-1" aria-label="Close" onClick={onClose} />
+      <button
+        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+        aria-label="Close"
+        onClick={onClose}
+      />
       <div
-        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto overflow-x-hidden"
+        className="relative w-full max-w-md rounded-3xl border border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[85dvh] overflow-y-auto overflow-x-hidden"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
       >
         <div className="flex items-start justify-between gap-3">
