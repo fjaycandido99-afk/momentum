@@ -23,6 +23,7 @@
  */
 
 import {
+  ROUTINE_HREF,
   STEP_KINDS,
   normalSteps,
   timeLabel,
@@ -76,8 +77,8 @@ export interface RoutineGlance {
   href: string
 }
 
-/** Where home sends them. */
-export const GLANCE_HREF = '/training'
+/** Where home sends them — the same page a notification opens. */
+export const GLANCE_HREF = ROUTINE_HREF
 
 /** Does the routine run on this weekday? Empty days means every day. */
 export function runsOn(days: number[], weekday: number): boolean {
@@ -136,7 +137,3 @@ export function routineGlance(input: GlanceInput): RoutineGlance | null {
   return { ...base, line: `next up ${title} at ${timeLabel(next.time!)}` }
 }
 
-/** "Training day · next up Today's promise at 7:00 am" */
-export function glanceLine(glance: RoutineGlance): string {
-  return `${glance.label} · ${glance.line}`
-}

@@ -22,6 +22,7 @@
 
 import {
   MAX_ROUTINE_STEPS,
+  ROUTINE_HREF,
   STEP_KINDS,
   parseTime,
   sortSteps,
@@ -32,8 +33,8 @@ import {
   type StepLite,
 } from './steps'
 
-/** Where the routine itself lives, for anything with no screen of its own. */
-export const ROUTINE_HOME = '/training'
+/** Where the routine lives. Kept as an alias so the plan reads plainly. */
+export const ROUTINE_HOME = ROUTINE_HREF
 
 export interface PlannedNotification {
   id: number

@@ -89,6 +89,15 @@ export function isRoutineStepKind(value: unknown): value is RoutineStepKind {
   return typeof value === 'string' && (ROUTINE_STEP_KINDS as readonly string[]).includes(value)
 }
 
+/**
+ * Where the routine itself lives.
+ *
+ * One constant, because a notification's route, a step with no screen of its
+ * own and home's line all have to land on the same page — and three copies of
+ * '/training' is three places to forget when it moves.
+ */
+export const ROUTINE_HREF = '/training'
+
 /** One routine, one day: 8 moments is already a lot to be reminded of. */
 export const MAX_ROUTINE_STEPS = 8
 export const ROUTINE_LIMITS = { label: 40, stepLabel: 60 } as const

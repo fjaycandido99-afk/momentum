@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   GLANCE_HREF,
-  glanceLine,
   routineGlance,
   runsOn,
   type GlanceInput,
@@ -139,13 +138,6 @@ describe('a sequence routine', () => {
       at(600, { routine: seq, run: { steps_total: 5, steps_done: 5, completed: true } }),
     )
     expect(glance?.line).toBe('you ran it today')
-  })
-})
-
-describe('the line home prints', () => {
-  it('joins the name to the phrase', () => {
-    const glance = routineGlance(at(6 * 60))!
-    expect(glanceLine(glance)).toBe('Training day · next up Today’s promise at 7:00 am')
   })
 })
 
