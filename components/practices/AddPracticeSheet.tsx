@@ -14,6 +14,7 @@ import { daysLabel } from '@/lib/practices/logic'
 import { BLOCKERS } from '@/lib/era/reasons'
 import { domainArt } from '@/lib/practices/domain-art'
 import { haptic } from '@/lib/haptics'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
@@ -42,6 +43,9 @@ export function AddPracticeSheet({
   const [blocker, setBlocker] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Freeze the page behind — see PracticePlanSheet.
+  useBodyScrollLock()
 
   const preset = presetKey ? PRESETS_BY_KEY.get(presetKey) ?? null : null
 

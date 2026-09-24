@@ -25,7 +25,20 @@ export default function TrainingPage() {
   const trains = attributesForEra(era?.key)
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    /*
+      App-shell scrolling, like /era, /daily-read, /journal and home.
+      This page was the odd one out on `min-h-screen`, which means the
+      DOCUMENT scrolls — and that matters for more than rubber-banding:
+      useBodyScrollLock has two paths, and the document-scrolling one has to
+      pin `position: fixed` on <body>, which makes WKWebView re-resolve the
+      page box against the safe area and shove everything down by the inset.
+      That is the bug that once dropped home's header by ~59px.
+
+      With a scrolling container the lock is a class and nothing moves. So
+      the sheets opened from this page — the plan editor, the book sheet —
+      can freeze what is behind them safely.
+    */
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain bg-black text-white" data-app-shell>
       <div
         className="max-w-md md:max-w-lg mx-auto px-5 pb-24"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}

@@ -13,6 +13,7 @@ import {
 import { PRESETS_BY_KEY } from '@/lib/practices/presets'
 import type { PracticeWire } from '@/lib/practices/logic'
 import { haptic } from '@/lib/haptics'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { guideForDomain } from '@/lib/practices/guides'
 import { PracticeGuideSheet } from './PracticeGuideSheet'
 import { matchMovement } from '@/lib/movements/swap'
@@ -99,6 +100,12 @@ export function PracticePlanSheet({
   const [templating, setTemplating] = useState(false)
   /** Set after a template fills the days, so the change is visible not silent. */
   const [applied, setApplied] = useState<string | null>(null)
+
+  // Freeze what is behind. Without it the page under a fixed overlay stays
+  // live, which on WKWebView is how a sheet ends up drawn in the wrong
+  // place — and /training scrolls in a container now, so this is the safe
+  // class-only path rather than pinning the body.
+  useBodyScrollLock()
 
   const setItem = (slotKey: string, index: number, patch: Partial<PlanItem>) => {
     setDraft(d => {

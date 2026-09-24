@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BookOpen, Check, Loader2, Search, Sparkles, X } from 'lucide-react'
 import { haptic } from '@/lib/haptics'
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { trackFeature } from '@/lib/analytics/track'
 import type { BookMatch } from '@/lib/books/lookup'
 import { finishEstimate, progressLine } from '@/lib/books/progress'
@@ -69,6 +70,9 @@ export function BookSheet({
   const [degraded, setDegraded] = useState(false)
   const [summaryState, setSummaryState] = useState<'idle' | 'loading' | 'unknown' | 'failed'>('idle')
   const [pageDraft, setPageDraft] = useState('')
+
+  // Freeze the page behind — see PracticePlanSheet.
+  useBodyScrollLock()
 
   /**
    * Already on the shelf, or still a string?
