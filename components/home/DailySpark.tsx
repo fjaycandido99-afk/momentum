@@ -236,6 +236,25 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
     dismiss()
   }, [dismiss])
 
+  /**
+   * The latest props, for the timer to read when it fires.
+   *
+   * This is the whole bug that made the era moment almost never appear. The
+   * effect below runs once on mount with `[]` deps, so it closed over the
+   * FIRST render's values — and on the first render `useEra` has not
+   * resolved, so `loopStep` is null. Six seconds later the timer fired,
+   * asked pickMoment about a null step, was told nothing was waiting on the
+   * era, and showed the journal prompt instead. To somebody sitting on
+   * "Make today's promise" that is the app interrupting them to suggest
+   * something else.
+   *
+   * The delay was never the problem — by 6s the era is there. The closure
+   * was. A ref reads the current value at fire time while the effect still
+   * runs exactly once per app open.
+   */
+  const latest = useRef({ loopStep, hasJournalToday })
+  latest.current = { loopStep, hasJournalToday }
+
   // Once per app open, after the screen has settled, never over another popup.
   useEffect(() => {
     if (isDismissed(OFF_ID) || shownThisSession()) return
@@ -245,7 +264,7 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
       // simply doesn't happen. Queueing behind it would be two
       // interruptions, which is the thing we were fixing.
       if (window.__popupActive) return
-      const chosen = pickMoment({ loopStep, hasJournalToday, lastKind: lastKind() })
+      const chosen = pickMoment({ ...latest.current, lastKind: lastKind() })
       // The quote has a daily ceiling (SPARK_PER_DAY); past it nothing shows.
       // Falling back to another kind here would mean showing the era moment
       // when the loop had nothing waiting, which is the definition of noise.
