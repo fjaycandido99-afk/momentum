@@ -82,6 +82,9 @@ model User {
 
   // What they are reading, and what they finished
   books Book[]
+
+  // Their day, as they arranged it (lib/routines). One per person.
+  routine Routine?
 }
 
 model Subscription {
@@ -1408,4 +1411,68 @@ model Book {
 
   /// The shelf query: unfinished first, newest first.
   @@index([user_id, finished_at])
+}
+
+/// A routine: the day, as the person arranged it.
+///
+/// One per user. A day is one thing, and several competing routines would
+/// raise "which routine is this in?" — the same trap as two habit systems.
+///
+/// It REMINDS; it does not record. A discipline asks whether you did it and
+/// keeps a run; a routine tells you when. If both recorded, every user would
+/// face an arbitrary choice about where to put something.
+///
+/// Not the `Routine` that was dropped earlier the same day — that was an audio
+/// playlist (pick from seven soundscapes, play them back to back) and nothing
+/// here resembles it. See docs/routines-scope.md.
+model Routine {
+  id      String @id @default(cuid())
+  user_id String @unique
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  /// What they call it. "My morning", "Evenings".
+  label String
+
+  /// Weekdays it runs, 0 = Sunday. Empty means every day — the same
+  /// convention as Practice.days, so the two cannot mean different things.
+  days Int[] @default([])
+
+  /// Off without deleting, so the steps and their times survive a pause.
+  enabled Boolean @default(true)
+
+  steps RoutineStep[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+/// One moment in a routine: what, and when.
+model RoutineStep {
+  id         String  @id @default(cuid())
+  routine_id String
+  routine    Routine @relation(fields: [routine_id], references: [id], onDelete: Cascade)
+
+  /// What this step is — see ROUTINE_STEP_KINDS in lib/routines/steps.ts.
+  /// "audio" | "promise" | "exercise" | "practice" | "journal" | "reset" | "own"
+  kind String
+
+  /// Which thing, where the kind needs one: a Practice id for "practice".
+  /// Null for every kind that has only one target.
+  ref String?
+
+  /// Their words. Required for "own", optional elsewhere as a note to
+  /// themselves — the app never rewrites it.
+  label String?
+
+  /// HH:MM in their own timezone. The notification fires here, on the device.
+  time String
+
+  /// Display and notification order is BY TIME, not by this. Kept so two
+  /// steps at the same minute have a stable order instead of swapping
+  /// between renders.
+  position Int @default(0)
+
+  created_at DateTime @default(now())
+
+  @@index([routine_id])
 }

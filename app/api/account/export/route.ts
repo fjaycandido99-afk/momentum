@@ -35,7 +35,7 @@ export async function GET() {
     // this is, so there is no way to ask for somebody else's.
     const [
       account, preferences, guides, favorites, goals, playlists, assessment, eras,
-      wellness, missions, books, practices, practiceLogs, exerciseRuns, resetSessions,
+      wellness, missions, books, practices, practiceLogs, exerciseRuns, resetSessions, routine,
     ] = await Promise.all([
       prisma.user.findUnique({
         where: { id: user.id },
@@ -127,6 +127,13 @@ export async function GET() {
       }),
       prisma.exerciseRun.findMany({ where: { user_id: user.id }, orderBy: { created_at: 'asc' } }),
       prisma.resetSession.findMany({ where: { user_id: user.id }, orderBy: { created_at: 'asc' } }),
+      // Their day as they arranged it, steps included. Added the same hour
+      // the table was — the completeness test refused the commit otherwise,
+      // which is the whole reason it exists.
+      prisma.routine.findUnique({
+        where: { user_id: user.id },
+        include: { steps: { orderBy: { time: 'asc' } } },
+      }),
     ])
 
     const payload = {
@@ -152,6 +159,7 @@ export async function GET() {
       practice_logs: practiceLogs,
       exercise_runs: exerciseRuns,
       reset_sessions: resetSessions,
+      routine,
     }
 
     const filename = `voxu-export-${new Date().toISOString().slice(0, 10)}.json`
