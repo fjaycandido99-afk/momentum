@@ -93,21 +93,31 @@ export async function GET() {
     const user = await requireUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const [routine, practices] = await Promise.all([
+    const [routine, practices, era] = await Promise.all([
       prisma.routine.findUnique({ where: { user_id: user.id }, select: ROUTINE_SELECT }),
       // What a 'practice' step can point at. Active only: a step aimed at a
       // paused discipline would remind somebody about something they had
       // deliberately stopped.
+      //
+      // `preset_key` rides along so a template can match a discipline step to
+      // the right domain without a second request.
       prisma.practice.findMany({
         where: { user_id: user.id, status: 'active' },
-        select: { id: true, label: true, minimum: true, days: true },
+        select: { id: true, label: true, minimum: true, days: true, preset_key: true },
         orderBy: { created_at: 'asc' },
+      }),
+      // Which template the builder opens on, so it never opens blank.
+      prisma.era.findFirst({
+        where: { user_id: user.id, status: 'active' },
+        orderBy: { created_at: 'desc' },
+        select: { era_key: true, title: true },
       }),
     ])
 
     return NextResponse.json({
       routine: routine ? wire(routine) : null,
       practices,
+      era: era ? { key: era.era_key, title: era.title } : null,
       max: MAX_ROUTINE_STEPS,
     })
   } catch (error) {

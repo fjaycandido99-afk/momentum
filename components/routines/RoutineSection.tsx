@@ -29,6 +29,9 @@ import {
   type RoutineMode,
   type RoutineStepKind,
 } from '@/lib/routines/steps'
+import { seedTemplate, templateFor } from '@/lib/routines/templates'
+import { planRoutine } from '@/lib/routines/schedule'
+import { applyRoutineSchedule, askRoutinePermission } from '@/lib/routines/native'
 import { RoutineRunner } from './RoutineRunner'
 import { RoutineEditor, type RoutineDraft } from './RoutineEditor'
 
@@ -69,13 +72,26 @@ export interface PracticeLite {
   label: string
   minimum: string
   days: number[]
+  /** Which preset it came from, so a template can match it by domain. */
+  preset_key: string
 }
 
 export function RoutineSection() {
   const [routine, setRoutine] = useState<RoutineWire | null>(null)
   const [practices, setPractices] = useState<PracticeLite[]>([])
+  const [era, setEra] = useState<{ key: string; title: string } | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [editing, setEditing] = useState(false)
+  /**
+   * The draft the editor opens on, when it is not their saved routine.
+   *
+   * A seeded template rather than an empty row: somebody who has never had a
+   * routine is the last person who should be asked to design one from
+   * nothing. They open on a day and change it.
+   */
+  const [seed, setSeed] = useState<RoutineDraft | null>(null)
+  /** The routine is saved but the phone will not deliver it. */
+  const [remindersOff, setRemindersOff] = useState(false)
   /** Which version is being walked through, if any. */
   const [running, setRunning] = useState<'full' | 'minimum' | null>(null)
 
@@ -86,12 +102,34 @@ export function RoutineSection() {
         if (!data) return
         setRoutine(data.routine ?? null)
         setPractices(data.practices ?? [])
+        setEra(data.era ?? null)
       })
       .catch(() => {})
       .finally(() => setLoaded(true))
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  /**
+   * Keep the phone in step with what is saved.
+   *
+   * On every open, not only on save: a notification lives on the device and
+   * the row lives in Postgres, and the two drift the moment somebody edits
+   * their routine on another phone, reinstalls, or has iOS drop a schedule.
+   * Reapplying a plan that is already correct costs nothing.
+   *
+   * It never prompts here — see lib/routines/native. If permission has not
+   * been given, `denied` comes back and the section says so instead of
+   * drawing a timeline that quietly does nothing.
+   */
+  useEffect(() => {
+    if (!loaded) return
+    let stale = false
+    applyRoutineSchedule(planRoutine(routine, era?.title ?? null)).then(result => {
+      if (!stale) setRemindersOff(result.ok === false && result.reason === 'denied')
+    })
+    return () => { stale = true }
+  }, [loaded, routine, era])
 
   // Nothing while it is still arriving: a skeleton for a section most people
   // do not have yet is worse than the wait.
@@ -113,6 +151,26 @@ export function RoutineSection() {
         practiceMinimum: practice?.minimum ?? null,
       }
     })
+
+  /**
+   * Open the editor on the era's routine.
+   *
+   * Seeded here rather than saved silently: a routine that appeared without
+   * being looked at would start sending notifications nobody chose. They see
+   * the day, change what is wrong, and press Save.
+   */
+  const openTemplate = () => {
+    haptic('medium')
+    const template = templateFor(era?.key)
+    setSeed({
+      label: template.label,
+      mode: template.mode,
+      startTime: template.start,
+      days: [],
+      steps: seedTemplate(template, practices),
+    })
+    setEditing(true)
+  }
 
   /** A step's title and floor — a discipline step reads from the discipline. */
   const describe = (step: RoutineWire['steps'][number]) => {
@@ -157,26 +215,43 @@ export function RoutineSection() {
       </div>
 
       {steps.length === 0 ? (
-        <button
-          onClick={() => { haptic('light'); setEditing(true) }}
-          className="w-full rounded-xl border border-white/[0.12] bg-white/[0.03] p-4 text-left active:scale-[0.99]"
-        >
+        /*
+          The first screen, and the one that decides whether anybody ever has
+          a routine. It opens on a day that is already written — the era's, or
+          a sensible one — because "here is a morning, change it" is a
+          question people can answer and "design your day" is not.
+        */
+        <div className="rounded-xl border border-white/[0.12] bg-white/[0.03] p-4">
           <div className="flex items-start gap-2.5">
             <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-white/50" />
-            <div>
+            <div className="min-w-0">
               <p className="text-[15px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
-                Build your routine
+                Build the day you want to repeat
               </p>
               <p className="text-[12px] text-white/55 mt-1 leading-relaxed">
-                Your audio, your promise, your disciplines — at the times you actually do them.
-                Voxu reminds you at each one.
+                Your audio, your promise, your disciplines — in the order you do them, or at the
+                times you do them. Voxu walks you through it.
               </p>
-              <span className="inline-flex items-center gap-1 text-[12px] text-white/70 mt-2">
-                <Plus className="w-3 h-3" /> Start one
-              </span>
             </div>
           </div>
-        </button>
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => openTemplate()}
+              className="flex-1 py-2.5 rounded-xl bg-white text-black text-[13px] font-medium active:scale-[0.99]"
+            >
+              {/* Named after their era when they have one, because "the Gym
+                  Arc routine" is a thing somebody wants to see and "a
+                  suggested routine" is not. */}
+              {era ? `Start with my ${era.title} day` : 'Start with a routine'}
+            </button>
+            <button
+              onClick={() => { haptic('light'); setSeed(null); setEditing(true) }}
+              className="px-3.5 py-2.5 rounded-xl border border-white/15 text-[13px] text-white/70 active:scale-[0.99] inline-flex items-center gap-1"
+            >
+              <Plus className="w-3 h-3" /> Blank
+            </button>
+          </div>
+        </div>
       ) : (
         <div className="rounded-xl border border-white/[0.12] overflow-hidden">
           {steps.map((step, i) => {
@@ -224,6 +299,15 @@ export function RoutineSection() {
             )
           })}
         </div>
+      )}
+
+      {/* Said plainly, because a timeline that reminds you of nothing is
+          worse than no timeline: they would think it was working. */}
+      {remindersOff && steps.length > 0 && (
+        <p className="text-[11px] text-white/45 leading-relaxed">
+          Notifications are off for Voxu, so this routine will not nudge you. Turn them on in your
+          phone&rsquo;s settings and it will start.
+        </p>
       )}
 
       {/*
@@ -288,11 +372,19 @@ export function RoutineSection() {
                     inMinimum: s.inMinimum,
                   })),
                 } satisfies RoutineDraft)
-              : null
+              : seed
           }
           practices={practices}
-          onClose={() => setEditing(false)}
-          onSaved={() => { setEditing(false); load() }}
+          onClose={() => { setEditing(false); setSeed(null) }}
+          onSaved={async () => {
+            setEditing(false)
+            setSeed(null)
+            // The one moment a routine may prompt: they have just asked to be
+            // reminded at 07:00, so "allow notifications?" answers a question
+            // they already have. No-op on web and when already granted.
+            await askRoutinePermission()
+            load()
+          }}
         />
       )}
     </div>

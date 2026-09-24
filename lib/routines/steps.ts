@@ -141,9 +141,13 @@ export function isValidTime(time: unknown): time is string {
 }
 
 /** HH:MM to { hour, minute }, for the scheduler. Null when it is not a time. */
-export function parseTime(time: string): { hour: number; minute: number } | null {
+export function parseTime(time: unknown): { hour: number; minute: number } | null {
+  // Takes anything, because the callers hold a nullable column: a sequence
+  // routine has no start time and a sequence step has no time at all. Null
+  // in, null out — the caller then decides not to schedule, rather than
+  // having to check the same thing twice.
   if (!isValidTime(time)) return null
-  const [h, m] = time.split(':')
+  const [h, m] = (time as string).split(':')
   return { hour: Number(h), minute: Number(m) }
 }
 
@@ -270,14 +274,33 @@ export function stepNotification(
  * NOTIFICATION_IDS already owns 1–8 (morning, evening, checkpoints, streak,
  * weekly review, bedtime). Starting at 9000 leaves that alone and leaves room
  * for anything added between.
+ *
+ * Eight slots per step, because `schedule.on` holds ONE weekday: a routine on
+ * Mondays and Thursdays needs two notifications for the same step, and they
+ * need different ids or the second would silently replace the first. Slot 0
+ * is the every-day version, slots 1–7 are Sunday to Saturday.
  */
 export const ROUTINE_NOTIFICATION_BASE = 9000
+export const ROUTINE_NOTIFICATION_SLOTS = 8
 
-export function stepNotificationId(index: number): number {
-  return ROUTINE_NOTIFICATION_BASE + index
+export function stepNotificationId(index: number, weekday: number | null = null): number {
+  const slot = weekday === null ? 0 : weekday + 1
+  return ROUTINE_NOTIFICATION_BASE + index * ROUTINE_NOTIFICATION_SLOTS + slot
 }
 
-/** Every id a routine could occupy, for cancelling before rescheduling. */
+/**
+ * Every id a routine could occupy, for cancelling before rescheduling.
+ *
+ * All 64, not just the ones currently in use: a routine that dropped from
+ * five days to two has to clear the three it no longer wants, and the only
+ * list that is certainly complete is the whole block.
+ */
 export function allStepNotificationIds(): number[] {
-  return Array.from({ length: MAX_ROUTINE_STEPS }, (_, i) => stepNotificationId(i))
+  const ids: number[] = []
+  for (let i = 0; i < MAX_ROUTINE_STEPS; i++) {
+    for (let slot = 0; slot < ROUTINE_NOTIFICATION_SLOTS; slot++) {
+      ids.push(ROUTINE_NOTIFICATION_BASE + i * ROUTINE_NOTIFICATION_SLOTS + slot)
+    }
+  }
+  return ids
 }

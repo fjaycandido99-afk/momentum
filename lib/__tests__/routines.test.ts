@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   MAX_ROUTINE_STEPS,
+  ROUTINE_NOTIFICATION_SLOTS,
   canRunMinimum,
   isRoutineMode,
   minimumSteps,
@@ -159,12 +160,27 @@ describe('notification ids', () => {
     }
   })
 
-  it('gives one id per possible step, all distinct', () => {
+  it('gives every step a slot per weekday, all distinct', () => {
+    // A step on Monday and Thursday is two notifications, because
+    // `schedule.on` holds one weekday. Sharing an id would mean the
+    // Thursday one quietly replaced the Monday one.
     const ids = allStepNotificationIds()
-    expect(ids).toHaveLength(MAX_ROUTINE_STEPS)
-    expect(new Set(ids).size).toBe(MAX_ROUTINE_STEPS)
+    const expected = MAX_ROUTINE_STEPS * ROUTINE_NOTIFICATION_SLOTS
+    expect(ids).toHaveLength(expected)
+    expect(new Set(ids).size).toBe(expected)
     expect(ids[0]).toBe(stepNotificationId(0))
+
+    const used = new Set<number>()
+    for (let step = 0; step < MAX_ROUTINE_STEPS; step++) {
+      for (const weekday of [null, 0, 1, 2, 3, 4, 5, 6]) {
+        const id = stepNotificationId(step, weekday)
+        expect(used.has(id), `step ${step} weekday ${weekday}`).toBe(false)
+        used.add(id)
+        expect(ids).toContain(id)
+      }
+    }
   })
+
 })
 
 describe('the kind table', () => {
