@@ -111,6 +111,28 @@ export function EraHome({
         <>
           <StartHero />
           <AudioCard audio={audio} />
+          {/*
+            Disciplines, between eras.
+
+            They lived only inside ActiveEra, so somebody with no era running
+            saw none of them on home — while /training tells them in as many
+            words that "practices work on their own". They do: a discipline
+            has its own schedule, its own floor and its own record, and none
+            of that pauses because an era ended. Asking someone to keep a
+            gym split for months and then hiding it the day their era
+            finishes is the app forgetting what it asked for.
+
+            It also carried the books feature: the reading line on this block
+            is the only way to reach a book from home, so that was
+            era-gated too.
+
+            Below StartHero, not above: with no era, the one thing home is
+            for is starting one. And this stays QUIET for anyone it does not
+            apply to — PracticesSection returns null when there are no
+            practices and it cannot add any, which is the case here. A new
+            user sees exactly what they saw before.
+          */}
+          <PracticesSection />
         </>
       )}
     </div>
