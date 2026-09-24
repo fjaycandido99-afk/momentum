@@ -80,8 +80,17 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
             fill
             sizes="100vw"
             priority
-            // Monochrome with the rest of the app — see SoundscapesSection.
-            className="object-cover z-0 grayscale"
+            /*
+              In colour (Francis, 2026-09-23), reversing the monochrome this
+              inherited from the home tiles.
+
+              The reason for grey on home still stands — the colour photos
+              were the only colour on that screen — but this is not that
+              screen. Full-bleed artwork you opened on purpose is the one
+              place the image IS the content, and a 56px tile in a row of
+              other tiles is not the same thing. Home stays grey.
+            */
+            className="object-cover z-0"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/50 z-[2]" />
         </>
