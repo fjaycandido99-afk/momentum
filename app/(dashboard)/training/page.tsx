@@ -6,6 +6,7 @@ import { useEra } from '@/hooks/useEra'
 import { PracticeSection } from '@/components/exercise/PracticeSection'
 import { PracticesSection } from '@/components/practices/PracticesSection'
 import { Shelf } from '@/components/books/Shelf'
+import { RoutineSection } from '@/components/routines/RoutineSection'
 import { PatternsBlock } from '@/components/practices/PatternsBlock'
 import { attributeLabel, attributesForEra } from '@/lib/exercises/attributes'
 import { eraName } from '@/lib/era/presets'
@@ -86,6 +87,11 @@ export default function TrainingPage() {
           </div>
           <PracticesSection canAdd />
         </div>
+
+        {/* The routine: the shape of the day and when. Above the shelf and
+            below the disciplines on purpose — it is the thing that ties the
+            others together, and it reads from them. */}
+        <RoutineSection />
 
         {/* Renders nothing until a book has been finished, so it never
             advertises itself at somebody who reads without resolving one. */}
