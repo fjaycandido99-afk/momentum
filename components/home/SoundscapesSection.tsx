@@ -71,14 +71,18 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
               style={{ animationDelay: `${index * 80}ms` }}
             >
               <div className="relative grid place-items-center" style={{ width: 64, height: 64 }}>
-                {/* Grayscale, like the rest of Voxu (Francis, 2026-09-18: the
-                    colour photos were the only colour on home). A soft centre
-                    scrim keeps the icon legible. */}
+                {/* In colour (Francis, 2026-09-23), reversing the grayscale
+                    from 2026-09-18 — the reason then was that these were the
+                    only colour on home. The full-screen player went back to
+                    colour first, and a grey tile opening a colour player was
+                    the worse inconsistency. The centre scrim stays: it is
+                    what keeps the icon legible over the artwork, and it
+                    matters more now, not less. */}
                 {(() => {
                   const bg = getSoundscapeBackground(item.id)
                   return bg ? (
                     <div className="absolute rounded-full overflow-hidden" style={{ width: 56, height: 56 }}>
-                      <img src={bg} alt="" className="w-full h-full object-cover grayscale" />
+                      <img src={bg} alt="" className="w-full h-full object-cover" />
                       <div
                         className="absolute inset-0"
                         style={{ background: 'radial-gradient(circle, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.12) 55%, transparent 100%)' }}
