@@ -102,7 +102,7 @@ export async function POST() {
       time: s.time ?? null,
     }))
 
-    const gate = await aiGate(user.id, 'routine_draft')
+    const gate = await aiGate(user.id, 'routine_voice')
     if (!gate.ok) return gate.response
 
     const completion = await getGroq('routine-voice').chat.completions.create({

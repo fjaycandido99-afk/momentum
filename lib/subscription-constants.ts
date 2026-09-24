@@ -218,6 +218,7 @@ export type AiFeatureKey =
   | 'book_summary'
   | 'goal_decompose'
   | 'routine_draft'
+  | 'routine_voice'
   | 'routine_observation'
   | 'letter'
   | 'retrospective'
@@ -262,6 +263,12 @@ export const AI_FEATURE_LIMITS: Record<AiFeatureKey, AiFeatureLimit> = {
   // months, so one a day is effectively unlimited for a free user — and the
   // draft is the moment the builder stops being a form.
   routine_draft:     { free: 1, premium: null, label: 'Routine drafts' },
+  // Its OWN key, and it has to be. Voicing runs on every save, so sharing
+  // routine_draft's meant one save could spend the draft a free user had
+  // not used yet — and then "describe your day" met a paywall for a feature
+  // they had never touched. Three a day covers editing a routine a few
+  // times in one sitting.
+  routine_voice:     { free: 3, premium: null, label: 'Routine reminders' },
   // Computed only when somebody OPENS their review and cached for the week,
   // so this is one call per person per week they actually look — never a
   // cron fanning out to everybody.

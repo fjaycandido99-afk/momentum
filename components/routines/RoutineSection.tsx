@@ -105,6 +105,8 @@ export function RoutineSection() {
   const [remindersOff, setRemindersOff] = useState(false)
   /** The week's line from their coach, or nothing. */
   const [observation, setObservation] = useState<string | null>(null)
+  /** What Voxu made of what they said, shown above the draft. */
+  const [draftNotice, setDraftNotice] = useState<string | null>(null)
   /** They are describing their day for Voxu to draft. */
   const [describing, setDescribing] = useState(false)
   /** Which version is being walked through, if any. */
@@ -508,10 +510,11 @@ export function RoutineSection() {
       {describing && (
         <DescribeDay
           onClose={() => setDescribing(false)}
-          onDrafted={draft => {
+          onDrafted={(draft, summary) => {
             // Straight into the editor, unsaved. They see their own day
             // before anything starts reminding them about it.
             setDescribing(false)
+            setDraftNotice(summary || null)
             setSeed({
               label: draft.label,
               mode: draft.mode,
@@ -527,7 +530,17 @@ export function RoutineSection() {
       {editing && (
         <RoutineEditor
           initial={
-            routine
+            /*
+              A seed WINS over the saved routine.
+
+              A seed is only ever set deliberately — the era's template, or a
+              day they just described — so it is always the thing they asked
+              to see. The other way round, somebody with a saved routine that
+              has no steps yet could describe their day and watch the draft
+              be silently discarded.
+            */
+            seed
+              ?? (routine
               ? ({
                   label: routine.label,
                   mode: routine.mode,
@@ -543,15 +556,17 @@ export function RoutineSection() {
                     weight: s.weight,
                   })),
                 } satisfies RoutineDraft)
-              : seed
+              : null)
           }
           practices={practices}
           book={book}
+          notice={draftNotice}
           canDelete={!!routine}
-          onClose={() => { setEditing(false); setSeed(null) }}
+          onClose={() => { setEditing(false); setSeed(null); setDraftNotice(null) }}
           onSaved={async () => {
             setEditing(false)
             setSeed(null)
+            setDraftNotice(null)
             // The one moment a routine may prompt: they have just asked to be
             // reminded at 07:00, so "allow notifications?" answers a question
             // they already have. No-op on web and when already granted.

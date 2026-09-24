@@ -24,7 +24,7 @@
  * Pure. The call lives in app/api/routines/voice.
  */
 
-import { ROUTINE_STEP_KINDS, STEP_KINDS, type RoutineStepKind } from './steps'
+import { STEP_KINDS, type RoutineStepKind } from './steps'
 
 /** Long enough for a sentence, short enough to survive a lock screen. */
 export const CUE_LIMIT = 90
@@ -151,7 +151,3 @@ export function toCues(
   return kept
 }
 
-/** Every kind has a fallback line already, which is what makes failure safe. */
-export function hasFallbackForEveryKind(): boolean {
-  return ROUTINE_STEP_KINDS.every(kind => kind === 'own' || STEP_KINDS[kind].cue.length > 0)
-}

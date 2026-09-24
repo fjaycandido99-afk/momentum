@@ -79,6 +79,7 @@ export function RoutineEditor({
   initial,
   practices,
   book = null,
+  notice = null,
   canDelete = false,
   onClose,
   onSaved,
@@ -87,6 +88,13 @@ export function RoutineEditor({
   practices: PracticeLite[]
   /** The book they are on, for the step picker. */
   book?: PickerBook | null
+  /**
+   * One line about where this draft came from, when it did not come from
+   * them — "4 steps from what you said… Change anything." Somebody who
+   * described their day out loud should be told what was made of it, in
+   * counts, before they are asked to approve it.
+   */
+  notice?: string | null
   /** There is a saved routine to delete — false for a seeded template. */
   canDelete?: boolean
   onClose: () => void
@@ -261,6 +269,13 @@ export function RoutineEditor({
             : 'The steps happen in order, and Voxu walks you through them when you start.'}{' '}
           It never asks whether you did them — your disciplines do that.
         </p>
+
+        {/* Where this draft came from, when it did not come from them. */}
+        {notice && (
+          <p className="text-[12px] text-white/55 leading-relaxed mt-3 px-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.1]">
+            {notice}
+          </p>
+        )}
 
         <div className="mt-4">
           <label htmlFor="routine-label" className="block text-[11px] uppercase tracking-[0.2em] text-white/45">

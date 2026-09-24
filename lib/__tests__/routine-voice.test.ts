@@ -3,11 +3,11 @@ import {
   CUE_LIMIT,
   VOICE_SYSTEM_PROMPT,
   buildVoicePrompt,
-  hasFallbackForEveryKind,
   toCues,
   validateCue,
   type VoiceStep,
 } from '@/lib/routines/voice'
+import { ROUTINE_STEP_KINDS, STEP_KINDS } from '@/lib/routines/steps'
 
 const step = (over: Partial<VoiceStep> = {}): VoiceStep => ({
   kind: 'journal',
@@ -134,6 +134,9 @@ describe('what makes failure safe', () => {
   it('every kind that can be voiced already has a line of its own', () => {
     // A refused cue leaves the step's `cue` null, which means the kind's
     // fallback — so silence from the model is invisible, not broken.
-    expect(hasFallbackForEveryKind()).toBe(true)
+    for (const kind of ROUTINE_STEP_KINDS) {
+      if (kind === 'own') continue
+      expect(STEP_KINDS[kind].cue.length, kind).toBeGreaterThan(0)
+    }
   })
 })
