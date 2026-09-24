@@ -6,6 +6,7 @@ import { AddPracticeSheet } from './AddPracticeSheet'
 import { PracticePlanSheet } from './PracticePlanSheet'
 import { PracticeGuideSheet } from './PracticeGuideSheet'
 import { dayName, daysLabel, minimumLine, type PracticesPayload, type PracticeWire } from '@/lib/practices/logic'
+import { previousDay } from '@/lib/era/logic'
 import { haptic } from '@/lib/haptics'
 import { trackFeature } from '@/lib/analytics/track'
 import { matchMovement } from '@/lib/movements/swap'
@@ -80,24 +81,30 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
 
   useEffect(() => { load() }, [load])
 
-  const log = async (practice: PracticeWire, done: boolean, minimumOnly = false) => {
+  const log = async (practice: PracticeWire, done: boolean, minimumOnly = false, day?: string) => {
     haptic(done ? 'medium' : 'light')
     setBusyId(practice.id)
     // Optimistic: the tap is the answer, and a slow network must not make
     // someone wonder whether it landed.
-    setData(prev => prev && {
-      ...prev,
-      practices: prev.practices.map(p =>
-        p.id === practice.id
-          ? { ...p, state: done ? (minimumOnly ? 'minimum' : 'done') : 'missed' }
-          : p,
-      ),
-    })
+    //
+    // Only for TODAY. Answering yesterday must not redraw today's row as
+    // answered — that would tell somebody they had done something they
+    // hadn't. The reload below brings back both days correctly.
+    if (!day) {
+      setData(prev => prev && {
+        ...prev,
+        practices: prev.practices.map(p =>
+          p.id === practice.id
+            ? { ...p, state: done ? (minimumOnly ? 'minimum' : 'done') : 'missed' }
+            : p,
+        ),
+      })
+    }
     try {
       await fetch('/api/practices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'log', practiceId: practice.id, done, minimumOnly }),
+        body: JSON.stringify({ action: 'log', practiceId: practice.id, done, minimumOnly, day }),
       })
       load()
     } catch {
@@ -165,7 +172,7 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
                 key={p.id}
                 practice={p}
                 busy={busyId === p.id}
-                onLog={(done, minimumOnly) => log(p, done, minimumOnly)}
+                onLog={(done, minimumOnly, day) => log(p, done, minimumOnly, day)}
                 onRetire={canAdd ? () => retire(p) : undefined}
                 onEditPlan={canAdd ? () => setPlanning(p) : undefined}
                 onGuide={() => setGuiding(p)}
@@ -220,7 +227,8 @@ function PracticeRow({
   onBooksChanged: () => void
   /** The user's local day, for naming the next due one. */
   today: string
-  onLog: (done: boolean, minimumOnly?: boolean) => void
+  /** `day` answers yesterday; omitted, it answers today. */
+  onLog: (done: boolean, minimumOnly?: boolean, day?: string) => void
   /** Only where practices are managed (/training), never on home. */
   onRetire?: () => void
   /** Opens the plan editor. Also only where they are managed. */
@@ -267,6 +275,17 @@ function PracticeRow({
         label: practice.cue ?? practice.slot?.label ?? '',
         items: practice.todaysPlan?.items ?? [],
       }
+
+  /**
+   * Yesterday's date, when it was due and never answered — otherwise null.
+   *
+   * `state === 'due'` on a past day is exactly that: it was asked for and
+   * nothing was recorded. A missed day already says 'missed', and a rest day
+   * says 'rest', so neither shows up here.
+   */
+  const yesterdayKey = previousDay(today)
+  const unansweredYesterday =
+    practice.week.find(d => d.day === yesterdayKey && d.state === 'due')?.day ?? null
 
   /** The book behind today's lines, if one has been resolved. */
   const isReading = PRESETS_BY_KEY.get(practice.presetKey)?.domain === 'read'
@@ -319,6 +338,48 @@ function PracticeRow({
           />
         ))}
       </div>
+
+      {/*
+        Yesterday, if it went unanswered.
+
+        The server has allowed this the whole time — "yesterday is allowed,
+        for the night that got away. Nothing older: a record edited a week
+        later is not a record" — and the API route already accepts the day.
+        Nothing in the UI had ever asked for it, so the one thing people
+        genuinely need to fix (they did it, and forgot to say so) was the one
+        thing they could not.
+
+        Only ever yesterday, and only when it was DUE and never answered. A
+        day that was answered stays answered; a rest day was never asked.
+      */}
+      {unansweredYesterday && (
+        <div className="mt-2 rounded-lg bg-white/[0.04] border border-white/[0.1] px-3 py-2.5">
+          <p className="text-[12px] text-white/70">Yesterday went unanswered.</p>
+          <div className="flex gap-1.5 mt-2">
+            <button
+              onClick={() => { haptic('medium'); onLog(true, false, unansweredYesterday) }}
+              disabled={busy}
+              className="flex-1 py-1.5 rounded-lg bg-white/[0.08] border border-white/15 text-[12px] text-white disabled:opacity-40 active:scale-[0.98]"
+            >
+              Done
+            </button>
+            <button
+              onClick={() => { haptic('light'); onLog(true, true, unansweredYesterday) }}
+              disabled={busy}
+              className="flex-1 py-1.5 rounded-lg bg-white/[0.08] border border-white/15 text-[12px] text-white/80 disabled:opacity-40 active:scale-[0.98]"
+            >
+              The minimum
+            </button>
+            <button
+              onClick={() => { haptic('light'); onLog(false, false, unansweredYesterday) }}
+              disabled={busy}
+              className="flex-1 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/50 disabled:opacity-40 active:scale-[0.98]"
+            >
+              It didn’t
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* After a missed session: scheduling answers, not a lecture. Never
           "you broke your streak", and never "do double today" — moving it,
