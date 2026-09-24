@@ -3,10 +3,14 @@
 /**
  * Building the routine.
  *
- * Every step is a kind, a time, and — for a step of their own — words and a
- * floor. No durations the app measures, no ordering handle: the list is sorted
- * by time, because time IS the order. Dragging a 07:00 block below an 08:00
- * one would mean nothing.
+ * Every step is a kind, and — for a step of their own — words and a floor. No
+ * durations the app measures: a step takes as long as it takes.
+ *
+ * The mode decides what the order IS, and so what this screen shows. By the
+ * clock, each step carries a time and the clock is the order, so there is
+ * nothing to reorder — moving a 07:00 step below an 08:00 one would mean
+ * nothing and the list would snap back. In order, the times are gone and the
+ * sequence is theirs, so each row gets a pair of arrows.
  *
  * The draft lives here and saves once. PUT replaces the steps wholesale, so a
  * half-saved routine can never leave somebody being reminded at times they
@@ -14,7 +18,7 @@
  */
 
 import { useState } from 'react'
-import { Check, Loader2, Plus, X } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Loader2, Plus, X } from 'lucide-react'
 import { haptic } from '@/lib/haptics'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import {
@@ -22,6 +26,7 @@ import {
   ROUTINE_LIMITS,
   ROUTINE_STEP_KINDS,
   STEP_KINDS,
+  moveStep,
   parseTime,
   sortSteps,
   validateSteps,
@@ -125,6 +130,11 @@ export function RoutineEditor({
       })
     })
     setMode(next)
+  }
+
+  const move = (from: number, to: number) => {
+    haptic('light')
+    setSteps(prev => moveStep(prev, from, to))
   }
 
   const removeStep = (i: number) => {
@@ -298,8 +308,32 @@ export function RoutineEditor({
                     className="w-[104px] shrink-0 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-[14px] text-white"
                   />
                 ) : (
-                  <span className="w-[34px] shrink-0 grid place-items-center text-[13px] tabular-nums text-white/40">
-                    {i + 1}.
+                  /*
+                    In sequence mode the order is theirs, so it has to be
+                    changeable. Buttons rather than drag: a touch drag needs
+                    pointer handling that only a phone can prove, and a
+                    reorder that half-works is worse than one that is two
+                    taps. These also work with a keyboard and a screen
+                    reader, which a drag handle does not.
+                  */
+                  <span className="w-[34px] shrink-0 flex flex-col items-center">
+                    <button
+                      onClick={() => move(i, i - 1)}
+                      disabled={i === 0}
+                      aria-label={`Move step ${i + 1} earlier`}
+                      className="p-0.5 text-white/40 disabled:opacity-20 hover:text-white/80"
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[11px] tabular-nums text-white/35 leading-none">{i + 1}</span>
+                    <button
+                      onClick={() => move(i, i + 1)}
+                      disabled={i === steps.length - 1}
+                      aria-label={`Move step ${i + 1} later`}
+                      className="p-0.5 text-white/40 disabled:opacity-20 hover:text-white/80"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
                   </span>
                 )}
                 <select

@@ -5,6 +5,7 @@ import {
   canRunMinimum,
   isRoutineMode,
   minimumSteps,
+  moveStep,
   ROUTINE_STEP_KINDS,
   STEP_KINDS,
   allStepNotificationIds,
@@ -283,5 +284,38 @@ describe('validation follows the mode', () => {
     expect(isRoutineMode('sequence')).toBe(true)
     expect(isRoutineMode('guided')).toBe(false)
     expect(isRoutineMode(null)).toBe(false)
+  })
+})
+
+describe('moving a step, which only sequence mode allows', () => {
+  const list = ['a', 'b', 'c', 'd']
+
+  it('moves it up and down', () => {
+    expect(moveStep(list, 2, 0)).toEqual(['c', 'a', 'b', 'd'])
+    expect(moveStep(list, 0, 3)).toEqual(['b', 'c', 'd', 'a'])
+    expect(moveStep(list, 1, 2)).toEqual(['a', 'c', 'b', 'd'])
+  })
+
+  it('does nothing rather than clamping a move off the end', () => {
+    // The button should not have been there. Landing the step somewhere
+    // else is worse than the tap doing nothing.
+    expect(moveStep(list, 0, -1)).toEqual(list)
+    expect(moveStep(list, 3, 4)).toEqual(list)
+    expect(moveStep(list, 9, 0)).toEqual(list)
+    expect(moveStep(list, 1, 1)).toEqual(list)
+  })
+
+  it('never mutates what it was given', () => {
+    const input = [...list]
+    moveStep(input, 0, 2)
+    expect(input).toEqual(list)
+  })
+
+  it('keeps every step, so a reorder can never lose one', () => {
+    for (let from = 0; from < list.length; from++) {
+      for (let to = 0; to < list.length; to++) {
+        expect([...moveStep(list, from, to)].sort()).toEqual([...list].sort())
+      }
+    }
   })
 })

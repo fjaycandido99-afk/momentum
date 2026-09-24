@@ -212,6 +212,26 @@ export function canRunMinimum(steps: readonly { inMinimum?: boolean }[]): boolea
   return steps.some(s => s.inMinimum)
 }
 
+/**
+ * Move a step, in sequence mode, where the order is the person's.
+ *
+ * Only there: in timed mode the clock decides, and dragging a 07:00 step below
+ * an 08:00 one would mean nothing — the list would snap straight back.
+ *
+ * Out-of-range moves return the list unchanged rather than clamping. A move
+ * past the end is a tap on a button that should not have been there, and
+ * silently landing the step somewhere else is worse than nothing happening.
+ */
+export function moveStep<T>(steps: readonly T[], from: number, to: number): T[] {
+  const list = [...steps]
+  if (from === to) return list
+  if (from < 0 || from >= list.length) return list
+  if (to < 0 || to >= list.length) return list
+  const [moved] = list.splice(from, 1)
+  list.splice(to, 0, moved)
+  return list
+}
+
 export type StepError = 'BAD_KIND' | 'BAD_TIME' | 'MISSING_REF' | 'MISSING_LABEL' | 'TOO_MANY'
 
 /**

@@ -176,3 +176,65 @@ the device.
    goals. Never breaks the routine.
 5. Native scheduling on save and on app open (in case the OS dropped them).
 6. Drag, the other modes, adaptive nudges.
+
+## What shipped, and what changed on the way
+
+The order above survived except for one reversal, which came from Francis
+looking at slice 2 and saying it "feels more like a reminder scheduler than a
+true Voxu routine builder". He was right, and the fix was one field.
+
+**Mode is the spine.** `timed` or `sequence`. It settles three arguments at
+once: in timed mode each step carries a time and its own notification and the
+clock IS the order, so there is nothing to reorder; in sequence mode the times
+are gone, the order is the person's, and the routine has a moment you BEGIN —
+one notification to start, then Voxu walks you through it. Everything in the
+builder reads the mode: the per-step time input, the start-time nudge, the
+reorder arrows, the Start button's prominence, and the sort.
+
+**Switching mode keeps the day.** To sequence, the list is sorted by time and
+then the times are dropped, so what they were looking at is what they get.
+Back to timed, steps are spread half-hourly from the start time — inventing no
+times would leave a routine that cannot be saved.
+
+**Minimum Routine** (item 4) shipped as `RoutineStep.in_minimum` plus a "When
+life gets messy" picker. A bad day runs only those steps, at their own floors,
+and it counts: `RoutineRun.minimum`. Nothing is defaulted into the minimum —
+a "bad day" that asks for everything is the opposite of the idea.
+
+**Era presets** (item 3) are `lib/routines/templates.ts`, one per era. Two
+rules, both inherited rather than invented: only `gym_arc` and `study` ask for
+a discipline, because `lib/era/keep.ts` already settled that those are the
+only two eras that map to a domain; and a discipline step with no matching
+active discipline of their own is DROPPED, never seeded blank, because a
+discipline step with no discipline cannot be saved.
+
+**Review** (not in the original order) is counts with their denominator:
+"Started 5 of the last 7 days · finished 3". The spec asked for "you keep your
+promise 31% more often when you run your routine" and that is refused — with
+seven rows there is no comparison, and with seventy it would still be somebody
+choosing to run their routine on the days they were already going to keep
+their promise. `lib/routines/review.ts` carries the argument and the tests
+assert the sentence never says %, "more often", "because", "streak" or
+"score", and never pep-talks a bad week.
+
+### Reorder: arrows, not drag
+
+Item 6's drag arrived as a pair of arrows per row, in sequence mode only.
+
+A touch drag needs pointer handling that only a phone can prove, and nothing
+in this codebase can test it: the mode spine, the plan, the templates and the
+review are all pure and tested, and a hand-rolled drag would be the one part
+shipped on hope. Arrows also work with a keyboard and a screen reader, which
+a drag handle does not. If drag comes later it is an addition to a reorder
+that already works, not a replacement for one that never did.
+
+### Notification budget
+
+iOS holds 64 pending notifications and silently drops the rest. The core
+reminders (`NOTIFICATION_IDS` 1–8) own eight, so a routine plans at most 48:
+one per step per CHOSEN day, with seven chosen days collapsing to a single
+repeating daily notification. Ids live in a 64-wide block from 9000, eight
+slots per step, because `schedule.on` holds one weekday — a step on Monday and
+Thursday is two notifications and they must not share an id. The whole block
+is cancelled before every reschedule, so a routine that drops from five days
+to two cannot leave three reminders firing for months.
