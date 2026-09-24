@@ -6,6 +6,7 @@ import { FeatureHint } from '@/components/ui/FeatureHint'
 import { MoodTimeline } from '@/components/saved/MoodTimeline'
 import { trackFeature } from '@/lib/analytics/track'
 import { unwrapQuoted } from '@/lib/quotes'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 type SavedFilter = 'all' | 'quote' | 'journal' | 'affirmation' | 'reflection'
 
@@ -249,6 +250,7 @@ export default function SavedPage() {
           role="dialog"
           aria-modal="true"
         >
+          <ScrollLock />
           {/* deepened atmosphere — a large breathing aura behind the memory */}
           <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[28rem] h-[28rem] rounded-full bg-white/[0.08] blur-3xl pointer-events-none animate-breathe" aria-hidden />
 

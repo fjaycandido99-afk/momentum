@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight, Loader2, Check, Circle, Flame, X, BookOpen, Heart, Target, Lightbulb, PenTool, Moon, MessageCircle } from 'lucide-react'
 import { getDateString } from '@/lib/daily-guide/day-type'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 interface DayData {
   date: Date
@@ -334,6 +335,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
           onClick={() => setShowJournalPopup(false)}
         >
+          <ScrollLock />
           <div
             className="w-full max-w-sm bg-black rounded-2xl border border-white/25 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
@@ -374,7 +376,7 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
             {/* Journal Content */}
             <div className="p-4">
               {hasJournalEntry(selectedDayData) ? (
-                <div className="space-y-3 max-h-[50vh] overflow-y-auto overflow-x-hidden">
+                <div className="space-y-3 max-h-[50dvh] overflow-y-auto overflow-x-hidden">
                   {selectedDayData.journal_win && (
                     <div>
                       <div className="flex items-center gap-2 text-white mb-1.5">

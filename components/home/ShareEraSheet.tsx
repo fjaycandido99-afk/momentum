@@ -5,6 +5,7 @@ import { Check, Link2, Loader2, Share2, X } from 'lucide-react'
 import type { EraToday } from '@/hooks/useEra'
 import { eraSlug, joinUrl, shareText } from '@/lib/era/share'
 import { trackFeature } from '@/lib/analytics/track'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 /**
  * The share sheet for an era: a preview of the card, then Share.
@@ -93,6 +94,7 @@ export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => 
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex flex-col" role="dialog" aria-modal="true" aria-label="Share your era">
+      <ScrollLock />
       <div className="flex justify-end px-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
         <button onClick={onClose} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20">
           <X className="w-5 h-5 text-white" />

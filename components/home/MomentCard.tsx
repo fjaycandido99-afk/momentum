@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowRight, Sparkles, X } from 'lucide-react'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -89,6 +90,7 @@ export function MomentCard({
       aria-modal="true"
       aria-label={label}
     >
+      <ScrollLock />
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative max-w-sm w-full rounded-2xl overflow-hidden glass-refined glass-elevated">
         <div className="absolute inset-0 bg-[#141416]/90" />

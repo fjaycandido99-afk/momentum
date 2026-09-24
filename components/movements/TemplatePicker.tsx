@@ -5,6 +5,7 @@ import { X } from 'lucide-react'
 import { KIT_LABELS, TEMPLATES, missingNote, sessionsFor, type Kit } from '@/lib/movements/templates'
 import { PatternGlyph } from './PatternGlyph'
 import { haptic } from '@/lib/haptics'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -42,9 +43,10 @@ export function TemplatePicker({
       aria-modal="true"
       aria-label="Start from a session"
     >
+      <ScrollLock />
       <button className="flex-1" aria-label="Close" onClick={onClose} />
       <div
-        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto overflow-x-hidden"
+        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88dvh] overflow-y-auto overflow-x-hidden"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
       >
         <div className="flex items-start justify-between gap-3">

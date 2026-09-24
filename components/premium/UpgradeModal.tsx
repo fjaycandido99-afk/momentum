@@ -6,6 +6,7 @@ import { X, Check, Crown, Sparkles, Zap, Clock, Music, Book, Download, Loader2 }
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { purchaseProduct, REVENUECAT_PRODUCTS } from '@/lib/revenuecat'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -100,6 +101,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Upgrade to Premium">
+      <ScrollLock />
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"

@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 import { GUIDE_LIMIT_NOTE, guideForDomain } from '@/lib/practices/guides'
 import { PRESETS_BY_KEY } from '@/lib/practices/presets'
 import { domainArt, domainArtAlt } from '@/lib/practices/domain-art'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -37,9 +38,10 @@ export function PracticeGuideSheet({
       aria-modal="true"
       aria-label={guide.title}
     >
+      <ScrollLock />
       <button className="flex-1" aria-label="Close" onClick={onClose} />
       <div
-        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88vh] overflow-y-auto overflow-x-hidden"
+        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[88dvh] overflow-y-auto overflow-x-hidden"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
       >
         <div className="flex items-start justify-between gap-3">

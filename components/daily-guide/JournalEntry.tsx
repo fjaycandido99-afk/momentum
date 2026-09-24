@@ -6,6 +6,7 @@ import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_JOURNAL_PROMPTS } from '@/lib/mindset/journal-prompts'
 import { getDateString } from '@/lib/daily-guide/day-type'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 interface JournalEntryProps {
   date?: Date
@@ -253,6 +254,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
   if (showAsModal) {
     return (
       <div role="dialog" aria-modal="true" aria-label="Daily reflection" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto overflow-x-hidden">
+        <ScrollLock />
         <div className="w-full max-w-md my-8 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/15 overflow-hidden">
           {content}
         </div>

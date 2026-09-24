@@ -6,6 +6,7 @@ import { AlarmClock, Loader2, Play, X } from 'lucide-react'
 import { eraName } from '@/lib/era/presets'
 import { isNativeApp, isPushSupported, subscribeToPush } from '@/lib/push-notifications'
 import { trackFeature } from '@/lib/analytics/track'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 export interface WakeCallSettings {
   enabled: boolean
@@ -105,6 +106,7 @@ export function WakeCallSheet({
         className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
       >
+        <ScrollLock />
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">

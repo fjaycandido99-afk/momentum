@@ -19,6 +19,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { ImmersiveHero } from './ImmersiveHero'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 interface MorningHeroPopupProps {
   /** Has the user already completed Morning Prime today? */
@@ -102,6 +103,7 @@ export function MorningHeroPopup({ morningPrimeDone, onBegin, era = null, onEraB
       aria-label="This morning"
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in"
     >
+      <ScrollLock />
       {/* Tap-anywhere-to-dismiss backdrop. backdrop-blur softens the home
           behind it so the hero owns the focus. */}
       <button

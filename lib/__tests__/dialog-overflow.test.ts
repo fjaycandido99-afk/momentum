@@ -65,8 +65,61 @@ describe('modal panels', () => {
     expect(offenders, `negative right margins in a dialog:\n${offenders.join('\n')}`).toEqual([])
   })
 
+  it('freezes the page behind every dialog', () => {
+    // 17 of 21 dialogs were not doing this. A `position: fixed` overlay with
+    // a live page behind it shows as the background sliding under a popup —
+    // and on WKWebView it is worse than cosmetic: it is how the book sheet
+    // came to be drawn off-screen on the native app, Save button out of
+    // reach, while working perfectly in a browser.
+    //
+    // Either form counts: <ScrollLock /> as a child (right for a dialog
+    // rendered only when open, which is most of them) or useBodyScrollLock
+    // with an `active` flag (right for one that stays mounted).
+    const offenders: string[] = []
+
+    for (const file of files) {
+      const source = readFileSync(file, 'utf8')
+      if (!source.includes('role="dialog"')) continue
+      if (source.includes('<ScrollLock') || source.includes('useBodyScrollLock')) continue
+      offenders.push(file)
+    }
+
+    expect(
+      offenders,
+      'dialogs that do not freeze the page behind them:\n' +
+        offenders.join('\n') +
+        '\n\nAdd <ScrollLock /> as the first child of the dialog root.',
+    ).toEqual([])
+  })
+
+  it('sizes dialog panels in dvh, not vh', () => {
+    // `vh` on a phone includes the space behind the URL bar, so a panel at
+    // "88vh" is TALLER than the screen and its last row — usually the Save
+    // button — cannot be reached. dvh is the height that actually exists.
+    //
+    // Only inside dialogs. A hero image capped in vh is a different case:
+    // there, dvh would resize the image as the URL bar hides and cause
+    // layout shift while scrolling, which is worse than being slightly tall.
+    const offenders: string[] = []
+
+    for (const file of files) {
+      const source = readFileSync(file, 'utf8')
+      if (!source.includes('role="dialog"')) continue
+      for (const line of source.split('\n')) {
+        if (/\b(?:max-h|min-h|h)-\[\d+vh\]/.test(line)) {
+          offenders.push(`${file}: ${line.trim().slice(0, 80)}`)
+        }
+      }
+    }
+
+    expect(offenders, `dialog panels sized in vh:\n${offenders.join('\n')}`).toEqual([])
+  })
+
   it('found some dialogs to check, so the test cannot pass by finding nothing', () => {
     const dialogs = files.filter(f => readFileSync(f, 'utf8').includes('role="dialog"'))
-    expect(dialogs.length).toBeGreaterThan(5)
+    // Was >5. There are 22, and a refactor that quietly stopped this file
+    // from finding them would make every assertion above pass on an empty
+    // list.
+    expect(dialogs.length).toBeGreaterThan(15)
   })
 })

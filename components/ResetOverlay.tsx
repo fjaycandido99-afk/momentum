@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { AuraRing } from '@/components/ui/Aura'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 interface ResetOverlayProps {
   open: boolean
@@ -65,6 +66,7 @@ export function ResetOverlay({ open, onClose }: ResetOverlayProps) {
       aria-modal="true"
       aria-label="Reset"
     >
+      <ScrollLock />
       <button
         onClick={onClose}
         aria-label="Close reset"

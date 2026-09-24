@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { CalendarDays, Trophy, Flame, PenLine, Check, Loader2, ChevronRight, Sparkles, Target, X, Zap, Heart, TrendingUp, BarChart3, Brain } from 'lucide-react'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { getDateString } from '@/lib/daily-guide/day-type'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 interface DayEntry {
   date: Date
@@ -513,6 +514,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto overflow-x-hidden"
       onClick={() => setShowFullJournal(false)}
     >
+      <ScrollLock />
       <div
         className="w-full max-w-md my-8 rounded-2xl bg-black border border-white/25 shadow-[0_2px_20px_rgba(255,255,255,0.08)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -538,7 +540,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
         </div>
 
         {/* Daily Entries */}
-        <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto overflow-x-hidden">
+        <div className="p-4 space-y-2 max-h-[60dvh] overflow-y-auto overflow-x-hidden">
           {stats.dailyEntries.map((day, index) => (
             <div
               key={index}

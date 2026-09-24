@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Lock, X, Crown, Sparkles, Gift } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 // Soft lock badge - shows a subtle amber lock icon on locked content
 interface SoftLockBadgeProps {
@@ -79,6 +80,7 @@ export function PreviewPaywall({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+      <ScrollLock />
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"

@@ -7,6 +7,7 @@ import { attributeLabel } from '@/lib/exercises/attributes'
 import { exerciseSeconds, type Exercise } from '@/lib/exercises/library'
 import { cueAt, HELPED_OPTIONS, type Helped } from '@/lib/exercises/select'
 import { haptic } from '@/lib/haptics'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -128,6 +129,7 @@ export function ExercisePlayer({
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
+      <ScrollLock />
       <div className="flex items-center justify-between px-5 pt-4">
         <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
           {/* Not "practice" any more: a practice is a discipline you keep
