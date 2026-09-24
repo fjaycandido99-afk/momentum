@@ -26,6 +26,11 @@ import {
   validateSteps,
   type StepLite,
 } from '@/lib/routines/steps'
+import { lastLocalDays, reviewRuns, type RoutineReview } from '@/lib/routines/review'
+import { localDay } from '@/lib/assessment/service'
+
+/** A week: long enough to see a shape, short enough to be about now. */
+const REVIEW_DAYS = 7
 
 export const dynamic = 'force-dynamic'
 
@@ -93,7 +98,7 @@ export async function GET() {
     const user = await requireUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const [routine, practices, era] = await Promise.all([
+    const [routine, practices, era, prefs] = await Promise.all([
       prisma.routine.findUnique({ where: { user_id: user.id }, select: ROUTINE_SELECT }),
       // What a 'practice' step can point at. Active only: a step aimed at a
       // paused discipline would remind somebody about something they had
@@ -112,12 +117,39 @@ export async function GET() {
         orderBy: { created_at: 'desc' },
         select: { era_key: true, title: true },
       }),
+      prisma.userPreferences.findUnique({
+        where: { user_id: user.id },
+        select: { timezone: true },
+      }),
     ])
+
+    /**
+     * Review rides along with the routine.
+     *
+     * A second request for seven small rows would be a second round trip on
+     * a page somebody opens every morning, and the section cannot draw
+     * itself without the routine anyway.
+     */
+    let review: RoutineReview | null = null
+    if (routine) {
+      const today = localDay(prefs?.timezone ?? null)
+      const window = lastLocalDays(today, REVIEW_DAYS)
+      const runs = window.length
+        ? await prisma.routineRun.findMany({
+            // Bounded by the window, not by a take: a routine kept for a
+            // year must not pull a year of rows to count seven days.
+            where: { routine_id: routine.id, local_day: { in: window } },
+            select: { local_day: true, minimum: true, steps_total: true, steps_done: true, completed_at: true },
+          })
+        : []
+      review = reviewRuns(runs, today, REVIEW_DAYS)
+    }
 
     return NextResponse.json({
       routine: routine ? wire(routine) : null,
       practices,
       era: era ? { key: era.era_key, title: era.title } : null,
+      review,
       max: MAX_ROUTINE_STEPS,
     })
   } catch (error) {

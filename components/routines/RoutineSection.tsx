@@ -31,6 +31,7 @@ import {
 } from '@/lib/routines/steps'
 import { seedTemplate, templateFor } from '@/lib/routines/templates'
 import { planRoutine } from '@/lib/routines/schedule'
+import { reviewLine, type RoutineReview } from '@/lib/routines/review'
 import { applyRoutineSchedule, askRoutinePermission } from '@/lib/routines/native'
 import { RoutineRunner } from './RoutineRunner'
 import { RoutineEditor, type RoutineDraft } from './RoutineEditor'
@@ -80,6 +81,7 @@ export function RoutineSection() {
   const [routine, setRoutine] = useState<RoutineWire | null>(null)
   const [practices, setPractices] = useState<PracticeLite[]>([])
   const [era, setEra] = useState<{ key: string; title: string } | null>(null)
+  const [review, setReview] = useState<RoutineReview | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [editing, setEditing] = useState(false)
   /**
@@ -103,6 +105,7 @@ export function RoutineSection() {
         setRoutine(data.routine ?? null)
         setPractices(data.practices ?? [])
         setEra(data.era ?? null)
+        setReview(data.review ?? null)
       })
       .catch(() => {})
       .finally(() => setLoaded(true))
@@ -298,6 +301,35 @@ export function RoutineSection() {
               <div key={step.id} className={className}>{body}</div>
             )
           })}
+        </div>
+      )}
+
+      {/*
+        Review. Counts and their denominator, and nothing that looks like a
+        score — see lib/routines/review for why there is no percentage here
+        and never will be.
+
+        Hidden until the routine has been run at all: "Started 0 of the last
+        7 days" on the day somebody builds one is the app opening with a
+        reproach for something it only just offered.
+      */}
+      {review && review.started > 0 && (
+        <div className="flex items-center gap-2.5">
+          <div className="flex gap-1" aria-hidden>
+            {review.marks.map(mark => (
+              <span
+                key={mark.day}
+                className={`h-1.5 w-1.5 rounded-full ${
+                  mark.state === 'none'
+                    ? 'bg-white/15'
+                    : mark.state === 'started'
+                      ? 'bg-white/35'
+                      : 'bg-white/75'
+                }`}
+              />
+            ))}
+          </div>
+          <p className="text-[11px] text-white/45 leading-relaxed">{reviewLine(review)}</p>
         </div>
       )}
 
