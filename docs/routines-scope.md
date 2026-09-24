@@ -238,3 +238,37 @@ slots per step, because `schedule.on` holds one weekday — a step on Monday and
 Thursday is two notifications and they must not share an id. The whole block
 is cancelled before every reschedule, so a routine that drops from five days
 to two cannot leave three reminders firing for months.
+
+## Round two
+
+**Home reads it.** One line under what the loop says to do now: "Training day
+· next up Today's promise at 7:00 am". It disappears when it has nothing to
+say — paused, not a day it runs, nothing left on the clock. The phrasing rule
+matters more than the feature: a timed routine records nothing about its
+steps, so every phrase is about the SCHEDULE. "Nothing left on the clock
+today" is true whatever happened; "done for today" would be the app claiming
+to know something it cannot. Sequence routines are the exception, and only
+because `RoutineRun` is a record of a real tap.
+
+**Pause and delete.** Both were missing, and both were found by asking what
+the code reaches rather than by looking at the screen: `DELETE /api/routines`
+existed with no caller, and `Routine.enabled` was honoured by the scheduler
+and written by nothing. Pause is its own PATCH — folding `enabled` into PUT
+would mean forgetting to re-send it once quietly turns somebody's reminders
+back on while they edit a step time.
+
+**Required / Optional / Bad days only** (`RoutineStep.weight`). Originally
+declined, because Skip already existed for every step and a priority that
+only changed a label's colour would be asking somebody to sort their day into
+tiers for nothing. Shipped once each value did something: optional steps get
+NO notification, and bad-days-only steps are the inverse of a minimum step —
+not on a normal day, always on a minimum one, the two-minute version you do
+instead. Notification ids come from the position in the FULL step list, not
+the filtered one: otherwise marking step 2 optional would shift every id
+after it and orphan live notifications.
+
+**The step picker** offers Voxu's moments, their disciplines by the names
+they gave them, their current book when no reading discipline already carries
+it, and four plain ideas. The book is dropped when a reading discipline
+exists — offering both would put the same reading in the day twice and
+remind them about each.
