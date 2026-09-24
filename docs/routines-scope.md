@@ -113,6 +113,41 @@ should do; the routine's name already says that.
 what their days contain, and it is the page Francis had in mind ("we are
 already at era training, it should be part of that").
 
+## Francis's fuller spec, and what was taken from it
+
+His 2026-09-23 spec: `Era = who you're becoming · Routine = the structure
+that supports it · Practice = the repeated behaviour · Mission = what matters
+today`. Era presets seed a routine; blocks carry a goal AND a minimum; Routine
+Modes (Full / Minimum / Recovery / Travel) let the day shrink instead of
+breaking. **"Never break the identity. Shrink the routine when needed."**
+
+Taken, all of it, with three changes:
+
+**1. The routine does NOT become a second tracker — it is where disciplines
+get a time.** His spec has blocks recording ("you've completed 4 of your last
+5 mornings", "do the 5-page minimum"). A block with a minimum, days and
+completion IS a discipline; building it separately would make disciplines
+redundant and ask every user "which do I put this in?". So a block pointing at
+a discipline borrows that discipline's minimum and its record. One habit
+system, two views of it. The earlier "reminds, never records" line was right
+about not duplicating and wrong about how to avoid it.
+
+**2. Durations are their words, not targets.** "Deep Work 90 min" is stored
+and shown; it is never parsed into a number the app measures against. Same
+contract as `Practice.plan` and `Practice.minimum` — Voxu writes no programmes
+and reads no set, rep or load.
+
+**3. The 3-discipline cap stays, and blocks are not all disciplines.** His
+Locked In morning has five blocks, which would break a cap of three. The cap
+is there so nobody collects habits they never keep, which is worth keeping —
+so a block is one of: a pointer to one of their ≤3 disciplines, an app thing
+(audio, promise, exercise, journal, reset), or their own words with its own
+minimum. That morning fits with nothing stretched.
+
+Deferred, not rejected: **relative rules** ("after another habit", "before
+bedtime") are a dependency graph and cost far more than times for less;
+**drag-reorder** waits, since the list sorts by time and time is the order.
+
 ## Decisions taken
 
 1. **Cue, not record** — see above. The strongest opinion in this document.
@@ -131,6 +166,13 @@ the device.
 
 ## Order
 
-1. Schema + pure logic (times, weekday validation, the notification id map)
-2. API + the /training section
-3. Native scheduling on save, and on app open (in case the OS dropped them)
+1. **Schema + pure logic** — times, validation, the notification id map. DONE.
+2. **Blocks with times, on a timeline, referencing disciplines.** API + the
+   /training section. No drag, no modes.
+3. **Era presets that seed it** — the thing that stops it opening blank, which
+   is what killed the last builder.
+4. **Minimum Day mode.** The strongest idea in the spec and cheap once every
+   block carries a minimum: one switch, and the day shows floors instead of
+   goals. Never breaks the routine.
+5. Native scheduling on save and on app open (in case the OS dropped them).
+6. Drag, the other modes, adaptive nudges.

@@ -1464,6 +1464,15 @@ model RoutineStep {
   /// themselves — the app never rewrites it.
   label String?
 
+  /// The smallest version of this step that still counts, in their words:
+  /// "5 pages", "20 minutes". Free text, never parsed — same contract as
+  /// Practice.minimum, and the thing a Minimum Day is built from.
+  ///
+  /// Only for a step of their OWN. A step pointing at a discipline borrows
+  /// that discipline's minimum, so the floor for reading is written in one
+  /// place and cannot drift between the routine and the record.
+  minimum String?
+
   /// HH:MM in their own timezone. The notification fires here, on the device.
   time String
 
