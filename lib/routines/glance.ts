@@ -22,7 +22,14 @@
  * Pure. The clock comes in as minutes past local midnight.
  */
 
-import { STEP_KINDS, sortSteps, timeLabel, type RoutineMode, type RoutineStepKind } from './steps'
+import {
+  STEP_KINDS,
+  normalSteps,
+  timeLabel,
+  type RoutineMode,
+  type RoutineStepKind,
+  type StepWeight,
+} from './steps'
 
 export interface GlanceStep {
   kind: RoutineStepKind
@@ -30,6 +37,8 @@ export interface GlanceStep {
   label: string | null
   time: string | null
   position: number
+  /** How much it asks for. Absent means 'required'. */
+  weight?: StepWeight
 }
 
 export interface GlanceRoutine {
@@ -105,7 +114,10 @@ export function routineGlance(input: GlanceInput): RoutineGlance | null {
     return { ...base, line: at ? `starts at ${at}` : 'ready when you are' }
   }
 
-  const steps = sortSteps(routine.steps, 'timed')
+  // Bad-days-only steps are not part of an ordinary day, so they are never
+  // what is "next up" on one. Optional steps are: they have no reminder, but
+  // they are still something the person put in their day.
+  const steps = normalSteps(routine.steps, 'timed')
   const next = steps.find(s => {
     if (!s.time) return false
     const [h, m] = s.time.split(':')

@@ -1520,6 +1520,23 @@ model RoutineStep {
   /// unavailable and says why, instead of quietly running an empty day.
   in_minimum Boolean @default(false)
 
+  /// How much this step asks for: "required" | "optional" | "minimum_only".
+  ///
+  /// Each value changes what actually happens, or it would be decoration:
+  ///
+  ///   required      a reminder at its time; runs on a normal day.
+  ///   optional      NO reminder — it is there if the day allows it, and a
+  ///                 notification for something optional is how a person
+  ///                 learns to swipe all of them away. Still walked through.
+  ///   minimum_only  the opposite of the others: it does NOT run on a normal
+  ///                 day and always runs on a minimum one. The two-minute
+  ///                 version you do instead, on the days the full thing is
+  ///                 not happening. No reminder either — a minimum day is
+  ///                 decided in the moment, not scheduled in advance.
+  ///
+  /// Defaults to "required", which is what every step was before this field.
+  weight String @default("required")
+
   created_at DateTime @default(now())
 
   @@index([routine_id])

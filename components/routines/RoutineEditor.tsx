@@ -26,13 +26,18 @@ import {
   ROUTINE_LIMITS,
   ROUTINE_STEP_KINDS,
   STEP_KINDS,
+  STEP_WEIGHTS,
+  STEP_WEIGHT_META,
   moveStep,
   parseTime,
   sortSteps,
   validateSteps,
   type RoutineMode,
   type RoutineStepKind,
+  type StepWeight,
 } from '@/lib/routines/steps'
+import type { PickerBook, StepOption } from '@/lib/routines/picker'
+import { StepPicker } from './StepPicker'
 import type { PracticeLite } from './RoutineSection'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -47,6 +52,8 @@ export interface DraftStep {
   time: string | null
   /** Does it survive a bad day? */
   inMinimum: boolean
+  /** How much it asks for. */
+  weight: StepWeight
 }
 
 export interface RoutineDraft {
@@ -60,6 +67,7 @@ export interface RoutineDraft {
 /** A sensible first step rather than an empty row nobody knows how to fill. */
 const FIRST_STEP: DraftStep = {
   kind: 'promise', ref: null, label: '', minimum: '', time: '07:30', inMinimum: false,
+  weight: 'required',
 }
 
 const MODES: { id: RoutineMode; label: string; line: string }[] = [
@@ -70,12 +78,15 @@ const MODES: { id: RoutineMode; label: string; line: string }[] = [
 export function RoutineEditor({
   initial,
   practices,
+  book = null,
   canDelete = false,
   onClose,
   onSaved,
 }: {
   initial: RoutineDraft | null
   practices: PracticeLite[]
+  /** The book they are on, for the step picker. */
+  book?: PickerBook | null
   /** There is a saved routine to delete — false for a seeded template. */
   canDelete?: boolean
   onClose: () => void
@@ -89,23 +100,35 @@ export function RoutineEditor({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  /** The step picker is open. */
+  const [picking, setPicking] = useState(false)
 
   const setStep = (i: number, patch: Partial<DraftStep>) => {
     setSteps(prev => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)))
   }
 
-  const addStep = () => {
-    haptic('light')
+  /**
+   * A step, from what they picked.
+   *
+   * The time is the only thing invented here: an hour after the last one, so
+   * a new row lands somewhere plausible rather than on top of an existing
+   * step. In sequence mode there is no time to invent.
+   */
+  const addPicked = (option: StepOption) => {
+    setPicking(false)
     setSteps(prev => {
       if (prev.length >= MAX_ROUTINE_STEPS) return prev
-      // In sequence mode a step has no clock time at all — it happens when
-      // the one before it is done — so it joins the end of the list.
-      if (mode === 'sequence') return [...prev, { ...FIRST_STEP, kind: 'own', time: null }]
-      // An hour after the last one, so a new row already has a plausible
-      // time instead of landing on top of an existing step.
+      const step: DraftStep = {
+        ...FIRST_STEP,
+        kind: option.kind,
+        ref: option.ref,
+        label: option.text,
+        time: null,
+      }
+      if (mode === 'sequence') return [...prev, step]
       const last = sortSteps(prev, 'timed').at(-1)
       const hour = last?.time ? Math.min(23, Number(last.time.slice(0, 2)) + 1) : 7
-      return [...prev, { ...FIRST_STEP, kind: 'own', time: `${String(hour).padStart(2, '0')}:00` }]
+      return [...prev, { ...step, time: `${String(hour).padStart(2, '0')}:00` }]
     })
   }
 
@@ -430,11 +453,43 @@ export function RoutineEditor({
                   />
                 </div>
               )}
+
+              {/*
+                How much the step asks for, and every value does something:
+                Required reminds you, Optional deliberately does not, and Bad
+                days only takes the step OUT of a normal day and puts it in
+                the minimum one. A priority that only changed a label would
+                be asking somebody to sort their own day into tiers for
+                nothing.
+              */}
+              <div className="flex gap-1 mt-2">
+                {STEP_WEIGHTS.map(w => (
+                  <button
+                    key={w}
+                    onClick={() => { haptic('light'); setStep(i, { weight: w }) }}
+                    aria-pressed={step.weight === w}
+                    title={STEP_WEIGHT_META[w].line}
+                    className={`flex-1 py-1.5 rounded-lg text-[11px] border ${
+                      step.weight === w
+                        ? 'bg-white/[0.1] border-white/35 text-white'
+                        : 'border-white/[0.1] text-white/45'
+                    }`}
+                  >
+                    {STEP_WEIGHT_META[w].label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10.5px] text-white/30 mt-1 leading-relaxed">
+                {STEP_WEIGHT_META[step.weight].line}
+              </p>
             </div>
           ))}
 
           {steps.length < MAX_ROUTINE_STEPS && (
-            <button onClick={addStep} className="flex items-center gap-1 text-[12px] text-white/55 hover:text-white">
+            <button
+              onClick={() => { haptic('light'); setPicking(true) }}
+              className="flex items-center gap-1 text-[12px] text-white/55 hover:text-white"
+            >
               <Plus className="w-3 h-3" /> Add a step
             </button>
           )}
@@ -461,6 +516,24 @@ export function RoutineEditor({
             <div className="mt-2.5 space-y-1.5">
               {steps.map((step, i) => {
                 const name = step.label.trim() || STEP_KINDS[step.kind].label
+                // A bad-days-only step IS the bad day. Asking somebody to
+                // tick it as well would be the app not understanding its own
+                // field, so it is shown as already in and cannot be turned
+                // off from here.
+                if (step.weight === 'minimum_only') {
+                  return (
+                    <div
+                      key={i}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border border-white/[0.1] bg-white/[0.05]"
+                    >
+                      <span aria-hidden className="h-4 w-4 shrink-0 rounded grid place-items-center bg-white/70">
+                        <Check className="w-3 h-3 text-black" />
+                      </span>
+                      <span className="min-w-0 flex-1 text-[13px] text-white/80 truncate">{name}</span>
+                      <span className="shrink-0 text-[11px] text-white/40">this is the bad day</span>
+                    </div>
+                  )
+                }
                 return (
                   <button
                     key={i}
@@ -486,7 +559,7 @@ export function RoutineEditor({
               })}
             </div>
             <p className="text-[11px] text-white/30 mt-2 leading-relaxed">
-              {steps.some(s => s.inMinimum)
+              {steps.some(s => s.inMinimum || s.weight === 'minimum_only')
                 ? 'A minimum day still counts as keeping the routine.'
                 : 'Pick none and there is no minimum day to offer.'}
             </p>
@@ -550,6 +623,15 @@ export function RoutineEditor({
           </div>
         )}
       </div>
+
+      {picking && (
+        <StepPicker
+          practices={practices}
+          book={book}
+          onPick={addPicked}
+          onClose={() => setPicking(false)}
+        />
+      )}
     </div>
   )
 }

@@ -21,7 +21,7 @@ import Link from 'next/link'
 import { ArrowRight, Check, SkipForward, X } from 'lucide-react'
 import { haptic } from '@/lib/haptics'
 import { ScrollLock } from '@/components/ui/ScrollLock'
-import { STEP_KINDS, timeLabel, type RoutineStepKind } from '@/lib/routines/steps'
+import { STEP_KINDS, timeLabel, type RoutineStepKind, type StepWeight } from '@/lib/routines/steps'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -32,6 +32,8 @@ export interface RunStep {
   label: string | null
   minimum: string | null
   time: string | null
+  /** How much it asks for — an optional step says so while it is on screen. */
+  weight?: StepWeight
   /** Resolved for a discipline step by the caller, which has the practices. */
   practiceLabel?: string | null
   practiceMinimum?: string | null
@@ -155,6 +157,11 @@ export function RoutineRunner({
             <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">
               {index + 1} of {total}
               {minimum && <span className="text-white/30"> · minimum day</span>}
+              {/* Said here so skipping it costs nothing: they already
+                  decided this one was for days that allow it. */}
+              {!minimum && step.weight === 'optional' && (
+                <span className="text-white/30"> · optional</span>
+              )}
             </p>
 
             <h2 className="text-[30px] text-white mt-3 leading-[1.1]" style={{ ...SERIF, fontWeight: 600 }}>

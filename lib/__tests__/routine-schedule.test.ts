@@ -175,3 +175,54 @@ describe('weekday translation', () => {
     expect(toPluginWeekday(6)).toBe(7)
   })
 })
+
+describe('the weight decides what is reminded about', () => {
+  const withWeights = planRoutine(
+    routine({
+      steps: [
+        { kind: 'promise', time: '07:00', position: 0, weight: 'required' },
+        { kind: 'audio', time: '08:00', position: 1, weight: 'optional' },
+        { kind: 'reset', time: '22:00', position: 2, weight: 'minimum_only' },
+      ],
+    }),
+  )
+
+  it('reminds about a required step only', () => {
+    // The whole difference the field makes. A notification for something
+    // optional is how a person learns to swipe all of them away, and a
+    // bad-days-only step is decided in the moment, not scheduled.
+    expect(withWeights).toHaveLength(1)
+    expect(withWeights[0].hour).toBe(7)
+  })
+
+  it('treats a step with no weight as required, as it always was', () => {
+    const plan = planRoutine(routine({ steps: [{ kind: 'promise', time: '07:00', position: 0 }] }))
+    expect(plan).toHaveLength(1)
+  })
+
+  it(`keeps each step's id its own, so changing a weight cancels only that one`, () => {
+    // Ids come from the position in the FULL list. If they came from the
+    // filtered one, marking step 1 optional would shift every id after it
+    // and leave orphaned notifications firing for months.
+    const all = planRoutine(
+      routine({
+        steps: [
+          { kind: 'promise', time: '07:00', position: 0 },
+          { kind: 'audio', time: '08:00', position: 1 },
+          { kind: 'journal', time: '21:00', position: 2 },
+        ],
+      }),
+    )
+    const middleOptional = planRoutine(
+      routine({
+        steps: [
+          { kind: 'promise', time: '07:00', position: 0 },
+          { kind: 'audio', time: '08:00', position: 1, weight: 'optional' },
+          { kind: 'journal', time: '21:00', position: 2 },
+        ],
+      }),
+    )
+    const keptIds = middleOptional.map(p => p.id)
+    expect(keptIds).toEqual([all[0].id, all[2].id])
+  })
+})

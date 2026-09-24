@@ -27,6 +27,7 @@ import {
   sortSteps,
   stepNotification,
   stepNotificationId,
+  stepWeight,
   type RoutineMode,
   type StepLite,
 } from './steps'
@@ -129,9 +130,25 @@ export function planRoutine(
     return planned
   }
 
+  /*
+    Only REQUIRED steps are reminded about, and this is the whole difference
+    the weight makes.
+
+    An optional step is one somebody said they would do if the day allowed
+    it; a notification for that is how a person learns to swipe all of them
+    away, and the one at 07:00 they actually needed goes with the rest. A
+    bad-days-only step is decided in the moment, so a daily reminder for it
+    would fire on every day it does not apply to.
+
+    The index for the id is taken from the FULL list, not the filtered one:
+    ids must stay stable per step so that changing a step's weight cancels
+    its own notification instead of shifting every id after it.
+  */
   const steps = sortSteps(routine.steps, 'timed').slice(0, MAX_ROUTINE_STEPS)
 
   steps.forEach((step, i) => {
+    if (stepWeight(step.weight) !== 'required') return
+
     const at = parseTime(step.time)
     // A step with no usable time is skipped rather than defaulted. There is
     // no honest hour to pick, and firing at midnight would be worse than

@@ -23,6 +23,7 @@ import {
   isRoutineStepKind,
   isValidTime,
   sortSteps,
+  stepWeight,
   validateSteps,
   type StepLite,
 } from '@/lib/routines/steps'
@@ -43,6 +44,7 @@ const STEP_SELECT = {
   time: true,
   position: true,
   in_minimum: true,
+  weight: true,
 } as const
 
 const ROUTINE_SELECT = {
@@ -98,7 +100,7 @@ export async function GET() {
     const user = await requireUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const [routine, practices, era, prefs] = await Promise.all([
+    const [routine, practices, era, prefs, book] = await Promise.all([
       prisma.routine.findUnique({ where: { user_id: user.id }, select: ROUTINE_SELECT }),
       // What a 'practice' step can point at. Active only: a step aimed at a
       // paused discipline would remind somebody about something they had
@@ -120,6 +122,14 @@ export async function GET() {
       prisma.userPreferences.findUnique({
         where: { user_id: user.id },
         select: { timezone: true },
+      }),
+      // The book they are on, for the step picker. Unfinished only, newest
+      // first — "Read Atomic Habits" is only worth offering while it is
+      // actually what they are reading.
+      prisma.book.findFirst({
+        where: { user_id: user.id, finished_at: null },
+        orderBy: { updated_at: 'desc' },
+        select: { title: true, author: true },
       }),
     ])
 
@@ -149,6 +159,7 @@ export async function GET() {
       routine: routine ? wire(routine) : null,
       practices,
       era: era ? { key: era.era_key, title: era.title } : null,
+      book,
       review,
       max: MAX_ROUTINE_STEPS,
     })
@@ -206,6 +217,10 @@ export async function PUT(request: NextRequest) {
         time: mode === 'timed' && typeof s?.time === 'string' ? s.time.trim() : null,
         position: i,
         inMinimum: s?.inMinimum === true,
+        // Unknown or missing becomes 'required' — what every step was before
+        // the field existed, and what a client that has not been reloaded
+        // since still sends.
+        weight: stepWeight(s?.weight),
         minimum: typeof s?.minimum === 'string'
           ? s.minimum.trim().replace(/\s+/g, ' ').slice(0, ROUTINE_LIMITS.stepLabel) || null
           : null,
@@ -247,7 +262,11 @@ export async function PUT(request: NextRequest) {
       minimum: s.kind === 'own' ? s.minimum ?? null : null,
       time: s.time,
       position: i,
-      in_minimum: s.inMinimum === true,
+      // A bad-days-only step is in the minimum day by definition — see
+      // minimumSteps. Storing it as true as well keeps the column honest
+      // for anything reading the row without the weight.
+      in_minimum: s.inMinimum === true || s.weight === 'minimum_only',
+      weight: stepWeight(s.weight),
     }))
 
     // One transaction: the steps are replaced, so a failure part-way through

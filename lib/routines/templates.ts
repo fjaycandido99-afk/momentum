@@ -28,7 +28,13 @@
 
 import type { PracticeDomain } from '@/lib/practices/presets'
 import { PRESETS_BY_KEY } from '@/lib/practices/presets'
-import { MAX_ROUTINE_STEPS, sortSteps, type RoutineMode, type RoutineStepKind } from './steps'
+import {
+  MAX_ROUTINE_STEPS,
+  sortSteps,
+  type RoutineMode,
+  type RoutineStepKind,
+  type StepWeight,
+} from './steps'
 
 export interface TemplateStep {
   kind: RoutineStepKind
@@ -38,6 +44,15 @@ export interface TemplateStep {
   time: string
   /** Does it survive a bad day? */
   inMinimum?: boolean
+  /**
+   * How much it asks for. Absent means required.
+   *
+   * Used sparingly: an evening wind-down is honestly "if the day allows it",
+   * and marking it optional means no reminder for it — but a template that
+   * sorted somebody's morning into tiers on their behalf would be making a
+   * judgement it has no standing to make.
+   */
+  weight?: StepWeight
   /**
    * A discipline step wants one of THEIR disciplines in this domain. The step
    * is dropped when they have none.
@@ -65,6 +80,7 @@ export interface SeededStep {
   minimum: string
   time: string | null
   inMinimum: boolean
+  weight: StepWeight
 }
 
 /**
@@ -117,7 +133,7 @@ export const ERA_TEMPLATES: Record<string, RoutineTemplate> = {
       { kind: 'audio', time: '07:30', inMinimum: true },
       { kind: 'promise', time: '07:45', inMinimum: true },
       { kind: 'exercise', time: '08:00' },
-      { kind: 'reset', time: '22:00' },
+      { kind: 'reset', time: '22:00', weight: 'optional' },
     ],
   },
   gym_arc: {
@@ -140,7 +156,7 @@ export const ERA_TEMPLATES: Record<string, RoutineTemplate> = {
       { kind: 'promise', time: '07:00', inMinimum: true },
       { kind: 'exercise', time: '12:30' },
       { kind: 'journal', time: '21:30', inMinimum: true },
-      { kind: 'reset', time: '22:15' },
+      { kind: 'reset', time: '22:15', weight: 'optional' },
     ],
   },
   confidence: {
@@ -229,6 +245,7 @@ export function seedTemplate(
       minimum: '',
       time: template.mode === 'timed' ? step.time : null,
       inMinimum: step.inMinimum === true,
+      weight: step.weight ?? 'required',
     })
   }
 

@@ -5,6 +5,11 @@ import {
   canRunMinimum,
   isRoutineMode,
   minimumSteps,
+  normalSteps,
+  STEP_WEIGHTS,
+  STEP_WEIGHT_META,
+  isStepWeight,
+  stepWeight,
   moveStep,
   ROUTINE_STEP_KINDS,
   STEP_KINDS,
@@ -18,6 +23,7 @@ import {
   timeLabel,
   validateSteps,
   type StepLite,
+  type StepWeight,
 } from '@/lib/routines/steps'
 import { NOTIFICATION_IDS } from '@/lib/notifications'
 
@@ -316,6 +322,50 @@ describe('moving a step, which only sequence mode allows', () => {
       for (let to = 0; to < list.length; to++) {
         expect([...moveStep(list, from, to)].sort()).toEqual([...list].sort())
       }
+    }
+  })
+})
+
+describe('how much a step asks for', () => {
+  const s = (weight: StepWeight | undefined, over: Partial<StepLite> = {}): StepLite =>
+    step({ weight, ...over })
+
+  it('treats anything unknown as required, which is what every step was', () => {
+    expect(stepWeight(undefined)).toBe('required')
+    expect(stepWeight(null)).toBe('required')
+    expect(stepWeight('urgent')).toBe('required')
+    expect(stepWeight('optional')).toBe('optional')
+    expect(isStepWeight('minimum_only')).toBe(true)
+    expect(isStepWeight('critical')).toBe(false)
+  })
+
+  it('keeps a bad-days-only step out of a normal day', () => {
+    // It is what you do INSTEAD. Running it alongside the full version
+    // would make a bad day longer than a good one.
+    const steps = [s('required'), s('optional'), s('minimum_only')]
+    expect(normalSteps(steps).map(x => stepWeight(x.weight))).toEqual(['required', 'optional'])
+  })
+
+  it('and puts it in the minimum day without being ticked', () => {
+    const steps = [s('required'), s('minimum_only')]
+    expect(minimumSteps(steps)).toHaveLength(1)
+    expect(stepWeight(minimumSteps(steps)[0].weight)).toBe('minimum_only')
+    expect(canRunMinimum(steps)).toBe(true)
+  })
+
+  it('still honours an explicitly marked minimum step', () => {
+    const steps = [s('required', { inMinimum: true }), s('required')]
+    expect(minimumSteps(steps)).toHaveLength(1)
+  })
+
+  it('offers no minimum day when nothing survives one', () => {
+    expect(canRunMinimum([s('required'), s('optional')])).toBe(false)
+  })
+
+  it('every weight has words of its own', () => {
+    for (const w of STEP_WEIGHTS) {
+      expect(STEP_WEIGHT_META[w].label.length, w).toBeGreaterThan(0)
+      expect(STEP_WEIGHT_META[w].line.length, w).toBeGreaterThan(0)
     }
   })
 })

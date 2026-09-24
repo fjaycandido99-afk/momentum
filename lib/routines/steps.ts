@@ -124,6 +124,43 @@ export interface StepLite {
   inMinimum?: boolean
   /** Their own smaller floor, for a step of their own. */
   minimum?: string | null
+  /** How much it asks for. Absent means 'required'. */
+  weight?: StepWeight
+}
+
+/**
+ * How much a step asks for.
+ *
+ * Three values, and each one changes what HAPPENS — a "priority" that only
+ * changed a label's colour would be the app inviting somebody to sort their
+ * own day into tiers for no reason:
+ *
+ *   required      a reminder at its time, and it runs on a normal day.
+ *   optional      no reminder, still walked through. A notification for
+ *                 something optional is how a person learns to swipe all of
+ *                 them away.
+ *   minimum_only  the inverse: NOT on a normal day, always on a minimum one.
+ *                 The two-minute version you do instead, on the days the
+ *                 full thing is not happening. No reminder either — a
+ *                 minimum day is decided in the moment.
+ */
+export const STEP_WEIGHTS = ['required', 'optional', 'minimum_only'] as const
+
+export type StepWeight = (typeof STEP_WEIGHTS)[number]
+
+export const STEP_WEIGHT_META: Record<StepWeight, { label: string; line: string }> = {
+  required: { label: 'Required', line: 'Reminds you, and part of the day.' },
+  optional: { label: 'Optional', line: 'No reminder. There if the day allows it.' },
+  minimum_only: { label: 'Bad days only', line: 'Skipped normally. Runs on a minimum day.' },
+}
+
+export function isStepWeight(value: unknown): value is StepWeight {
+  return typeof value === 'string' && (STEP_WEIGHTS as readonly string[]).includes(value)
+}
+
+/** Absent, unknown or junk all mean the weight every step had before. */
+export function stepWeight(value: unknown): StepWeight {
+  return isStepWeight(value) ? value : 'required'
 }
 
 /**
@@ -193,11 +230,31 @@ export function sortSteps<T extends { time?: string | null; position?: number }>
  * "Never break the identity. Shrink the routine when needed." A Minimum Day
  * runs only these, at whatever smaller floor each one carries.
  */
-export function minimumSteps<T extends { inMinimum?: boolean; time?: string | null; position?: number }>(
+export function minimumSteps<
+  T extends { inMinimum?: boolean; weight?: StepWeight; time?: string | null; position?: number },
+>(steps: readonly T[], mode: RoutineMode = 'timed'): T[] {
+  // A bad-days-only step needs no ticking: being in the minimum day is the
+  // whole reason it exists, and asking somebody to mark it twice would be
+  // the app not understanding its own field.
+  return sortSteps(
+    steps.filter(s => s.inMinimum || stepWeight(s.weight) === 'minimum_only'),
+    mode,
+  )
+}
+
+/**
+ * The steps of an ordinary day.
+ *
+ * Everything except the bad-days-only ones, which are the inverse of a
+ * minimum step: they are what you do INSTEAD, so running them alongside the
+ * full version would make a normal day longer than usual rather than
+ * shorter.
+ */
+export function normalSteps<T extends { weight?: StepWeight; time?: string | null; position?: number }>(
   steps: readonly T[],
   mode: RoutineMode = 'timed',
 ): T[] {
-  return sortSteps(steps.filter(s => s.inMinimum), mode)
+  return sortSteps(steps.filter(s => stepWeight(s.weight) !== 'minimum_only'), mode)
 }
 
 /**
@@ -208,8 +265,10 @@ export function minimumSteps<T extends { inMinimum?: boolean; time?: string | nu
  * every step into the minimum — would mean a "bad day" that asks for
  * everything, which is the opposite of the idea.
  */
-export function canRunMinimum(steps: readonly { inMinimum?: boolean }[]): boolean {
-  return steps.some(s => s.inMinimum)
+export function canRunMinimum(
+  steps: readonly { inMinimum?: boolean; weight?: StepWeight }[],
+): boolean {
+  return steps.some(s => s.inMinimum || stepWeight(s.weight) === 'minimum_only')
 }
 
 /**

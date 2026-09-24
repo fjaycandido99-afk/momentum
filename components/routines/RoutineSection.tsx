@@ -24,14 +24,17 @@ import {
   STEP_KINDS,
   canRunMinimum,
   minimumSteps,
+  normalSteps,
   sortSteps,
   timeLabel,
   type RoutineMode,
   type RoutineStepKind,
+  type StepWeight,
 } from '@/lib/routines/steps'
 import { seedTemplate, templateFor } from '@/lib/routines/templates'
 import { planRoutine } from '@/lib/routines/schedule'
 import { reviewLine, type RoutineReview } from '@/lib/routines/review'
+import type { PickerBook } from '@/lib/routines/picker'
 import { applyRoutineSchedule, askRoutinePermission } from '@/lib/routines/native'
 import { RoutineRunner } from './RoutineRunner'
 import { RoutineEditor, type RoutineDraft } from './RoutineEditor'
@@ -65,6 +68,7 @@ export interface RoutineWire {
     time: string | null
     position: number
     inMinimum: boolean
+    weight: StepWeight
   }[]
 }
 
@@ -82,6 +86,8 @@ export function RoutineSection() {
   const [practices, setPractices] = useState<PracticeLite[]>([])
   const [era, setEra] = useState<{ key: string; title: string } | null>(null)
   const [review, setReview] = useState<RoutineReview | null>(null)
+  /** The book they are on, offered by the step picker. */
+  const [book, setBook] = useState<PickerBook | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [editing, setEditing] = useState(false)
   /**
@@ -106,6 +112,7 @@ export function RoutineSection() {
         setPractices(data.practices ?? [])
         setEra(data.era ?? null)
         setReview(data.review ?? null)
+        setBook(data.book ?? null)
       })
       .catch(() => {})
       .finally(() => setLoaded(true))
@@ -146,7 +153,7 @@ export function RoutineSection() {
 
   /** The steps a run walks through, with each discipline's own words filled in. */
   const runSteps = (useMinimum: boolean) =>
-    (useMinimum ? minimumSteps(steps, routine?.mode) : steps).map(s => {
+    (useMinimum ? minimumSteps(steps, routine?.mode) : normalSteps(steps, routine?.mode)).map(s => {
       const practice = s.ref ? byId.get(s.ref) : undefined
       return {
         ...s,
@@ -317,7 +324,17 @@ export function RoutineSection() {
                   <Icon className="w-3.5 h-3.5 text-white/35" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[14px] text-white leading-snug truncate">{title}</span>
+                  <span className="block text-[14px] text-white leading-snug truncate">
+                    {title}
+                    {/* Said on the row, because "why did that one not remind
+                        me?" has to be answerable from the day itself. */}
+                    {step.weight === 'optional' && (
+                      <span className="text-[11px] text-white/35 font-normal"> · optional</span>
+                    )}
+                    {step.weight === 'minimum_only' && (
+                      <span className="text-[11px] text-white/35 font-normal"> · bad days only</span>
+                    )}
+                  </span>
                   {missing ? (
                     <span className="block text-[11px] text-white/35 mt-0.5">
                       That discipline is paused — edit the routine to point it somewhere
@@ -452,11 +469,13 @@ export function RoutineSection() {
                     minimum: s.minimum ?? '',
                     time: s.time,
                     inMinimum: s.inMinimum,
+                    weight: s.weight,
                   })),
                 } satisfies RoutineDraft)
               : seed
           }
           practices={practices}
+          book={book}
           canDelete={!!routine}
           onClose={() => { setEditing(false); setSeed(null) }}
           onSaved={async () => {
