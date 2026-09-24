@@ -1433,6 +1433,25 @@ model Routine {
   /// What they call it. "My morning", "Evenings".
   label String
 
+  /// "timed" | "sequence" — and this is the spine of the whole feature.
+  ///
+  ///   timed     every step has a clock time; the time IS the order, so
+  ///             there is nothing to drag, and each step gets a reminder.
+  ///   sequence  they tap Start and Voxu walks them through it in order;
+  ///             the order is theirs, so dragging is the only way to set
+  ///             it, and there is one reminder for the start rather than
+  ///             seven.
+  ///
+  /// Every argument about drag handles, per-step times and notifications
+  /// resolves differently per mode, which is why this is stored rather than
+  /// inferred.
+  mode String @default("timed")
+
+  /// When a SEQUENCE routine is nudged to begin. Null means no reminder —
+  /// they start it when they start it. Meaningless in timed mode, where each
+  /// step carries its own time.
+  start_time String?
+
   /// Weekdays it runs, 0 = Sunday. Empty means every day — the same
   /// convention as Practice.days, so the two cannot mean different things.
   days Int[] @default([])
@@ -1474,12 +1493,31 @@ model RoutineStep {
   minimum String?
 
   /// HH:MM in their own timezone. The notification fires here, on the device.
-  time String
+  ///
+  /// Nullable because a SEQUENCE step has no clock time — it happens when
+  /// the one before it is done. Required in timed mode, enforced in
+  /// lib/routines/steps.ts rather than by the column, since the same table
+  /// holds both kinds of routine.
+  time String?
 
-  /// Display and notification order is BY TIME, not by this. Kept so two
-  /// steps at the same minute have a stable order instead of swapping
-  /// between renders.
+  /// The order in sequence mode, and the tie-break in timed mode.
+  ///
+  /// In timed mode the clock decides and this only stops two steps at the
+  /// same minute swapping places between renders. In sequence mode it is the
+  /// whole answer, which is why dragging is worth building there and
+  /// meaningless in the other.
   position Int @default(0)
+
+  /// Does this step survive a bad day?
+  ///
+  /// "Never break the identity. Shrink the routine when needed" — the
+  /// strongest idea in Francis's spec. A Minimum Day runs only the steps
+  /// marked here, at their own smaller floors.
+  ///
+  /// Defaults to FALSE, so the minimum is something they choose rather than
+  /// something the app assumed. With none chosen, Minimum mode is offered as
+  /// unavailable and says why, instead of quietly running an empty day.
+  in_minimum Boolean @default(false)
 
   created_at DateTime @default(now())
 

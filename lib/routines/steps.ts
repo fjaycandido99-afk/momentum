@@ -93,12 +93,37 @@ export function isRoutineStepKind(value: unknown): value is RoutineStepKind {
 export const MAX_ROUTINE_STEPS = 8
 export const ROUTINE_LIMITS = { label: 40, stepLabel: 60 } as const
 
+/**
+ * Timed or sequence — the spine of the feature.
+ *
+ * Every argument about drag handles, per-step times and how many
+ * notifications to send resolves differently depending on this one value,
+ * which is why it is stored rather than guessed from whether times are set.
+ *
+ *   timed     the clock is the order. Nothing to drag. A reminder per step.
+ *   sequence  they tap Start and are walked through it. The order is theirs,
+ *             so dragging is the only way to express it, and there is one
+ *             reminder for the start instead of seven.
+ */
+export type RoutineMode = 'timed' | 'sequence'
+
+export const ROUTINE_MODES: readonly RoutineMode[] = ['timed', 'sequence']
+
+export function isRoutineMode(value: unknown): value is RoutineMode {
+  return value === 'timed' || value === 'sequence'
+}
+
 export interface StepLite {
   kind: RoutineStepKind
   ref?: string | null
   label?: string | null
-  time: string
+  /** Required in timed mode, absent in sequence mode. */
+  time?: string | null
   position?: number
+  /** Does it survive a bad day? See Minimum mode. */
+  inMinimum?: boolean
+  /** Their own smaller floor, for a step of their own. */
+  minimum?: string | null
 }
 
 /**
@@ -133,17 +158,54 @@ export function timeLabel(time: string): string {
 }
 
 /**
- * The day in order.
+ * The day in order — which depends entirely on the mode.
  *
- * By time, then by position. Position exists only to break a tie: two steps
- * at 07:00 would otherwise swap places between renders, and a list that
- * reorders itself while you look at it is a list you stop trusting.
+ * TIMED: the clock decides, and position only breaks a tie, so two steps at
+ * 07:00 do not swap places between renders. A list that reorders itself while
+ * you look at it is one you stop trusting.
+ *
+ * SEQUENCE: position IS the order. There are no times to sort by, and this is
+ * exactly why dragging is worth building in that mode and meaningless in the
+ * other.
  */
-export function sortSteps<T extends { time: string; position?: number }>(steps: readonly T[]): T[] {
+export function sortSteps<T extends { time?: string | null; position?: number }>(
+  steps: readonly T[],
+  mode: RoutineMode = 'timed',
+): T[] {
+  if (mode === 'sequence') {
+    return [...steps].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+  }
   return [...steps].sort((a, b) => {
-    if (a.time !== b.time) return a.time < b.time ? -1 : 1
+    const at = a.time ?? ''
+    const bt = b.time ?? ''
+    if (at !== bt) return at < bt ? -1 : 1
     return (a.position ?? 0) - (b.position ?? 0)
   })
+}
+
+/**
+ * The steps that survive a bad day, in order.
+ *
+ * "Never break the identity. Shrink the routine when needed." A Minimum Day
+ * runs only these, at whatever smaller floor each one carries.
+ */
+export function minimumSteps<T extends { inMinimum?: boolean; time?: string | null; position?: number }>(
+  steps: readonly T[],
+  mode: RoutineMode = 'timed',
+): T[] {
+  return sortSteps(steps.filter(s => s.inMinimum), mode)
+}
+
+/**
+ * Can a Minimum Day be offered at all?
+ *
+ * False when they have marked nothing, and then the UI says so rather than
+ * offering a mode that would run an empty day. The alternative — defaulting
+ * every step into the minimum — would mean a "bad day" that asks for
+ * everything, which is the opposite of the idea.
+ */
+export function canRunMinimum(steps: readonly { inMinimum?: boolean }[]): boolean {
+  return steps.some(s => s.inMinimum)
 }
 
 export type StepError = 'BAD_KIND' | 'BAD_TIME' | 'MISSING_REF' | 'MISSING_LABEL' | 'TOO_MANY'
@@ -154,12 +216,18 @@ export type StepError = 'BAD_KIND' | 'BAD_TIME' | 'MISSING_REF' | 'MISSING_LABEL
  * Returns the first problem rather than a list: the editor fixes one thing at
  * a time, and a wall of errors for a form this small is noise.
  */
-export function validateSteps(steps: readonly StepLite[]): StepError | null {
+export function validateSteps(
+  steps: readonly StepLite[],
+  mode: RoutineMode = 'timed',
+): StepError | null {
   if (steps.length > MAX_ROUTINE_STEPS) return 'TOO_MANY'
 
   for (const step of steps) {
     if (!isRoutineStepKind(step.kind)) return 'BAD_KIND'
-    if (!isValidTime(step.time)) return 'BAD_TIME'
+    // A time is required in timed mode and meaningless in sequence mode,
+    // where a step happens when the one before it is done. Demanding one
+    // there would make people invent times for a routine that has none.
+    if (mode === 'timed' && !isValidTime(step.time)) return 'BAD_TIME'
 
     const meta = STEP_KINDS[step.kind]
     if (meta.needsRef && !step.ref?.trim()) return 'MISSING_REF'

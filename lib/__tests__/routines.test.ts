@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
   MAX_ROUTINE_STEPS,
+  canRunMinimum,
+  isRoutineMode,
+  minimumSteps,
   ROUTINE_STEP_KINDS,
   STEP_KINDS,
   allStepNotificationIds,
@@ -190,5 +193,79 @@ describe('the kind table', () => {
     for (const kind of ROUTINE_STEP_KINDS) expect(isRoutineStepKind(kind)).toBe(true)
     expect(isRoutineStepKind('routine')).toBe(false)
     expect(isRoutineStepKind(null)).toBe(false)
+  })
+})
+
+describe('mode changes what "in order" means', () => {
+  const timed = [
+    { time: '21:30', position: 0, label: 'night' },
+    { time: '07:00', position: 1, label: 'morning' },
+  ]
+
+  it('timed sorts by the clock, whatever the positions say', () => {
+    expect(sortSteps(timed, 'timed').map(s => s.label)).toEqual(['morning', 'night'])
+  })
+
+  it('sequence sorts by position, and ignores any times lying around', () => {
+    // This is exactly why dragging is worth building in sequence mode and
+    // meaningless in the other.
+    expect(sortSteps(timed, 'sequence').map(s => s.label)).toEqual(['night', 'morning'])
+  })
+
+  it('defaults to timed, so existing callers keep their behaviour', () => {
+    expect(sortSteps(timed).map(s => s.label)).toEqual(['morning', 'night'])
+  })
+
+  it('handles sequence steps with no times at all', () => {
+    const seq = [{ position: 1, label: 'b' }, { position: 0, label: 'a' }]
+    expect(sortSteps(seq, 'sequence').map(s => s.label)).toEqual(['a', 'b'])
+  })
+})
+
+describe('what a bad day still asks for', () => {
+  const steps: StepLite[] = [
+    { kind: 'own', label: 'Meditate', time: '07:00', inMinimum: true, minimum: '2 min' },
+    { kind: 'own', label: 'Deep work', time: '09:00', inMinimum: false },
+    { kind: 'own', label: 'Read', time: '21:00', inMinimum: true, minimum: '5 pages' },
+  ]
+
+  it('keeps only the steps that survive it, in order', () => {
+    expect(minimumSteps(steps).map(s => s.label)).toEqual(['Meditate', 'Read'])
+  })
+
+  it('is offered only once they have chosen something', () => {
+    // Defaulting every step in would make a "bad day" ask for everything,
+    // which is the opposite of the idea. Nothing chosen means the mode says
+    // so rather than running an empty day.
+    expect(canRunMinimum(steps)).toBe(true)
+    expect(canRunMinimum([{ inMinimum: false }, {}])).toBe(false)
+    expect(canRunMinimum([])).toBe(false)
+  })
+})
+
+describe('validation follows the mode', () => {
+  it('demands a time in timed mode', () => {
+    expect(validateSteps([{ kind: 'promise' }], 'timed')).toBe('BAD_TIME')
+    expect(validateSteps([{ kind: 'promise', time: '07:30' }], 'timed')).toBeNull()
+  })
+
+  it('does not ask for one in sequence mode', () => {
+    // A sequence step happens when the one before it is done. Demanding a
+    // clock time would make people invent times for a routine that has none.
+    expect(validateSteps([{ kind: 'promise' }], 'sequence')).toBeNull()
+    expect(validateSteps([{ kind: 'promise', time: null }], 'sequence')).toBeNull()
+  })
+
+  it('still enforces everything else in sequence mode', () => {
+    expect(validateSteps([{ kind: 'practice' }], 'sequence')).toBe('MISSING_REF')
+    expect(validateSteps([{ kind: 'own' }], 'sequence')).toBe('MISSING_LABEL')
+    expect(validateSteps([{ kind: 'nonsense' as never }], 'sequence')).toBe('BAD_KIND')
+  })
+
+  it('knows a real mode from a made-up one', () => {
+    expect(isRoutineMode('timed')).toBe(true)
+    expect(isRoutineMode('sequence')).toBe(true)
+    expect(isRoutineMode('guided')).toBe(false)
+    expect(isRoutineMode(null)).toBe(false)
   })
 })

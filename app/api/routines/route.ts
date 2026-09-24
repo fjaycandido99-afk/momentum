@@ -19,7 +19,9 @@ import { rateLimit } from '@/lib/rate-limit'
 import {
   MAX_ROUTINE_STEPS,
   ROUTINE_LIMITS,
+  isRoutineMode,
   isRoutineStepKind,
+  isValidTime,
   sortSteps,
   validateSteps,
   type StepLite,
@@ -35,6 +37,17 @@ const STEP_SELECT = {
   minimum: true,
   time: true,
   position: true,
+  in_minimum: true,
+} as const
+
+const ROUTINE_SELECT = {
+  id: true,
+  label: true,
+  mode: true,
+  start_time: true,
+  days: true,
+  enabled: true,
+  steps: { select: STEP_SELECT },
 } as const
 
 /** Why a save was refused, in words a person can act on. */
@@ -52,22 +65,36 @@ async function requireUser() {
   return user
 }
 
+/**
+ * The routine as the client wants it: steps in the right order for its mode,
+ * and `inMinimum` rather than the column's `in_minimum`.
+ *
+ * Sorted here rather than in the component so the order is decided once, by
+ * the same function on both sides — in timed mode the clock decides, in
+ * sequence mode position does.
+ */
+function wire(routine: {
+  mode: string
+  steps: { in_minimum: boolean; time: string | null; position: number }[]
+}) {
+  const mode = isRoutineMode(routine.mode) ? routine.mode : 'timed'
+  return {
+    ...routine,
+    mode,
+    steps: sortSteps(routine.steps, mode).map(({ in_minimum, ...step }) => ({
+      ...step,
+      inMinimum: in_minimum,
+    })),
+  }
+}
+
 export async function GET() {
   try {
     const user = await requireUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const [routine, practices] = await Promise.all([
-      prisma.routine.findUnique({
-        where: { user_id: user.id },
-        select: {
-          id: true,
-          label: true,
-          days: true,
-          enabled: true,
-          steps: { select: STEP_SELECT },
-        },
-      }),
+      prisma.routine.findUnique({ where: { user_id: user.id }, select: ROUTINE_SELECT }),
       // What a 'practice' step can point at. Active only: a step aimed at a
       // paused discipline would remind somebody about something they had
       // deliberately stopped.
@@ -79,7 +106,7 @@ export async function GET() {
     ])
 
     return NextResponse.json({
-      routine: routine ? { ...routine, steps: sortSteps(routine.steps) } : null,
+      routine: routine ? wire(routine) : null,
       practices,
       max: MAX_ROUTINE_STEPS,
     })
@@ -107,6 +134,13 @@ export async function PUT(request: NextRequest) {
     // Weekdays, deduped and sorted. Empty means every day — the same
     // convention as Practice.days, so the two cannot come to mean different
     // things.
+    const mode = isRoutineMode(body?.mode) ? body.mode : 'timed'
+
+    // Only meaningful in sequence mode, where it is the one nudge to begin.
+    // A timed routine's steps each carry their own time, so a start time
+    // there would be a second, contradictory answer to the same question.
+    const startTime = mode === 'sequence' && isValidTime(body?.startTime) ? body.startTime : null
+
     const days: number[] = Array.isArray(body?.days)
       ? [...new Set(
           (body.days as unknown[]).filter(
@@ -124,8 +158,15 @@ export async function PUT(request: NextRequest) {
         label: typeof s?.label === 'string'
           ? s.label.trim().replace(/\s+/g, ' ').slice(0, ROUTINE_LIMITS.stepLabel) || null
           : null,
-        time: typeof s?.time === 'string' ? s.time.trim() : '',
+        // Null in sequence mode: a step there happens when the one before
+        // it is done, and storing a stale clock time would make switching
+        // back to timed mode resurrect times nobody chose.
+        time: mode === 'timed' && typeof s?.time === 'string' ? s.time.trim() : null,
         position: i,
+        inMinimum: s?.inMinimum === true,
+        minimum: typeof s?.minimum === 'string'
+          ? s.minimum.trim().replace(/\s+/g, ' ').slice(0, ROUTINE_LIMITS.stepLabel) || null
+          : null,
       }
     })
 
@@ -137,7 +178,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    const problem = validateSteps(steps)
+    const problem = validateSteps(steps, mode)
     if (problem) return NextResponse.json({ error: REFUSALS[problem] ?? 'That routine cannot be saved', problem }, { status: 400 })
 
     // A step may only point at one of THEIR active disciplines. Without this
@@ -153,20 +194,18 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // A minimum belongs to the discipline for a 'practice' step — written in
-    // one place so the floor for reading cannot drift between the routine and
-    // the record.
     const rows = steps.map((s, i) => ({
       kind: s.kind,
       ref: s.kind === 'practice' ? s.ref : null,
       label: s.label,
-      minimum: s.kind === 'own' && typeof rawSteps[i] === 'object'
-        ? (typeof (rawSteps[i] as Record<string, unknown>).minimum === 'string'
-            ? ((rawSteps[i] as Record<string, unknown>).minimum as string).trim().slice(0, ROUTINE_LIMITS.stepLabel) || null
-            : null)
-        : null,
+      // A minimum is only ever stored for a step of their OWN. A step
+      // pointing at a discipline reads that discipline's floor, so "5 pages"
+      // is written in one place and cannot drift between the routine and the
+      // record.
+      minimum: s.kind === 'own' ? s.minimum ?? null : null,
       time: s.time,
       position: i,
+      in_minimum: s.inMinimum === true,
     }))
 
     // One transaction: the steps are replaced, so a failure part-way through
@@ -174,8 +213,8 @@ export async function PUT(request: NextRequest) {
     const routine = await prisma.$transaction(async tx => {
       const existing = await tx.routine.upsert({
         where: { user_id: user.id },
-        create: { user_id: user.id, label, days },
-        update: { label, days },
+        create: { user_id: user.id, label, days, mode, start_time: startTime },
+        update: { label, days, mode, start_time: startTime },
         select: { id: true },
       })
       await tx.routineStep.deleteMany({ where: { routine_id: existing.id } })
@@ -186,11 +225,11 @@ export async function PUT(request: NextRequest) {
       }
       return tx.routine.findUnique({
         where: { id: existing.id },
-        select: { id: true, label: true, days: true, enabled: true, steps: { select: STEP_SELECT } },
+        select: ROUTINE_SELECT,
       })
     })
 
-    return NextResponse.json({ routine: routine ? { ...routine, steps: sortSteps(routine.steps) } : null })
+    return NextResponse.json({ routine: routine ? wire(routine) : null })
   } catch (error) {
     console.error('Routines PUT error:', error)
     return NextResponse.json({ error: 'Could not save that' }, { status: 500 })
