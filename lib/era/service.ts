@@ -13,6 +13,7 @@ import {
   computeStats,
   daysBetween,
   eraDayNumber,
+  eraFinished,
   eraStage,
   eraStep,
   missionForDay,
@@ -185,6 +186,11 @@ export interface EraTodayWire {
   }
   /** The end-of-era arithmetic. Only once it's finished. */
   report: EraReport | null
+  /**
+   * Eras finished, this one included. Only set at the complete step — it
+   * costs a query and means nothing on day 9.
+   */
+  erasFinished: number | null
   /** Today's mission from the era's bank (lib/era/missions.ts). */
   mission: string | null
   /** Has today's mission been marked done? */
@@ -302,6 +308,46 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     )
   }
 
+  /**
+   * How many eras they have finished, this one included.
+   *
+   * `erasCompleted` has been computed for the achievements since they
+   * shipped and shown to the reader NOWHERE — so the app could hand
+   * somebody a badge for their second era without ever telling them it was
+   * their second.
+   *
+   * Inside the `finished` block on purpose: it is one extra query, on one
+   * day out of thirty. Every other day it costs nothing.
+   *
+   * The rule is eraFinished(), the same predicate the achievement uses, so
+   * the count and the badge can never disagree.
+   */
+  let erasFinished: number | null = null
+  if (finished) {
+    const all = await prisma.era.findMany({
+      where: { user_id: userId },
+      select: {
+        start_day: true,
+        length_days: true,
+        status: true,
+        ended_at: true,
+        _count: { select: { promises: true } },
+      },
+    })
+    erasFinished = all.filter(e =>
+      eraFinished({
+        startDay: e.start_day,
+        lengthDays: e.length_days,
+        // An era still running is measured to today; an ended one to the day
+        // it ended, not to now — otherwise every old era looks longer than
+        // it was.
+        endDay: e.status === 'active' ? today : e.ended_at ? localDay(tz, e.ended_at) : today,
+        promisesMade: e._count.promises,
+        minPromises: ERA_COMPLETE_MIN_PROMISES,
+      }),
+    ).length
+  }
+
   // Today's sequence. The state check-in is only part of someone's loop when
   // they turned wellness on, and its rows are only read in that case — an off
   // switch that still reads the rows is not an off switch.
@@ -379,6 +425,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
       phaseDays: phaseBounds.to - phaseBounds.from + 1,
     },
     report,
+    erasFinished,
     mission: missionFor(era.era_key, day),
     missionDone: missionRow !== null,
     links: { soundscapeId: program.soundscapeId, guideId: program.guideId },

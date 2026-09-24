@@ -125,6 +125,9 @@ export function sampleEra(key: string): EraTodayWire | null {
       asks: 'Take on the thing you have been avoiding. This is the week that earns the era.',
     },
     report: null,
+    // Sample data for the share card: this one is mid-era, so there is no
+    // count to show and nothing would read it anyway.
+    erasFinished: null,
     mission: null, missionDone: false,
     links: { soundscapeId: 'focus', guideId: 'breathing' }, image: programFor(key).image ?? null,
     isPremium: false, memoryLockedToday: false, recap: null, alignment: null,

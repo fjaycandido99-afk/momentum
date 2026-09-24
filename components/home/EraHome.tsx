@@ -28,6 +28,7 @@ import { WakeCallSheet, type WakeCallSettings } from './WakeCallSheet'
 import { CircleSection } from './CircleSection'
 import { ReminderAsk } from '@/components/notifications/ReminderAsk'
 import { clockLabel } from '@/lib/era/wake'
+import { eraOrdinal } from '@/lib/era/logic'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
 import type { EraToday } from '@/hooks/useEra'
 
@@ -643,12 +644,25 @@ function ActiveEra({
   )
 
   const t = era.today
+  /** "third", or null for a first era — see eraOrdinal. */
+  const ordinal = era.erasFinished ? eraOrdinal(era.erasFinished) : null
 
   let action: React.ReactNode = null
   switch (era.step) {
     case 'complete':
       action = (
         <div className="card-surface-lg p-4">
+          {/* Which era this is. erasCompleted has been computed for the
+              achievements since they shipped and shown to the reader
+              nowhere — so the app could hand somebody a badge for their
+              second era without ever telling them it was their second.
+              Nothing renders for a first era: "your first era" on the day
+              you finish your first one is a strange thing to be told. */}
+          {ordinal && (
+            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 mb-1.5">
+              Your {ordinal} era
+            </p>
+          )}
           <p className="text-[15px] text-white">
             You finished your {eraName(era.title)}.
             {era.stats.keptPercent !== null && <> You kept {era.stats.kept} of {era.stats.answered} promises.</>}

@@ -231,3 +231,53 @@ export function missionForDay(bank: readonly string[] | undefined, day: number):
   if (!bank || bank.length === 0) return null
   return bank[(Math.max(day, 1) - 1) % bank.length]
 }
+
+/**
+ * Did this era actually finish?
+ *
+ * Two conditions, and the second is the one that matters: the era ran past
+ * its last day AND was LIVED. An era nobody touched for a month has run its
+ * course by the calendar, and calling that "finished" would let somebody
+ * collect completions by starting eras and ignoring them.
+ *
+ * Extracted here because three places were about to answer this question:
+ * the achievement stats, the XP award, and now the count shown to the
+ * reader. Two of them agreeing and the third drifting is how an app comes
+ * to tell you this is your third era while giving you a badge for your
+ * second.
+ *
+ * Pure. `endDay` is today for an era still running, or the day it ended.
+ */
+export function eraFinished(args: {
+  startDay: string
+  lengthDays: number
+  endDay: string
+  /** Promises MADE, not kept. Finishing is about showing up, not scoring. */
+  promisesMade: number
+  minPromises: number
+}): boolean {
+  const ranItsCourse = eraDayNumber(args.startDay, args.endDay) > args.lengthDays
+  return ranItsCourse && args.promisesMade >= args.minPromises
+}
+
+/**
+ * "third", for "Your third era".
+ *
+ * Words to ten, then digits — "your 14th era" reads fine and "your
+ * fourteenth era" does not. Returns null below 2: "your first era" on the
+ * day you finish your first one is a strange thing to be told, and the
+ * caller should say nothing instead.
+ */
+const ORDINALS = [
+  '', '', 'second', 'third', 'fourth', 'fifth',
+  'sixth', 'seventh', 'eighth', 'ninth', 'tenth',
+]
+
+export function eraOrdinal(count: number): string | null {
+  if (!Number.isInteger(count) || count < 2) return null
+  if (count <= 10) return ORDINALS[count]
+  const suffix = count % 100 >= 11 && count % 100 <= 13
+    ? 'th'
+    : ['th', 'st', 'nd', 'rd'][count % 10] ?? 'th'
+  return `${count}${suffix}`
+}
