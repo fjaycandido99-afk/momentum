@@ -1,6 +1,15 @@
 import { prisma } from '@/lib/prisma'
-import { adherence } from '@/lib/practices/logic'
-import type { BehaviourFacts } from './behaviour-context'
+import { adherence, daysLabel } from '@/lib/practices/logic'
+import {
+  STEP_KINDS,
+  isRoutineMode,
+  isRoutineStepKind,
+  normalSteps,
+  stepWeight,
+  timeLabel,
+  type RoutineStepKind,
+} from '@/lib/routines/steps'
+import type { BehaviourFacts, RoutineFacts } from './behaviour-context'
 
 /**
  * Loads the shape of someone's last N days for the coach.
@@ -29,7 +38,7 @@ export async function loadBehaviourFacts(
 ): Promise<BehaviourFacts> {
   const from = dayBefore(today, days)
 
-  const [era, promises, practices, exerciseRuns] = await Promise.all([
+  const [era, promises, practices, exerciseRuns, routine] = await Promise.all([
     prisma.era.findFirst({
       where: { user_id: userId, status: 'active' },
       select: { title: true, start_day: true, length_days: true },
@@ -57,6 +66,25 @@ export async function loadBehaviourFacts(
     }),
     prisma.exerciseRun.count({
       where: { user_id: userId, local_day: { gte: from, lte: today }, completed: true },
+    }),
+    // The shape of their day. One routine per person, so one row and its
+    // steps — and the runs inside the same window as everything else, so the
+    // coach is never quoting two different weeks at once.
+    prisma.routine.findUnique({
+      where: { user_id: userId },
+      select: {
+        label: true,
+        mode: true,
+        days: true,
+        enabled: true,
+        steps: {
+          select: { kind: true, ref: true, label: true, time: true, position: true, weight: true },
+        },
+        runs: {
+          where: { local_day: { gte: from, lte: today } },
+          select: { local_day: true },
+        },
+      },
     }),
   ])
 
@@ -89,5 +117,61 @@ export async function loadBehaviourFacts(
       return { label: p.label, kept: done, due: of }
     }),
     exercises: { run: exerciseRuns, days },
+    routine: routine ? routineFacts(routine, practices, days) : null,
+  }
+}
+
+/**
+ * The routine, as the coach is allowed to see it.
+ *
+ * Titles resolve the same way every other surface resolves them — their own
+ * words, then the discipline's name, then the kind's label — so the coach
+ * cannot end up calling their gym session "A discipline". Times are read
+ * back in 12-hour, because "18:00" is not how anybody says it out loud.
+ *
+ * Bad-days-only steps are left out: they are not part of an ordinary day,
+ * and including them would have the coach describing a day the person does
+ * not normally have.
+ */
+function routineFacts(
+  routine: {
+    label: string
+    mode: string
+    days: number[]
+    enabled: boolean
+    steps: { kind: string; ref: string | null; label: string | null; time: string | null; position: number; weight: string }[]
+    runs: { local_day: string }[]
+  },
+  practices: { id: string; label: string }[],
+  days: number,
+): RoutineFacts {
+  const mode = isRoutineMode(routine.mode) ? routine.mode : 'timed'
+  const byId = new Map(practices.map(p => [p.id, p.label]))
+
+  const steps = normalSteps(
+    routine.steps.filter(s => isRoutineStepKind(s.kind)).map(s => ({
+      ...s,
+      kind: s.kind as RoutineStepKind,
+      weight: stepWeight(s.weight),
+    })),
+    mode,
+  ).map(step => ({
+    title:
+      step.label?.trim()
+      || (step.ref ? byId.get(step.ref) : undefined)
+      || STEP_KINDS[step.kind].label,
+    time: step.time ? timeLabel(step.time) : null,
+  }))
+
+  return {
+    label: routine.label,
+    timed: mode === 'timed',
+    steps,
+    days: routine.days.length > 0 ? daysLabel(routine.days) : null,
+    // Only a sequence routine records being begun. A timed one has nothing
+    // to count, and a count of zero would read as a failure rather than as
+    // a feature that does not work that way.
+    started: mode === 'sequence' ? { days: new Set(routine.runs.map(r => r.local_day)).size, of: days } : null,
+    paused: !routine.enabled,
   }
 }

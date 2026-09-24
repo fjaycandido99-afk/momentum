@@ -25,6 +25,34 @@ export interface BehaviourFacts {
   /** One per active discipline, newest window first. */
   practices: { label: string; kept: number; due: number }[]
   exercises: { run: number; days: number } | null
+  /**
+   * The shape of their day, and how often they have begun it.
+   *
+   * The coach could already see whether somebody kept the gym and had no
+   * idea they had PUT the gym at 18:00 on Mondays and Thursdays — so "why do
+   * I keep skipping it" was answered without the one fact that makes it
+   * answerable.
+   *
+   * The SHAPE only: what is in the day, when, and how many days it was
+   * started. Never whether a step was done — a timed routine records nothing
+   * about its steps by design (the disciplines do), so a coach told
+   * otherwise would be inventing it.
+   */
+  routine: RoutineFacts | null
+}
+
+export interface RoutineFacts {
+  label: string
+  /** 'By the clock' or 'in order' — it changes what advice makes sense. */
+  timed: boolean
+  /** Their steps in order: what it is, and when, where there is a when. */
+  steps: { title: string; time: string | null }[]
+  /** Which weekdays, in words. Null means every day. */
+  days: string | null
+  /** Started this many of the last `of` days. Null before it was ever run. */
+  started: { days: number; of: number } | null
+  /** Paused: the day is still there, the reminders are not. */
+  paused: boolean
 }
 
 /** Plain-English lines, or nothing when there is nothing worth saying. */
@@ -56,6 +84,34 @@ export function behaviourLines(facts: BehaviourFacts): string[] {
     )
   }
 
+  /*
+    The routine, last, because it is the frame and not an achievement.
+
+    Written as the day itself — "Training day (by the clock): Today's promise
+    at 7:00 am, Push Pull Legs at 6:00 pm" — rather than as a count of steps,
+    because the useful thing a coach can do with it is talk about the actual
+    day. "5 steps" tells it nothing it can say back.
+  */
+  if (facts.routine && facts.routine.steps.length > 0) {
+    const { label, timed, steps, days, started, paused } = facts.routine
+    const shape = steps
+      .map(s => (s.time ? `${s.title} at ${s.time}` : s.title))
+      .join(', ')
+
+    lines.push(`Their routine — ${label} (${timed ? 'by the clock' : 'in order'}${days ? `, ${days}` : ''}): ${shape}.`)
+
+    // Only for a routine they actually begin, and only as a count with its
+    // scale. A sequence routine is the only one that records being run; a
+    // timed one has nothing to count, and silence is the honest answer.
+    if (started) {
+      lines.push(`Routine started on ${started.days} of the last ${started.of} days.`)
+    }
+
+    if (paused) {
+      lines.push('Their routine is paused right now — deliberately, by them.')
+    }
+  }
+
   return lines
 }
 
@@ -72,6 +128,12 @@ export const BEHAVIOUR_GUIDANCE = [
   'about the day they missed, connect it to what they are saying now. Do not',
   'list it back, do not lead with it, and never use it to scold. A missed day',
   'is information, not a failing.',
+  '',
+  'Their routine is the shape of their day, not a score. You know what is in',
+  'it and when. You do NOT know whether they did any particular step — only',
+  'the disciplines above record that — so never assume they missed one, and',
+  'ask rather than tell. Suggesting a different time is fair game when they',
+  'raise it; rearranging their day unasked is not.',
 ].join('\n')
 
 export function behaviourSection(facts: BehaviourFacts): string | null {
