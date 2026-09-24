@@ -70,11 +70,14 @@ const MODES: { id: RoutineMode; label: string; line: string }[] = [
 export function RoutineEditor({
   initial,
   practices,
+  canDelete = false,
   onClose,
   onSaved,
 }: {
   initial: RoutineDraft | null
   practices: PracticeLite[]
+  /** There is a saved routine to delete — false for a seeded template. */
+  canDelete?: boolean
   onClose: () => void
   onSaved: () => void
 }) {
@@ -85,6 +88,7 @@ export function RoutineEditor({
   const [steps, setSteps] = useState<DraftStep[]>(initial?.steps?.length ? initial.steps : [FIRST_STEP])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const setStep = (i: number, patch: Partial<DraftStep>) => {
     setSteps(prev => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)))
@@ -130,6 +134,29 @@ export function RoutineEditor({
       })
     })
     setMode(next)
+  }
+
+  /**
+   * Only a SAVED routine can be deleted. Offering it on a seeded template
+   * would mean a button that deletes nothing, or worse, deletes a routine
+   * they were in the middle of replacing.
+   */
+  const remove = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/routines', { method: 'DELETE' })
+      if (!res.ok) {
+        setError('Could not remove that')
+        return
+      }
+      haptic('medium')
+      onSaved()
+    } catch {
+      setError('Couldn’t reach Voxu. Check your connection.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const move = (from: number, to: number) => {
@@ -479,6 +506,49 @@ export function RoutineEditor({
           Reminders arrive in the app. On the web the routine still shows — the notifications need
           the app.
         </p>
+
+        {/*
+          Deleting it, which somebody has to be able to do.
+
+          Two taps rather than a browser confirm: a native alert blocks the
+          web view and looks like the app broke. The second tap says what it
+          will do, and Pause is offered in the same breath because wanting
+          the 06:30 reminder to stop for a fortnight is not the same as
+          wanting the day gone.
+        */}
+        {canDelete && (
+          <div className="mt-4 pt-4 border-t border-white/[0.07] text-center">
+            {confirmDelete ? (
+              <>
+                <p className="text-[12px] text-white/60 leading-relaxed">
+                  Delete the routine and its steps? Pausing keeps the day and stops the reminders.
+                </p>
+                <div className="flex gap-2 mt-2.5">
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-white/15 text-[13px] text-white/70"
+                  >
+                    Keep it
+                  </button>
+                  <button
+                    onClick={remove}
+                    disabled={busy}
+                    className="flex-1 py-2.5 rounded-xl border border-amber-300/30 text-[13px] text-amber-300/90 disabled:opacity-60"
+                  >
+                    Delete it
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() => { haptic('light'); setConfirmDelete(true) }}
+                className="text-[11px] text-white/35 hover:text-white/70"
+              >
+                Delete this routine
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

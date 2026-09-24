@@ -278,6 +278,51 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+/**
+ * PATCH — pause the routine, or start it again.
+ *
+ * One field, and deliberately not part of PUT. PUT replaces the whole day,
+ * and folding `enabled` into it would mean every edit had to remember to
+ * re-send it: forget once and saving a step time quietly turns somebody's
+ * reminders back on.
+ *
+ * Pausing keeps the routine. Somebody on holiday, or ill, or working nights
+ * for a fortnight wants the reminders to stop without losing the day they
+ * built — and deleting it as the only way to stop the 06:30 notification is
+ * how a routine gets thrown away for a week that ended.
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = await requireUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { allowed } = rateLimit(`routines:${user.id}`, { limit: 20, windowSeconds: 60 })
+    if (!allowed) return NextResponse.json({ error: 'Slow down' }, { status: 429 })
+
+    const body = await request.json().catch(() => ({}))
+    if (typeof body?.enabled !== 'boolean') {
+      return NextResponse.json({ error: 'Nothing to change' }, { status: 400 })
+    }
+
+    const existing = await prisma.routine.findUnique({
+      where: { user_id: user.id },
+      select: { id: true },
+    })
+    if (!existing) return NextResponse.json({ error: 'No routine' }, { status: 404 })
+
+    const routine = await prisma.routine.update({
+      where: { id: existing.id },
+      data: { enabled: body.enabled },
+      select: ROUTINE_SELECT,
+    })
+
+    return NextResponse.json({ routine: wire(routine) })
+  } catch (error) {
+    console.error('Routines PATCH error:', error)
+    return NextResponse.json({ error: 'Could not change that' }, { status: 500 })
+  }
+}
+
 export async function DELETE() {
   try {
     const user = await requireUser()

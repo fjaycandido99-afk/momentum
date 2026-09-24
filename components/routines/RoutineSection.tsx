@@ -175,6 +175,32 @@ export function RoutineSection() {
     setEditing(true)
   }
 
+  /**
+   * Stop the reminders, keep the routine.
+   *
+   * Optimistic, so the label changes under the thumb — and the schedule
+   * effect watches `routine`, so flipping this cancels every notification on
+   * the device without a second code path that could disagree with it.
+   */
+  const togglePaused = async () => {
+    if (!routine) return
+    haptic('light')
+    const next = !routine.enabled
+    setRoutine({ ...routine, enabled: next })
+    try {
+      const res = await fetch('/api/routines', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: next }),
+      })
+      if (!res.ok) throw new Error('refused')
+    } catch {
+      // Put it back rather than showing a paused routine that is still
+      // sending notifications.
+      setRoutine(current => (current ? { ...current, enabled: !next } : current))
+    }
+  }
+
   /** A step's title and floor — a discipline step reads from the discipline. */
   const describe = (step: RoutineWire['steps'][number]) => {
     if (step.kind === 'practice') {
@@ -208,12 +234,28 @@ export function RoutineSection() {
           </p>
         </div>
         {routine && (
-          <button
-            onClick={() => { haptic('light'); setEditing(true) }}
-            className="shrink-0 text-[11px] text-white/45 hover:text-white/80"
-          >
-            Edit
-          </button>
+          <div className="shrink-0 flex items-center gap-3">
+            {/*
+              Pause, not delete.
+
+              Somebody working nights for a fortnight wants the 06:30
+              notification to stop without losing the day they built, and
+              deleting the routine as the only way to do that is how a good
+              routine gets thrown away over a week that ended.
+            */}
+            <button
+              onClick={togglePaused}
+              className="text-[11px] text-white/45 hover:text-white/80"
+            >
+              {routine.enabled ? 'Pause' : 'Resume'}
+            </button>
+            <button
+              onClick={() => { haptic('light'); setEditing(true) }}
+              className="text-[11px] text-white/45 hover:text-white/80"
+            >
+              Edit
+            </button>
+          </div>
         )}
       </div>
 
@@ -333,9 +375,17 @@ export function RoutineSection() {
         </div>
       )}
 
+      {/* Paused is a state worth seeing: a timeline that looks live and
+          reminds you of nothing is the thing to avoid. */}
+      {routine && !routine.enabled && steps.length > 0 && (
+        <p className="text-[11px] text-white/45 leading-relaxed">
+          Paused. The day is still here — nothing will nudge you until you resume it.
+        </p>
+      )}
+
       {/* Said plainly, because a timeline that reminds you of nothing is
           worse than no timeline: they would think it was working. */}
-      {remindersOff && steps.length > 0 && (
+      {remindersOff && routine?.enabled && steps.length > 0 && (
         <p className="text-[11px] text-white/45 leading-relaxed">
           Notifications are off for Voxu, so this routine will not nudge you. Turn them on in your
           phone&rsquo;s settings and it will start.
@@ -407,6 +457,7 @@ export function RoutineSection() {
               : seed
           }
           practices={practices}
+          canDelete={!!routine}
           onClose={() => { setEditing(false); setSeed(null) }}
           onSaved={async () => {
             setEditing(false)
