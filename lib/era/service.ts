@@ -34,6 +34,7 @@ import type { AxisId } from '@/lib/assessment/axes'
 import { ERA_MISSIONS } from './missions'
 import { isBlocker, isHelper, parseConfidence, reasonLabel } from './reasons'
 import { buildEraReport, type EraReport } from './report'
+import { keepOptions } from './keep'
 import { loadPatterns } from '@/lib/patterns/server'
 import { practiceLinesForCoach } from '@/lib/practices/server'
 import { coachPatternLine, weakDayLine } from '@/lib/patterns/rules'
@@ -191,6 +192,14 @@ export interface EraTodayWire {
    * costs a query and means nothing on day 9.
    */
   erasFinished: number | null
+  /**
+   * Their own repeated promises from this era, most-promised first, for
+   * "Keep one thing from this". Only at the complete step.
+   *
+   * Their text, shown back to them, in their own session — the same thing
+   * the Era Recap already does with it. It is never read for anything else.
+   */
+  keepOptions: { text: string; count: number }[]
   /** Today's mission from the era's bank (lib/era/missions.ts). */
   mission: string | null
   /** Has today's mission been marked done? */
@@ -426,6 +435,9 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     },
     report,
     erasFinished,
+    // Free: `promises` is already loaded for the stats, so this is pure
+    // computation on rows in hand, and only at the step that uses it.
+    keepOptions: finished ? keepOptions(promises) : [],
     mission: missionFor(era.era_key, day),
     missionDone: missionRow !== null,
     links: { soundscapeId: program.soundscapeId, guideId: program.guideId },

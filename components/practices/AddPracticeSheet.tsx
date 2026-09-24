@@ -14,6 +14,7 @@ import { daysLabel } from '@/lib/practices/logic'
 import { BLOCKERS } from '@/lib/era/reasons'
 import { domainArt } from '@/lib/practices/domain-art'
 import { haptic } from '@/lib/haptics'
+import { labelFromPromise } from '@/lib/era/keep'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -28,16 +29,42 @@ const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
  * BLOCKERS list, so a skipped practice and a missed promise can be counted
  * together instead of in two private vocabularies.
  */
+/**
+ * Everything a finished era can hand this sheet.
+ *
+ * Note what is NOT here: a minimum. The era had no floor concept, so
+ * suggesting one would be the app setting the smallest version of somebody
+ * else's habit — and the floor is the whole point of a discipline. They write
+ * it.
+ */
+export interface PracticeSeed {
+  /** Only where the era genuinely maps to one — see ERA_PRACTICE_DOMAIN. */
+  domain?: PracticeDomain
+  label?: string
+  /** Their own repeated promises, to pick a name from. */
+  chips?: { text: string; count: number }[]
+}
+
+// No `days` here on purpose. Picking a preset always sets the days from that
+// preset, and a preset must be picked to get any further — so a seeded days
+// value could only ever be overwritten a moment later. Dead config that
+// looks live is worse than none.
+
 export function AddPracticeSheet({
   onClose,
   onAdded,
+  seed,
 }: {
   onClose: () => void
   onAdded: () => void
+  seed?: PracticeSeed
 }) {
-  const [domain, setDomain] = useState<PracticeDomain | null>(null)
+  // Seeded, so arriving from a finished era lands on the step that still
+  // needs answering rather than on "what do you already care about?" — they
+  // just spent thirty days answering that.
+  const [domain, setDomain] = useState<PracticeDomain | null>(seed?.domain ?? null)
   const [presetKey, setPresetKey] = useState<string | null>(null)
-  const [label, setLabel] = useState('')
+  const [label, setLabel] = useState(seed?.label ?? '')
   const [minimum, setMinimum] = useState('')
   const [days, setDays] = useState<number[]>([])
   const [blocker, setBlocker] = useState<string | null>(null)
@@ -53,7 +80,11 @@ export function AddPracticeSheet({
     haptic('light')
     const p = PRESETS_BY_KEY.get(key)
     setPresetKey(key)
-    setLabel(isCustomPreset(p?.key ?? '') ? '' : p?.label ?? '')
+    // A named preset names the discipline — picking "Read 10 pages a day" is
+    // a deliberate statement of what it is. "Something else" falls back to
+    // the era's own title when we arrived from one, so the month somebody
+    // just did is not thrown away at the last step.
+    setLabel(isCustomPreset(p?.key ?? '') ? (seed?.label ?? '') : p?.label ?? '')
     setMinimum(p?.minimum ?? '')
     setDays(p?.days ?? [])
     setError(null)
@@ -209,6 +240,41 @@ export function AddPracticeSheet({
                 placeholder={isCustomPreset(preset.key) ? 'Piano, cold showers, Spanish…' : preset.label}
                 className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/30"
               />
+              {/*
+                Their own promises from the era they just finished, most
+                promised first.
+
+                This is the honest answer to "what was the recurring thing?".
+                A promise is different every day and a discipline is one
+                thing, so there is nothing to convert — the app shows
+                somebody their own thirty days and they point at it. Nothing
+                is inferred and nothing is merged: "Gym" and "Go to the gym"
+                stay separate, because deciding they meant the same thing is
+                not ours to do.
+
+                A promise is a sentence and a label is a name, so tapping one
+                trims it at a word boundary into an editable field where they
+                can see exactly what went in.
+              */}
+              {seed?.chips && seed.chips.length > 0 && (
+                <div className="mt-2.5">
+                  <p className="text-[11px] text-white/40">What you promised most:</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {seed.chips.map(chip => (
+                      <button
+                        key={chip.text}
+                        onClick={() => { haptic('light'); setLabel(labelFromPromise(chip.text, PRACTICE_LIMITS.label)) }}
+                        className="max-w-full px-2.5 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12] text-[12px] text-white/75 text-left active:scale-[0.98]"
+                      >
+                        <span className="block truncate">{chip.text}</span>
+                        {chip.count > 1 && (
+                          <span className="block text-[10px] text-white/40">{chip.count} days</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>

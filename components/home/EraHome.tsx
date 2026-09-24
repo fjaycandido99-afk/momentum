@@ -29,6 +29,8 @@ import { CircleSection } from './CircleSection'
 import { ReminderAsk } from '@/components/notifications/ReminderAsk'
 import { clockLabel } from '@/lib/era/wake'
 import { eraOrdinal } from '@/lib/era/logic'
+import { ERA_PRACTICE_DOMAIN } from '@/lib/era/keep'
+import { AddPracticeSheet } from '@/components/practices/AddPracticeSheet'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
 import type { EraToday } from '@/hooks/useEra'
 
@@ -646,6 +648,8 @@ function ActiveEra({
   const t = era.today
   /** "third", or null for a first era — see eraOrdinal. */
   const ordinal = era.erasFinished ? eraOrdinal(era.erasFinished) : null
+  /** "Keep one thing from this" — the seeded add-a-discipline sheet. */
+  const [keeping, setKeeping] = useState(false)
 
   let action: React.ReactNode = null
   switch (era.step) {
@@ -671,9 +675,36 @@ function ActiveEra({
               you became lands harder next to the number that earned it. */}
           {era.report && <EraReportCard report={era.report} />}
           <EraRecap era={era} onLocked={openUpgradeModal} />
+          {/*
+            The other thing day 31 can be.
+
+            It used to offer one option — start another era — so the month
+            somebody just spent promising the same sort of thing daily ended
+            with no way to carry it. Voxu's own answer to "is thirty days
+            enough?" is a discipline, with a schedule and a floor, and it was
+            never suggested at the one moment it is obviously the question.
+
+            Shown after every era, including one that went badly, and the
+            wording does not change. Somebody who kept 4 of 28 is exactly who
+            a commitment with a FLOOR would serve — that is what a discipline
+            has and an era does not. The offer is about what happens next, not
+            a verdict on the month, so it must not read like a reward for a
+            good one.
+
+            Second, not first: starting the next era is still the headline.
+          */}
           <Link href="/era" className="mt-3 w-full block text-center py-3 rounded-xl bg-white text-black text-sm font-medium">
             Start your next era
           </Link>
+          <button
+            onClick={() => { haptic('light'); setKeeping(true) }}
+            className="mt-2 w-full py-3 rounded-xl border border-white/15 text-sm text-white/85 active:scale-[0.99]"
+          >
+            Keep one thing from this
+          </button>
+          <p className="text-[11px] text-white/40 text-center mt-1.5 leading-relaxed">
+            Thirty days is a push. A discipline is what you keep.
+          </p>
         </div>
       )
       break
@@ -1082,6 +1113,21 @@ function ActiveEra({
       )}
 
       {sharing && <ShareEraSheet era={era} onClose={() => setSharing(false)} />}
+      {/* Seeded from the era: its domain where one genuinely maps, its title
+          as a fallback name, and their own repeated promises to pick from.
+          No minimum — the floor is theirs to write, and it is the part a
+          discipline exists for. */}
+      {keeping && (
+        <AddPracticeSheet
+          seed={{
+            domain: ERA_PRACTICE_DOMAIN[era.key],
+            label: eraName(era.title),
+            chips: era.keepOptions,
+          }}
+          onClose={() => setKeeping(false)}
+          onAdded={() => setKeeping(false)}
+        />
+      )}
       {wakeOpen && (
         <WakeCallSheet eraTitle={era.title} initial={wake} onClose={() => setWakeOpen(false)} onSaved={setWake} />
       )}
