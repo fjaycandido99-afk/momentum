@@ -73,7 +73,6 @@ import { useAchievementOptional } from '@/contexts/AchievementContext'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 import { haptic } from '@/lib/haptics'
 import { isNativePlatform } from '@/lib/guide-audio-native'
-import { AudioVisualizer } from '@/components/player/AudioVisualizer'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { useFeatureTooltip, type FeatureId } from '@/components/premium/FeatureTooltip'
 
@@ -1308,6 +1307,13 @@ export function ImmersiveHome() {
     handlePlayMusic(video, index, genreId, genreWord)
   }, [stopPreview, startPreview, genreVideos, genreBackgrounds, backgrounds, createBgMusicPlayer, audioContext, dispatch])
 
+  // Is the mini player on screen? Something playing, loading, or paused by
+  // the user — see the BottomPlayerBar comment below. The coach button reads
+  // it too, so it only lifts when there is a bar to clear.
+  const playerBarShowing = !!(audioState.musicPlaying || audioState.guideIsPlaying || audioState.soundscapeIsPlaying
+    || audioState.loadingGuide
+    || audioState.userPausedMusic || audioState.userPausedGuide || audioState.userPausedSoundscape)
+
   return (
     <div className="isolate h-[100dvh] overflow-hidden">
     {/* App-shell scrolling: the PAGE does not scroll, this container does.
@@ -1833,7 +1839,14 @@ export function ImmersiveHome() {
           1,194px screen floats in empty space 200px away from anything it
           relates to. On a phone the column is the whole width, so this is
           the same position it always was. */}
-      <div className="fixed inset-x-0 bottom-28 z-30 pointer-events-none flex justify-end md:justify-center">
+      {/* Lifted above the player bar only while the bar is there. It used to
+          sit at bottom-28 always, floating over the disciplines with nothing
+          beneath it. */}
+      <div
+        className={`fixed inset-x-0 z-30 pointer-events-none flex justify-end md:justify-center ${
+          playerBarShowing ? 'bottom-28' : 'bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
+        }`}
+      >
       <div className="flex items-center gap-2 pointer-events-auto pr-5 md:pr-0 md:w-[680px] md:justify-end">
         <CoachGreetingBubble mindsetId={mindsetCtx?.mindset} onVisibleChange={setIsCoachNudging} />
         <Link
@@ -1881,12 +1894,9 @@ export function ImmersiveHome() {
         }}
       />
 
-      {/* Audio Visualizer — decorative bars above the player bar */}
-      {(audioState.musicPlaying || audioState.soundscapeIsPlaying) && (
-        <div className="fixed bottom-[68px] left-0 right-0 z-30 flex justify-center pointer-events-none">
-          <AudioVisualizer isPlaying={audioState.musicPlaying || audioState.soundscapeIsPlaying} barCount={24} height={32} className="opacity-40" />
-        </div>
-      )}
+      {/* (The decorative visualizer that floated above the player bar is
+          gone: it sat over content, right above a bar that already animates
+          its own bars.) */}
 
       {/* Bottom Player Bar — only when there is a live session.
           It used to render always, so a fresh home screen showed
@@ -1896,9 +1906,7 @@ export function ImmersiveHome() {
           that lies. Now it appears when something is playing, loading, or
           the user paused it themselves — a restored label nobody has
           touched shows nothing. */}
-      {(audioState.musicPlaying || audioState.guideIsPlaying || audioState.soundscapeIsPlaying
-        || audioState.loadingGuide
-        || audioState.userPausedMusic || audioState.userPausedGuide || audioState.userPausedSoundscape) && (
+      {playerBarShowing && (
       <BottomPlayerBar
         mode={activeMode}
         isPlaying={

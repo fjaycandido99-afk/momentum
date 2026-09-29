@@ -64,7 +64,9 @@ export function FeatureHint({ id, text, mode }: FeatureHintProps) {
         {text}
       </p>
       <button
-        onClick={() => { setDismissed(`hint-${id}`, 'forever'); setVisible(false) }}
+        // stopPropagation: a hint can sit inside something tappable (it did,
+        // in the mini player), and closing it also opened the player.
+        onClick={(e) => { e.stopPropagation(); setDismissed(`hint-${id}`, 'forever'); setVisible(false) }}
         aria-label="Hide this tip"
         className="shrink-0 p-0.5 -mt-0.5 rounded-full text-white/25 hover:text-white/60 hover:bg-white/10"
       >

@@ -19,7 +19,6 @@ import { VOICE_GUIDES } from './home-types'
 import { ERA_LIMITS, eraName } from '@/lib/era/presets'
 import { BLOCKERS, CONFIDENCE_LABELS, HELPERS, reasonLabel } from '@/lib/era/reasons'
 import { alignmentLine } from '@/lib/era/alignment'
-import { DIFFICULTY_DOTS } from '@/lib/era/logic'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
@@ -741,23 +740,9 @@ function ActiveEra({
                 <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
                   <Target className="w-3.5 h-3.5" /> Today&rsquo;s mission
                 </div>
-                {/* Difficulty comes from the PHASE, not from 240 hand-written
-                    labels: the same mission is a different ask in week one
-                    and week three, and the phase is the honest answer. */}
-                <span
-                  className="flex items-center gap-1"
-                  title={`${era.phase.difficulty} — ${era.phase.asks}`}
-                  aria-label={`Difficulty: ${era.phase.difficulty}`}
-                >
-                  {[1, 2, 3].map(dot => (
-                    <span
-                      key={dot}
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        dot <= DIFFICULTY_DOTS[era.phase.difficulty] ? 'bg-white/80' : 'bg-white/20'
-                      }`}
-                    />
-                  ))}
-                </span>
+                {/* No difficulty dots here: three dots beside a label read as a
+                    pager. The phase still sets how hard the mission is — the
+                    hero's chapter line says which phase this is. */}
               </div>
               <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>{era.mission}</p>
               <div className="flex flex-wrap items-center gap-3">
@@ -1080,9 +1065,10 @@ function ActiveEra({
         </div>
       )}
 
-      {/* Promises kept · streak */}
-      <div className="card-surface-lg px-4 py-3.5 grid grid-cols-2 divide-x divide-white/10">
-        <div className="flex items-center gap-3 pr-3">
+      {/* Promises kept. The streak used to sit beside it as well as in the
+          hero — one streak per screen, and the hero's is the one people see. */}
+      <div className="card-surface-lg px-4 py-3.5">
+        <div className="flex items-center gap-3">
           <BarChart3 className="w-5 h-5 text-white/80" />
           <div>
             <p className="text-[11px] text-white/55">Promises kept</p>
@@ -1096,20 +1082,6 @@ function ActiveEra({
             {era.stats.keptPercent === null && (
               <p className="text-[10px] text-white/40 mt-1">after your first check-in</p>
             )}
-          </div>
-        </div>
-        <div className="flex items-center gap-3 pl-4">
-          <Flame className="w-5 h-5 text-white/80" />
-          <div>
-            <p className="text-[11px] text-white/55">Streak</p>
-            <p className="text-2xl text-white leading-none mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
-              {era.stats.promiseStreak}
-            </p>
-            {/* Says what the number counts: days with a promise MADE, which
-                is not the same as days kept (lib/era/logic computeStats). */}
-            <p className="text-[10px] text-white/40 mt-1">
-              {era.stats.promiseStreak === 1 ? 'day with a promise' : 'days with a promise'}
-            </p>
           </div>
         </div>
       </div>

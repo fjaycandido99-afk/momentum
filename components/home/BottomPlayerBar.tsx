@@ -2,7 +2,6 @@
 
 import { Share2 } from 'lucide-react'
 import { EqBars } from '@/components/ui/EqBars'
-import { FeatureHint } from '@/components/ui/FeatureHint'
 import { useShareCard } from '@/hooks/useShareCard'
 import { generateListeningCard } from '@/hooks/useShareCardTemplates'
 import PlayPauseIcon from '@/components/ui/PlayPauseIcon'
@@ -65,7 +64,6 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
               )}
             </div>
             <p className="text-xs text-white/70 leading-tight truncate">{displayLabel}</p>
-            <FeatureHint id="home-player-bar" text="Tap the title to open full player" mode="once" />
             {nextTrackTitle && isPlaying && (
               <p className="text-[10px] text-white/60 leading-tight truncate mt-0.5">
                 Up next: {nextTrackTitle}
