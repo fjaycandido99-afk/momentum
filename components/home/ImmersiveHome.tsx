@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, PenLine, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Wind, MessageCircle, Dumbbell, X, HeartPulse } from 'lucide-react'
+import { Settings, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Wind, MessageCircle, X, Search } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
-import { SpiralLogo } from './SpiralLogo'
+import { SearchSheet } from './SearchSheet'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { useHomeAudio } from '@/contexts/HomeAudioContext'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
@@ -43,7 +43,6 @@ import { getDateString } from '@/lib/daily-guide/day-type'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { syncWidgetData } from '@/lib/widget-sync'
-import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { FREEMIUM_LIMITS } from '@/lib/subscription-constants'
 import { PreviewPaywall, PreviewTimer, usePreview } from '@/components/premium/SoftLock'
@@ -246,7 +245,7 @@ export function ImmersiveHome() {
   const [isCoachNudging, setIsCoachNudging] = useState(false)
 
   // Hamburger menu
-  const [showMenu, setShowMenu] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
 
   // Overlays
 
@@ -1464,86 +1463,38 @@ export function ImmersiveHome() {
               <NotificationBell />
               {/* Reset wind button — parked per user request. Infra
                   stays mounted; re-add this block to bring it back. */}
-              {/* The mindset mark used to be a decorative div: a symbol in
-                  the middle of the tap targets with no label and nowhere to
-                  go, so nobody could tell what it was. It's the coach's
-                  voice, so it now says so and opens the picker. */}
-              {mindsetCtx && (
-                <Link
-                  href="/mindset-selection"
-                  aria-label={`Your coach speaks as ${mindsetCtx.mindset}. Change it.`}
-                  title={`Coach voice: ${mindsetCtx.mindset}`}
-                  className="flex items-center justify-center h-7 w-7 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
-                >
-                  <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-4 h-4 text-white/75" />
-                </Link>
-              )}
-              {/* The mark is the menu, and a logo does not look tappable —
-                  the only hint it was a control arrived after you'd already
-                  tapped it (the spiral starts spinning). It keeps its size
-                  and its job, but wears the same ring as the controls
-                  beside it, so the row reads as three buttons instead of
-                  two buttons and a piece of branding. */}
+              {/* Search and Settings, the mockup's header. The spiral menu is
+                  gone: its places are the search sheet's "Go to" list and
+                  the top of Settings ("Your space"), and the coach-voice mark
+                  lives in both. */}
               <button
-                onClick={() => setShowMenu(!showMenu)}
-                aria-label={showMenu ? 'Close menu' : 'Open menu'}
-                aria-expanded={showMenu}
-                title={showMenu ? 'Close menu' : 'Menu'}
-                className={`flex items-center justify-center h-10 w-10 rounded-full border press-scale transition-colors ${
-                  showMenu ? 'bg-white/[0.12] border-white/25' : 'bg-white/[0.06] border-white/[0.12]'
-                }`}
+                onClick={() => setShowSearch(true)}
+                aria-label="Search"
+                className="flex items-center justify-center h-10 w-10 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
               >
-                <SpiralLogo open={showMenu} size={30} />
+                <Search className="w-[18px] h-[18px] text-white/85" />
               </button>
+              <Link
+                href="/settings"
+                aria-label="Settings"
+                className="flex items-center justify-center h-10 w-10 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
+              >
+                <Settings className="w-[18px] h-[18px] text-white/85" />
+              </Link>
             </div>
           </div>
         </div>
       )}
 
-      {/* Hamburger Menu Dropdown */}
-      {showMenu && (
-        <>
-          {/* z-[60] and a safe-area-relative offset.
-              This menu was z-40 while the sticky header above it is z-50,
-              and it was pinned at a hardcoded top-[100px]. On a notched
-              iPhone the header is taller than 100px once
-              safe-area-inset-top is added, so the header painted straight
-              over the menu's first row — Daily Guide — and it simply was
-              not there on the device. Invisible on desktop, where the
-              header is shorter. Same layering mistake as the quote popup.
-              Offset now follows the notch instead of guessing at it. */}
-          <div className="fixed inset-0 z-[55]" onClick={() => setShowMenu(false)} role="presentation" />
-          <div
-            className="fixed right-6 z-[60] w-48 py-2 rounded-2xl bg-black border border-white/15 shadow-xl animate-fade-in-up"
-            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 4.5rem)' }}
-          >
-            <Link href="/training" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
-              <Dumbbell className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">Training</span>
-            </Link>
-            <Link href="/reset" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
-              <HeartPulse className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">Not feeling it</span>
-            </Link>
-            <Link href="/journal" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
-              <PenLine className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">Journal</span>
-            </Link>
-            <Link href="/saved" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
-              <Save className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">Saved</span>
-            </Link>
-            <Link href="/progress" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
-              <BarChart3 className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">Progress</span>
-            </Link>
-            <div className="mx-3 my-1 border-t border-white/15" />
-            <Link href="/settings" onClick={() => setShowMenu(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 active:bg-white/5 transition-colors">
-              <Settings className="w-4 h-4 text-white/85" />
-              <span className="text-sm text-white/90">Settings</span>
-            </Link>
-          </div>
-        </>
+      {showSearch && (
+        <SearchSheet
+          onClose={() => setShowSearch(false)}
+          onPlaySoundscape={(id) => {
+            const item = SOUNDSCAPE_ITEMS.find(s => s.id === id)
+            if (item) handleSoundscapePlay(item, !isContentFree('soundscape', id))
+          }}
+          onPlayGuide={(id, name) => handleGuidePlay(id, name, !isContentFree('voiceGuide', id))}
+        />
       )}
 
       {/* Morning ritual popup — appears centered on first open in the morning

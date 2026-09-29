@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  AlarmClock, ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Moon, Play, Share2, Shuffle, Target, X,
+  AlarmClock, ArrowRight, ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Moon, Play, Share2, Shuffle, Target, X,
   type LucideIcon,
 } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
@@ -180,6 +180,20 @@ function Greeting({ quote }: { quote: { text: string; author: string } | null })
   )
 }
 
+/**
+ * Scroll the page's own container (the [data-app-shell]) so an element sits
+ * a little below the sticky header. Never scrollIntoView: it also scrolls the
+ * document and the overflow-hidden frame around the shell, which is what
+ * once left the header stuck under the status bar.
+ */
+function scrollShellTo(id: string) {
+  const el = document.getElementById(id)
+  const shell = el?.closest<HTMLElement>('[data-app-shell]')
+  if (!el || !shell) return
+  const top = shell.scrollTop + el.getBoundingClientRect().top - shell.getBoundingClientRect().top - 120
+  shell.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+}
+
 // ─── Hero ────────────────────────────────────────────────────────────────────
 
 function heroShell(children: React.ReactNode, image?: string | null) {
@@ -263,16 +277,10 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
             </p>
           )}
 
-          <div className="flex items-end justify-between gap-3 mt-5">
-            <p className="text-2xl text-white" style={{ ...SERIF, fontWeight: 500 }}>
-              Day {era.day}<span className="text-white/40"> / {era.lengthDays}</span>
-            </p>
-            {era.stats.promiseStreak > 1 && (
-              <span className="flex items-center gap-1 text-xs text-white/70 pb-1">
-                <Flame className="w-3.5 h-3.5" /> {era.stats.promiseStreak} day streak
-              </span>
-            )}
-          </div>
+          {/* The streak lives in the stats card below — one per screen. */}
+          <p className="text-2xl text-white mt-5" style={{ ...SERIF, fontWeight: 500 }}>
+            Day {era.day}<span className="text-white/40"> / {era.lengthDays}</span>
+          </p>
           {/* One segment per day — a hairline percentage bar was easy to miss
               and said nothing about HOW the days went. Kept is solid white,
               not kept is dim, a day without a promise is faint, today glows
@@ -992,24 +1000,34 @@ function ActiveEra({
       {/* The day as a sequence: where you are, what to do now, and — when
           they told us how they are — one line of their own words about it.
           The cards below stop being a wall of equals. */}
-      <div className="px-1">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] tracking-[0.2em] uppercase text-white/45">{era.loop.label}</span>
-          <span className="flex items-center gap-1" aria-label={`Step ${era.loop.index} of ${era.loop.of} today`}>
-            {Array.from({ length: era.loop.of }, (_, i) => (
-              <span
-                key={i}
-                className={`h-[3px] w-4 rounded-full ${
-                  i < era.loop.index ? 'bg-white/70' : 'bg-white/15'
-                }`}
-              />
-            ))}
-          </span>
+      {/* "Focus now": the one next step, as a card with a way straight to it
+          (the arrow scrolls to the promise / check-in card below). */}
+      <div className="card-surface-lg p-4 flex items-center gap-3.5">
+        <span className="w-10 h-10 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center" aria-hidden>
+          <Target className="w-[18px] h-[18px] text-white/80" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+            {era.step === 'complete' || era.loop.label === 'Done for today' ? era.loop.label : 'Focus now'}
+          </p>
+          <p className="text-[19px] text-white leading-snug mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
+            {era.loop.line}
+          </p>
+          {era.loop.advice && (
+            <p className="text-[13px] text-white/50 mt-1 leading-snug">{era.loop.advice}</p>
+          )}
         </div>
-        <p className="text-sm text-white/80 mt-1.5 leading-snug">{era.loop.line}</p>
-        {era.loop.advice && (
-          <p className="text-[13px] text-white/50 mt-1 leading-snug">{era.loop.advice}</p>
+        {era.step !== 'complete' && (
+          <button
+            onClick={() => scrollShellTo('era-action')}
+            aria-label={`Go to: ${era.loop.line}`}
+            className="w-11 h-11 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center press-scale"
+          >
+            <ArrowRight className="w-4 h-4 text-white/85" />
+          </button>
         )}
+      </div>
+      <div className="px-1 -mt-1">
         {/* The way out of the loop, for the days when the loop is the wrong
             ask. Sitting here on purpose: the moment someone reads "make
             today's promise" and can't is the moment they need this. */}
@@ -1034,7 +1052,7 @@ function ActiveEra({
       <RoutineLine />
 
       <AudioCard audio={audio} />
-      {action}
+      <div id="era-action" className="scroll-mt-28">{action}</div>
       {/* The practice — an exercise Voxu runs with you, sized to the phase
           you're in. Sits after the promise deliberately: the promise is the
           era, this is the training for it. */}
@@ -1065,10 +1083,10 @@ function ActiveEra({
         </div>
       )}
 
-      {/* Promises kept. The streak used to sit beside it as well as in the
-          hero — one streak per screen, and the hero's is the one people see. */}
-      <div className="card-surface-lg px-4 py-3.5">
-        <div className="flex items-center gap-3">
+      {/* Promises kept · streak — the era's two real numbers, and the only
+          streak on the screen (the hero shows the day, not the streak). */}
+      <div className="card-surface-lg px-4 py-3.5 grid grid-cols-2 divide-x divide-white/10">
+        <div className="flex items-center gap-3 pr-3">
           <BarChart3 className="w-5 h-5 text-white/80" />
           <div>
             <p className="text-[11px] text-white/55">Promises kept</p>
@@ -1082,6 +1100,20 @@ function ActiveEra({
             {era.stats.keptPercent === null && (
               <p className="text-[10px] text-white/40 mt-1">after your first check-in</p>
             )}
+          </div>
+        </div>
+        <div className="flex items-center gap-3 pl-4">
+          <Flame className="w-5 h-5 text-white/80" />
+          <div>
+            <p className="text-[11px] text-white/55">Streak</p>
+            <p className="text-2xl text-white leading-none mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
+              {era.stats.promiseStreak}
+            </p>
+            {/* Says what the number counts: days with a promise MADE, which
+                is not the same as days kept (lib/era/logic computeStats). */}
+            <p className="text-[10px] text-white/40 mt-1">
+              {era.stats.promiseStreak === 1 ? 'day with a promise' : 'days with a promise'}
+            </p>
           </div>
         </div>
       </div>
