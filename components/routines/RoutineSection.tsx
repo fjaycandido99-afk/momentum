@@ -263,11 +263,12 @@ export function RoutineSection() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Your routine</p>
-          <p className="text-[12px] text-white/45 mt-0.5">
-            {routine
-              ? `${routine.label} · ${daysLabel(routine.days)}`
-              : 'The shape of your day, and when.'}
-          </p>
+          {/* Only a subtitle that carries data — the name and the days. */}
+          {routine && (
+            <p className="text-[12px] text-white/45 mt-0.5">
+              {`${routine.label} · ${daysLabel(routine.days)}`}
+            </p>
+          )}
         </div>
         {routine && (
           <div className="shrink-0 flex items-center gap-3">

@@ -166,7 +166,9 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
             </p>
           </>
         ) : (
-          <div className="mt-3 space-y-3">
+          // One card, rows split by hairlines — not a box per discipline with
+          // boxes inside it (three levels of border read as clutter).
+          <div className="mt-1 divide-y divide-white/[0.08]">
             {practices.map(p => (
               <PracticeRow
                 key={p.id}
@@ -309,20 +311,12 @@ function PracticeRow({
   }
 
   return (
-    <div className="rounded-xl border border-white/[0.12] p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[15px] text-white leading-snug truncate">{practice.label}</p>
-          <p className="text-[11px] text-white/45 mt-0.5">
-            {daysLabel(practice.days)} · minimum {practice.todaysMinimum}
-          </p>
-        </div>
-        {/* Counts with their denominator in view — never a bare percentage. */}
-        {practice.of > 0 && (
-          <p className="text-[11px] text-white/45 tabular-nums shrink-0">
-            {practice.done} of {practice.of}
-          </p>
-        )}
+    <div className="py-3.5">
+      {/* The minimum is said once, in the line above the buttons, and the
+          "N of M" count lives in Details — each used to appear here too. */}
+      <div className="min-w-0">
+        <p className="text-[15px] text-white leading-snug truncate">{practice.label}</p>
+        <p className="text-[11px] text-white/45 mt-0.5">{daysLabel(practice.days)}</p>
       </div>
 
       {/* The last seven days. Same language as the year grid on /proof:
@@ -357,32 +351,35 @@ function PracticeRow({
         Only ever yesterday, and only when it was DUE and never answered. A
         day that was answered stays answered; a rest day was never asked.
       */}
+      {/* One quiet line, not a second row of big buttons: it sat right
+          above today's Done / Minimum / – and the two sets looked the same.
+          The ability is unchanged; only its weight is. */}
       {unansweredYesterday && (
-        <div className="mt-2 rounded-lg bg-white/[0.04] border border-white/[0.1] px-3 py-2.5">
-          <p className="text-[12px] text-white/70">Yesterday went unanswered.</p>
-          <div className="flex gap-1.5 mt-2">
-            <button
-              onClick={() => { haptic('medium'); onLog(true, false, unansweredYesterday) }}
-              disabled={busy}
-              className="flex-1 py-1.5 rounded-lg bg-white/[0.08] border border-white/15 text-[12px] text-white disabled:opacity-40 active:scale-[0.98]"
-            >
-              Done
-            </button>
-            <button
-              onClick={() => { haptic('light'); onLog(true, true, unansweredYesterday) }}
-              disabled={busy}
-              className="flex-1 py-1.5 rounded-lg bg-white/[0.08] border border-white/15 text-[12px] text-white/80 disabled:opacity-40 active:scale-[0.98]"
-            >
-              The minimum
-            </button>
-            <button
-              onClick={() => { haptic('light'); onLog(false, false, unansweredYesterday) }}
-              disabled={busy}
-              className="flex-1 py-1.5 rounded-lg border border-white/10 text-[12px] text-white/50 disabled:opacity-40 active:scale-[0.98]"
-            >
-              It didn’t
-            </button>
-          </div>
+        <div className="mt-2 flex flex-wrap items-center gap-x-1 text-[12px]">
+          <span className="text-white/50 mr-1">Yesterday?</span>
+          <button
+            onClick={() => { haptic('medium'); onLog(true, false, unansweredYesterday) }}
+            disabled={busy}
+            className="px-1.5 py-2 text-white/80 underline underline-offset-4 decoration-white/20 disabled:opacity-40"
+          >
+            Done
+          </button>
+          <span className="text-white/25" aria-hidden>·</span>
+          <button
+            onClick={() => { haptic('light'); onLog(true, true, unansweredYesterday) }}
+            disabled={busy}
+            className="px-1.5 py-2 text-white/80 underline underline-offset-4 decoration-white/20 disabled:opacity-40"
+          >
+            The minimum
+          </button>
+          <span className="text-white/25" aria-hidden>·</span>
+          <button
+            onClick={() => { haptic('light'); onLog(false, false, unansweredYesterday) }}
+            disabled={busy}
+            className="px-1.5 py-2 text-white/55 underline underline-offset-4 decoration-white/15 disabled:opacity-40"
+          >
+            It didn’t
+          </button>
         </div>
       )}
 
@@ -392,7 +389,7 @@ function PracticeRow({
           is a VIEW choice: it changes which list is shown, and the single
           Done / Minimum / Not today is still the only thing recorded. */}
       {practice.recovery && !answered && (
-        <div className="mt-2.5 rounded-lg bg-white/[0.05] border border-white/[0.14] px-3 py-2.5">
+        <div className="mt-2.5 rounded-lg bg-white/[0.05] px-3 py-2.5">
           <p className="text-[13px] text-white/85 leading-snug">{practice.recovery.line}</p>
           {practice.recovery.options.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
@@ -424,7 +421,8 @@ function PracticeRow({
           detail they typed, the run, the book. Shown, never graded, and
           never parsed: "3 x 8" is a note to themselves. */}
       {shownContent.slot && (shownContent.items.length > 0 || onEditPlan) && practice.state !== 'rest' && (
-        <div className="mt-2.5 rounded-lg bg-white/[0.03] border border-white/[0.08] px-3 py-2">
+        // A rule down the side, not another box inside the row.
+        <div className="mt-2.5 border-l border-white/[0.14] pl-3 py-0.5">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[10px] tracking-[0.18em] uppercase text-white/40">
               {shownContent.label}
@@ -508,7 +506,7 @@ function PracticeRow({
           tone. It never lowers the ask by itself: it says what it noticed
           and the choice below is still theirs. */}
       {choosing && practice.intervention && (
-        <p className="text-[13px] text-white/80 mt-2 leading-snug rounded-lg bg-white/[0.05] border border-white/[0.12] px-3 py-2">
+        <p className="text-[13px] text-white/80 mt-2 leading-snug">
           {practice.intervention}
         </p>
       )}

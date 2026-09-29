@@ -70,21 +70,15 @@ export default function TrainingPage() {
             ONE exercise for today, and the disciplines you keep for months.
             They used to be called "Today's practice" and "Your practices",
             which made the reader work out the difference. */}
+        {/* No page headings over these two: each card already names itself
+            ("Today", "Your disciplines" with its Add button), and a heading
+            plus a subtitle plus the card's own label said every name three
+            times. */}
         <div className="mt-7">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Today</p>
-          <p className="text-[12px] text-white/45 mt-0.5">Your one mindset exercise for today.</p>
-          <div className="mt-2.5">
-            <PracticeSection hasEra={!!era} />
-          </div>
+          <PracticeSection hasEra={!!era} />
         </div>
 
-        <div className="mt-7 space-y-3">
-          <div>
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Disciplines</p>
-            <p className="text-[12px] text-white/45 mt-0.5">
-              The long-term things you&rsquo;re staying consistent with.
-            </p>
-          </div>
+        <div className="mt-5">
           <PracticesSection canAdd />
         </div>
 
@@ -100,10 +94,7 @@ export default function TrainingPage() {
         {/* What it has noticed. Last on the page on purpose: the answer for
             today comes before any observation about the last three months. */}
         <div className="mt-7 space-y-3">
-          <div>
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Patterns</p>
-            <p className="text-[12px] text-white/45 mt-0.5">What Voxu is learning about you.</p>
-          </div>
+          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Patterns</p>
           <PatternsBlock />
         </div>
 

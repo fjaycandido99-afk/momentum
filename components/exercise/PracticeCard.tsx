@@ -1,7 +1,6 @@
 'use client'
 
 import { Check, Play } from 'lucide-react'
-import { DIFFICULTY_DOTS } from '@/lib/era/logic'
 import { attributeLabel } from '@/lib/exercises/attributes'
 import type { Exercise } from '@/lib/exercises/library'
 
@@ -22,13 +21,13 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 export function PracticeCard({
   exercise,
   trains,
-  difficulty,
   done,
   onOpen,
 }: {
   exercise: Exercise
   trains: string[]
-  difficulty: 'light' | 'moderate' | 'hard'
+  /** Still passed by callers; no longer drawn here (see below). */
+  difficulty?: 'light' | 'moderate' | 'hard'
   done?: boolean
   onOpen: () => void
 }) {
@@ -59,21 +58,11 @@ export function PracticeCard({
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">
-            {done ? 'Done today' : 'Today'}
-          </p>
-          {!done && (
-            <span className="flex items-center gap-[3px]" aria-label={`Difficulty: ${difficulty}`}>
-              {[0, 1, 2].map(i => (
-                <span
-                  key={i}
-                  className={`w-1 h-1 rounded-full ${i < DIFFICULTY_DOTS[difficulty] ? 'bg-white/60' : 'bg-white/15'}`}
-                />
-              ))}
-            </span>
-          )}
-        </div>
+        {/* No difficulty dots: three dots beside a label read as a pager,
+            and people looked for the other pages. */}
+        <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">
+          {done ? 'Done today' : 'Today'}
+        </p>
         <p className="text-xl text-white leading-tight mt-0.5 truncate" style={{ ...SERIF, fontWeight: 500 }}>
           {exercise.title}
         </p>
