@@ -65,7 +65,14 @@ export function MusicTabsSection({
     if (!pillsRef.current) return
     const active = pillsRef.current.querySelector('[data-active="true"]') as HTMLElement | null
     if (active) {
-      active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+      // Scroll the strip itself, not scrollIntoView: WebKit also scrolls
+      // outer (even overflow-hidden) ancestors with it, which on the phone
+      // shoved the whole home screen up under the status bar.
+      const strip = pillsRef.current
+      const s = strip.getBoundingClientRect()
+      const r = active.getBoundingClientRect()
+      const left = strip.scrollLeft + (r.left - s.left) - (s.width - r.width) / 2
+      strip.scrollTo({ left, behavior: 'smooth' })
     }
   }, [selectedGenreId])
 

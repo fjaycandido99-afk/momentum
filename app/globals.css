@@ -2844,3 +2844,24 @@ html.modal-open body {
 html.modal-open [data-app-shell] {
   overflow: hidden !important;
 }
+
+/* Room to scroll a field above the keyboard. Pages scroll inside a
+   [data-app-shell] sized to the SCREEN, so a field near the end of the page —
+   the journal chat composer — had nothing below it to scroll up into, and sat
+   under the keyboard. KeyboardAware sets --kb-inset to the keyboard's height
+   while it is open (0 otherwise), and this adds exactly that much space. */
+[data-app-shell]::after {
+  content: '';
+  display: block;
+  height: var(--kb-inset, 0px);
+}
+
+/* A page with an app shell scrolls INSIDE the shell. The document itself must
+   never scroll: when it did (the keyboard's inset, a scrollIntoView), the whole
+   screen slid up and the sticky header went under the status bar with no way
+   back. Browsers without :has() simply keep the old behaviour. */
+html:has([data-app-shell]),
+html:has([data-app-shell]) body {
+  height: 100%;
+  overflow: hidden;
+}
