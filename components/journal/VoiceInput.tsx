@@ -6,9 +6,11 @@
    Two backends, chosen by what the runtime actually exposes:
 
    1. Web Speech API (`webkitSpeechRecognition`) — instant on-device
-      streaming transcription. Available in Safari / Chrome, but NOT in
-      the iOS WKWebView that Capacitor uses. When this is present we use
-      it because it's free, low-latency, and emits interim text live.
+      streaming transcription. Used in Safari / Chrome because it's free,
+      low-latency, and emits interim text live. NOT in the iPhone app: the
+      WKWebView there DOES expose webkitSpeechRecognition, but every start
+      fails with "service-not-allowed" — so the constructor existing proves
+      nothing, and native goes straight to (2).
 
    2. MediaRecorder + /api/transcribe (Whisper) — fallback when SR is
       missing. Records audio locally via the mic (requires the mic
@@ -38,19 +40,29 @@ interface VoiceInputProps {
 
 type Backend = 'speech-api' | 'media-recorder' | 'none'
 
-function detectBackend(): Backend {
+function canRecord(): boolean {
+  return (
+    typeof window.MediaRecorder !== 'undefined'
+    && typeof navigator !== 'undefined'
+    && !!navigator.mediaDevices
+    && typeof navigator.mediaDevices.getUserMedia === 'function'
+  )
+}
+
+function isNativeApp(): boolean {
+  const cap = (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor
+  return !!cap?.isNativePlatform?.()
+}
+
+export function detectBackend(): Backend {
   if (typeof window === 'undefined') return 'none'
+  // The iPhone app first — see the header: its speech API is a stub that
+  // always refuses.
+  if (isNativeApp() && canRecord()) return 'media-recorder'
   const SR = (window as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown }).SpeechRecognition
     || (window as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
   if (SR) return 'speech-api'
-  if (
-    typeof window.MediaRecorder !== 'undefined'
-    && typeof navigator !== 'undefined'
-    && navigator.mediaDevices
-    && typeof navigator.mediaDevices.getUserMedia === 'function'
-  ) {
-    return 'media-recorder'
-  }
+  if (canRecord()) return 'media-recorder'
   return 'none'
 }
 
@@ -120,6 +132,15 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onerror = (event: any) => {
       console.error('[VoiceInput] Speech API error:', event.error)
+      // The runtime has the API but will not run it (the iPhone app's web
+      // view does this). Recording works there, so switch and start that
+      // rather than showing a code nobody can act on.
+      if (event.error === 'service-not-allowed' && canRecord()) {
+        setIsRecording(false)
+        setBackend('media-recorder')
+        void startMediaRecorderRef.current?.()
+        return
+      }
       if (event.error !== 'no-speech') {
         setIsRecording(false)
         setError(
@@ -127,7 +148,7 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
             ? 'Microphone permission denied.'
             : event.error === 'network'
               ? 'Voice service unreachable. Check your connection.'
-              : `Voice error: ${event.error}`,
+              : "Voice input isn't available here. Type instead.",
         )
       }
     }
@@ -150,6 +171,9 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
   }, [onTranscript, onInterim, resetSilenceTimer])
 
   // ── MediaRecorder backend (Capacitor native, others) ──────────────────
+  // Lets the speech path hand over to recording (defined below it).
+  const startMediaRecorderRef = useRef<(() => Promise<void>) | null>(null)
+
   const startMediaRecorder = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -232,6 +256,8 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
     }
   }, [backend])
 
+  startMediaRecorderRef.current = startMediaRecorder
+
   const toggle = useCallback(() => {
     if (isRecording) {
       stop()
@@ -288,7 +314,10 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
         <button
           type="button"
           onClick={clearError}
-          className="absolute top-full right-0 mt-2 max-w-[220px] px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-[11px] text-red-200 text-left leading-snug shadow-lg z-10"
+          // w-max, not just max-w: an absolute box inside a button-wide
+          // wrapper shrinks to the button, which set the message one word
+          // per line. left-0 because this is the left-most control in the row.
+          className="absolute top-full left-0 mt-2 w-max max-w-[260px] px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-[11px] text-red-200 text-left leading-snug shadow-lg z-10"
         >
           {error}
         </button>

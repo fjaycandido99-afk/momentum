@@ -746,6 +746,10 @@ function JournalContent() {
     const history = seedHistory ?? conversation
     const newConversation = [...history, { role: 'user' as const, content: userMessage }]
     setConversation(newConversation)
+    // There is something new to save. Without this the button stayed on
+    // "Saved" (and disabled) after the first save, or all day on a day that
+    // already had an entry, so later messages could never be kept.
+    setIsSaved(false)
     setChatLoading(true)
     setChatDegraded(false)
 
@@ -1300,22 +1304,34 @@ function JournalContent() {
                   tapped. Both take spoken OR typed input, so the choice is
                   about whether it TALKS to you, not about which hand you
                   use. */}
-              <div className="flex items-center gap-2 px-3 pt-2.5">
+              {/* A labelled switch, not a "Texting / Talking" pill. The pill sat
+                  above the mic and the text box and read as HOW YOU REPLY;
+                  all it ever changed was whether the coach's replies are read
+                  out. Now it says exactly that. */}
+              <div className="px-3 pt-2.5">
                 <button
+                  type="button"
+                  role="switch"
+                  aria-checked={voiceMode}
                   onClick={toggleVoiceMode}
-                  aria-pressed={voiceMode}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    voiceMode
-                      ? 'bg-white text-black'
-                      : 'bg-white/[0.06] border border-white/[0.12] text-white/70 hover:text-white hover:bg-white/[0.12]'
-                  }`}
+                  className="w-full flex items-center gap-2.5 py-1 text-left focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded-lg"
                 >
-                  {voiceMode ? <Volume2 className="w-3.5 h-3.5" /> : <MessageCircle className="w-3.5 h-3.5" />}
-                  {voiceMode ? 'Talking' : 'Texting'}
+                  <Volume2 className={`w-4 h-4 shrink-0 ${voiceMode ? 'text-white' : 'text-white/45'}`} />
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-[13px] text-white/85">Read replies aloud</span>
+                    <span className="block text-[11px] text-white/40">
+                      {voiceMode ? 'Every reply is spoken' : 'Off — tap the speaker on a reply to hear it'}
+                    </span>
+                  </span>
+                  <span
+                    aria-hidden
+                    className={`relative w-10 h-6 rounded-full shrink-0 transition-colors ${voiceMode ? 'bg-white' : 'bg-white/15'}`}
+                  >
+                    <span
+                      className={`absolute top-0.5 w-5 h-5 rounded-full transition-all ${voiceMode ? 'left-[18px] bg-black' : 'left-0.5 bg-white/70'}`}
+                    />
+                  </span>
                 </button>
-                <span className="text-[11px] text-white/40">
-                  {voiceMode ? 'Replies are spoken aloud' : 'Replies stay silent — tap to hear one'}
-                </span>
               </div>
 
               <div className="flex items-end gap-2 p-3 border-t border-white/15">
