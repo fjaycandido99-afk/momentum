@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCachedVideos, setCachedVideos, getStaleCachedVideos } from '@/lib/video-cache'
+import { getCachedVideos, setCachedVideos, getStaleCachedVideos, rememberForToday } from '@/lib/video-cache'
+import { dailyPick } from '@/lib/video-pick'
+
+/** How many to show at once. The cache keeps a bigger pool to pick from. */
+const SHOW = 10
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -70,7 +74,8 @@ export async function GET(request: NextRequest) {
     if (cachedVideos && cachedVideos.length > 0) {
       console.log(`[Music Videos] Using cached videos for "${genre}"`)
       return NextResponse.json({
-        videos: cachedVideos,
+        // Today's pick from the pool, not the pool's first 10 every day.
+        videos: dailyPick(cachedVideos, genre, SHOW),
         genre,
         todaysGenre: getTodaysGenre(),
         cached: true,
@@ -91,7 +96,7 @@ export async function GET(request: NextRequest) {
       }
       return NextResponse.json({ videos: shuffled, genre, todaysGenre: getTodaysGenre(), fallback: true })
     }
-    return NextResponse.json({ videos: fallback, genre, todaysGenre: getTodaysGenre(), fallback: true })
+    return NextResponse.json({ videos: dailyPick(fallback, genre, SHOW), genre, todaysGenre: getTodaysGenre(), fallback: true })
   }
 
   const searchTerms = GENRE_SEARCHES[genre] || GENRE_SEARCHES['lofi']
@@ -129,9 +134,10 @@ export async function GET(request: NextRequest) {
       // Return stale cached videos on API error
       const fallback = await getFallback(genre)
       if (fallback.length > 0) {
-        await setCachedVideos('music', genre, fallback)
+        // Memory only — never re-date a stale list as today's (see video-cache).
+        rememberForToday('music', genre, fallback)
       }
-      return NextResponse.json({ videos: fallback, genre, todaysGenre: getTodaysGenre(), fallback: true })
+      return NextResponse.json({ videos: dailyPick(fallback, genre, SHOW), genre, todaysGenre: getTodaysGenre(), fallback: true })
     }
 
     const searchData = await searchResponse.json()
@@ -180,12 +186,11 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Return up to 10 videos and cache them (skip cache for shuffle — it's user-triggered)
-    const finalVideos = videos.slice(0, 10)
-
-    if (finalVideos.length > 0 && !shuffle) {
-      await setCachedVideos('music', genre, finalVideos)
-    }
+    // Everything that passed the filters goes into the pool; today's pick
+    // comes out of the pool. A user-triggered shuffle stays out of the cache.
+    // An empty search must not re-date the old pool as today's either.
+    const pool = shuffle || videos.length === 0 ? videos : await setCachedVideos('music', genre, videos)
+    const finalVideos = shuffle ? videos.slice(0, SHOW) : dailyPick(pool, genre, SHOW)
 
     return NextResponse.json({
       videos: finalVideos,
@@ -199,8 +204,9 @@ export async function GET(request: NextRequest) {
     // Return stale cached videos on error
     const fallback = await getFallback(genre)
     if (fallback.length > 0) {
-      setCachedVideos('music', genre, fallback)
+      // Memory only — never re-date a stale list as today's (see video-cache).
+      rememberForToday('music', genre, fallback)
     }
-    return NextResponse.json({ videos: fallback, genre, todaysGenre: getTodaysGenre(), fallback: true })
+    return NextResponse.json({ videos: dailyPick(fallback, genre, SHOW), genre, todaysGenre: getTodaysGenre(), fallback: true })
   }
 }

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCachedVideos, setCachedVideos, getStaleCachedVideos } from '@/lib/video-cache'
+import { getCachedVideos, setCachedVideos, getStaleCachedVideos, rememberForToday } from '@/lib/video-cache'
+import { dailyPick } from '@/lib/video-pick'
+
+/** How many to show at once. The cache keeps a bigger pool to pick from. */
+const SHOW = 8
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -56,7 +60,8 @@ export async function GET(request: NextRequest) {
     if (cachedVideos && cachedVideos.length > 0) {
       console.log(`[Motivation Videos] Using cached videos for "${topic}"`)
       return NextResponse.json({
-        videos: cachedVideos,
+        // Today's pick from the pool, not the pool's first 8 every day.
+        videos: dailyPick(cachedVideos, topic, SHOW),
         topic,
         cached: true,
       })
@@ -76,7 +81,7 @@ export async function GET(request: NextRequest) {
       }
       return NextResponse.json({ videos: shuffled, topic, fallback: true })
     }
-    return NextResponse.json({ videos: fallback, topic, fallback: true })
+    return NextResponse.json({ videos: dailyPick(fallback, topic, SHOW), topic, fallback: true })
   }
 
   const searchTerms = TOPIC_SEARCHES[topic] || TOPIC_SEARCHES['Discipline']
@@ -115,9 +120,10 @@ export async function GET(request: NextRequest) {
       // Return stale cached videos on API error (quota exceeded, etc.)
       const fallback = await getFallback(topic)
       if (fallback.length > 0) {
-        await setCachedVideos('motivation', topic, fallback)
+        // Memory only — never re-date a stale list as today's (see video-cache).
+        rememberForToday('motivation', topic, fallback)
       }
-      return NextResponse.json({ videos: fallback, topic, fallback: true })
+      return NextResponse.json({ videos: dailyPick(fallback, topic, SHOW), topic, fallback: true })
     }
 
     const searchData = await searchResponse.json()
@@ -182,13 +188,12 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Return up to 8 videos and cache them
-    const finalVideos = videos.slice(0, 8)
+    // Everything that passed the filters goes into the pool; today's pick
+    // comes out of the pool. A user-triggered shuffle stays out of the cache.
+    // An empty search must not re-date the old pool as today's either.
+    const pool = shuffle || videos.length === 0 ? videos : await setCachedVideos('motivation', topic, videos)
+    const finalVideos = shuffle ? videos.slice(0, SHOW) : dailyPick(pool, topic, SHOW)
 
-    // Cache the results for today (skip cache for shuffle — it's user-triggered)
-    if (finalVideos.length > 0 && !shuffle) {
-      await setCachedVideos('motivation', topic, finalVideos)
-    }
 
     return NextResponse.json({
       videos: finalVideos,
@@ -201,8 +206,9 @@ export async function GET(request: NextRequest) {
     // Return stale cached videos on any error
     const fallback = await getFallback(topic)
     if (fallback.length > 0) {
-      setCachedVideos('motivation', topic, fallback)
+      // Memory only — never re-date a stale list as today's (see video-cache).
+      rememberForToday('motivation', topic, fallback)
     }
-    return NextResponse.json({ videos: fallback, topic, fallback: true })
+    return NextResponse.json({ videos: dailyPick(fallback, topic, SHOW), topic, fallback: true })
   }
 }

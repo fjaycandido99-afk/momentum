@@ -3,6 +3,7 @@
 // DB (VideoCache model) persists across cold starts
 
 import { prisma } from '@/lib/prisma'
+import { mergePool } from '@/lib/video-pick'
 
 interface CachedVideos {
   date: string // YYYY-MM-DD
@@ -59,14 +60,21 @@ export async function getCachedVideos(type: 'motivation' | 'music', key: string)
   return null
 }
 
-// Save videos to both memory and DB
+// Add a FRESH search's results to the pool (fresh first, deduped, capped —
+// see lib/video-pick.ts) and mark it as today's. Returns the merged pool.
+//
+// Only ever call this with results that really came from YouTube today. It
+// used to be called with the stale fallback when the API failed, which
+// re-dated an old list as today's and served it again the next day, and the
+// next — the main reason people kept seeing the same videos.
 export async function setCachedVideos(
   type: 'motivation' | 'music',
   key: string,
-  videos: CachedVideos['videos']
-): Promise<void> {
+  fresh: CachedVideos['videos']
+): Promise<CachedVideos['videos']> {
   const cacheKey = `${type}-${key.toLowerCase()}`
   const today = getTodayString()
+  const videos = mergePool(fresh, await getStaleCachedVideos(type, key))
 
   // Save to memory
   memoryCache.set(cacheKey, { date: today, videos })
@@ -88,7 +96,15 @@ export async function setCachedVideos(
     console.error('[Video Cache] DB write error:', e)
   }
 
-  console.log(`[Video Cache] Cached ${videos.length} ${type} videos for "${key}"`)
+  console.log(`[Video Cache] Pooled ${videos.length} ${type} videos for "${key}" (${fresh.length} fresh)`)
+  return videos
+}
+
+// Serve a stale pool for the rest of today from THIS instance's memory only,
+// so a failing API isn't retried on every request — without writing it to
+// the DB as today's. Tomorrow (or a cold start) tries YouTube again.
+export function rememberForToday(type: 'motivation' | 'music', key: string, videos: CachedVideos['videos']): void {
+  memoryCache.set(`${type}-${key.toLowerCase()}`, { date: getTodayString(), videos })
 }
 
 // Check if we have valid cache for today
