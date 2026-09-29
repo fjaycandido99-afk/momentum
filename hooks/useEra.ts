@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
 import type { EraTodayWire } from '@/lib/era/service'
+import { syncWidgetEra } from '@/lib/widget-sync'
 
 export type EraToday = EraTodayWire
 
@@ -40,6 +41,13 @@ export function useEra() {
   useEffect(() => {
     refresh()
   }, [refresh])
+
+  // Keep the home-screen widget in step with what the app shows. Every
+  // change to the era goes through here — made a promise, kept it, did the
+  // mission — so this one line covers home, /era, the journal and training.
+  useEffect(() => {
+    if (loaded) void syncWidgetEra(era)
+  }, [era, loaded])
 
   return { era, loaded, setEra, refresh }
 }
