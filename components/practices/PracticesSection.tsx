@@ -173,7 +173,11 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
                 practice={p}
                 busy={busyId === p.id}
                 onLog={(done, minimumOnly, day) => log(p, done, minimumOnly, day)}
-                onRetire={canAdd ? () => retire(p) : undefined}
+                // Removing is allowed on home too: it sits behind Details and a
+                // confirm, so it is not a form on the home screen — and a
+                // discipline you could only remove from a page reached through
+                // a menu read as "there is no way to delete this".
+                onRetire={() => retire(p)}
                 onEditPlan={canAdd ? () => setPlanning(p) : undefined}
                 onGuide={() => setGuiding(p)}
                 books={books}
@@ -229,9 +233,10 @@ function PracticeRow({
   today: string
   /** `day` answers yesterday; omitted, it answers today. */
   onLog: (done: boolean, minimumOnly?: boolean, day?: string) => void
-  /** Only where practices are managed (/training), never on home. */
+  /** Removes it from the list (retire; logs kept). Everywhere, behind
+   * Details and a confirm. */
   onRetire?: () => void
-  /** Opens the plan editor. Also only where they are managed. */
+  /** Opens the plan editor. Only where they are managed (/training). */
   onEditPlan?: () => void
   /** Opens the how-to for this discipline's domain. Everywhere, not just
    * where they are managed: the guidance is for the day, not for setup. */
@@ -636,14 +641,14 @@ function PracticeRow({
         confirmRetire ? (
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
             <p className="text-[12px] text-white/70 flex-1">
-              Pause this? Everything it recorded is kept.
+              Remove it from your list? Nothing you logged is deleted.
             </p>
             <button
               onClick={() => { setConfirmRetire(false); onRetire() }}
               disabled={busy}
               className="text-[12px] text-white rounded-lg border border-white/20 px-2.5 py-1 disabled:opacity-40"
             >
-              Pause it
+              Remove
             </button>
             <button
               onClick={() => setConfirmRetire(false)}
@@ -655,9 +660,11 @@ function PracticeRow({
         ) : (
           <button
             onClick={() => setConfirmRetire(true)}
-            className="text-[11px] text-white/30 hover:text-white/60 mt-2.5"
+            className="text-[12px] text-white/50 hover:text-white/80 mt-2.5"
           >
-            Pause this discipline
+            {/* "Remove", not "Pause": there is no way back from retired, and
+                a pause you cannot resume is a delete with a softer name. */}
+            Remove this discipline
           </button>
         )
       )}
