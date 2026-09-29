@@ -118,6 +118,37 @@ workflows:
           echo "=== Entitlements ==="
           /usr/libexec/PlistBuddy -c "Print Entitlements" $PP_PLIST
 
+          # The app's profile must carry the App Group, or the archive fails
+          # signing the moment the widget's shared storage is asked for.
+          if ! /usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.security.application-groups" $PP_PLIST >/dev/null 2>&1; then
+            echo "The app profile has no App Groups entitlement. Regenerate 'Voxu App Store Distribution'"
+            echo "after enabling App Groups (group.com.voxu.app) on com.voxu.app. See ios/App/VoxuWidget/README.md."
+            exit 1
+          fi
+
+      - name: Install widget provisioning profile
+        script: |
+          # The home-screen widget is its own bundle (com.voxu.app.VoxuWidget)
+          # and needs its own App Store profile, named exactly
+          # "Voxu Widget App Store Distribution" (the Xcode project asks for
+          # that name). See ios/App/VoxuWidget/README.md.
+          WPP_PATH=ios/App/Voxu_Widget_App_Store_Distribution.mobileprovision
+          WPP_PLIST=/tmp/wpp_decoded.plist
+          if [ ! -s "$WPP_PATH" ]; then
+            echo "Missing $WPP_PATH — the widget cannot be signed. See ios/App/VoxuWidget/README.md."
+            exit 1
+          fi
+          /usr/bin/security cms -D -i $WPP_PATH > $WPP_PLIST
+          WPP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" $WPP_PLIST)
+          WPP_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" $WPP_PLIST)
+          echo "Widget profile: $WPP_NAME ($WPP_UUID)"
+          if [ "$WPP_NAME" != "Voxu Widget App Store Distribution" ]; then
+            echo "The widget profile must be named exactly 'Voxu Widget App Store Distribution' (got '$WPP_NAME')."
+            exit 1
+          fi
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$WPP_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$WPP_UUID.mobileprovision"
+
       - name: Set version and build number
         script: |
           cd ios/App
@@ -132,6 +163,11 @@ workflows:
           # rejected — every build since then had nowhere to land.
           agvtool new-marketing-version 1.2.2
           agvtool new-version -all $(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0) + 1))
+          # The widget must carry the SAME version and build number as the app
+          # or App Store Connect rejects the upload. agvtool sets every target;
+          # print both so a mismatch is visible in the log.
+          xcodebuild -project App.xcodeproj -target App -showBuildSettings 2>/dev/null | grep -E " (MARKETING_VERSION|CURRENT_PROJECT_VERSION) ="
+          xcodebuild -project App.xcodeproj -target VoxuWidget -showBuildSettings 2>/dev/null | grep -E " (MARKETING_VERSION|CURRENT_PROJECT_VERSION) ="
 
       - name: Build iOS
         script: |
@@ -171,6 +207,8 @@ workflows:
             <dict>
               <key>com.voxu.app</key>
               <string>${PP_NAME}</string>
+              <key>com.voxu.app.VoxuWidget</key>
+              <string>Voxu Widget App Store Distribution</string>
             </dict>
           </dict>
           </plist>
