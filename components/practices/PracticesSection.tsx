@@ -6,6 +6,9 @@ import { BookOpen, Check, ChevronDown, ChevronRight, ChevronUp, Minus, Plus, Rep
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import { domainArt, domainArtAlt } from '@/lib/practices/domain-art'
 import { OPEN_DISCIPLINE, PRACTICES_CHANGED } from '@/lib/pulse/events'
+import { startScript } from '@/lib/pulse/push'
+import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { AddPracticeSheet } from './AddPracticeSheet'
 import { PracticePlanSheet } from './PracticePlanSheet'
 import { PracticeGuideSheet } from './PracticeGuideSheet'
@@ -298,6 +301,7 @@ function PracticeRow({
   onGuide?: () => void
 }) {
   const [confirmRetire, setConfirmRetire] = useState(false)
+  const subscription = useSubscriptionOptional()
   /**
    * Which recovery option they picked, and which slot to show because of it.
    *
@@ -595,6 +599,18 @@ function PracticeRow({
               <Minus className="w-4 h-4" />
             </button>
           </div>
+          {/* Spoken, in Voxu's voice — only while it's actually due. A fixed
+              line per kind of discipline (lib/pulse/push), so it's cached
+              for everyone with the same minimum. */}
+          {practice.state === 'due' && !editing && (
+            <div className="mt-2.5">
+              <SpeakReplyButton
+                label="Talk me into it"
+                text={startScript(PRESETS_BY_KEY.get(practice.presetKey)?.domain, practice.todaysMinimum)}
+                onUpgrade={subscription?.openUpgradeModal}
+              />
+            </div>
+          )}
         </>
       )}
 

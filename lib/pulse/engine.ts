@@ -23,6 +23,8 @@
  * Pure: the clock comes in as minutes past local midnight and a weekday.
  */
 
+import { startScript } from './push'
+
 export type LoopStep = 'state' | 'promise' | 'act' | 'check' | 'check_yesterday' | 'prepare' | 'ready' | 'complete'
 
 export type PracticeState = 'due' | 'done' | 'minimum' | 'missed' | 'rest'
@@ -39,6 +41,8 @@ export interface PulseEra {
 export interface PulsePractice {
   id: string
   label: string
+  /** Its kind (gym, read…) — picks the "talk me into it" line. */
+  domain?: string | null
   state: PracticeState
   todaysMinimum: string
   weakDay: { weekday: number; missed: number; of: number } | null
@@ -77,6 +81,8 @@ export interface RightNow {
   quote: string | null
   context: string | null
   action: { label: string; target: ActionTarget } | null
+  /** For a discipline: the fixed "talk me into it" script (lib/pulse/push). */
+  push?: string | null
 }
 
 export type TodayStatus = 'done' | 'minimum' | 'kept' | 'missed' | 'open' | 'due' | 'upcoming'
@@ -178,6 +184,7 @@ export function rightNow(input: PulseInput, scored: Scored[] = scorePractices(in
       quote: null,
       context: `${slip.slipping} ${minimumContext(slip.p)}`,
       action: { label: 'Open', target: { type: 'practice', id: slip.p.id } },
+      push: startScript(slip.p.domain, slip.p.todaysMinimum),
     }
   }
   const now = scored.find(s => s.dueNow)
@@ -189,6 +196,7 @@ export function rightNow(input: PulseInput, scored: Scored[] = scorePractices(in
       quote: null,
       context: minimumContext(now.p),
       action: { label: 'Open', target: { type: 'practice', id: now.p.id } },
+      push: startScript(now.p.domain, now.p.todaysMinimum),
     }
   }
 
@@ -206,6 +214,7 @@ export function rightNow(input: PulseInput, scored: Scored[] = scorePractices(in
       quote: null,
       context: minimumContext(untimed.p),
       action: { label: 'Open', target: { type: 'practice', id: untimed.p.id } },
+      push: startScript(untimed.p.domain, untimed.p.todaysMinimum),
     }
   }
   if (step === 'act' || step === 'prepare') return fromEra()

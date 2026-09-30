@@ -18,6 +18,7 @@ import { loadEraToday } from '@/lib/era/service'
 import { loadPractices } from '@/lib/practices/server'
 import { runsOn } from '@/lib/routines/glance'
 import { buildPulse, type PulseStep } from '@/lib/pulse/engine'
+import { PRESETS_BY_KEY } from '@/lib/practices/presets'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,6 +73,7 @@ export async function GET() {
       practices: (practices?.practices ?? []).map(p => ({
         id: p.id,
         label: p.label,
+        domain: PRESETS_BY_KEY.get(p.presetKey)?.domain ?? null,
         state: p.state,
         todaysMinimum: p.todaysMinimum,
         weakDay: p.weakDay,

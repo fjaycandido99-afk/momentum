@@ -3,6 +3,8 @@
 import { X } from 'lucide-react'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import type { RightNow } from '@/lib/pulse/engine'
+import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -29,6 +31,7 @@ export function NudgeSheet({
   animating: boolean
   dismissing: boolean
 }) {
+  const subscription = useSubscriptionOptional()
   return (
     <div
       role="dialog"
@@ -51,6 +54,11 @@ export function NudgeSheet({
           {rightNow.title}
         </p>
         {rightNow.context && <p className="text-[13px] text-white/60 mt-2 leading-snug">{rightNow.context}</p>}
+        {rightNow.push && (
+          <div className="mt-3">
+            <SpeakReplyButton label="Talk me into it" text={rightNow.push} onUpgrade={subscription?.openUpgradeModal} />
+          </div>
+        )}
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             onClick={onPrimary}

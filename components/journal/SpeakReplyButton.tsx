@@ -23,8 +23,14 @@ export function SpeakReplyButton({
   text,
   onUpgrade,
   autoPlay = false,
+  label,
 }: {
   text: string
+  /**
+   * Render as a labelled pill ("Talk me into it") instead of the small
+   * speaker icon under a chat reply. Same fetch, same meter, same cache.
+   */
+  label?: string
   onUpgrade?: () => void
   /**
    * Speak this reply without being asked.
@@ -126,6 +132,22 @@ export function SpeakReplyButton({
         <VolumeX className="h-3 w-3" />
         voice unavailable
       </span>
+    )
+  }
+
+  if (label) {
+    return (
+      <button
+        onClick={() => play(true)}
+        className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.16] px-3 py-1.5 text-[12px] text-white/80 hover:text-white active:scale-[0.98] transition-all"
+      >
+        {state === 'loading' ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Volume2 className={`h-3.5 w-3.5 ${state === 'playing' ? 'text-white' : ''}`} />
+        )}
+        {state === 'playing' ? 'Stop' : label}
+      </button>
     )
   }
 
