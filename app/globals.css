@@ -2908,7 +2908,9 @@ html:has([data-app-shell]) body {
 .voxu-scene .card-surface-lg,
 .voxu-scene .card-surface,
 .voxu-scene .scene-hero {
-  background: linear-gradient(180deg, rgb(20 21 26 / 0.76), rgb(8 9 12 / 0.88));
+  /* Solid, not glass: the backdrop shows in the gaps between cards, never
+     through them (Francis: cards "should not be transparent"). */
+  background: linear-gradient(180deg, #15161b, #0a0b0e);
   border-color: rgb(255 255 255 / 0.12);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.05),
@@ -2918,12 +2920,12 @@ html:has([data-app-shell]) body {
 .voxu-scene .scene-hero:has(.scene-photo) {
   background:
     radial-gradient(120% 80% at 0% 0%, rgb(var(--scene-glow) / 0.10), transparent 60%),
-    linear-gradient(180deg, rgb(26 34 60 / 0.66), rgb(9 12 22 / 0.82));
+    linear-gradient(180deg, #161d31, #080b14);
   border-color: rgb(140 165 235 / 0.22);
 }
 .voxu-scene .card-surface-lg { border-radius: 22px; }
 .voxu-scene .glass-refined {
-  background: linear-gradient(180deg, rgb(18 19 24 / 0.92), rgb(7 8 11 / 0.95));
+  background: linear-gradient(180deg, #121318, #07080b);
   border-color: rgb(255 255 255 / 0.12);
 }
 /* Progress fills: white off-scene, blue into violet on it. */
