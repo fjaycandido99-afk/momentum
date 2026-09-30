@@ -26,11 +26,11 @@ export const HOME_SCENES = {
 /**
  * The Guided player's room: a shaft of light in a dark stone space, a lantern
  * glowing low on the right. Tall + wide, like every backdrop. null = not made
- * yet; the player falls back to plain black.
+ * yet; the player falls back to Home's sky for the hour.
  */
 export const GUIDED_SCENE: { tall: string | null; wide: string | null } = {
-  tall: null,
-  wide: null,
+  tall: '/scenes/guided/tall.jpg',
+  wide: '/scenes/guided/wide.jpg',
 }
 
 /**
