@@ -28,7 +28,7 @@ import { formatEraChatBlock, generatePromiseReply, generateRecap, isMemoryLocked
 import { loopCopy, loopProgress, loopStep, stateAdvice, type LoopStep } from './day-loop'
 import { isPremiumUser } from '@/lib/subscription-check'
 import { awardEraXPOnce, ERA_COMPLETE_MIN_PROMISES, type AwardedAchievement } from '@/lib/achievements-server'
-import { programFor } from './programs'
+import { eraImageFor, programFor } from './programs'
 import { alignmentLine, computeAlignment, type EraAlignment } from './alignment'
 import type { AxisId } from '@/lib/assessment/axes'
 import { ERA_MISSIONS } from './missions'
@@ -441,7 +441,8 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     mission: missionFor(era.era_key, day),
     missionDone: missionRow !== null,
     links: { soundscapeId: program.soundscapeId, guideId: program.guideId },
-    image: program.image ?? null,
+    // By chapter where the era has stage art (Gym Arc), else its one image.
+    image: eraImageFor(program, stage.phase),
     isPremium: premium,
     memoryLockedToday: isMemoryLockedToday(day, era.length_days, yesterdayOutcome, premium),
     recap: era.recap ?? null,

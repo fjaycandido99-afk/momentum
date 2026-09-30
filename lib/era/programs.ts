@@ -25,6 +25,13 @@ export interface EraProgram {
    */
   image?: string
   /**
+   * One picture per chapter (the era's four week-long phases), in order —
+   * the same figure, further along in each. Chosen by the chapter, which
+   * comes from the DAY, so the picture never goes backwards after a miss.
+   * Falls back to `image` for eras without them. Gym Arc is the pilot.
+   */
+  stageImages?: [string, string, string, string]
+  /**
    * The Daily Read axis this era is trying to move, and which way — see
    * lib/era/alignment. Unset for custom eras: their goal is the user's own
    * words, and guessing an axis for "Dad Mode" would be making it up.
@@ -94,6 +101,7 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
     soundscapeId: 'energy',
     guideId: 'breathing',
     image: '/era/gym_arc.jpg',
+    stageImages: ['/era/gym_arc/1.jpg', '/era/gym_arc/2.jpg', '/era/gym_arc/3.jpg', '/era/gym_arc/4.jpg'],
     motivationTopic: 'Hustle',
     quoteCategories: ['strength', 'action'],
     journalQuestion: "How did your body feel today, and did you show up for it?",
@@ -159,4 +167,17 @@ export const ERA_PROGRAMS: Record<string, EraProgram> = {
 
 export function programFor(eraKey: string): EraProgram {
   return ERA_PROGRAMS[eraKey] ?? ERA_PROGRAMS.custom
+}
+
+/**
+ * The hero picture for an era at a chapter (1–4): that chapter's own image
+ * where the era has stage art, else the era's single image, else null.
+ */
+export function eraImageFor(
+  program: { image?: string; stageImages?: [string, string, string, string] } | null | undefined,
+  chapter: number,
+): string | null {
+  if (!program) return null
+  const i = Math.min(4, Math.max(1, Math.round(chapter))) - 1
+  return program.stageImages?.[i] ?? program.image ?? null
 }
