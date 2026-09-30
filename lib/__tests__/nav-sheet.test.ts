@@ -20,7 +20,10 @@ describe('the menu', () => {
   it('never shows a status nothing measures', () => {
     // The mockup had "↑ 12%" and "On track". Statuses here are counts the
     // app has (Pulse, the era, today's journal) — never a trend or a grade.
-    const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
-    expect(code).not.toMatch(/↑|On track|%`/)
+    // Only what a status line can SAY — the status expressions. (The era
+    // bar's CSS width is a percentage, and is not a claim.)
+    const statuses = [...src.matchAll(/status: ([^\n]+)/g)].map(m => m[1]).join('\n')
+    expect(statuses.length).toBeGreaterThan(0)
+    expect(statuses).not.toMatch(/↑|On track|%/)
   })
 })
