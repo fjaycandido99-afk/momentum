@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  AlarmClock, ArrowRight, ArrowUp, BarChart3, Zap, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Moon, Play, Share2, Shuffle, Target, X,
+  AlarmClock, ArrowUp, BarChart3, Zap, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Moon, Play, Share2, Shuffle, Target, X,
   type LucideIcon,
 } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
@@ -11,6 +11,7 @@ import { CountUp } from '@/components/ui/CountUp'
 import { EqBars } from '@/components/ui/EqBars'
 import { PracticeSection } from '@/components/exercise/PracticeSection'
 import { PracticesSection } from '@/components/practices/PracticesSection'
+import { PulseSection } from './PulseSection'
 import { RoutineLine } from '@/components/routines/RoutineLine'
 import { haptic } from '@/lib/haptics'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
@@ -113,6 +114,8 @@ export function EraHome({
       {era ? <ActiveEra era={era} onChange={onChange} content={content} audio={audio} /> : (
         <>
           <StartHero />
+          {/* Disciplines still have a right-now and a today between eras. */}
+          <PulseSection version="no-era" onEra={() => {}} />
           <AudioCard audio={audio} />
           {/*
             Disciplines, between eras.
@@ -999,47 +1002,15 @@ function ActiveEra({
         </div>
       )}
 
-      {/* The day as a sequence: where you are, what to do now, and — when
-          they told us how they are — one line of their own words about it.
-          The cards below stop being a wall of equals. */}
-      {/* "Focus now": the one next step, as a card with a way straight to it
-          (the arrow scrolls to the promise / check-in card below). */}
-      <div className="card-surface-lg p-4 flex items-center gap-3.5">
-        <span className="w-10 h-10 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center" aria-hidden>
-          <Target className="w-[18px] h-[18px] text-white/80" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
-            {era.step === 'complete' || era.loop.label === 'Done for today' ? era.loop.label : 'Focus now'}
-          </p>
-          <p className="text-[19px] text-white leading-snug mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
-            {era.loop.line}
-          </p>
-          {era.loop.advice && (
-            <p className="text-[13px] text-white/50 mt-1 leading-snug">{era.loop.advice}</p>
-          )}
-        </div>
-        {era.step !== 'complete' && (
-          <button
-            onClick={() => scrollShellTo('era-action')}
-            aria-label={`Go to: ${era.loop.line}`}
-            className="w-11 h-11 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center press-scale"
-          >
-            <ArrowRight className="w-4 h-4 text-white/85" />
-          </button>
-        )}
-      </div>
-      <div className="px-1 -mt-1">
-        {/* The way out of the loop, for the days when the loop is the wrong
-            ask. Sitting here on purpose: the moment someone reads "make
-            today's promise" and can't is the moment they need this. */}
-        <Link
-          href="/reset"
-          className="inline-block text-[12px] text-white/40 hover:text-white/70 mt-1.5 underline underline-offset-4 decoration-white/20"
-        >
-          Not feeling it?
-        </Link>
-      </div>
+      {/* Right now + Today (lib/pulse/engine.ts): the one thing to do, then
+          the day as a list — instead of the loop line and five equal cards.
+          'Not feeling it?' moved with it, right under what it says to do.
+          Refetches when the era moves; the disciplines list tells it when a
+          discipline is logged. */}
+      <PulseSection
+        version={`${era.loop.step}-${era.today?.kept ?? 'x'}-${era.missionDone}-${era.today?.text ?? ''}`}
+        onEra={() => scrollShellTo('era-action')}
+      />
 
       {/*
         The routine, one line, right under what the loop says to do now.

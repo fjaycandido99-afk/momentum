@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { BookOpen, Check, ChevronDown, ChevronRight, ChevronUp, Minus, Plus, Repeat2, X } from 'lucide-react'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import { domainArt, domainArtAlt } from '@/lib/practices/domain-art'
+import { OPEN_DISCIPLINE, PRACTICES_CHANGED } from '@/lib/pulse/events'
 import { AddPracticeSheet } from './AddPracticeSheet'
 import { PracticePlanSheet } from './PracticePlanSheet'
 import { PracticeGuideSheet } from './PracticeGuideSheet'
@@ -92,6 +93,17 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
 
   useEffect(() => { load() }, [load])
 
+  // Pulse's "Open" on a discipline (home only — /training shows full rows).
+  useEffect(() => {
+    if (!compact) return
+    const onOpen = (e: Event) => {
+      const id = (e as CustomEvent<{ id?: string }>).detail?.id
+      if (id) setOpenId(id)
+    }
+    window.addEventListener(OPEN_DISCIPLINE, onOpen)
+    return () => window.removeEventListener(OPEN_DISCIPLINE, onOpen)
+  }, [compact])
+
   const log = async (practice: PracticeWire, done: boolean, minimumOnly = false, day?: string) => {
     haptic(done ? 'medium' : 'light')
     setBusyId(practice.id)
@@ -118,6 +130,7 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
         body: JSON.stringify({ action: 'log', practiceId: practice.id, done, minimumOnly, day }),
       })
       load()
+      window.dispatchEvent(new Event(PRACTICES_CHANGED))
     } catch {
       load()
     } finally {
@@ -136,6 +149,7 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
         body: JSON.stringify({ action: 'retire', practiceId: practice.id }),
       })
       load()
+      window.dispatchEvent(new Event(PRACTICES_CHANGED))
     } catch {
       load()
     } finally {
