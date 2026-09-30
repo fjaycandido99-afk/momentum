@@ -2935,11 +2935,11 @@ html:has([data-app-shell]) body {
 .scene-content { position: relative; z-index: 1; }
 /* No card is see-through on a scene page (Francis: cards "should not be
    transparent"). Most screens build cards by hand — a rounded box with a
-   white hairline border and a faint white/black fill, or none — so this
+   white hairline border and no fill, or a faint white/black fill with or without a border — so this
    catches that SHAPE, not one class. A stronger fill (bg-white/10 and up) is
    a selected state and keeps its own colour. Pills (rounded-full) are left. */
-.voxu-scene :is([class*="rounded-lg"], [class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-3xl"])[class*="border-white"]:is(
-  :not([class*=" bg-"]):not([class^="bg-"]),
+.voxu-scene :is([class*="rounded-lg"], [class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-3xl"]):is(
+  [class*="border-white"]:not([class*=" bg-"]):not([class^="bg-"]),
   [class*="bg-white/[0.0"],
   [class~="bg-white/5"],
   [class*="bg-black/"]

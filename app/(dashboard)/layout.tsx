@@ -31,7 +31,9 @@ export default function DashboardLayout({
           {scene ? (
             // Fixed, so it holds still behind whichever element scrolls.
             <div className="fixed inset-0 pointer-events-none" aria-hidden>
-              <DayBackdrop />
+              {/* Dimmer than Home (0.85): these pages put grids, calendars and
+                  text straight on the page, and they must read over it. */}
+              <DayBackdrop opacity={0.4} />
             </div>
           ) : (
             <AmbientBackground />

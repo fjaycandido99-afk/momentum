@@ -16,8 +16,8 @@ export function useDayScene(): PhaseScene | null {
  * Progress and Right now sit under the sky Home does. Drop it first inside a
  * positioned `voxu-scene` root, like Home's.
  */
-export function DayBackdrop() {
+export function DayBackdrop({ opacity }: { opacity?: number } = {}) {
   const scene = useDayScene()
   if (!scene) return null
-  return <SceneBackdrop key={scene.tall} src={scene.tall} wideSrc={scene.wide} />
+  return <SceneBackdrop key={scene.tall} src={scene.tall} wideSrc={scene.wide} opacity={opacity} />
 }
