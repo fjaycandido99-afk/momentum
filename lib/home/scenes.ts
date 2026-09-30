@@ -1,3 +1,5 @@
+import type { DayPhase, PhaseScene } from './time-of-day'
+
 /**
  * Home's scene photographs — one per card, drawn behind its content and
  * faded into the card so text always reads against dark.
@@ -11,14 +13,6 @@
  * painted checkerboard — these are full-bleed photographs, not cut-outs.
  */
 export const HOME_SCENES = {
-  /** The whole page's backdrop, held still behind the scroll: tall portrait,
-   *  dark sky above, mountains and a still lake in the lower half. */
-  backdrop: '/scenes/home/backdrop.jpg',
-  /** The same scene, landscape — for screens wider than they are tall (iPad
-   *  landscape), where the tall photo would be stretched soft. */
-  backdropWide: '/scenes/home/backdrop-wide.jpg',
-  /** Behind the greeting: a figure on a ridge at dusk, right third. */
-  hero: '/scenes/home/hero.jpg',
   /** Today's mission: a desk, an open notebook, a lamp. */
   mission: '/scenes/home/mission.jpg',
   /** Today's promise: mountains at last light. */
@@ -29,4 +23,18 @@ export const HOME_SCENES = {
   circle: '/scenes/home/circle.jpg',
 } as const
 
-export type HomeScene = keyof typeof HOME_SCENES
+/**
+ * The page backdrop and the greeting's figure, by time of day
+ * (lib/home/time-of-day). Every backdrop needs a TALL photo (phones, iPad
+ * portrait) and a WIDE one (iPad landscape — the tall one goes soft there).
+ * null = not made yet; sceneFor() lends sunset's until it is.
+ */
+export const PHASE_SCENES: Record<DayPhase, PhaseScene> = {
+  sunrise: { tall: null, wide: null, hero: null },
+  sunset: {
+    tall: '/scenes/home/backdrop.jpg',
+    wide: '/scenes/home/backdrop-wide.jpg',
+    hero: '/scenes/home/hero.jpg',
+  },
+  night: { tall: null, wide: null, hero: null },
+}

@@ -2925,3 +2925,32 @@ html:has([data-app-shell]) body {
   border: 1px solid rgb(var(--scene-glow, 122 146 255) / 0.35);
   background: rgb(var(--scene-glow, 122 146 255) / 0.06);
 }
+
+/* ── Gold theme (the coach / mindset picker) ───────────────────────────
+   Warm black and antique gold, from Francis's "A new voice" mockup. The
+   portraits are the same monochrome art as everywhere, toned warm by
+   .gold-tone — no second set of images to keep in step. Gold lights the
+   small labels and the one title word; everything else stays white. */
+.voxu-gold {
+  background:
+    radial-gradient(120% 45% at 80% 0%, rgb(70 48 26 / 0.45), transparent 60%),
+    linear-gradient(180deg, #0d0a07 0%, #070504 60%, #050403 100%);
+}
+.gold-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgb(214 170 118);
+}
+.gold-title {
+  background: linear-gradient(180deg, #f3dcb8 0%, #d2a36c 55%, #a8743f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.gold-card {
+  border: 1px solid rgb(214 178 130 / 0.22);
+  background: #0a0806;
+}
+.gold-card:focus-visible { outline: none; box-shadow: 0 0 0 2px rgb(214 170 118 / 0.7); }
+.gold-tone { filter: grayscale(1) sepia(0.55) saturate(1.25) brightness(0.9) contrast(1.05); }

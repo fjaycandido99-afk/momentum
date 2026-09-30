@@ -37,7 +37,8 @@ import { eraOrdinal } from '@/lib/era/logic'
 import { ERA_PRACTICE_DOMAIN } from '@/lib/era/keep'
 import { AddPracticeSheet } from '@/components/practices/AddPracticeSheet'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
-import { HOME_SCENES } from '@/lib/home/scenes'
+import { HOME_SCENES, PHASE_SCENES } from '@/lib/home/scenes'
+import { dayPhase, sceneFor } from '@/lib/home/time-of-day'
 import { SceneImage } from './SceneImage'
 import type { EraToday } from '@/hooks/useEra'
 
@@ -166,8 +167,12 @@ function greetingFor(hour: number): { label: string; line: string } {
 
 function Greeting({ quote }: { quote: { text: string; author: string } | null }) {
   // Hour is read after mount so server and client render the same markup.
-  const [g, setG] = useState<{ label: string; line: string } | null>(null)
-  useEffect(() => { setG(greetingFor(new Date().getHours())) }, [])
+  const [g, setG] = useState<{ label: string; line: string; hero: string | null } | null>(null)
+  useEffect(() => {
+    const h = new Date().getHours()
+    // The figure matches the sky behind it — same phase as the backdrop.
+    setG({ ...greetingFor(h), hero: sceneFor(dayPhase(h), PHASE_SCENES).hero })
+  }, [])
   if (!g) return <div className="h-[68px]" aria-hidden />
 
   // Only short quotes fit beside the greeting on a phone; a long one would
@@ -180,11 +185,12 @@ function Greeting({ quote }: { quote: { text: string; author: string } | null })
        the left, so they always read against dark. */
     <div className="relative -mx-6 px-6 -mt-3 pt-4 pb-3 md:mx-0 md:px-0">
       <SceneImage
-        src={HOME_SCENES.hero}
+        key={g.hero ?? 'none'}
+        src={g.hero}
         fade="left-down"
         className="-top-24 right-0 w-[78%] h-[calc(100%+6rem)]"
         position="center right"
-        opacity={0.85}
+        opacity={1}
       />
       <div className="relative flex items-start justify-between gap-4">
         <div className="min-w-0">

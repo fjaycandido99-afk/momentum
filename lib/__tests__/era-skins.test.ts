@@ -45,10 +45,23 @@ describe('era skins', () => {
   // the eyebrow's white and the eyebrow-glow class.
   it('scene theme colours only eyebrow labels', () => {
     const css = fs.readFileSync(path.join(process.cwd(), 'app/globals.css'), 'utf8')
-    const block = css.slice(css.indexOf('── Scene theme'))
+    const from = css.indexOf('── Scene theme')
+    const to = css.indexOf('── Gold theme', from)
+    const block = css.slice(from, to > from ? to : undefined)
     const rules = [...block.matchAll(/([^{}]+)\{([^}]*)\}/g)]
       .filter(([, , body]) => /(^|[;{\s])color\s*:/m.test(body))
       .map(([, sel]) => sel.trim())
     expect(rules).toEqual(['.scene-eyebrow', '.scene-eyebrow-glow'])
+  })
+
+  // Gold on the coach picker: the label and the one title word, nothing else.
+  it('gold theme colours only its label and title', () => {
+    const css = fs.readFileSync(path.join(process.cwd(), 'app/globals.css'), 'utf8')
+    const block = css.slice(css.indexOf('── Gold theme'))
+    const end = block.indexOf('.gold-tone {')
+    const rules = [...block.slice(0, block.indexOf('}', end) + 1).matchAll(/([^{}]+)\{([^}]*)\}/g)]
+      .filter(([, , body]) => /(^|[;{\s])color\s*:/m.test(body))
+      .map(([, sel]) => sel.trim().split('\n').pop()!.trim())
+    expect(rules).toEqual(['.gold-eyebrow', '.gold-title'])
   })
 })

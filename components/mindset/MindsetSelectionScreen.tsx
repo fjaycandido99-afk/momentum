@@ -6,6 +6,13 @@ import { ChevronLeft } from 'lucide-react'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
 import { MINDSET_IDS, type MindsetId } from '@/lib/mindset/types'
 import { MINDSET_VOICES } from '@/lib/mindset/voice-samples'
+import { SceneImage } from '@/components/home/SceneImage'
+
+/** The picker's photograph (see lib/home/scenes.ts for the art rules). */
+const MINDSET_SCENES = {
+  /** A marble bust of a bearded philosopher in warm side light, far right. */
+  hero: null as string | null,
+}
 
 interface MindsetSelectionScreenProps {
   /** If true, show as a "Reset My Path" picker instead of onboarding */
@@ -48,30 +55,31 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
   return (
     <button
       onClick={() => onTap(id)}
-      className={`relative overflow-hidden rounded-2xl text-left aspect-[3/4] border border-white/[0.14] bg-black active:scale-[0.97] transition-all duration-500 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none group ${
+      className={`gold-card relative overflow-hidden rounded-[18px] text-left aspect-[3/4] active:scale-[0.97] transition-all duration-500 group ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
     >
+      {/* The same monochrome portrait as everywhere, toned warm. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={cardImage(id)}
         alt=""
         aria-hidden
-        className="absolute inset-0 w-full h-full object-cover object-top grayscale opacity-70 group-hover:opacity-85 transition-opacity duration-300"
+        className="absolute inset-0 w-full h-full object-cover object-top gold-tone opacity-80 group-hover:opacity-95 transition-opacity duration-300"
       />
-      {/* Black rising from the foot so the title always reads. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+      {/* Warm black rising from the foot so the title always reads. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#070504] via-[#070504]/75 to-transparent" />
 
       <div className="absolute inset-x-0 bottom-0 p-3.5">
-        <p className="text-[9px] tracking-[0.22em] uppercase text-white/55">{TAGLINE(id)}</p>
+        <p className="gold-eyebrow !text-[9px] !tracking-[0.22em]">{TAGLINE(id)}</p>
         {/* Long names (Existentialist) step down a size so they never clip. */}
         <p
-          className={`${config.name.length > 11 ? 'text-[19px]' : 'text-[24px]'} leading-none text-white uppercase mt-1 break-words`}
+          className={`${config.name.length > 11 ? 'text-[19px] md:text-[26px]' : 'text-[25px] md:text-[32px]'} leading-none text-white uppercase mt-1.5 break-words`}
           style={{ ...SERIF, fontWeight: 600 }}
         >
           {config.name}
         </p>
-        <p className="text-[11px] text-white/70 leading-snug mt-1.5 line-clamp-2">{config.subtitle}</p>
+        <p className="text-[11px] md:text-[13px] text-white/75 leading-snug mt-1.5 line-clamp-2">{config.subtitle}</p>
       </div>
     </button>
   )
@@ -91,7 +99,16 @@ export function MindsetSelectionScreen({ isReset }: MindsetSelectionScreenProps)
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center px-5 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-12 relative overflow-hidden">
+    <div className="min-h-screen voxu-gold flex flex-col items-center px-5 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-12 relative overflow-hidden">
+      {/* The coach, in marble, over the title's right shoulder. Landscape so
+          one photo serves a phone (its right side) and an iPad (all of it). */}
+      <SceneImage
+        src={MINDSET_SCENES.hero}
+        fade="left-down"
+        className="top-0 right-0 w-[72%] md:w-[60%] h-[440px] md:h-[520px]"
+        position="center right"
+        opacity={0.9}
+      />
       {/*
         A way out, but only when there is one.
 
@@ -113,25 +130,27 @@ export function MindsetSelectionScreen({ isReset }: MindsetSelectionScreenProps)
           <ChevronLeft className="w-5 h-5" />
         </button>
       )}
-      <div className={`text-center mb-8 transition-all duration-700 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
-        <p className="text-white/55 text-[10px] font-medium tracking-[0.28em] uppercase mb-3">
+      <div className={`relative text-center mb-8 transition-all duration-700 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
+        <p className="gold-eyebrow mb-3">
           {isReset ? 'Change your coach' : 'Your coach'}
         </p>
-        <h1 className="text-[40px] leading-[0.95] text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>
-          {isReset ? <>A new<br />voice</> : <>How should<br />it talk to you?</>}
+        <h1 className="text-[52px] md:text-[64px] leading-[0.92] text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>
+          {isReset
+            ? <>A new<br /><span className="gold-title">voice</span></>
+            : <>How should<br /><span className="gold-title">it talk to you?</span></>}
         </h1>
-        <p className="text-white/70 text-sm max-w-[300px] mx-auto leading-relaxed mt-4">
+        <p className="text-white/80 text-[15px] max-w-[320px] mx-auto leading-relaxed mt-4">
           Your era is what you&rsquo;re working on. Your mindset is how your coach talks to you about it.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+      <div className="relative grid grid-cols-2 gap-3 md:gap-4 w-full max-w-sm md:max-w-xl">
         {MINDSET_IDS.map((id, i) => (
           <MindsetCard key={id} id={id} index={i} onTap={handleCardTap} />
         ))}
       </div>
 
-      <p className={`text-white/50 text-[11px] mt-8 transition-all duration-700 delay-700 ${headerVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <p className={`relative text-white/50 text-[11px] mt-8 transition-all duration-700 delay-700 ${headerVisible ? 'opacity-100' : 'opacity-0'}`}>
         Tap one to see how it talks. You can change it anytime.
       </p>
     </div>

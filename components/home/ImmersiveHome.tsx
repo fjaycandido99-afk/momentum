@@ -16,7 +16,9 @@ import { useHomeAudio } from '@/contexts/HomeAudioContext'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
 import { BottomPlayerBar } from './BottomPlayerBar'
 import { SceneBackdrop } from './SceneBackdrop'
-import { HOME_SCENES } from '@/lib/home/scenes'
+import { PHASE_SCENES } from '@/lib/home/scenes'
+import { sceneFor } from '@/lib/home/time-of-day'
+import { useDayPhase } from '@/hooks/useDayPhase'
 import { DailySpark } from './DailySpark'
 import { CoachGreetingBubble } from './CoachGreetingBubble'
 import { trackFeature } from '@/lib/analytics/track'
@@ -1332,6 +1334,9 @@ export function ImmersiveHome() {
   // The shell stops scrolling only while a fullscreen player is actually ON
   // SCREEN — the same conditions the overlays render under below. Keyed off
   // fullPlayerOpen alone, Home froze whenever that flag outlived the player.
+  const dayPhase = useDayPhase()
+  const dayScene = dayPhase ? sceneFor(dayPhase, PHASE_SCENES) : null
+
   const fullscreenOverlayShown =
     (fullPlayerOpen && (!!audioState.playingSound || !!audioState.guideLabel)) ||
     (!!audioState.activeSoundscape && audioState.showSoundscapePlayer)
@@ -1340,8 +1345,9 @@ export function ImmersiveHome() {
     // The era's skin (lib/era/skins.ts): one accent, read by the era-* classes
     // for glows and fills only. Plain white with no era — Voxu as it was.
     <div className="relative isolate voxu-scene h-[100dvh] overflow-hidden" style={eraSkinVars(era.era?.key) as React.CSSProperties}>
-    {/* The page's photograph, held still behind the scrolling shell. */}
-    <SceneBackdrop src={HOME_SCENES.backdrop} wideSrc={HOME_SCENES.backdropWide} />
+    {/* The page's photograph, held still behind the scrolling shell, and
+        following the clock: sunrise, sunset, night (lib/home/time-of-day). */}
+    {dayScene && <SceneBackdrop key={dayScene.tall} src={dayScene.tall} wideSrc={dayScene.wide} />}
     {/* App-shell scrolling: the PAGE does not scroll, this container does.
         On iOS the document rubber-bands past its ends, and during that
         bounce the entire visual viewport moves — so a header pinned with
