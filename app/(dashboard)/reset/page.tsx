@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Zap, Crosshair, Sprout, Moon, type LucideIcon } from 'lucide-react'
 import { ExercisePlayer } from '@/components/exercise/ExercisePlayer'
 import {
   RESET_STATES,
@@ -13,8 +13,19 @@ import {
 } from '@/lib/reset/states'
 import { haptic } from '@/lib/haptics'
 import { trackFeature } from '@/lib/analytics/track'
+import { SceneImage } from '@/components/home/SceneImage'
+import { RESET_SCENES } from '@/lib/home/scenes'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
+
+/** Each state's mark and its colour (rgb triplet), as in the mockup: a
+ *  tinted tile, never tinted text. */
+const STATE_MARK: Record<ResetStateId, { Icon: LucideIcon; rgb: string }> = {
+  overwhelmed: { Icon: Zap, rgb: '248 90 90' },
+  unfocused: { Icon: Crosshair, rgb: '125 150 255' },
+  wired: { Icon: Sprout, rgb: '110 200 130' },
+  sleepless: { Icon: Moon, rgb: '170 120 255' },
+}
 
 type Phase = 'pick' | 'before' | 'run' | 'after'
 
@@ -108,12 +119,33 @@ export default function ResetPage() {
                 <button
                   key={s.id}
                   onClick={() => choose(s.id)}
-                  className="card-surface w-full text-left p-4 rounded-2xl border border-white/[0.14] hover:bg-white/[0.05] press-scale"
+                  className="card-surface w-full text-left p-4 rounded-2xl border border-white/[0.14] hover:bg-white/[0.05] press-scale flex items-center gap-4"
                 >
-                  <p className="text-[19px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
-                    {s.label}
-                  </p>
-                  <p className="text-[12px] text-white/50 mt-1 leading-snug">{s.recognise}</p>
+                  <SceneImage src={RESET_SCENES[s.id]} className="inset-y-0 right-0 w-[55%] h-full" />
+                  {(() => {
+                    const { Icon, rgb } = STATE_MARK[s.id]
+                    return (
+                      <span
+                        className="scene-content shrink-0 w-12 h-12 rounded-xl border flex items-center justify-center"
+                        style={{
+                          background: `rgb(${rgb} / 0.10)`,
+                          borderColor: `rgb(${rgb} / 0.35)`,
+                          boxShadow: `0 0 18px -6px rgb(${rgb} / 0.6)`,
+                        }}
+                      >
+                        <Icon className="w-5 h-5" style={{ color: `rgb(${rgb})` }} />
+                      </span>
+                    )
+                  })()}
+                  <span className="scene-content flex-1 min-w-0">
+                    <span className="block text-[19px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
+                      {s.label}
+                    </span>
+                    <span className="block text-[12px] text-white/60 mt-1 leading-snug">{s.recognise}</span>
+                  </span>
+                  <span className="scene-content shrink-0 w-9 h-9 rounded-full border border-white/25 bg-black/40 flex items-center justify-center">
+                    <ChevronRight className="w-4 h-4 text-white/80" />
+                  </span>
                 </button>
               ))}
             </div>

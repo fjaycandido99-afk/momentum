@@ -56,3 +56,19 @@ export const PHASE_SCENES: Record<DayPhase, PhaseScene> = {
     hero: '/scenes/home/night-hero.jpg',
   },
 }
+
+/**
+ * Right now's four cards (app/(dashboard)/reset): one photograph each, faded
+ * in from the right behind the words. Same art rules as Home's cards. A
+ * missing file shows the plain card, so these light up as they're added.
+ */
+export const RESET_SCENES: Record<'overwhelmed' | 'unfocused' | 'wired' | 'sleepless', string> = {
+  /** A storm cloud with red light breaking through it. */
+  overwhelmed: '/scenes/reset/overwhelmed.jpg',
+  /** A head in profile, lit by one cold shaft of light. */
+  unfocused: '/scenes/reset/unfocused.jpg',
+  /** A still lake under mountains at last light. */
+  wired: '/scenes/reset/wired.jpg',
+  /** Rumpled pillows in blue night light. */
+  sleepless: '/scenes/reset/sleepless.jpg',
+}
