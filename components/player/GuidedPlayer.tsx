@@ -219,14 +219,17 @@ export function GuidedPlayer({
 
       {/* Center: circular visualizer + title */}
       <div className="relative z-10 flex-1 min-h-0 flex flex-col items-center justify-center px-6">
-        {/* Circular ring visualizer, lit from behind with the scene's blue. */}
-        <div className="mb-10 rounded-full [filter:drop-shadow(0_0_18px_rgb(150_175_255/0.55))]">
+        {/* Circular ring visualizer, lit from behind with the scene's blue —
+            drawn in the canvas (glow), never a CSS filter: that froze it. */}
+        <div className="mb-10">
           <CircularVisualizer
             analyser={analyser}
             isPlaying={isPlaying}
             simulated={!analyser && isPlaying}
-            barCount={64}
-            size={200}
+            barCount={72}
+            glow="150 175 255"
+            dial
+            size={260}
           />
         </div>
 

@@ -11,6 +11,13 @@ interface CircularVisualizerProps {
   barCount?: number
   size?: number
   className?: string
+  /** A halo drawn IN the canvas (rgb triplet, e.g. '150 175 255'), swelling
+   *  with the sound. Never a CSS filter on a wrapper: WKWebView stops
+   *  repainting a canvas under one, and the ring froze on iPhone. */
+  glow?: string
+  /** The Guided mockup's dial: a wider ring of short, thick ticks round a
+   *  dark centre, lit from the upper right. Ticks still follow the sound. */
+  dial?: boolean
 }
 
 function CircularVisualizerInner({
@@ -20,6 +27,8 @@ function CircularVisualizerInner({
   barCount = 64,
   size = 280,
   className = '',
+  glow,
+  dial = false,
 }: CircularVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animFrameRef = useRef<number>(0)
@@ -99,10 +108,38 @@ function CircularVisualizerInner({
 
     const cx = w / 2
     const cy = h / 2
-    const radius = Math.min(w, h) * 0.28
-    const maxBarLength = Math.min(w, h) * 0.18
-    const barWidth = 2
+    const min = Math.min(w, h)
+    const radius = min * (dial ? 0.36 : 0.28)
+    const maxBarLength = min * (dial ? 0.09 : 0.18)
+    const baseBar = dial ? min * 0.035 : 3
+    const barWidth = dial ? 3 : 2
     const angleStep = (Math.PI * 2) / barCount
+
+    if (glow) {
+      let level = 0
+      for (let i = 0; i < barCount; i++) level += smoothed[i]
+      level /= barCount
+      const [r, g, b] = glow.split(' ')
+      const outer = min / 2
+      const halo = ctx.createRadialGradient(cx, cy, radius * 0.8, cx, cy, outer)
+      halo.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`)
+      halo.addColorStop(0.25, `rgba(${r}, ${g}, ${b}, ${0.22 + level * 0.5})`)
+      halo.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
+      ctx.fillStyle = halo
+      ctx.fillRect(0, 0, w, h)
+    }
+
+    if (dial) {
+      // The dark centre the ticks sit around.
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius)
+      core.addColorStop(0, 'rgba(0, 0, 0, 0.85)')
+      core.addColorStop(0.85, 'rgba(0, 0, 0, 0.7)')
+      core.addColorStop(1, 'rgba(0, 0, 0, 0)')
+      ctx.fillStyle = core
+      ctx.beginPath()
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+      ctx.fill()
+    }
 
     // Inner circle ring
     ctx.beginPath()
@@ -115,8 +152,10 @@ function CircularVisualizerInner({
     for (let i = 0; i < barCount; i++) {
       const value = smoothed[i]
       const angle = i * angleStep - Math.PI / 2
-      const barLength = Math.max(3, value * maxBarLength)
-      const opacity = 0.6 + value * 0.4
+      const barLength = dial ? baseBar + value * maxBarLength : Math.max(baseBar, value * maxBarLength)
+      // The dial is lit from the upper right, as in the mockup.
+      const lit = dial ? 0.45 + 0.55 * Math.max(0, Math.cos(angle + Math.PI / 4)) : 1
+      const opacity = (0.6 + value * 0.4) * lit
       const x1 = cx + Math.cos(angle) * radius
       const y1 = cy + Math.sin(angle) * radius
       const x2 = cx + Math.cos(angle) * (radius + barLength)
@@ -130,8 +169,8 @@ function CircularVisualizerInner({
       ctx.stroke()
     }
 
-    // Inward reflection bars
-    for (let i = 0; i < barCount; i++) {
+    // Inward reflection bars (not on the dial — its centre stays dark)
+    for (let i = 0; i < (dial ? 0 : barCount); i++) {
       const value = smoothed[i]
       const angle = i * angleStep - Math.PI / 2
       const inwardLength = Math.max(1, value * maxBarLength * 0.35)
@@ -150,7 +189,7 @@ function CircularVisualizerInner({
     }
 
     animFrameRef.current = requestAnimationFrame(draw)
-  }, [isPlaying, barCount, size, analyser, simulated])
+  }, [isPlaying, barCount, size, analyser, simulated, glow, dial])
 
   useEffect(() => {
     animFrameRef.current = requestAnimationFrame(draw)
