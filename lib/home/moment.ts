@@ -15,7 +15,7 @@ import type { LoopStep } from '@/lib/era/day-loop'
  * last time go in; a kind comes out.
  */
 
-export type MomentKind = 'era' | 'journal' | 'spark'
+export type MomentKind = 'era' | 'journal' | 'spark' | 'pulse'
 
 /** Steps where something is genuinely waiting for the user. */
 const OPEN_STEPS: LoopStep[] = ['state', 'promise', 'check', 'check_yesterday']
@@ -26,9 +26,18 @@ export interface MomentInput {
   hasJournalToday: boolean
   /** What this slot showed last time, so it doesn't repeat itself. */
   lastKind: MomentKind | null
+  /**
+   * Pulse has a discipline slipping or due now that has not interrupted
+   * today (lib/pulse/nudge.ts). Pulse already ranked the era's gates above
+   * it, so when this is true nothing on the era is more urgent.
+   */
+  pulseNudge?: boolean
 }
 
 export function pickMoment(input: MomentInput): MomentKind {
+  // The moment where acting in the next few minutes changes the day.
+  if (input.pulseNudge) return 'pulse'
+
   const eraOpen = !!input.loopStep && OPEN_STEPS.includes(input.loopStep)
 
   // An open commitment always wins, even twice running: it is the user's own

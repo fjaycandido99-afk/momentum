@@ -16,6 +16,10 @@ import {
 } from '@/lib/home/moment'
 import type { LoopStep } from '@/lib/era/day-loop'
 import { MomentCard } from './MomentCard'
+import { NudgeSheet } from './NudgeSheet'
+import { getLatestPulse } from '@/lib/pulse/store'
+import { pickNudge, type PulseNudge } from '@/lib/pulse/nudge'
+import { OPEN_DISCIPLINE } from '@/lib/pulse/events'
 
 /**
  * ONE MOMENT PER APP OPEN — and not always the same kind of moment.
@@ -105,7 +109,7 @@ function markShown(kind: MomentKind) {
 function lastKind(): MomentKind | null {
   try {
     const value = localStorage.getItem(LAST_KIND_KEY)
-    return value === 'era' || value === 'journal' || value === 'spark' ? value : null
+    return value === 'era' || value === 'journal' || value === 'spark' || value === 'pulse' ? value : null
   } catch {
     return null
   }
@@ -122,6 +126,8 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
   const [visible, setVisible] = useState(false)
   /** Which kind of moment this is. Decided when it's shown. */
   const [kind, setKind] = useState<MomentKind>('spark')
+  /** The Pulse nudge being shown, when kind is 'pulse'. */
+  const [nudge, setNudge] = useState<PulseNudge | null>(null)
   const [animating, setAnimating] = useState(false)
   const [dismissing, setDismissing] = useState(false)
   const [spark, setSpark] = useState<Spark | null>(null)
@@ -264,7 +270,14 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
       // simply doesn't happen. Queueing behind it would be two
       // interruptions, which is the thing we were fixing.
       if (window.__popupActive) return
-      const chosen = pickMoment({ ...latest.current, lastKind: lastKind() })
+      const n = pickNudge(getLatestPulse(), key => isDismissed(key))
+      const chosen = pickMoment({ ...latest.current, lastKind: lastKind(), pulseNudge: !!n })
+      if (chosen === 'pulse' && n) {
+        // Spent once shown: this discipline won't interrupt the same way
+        // again today, whatever the answer.
+        setDismissed(n.key, 'today')
+        setNudge(n)
+      }
       // The quote has a daily ceiling (SPARK_PER_DAY); past it nothing shows.
       // Falling back to another kind here would mean showing the era moment
       // when the loop had nothing waiting, which is the definition of noise.
@@ -371,6 +384,24 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
   useBodyScrollLock(visible)
 
   if (!visible) return null
+  if (kind === 'pulse' && nudge) {
+    const target = nudge.rightNow.action?.target
+    return (
+      <NudgeSheet
+        rightNow={nudge.rightNow}
+        primary={nudge.primary}
+        onPrimary={() => dismiss(() => {
+          if (target?.type === 'practice') {
+            window.dispatchEvent(new CustomEvent(OPEN_DISCIPLINE, { detail: { id: target.id } }))
+          }
+        })}
+        onLater={() => dismiss()}
+        onOff={turnOff}
+        animating={animating}
+        dismissing={dismissing}
+      />
+    )
+  }
   if (kind !== 'spark') {
     const era = loopStep ? eraMomentCopy(loopStep) : null
     // The era moment's button dismisses rather than navigates: this only

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Check, ChevronRight, Minus } from 'lucide-react'
 import { timeLabel, type ActionTarget, type Pulse, type TodayItem } from '@/lib/pulse/engine'
 import { OPEN_DISCIPLINE, PRACTICES_CHANGED } from '@/lib/pulse/events'
+import { setLatestPulse } from '@/lib/pulse/store'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -36,7 +37,13 @@ export function PulseSection({ version, onEra }: { version: string; onEra: () =>
   const load = useCallback(() => {
     fetch('/api/pulse', { cache: 'no-store' })
       .then(r => (r.ok ? r.json() : null))
-      .then(d => setPulse(d?.pulse ?? null))
+      .then(d => {
+        const p = d?.pulse ?? null
+        setPulse(p)
+        // The one-per-open moment reads this when its timer fires, so the
+        // nudge costs no second request.
+        setLatestPulse(p)
+      })
       .catch(() => { /* home still has every card below */ })
   }, [])
 
