@@ -64,7 +64,7 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-[100dvh] flex items-center justify-center">
         <Loader2 className="w-5 h-5 text-white/60 animate-spin" />
       </div>
     )
@@ -72,7 +72,7 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
 
   if (!data) {
     return (
-      <div className="min-h-screen text-white pb-24 px-6 pt-16 text-center">
+      <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white pb-24 px-6 pt-16 text-center" data-app-shell>
         <p className="text-lg">Couldn&apos;t build your portrait.</p>
         <Link href="/" className="inline-block mt-4 text-sm text-white/60 hover:text-white">← Home</Link>
       </div>
@@ -80,7 +80,7 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
   }
 
   return (
-    <div className="min-h-screen text-white pb-24">
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white pb-24" data-app-shell>
       <div className="px-6 safe-area-pt pb-3">
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white">
           <ChevronLeft className="w-4 h-4" /> Home

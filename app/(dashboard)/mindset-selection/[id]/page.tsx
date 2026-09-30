@@ -51,7 +51,7 @@ export default function MindsetDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain bg-black text-white" data-app-shell>
       {/* Back — clears the notch; it used to sit under the status bar. */}
       <button
         onClick={() => router.back()}

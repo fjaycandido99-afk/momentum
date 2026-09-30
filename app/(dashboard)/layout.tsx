@@ -53,10 +53,14 @@ export default function DashboardLayout({
               lg: only, so nothing about the mobile layout changes. Home and
               the mindset screens opt out: they are built on full-bleed
               carousels and hero art that are SUPPOSED to reach the edges. */}
+          {/* No bottom padding on mobile: it made every min-h-screen page
+              64px taller than the screen, so pages scrolled with nothing
+              below. Pages are app shells (data-app-shell) and clear the nav
+              with their own padding — see lib/__tests__/page-scroll.test.ts. */}
           <main
             id="main-content"
             key={pathname}
-            className={`relative z-10 min-h-screen page-enter ${isHome ? '' : 'pb-16'} ${!hideChrome ? 'lg:pb-40' : ''}`}
+            className={`relative z-10 min-h-screen page-enter ${!hideChrome ? 'lg:pb-40' : ''}`}
           >
             {/* Home renders children with NO wrapper at all, not merely an
                 unstyled one. An extra block ancestor changes the containing
