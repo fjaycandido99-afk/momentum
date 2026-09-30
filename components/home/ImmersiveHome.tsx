@@ -3,9 +3,13 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Settings, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Wind, MessageCircle, X, Search } from 'lucide-react'
+import { Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, BarChart3, Wind, MessageCircle, X, Search } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
 import { SearchSheet } from './SearchSheet'
+import { SpiralLogo } from './SpiralLogo'
+import { NavSheet } from './NavSheet'
+import { getLatestPulse } from '@/lib/pulse/store'
+import { scrollShellTo } from '@/lib/ui/scroll-shell'
 import { eraSkinVars } from '@/lib/era/skins'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { useHomeAudio } from '@/contexts/HomeAudioContext'
@@ -247,6 +251,9 @@ export function ImmersiveHome() {
 
   // Hamburger menu
   const [showSearch, setShowSearch] = useState(false)
+  /** Open search straight onto one Browse list (from the menu). */
+  const [searchKind, setSearchKind] = useState<'guide' | 'soundscape' | null>(null)
+  const [showNav, setShowNav] = useState(false)
 
   // Overlays
 
@@ -1452,7 +1459,19 @@ export function ImmersiveHome() {
                 (SessionTimeline), which already showed exactly the same
                 state the ring did. */}
             <div className="flex items-center gap-2.5 min-w-0">
-              <h1 className={`font-bold shimmer-text transition-all duration-300 shrink-0 tracking-tight ${headerScrolled ? 'text-xl' : 'text-2xl'}`}>Explore</h1>
+              {/* The spiral is Voxu's mark, and it IS the menu — merged with
+                  the page's name, with a chevron so it reads as something to
+                  tap (a logo alone never did). It spins faster while open. */}
+              <button
+                onClick={() => setShowNav(true)}
+                aria-label="Open menu"
+                aria-expanded={showNav}
+                className="flex items-center gap-2 min-w-0 -ml-1 pl-1 pr-2 py-1 rounded-full press-scale"
+              >
+                <SpiralLogo open={showNav} size={30} />
+                <h1 className={`font-bold shimmer-text transition-all duration-300 shrink-0 tracking-tight ${headerScrolled ? 'text-xl' : 'text-2xl'}`}>Today</h1>
+                <ChevronDown className="w-4 h-4 text-white/60 shrink-0 mt-0.5" aria-hidden />
+              </button>
               {/* One streak per screen.
                   This badge counts days the app was USED (current_streak);
                   the era card counts days a promise was MADE. Two numbers
@@ -1466,36 +1485,70 @@ export function ImmersiveHome() {
               {!era.era && <StreakBadge streak={streak} freezeCount={streakFreezes} />}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {/* Dot until notifications are on — the era's morning and 8pm
-                  pushes depend on it. */}
-              <NotificationBell />
-              {/* Reset wind button — parked per user request. Infra
-                  stays mounted; re-add this block to bring it back. */}
-              {/* Search and Settings, the mockup's header. The spiral menu is
-                  gone: its places are the search sheet's "Go to" list and
-                  the top of Settings ("Your space"), and the coach-voice mark
-                  lives in both. */}
+              {/* Only while notifications are off — then it's an ask the era's
+                  morning and 8pm pushes depend on. Once on, it steps out (its
+                  settings live in the menu). */}
+              <NotificationBell onlyWhenOff />
               <button
-                onClick={() => setShowSearch(true)}
+                onClick={() => { setSearchKind(null); setShowSearch(true) }}
                 aria-label="Search"
                 className="flex items-center justify-center h-10 w-10 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
               >
                 <Search className="w-[18px] h-[18px] text-white/85" />
               </button>
-              <Link
-                href="/settings"
-                aria-label="Settings"
-                className="flex items-center justify-center h-10 w-10 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
-              >
-                <Settings className="w-[18px] h-[18px] text-white/85" />
-              </Link>
+              {/* The era at a glance: its progress as a ring. Opens the era. */}
+              {era.era && (
+                <Link
+                  href="/era"
+                  aria-label={`${era.era.title}, day ${era.era.day} of ${era.era.lengthDays}. Open your era.`}
+                  className="relative flex items-center justify-center h-10 w-10 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
+                >
+                  <svg viewBox="0 0 40 40" className="absolute inset-0 -rotate-90" aria-hidden>
+                    <circle cx="20" cy="20" r="15" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="2.5" />
+                    <circle
+                      cx="20" cy="20" r="15" fill="none" strokeWidth="2.5" strokeLinecap="round"
+                      style={{ stroke: 'rgb(var(--era-accent, 255 255 255))' }}
+                      strokeDasharray={2 * Math.PI * 15}
+                      strokeDashoffset={2 * Math.PI * 15 * (1 - Math.min(1, era.era.day / era.era.lengthDays))}
+                    />
+                  </svg>
+                  <span className="text-[10px] text-white/85 tabular-nums">{Math.round(Math.min(1, era.era.day / era.era.lengthDays) * 100)}</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
       )}
 
+      {showNav && (
+        <NavSheet
+          status={(() => {
+            // What the menu can say for sure, from what home already loaded.
+            const p = getLatestPulse()
+            const due = p?.today.items.find(i => i.kind === 'discipline' && i.status === 'due')
+            return {
+              todayLeft: p && p.today.total > 0 ? p.today.total - p.today.done : null,
+              dueDiscipline: due?.title ?? null,
+              era: era.era ? { title: era.era.title, day: era.era.day, length: era.era.lengthDays } : null,
+              journaledToday: !!hasJournaledToday,
+            }
+          })()}
+          onClose={() => setShowNav(false)}
+          onGuided={() => {
+            setShowNav(false)
+            // The shelf, if it's on home; otherwise the full list in search.
+            if (!scrollShellTo('shelf-guided')) { setSearchKind('guide'); setShowSearch(true) }
+          }}
+          onSoundscapes={() => {
+            setShowNav(false)
+            if (!scrollShellTo('shelf-soundscapes')) { setSearchKind('soundscape'); setShowSearch(true) }
+          }}
+        />
+      )}
+
       {showSearch && (
         <SearchSheet
+          initialKind={searchKind}
           onClose={() => setShowSearch(false)}
           onPlaySoundscape={(id) => {
             const item = SOUNDSCAPE_ITEMS.find(s => s.id === id)
@@ -1628,7 +1681,7 @@ export function ImmersiveHome() {
         switch (section) {
           case 'soundscapes':
             return (
-              <div key="soundscapes" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
+              <div key="soundscapes" id="shelf-soundscapes" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
                 <SoundscapesSection
                   eraPickId={era.era?.links.soundscapeId}
                   eraTitle={era.era?.title}
@@ -1643,7 +1696,7 @@ export function ImmersiveHome() {
             )
           case 'guided':
             return (
-              <div key="guided" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
+              <div key="guided" id="shelf-guided" className="stagger-item" style={{ '--i': orderIdx } as React.CSSProperties}>
                 <GuidedSection
                   eraPickId={era.era?.links.guideId}
                   eraTitle={era.era?.title}

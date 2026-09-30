@@ -97,3 +97,8 @@ export function searchHome(query: string, items: SearchItem[] = allSearchItems()
     .slice(0, limit)
     .map(r => r.item)
 }
+
+/** Everything of one kind, in its own order — search's "Browse". */
+export function browse(kind: SearchKind): SearchItem[] {
+  return allSearchItems().filter(i => i.kind === kind)
+}

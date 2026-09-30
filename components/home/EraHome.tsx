@@ -13,6 +13,7 @@ import { EqBars } from '@/components/ui/EqBars'
 import { PracticeSection } from '@/components/exercise/PracticeSection'
 import { PracticesSection } from '@/components/practices/PracticesSection'
 import { PulseSection } from './PulseSection'
+import { scrollShellTo } from '@/lib/ui/scroll-shell'
 import { attributeLabel, attributesForEra } from '@/lib/exercises/attributes'
 import { RoutineLine } from '@/components/routines/RoutineLine'
 import { haptic } from '@/lib/haptics'
@@ -183,20 +184,6 @@ function Greeting({ quote }: { quote: { text: string; author: string } | null })
       )}
     </div>
   )
-}
-
-/**
- * Scroll the page's own container (the [data-app-shell]) so an element sits
- * a little below the sticky header. Never scrollIntoView: it also scrolls the
- * document and the overflow-hidden frame around the shell, which is what
- * once left the header stuck under the status bar.
- */
-function scrollShellTo(id: string) {
-  const el = document.getElementById(id)
-  const shell = el?.closest<HTMLElement>('[data-app-shell]')
-  if (!el || !shell) return
-  const top = shell.scrollTop + el.getBoundingClientRect().top - shell.getBoundingClientRect().top - 120
-  shell.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
 }
 
 // ─── Hero ────────────────────────────────────────────────────────────────────

@@ -30,7 +30,14 @@ async function readPushState(): Promise<PushState> {
   }
 }
 
-export function NotificationBell() {
+export function NotificationBell({ onlyWhenOff = false }: {
+  /**
+   * The header passes this: the bell stays there only while it is an ASK
+   * (notifications not on yet). Once on, its other job — opening the
+   * notification settings — lives in the menu under Settings.
+   */
+  onlyWhenOff?: boolean
+} = {}) {
   const router = useRouter()
   const [state, setState] = useState<PushState>('unknown')
   const [busy, setBusy] = useState(false)
@@ -61,6 +68,7 @@ export function NotificationBell() {
   // Off in every sense that matters to the era's pushes: never asked, or
   // asked and refused. 'unsupported' looks off too, because it is.
   const off = state === 'prompt' || state === 'denied' || state === 'unsupported'
+  if (onlyWhenOff && (state === 'granted' || state === 'unknown' || state === 'unsupported')) return null
 
   return (
     <button

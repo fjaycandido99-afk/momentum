@@ -80,19 +80,7 @@ const SEGMENT_OPTIONS = [
 ]
 
 import { LanguageSelector } from '@/components/settings/LanguageSelector'
-import { Globe, PenLine as SpacePen, Dumbbell as SpaceTraining, BarChart3 as SpaceProgress, Bookmark as SpaceSaved, HeartPulse as SpaceReset, Mic2 as SpaceVoice } from 'lucide-react'
-
-// The places the old home menu held. The home header is now search +
-// settings, so these live at the top of Settings (and in the search sheet's
-// "Go to" list) — one tap from the gear, never buried in a category.
-const YOUR_SPACE = [
-  { href: '/journal', label: 'Journal', icon: SpacePen },
-  { href: '/training', label: 'Training', icon: SpaceTraining },
-  { href: '/progress', label: 'Progress', icon: SpaceProgress },
-  { href: '/saved', label: 'Saved', icon: SpaceSaved },
-  { href: '/reset', label: 'Not feeling it', icon: SpaceReset },
-  { href: '/mindset-selection', label: 'Coach voice', icon: SpaceVoice },
-] as const
+import { Globe } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { restorePurchases } from '@/lib/revenuecat'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
@@ -419,22 +407,6 @@ function SettingsContent() {
       </div>
 
       <TierBanner page="settings" />
-
-      <nav aria-label="Your space" className="px-6 mb-5">
-        <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 mb-2">Your space</p>
-        <div className="grid grid-cols-2 gap-2">
-          {YOUR_SPACE.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-2.5 rounded-xl border border-white/[0.12] bg-white/[0.03] px-3 py-3 press-scale"
-            >
-              <Icon className="w-4 h-4 text-white/75 shrink-0" />
-              <span className="text-[14px] text-white/90 truncate">{label}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
 
       <div className="px-6 space-y-3">
         {/* ═══════════════ 1. Profile & Schedule ═══════════════ */}
