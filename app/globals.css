@@ -2865,3 +2865,23 @@ html:has([data-app-shell]) body {
   height: 100%;
   overflow: hidden;
 }
+
+/* ── Era skins (lib/era/skins.ts) ─────────────────────────────────────
+   One accent per era, for atmosphere only: glows, progress fill, the due
+   ring, the hero tint. Text and buttons never take it — they stay white on
+   black in every era. Without an era, the accent is plain white, which is
+   exactly how Voxu looked before skins. */
+.era-glow {
+  box-shadow:
+    0 0 0 1px rgb(var(--era-accent, 255 255 255) / 0.16),
+    0 22px 60px -32px rgb(var(--era-accent, 255 255 255) / 0.55);
+}
+.era-accent-bg { background-color: rgb(var(--era-accent, 255 255 255)); }
+.era-accent-ring { border-color: rgb(var(--era-accent, 255 255 255) / 0.9); }
+.era-hero-tint {
+  background: radial-gradient(95% 75% at 100% 0%, rgb(var(--era-accent, 255 255 255) / 0.18), transparent 62%);
+}
+.era-chip {
+  border: 1px solid rgb(var(--era-accent, 255 255 255) / 0.28);
+  background: rgb(var(--era-accent, 255 255 255) / 0.06);
+}

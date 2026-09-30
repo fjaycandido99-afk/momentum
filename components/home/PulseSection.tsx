@@ -69,7 +69,7 @@ export function PulseSection({ version, onEra }: { version: string; onEra: () =>
     <div className="space-y-3">
       {r && (
         <div>
-          <section className="card-surface-lg p-5" aria-label="Right now">
+          <section className="card-surface-lg era-glow p-5" aria-label="Right now">
             <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">{r.eyebrow}</p>
             <h2 className="text-[26px] leading-[1.1] text-white mt-1.5" style={{ ...SERIF, fontWeight: 500 }}>
               {r.title}
@@ -123,7 +123,7 @@ export function PulseSection({ version, onEra }: { version: string; onEra: () =>
                 <>
                   <span
                     className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center ${
-                      ticked ? 'bg-white text-black' : due ? 'border-2 border-white/80' : 'border border-white/25'
+                      ticked ? 'bg-white text-black' : due ? 'border-2 era-accent-ring' : 'border border-white/25'
                     }`}
                     aria-hidden
                   >

@@ -13,6 +13,7 @@ import { EqBars } from '@/components/ui/EqBars'
 import { PracticeSection } from '@/components/exercise/PracticeSection'
 import { PracticesSection } from '@/components/practices/PracticesSection'
 import { PulseSection } from './PulseSection'
+import { attributeLabel, attributesForEra } from '@/lib/exercises/attributes'
 import { RoutineLine } from '@/components/routines/RoutineLine'
 import { haptic } from '@/lib/haptics'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
@@ -219,6 +220,8 @@ function heroShell(children: React.ReactNode, image?: string | null) {
           }}
         />
       )}
+      {/* The era's light over its picture — the skin's accent, faint. */}
+      <div className="absolute inset-0 era-hero-tint pointer-events-none" aria-hidden />
       <div className="relative">{children}</div>
     </div>
   )
@@ -280,6 +283,17 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
               <span className="text-white/30"> · day {era.phase.dayInPhase} of {era.phase.phaseDays}</span>
             </p>
           )}
+          {/* What this era trains, in order of weight (ERA_ATTRIBUTES). No
+              up-arrows: nothing measures growth in these, so none is shown. */}
+          {era.step !== 'complete' && (
+            <div className="flex flex-wrap gap-1.5 mt-2.5" aria-label="This era trains">
+              {attributesForEra(era.key).map(id => (
+                <span key={id} className="era-chip rounded-full px-2 py-0.5 text-[10px] tracking-wide text-white/80">
+                  {attributeLabel(id)}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* The streak lives in the stats card below — one per screen. */}
           <p className="text-2xl text-white mt-5" style={{ ...SERIF, fontWeight: 500 }}>
@@ -297,7 +311,7 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
                 const isToday = n === era.day && era.step !== 'complete'
                 const cls =
                   n > era.day ? 'bg-white/[0.08]'
-                    : kept === true ? 'bg-white'
+                    : kept === true ? 'era-accent-bg'
                     : kept === false ? 'bg-white/35'
                     : kept === null ? 'bg-white/60'
                     : isToday ? 'bg-white/25 animate-pulse motion-reduce:animate-none'

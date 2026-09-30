@@ -21,6 +21,7 @@
 
 import type { EraTodayWire } from '@/lib/era/service'
 import type { Pulse, TodayStatus } from '@/lib/pulse/engine'
+import { eraAccentHex } from '@/lib/era/skins'
 
 export const WIDGET_SNAPSHOT_VERSION = 1
 
@@ -47,6 +48,8 @@ export interface WidgetSnapshot {
    * Optional so a snapshot written before Pulse still decodes.
    */
   pulse?: WidgetPulse | null
+  /** The era skin's accent, "#rrggbb" (lib/era/skins.ts) — fills and glow only. */
+  accent?: string
 }
 
 export interface WidgetPulse {
@@ -97,7 +100,7 @@ export function clip(text: string, max: number): string {
 export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Date(), pulse?: Pulse | null): WidgetSnapshot {
   const date = localDay(now)
   const p = widgetPulse(pulse)
-  if (!era) return { v: WIDGET_SNAPSHOT_VERSION, date, era: null, promise: null, mission: null, streak: 0, pulse: p }
+  if (!era) return { v: WIDGET_SNAPSHOT_VERSION, date, era: null, promise: null, mission: null, streak: 0, pulse: p, accent: eraAccentHex(null) }
   return {
     v: WIDGET_SNAPSHOT_VERSION,
     date,
@@ -111,5 +114,6 @@ export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Da
     mission: era.mission ? { text: clip(era.mission, 120), done: !!era.missionDone } : null,
     streak: Math.max(0, era.stats?.promiseStreak ?? 0),
     pulse: p,
+    accent: eraAccentHex(era.key),
   }
 }

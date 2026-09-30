@@ -42,6 +42,22 @@ struct Snapshot: Decodable {
     let mission: Mission?
     let streak: Int
     let pulse: PulseSnap?
+    /// The era skin's accent, "#rrggbb" — fills and glow only, never text.
+    let accent: String?
+}
+
+extension Color {
+    /// "#rrggbb" → Color; white for anything unreadable.
+    init(hex: String?) {
+        var s = (hex ?? "").trimmingCharacters(in: .whitespaces)
+        if s.hasPrefix("#") { s.removeFirst() }
+        guard s.count == 6, let v = UInt32(s, radix: 16) else { self = .white; return }
+        self = Color(
+            red: Double((v >> 16) & 0xFF) / 255,
+            green: Double((v >> 8) & 0xFF) / 255,
+            blue: Double(v & 0xFF) / 255
+        )
+    }
 }
 
 struct DayItem {
@@ -73,6 +89,7 @@ struct Today {
     var done = 0
     var total = 0
     var next: DayItem? = nil
+    var accent: Color = .white
     // Fallback
     var quote = "Small steps, repeated, become a life."
     var author = "Voxu"
@@ -131,6 +148,7 @@ func loadToday(at now: Date = Date()) -> Today {
         t.day = era.day + daysSince
     }
     t.streak = daysSince <= 1 ? snap.streak : 0
+    t.accent = Color(hex: snap.accent)
     // Today's words and today's list only on the day they were written.
     guard daysSince == 0 else { return t }
 
@@ -289,11 +307,12 @@ struct Eyebrow: View {
 
 struct Bar: View {
     let progress: Double
+    var fill: Color = .white
     var body: some View {
         GeometryReader { g in
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.white.opacity(0.14))
-                Capsule().fill(Color.white).frame(width: max(4, g.size.width * progress))
+                Capsule().fill(fill).frame(width: max(4, g.size.width * progress))
             }
         }
         .frame(height: 4)
@@ -303,12 +322,13 @@ struct Bar: View {
 struct Ring: View {
     let progress: Double
     let size: CGFloat
+    var fill: Color = .white
     var body: some View {
         ZStack {
             Circle().stroke(Color.white.opacity(0.14), lineWidth: 4)
             Circle()
                 .trim(from: 0, to: max(0.02, progress))
-                .stroke(Color.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .stroke(fill, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                 .rotationEffect(.degrees(-90))
         }
         .frame(width: size, height: size)
@@ -366,7 +386,7 @@ struct VoxuWidgetEntryView: View {
             Spacer(minLength: 0)
             if t.total > 0 {
                 HStack(spacing: 6) {
-                    Ring(progress: Double(t.done) / Double(max(1, t.total)), size: 14)
+                    Ring(progress: Double(t.done) / Double(max(1, t.total)), size: 14, fill: t.accent)
                     Text(countLine).font(.system(size: 11, weight: .semibold)).foregroundColor(.white)
                 }
             }
@@ -387,7 +407,7 @@ struct VoxuWidgetEntryView: View {
             HStack(spacing: 10) {
                 if t.total > 0 {
                     Text(countLine).font(.system(size: 11, weight: .semibold)).foregroundColor(.white)
-                    Bar(progress: Double(t.done) / Double(max(1, t.total))).frame(maxWidth: 90)
+                    Bar(progress: Double(t.done) / Double(max(1, t.total)), fill: t.accent).frame(maxWidth: 90)
                 }
                 Spacer(minLength: 0)
                 if let n = t.next, let time = n.time {
@@ -408,7 +428,7 @@ struct VoxuWidgetEntryView: View {
                     Label("\(t.streak)", systemImage: "flame.fill").font(.system(size: 11, weight: .semibold)).foregroundColor(dim)
                 }
             }
-            if t.hasEra && !t.eraFinished { Bar(progress: t.progress) }
+            if t.hasEra && !t.eraFinished { Bar(progress: t.progress, fill: t.accent) }
             VStack(alignment: .leading, spacing: 3) {
                 Eyebrow(text: t.nowEyebrow ?? "Right now")
                 Text(t.nowTitle ?? "").font(.system(size: 22, weight: .medium, design: .serif)).foregroundColor(.white).lineLimit(2)
@@ -501,7 +521,13 @@ struct VoxuWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
                 VoxuWidgetEntryView(entry: entry)
-                    .containerBackground(for: .widget) { Color.black }
+                    .containerBackground(for: .widget) {
+                        // The era's light, faint, from the top — atmosphere only.
+                        LinearGradient(
+                            colors: [entry.today.accent.opacity(0.16), Color.black],
+                            startPoint: .top, endPoint: .center
+                        )
+                    }
             } else {
                 VoxuWidgetEntryView(entry: entry)
                     .padding(14)

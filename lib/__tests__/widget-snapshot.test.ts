@@ -31,6 +31,7 @@ describe('buildWidgetSnapshot', () => {
       mission: { text: 'Say no to one request.', done: false },
       streak: 6,
       pulse: null,
+      accent: '#ffffff',
     })
   })
 

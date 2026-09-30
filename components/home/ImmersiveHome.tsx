@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import { Settings, Home, Save, ChevronRight, Sun, Sunrise, Moon, BarChart3, Wind, MessageCircle, X, Search } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
 import { SearchSheet } from './SearchSheet'
+import { eraSkinVars } from '@/lib/era/skins'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { useHomeAudio } from '@/contexts/HomeAudioContext'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
@@ -1314,7 +1315,9 @@ export function ImmersiveHome() {
     || audioState.userPausedMusic || audioState.userPausedGuide || audioState.userPausedSoundscape)
 
   return (
-    <div className="isolate h-[100dvh] overflow-hidden">
+    // The era's skin (lib/era/skins.ts): one accent, read by the era-* classes
+    // for glows and fills only. Plain white with no era — Voxu as it was.
+    <div className="isolate h-[100dvh] overflow-hidden" style={eraSkinVars(era.era?.key) as React.CSSProperties}>
     {/* App-shell scrolling: the PAGE does not scroll, this container does.
         On iOS the document rubber-bands past its ends, and during that
         bounce the entire visual viewport moves — so a header pinned with
