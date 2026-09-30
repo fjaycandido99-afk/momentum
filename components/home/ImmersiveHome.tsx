@@ -1460,7 +1460,7 @@ export function ImmersiveHome() {
           player closes (it is what keeps the mini player alive), so once
           anything had been opened the header was gone until a refresh. */}
       {!(audioState.playingSound && fullPlayerOpen) && !(audioState.activeSoundscape && audioState.showSoundscapePlayer) && (
-        <div className="sticky top-0 z-50 px-5 safe-area-pt pb-3.5 animate-fade-in-down bg-[rgb(7_10_18/0.86)] backdrop-blur-xl before:absolute before:content-[''] before:-top-20 before:left-0 before:right-0 before:h-20 before:bg-[#070a12]"
+        <div className="sticky top-0 z-50 px-5 safe-area-pt pb-3.5 animate-fade-in-down bg-black before:absolute before:content-[''] before:-top-20 before:left-0 before:right-0 before:h-20 before:bg-black"
         >
           {/* Bottom blur fade */}
           <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />

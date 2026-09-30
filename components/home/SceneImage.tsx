@@ -44,7 +44,7 @@ export function SceneImage({
       loading="lazy"
       decoding="async"
       onError={() => setMissing(true)}
-      className={`absolute pointer-events-none select-none object-cover ${className}`}
+      className={`scene-photo absolute pointer-events-none select-none object-cover ${className}`}
       style={{
         objectPosition: position,
         opacity,

@@ -43,6 +43,8 @@ const TAGLINE = (id: MindsetId) => MINDSET_VOICES[id].tagline
 export const PORTRAIT_VERSION = 2
 const cardImage = (id: MindsetId) => `/portraits/cards/${id}.jpg?v=${PORTRAIT_VERSION}`
 
+const longestWord = (name: string) => Math.max(...name.split(/s+/).map(w => w.length))
+
 function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap: (id: MindsetId) => void }) {
   const [visible, setVisible] = useState(false)
   const config = MINDSET_CONFIGS[id]
@@ -55,6 +57,7 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
   return (
     <button
       onClick={() => onTap(id)}
+      style={{ containerType: 'inline-size' }}
       className={`gold-card relative overflow-hidden rounded-[18px] text-left aspect-[3/4] active:scale-[0.97] transition-all duration-500 group ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
@@ -72,10 +75,14 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
 
       <div className="absolute inset-x-0 bottom-0 p-3.5">
         <p className="gold-eyebrow !text-[9px] !tracking-[0.22em]">{TAGLINE(id)}</p>
-        {/* Long names (Existentialist) step down a size so they never clip. */}
+        {/* Sized to the card, by its longest WORD: a name may wrap between
+            words (Samurai / Code) but never inside one — break-words split
+            MANIFESTOR into "MANIFESTO / R". cqw is the card's own width
+            (container-type on the button), so it fits a phone and an iPad
+            alike; 0.7em is a safe width for a Cormorant capital. */}
         <p
-          className={`${config.name.length > 11 ? 'text-[19px] md:text-[26px]' : 'text-[25px] md:text-[32px]'} leading-none text-white uppercase mt-1.5 break-words`}
-          style={{ ...SERIF, fontWeight: 600 }}
+          className="leading-none text-white uppercase mt-1.5"
+          style={{ ...SERIF, fontWeight: 600, fontSize: `min(32px, calc((100cqw - 28px) / ${(longestWord(config.name) * 0.7).toFixed(2)}))` }}
         >
           {config.name}
         </p>
