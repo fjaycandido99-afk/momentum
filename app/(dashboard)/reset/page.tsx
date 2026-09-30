@@ -94,7 +94,10 @@ export default function ResetPage() {
   }, [sessionId])
 
   return (
-    <div className="min-h-screen text-white">
+    // App shell: this container scrolls (only when the content is taller than
+    // the screen), never the document — min-h-screen plus the layout's
+    // bottom padding made the page scroll with nothing below.
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
       <div
         className="max-w-md mx-auto px-5 pb-24"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
