@@ -6,6 +6,7 @@ import { Check, ChevronRight, Minus } from 'lucide-react'
 import { timeLabel, type ActionTarget, type Pulse, type TodayItem } from '@/lib/pulse/engine'
 import { OPEN_DISCIPLINE, PRACTICES_CHANGED } from '@/lib/pulse/events'
 import { setLatestPulse } from '@/lib/pulse/store'
+import { syncWidgetPulse } from '@/lib/widget-sync'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -43,6 +44,7 @@ export function PulseSection({ version, onEra }: { version: string; onEra: () =>
         // The one-per-open moment reads this when its timer fires, so the
         // nudge costs no second request.
         setLatestPulse(p)
+        void syncWidgetPulse(p)
       })
       .catch(() => { /* home still has every card below */ })
   }, [])

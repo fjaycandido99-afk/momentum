@@ -5,6 +5,7 @@ import { getJourney } from '@/lib/journey'
 import type { MindsetId } from '@/lib/mindset/types'
 import type { EraTodayWire } from '@/lib/era/service'
 import { buildWidgetSnapshot } from '@/lib/widget-snapshot'
+import type { Pulse } from '@/lib/pulse/engine'
 
 // Native bridge (WidgetBridgePlugin.swift) — refreshes the home-screen widget
 // immediately after new data is written. Absent until the native rebuild; calls
@@ -50,9 +51,31 @@ let lastWritten = ''
  * No-op on web, and a safe no-op on builds without the widget.
  */
 export async function syncWidgetEra(era: EraTodayWire | null): Promise<void> {
+  lastEra = era
+  eraLoaded = true
+  await writeSnapshot()
+}
+
+/**
+ * Sends Pulse's right-now and today's list to the widget. Called by home's
+ * Pulse section each time it loads. Merged with the last era rather than
+ * written alone, so neither half ever wipes the other.
+ */
+export async function syncWidgetPulse(pulse: Pulse | null): Promise<void> {
+  lastPulse = pulse
+  // Nothing until the era has been read once: writing now would put a
+  // snapshot with no era on the widget for the moment before it arrives.
+  if (eraLoaded) await writeSnapshot()
+}
+
+let lastEra: EraTodayWire | null = null
+let lastPulse: Pulse | null = null
+let eraLoaded = false
+
+async function writeSnapshot(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return
   try {
-    const json = JSON.stringify(buildWidgetSnapshot(era))
+    const json = JSON.stringify(buildWidgetSnapshot(lastEra, new Date(), lastPulse))
     if (json === lastWritten) return
     const res = await WidgetBridge.write({ json })
     if (res?.written) {

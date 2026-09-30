@@ -30,7 +30,28 @@ describe('buildWidgetSnapshot', () => {
       promise: { text: 'Finish the report before lunch.', kept: null },
       mission: { text: 'Say no to one request.', done: false },
       streak: 6,
+      pulse: null,
     })
+  })
+
+  it('carries Pulse — right now and today — trimmed for a widget', () => {
+    const pulse = {
+      rightNow: { kind: 'due_now' as const, eyebrow: 'Due now', title: 'Gym is due now.', quote: null, context: 'x', action: null },
+      today: {
+        done: 1,
+        total: 3,
+        items: Array.from({ length: 9 }, (_, i) => ({
+          key: String(i), kind: 'discipline' as const, title: `Item ${i}`, time: i === 0 ? '17:30' : null,
+          status: 'due' as const, target: null,
+        })),
+      },
+      next: null,
+    }
+    const s = buildWidgetSnapshot(era(), noon, pulse)
+    expect(s.pulse?.rightNow).toEqual({ eyebrow: 'Due now', title: 'Gym is due now.', quote: null })
+    expect(s.pulse?.items).toHaveLength(6)
+    expect(s.pulse?.items[0]).toEqual({ title: 'Item 0', time: '17:30', status: 'due', kind: 'discipline' })
+    expect([s.pulse?.done, s.pulse?.total]).toEqual([1, 3])
   })
 
   it('has no promise before one is made — the widget asks for one', () => {
@@ -79,7 +100,7 @@ describe('clip', () => {
 describe('the Swift side reads the same shape', () => {
   it('decodes every field the snapshot writes', () => {
     const swift = fs.readFileSync(path.join(process.cwd(), 'ios/App/VoxuWidget/VoxuWidget.swift'), 'utf8')
-    for (const field of ['let v: Int', 'let date: String', 'let era: Era?', 'let promise: Promise?', 'let mission: Mission?', 'let streak: Int']) {
+    for (const field of ['let v: Int', 'let date: String', 'let era: Era?', 'let promise: Promise?', 'let mission: Mission?', 'let streak: Int', 'let pulse: PulseSnap?', 'let rightNow: RightNow?', 'let items: [Item]']) {
       expect(swift).toContain(field)
     }
     expect(swift).toContain('"widget_snapshot"')

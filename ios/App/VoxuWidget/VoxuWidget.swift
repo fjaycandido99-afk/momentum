@@ -5,29 +5,54 @@ import SwiftUI
 //
 // The app writes one JSON snapshot into the App Group (WidgetBridgePlugin
 // .write, built by lib/widget-snapshot.ts): the era's title and day, today's
-// promise in the user's own words, today's mission, and the promise streak.
+// promise and mission, the streak — and Pulse (lib/pulse/engine.ts): the one
+// thing right now and today's list.
 //
-// The snapshot is dated. The widget moves the day forward itself, so a phone
-// that hasn't opened the app since yesterday still says the right day — and
-// it never shows yesterday's promise as today's.
+// The widget keeps it current ON ITS OWN CLOCK. A timed item turns "due now"
+// fifteen minutes before its time and "before it slips" an hour after, and a
+// timeline entry sits at each of those moments — so the widget changes
+// through the day without the app being opened. It never ticks anything the
+// app didn't record, and it drops yesterday's words at midnight.
 //
-// With no era (or no snapshot yet) it falls back to the daily quote from the
-// public endpoint, which needs no sign-in.
+// With no era and no Pulse it falls back to the daily quote from the public
+// endpoint, which needs no sign-in.
 
 private let APP_GROUP = "group.com.voxu.app"
 private let SNAPSHOT_KEY = "widget_snapshot"
 private let QUOTE_URL = "https://voxu.app/api/widget?type=quote"
+private let DUE_BEFORE = 15   // minutes before a time it becomes "due now"
+private let SLIP_AFTER = 60   // minutes after a time it is "before it slips"
 
 struct Snapshot: Decodable {
     struct Era: Decodable { let title: String; let day: Int; let length: Int; let stage: String }
     struct Promise: Decodable { let text: String; let kept: Bool? }
     struct Mission: Decodable { let text: String; let done: Bool }
+    struct PulseSnap: Decodable {
+        struct RightNow: Decodable { let eyebrow: String; let title: String; let quote: String? }
+        struct Item: Decodable { let title: String; let time: String?; let status: String; let kind: String }
+        let rightNow: RightNow?
+        let done: Int
+        let total: Int
+        let items: [Item]
+    }
     let v: Int
     let date: String
     let era: Era?
     let promise: Promise?
     let mission: Mission?
     let streak: Int
+    let pulse: PulseSnap?
+}
+
+struct DayItem {
+    let title: String
+    let time: String?
+    /// done, minimum, kept, missed, open, due, upcoming — plus "slipping",
+    /// which only the widget's own clock produces.
+    let status: String
+    let kind: String
+
+    var ticked: Bool { status == "done" || status == "minimum" || status == "kept" }
 }
 
 /// The snapshot as it applies at `now`.
@@ -40,12 +65,23 @@ struct Today {
     var mission: String? = nil
     var missionDone = false
     var streak = 0
+    // Pulse
+    var nowEyebrow: String? = nil
+    var nowTitle: String? = nil
+    var nowQuote: String? = nil
+    var items: [DayItem] = []
+    var done = 0
+    var total = 0
+    var next: DayItem? = nil
+    // Fallback
     var quote = "Small steps, repeated, become a life."
     var author = "Voxu"
 
     var hasEra: Bool { eraTitle != nil }
+    var hasPulse: Bool { nowTitle != nil || !items.isEmpty }
     var eraFinished: Bool { hasEra && day > length }
     var progress: Double { length > 0 ? min(1, Double(day) / Double(length)) : 0 }
+    var left: Int { max(0, total - done) }
 }
 
 private func localDate(_ ymd: String) -> Date? {
@@ -56,13 +92,35 @@ private func localDate(_ ymd: String) -> Date? {
     return f.date(from: ymd)
 }
 
-func loadToday(at now: Date = Date()) -> Today {
-    var t = Today()
+func minutesOf(_ hhmm: String) -> Int {
+    let parts = hhmm.split(separator: ":").compactMap { Int($0) }
+    guard parts.count >= 2 else { return 0 }
+    return parts[0] * 60 + parts[1]
+}
+
+func clockLabel(_ hhmm: String) -> String {
+    let m = minutesOf(hhmm)
+    let h = m / 60, mm = m % 60
+    let h12 = h % 12 == 0 ? 12 : h % 12
+    let suffix = h >= 12 ? "PM" : "AM"
+    return mm == 0 ? "\(h12) \(suffix)" : String(format: "%d:%02d %@", h12, mm, suffix)
+}
+
+private func minutesNow(_ date: Date) -> Int {
+    let c = Calendar.current.dateComponents([.hour, .minute], from: date)
+    return (c.hour ?? 0) * 60 + (c.minute ?? 0)
+}
+
+private func loadSnapshot() -> Snapshot? {
     guard let store = UserDefaults(suiteName: APP_GROUP),
           let json = store.string(forKey: SNAPSHOT_KEY),
-          let data = json.data(using: .utf8),
-          let snap = try? JSONDecoder().decode(Snapshot.self, from: data),
-          let written = localDate(snap.date) else { return t }
+          let data = json.data(using: .utf8) else { return nil }
+    return try? JSONDecoder().decode(Snapshot.self, from: data)
+}
+
+func loadToday(at now: Date = Date()) -> Today {
+    var t = Today()
+    guard let snap = loadSnapshot(), let written = localDate(snap.date) else { return t }
 
     let cal = Calendar.current
     let daysSince = max(0, cal.dateComponents([.day], from: cal.startOfDay(for: written), to: cal.startOfDay(for: now)).day ?? 0)
@@ -72,15 +130,59 @@ func loadToday(at now: Date = Date()) -> Today {
         t.length = era.length
         t.day = era.day + daysSince
     }
-    // Today's words only on the day they were written.
-    if daysSince == 0 {
-        t.promise = snap.promise?.text
-        t.kept = snap.promise?.kept
-        t.mission = snap.mission?.text
-        t.missionDone = snap.mission?.done ?? false
-    }
-    // The streak runs to today or yesterday; any longer gap and it's broken.
     t.streak = daysSince <= 1 ? snap.streak : 0
+    // Today's words and today's list only on the day they were written.
+    guard daysSince == 0 else { return t }
+
+    t.promise = snap.promise?.text
+    t.kept = snap.promise?.kept
+    t.mission = snap.mission?.text
+    t.missionDone = snap.mission?.done ?? false
+
+    guard let p = snap.pulse else { return t }
+    let mins = minutesNow(now)
+    t.done = p.done
+    t.total = p.total
+
+    // Move timed items along the clock. Only statuses the app set can be
+    // "done"; the clock only ever moves upcoming → due → slipping.
+    t.items = p.items.map { (it: Snapshot.PulseSnap.Item) -> DayItem in
+        guard let time = it.time, it.status == "upcoming" || it.status == "due" else {
+            return DayItem(title: it.title, time: it.time, status: it.status, kind: it.kind)
+        }
+        let at = minutesOf(time)
+        let status: String
+        if it.kind == "discipline" && mins > at + SLIP_AFTER { status = "slipping" }
+        else if mins >= at - DUE_BEFORE { status = it.kind == "step" ? "upcoming" : "due" }
+        else { status = "upcoming" }
+        return DayItem(title: it.title, time: time, status: status, kind: it.kind)
+    }
+    // A routine step with no record is only shown while still ahead.
+    t.items = t.items.filter { (item: DayItem) -> Bool in
+        guard item.kind == "step", let time = item.time else { return true }
+        return minutesOf(time) > mins
+    }
+
+    t.next = t.items.first(where: { (item: DayItem) -> Bool in
+        guard let time = item.time else { return false }
+        return minutesOf(time) > mins && (item.status == "upcoming" || item.status == "due")
+    })
+
+    // Right now: a timed discipline the clock has made urgent outranks what
+    // the app last said; otherwise the app's own answer.
+    if let slip = t.items.first(where: { $0.status == "slipping" }) {
+        t.nowEyebrow = "Before it slips"
+        t.nowTitle = "\(slip.title) — do the minimum."
+        t.nowQuote = nil
+    } else if let due = t.items.first(where: { $0.status == "due" && $0.time != nil && $0.kind == "discipline" }) {
+        t.nowEyebrow = "Due now"
+        t.nowTitle = "\(due.title) is due now."
+        t.nowQuote = nil
+    } else if let r = p.rightNow {
+        t.nowEyebrow = r.eyebrow
+        t.nowTitle = r.title
+        t.nowQuote = r.quote
+    }
     return t
 }
 
@@ -94,10 +196,17 @@ struct VoxuEntry: TimelineEntry {
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> VoxuEntry {
         var t = Today()
-        t.eraTitle = "Locked In"; t.day = 9; t.length = 30
-        t.promise = "I'll finish the thing I've been avoiding before lunch."
-        t.mission = "Say no to one request that pulls you away from what matters."
-        t.streak = 6
+        t.eraTitle = "Locked In"; t.day = 9; t.length = 30; t.streak = 6
+        t.nowEyebrow = "Right now"; t.nowTitle = "Keep today’s promise."
+        t.nowQuote = "I’ll finish the thing I’ve been avoiding."
+        t.items = [
+            DayItem(title: "Read 10 pages", time: nil, status: "done", kind: "discipline"),
+            DayItem(title: "Gym", time: "17:30", status: "upcoming", kind: "discipline"),
+            DayItem(title: "Today’s promise", time: nil, status: "open", kind: "promise"),
+            DayItem(title: "Reflection", time: "21:30", status: "upcoming", kind: "step"),
+        ]
+        t.done = 1; t.total = 3
+        t.next = t.items[1]
         return VoxuEntry(date: Date(), today: t)
     }
 
@@ -110,20 +219,37 @@ struct Provider: TimelineProvider {
         let cal = Calendar.current
         let midnight = cal.startOfDay(for: cal.date(byAdding: .day, value: 1, to: now) ?? now.addingTimeInterval(86400))
 
-        let finish: (Today) -> Void = { today in
-            // One entry now and one at midnight, so the day counter turns over
-            // on time even if the app isn't opened; then ask again in 4 hours.
-            let entries = [
-                VoxuEntry(date: now, today: today),
-                VoxuEntry(date: midnight, today: loadToday(at: midnight)),
-            ]
+        // An entry at every moment the day changes on its own: each timed
+        // item turning due, and turning "before it slips".
+        var moments: [Date] = [now]
+        if let snap = loadSnapshot(), let items = snap.pulse?.items {
+            let start = cal.startOfDay(for: now)
+            for it in items {
+                guard let time = it.time else { continue }
+                let at = minutesOf(time)
+                for m in [at - DUE_BEFORE, at, at + SLIP_AFTER + 1] where m > 0 {
+                    if let d = cal.date(byAdding: .minute, value: m, to: start), d > now, d < midnight {
+                        moments.append(d)
+                    }
+                }
+            }
+        }
+        moments.append(midnight)
+        let unique = Array(Set(moments)).sorted().prefix(24)
+
+        let finish: (Today?) -> Void = { override in
+            let entries = unique.map { d -> VoxuEntry in
+                var t = loadToday(at: d)
+                if let o = override, !t.hasEra && !t.hasPulse { t.quote = o.quote; t.author = o.author }
+                return VoxuEntry(date: d, today: t)
+            }
             let next = cal.date(byAdding: .hour, value: 4, to: now) ?? now.addingTimeInterval(14400)
             completion(Timeline(entries: entries, policy: .after(min(next, midnight.addingTimeInterval(60)))))
         }
 
         let today = loadToday(at: now)
-        if today.hasEra {
-            finish(today)
+        if today.hasEra || today.hasPulse {
+            finish(nil)
         } else {
             fetchQuote { quote, author in
                 var t = today
@@ -148,6 +274,7 @@ struct Provider: TimelineProvider {
 // MARK: - Pieces (monochrome, the app's look)
 
 private let dim = Color.white.opacity(0.45)
+private let titleFont = Font.system(size: 20, weight: .medium, design: .serif)
 
 struct Eyebrow: View {
     let text: String
@@ -160,7 +287,7 @@ struct Eyebrow: View {
     }
 }
 
-struct DayBar: View {
+struct Bar: View {
     let progress: Double
     var body: some View {
         GeometryReader { g in
@@ -173,29 +300,39 @@ struct DayBar: View {
     }
 }
 
-struct PromiseLine: View {
-    let today: Today
+struct Ring: View {
+    let progress: Double
     let size: CGFloat
-    let lines: Int
     var body: some View {
-        if let p = today.promise {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(p)
-                    .font(.system(size: size, weight: .medium))
-                    .foregroundColor(.white)
-                    .lineLimit(lines)
-                    .minimumScaleFactor(0.85)
-                if let kept = today.kept {
-                    Label(kept ? "Kept" : "Not today", systemImage: kept ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(kept ? .white : dim)
-                }
+        ZStack {
+            Circle().stroke(Color.white.opacity(0.14), lineWidth: 4)
+            Circle()
+                .trim(from: 0, to: max(0.02, progress))
+                .stroke(Color.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+struct ItemRow: View {
+    let item: DayItem
+    private var urgent: Bool { item.status == "due" || item.status == "slipping" }
+    private var symbol: String { item.ticked ? "checkmark.circle.fill" : (urgent ? "circle.inset.filled" : "circle") }
+    private var tint: Color { (item.ticked || urgent) ? Color.white : dim }
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: symbol)
+                .font(.system(size: 12))
+                .foregroundColor(tint)
+            Text(item.title)
+                .font(.system(size: 12, weight: item.ticked ? .regular : .medium))
+                .foregroundColor(item.ticked ? Color.white.opacity(0.6) : Color.white)
+                .lineLimit(1)
+            Spacer(minLength: 4)
+            if let time = item.time {
+                Text(clockLabel(time)).font(.system(size: 10)).foregroundColor(dim)
             }
-        } else {
-            Text(today.eraFinished ? "Era complete. Open Voxu to see it." : "Make today's promise.")
-                .font(.system(size: size, weight: .medium))
-                .foregroundColor(Color.white.opacity(0.7))
-                .lineLimit(lines)
         }
     }
 }
@@ -205,61 +342,96 @@ struct PromiseLine: View {
 struct VoxuWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
     let entry: VoxuEntry
-
     private var t: Today { entry.today }
 
-    private var dayLabel: String {
-        t.eraFinished ? "Era complete" : "Day \(t.day) of \(t.length)"
+    private var eraLine: String {
+        guard let title = t.eraTitle else { return "Voxu" }
+        return t.eraFinished ? "\(title) · complete" : "\(title) · Day \(t.day)"
     }
 
+    private var countLine: String { t.total > 0 ? "\(t.done) of \(t.total) today" : "" }
+
+    /// Small: what's next, and how the day is going.
     var small: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Eyebrow(text: dayLabel)
-            DayBar(progress: t.progress)
-            Spacer(minLength: 2)
-            PromiseLine(today: t, size: 13, lines: 4)
+        VStack(alignment: .leading, spacing: 6) {
+            Eyebrow(text: "Voxu")
+            Spacer(minLength: 0)
+            if let n = t.next {
+                Text("Next up").font(.system(size: 10)).foregroundColor(dim)
+                Text(n.title).font(.system(size: 16, weight: .medium, design: .serif)).foregroundColor(.white).lineLimit(2)
+                if let time = n.time { Text(clockLabel(time)).font(.system(size: 11)).foregroundColor(dim) }
+            } else if let title = t.nowTitle {
+                Text(title).font(.system(size: 15, weight: .medium, design: .serif)).foregroundColor(.white).lineLimit(3)
+            }
+            Spacer(minLength: 0)
+            if t.total > 0 {
+                HStack(spacing: 6) {
+                    Ring(progress: Double(t.done) / Double(max(1, t.total)), size: 14)
+                    Text(countLine).font(.system(size: 11, weight: .semibold)).foregroundColor(.white)
+                }
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
+    /// Medium: right now, in full, with the day underneath.
     var medium: some View {
-        HStack(alignment: .top, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(t.eraFinished ? "✓" : "\(t.day)")
-                    .font(.system(size: 40, weight: .semibold, design: .serif))
-                    .foregroundColor(.white)
-                Text(t.eraFinished ? "complete" : "of \(t.length)")
-                    .font(.system(size: 11)).foregroundColor(dim)
+        VStack(alignment: .leading, spacing: 6) {
+            Eyebrow(text: eraLine)
+            Text(t.nowEyebrow ?? "Right now").font(.system(size: 11)).foregroundColor(dim)
+            Text(t.nowTitle ?? "").font(titleFont).foregroundColor(.white).lineLimit(2).minimumScaleFactor(0.85)
+            if let q = t.nowQuote {
+                Text("“\(q)”").font(.system(size: 12, design: .serif)).italic().foregroundColor(Color.white.opacity(0.7)).lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            HStack(spacing: 10) {
+                if t.total > 0 {
+                    Text(countLine).font(.system(size: 11, weight: .semibold)).foregroundColor(.white)
+                    Bar(progress: Double(t.done) / Double(max(1, t.total))).frame(maxWidth: 90)
+                }
                 Spacer(minLength: 0)
-                Text(t.eraTitle ?? "")
-                    .font(.system(size: 12, weight: .semibold)).foregroundColor(.white)
-                    .lineLimit(2)
-                if t.streak > 1 {
-                    Label("\(t.streak) in a row", systemImage: "flame.fill")
-                        .font(.system(size: 10, weight: .semibold)).foregroundColor(dim)
+                if let n = t.next, let time = n.time {
+                    Text("\(n.title) · \(clockLabel(time))").font(.system(size: 11)).foregroundColor(dim).lineLimit(1)
                 }
             }
-            .frame(width: 84, alignment: .leading)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Eyebrow(text: "Today's promise")
-                PromiseLine(today: t, size: 14, lines: 3)
-                Spacer(minLength: 0)
-                if let m = t.mission {
-                    HStack(alignment: .top, spacing: 5) {
-                        Image(systemName: t.missionDone ? "checkmark.circle.fill" : "target")
-                            .font(.system(size: 11))
-                        Text(m).font(.system(size: 11)).lineLimit(2)
-                    }
-                    .foregroundColor(t.missionDone ? .white : dim)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// No era yet: the daily quote.
+    /// Large: the era, right now, and today's list.
+    var large: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Eyebrow(text: eraLine)
+                Spacer()
+                if t.streak > 1 {
+                    Label("\(t.streak)", systemImage: "flame.fill").font(.system(size: 11, weight: .semibold)).foregroundColor(dim)
+                }
+            }
+            if t.hasEra && !t.eraFinished { Bar(progress: t.progress) }
+            VStack(alignment: .leading, spacing: 3) {
+                Eyebrow(text: t.nowEyebrow ?? "Right now")
+                Text(t.nowTitle ?? "").font(.system(size: 22, weight: .medium, design: .serif)).foregroundColor(.white).lineLimit(2)
+                if let q = t.nowQuote {
+                    Text("“\(q)”").font(.system(size: 13, design: .serif)).italic().foregroundColor(Color.white.opacity(0.7)).lineLimit(2)
+                }
+            }
+            if !t.items.isEmpty {
+                VStack(alignment: .leading, spacing: 7) {
+                    HStack {
+                        Eyebrow(text: "Today")
+                        Spacer()
+                        Text(countLine).font(.system(size: 10)).foregroundColor(dim)
+                    }
+                    ForEach(Array(t.items.prefix(5).enumerated()), id: \.offset) { _, it in ItemRow(item: it) }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    /// No era and no Pulse yet: the daily quote.
     var quote: some View {
         VStack(alignment: .leading, spacing: 6) {
             Eyebrow(text: "Voxu")
@@ -267,7 +439,7 @@ struct VoxuWidgetEntryView: View {
             Text("“\(t.quote)”")
                 .font(.system(size: family == .systemSmall ? 13 : 16, weight: .medium))
                 .foregroundColor(.white)
-                .lineLimit(family == .systemSmall ? 5 : 3)
+                .lineLimit(family == .systemSmall ? 5 : 4)
                 .minimumScaleFactor(0.85)
             Text("— \(t.author)").font(.system(size: 10)).foregroundColor(dim).lineLimit(1)
         }
@@ -277,19 +449,33 @@ struct VoxuWidgetEntryView: View {
     // Lock screen. The system tints these, so no colours of our own.
     var rectangular: some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(t.hasEra ? "\(dayLabel) · \(t.eraTitle ?? "")" : "Voxu")
-                .font(.system(size: 12, weight: .semibold)).lineLimit(1)
-            Text(t.promise ?? (t.hasEra ? "Make today's promise." : t.quote))
-                .font(.system(size: 12)).lineLimit(2)
+            if t.total > 0 {
+                Text(t.left == 0 ? "All done today" : "\(t.left) left today")
+                    .font(.system(size: 12, weight: .semibold)).lineLimit(1)
+            } else {
+                Text(eraLine).font(.system(size: 12, weight: .semibold)).lineLimit(1)
+            }
+            if let n = t.next, let time = n.time {
+                Text("Next: \(n.title) \(clockLabel(time))").font(.system(size: 12)).lineLimit(1)
+            } else {
+                Text(t.nowTitle ?? t.promise ?? t.quote).font(.system(size: 12)).lineLimit(2)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     var circular: some View {
-        Gauge(value: t.progress) {
-            Text("Day")
+        Gauge(value: t.total > 0 ? Double(t.done) / Double(t.total) : t.progress) {
+            Text("Voxu")
         } currentValueLabel: {
-            Text(t.hasEra ? (t.eraFinished ? "✓" : "\(t.day)") : "–")
+            if t.total > 0 {
+                VStack(spacing: -2) {
+                    Text("\(t.left)").font(.system(size: 16, weight: .semibold))
+                    Text("left").font(.system(size: 8))
+                }
+            } else {
+                Text(t.hasEra ? "\(t.day)" : "–")
+            }
         }
         .gaugeStyle(.accessoryCircular)
     }
@@ -298,8 +484,9 @@ struct VoxuWidgetEntryView: View {
         switch family {
         case .accessoryRectangular: rectangular
         case .accessoryCircular: circular
-        case .systemMedium: t.hasEra ? AnyView(medium) : AnyView(quote)
-        default: t.hasEra ? AnyView(small) : AnyView(quote)
+        case .systemLarge: (t.hasPulse || t.hasEra) ? AnyView(large) : AnyView(quote)
+        case .systemMedium: t.hasPulse ? AnyView(medium) : AnyView(quote)
+        default: (t.hasPulse || t.hasEra) ? AnyView(small) : AnyView(quote)
         }
     }
 }
@@ -322,7 +509,7 @@ struct VoxuWidget: Widget {
             }
         }
         .configurationDisplayName("Voxu")
-        .description("Your era's day, today's promise and today's mission.")
-        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular, .accessoryCircular])
+        .description("What matters right now, and how today is going.")
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryCircular])
     }
 }
