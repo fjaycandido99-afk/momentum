@@ -9,7 +9,7 @@ import {
   CATEGORY_ICONS,
   
 } from '@/lib/achievements'
-import { AchievementBadge } from './AchievementBadge'
+import { AchievementBadge, METAL, METAL_RGB } from './AchievementBadge'
 
 interface AchievementWithStatus extends Achievement {
   unlocked: boolean
@@ -103,11 +103,15 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                       onClick={() => onAchievementClick?.(a)}
                       className={`press-scale relative flex flex-col items-center gap-2 px-2 pt-3 pb-2.5 rounded-xl border transition-all duration-200 ${
                         a.unlocked
-                          // Earned tiles are warm: a gold edge over a faint amber
-                          // glow, like the unlock popup. Locked stay grey.
-                          ? 'border-[#d6aa76]/40 bg-[radial-gradient(90%_70%_at_50%_20%,rgba(214,170,118,0.12),rgba(255,255,255,0.02))] hover:border-[#d6aa76]/60'
+                          // Earned tiles take their badge's metal — steel, silver or
+                          // gold — as an edge over a faint glow. Locked stay grey.
+                          ? 'bg-white/[0.02]'
                           : 'border-white/[0.06] bg-white/[0.015]'
                       }`}
+                      style={a.unlocked ? {
+                        borderColor: `rgb(${METAL_RGB[METAL[a.rarity]]} / ${METAL[a.rarity] === 'steel' ? 0.18 : 0.4})`,
+                        backgroundImage: `radial-gradient(90% 70% at 50% 20%, rgb(${METAL_RGB[METAL[a.rarity]]} / 0.1), transparent)`,
+                      } : undefined}
                       aria-label={
                         a.unlocked
                           ? `${a.title}, ${a.rarity}, unlocked`
@@ -124,7 +128,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
 
                       {a.unlocked ? (
                         <span className="flex items-center gap-1.5">
-                          <span className="gold-eyebrow !text-[9px] !tracking-[0.16em]">
+                          <span className="text-[9px] uppercase tracking-[0.16em] font-medium" style={{ color: `rgb(${METAL_RGB[METAL[a.rarity]]})` }}>
                             {a.rarity}
                           </span>
                           {a.unlockedAt && <span className="text-[10px] text-white/40">{formatDate(a.unlockedAt)}</span>}

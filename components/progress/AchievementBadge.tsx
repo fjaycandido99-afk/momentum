@@ -17,17 +17,36 @@ import {
  *  - The STAMP: a small plate at the foot of the coin carrying the
  *    achievement's number — "7", "30", "365", "2K" — or, when it has none,
  *    its own glyph. Getting Started and Year of Growth no longer look alike.
- *  - The FINISH, by rarity, in antique gold (Francis's "Year of Growth"
- *    mockup, 2026-09-30): the same coin art toned warm — common is dull
- *    bronze with a faint ring; rare clean gold; epic bright with a double
- *    ring; legendary brightest, glowing, with a slow sheen. Locked stays grey:
- *    gold is only ever something you earned.
+ *  - The METAL, by rarity (Francis, 2026-09-30: "gold should be for the
+ *    harder achievement"): common is steel, rare is silver, epic is gold,
+ *    legendary is gold that glows, with a slow sheen. Gold that every badge
+ *    wore meant nothing. Locked stays grey.
  */
+
+export type Metal = 'steel' | 'silver' | 'gold'
+export const METAL: Record<AchievementRarity, Metal> = {
+  common: 'steel',
+  rare: 'silver',
+  epic: 'gold',
+  legendary: 'gold',
+}
+/** "r g b" per metal, for edges, glows and labels. */
+export const METAL_RGB: Record<Metal, string> = {
+  steel: '170 176 186',
+  silver: '214 224 238',
+  gold: '214 170 118',
+}
 
 const GOLD_TONE = 'grayscale(1) sepia(0.7) saturate(1.45) hue-rotate(-6deg)'
 const FINISH: Record<AchievementRarity, { filter: string; ring: string; shadow?: string }> = {
-  common: { filter: `${GOLD_TONE} brightness(0.72) contrast(1.05)`, ring: 'ring-1 ring-[#d6aa76]/25' },
-  rare: { filter: `${GOLD_TONE} brightness(0.95) contrast(1.1)`, ring: 'ring-1 ring-[#d6aa76]/55' },
+  // Steel: dull, dark metal.
+  common: { filter: 'grayscale(1) brightness(0.72) contrast(1.05)', ring: 'ring-1 ring-white/20' },
+  // Silver: bright and cool — a faint blue in the white.
+  rare: {
+    filter: 'grayscale(1) sepia(0.15) hue-rotate(180deg) saturate(0.6) brightness(1.1) contrast(1.15)',
+    ring: 'ring-1 ring-[#d6e0ee]/75',
+    shadow: '0 0 14px rgba(214,224,238,0.18)',
+  },
   epic: {
     filter: `${GOLD_TONE} brightness(1.1) contrast(1.15)`,
     ring: 'ring-2 ring-[#d6aa76]/80',
@@ -64,7 +83,7 @@ export function AchievementBadge({
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }} aria-hidden>
       <div
-        className={`absolute inset-0 rounded-full overflow-hidden flex items-center justify-center bg-[radial-gradient(circle_at_30%_25%,rgba(232,199,154,0.16),rgba(255,255,255,0.03)_60%,rgba(0,0,0,0.4))] ${
+        className={`absolute inset-0 rounded-full overflow-hidden flex items-center justify-center bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.14),rgba(255,255,255,0.03)_60%,rgba(0,0,0,0.4))] ${
           unlocked ? finish.ring : 'ring-1 ring-white/[0.08]'
         }`}
         style={unlocked && finish.shadow ? { boxShadow: finish.shadow } : undefined}
@@ -106,7 +125,11 @@ export function AchievementBadge({
           unlocked
             ? rarity === 'legendary'
               ? 'bg-[linear-gradient(180deg,#f3dcb8,#c9965e)] text-black border-[#f3dcb8]'
-              : 'bg-black text-[#f0d6ae] border-[#d6aa76]/60'
+              : rarity === 'epic'
+                ? 'bg-black text-[#f0d6ae] border-[#d6aa76]/60'
+                : rarity === 'rare'
+                  ? 'bg-black text-[#e8eef7] border-[#d6e0ee]/60'
+                  : 'bg-black text-white/80 border-white/30'
             : 'bg-black text-white/30 border-white/10'
         }`}
         style={{ fontSize: plateFont }}

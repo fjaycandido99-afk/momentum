@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { ChevronRight, Sparkle, X } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { getAchievementById, achievementMark } from '@/lib/achievements'
-import { AchievementBadge } from './AchievementBadge'
+import { AchievementBadge, METAL, METAL_RGB } from './AchievementBadge'
 
 interface AchievementCelebrationProps {
   achievement: {
@@ -19,28 +19,32 @@ interface AchievementCelebrationProps {
 }
 
 /*
- * Gold, from Francis's "Year of Growth" mockup: warm black, an antique-gold
- * edge and embers, a serif title. Rarity shows in how much it glows.
+ * From Francis's "Year of Growth" mockup: warm black, an edge and embers in
+ * the achievement's METAL (steel · silver · gold — AchievementBadge), a serif
+ * title. Only epic and legendary are gold; rarity also sets how much it glows.
  */
-const GOLD = '214 170 118'
-const RARITY_GLOW_STYLE: Record<string, string> = {
+
+const glowStyle = (GOLD: string): Record<string, string> => ({
   common: `0 0 40px rgb(${GOLD} / 0.10)`,
   rare: `0 0 50px rgb(${GOLD} / 0.18)`,
   epic: `0 0 60px rgb(${GOLD} / 0.26)`,
   legendary: `0 0 80px rgb(${GOLD} / 0.38)`,
-}
+})
 
 // Rarity-based embers
-const PARTICLE_CONFIG: Record<string, { count: number; opacity: number; glow: string; sizeBoost: number }> = {
+const particleConfig = (GOLD: string): Record<string, { count: number; opacity: number; glow: string; sizeBoost: number }> => ({
   common: { count: 15, opacity: 0.55, glow: `0 0 4px rgb(${GOLD} / 0.5)`, sizeBoost: 0 },
   rare: { count: 20, opacity: 0.7, glow: `0 0 5px rgb(${GOLD} / 0.6)`, sizeBoost: 0 },
   epic: { count: 25, opacity: 0.85, glow: `0 0 6px rgb(${GOLD} / 0.7)`, sizeBoost: 0 },
   legendary: { count: 30, opacity: 0.95, glow: `0 0 8px rgb(${GOLD} / 0.85)`, sizeBoost: 1 },
-}
+})
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
 export function AchievementCelebration({ achievement, onClose }: AchievementCelebrationProps) {
+  const metal = METAL[achievement.rarity]
+  const GOLD = METAL_RGB[metal]
+  const warm = metal === 'gold'
   const [visible, setVisible] = useState(false)
   const [fadeOut, setFadeOut] = useState(false)
   const router = useRouter()
@@ -61,11 +65,12 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
       color: `rgb(${GOLD} / ${0.35 + Math.random() * 0.5})`,
       drift: (Math.random() - 0.5) * 60,
     }))
-  }, [])
+  }, [GOLD])
 
   // Generate burst particles (radial from center)
   const burstParticles = useMemo(() => {
-    const config = PARTICLE_CONFIG[achievement.rarity] || PARTICLE_CONFIG.common
+    const all = particleConfig(GOLD)
+    const config = all[achievement.rarity] || all.common
     return Array.from({ length: config.count }, (_, i) => ({
       id: i,
       px: (Math.random() - 0.5) * 120, // -60 to 60
@@ -74,7 +79,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
       opacity: config.opacity,
       glow: config.glow,
     }))
-  }, [achievement.rarity])
+  }, [achievement.rarity, GOLD])
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
@@ -99,7 +104,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
       {/* White flash overlay */}
       {visible && (
         <div
-          className="absolute inset-0 bg-[#f3dcb8] pointer-events-none"
+          className={`absolute inset-0 pointer-events-none ${warm ? 'bg-[#f3dcb8]' : 'bg-white'}`}
           style={{ animation: 'achievement-flash 150ms ease-out forwards' }}
         />
       )}
@@ -125,10 +130,12 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
       {/* Card */}
       <div
         className={`relative z-10 max-w-[340px] md:max-w-[400px] w-full mx-5 rounded-[26px] border px-6 pt-6 pb-6 text-center
-          bg-[radial-gradient(90%_60%_at_50%_30%,rgb(70_48_26/0.55),rgb(12_9_6/0.96)_70%)]
+          ${warm
+            ? 'bg-[radial-gradient(90%_60%_at_50%_30%,rgb(70_48_26/0.55),rgb(12_9_6/0.97)_70%)]'
+            : 'bg-[radial-gradient(90%_60%_at_50%_30%,rgb(44_48_56/0.55),rgb(8_9_11/0.97)_70%)]'}
           ${visible ? 'animate-achievement-enter' : 'opacity-0 scale-90'}
         `}
-        style={{ boxShadow: RARITY_GLOW_STYLE[achievement.rarity], borderColor: `rgb(${GOLD} / 0.55)` }}
+        style={{ boxShadow: glowStyle(GOLD)[achievement.rarity], borderColor: `rgb(${GOLD} / 0.55)` }}
         onClick={e => e.stopPropagation()}
       >
         <button
@@ -139,7 +146,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
           <X className="w-4 h-4" />
         </button>
 
-        <p className="gold-eyebrow !tracking-[0.34em] mb-5 mt-1.5">Achievement unlocked</p>
+        <p className="text-[10px] uppercase tracking-[0.34em] mb-5 mt-1.5" style={{ color: `rgb(${GOLD})` }}>Achievement unlocked</p>
 
         {/* Icon with staged reveal */}
         <div
@@ -152,7 +159,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
             rarity={achievement.rarity}
             unlocked
             mark={(() => { const full = getAchievementById(achievement.id); return full ? achievementMark(full) : null })()}
-            size={136}
+            size={160}
           />
         </div>
 
@@ -161,7 +168,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
           {burstParticles.map(p => (
             <div
               key={p.id}
-              className="absolute rounded-full bg-[#e8c79a]"
+              className="absolute rounded-full"
               style={{
                 width: `${p.size}px`,
                 height: `${p.size}px`,
@@ -171,6 +178,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
                 ['--px' as string]: `${p.px}px`,
                 ['--py' as string]: `${p.py}px`,
                 boxShadow: p.glow,
+                backgroundColor: `rgb(${GOLD})`,
                 animation: 'achievement-particle 800ms ease-out 700ms forwards',
               }}
             />
@@ -204,11 +212,10 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
             View progress <ChevronRight className="w-3.5 h-3.5" />
           </button>
           <span className="h-12 rounded-full border border-white/15 bg-black/40 flex items-center justify-center gap-1.5 text-white font-semibold text-[15px]">
-            <Sparkle className="w-4 h-4 text-[#e8c79a]" fill="currentColor" />
+            <Sparkle className="w-4 h-4" style={{ color: `rgb(${GOLD})` }} fill="currentColor" />
             +{achievement.xpReward} XP
           </span>
         </div>
-        <p className="gold-eyebrow !text-[9px] mt-3 opacity-80">{achievement.rarity}</p>
       </div>
 
       <style jsx>{`
