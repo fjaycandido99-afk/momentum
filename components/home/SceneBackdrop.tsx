@@ -14,20 +14,33 @@ import { useState } from 'react'
  *
  * The parent must be positioned (Home's root is `isolate` with a fixed height).
  */
-export function SceneBackdrop({ src, opacity = 0.55 }: { src: string | null | undefined; opacity?: number }) {
+export function SceneBackdrop({
+  src,
+  wideSrc,
+  opacity = 0.55,
+}: {
+  src: string | null | undefined
+  /** Used when the screen is wider than 4:3 (iPad landscape): a tall photo
+   *  there would be scaled up past its pixels and look soft. */
+  wideSrc?: string | null
+  opacity?: number
+}) {
   const [missing, setMissing] = useState(false)
   if (!src || missing) return null
   return (
     <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt=""
-        decoding="async"
-        onError={() => setMissing(true)}
-        className="absolute inset-0 w-full h-full object-cover object-center"
-        style={{ opacity }}
-      />
+      <picture>
+        {wideSrc && <source media="(min-aspect-ratio: 4/3)" srcSet={wideSrc} />}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt=""
+          decoding="async"
+          onError={() => setMissing(true)}
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          style={{ opacity }}
+        />
+      </picture>
       <div
         className="absolute inset-0"
         style={{

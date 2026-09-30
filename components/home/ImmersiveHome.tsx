@@ -1341,7 +1341,7 @@ export function ImmersiveHome() {
     // for glows and fills only. Plain white with no era — Voxu as it was.
     <div className="relative isolate voxu-scene h-[100dvh] overflow-hidden" style={eraSkinVars(era.era?.key) as React.CSSProperties}>
     {/* The page's photograph, held still behind the scrolling shell. */}
-    <SceneBackdrop src={HOME_SCENES.backdrop} />
+    <SceneBackdrop src={HOME_SCENES.backdrop} wideSrc={HOME_SCENES.backdropWide} />
     {/* App-shell scrolling: the PAGE does not scroll, this container does.
         On iOS the document rubber-bands past its ends, and during that
         bounce the entire visual viewport moves — so a header pinned with

@@ -13,9 +13,10 @@
 export const HOME_SCENES = {
   /** The whole page's backdrop, held still behind the scroll: tall portrait,
    *  dark sky above, mountains and a still lake in the lower half. */
-  // Not made yet — null rather than a path, so no page load asks for a file
-  // that 404s. Set to '/scenes/home/backdrop.jpg' once it exists.
-  backdrop: null as string | null,
+  backdrop: '/scenes/home/backdrop.jpg',
+  /** The same scene, landscape — for screens wider than they are tall (iPad
+   *  landscape), where the tall photo would be stretched soft. */
+  backdropWide: '/scenes/home/backdrop-wide.jpg',
   /** Behind the greeting: a figure on a ridge at dusk, right third. */
   hero: '/scenes/home/hero.jpg',
   /** Today's mission: a desk, an open notebook, a lamp. */
