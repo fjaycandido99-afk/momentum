@@ -10,6 +10,7 @@ import { ModulesCompleted } from '@/components/progress/ModulesCompleted'
 import { MoodTrends } from '@/components/progress/MoodTrends'
 import { XPProgress } from '@/components/progress/XPProgress'
 import { AchievementGrid } from '@/components/progress/AchievementGrid'
+import { DayBackdrop } from '@/components/home/DayBackdrop'
 import { AchievementCelebration } from '@/components/progress/AchievementCelebration'
 import { DailyChallenges } from '@/components/progress/DailyChallenges'
 import { WeeklyMissions } from '@/components/progress/WeeklyMissions'
@@ -81,7 +82,11 @@ export default function ProgressPage() {
   }, [])
 
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white pb-24"
+    // Home's sky behind the page (components/home/DayBackdrop), held still
+    // behind the scrolling shell exactly as on Home.
+    <div className="relative voxu-scene h-[100dvh] overflow-hidden">
+    <DayBackdrop />
+    <div className="relative h-[100dvh] overflow-y-auto overscroll-contain text-white pb-24"
       data-app-shell
     >
       {/* App-shell scroll: this container scrolls, the document does not.
@@ -265,6 +270,7 @@ export default function ProgressPage() {
           onClose={() => setCelebratingAchievement(null)}
         />
       )}
+    </div>
     </div>
   )
 }

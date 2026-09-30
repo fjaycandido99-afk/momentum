@@ -13,6 +13,7 @@ import {
 } from '@/lib/reset/states'
 import { haptic } from '@/lib/haptics'
 import { trackFeature } from '@/lib/analytics/track'
+import { DayBackdrop } from '@/components/home/DayBackdrop'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -83,7 +84,9 @@ export default function ResetPage() {
   }, [sessionId])
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="relative voxu-scene min-h-screen text-white">
+      {/* Home's sky behind the page (components/home/DayBackdrop). */}
+      <DayBackdrop />
       <div
         className="max-w-md mx-auto px-5 pb-24"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
@@ -108,7 +111,7 @@ export default function ResetPage() {
                 <button
                   key={s.id}
                   onClick={() => choose(s.id)}
-                  className="w-full text-left p-4 rounded-2xl border border-white/[0.14] hover:bg-white/[0.05] press-scale"
+                  className="card-surface w-full text-left p-4 rounded-2xl border border-white/[0.14] hover:bg-white/[0.05] press-scale"
                 >
                   <p className="text-[19px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
                     {s.label}
@@ -141,7 +144,7 @@ export default function ResetPage() {
                 <button
                   key={label}
                   onClick={() => start(i + 1)}
-                  className="w-full text-left px-4 py-3 rounded-xl border border-white/[0.14] text-[15px] text-white hover:bg-white/[0.06]"
+                  className="card-surface w-full text-left px-4 py-3 rounded-xl border border-white/[0.14] text-[15px] text-white hover:bg-white/[0.06]"
                 >
                   {label}
                 </button>
@@ -170,7 +173,7 @@ export default function ResetPage() {
                     <button
                       key={label}
                       onClick={() => finish(i + 1, true)}
-                      className="w-full text-left px-4 py-3 rounded-xl border border-white/[0.14] text-[15px] text-white hover:bg-white/[0.06]"
+                      className="card-surface w-full text-left px-4 py-3 rounded-xl border border-white/[0.14] text-[15px] text-white hover:bg-white/[0.06]"
                     >
                       {label}
                     </button>

@@ -12,6 +12,7 @@ import { isContentFree } from '@/lib/subscription-constants'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { SceneBackdrop } from '@/components/home/SceneBackdrop'
 import { GUIDED_SCENE } from '@/lib/home/scenes'
+import { useDayScene } from '@/components/home/DayBackdrop'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -191,13 +192,16 @@ export function GuidedPlayer({
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
   const activeGuide = VOICE_GUIDES.find(g => g.id === guideId)
+  // Its own room photo when one is made; until then, Home's sky for the hour.
+  const dayScene = useDayScene()
+  const room = GUIDED_SCENE.tall ? GUIDED_SCENE : dayScene
 
   return (
     <div className="fixed inset-0 z-[55] flex flex-col overflow-hidden overscroll-none bg-black">
       {/* The room the session happens in (lib/home/scenes GUIDED_SCENE):
           one still photograph behind everything, tall on a phone and wide
           on an iPad in landscape. */}
-      <SceneBackdrop src={GUIDED_SCENE.tall} wideSrc={GUIDED_SCENE.wide} opacity={0.9} />
+      <SceneBackdrop key={room?.tall ?? 'none'} src={room?.tall} wideSrc={room?.wide} opacity={0.9} />
       {/* Top bar */}
       <div className="relative flex items-center justify-between px-4 pt-[env(safe-area-inset-top)] h-16 z-20">
         <button

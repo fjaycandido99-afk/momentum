@@ -37,6 +37,7 @@ import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useEra } from '@/hooks/useEra'
 import { chatStarters, dailyStarters, isConversational, splitAnsweredPrompt } from '@/lib/journal/starters'
 import { eraJournalPrompt } from '@/lib/era/content'
+import { DayBackdrop } from '@/components/home/DayBackdrop'
 
 interface JournalEntry {
   date: string
@@ -1020,7 +1021,11 @@ function JournalContent() {
   // stretch absurdly wide on ultrawide monitors but the page no
   // longer sits narrow in a sea of empty space.
   return (
-    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white pb-24"
+    // Home's sky behind the page (components/home/DayBackdrop), held still
+    // behind the scrolling shell exactly as on Home.
+    <div className="relative voxu-scene h-[100dvh] overflow-hidden">
+    <DayBackdrop />
+    <div className="relative h-[100dvh] overflow-y-auto overscroll-contain text-white pb-24"
       data-app-shell
     >
       {/* App-shell scroll: this container scrolls, the document does not.
@@ -2109,6 +2114,7 @@ function JournalContent() {
           onDismiss={() => setMilestoneStreak(null)}
         />
       )}
+    </div>
     </div>
   )
 }
