@@ -1421,7 +1421,12 @@ export function ImmersiveHome() {
 
 
       {/* Header — hidden when any fullscreen overlay is active */}
-      {!audioState.playingSound && !audioState.showSoundscapePlayer && (
+      {/* Hidden ONLY while a full-screen player covers it — the same two
+          conditions that render them above. It used to hide whenever
+          playingSound was set, and playingSound stays set after the full
+          player closes (it is what keeps the mini player alive), so once
+          anything had been opened the header was gone until a refresh. */}
+      {!(audioState.playingSound && fullPlayerOpen) && !(audioState.activeSoundscape && audioState.showSoundscapePlayer) && (
         <div className="sticky top-0 z-50 px-5 safe-area-pt pb-3.5 animate-fade-in-down bg-black before:absolute before:content-[''] before:-top-20 before:left-0 before:right-0 before:h-20 before:bg-black"
         >
           {/* Bottom blur fade */}
