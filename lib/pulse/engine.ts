@@ -24,6 +24,7 @@
  */
 
 import { startScript } from './push'
+import { rescuePlan } from './rescue'
 
 export type LoopStep = 'state' | 'promise' | 'act' | 'check' | 'check_yesterday' | 'prepare' | 'ready' | 'complete'
 
@@ -99,6 +100,8 @@ export interface TodayItem {
 
 export interface Pulse {
   rightNow: RightNow | null
+  /** The day compressed to its minimums, when it's slipping (lib/pulse/rescue). */
+  rescue?: import('./rescue').RescuePlan | null
   today: { items: TodayItem[]; done: number; total: number }
   /** The next timed thing still ahead today, for "Next: Gym · 5:30 PM". */
   next: { title: string; time: string } | null
@@ -309,6 +312,7 @@ export function buildPulse(input: PulseInput): Pulse {
   const nextTimed = items.find(i => i.time && minutesOf(i.time) > input.now && (i.status === 'upcoming' || i.status === 'due'))
   return {
     rightNow: rightNow(input, scored),
+    rescue: rescuePlan(input),
     today: { items, done, total: answerable.length },
     next: nextTimed ? { title: nextTimed.title, time: nextTimed.time! } : null,
   }

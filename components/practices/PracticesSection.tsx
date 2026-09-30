@@ -7,6 +7,7 @@ import { ScrollLock } from '@/components/ui/ScrollLock'
 import { domainArt, domainArtAlt } from '@/lib/practices/domain-art'
 import { OPEN_DISCIPLINE, PRACTICES_CHANGED } from '@/lib/pulse/events'
 import { startScript } from '@/lib/pulse/push'
+import { isRescueOn } from '@/lib/pulse/rescue-state'
 import { SpeakReplyButton } from '@/components/journal/SpeakReplyButton'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { AddPracticeSheet } from './AddPracticeSheet'
@@ -302,6 +303,8 @@ function PracticeRow({
 }) {
   const [confirmRetire, setConfirmRetire] = useState(false)
   const subscription = useSubscriptionOptional()
+  // Read at render: accepting rescue happens on home before a sheet opens.
+  const rescue = practice.state === 'due' && isRescueOn()
   /**
    * Which recovery option they picked, and which slot to show because of it.
    *
@@ -575,18 +578,20 @@ function PracticeRow({
                 already named it. */}
             {practice.intervention ? null : minimumLine({ ...practice, minimum: practice.todaysMinimum })}
           </p>
+          {/* Rescue on today: the minimum is the ask, so it leads. Both still
+              record exactly what they say. */}
           <div className="flex gap-2 mt-2.5">
             <button
               onClick={() => choose(true)}
               disabled={busy}
-              className="flex-1 py-2 rounded-lg bg-white text-black text-[13px] font-medium disabled:opacity-40"
+              className={`flex-1 py-2 rounded-lg text-[13px] disabled:opacity-40 ${rescue ? 'border border-white/20 text-white' : 'bg-white text-black font-medium'}`}
             >
               Done
             </button>
             <button
               onClick={() => choose(true, true)}
               disabled={busy}
-              className="flex-1 py-2 rounded-lg border border-white/20 text-[13px] text-white disabled:opacity-40"
+              className={`flex-1 py-2 rounded-lg text-[13px] disabled:opacity-40 ${rescue ? 'order-first bg-white text-black font-medium' : 'border border-white/20 text-white'}`}
             >
               Just the minimum
             </button>

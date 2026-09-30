@@ -9,6 +9,8 @@ import { setLatestPulse } from '@/lib/pulse/store'
 import { syncWidgetPulse } from '@/lib/widget-sync'
 import { buildDebrief } from '@/lib/pulse/debrief'
 import { NightDebriefCard, isDebriefHour } from './NightDebriefCard'
+import { RescueCard } from './RescueCard'
+import { acceptRescue, declineRescue, isRescueDeclined, isRescueOn } from '@/lib/pulse/rescue-state'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -45,6 +47,13 @@ export function PulseSection({
   debrief?: { era: { title: string; day: number }; tomorrowReady: boolean } | null
 }) {
   const [pulse, setPulse] = useState<Pulse | null>(null)
+  // Read once on mount; both reset at local midnight (lib/pulse/rescue-state).
+  const [rescueOn, setRescueOn] = useState(false)
+  const [rescueDeclined, setRescueDeclined] = useState(false)
+  useEffect(() => {
+    setRescueOn(isRescueOn())
+    setRescueDeclined(isRescueDeclined())
+  }, [])
 
   const load = useCallback(() => {
     fetch('/api/pulse', { cache: 'no-store' })
@@ -76,10 +85,24 @@ export function PulseSection({
   const r = pulse.rightNow
   const items = pulse.today.items
   const showDebrief = !!debrief && items.length > 0 && isDebriefHour()
+  const rescue = pulse.rescue && pulse.rescue.steps.length > 0 ? pulse.rescue : null
+  // On: the plan replaces Right now for the rest of the day. Offered: it sits
+  // above Right now until answered. Declined: gone until tomorrow.
+  const showRescue = !!rescue && (rescueOn || !rescueDeclined)
 
   return (
     <div className="space-y-3">
-      {r && (
+      {showRescue && (
+        <RescueCard
+          plan={rescue!}
+          active={rescueOn}
+          onAccept={() => { acceptRescue(); setRescueOn(true) }}
+          onDecline={() => { declineRescue(); setRescueDeclined(true) }}
+          onOpen={id => act({ type: 'practice', id })}
+        />
+      )}
+
+      {r && !(showRescue && rescueOn) && (
         <div>
           <section className="card-surface-lg era-glow p-5" aria-label="Right now">
             <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">{r.eyebrow}</p>
