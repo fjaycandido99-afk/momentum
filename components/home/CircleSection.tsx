@@ -62,31 +62,40 @@ export function CircleSection({ onShare }: { onShare: () => void }) {
 
   return (
     <div className="space-y-5">
-      <section>
-        <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 px-1 flex items-center gap-1.5">
-          <Users className="w-3 h-3" /> Your circle
-        </p>
+      {/* One card: the label inside it, the people as divided rows — not a
+          label floating above a stack of separate cards. */}
+      <section className="card-surface-lg p-4">
+        <div className="flex items-start gap-3">
+          <span className="w-10 h-10 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center" aria-hidden>
+            <Users className="w-[18px] h-[18px] text-white/80" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Your circle</p>
+            {data.circle.length === 0 && (
+              <>
+                <p className="text-[18px] text-white leading-snug mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
+                  Nobody has joined your era yet.
+                </p>
+                <p className="text-[13px] text-white/60 mt-1 leading-snug">
+                  Share it. Whoever starts from your link shows up here, on day 1 with you.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
 
         {data.circle.length === 0 ? (
-          <div className="card-surface-lg p-4 mt-2">
-            <p className="text-[19px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
-              Nobody has joined your era yet.
-            </p>
-            <p className="text-sm text-white/70 mt-1.5">
-              Share it. Whoever starts from your link shows up here, on day 1 with you.
-            </p>
-            <button
-              onClick={onShare}
-              className="mt-3 w-full py-2.5 rounded-xl bg-white text-black text-sm font-medium flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all"
-            >
-              <Share2 className="w-4 h-4" /> Share your era
-            </button>
-          </div>
+          <button
+            onClick={onShare}
+            className="mt-3 w-full py-2.5 rounded-xl bg-white text-black text-sm font-medium flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all"
+          >
+            <Share2 className="w-4 h-4" /> Share your era
+          </button>
         ) : (
           <>
-            <ul className="mt-2 space-y-1.5">
+            <ul className="mt-2 divide-y divide-white/[0.08]">
               {data.circle.map((m, i) => (
-                <li key={`${m.name}-${i}`} className="card-surface-lg px-4 py-3 flex items-center gap-3">
+                <li key={`${m.name}-${i}`} className="py-3 flex items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-[17px] text-white leading-tight truncate" style={{ ...SERIF, fontWeight: 500 }}>
                       {m.name}

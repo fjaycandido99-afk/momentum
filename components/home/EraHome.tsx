@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  AlarmClock, ArrowRight, ArrowUp, BarChart3, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Moon, Play, Share2, Shuffle, Target, X,
+  AlarmClock, ArrowRight, ArrowUp, BarChart3, Zap, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Moon, Play, Share2, Shuffle, Target, X,
   type LucideIcon,
 } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
@@ -1089,7 +1089,9 @@ function ActiveEra({
           streak on the screen (the hero shows the day, not the streak). */}
       <div className="card-surface-lg px-4 py-3.5 grid grid-cols-2 divide-x divide-white/10">
         <div className="flex items-center gap-3 pr-3">
-          <BarChart3 className="w-5 h-5 text-white/80" />
+          <span className="w-10 h-10 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center" aria-hidden>
+            <BarChart3 className="w-[18px] h-[18px] text-white/80" />
+          </span>
           <div>
             <p className="text-[11px] text-white/55">Promises kept</p>
             <p className="text-2xl text-white leading-none mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
@@ -1105,7 +1107,9 @@ function ActiveEra({
           </div>
         </div>
         <div className="flex items-center gap-3 pl-4">
-          <Flame className="w-5 h-5 text-white/80" />
+          <span className="w-10 h-10 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center" aria-hidden>
+            <Flame className="w-[18px] h-[18px] text-white/80" />
+          </span>
           <div>
             <p className="text-[11px] text-white/55">Streak</p>
             <p className="text-2xl text-white leading-none mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
@@ -1172,9 +1176,11 @@ function ActiveEra({
       {/* For your era — the wake-up call, and the one soundscape and one voice
           guide this era leans on. */}
       {era.step !== 'complete' && (
-        <div>
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 px-1">For your era</p>
-          <div className="flex flex-wrap gap-2 mt-2">
+        <div className="card-surface-lg p-4">
+          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
+            <Zap className="w-3 h-3" /> For your era
+          </p>
+          <div className="flex flex-wrap gap-2 mt-2.5">
             <button className={chip} onClick={() => setWakeOpen(true)}>
               <AlarmClock className="w-3 h-3" /> {wakeLabel ? `Wake-up call · ${wakeLabel}` : 'Set a wake-up call'}
             </button>

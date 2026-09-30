@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Compass } from 'lucide-react'
+import { ChevronRight, Compass } from 'lucide-react'
 import type { DailyReadToday } from '@/hooks/useDailyRead'
 
 /**
@@ -115,25 +115,37 @@ export function DailyReadCard({
   }
 
   return (
-    <div className="relative p-5 card-surface-lg h-full flex flex-col justify-between">
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-xl bg-white/[0.06] border border-white/[0.12]">
-          <Compass className="w-5 h-5 text-white" />
+    <div className="relative p-4 card-surface-lg h-full flex flex-col justify-between">
+      <div className="flex items-start gap-3">
+        <span className="w-10 h-10 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center" aria-hidden>
+          <Compass className="w-[18px] h-[18px] text-white/80" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[10px] tracking-[0.24em] uppercase text-white/45 font-normal">Daily Read</h2>
+          <p className="text-[12px] text-white/55 mt-0.5">One tap, and it learns how you tick.</p>
         </div>
-        <div>
-          <h2 className="text-lg font-medium text-white">Daily Read</h2>
-          <p className="text-xs text-white/90">One tap, and it learns how you tick</p>
-        </div>
+        <Link
+          href="/daily-read"
+          className="shrink-0 flex items-center gap-0.5 text-[11px] text-white/55 hover:text-white tabular-nums"
+        >
+          {count} answered <ChevronRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
 
-      <p className="text-[15px] text-white leading-snug mt-3">{data.item.text}</p>
+      <p className="text-[18px] text-white leading-snug mt-3" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 500 }}>
+        {data.item.text}
+      </p>
 
       <div className="mt-auto pt-3 flex flex-col gap-2">
         {/* A forced choice gets two wide rows rather than five narrow ones —
             two options squeezed into a five-wide strip would look like a
             broken scale. */}
         <div
-          className={data.item.kind === 'choice' ? 'flex flex-col gap-1.5' : 'flex items-stretch gap-1.5'}
+          className={
+            data.item.kind === 'choice'
+              ? (data.item.options ?? []).length === 2 ? 'grid grid-cols-2 gap-1.5' : 'flex flex-col gap-1.5'
+              : 'flex items-stretch gap-1.5'
+          }
           role="radiogroup"
           aria-label={data.item.text}
         >

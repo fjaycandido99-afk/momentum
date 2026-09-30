@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useQuiet } from '@/hooks/useQuiet'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Medal, Trophy } from 'lucide-react'
 import type { AchievementCategory, AchievementRarity } from '@/lib/achievements'
 import { AchievementBadge } from '@/components/progress/AchievementBadge'
 import { useGamificationStatus } from '@/hooks/useHomeSWR'
@@ -20,7 +20,25 @@ interface StatusAchievement {
   progress?: { current: number; target: number } | null
 }
 
-const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
+/** Progress as a ring with the count inside — "2/3" at a glance. */
+function Ring({ current, target }: { current: number; target: number }) {
+  const r = 17
+  const c = 2 * Math.PI * r
+  const pct = Math.max(0, Math.min(1, target > 0 ? current / target : 0))
+  return (
+    <span className="relative w-11 h-11 shrink-0 grid place-items-center" aria-hidden>
+      <svg viewBox="0 0 40 40" className="absolute inset-0 -rotate-90">
+        <circle cx="20" cy="20" r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="3" />
+        <circle
+          cx="20" cy="20" r={r} fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - Math.max(pct, 0.03))}
+          className="transition-[stroke-dashoffset] duration-700"
+        />
+      </svg>
+      <span className="text-[10px] text-white/85 tabular-nums">{current}/{target}</span>
+    </span>
+  )
+}
 
 /**
  * Achievements on home: what you're closest to next, and what you've earned.
@@ -59,61 +77,53 @@ export function AchievementShelf() {
     .slice(0, 8)
 
   return (
-    <section className="px-6 mt-2 mb-8" aria-label="Achievements">
-      <div className="flex items-end justify-between mb-3">
-        <div>
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">Achievements</p>
-          <p className="text-xl text-white leading-tight mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
-            {unlocked.length} <span className="text-white/40">of {all.length} earned</span>
+    <section className="px-5 mt-2 mb-8 space-y-3" aria-label="Achievements">
+      <div className="card-surface-lg p-4">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
+            <Trophy className="w-3.5 h-3.5" /> Achievements
           </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={hide}
+              className="text-[11px] text-white/35 hover:text-white/80"
+              aria-label="Hide until something new is earned"
+            >
+              Hide
+            </button>
+            <Link href="/progress" className="flex items-center gap-0.5 text-[11px] text-white/55 hover:text-white tabular-nums">
+              {unlocked.length} of {all.length} earned <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
-        <div className="flex items-center gap-3 pb-1">
-          <button
-            onClick={hide}
-            className="text-xs text-white/40 hover:text-white/80"
-            aria-label="Hide until something new is earned"
-          >
-            Hide
-          </button>
-          <Link href="/progress" className="flex items-center gap-0.5 text-xs text-white/60 hover:text-white">
-            See all <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
+
+        {/* What's closest, as rings — the count inside each, the name beside
+            it. Three across on a phone; they wrap below 360px. */}
+        {next.length > 0 && (
+          <div className="mt-3 grid grid-cols-1 min-[360px]:grid-cols-3 gap-2">
+            {next.map(a => (
+              <Link key={a.id} href="/progress" className="flex items-center gap-2 min-w-0" title={a.description}>
+                <Ring current={a.progress!.current} target={a.progress!.target} />
+                <span className="text-[12px] text-white/85 leading-tight line-clamp-2 min-w-0">{a.title}</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
-      {next.length > 0 && (
-        <div className="card-surface-lg p-4 space-y-4">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/50">Next up</p>
-          {next.map(a => {
-            const pct = Math.round((a.progress!.current / a.progress!.target) * 100)
-            return (
-              <Link key={a.id} href="/progress" className="flex items-center gap-3.5">
-                <AchievementBadge category={a.category} icon={a.icon} rarity={a.rarity} unlocked={false} mark={a.mark} size={46} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <p className="text-sm text-white font-medium truncate">{a.title}</p>
-                    <p className="text-xs text-white/70 tabular-nums shrink-0">
-                      {a.progress!.current}<span className="text-white/35">/{a.progress!.target}</span>
-                    </p>
-                  </div>
-                  <p className="text-[11px] text-white/45 truncate">{a.description}</p>
-                  {/* Thick and bright on purpose — a hairline bar reads as decoration. */}
-                  <div className="h-2 rounded-full bg-white/10 overflow-hidden mt-1.5">
-                    <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${Math.max(pct, 3)}%` }} />
-                  </div>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-      )}
-
       {recent.length > 0 && (
-        <div className="mt-4">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/50 mb-0.5">Recently earned</p>
+        <div className="card-surface-lg p-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
+              <Medal className="w-3.5 h-3.5" /> Recently earned
+            </p>
+            <Link href="/progress" className="flex items-center gap-0.5 text-[11px] text-white/55 hover:text-white">
+              See all <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
           {/* pt-4: a horizontal scroller clips vertically too, and it was
               cutting the tops off the rings and the legendary glow. */}
-          <div className="flex gap-4 overflow-x-auto pt-4 pb-3 -mx-6 px-6 scrollbar-hide">
+          <div className="flex gap-4 overflow-x-auto pt-4 pb-1 -mx-4 px-4 scrollbar-hide">
             {recent.map(a => (
               <Link key={a.id} href="/progress" className="flex flex-col items-center gap-2 w-[68px] shrink-0">
                 <AchievementBadge category={a.category} icon={a.icon} rarity={a.rarity} unlocked mark={a.mark} size={56} />

@@ -167,7 +167,10 @@ export function WisdomSection({
             </div>
           </div>
 
-          <blockquote className="text-sm text-white/90 leading-relaxed italic">
+          <blockquote
+            className="text-[19px] text-white leading-snug"
+            style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 500 }}
+          >
             &ldquo;{dailyQuote.text}&rdquo;
           </blockquote>
           {displayAuthor(dailyQuote.author) && (
