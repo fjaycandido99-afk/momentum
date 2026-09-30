@@ -7,6 +7,8 @@ import { timeLabel, type ActionTarget, type Pulse, type TodayItem } from '@/lib/
 import { OPEN_DISCIPLINE, PRACTICES_CHANGED } from '@/lib/pulse/events'
 import { setLatestPulse } from '@/lib/pulse/store'
 import { syncWidgetPulse } from '@/lib/widget-sync'
+import { buildDebrief } from '@/lib/pulse/debrief'
+import { NightDebriefCard, isDebriefHour } from './NightDebriefCard'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -32,7 +34,16 @@ const STATUS_TEXT: Record<TodayItem['status'], string> = {
  * (`version`) or a discipline was logged (PRACTICES_CHANGED). Never on a
  * timer.
  */
-export function PulseSection({ version, onEra }: { version: string; onEra: () => void }) {
+export function PulseSection({
+  version,
+  onEra,
+  debrief = null,
+}: {
+  version: string
+  onEra: () => void
+  /** With an era: what the night debrief needs beyond today's list. */
+  debrief?: { era: { title: string; day: number }; tomorrowReady: boolean } | null
+}) {
   const [pulse, setPulse] = useState<Pulse | null>(null)
 
   const load = useCallback(() => {
@@ -64,6 +75,7 @@ export function PulseSection({ version, onEra }: { version: string; onEra: () =>
   if (!pulse) return null
   const r = pulse.rightNow
   const items = pulse.today.items
+  const showDebrief = !!debrief && items.length > 0 && isDebriefHour()
 
   return (
     <div className="space-y-3">
@@ -154,6 +166,15 @@ export function PulseSection({ version, onEra }: { version: string; onEra: () =>
             })}
           </ul>
         </section>
+      )}
+
+      {/* Evening: the day, closed — from what was recorded. */}
+      {showDebrief && (
+        <NightDebriefCard
+          script={buildDebrief({ era: debrief!.era, items, tomorrowReady: debrief!.tomorrowReady })}
+          done={pulse.today.done}
+          total={pulse.today.total}
+        />
       )}
     </div>
   )

@@ -50,6 +50,8 @@ export interface WidgetSnapshot {
   pulse?: WidgetPulse | null
   /** The era skin's accent, "#rrggbb" (lib/era/skins.ts) — fills and glow only. */
   accent?: string
+  /** Tomorrow's promise already written — the evening widget says so. */
+  tomorrowReady?: boolean
 }
 
 export interface WidgetPulse {
@@ -115,5 +117,6 @@ export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Da
     streak: Math.max(0, era.stats?.promiseStreak ?? 0),
     pulse: p,
     accent: eraAccentHex(era.key),
+    tomorrowReady: !!era.tomorrow,
   }
 }

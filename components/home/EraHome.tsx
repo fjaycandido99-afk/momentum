@@ -1031,6 +1031,7 @@ function ActiveEra({
       <PulseSection
         version={`${era.loop.step}-${era.today?.kept ?? 'x'}-${era.missionDone}-${era.today?.text ?? ''}`}
         onEra={() => scrollShellTo('era-action')}
+        debrief={{ era: { title: era.title, day: era.day }, tomorrowReady: !!era.tomorrow }}
       />
       {/* Mornings only; renders nothing otherwise. */}
       <MorningBriefCard />

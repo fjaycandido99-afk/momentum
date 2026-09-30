@@ -32,6 +32,7 @@ describe('buildWidgetSnapshot', () => {
       streak: 6,
       pulse: null,
       accent: '#ffffff',
+      tomorrowReady: false,
     })
   })
 

@@ -44,6 +44,8 @@ struct Snapshot: Decodable {
     let pulse: PulseSnap?
     /// The era skin's accent, "#rrggbb" — fills and glow only, never text.
     let accent: String?
+    /// Tomorrow's promise already written tonight.
+    let tomorrowReady: Bool?
 }
 
 extension Color {
@@ -90,6 +92,9 @@ struct Today {
     var total = 0
     var next: DayItem? = nil
     var accent: Color = .white
+    /// Evening: "Close the day" instead of what's next.
+    var closing = false
+    var tomorrowReady = false
     // Fallback
     var quote = "Small steps, repeated, become a life."
     var author = "Voxu"
@@ -200,6 +205,21 @@ func loadToday(at now: Date = Date()) -> Today {
         t.nowEyebrow = r.eyebrow
         t.nowTitle = r.title
         t.nowQuote = r.quote
+    }
+
+    // Evening, and nothing urgent on the clock: close the day instead. The
+    // spoken debrief is in the app — a widget can't play audio — so a tap
+    // opens home, where it is.
+    let hour = mins / 60
+    let urgent = t.items.contains { (item: DayItem) -> Bool in
+        item.status == "slipping" || (item.status == "due" && item.time != nil && item.kind == "discipline")
+    }
+    if (hour >= 19 || hour < 3) && !urgent && snap.era != nil {
+        t.closing = true
+        t.tomorrowReady = snap.tomorrowReady ?? false
+        t.nowEyebrow = "Close the day"
+        t.nowTitle = t.total > 0 ? "\(t.done) of \(t.total) done today." : "Today, closed."
+        t.nowQuote = nil
     }
     return t
 }
@@ -403,6 +423,10 @@ struct VoxuWidgetEntryView: View {
             if let q = t.nowQuote {
                 Text("“\(q)”").font(.system(size: 12, design: .serif)).italic().foregroundColor(Color.white.opacity(0.7)).lineLimit(1)
             }
+            if t.closing {
+                Text(t.tomorrowReady ? "Tomorrow’s promise is set." : "Write tomorrow’s promise.")
+                    .font(.system(size: 12)).foregroundColor(Color.white.opacity(0.7)).lineLimit(1)
+            }
             Spacer(minLength: 0)
             HStack(spacing: 10) {
                 if t.total > 0 {
@@ -434,6 +458,10 @@ struct VoxuWidgetEntryView: View {
                 Text(t.nowTitle ?? "").font(.system(size: 22, weight: .medium, design: .serif)).foregroundColor(.white).lineLimit(2)
                 if let q = t.nowQuote {
                     Text("“\(q)”").font(.system(size: 13, design: .serif)).italic().foregroundColor(Color.white.opacity(0.7)).lineLimit(2)
+                }
+                if t.closing {
+                    Text(t.tomorrowReady ? "Tomorrow’s promise is set. You’re done for tonight." : "Write tomorrow’s promise, then you’re done.")
+                        .font(.system(size: 12)).foregroundColor(Color.white.opacity(0.7)).lineLimit(2)
                 }
             }
             if !t.items.isEmpty {
