@@ -10,6 +10,10 @@ import { VOICE_GUIDES } from '@/components/home/home-types'
 import { GUIDE_LAYERS } from '@/components/home/GuidedSection'
 import { isContentFree } from '@/lib/subscription-constants'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { SceneBackdrop } from '@/components/home/SceneBackdrop'
+import { GUIDED_SCENE } from '@/lib/home/scenes'
+
+const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
 const IS_NATIVE = typeof window !== 'undefined' && !!(window as any).Capacitor
 
@@ -190,21 +194,29 @@ export function GuidedPlayer({
 
   return (
     <div className="fixed inset-0 z-[55] flex flex-col overflow-hidden overscroll-none bg-black">
+      {/* The room the session happens in (lib/home/scenes GUIDED_SCENE):
+          one still photograph behind everything, tall on a phone and wide
+          on an iPad in landscape. */}
+      <SceneBackdrop src={GUIDED_SCENE.tall} wideSrc={GUIDED_SCENE.wide} opacity={0.9} />
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 pt-[env(safe-area-inset-top)] h-14 z-20">
-        <button aria-label="Close player" onClick={onClose} className="p-2 -ml-2">
-          <ChevronDown className="w-7 h-7 text-white" />
+      <div className="relative flex items-center justify-between px-4 pt-[env(safe-area-inset-top)] h-16 z-20">
+        <button
+          aria-label="Close player"
+          onClick={onClose}
+          className="w-11 h-11 rounded-full border border-white/25 bg-black/30 backdrop-blur-sm flex items-center justify-center"
+        >
+          <ChevronDown className="w-5 h-5 text-white" />
         </button>
-        <span className="absolute left-1/2 -translate-x-1/2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/70">
+        <span className="absolute left-1/2 -translate-x-1/2 text-[11px] font-medium uppercase tracking-[0.34em] text-white/80">
           Guided
         </span>
-        <div className="w-7" />
+        <div className="w-11" />
       </div>
 
       {/* Center: circular visualizer + title */}
-      <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-6">
-        {/* Circular ring visualizer */}
-        <div className="mb-10">
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col items-center justify-center px-6">
+        {/* Circular ring visualizer, lit from behind with the scene's blue. */}
+        <div className="mb-10 rounded-full [filter:drop-shadow(0_0_18px_rgb(150_175_255/0.55))]">
           <CircularVisualizer
             analyser={analyser}
             isPlaying={isPlaying}
@@ -215,29 +227,35 @@ export function GuidedPlayer({
         </div>
 
         {/* Guide name */}
-        <h1 className="text-2xl font-bold text-white mb-1">{guideName}</h1>
+        <h1 className="text-[44px] leading-tight text-white text-center" style={{ ...SERIF, fontWeight: 600 }}>{guideName}</h1>
         {activeGuide && (
-          <p className="text-sm text-white/50">{activeGuide.tagline}</p>
+          <p className="text-lg text-white/60 mt-1 text-center">{activeGuide.tagline}</p>
         )}
       </div>
 
       {/* Bottom controls */}
-      <div className="flex-shrink-0 px-6 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-4 z-10">
+      <div className="relative flex-shrink-0 px-6 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-4 z-10 md:max-w-[640px] md:mx-auto md:w-full">
         {/* Progress bar */}
         <div className="mb-5">
           <div
-            className="w-full h-1 bg-white/10 rounded-full cursor-pointer"
+            className="relative w-full h-1 bg-white/15 rounded-full cursor-pointer"
             onClick={handleSeek}
             onTouchStart={handleSeek}
           >
             <div
-              className="h-full bg-white rounded-full transition-[width] duration-100"
+              className="h-full rounded-full transition-[width] duration-100 bg-gradient-to-r from-[#7f9bff] to-white shadow-[0_0_12px_rgb(127_155_255/0.8)]"
               style={{ width: `${progress}%` }}
             />
+            {/* The knob, so the bar reads as something you can drag. */}
+            <span
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_10px_rgb(127_155_255/0.9)] pointer-events-none"
+              style={{ left: `${progress}%` }}
+              aria-hidden
+            />
           </div>
-          <div className="flex justify-between mt-1.5">
-            <span className="text-[11px] text-white/40 tabular-nums">{formatTime(currentTime)}</span>
-            <span className="text-[11px] text-white/40 tabular-nums">{duration > 0 ? formatTime(duration) : '--:--'}</span>
+          <div className="flex justify-between mt-2">
+            <span className="text-[13px] text-white/70 tabular-nums">{formatTime(currentTime)}</span>
+            <span className="text-[13px] text-white/70 tabular-nums">{duration > 0 ? formatTime(duration) : '--:--'}</span>
           </div>
         </div>
 
@@ -247,13 +265,13 @@ export function GuidedPlayer({
           <button
             onClick={autoplay.toggle}
             aria-pressed={autoplay.enabled}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+            className={`inline-flex items-center gap-2 h-11 px-5 rounded-full text-[14px] font-medium backdrop-blur-sm transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
               autoplay.enabled
-                ? 'bg-white/15 border border-white/25 text-white'
-                : 'bg-white/[0.04] border border-white/10 text-white/50 hover:text-white/80'
+                ? 'bg-black/40 border border-white/30 text-white'
+                : 'bg-black/30 border border-white/15 text-white/55 hover:text-white/80'
             }`}
           >
-            <Repeat className="w-3 h-3" />
+            <Repeat className="w-4 h-4" />
             {autoplay.enabled ? 'Keep playing' : 'Stop after this'}
           </button>
         </div>
@@ -276,12 +294,12 @@ export function GuidedPlayer({
                     onSwitchGuide(guide.id, guide.name)
                   }
                 }}
-                className="flex flex-col items-center gap-1.5 shrink-0"
+                className="flex flex-col items-center gap-2 shrink-0"
               >
-                <div className={`relative w-14 h-[72px] rounded-xl overflow-hidden transition-all duration-200 ${
+                <div className={`relative w-[76px] h-[92px] rounded-2xl overflow-hidden transition-all duration-200 ${
                   isActive
-                    ? 'border-2 border-white bg-black'
-                    : 'border border-white/15 bg-black'
+                    ? 'border-2 border-white bg-black scene-selected'
+                    : 'border border-white/15 bg-black/70'
                 }`}>
                   {/* Lock badge */}
                   {isLocked && !isActive && (
@@ -307,7 +325,7 @@ export function GuidedPlayer({
                     />
                   ))}
                 </div>
-                <span className={`text-[9px] transition-colors whitespace-nowrap ${isActive ? 'text-white' : 'text-white/50'}`}>
+                <span className={`text-[12px] transition-colors whitespace-nowrap ${isActive ? 'text-white font-semibold' : 'text-white/60'}`}>
                   {guide.name}
                 </span>
               </button>
@@ -321,7 +339,7 @@ export function GuidedPlayer({
             aria-label={isLoading ? 'Loading' : isPlaying ? 'Pause' : 'Play'}
             onClick={onTogglePlay}
             disabled={isLoading}
-            className="w-16 h-16 rounded-full bg-white flex items-center justify-center transition-transform active:scale-95 disabled:opacity-80"
+            className="w-20 h-20 rounded-full bg-white flex items-center justify-center transition-transform active:scale-95 disabled:opacity-80 shadow-[0_0_0_4px_rgb(127_155_255/0.35),0_0_40px_rgb(127_155_255/0.55)]"
           >
             {isLoading ? (
               <Loader2 className="w-7 h-7 text-black animate-spin" />

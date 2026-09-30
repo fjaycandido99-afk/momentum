@@ -24,6 +24,16 @@ export const HOME_SCENES = {
 } as const
 
 /**
+ * The Guided player's room: a shaft of light in a dark stone space, a lantern
+ * glowing low on the right. Tall + wide, like every backdrop. null = not made
+ * yet; the player falls back to plain black.
+ */
+export const GUIDED_SCENE: { tall: string | null; wide: string | null } = {
+  tall: null,
+  wide: null,
+}
+
+/**
  * The page backdrop and the greeting's figure, by time of day
  * (lib/home/time-of-day). Every backdrop needs a TALL photo (phones, iPad
  * portrait) and a WIDE one (iPad landscape — the tall one goes soft there).

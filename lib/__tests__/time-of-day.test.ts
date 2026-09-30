@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { dayPhase, sceneFor } from '@/lib/home/time-of-day'
-import { PHASE_SCENES } from '@/lib/home/scenes'
+import { GUIDED_SCENE, PHASE_SCENES } from '@/lib/home/scenes'
 
 describe('home time of day', () => {
   it('splits the clock into sunrise, sunset and night', () => {
@@ -34,7 +34,7 @@ describe('home time of day', () => {
   // iPad: a phase with a tall backdrop must have a wide one too, or iPad
   // landscape shows the tall one stretched soft.
   it('every backdrop that exists has both a tall and a wide photo', () => {
-    for (const s of Object.values(PHASE_SCENES)) {
+    for (const s of [...Object.values(PHASE_SCENES), GUIDED_SCENE]) {
       expect(!!s.tall).toBe(!!s.wide)
     }
   })
