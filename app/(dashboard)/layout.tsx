@@ -5,6 +5,7 @@ import { MinimalNav } from '@/components/navigation/MinimalNav'
 import { DesktopDock } from '@/components/navigation/DesktopDock'
 import { PageTransition } from '@/components/ui/PageTransition'
 import { AmbientBackground } from '@/components/ui/AmbientBackground'
+import { DayBackdrop } from '@/components/home/DayBackdrop'
 import { Providers } from './providers'
 import { ResetProvider } from '@/contexts/ResetContext'
 
@@ -18,12 +19,23 @@ export default function DashboardLayout({
   const isMindsetSelection = pathname?.startsWith('/mindset-selection')
   const isOnboarding = pathname?.startsWith('/daily-guide/onboarding')
   const hideChrome = isMindsetSelection || isOnboarding
+  // Every page stands on Home's sky (DayBackdrop) and takes the scene look
+  // (.voxu-scene: navy, solid cards). Home draws its own; onboarding and the
+  // mindset screens have their own art.
+  const scene = !isHome && !hideChrome
 
   return (
     <Providers>
       <ResetProvider>
-        <div className="isolate min-h-screen bg-black">
-          <AmbientBackground />
+        <div className={`isolate min-h-screen ${scene ? 'voxu-scene' : 'bg-black'}`}>
+          {scene ? (
+            // Fixed, so it holds still behind whichever element scrolls.
+            <div className="fixed inset-0 pointer-events-none" aria-hidden>
+              <DayBackdrop />
+            </div>
+          ) : (
+            <AmbientBackground />
+          )}
 
           {/* Main content. Full-bleed on every breakpoint — no sidebar
               offset, no max-width cap. The dock floats inside main (below)

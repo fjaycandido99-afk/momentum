@@ -52,7 +52,7 @@ export default function ProofPage() {
   const detail = open && data ? data.details[open] ?? null : null
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen text-white">
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
         <div className="flex items-center justify-between">
           <Link href="/" aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-white/10">

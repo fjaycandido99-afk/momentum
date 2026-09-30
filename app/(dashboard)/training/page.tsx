@@ -39,7 +39,7 @@ export default function TrainingPage() {
       the sheets opened from this page — the plan editor, the book sheet —
       can freeze what is behind them safely.
     */
-    <div className="h-[100dvh] overflow-y-auto overscroll-contain bg-black text-white" data-app-shell>
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
       <div
         className="max-w-md md:max-w-lg mx-auto px-5 pb-24"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}

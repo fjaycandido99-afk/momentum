@@ -13,7 +13,6 @@ import {
 } from '@/lib/reset/states'
 import { haptic } from '@/lib/haptics'
 import { trackFeature } from '@/lib/analytics/track'
-import { DayBackdrop } from '@/components/home/DayBackdrop'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -84,9 +83,7 @@ export default function ResetPage() {
   }, [sessionId])
 
   return (
-    <div className="relative voxu-scene min-h-screen text-white">
-      {/* Home's sky behind the page (components/home/DayBackdrop). */}
-      <DayBackdrop />
+    <div className="min-h-screen text-white">
       <div
         className="max-w-md mx-auto px-5 pb-24"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
