@@ -11,7 +11,7 @@ import { SceneImage } from '@/components/home/SceneImage'
 /** The picker's photograph (see lib/home/scenes.ts for the art rules). */
 const MINDSET_SCENES = {
   /** A marble bust of a bearded philosopher in warm side light, far right. */
-  hero: null as string | null,
+  hero: '/scenes/mindset/hero.jpg' as string | null,
 }
 
 interface MindsetSelectionScreenProps {

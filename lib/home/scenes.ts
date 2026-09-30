@@ -30,11 +30,19 @@ export const HOME_SCENES = {
  * null = not made yet; sceneFor() lends sunset's until it is.
  */
 export const PHASE_SCENES: Record<DayPhase, PhaseScene> = {
-  sunrise: { tall: null, wide: null, hero: null },
+  sunrise: {
+    tall: '/scenes/home/sunrise-tall.jpg',
+    wide: '/scenes/home/sunrise-wide.jpg',
+    hero: '/scenes/home/sunrise-hero.jpg',
+  },
   sunset: {
     tall: '/scenes/home/backdrop.jpg',
     wide: '/scenes/home/backdrop-wide.jpg',
     hero: '/scenes/home/hero.jpg',
   },
-  night: { tall: null, wide: null, hero: null },
+  night: {
+    tall: '/scenes/home/night-tall.jpg',
+    wide: '/scenes/home/night-wide.jpg',
+    hero: '/scenes/home/night-hero.jpg',
+  },
 }
