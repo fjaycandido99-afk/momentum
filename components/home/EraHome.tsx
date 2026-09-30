@@ -13,6 +13,7 @@ import { EqBars } from '@/components/ui/EqBars'
 import { PracticeSection } from '@/components/exercise/PracticeSection'
 import { PracticesSection } from '@/components/practices/PracticesSection'
 import { PulseSection } from './PulseSection'
+import { MorningBriefCard } from './MorningBriefCard'
 import { scrollShellTo } from '@/lib/ui/scroll-shell'
 import { attributeLabel, attributesForEra } from '@/lib/exercises/attributes'
 import { RoutineLine } from '@/components/routines/RoutineLine'
@@ -1031,6 +1032,8 @@ function ActiveEra({
         version={`${era.loop.step}-${era.today?.kept ?? 'x'}-${era.missionDone}-${era.today?.text ?? ''}`}
         onEra={() => scrollShellTo('era-action')}
       />
+      {/* Mornings only; renders nothing otherwise. */}
+      <MorningBriefCard />
 
       {/*
         The routine, one line, right under what the loop says to do now.
