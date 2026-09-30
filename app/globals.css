@@ -2885,3 +2885,43 @@ html:has([data-app-shell]) body {
   border: 1px solid rgb(var(--era-accent, 255 255 255) / 0.28);
   background: rgb(var(--era-accent, 255 255 255) / 0.06);
 }
+
+/* ── Scene theme (Home first; other screens opt in with the class) ─────
+   The cinematic look: deep navy instead of flat black, cards of dark glass
+   with a photo fading in from the right (components/home/SceneImage), and one
+   cool blue glow for what is selected or live. The glow is the app's, not the
+   era's — era skins still tint their own hero via --era-accent. Text stays
+   white; the blue only ever lights edges, labels and fills. */
+.voxu-scene {
+  --scene-glow: 122 146 255;
+  background:
+    radial-gradient(130% 50% at 75% 0%, rgb(30 40 70 / 0.55), transparent 62%),
+    linear-gradient(180deg, #080b14 0%, #05070c 55%, #040509 100%);
+}
+.voxu-scene .card-surface-lg {
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgb(24 30 48 / 0.62), rgb(9 11 19 / 0.78));
+  border-color: rgb(160 178 230 / 0.16);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 18px 40px -28px rgb(0 0 0 / 0.9);
+}
+/* Content sits above a card's scene photo. */
+.scene-content { position: relative; z-index: 1; }
+.scene-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.6);
+}
+.scene-eyebrow-glow { color: rgb(var(--scene-glow, 122 146 255) / 0.95); }
+.scene-selected {
+  border-color: rgb(var(--scene-glow, 122 146 255) / 0.75) !important;
+  box-shadow:
+    0 0 0 1px rgb(var(--scene-glow, 122 146 255) / 0.35),
+    0 0 30px -6px rgb(var(--scene-glow, 122 146 255) / 0.6);
+}
+.scene-icon-ring {
+  border: 1px solid rgb(var(--scene-glow, 122 146 255) / 0.35);
+  background: rgb(var(--scene-glow, 122 146 255) / 0.06);
+}

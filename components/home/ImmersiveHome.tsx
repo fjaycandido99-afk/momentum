@@ -1337,7 +1337,7 @@ export function ImmersiveHome() {
   return (
     // The era's skin (lib/era/skins.ts): one accent, read by the era-* classes
     // for glows and fills only. Plain white with no era — Voxu as it was.
-    <div className="isolate h-[100dvh] overflow-hidden" style={eraSkinVars(era.era?.key) as React.CSSProperties}>
+    <div className="isolate voxu-scene h-[100dvh] overflow-hidden" style={eraSkinVars(era.era?.key) as React.CSSProperties}>
     {/* App-shell scrolling: the PAGE does not scroll, this container does.
         On iOS the document rubber-bands past its ends, and during that
         bounce the entire visual viewport moves — so a header pinned with
@@ -1450,7 +1450,7 @@ export function ImmersiveHome() {
           player closes (it is what keeps the mini player alive), so once
           anything had been opened the header was gone until a refresh. */}
       {!(audioState.playingSound && fullPlayerOpen) && !(audioState.activeSoundscape && audioState.showSoundscapePlayer) && (
-        <div className="sticky top-0 z-50 px-5 safe-area-pt pb-3.5 animate-fade-in-down bg-black before:absolute before:content-[''] before:-top-20 before:left-0 before:right-0 before:h-20 before:bg-black"
+        <div className="sticky top-0 z-50 px-5 safe-area-pt pb-3.5 animate-fade-in-down bg-[rgb(7_10_18/0.86)] backdrop-blur-xl before:absolute before:content-[''] before:-top-20 before:left-0 before:right-0 before:h-20 before:bg-[#070a12]"
         >
           {/* Bottom blur fade */}
           <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />

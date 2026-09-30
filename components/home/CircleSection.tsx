@@ -7,6 +7,8 @@ import { Eye, EyeOff, Flame, Share2, Users } from 'lucide-react'
 import { eraName } from '@/lib/era/presets'
 import { eraSlug } from '@/lib/era/share'
 import type { CircleMember, TrendingEra } from '@/lib/era/circle'
+import { HOME_SCENES } from '@/lib/home/scenes'
+import { SceneImage } from './SceneImage'
 
 /**
  * Your circle — the people who started an era from your link, or whose link
@@ -65,12 +67,18 @@ export function CircleSection({ onShare }: { onShare: () => void }) {
       {/* One card: the label inside it, the people as divided rows — not a
           label floating above a stack of separate cards. */}
       <section className="card-surface-lg p-4">
+        {/* Only while the circle is empty: a list of real people doesn't
+            need a crowd drawn behind it. */}
+        {data.circle.length === 0 && (
+          <SceneImage src={HOME_SCENES.circle} className="top-0 right-0 w-[60%] h-[75%]" fade="left-down" opacity={0.75} />
+        )}
+        <div className="scene-content">
         <div className="flex items-start gap-3">
-          <span className="w-10 h-10 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center" aria-hidden>
+          <span className="w-10 h-10 shrink-0 rounded-full scene-icon-ring flex items-center justify-center" aria-hidden>
             <Users className="w-[18px] h-[18px] text-white/80" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Your circle</p>
+            <p className="scene-eyebrow">Your circle</p>
             {data.circle.length === 0 && (
               <>
                 <p className="text-[18px] text-white leading-snug mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
@@ -125,6 +133,7 @@ export function CircleSection({ onShare }: { onShare: () => void }) {
             </button>
           </>
         )}
+        </div>
       </section>
 
       {/* Only ever rendered with real counts behind it. */}

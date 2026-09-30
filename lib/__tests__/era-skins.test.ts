@@ -34,7 +34,21 @@ describe('era skins', () => {
 
   it('never colours text: the accent classes set fills, borders and shadows only', () => {
     const css = fs.readFileSync(path.join(process.cwd(), 'app/globals.css'), 'utf8')
-    const block = css.slice(css.indexOf('── Era skins'))
+    const start = css.indexOf('── Era skins')
+    const end = css.indexOf('── Scene theme', start)
+    const block = css.slice(start, end > start ? end : undefined)
     expect(block).not.toMatch(/(^|[;{\s])color\s*:/m)
+  })
+
+  // The scene theme's blue may light a small label (the mockup's
+  // "TODAY'S TRAINING"), never body text: the only text colours it sets are
+  // the eyebrow's white and the eyebrow-glow class.
+  it('scene theme colours only eyebrow labels', () => {
+    const css = fs.readFileSync(path.join(process.cwd(), 'app/globals.css'), 'utf8')
+    const block = css.slice(css.indexOf('── Scene theme'))
+    const rules = [...block.matchAll(/([^{}]+)\{([^}]*)\}/g)]
+      .filter(([, , body]) => /(^|[;{\s])color\s*:/m.test(body))
+      .map(([, sel]) => sel.trim())
+    expect(rules).toEqual(['.scene-eyebrow', '.scene-eyebrow-glow'])
   })
 })

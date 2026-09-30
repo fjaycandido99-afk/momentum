@@ -37,6 +37,8 @@ import { eraOrdinal } from '@/lib/era/logic'
 import { ERA_PRACTICE_DOMAIN } from '@/lib/era/keep'
 import { AddPracticeSheet } from '@/components/practices/AddPracticeSheet'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
+import { HOME_SCENES } from '@/lib/home/scenes'
+import { SceneImage } from './SceneImage'
 import type { EraToday } from '@/hooks/useEra'
 
 /**
@@ -173,16 +175,28 @@ function Greeting({ quote }: { quote: { text: string; author: string } | null })
   const showQuote = quote && quote.text.length <= 70
 
   return (
-    <div className="flex items-start justify-between gap-4 pt-1">
-      <div className="min-w-0">
-        <p className="text-[10px] tracking-[0.3em] uppercase text-white/50">{g.label}</p>
-        <p className="text-[26px] leading-[1.1] text-white mt-1" style={SERIF}>{g.line}</p>
+    /* The day's opening scene: the photo bleeds to the screen edges and up
+       under the translucent header, fading down into the page. The words keep
+       the left, so they always read against dark. */
+    <div className="relative -mx-6 px-6 -mt-3 pt-4 pb-3 md:mx-0 md:px-0">
+      <SceneImage
+        src={HOME_SCENES.hero}
+        fade="left-down"
+        className="-top-24 right-0 w-[78%] h-[calc(100%+6rem)]"
+        position="center right"
+        opacity={0.85}
+      />
+      <div className="relative flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="scene-eyebrow">{g.label}</p>
+          <p className="text-[34px] leading-[1.02] text-white mt-2 max-w-[80%]" style={{ ...SERIF, fontWeight: 500 }}>{g.line}</p>
+        </div>
+        {showQuote && (
+          <p className="max-w-[38%] text-[12px] leading-snug italic text-white/60 text-right pt-1" style={SERIF}>
+            &ldquo;{quote!.text}&rdquo;
+          </p>
+        )}
       </div>
-      {showQuote && (
-        <p className="max-w-[38%] text-[12px] leading-snug italic text-white/60 text-right pt-1" style={SERIF}>
-          &ldquo;{quote!.text}&rdquo;
-        </p>
-      )}
     </div>
   )
 }
@@ -360,7 +374,8 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
       aria-label={audio.playing ? `Open the player — ${audio.title} is playing` : undefined}
       className="w-full text-left card-surface-lg p-4 press-scale flex items-center gap-4"
     >
-      <div className="relative w-14 h-14 shrink-0 rounded-xl overflow-hidden border border-white/[0.12] bg-[linear-gradient(160deg,rgba(255,255,255,0.18),rgba(255,255,255,0.02))] flex items-center justify-center">
+      <SceneImage src={HOME_SCENES.training} className="inset-y-0 right-0 w-[55%] h-full" opacity={0.7} />
+      <div className="relative z-[1] w-14 h-14 shrink-0 rounded-xl overflow-hidden border border-white/[0.12] bg-[linear-gradient(160deg,rgba(255,255,255,0.18),rgba(255,255,255,0.02))] flex items-center justify-center">
         {audio.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={audio.image} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover grayscale" />
@@ -372,8 +387,8 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
           </div>
         )}
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">
+      <div className="scene-content min-w-0 flex-1">
+        <p className="scene-eyebrow scene-eyebrow-glow">
           {audio.playing ? 'Now playing' : audio.loading ? 'Starting…' : 'Today’s audio'}
         </p>
         <p className="text-xl text-white leading-tight mt-0.5 truncate" style={{ ...SERIF, fontWeight: 500 }}>{audio.title}</p>
@@ -390,8 +405,8 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
       </div>
       {/* Duration above the button rather than beside it: three things in a
           row left 40px for a title on a 390px screen. */}
-      <div className="shrink-0 flex flex-col items-center gap-1.5">
-        <span className="w-11 h-11 rounded-full bg-white text-black flex items-center justify-center" aria-hidden>
+      <div className="scene-content shrink-0 flex flex-col items-center gap-1.5">
+        <span className="w-11 h-11 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_24px_-4px_rgb(122_146_255/0.7)]" aria-hidden>
           {audio.playing ? (
             // Moving bars, because a static pause icon reads as "paused".
             // EqBars animates with rAF: CSS keyframes are unreliable here.
@@ -426,13 +441,18 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
 
 // ─── Active era ──────────────────────────────────────────────────────────────
 
-function Tile({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: React.ReactNode }) {
+function Tile({ icon: Icon, label, scene, children }: { icon: LucideIcon; label: string; scene?: string; children: React.ReactNode }) {
   return (
     <div className="card-surface-lg p-4 min-w-0">
-      <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
-        <Icon className="w-3.5 h-3.5" /> {label}
+      {/* The photo takes the lower right and rises into the dark, so the
+          label and the first lines stay on black. */}
+      <SceneImage src={scene} fade="left-up" className="bottom-0 right-0 w-[80%] h-[72%]" position="center bottom" opacity={0.8} />
+      <div className="scene-content">
+        <div className="flex items-center gap-1.5 scene-eyebrow">
+          <Icon className="w-3.5 h-3.5 scene-eyebrow-glow" /> {label}
+        </div>
+        <div className="mt-2">{children}</div>
       </div>
-      <div className="mt-2">{children}</div>
     </div>
   )
 }
@@ -763,8 +783,10 @@ function ActiveEra({
           <div className={`grid gap-3 ${era.mission && !promiseExpanded ? 'grid-cols-1 min-[380px]:grid-cols-2' : 'grid-cols-1'}`}>
             {era.mission && (
               <div className="card-surface-lg p-4 min-w-0 flex flex-col">
-                <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
-                  <Target className="w-3.5 h-3.5" /> Today&rsquo;s mission
+                <SceneImage src={HOME_SCENES.mission} fade="left-up" className="bottom-0 right-0 w-[80%] h-[72%]" position="center bottom" opacity={0.8} />
+                <div className="scene-content flex-1 flex flex-col">
+                <div className="flex items-center gap-1.5 scene-eyebrow">
+                  <Target className="w-3.5 h-3.5 scene-eyebrow-glow" /> Today&rsquo;s mission
                 </div>
                 {/* No difficulty dots: three dots beside a label read as a pager. */}
                 <p className="text-[16px] text-white mt-1.5 leading-snug flex-1" style={SERIF}>{era.mission}</p>
@@ -778,11 +800,16 @@ function ActiveEra({
                     Make it my promise
                   </button>
                 </div>
+                </div>
               </div>
             )}
             <div className="card-surface-lg p-4 min-w-0">
-              <label htmlFor="era-promise" className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
-                <BookOpen className="w-3.5 h-3.5" /> Today&rsquo;s promise
+              {/* The scene sits above the box, behind the label — never
+                  under what is being typed. */}
+              <SceneImage src={HOME_SCENES.promise} fade="left-down" className="top-0 right-0 w-[80%] h-[60%]" position="center top" opacity={0.75} />
+              <div className="scene-content">
+              <label htmlFor="era-promise" className="flex items-center gap-1.5 scene-eyebrow">
+                <BookOpen className="w-3.5 h-3.5 scene-eyebrow-glow" /> Today&rsquo;s promise
               </label>
               <textarea
                 id="era-promise"
@@ -827,6 +854,7 @@ function ActiveEra({
               </div>
               {/* Asked before they commit, while the answer is still honest. */}
               {draft.trim().length > 0 && confidenceRow}
+              </div>
             </div>
           </div>
         </div>
@@ -838,11 +866,11 @@ function ActiveEra({
       action = (
         <>
           <div className={`grid gap-3 ${era.mission && t?.text !== era.mission ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            <Tile icon={BookOpen} label="Today's promise">
+            <Tile icon={BookOpen} label="Today's promise" scene={HOME_SCENES.promise}>
               <p className="text-[17px] text-white leading-snug" style={SERIF}>{t?.text}</p>
             </Tile>
             {era.mission && t?.text !== era.mission && (
-              <Tile icon={Target} label="Today's mission">
+              <Tile icon={Target} label="Today's mission" scene={HOME_SCENES.mission}>
                 <p className="text-[17px] text-white leading-snug" style={SERIF}>{era.mission}</p>
                 {missionToggle}
               </Tile>
@@ -1084,7 +1112,7 @@ function ActiveEra({
           streak on the screen (the hero shows the day, not the streak). */}
       <div className="card-surface-lg px-4 py-3.5 grid grid-cols-2 divide-x divide-white/10">
         <div className="flex items-center gap-3 pr-3">
-          <span className="w-10 h-10 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center" aria-hidden>
+          <span className="w-10 h-10 shrink-0 rounded-full scene-icon-ring flex items-center justify-center" aria-hidden>
             <BarChart3 className="w-[18px] h-[18px] text-white/80" />
           </span>
           <div>
@@ -1102,7 +1130,7 @@ function ActiveEra({
           </div>
         </div>
         <div className="flex items-center gap-3 pl-4">
-          <span className="w-10 h-10 shrink-0 rounded-full border border-white/[0.16] flex items-center justify-center" aria-hidden>
+          <span className="w-10 h-10 shrink-0 rounded-full scene-icon-ring flex items-center justify-center" aria-hidden>
             <Flame className="w-[18px] h-[18px] text-white/80" />
           </span>
           <div>
