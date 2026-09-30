@@ -7,7 +7,7 @@ import {
   type AchievementCategory,
   CATEGORY_LABELS,
   CATEGORY_ICONS,
-  RARITY_TEXT,
+  
 } from '@/lib/achievements'
 import { AchievementBadge } from './AchievementBadge'
 
@@ -65,7 +65,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2.5">
-          <Trophy className="w-4 h-4 text-white" />
+          <Trophy className="w-4 h-4 text-[#e8c79a]" />
           <div>
             <h3 className="text-sm font-semibold text-white">Achievements</h3>
             <p className="text-[11px] text-white/60">{unlockedCount} of {totalCount} unlocked</p>
@@ -74,7 +74,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
         <div className="flex items-center gap-2">
           <div className="h-1.5 w-20 rounded-full bg-white/10 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-white/60 to-white transition-all duration-700"
+              className="h-full rounded-full bg-gradient-to-r from-[#a8743f] to-[#f3dcb8] transition-all duration-700"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -103,7 +103,9 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                       onClick={() => onAchievementClick?.(a)}
                       className={`press-scale relative flex flex-col items-center gap-2 px-2 pt-3 pb-2.5 rounded-xl border transition-all duration-200 ${
                         a.unlocked
-                          ? 'border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.07]'
+                          // Earned tiles are warm: a gold edge over a faint amber
+                          // glow, like the unlock popup. Locked stay grey.
+                          ? 'border-[#d6aa76]/40 bg-[radial-gradient(90%_70%_at_50%_20%,rgba(214,170,118,0.12),rgba(255,255,255,0.02))] hover:border-[#d6aa76]/60'
                           : 'border-white/[0.06] bg-white/[0.015]'
                       }`}
                       aria-label={
@@ -122,7 +124,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
 
                       {a.unlocked ? (
                         <span className="flex items-center gap-1.5">
-                          <span className={`text-[10px] font-semibold uppercase tracking-wider ${RARITY_TEXT[a.rarity]}`}>
+                          <span className="gold-eyebrow !text-[9px] !tracking-[0.16em]">
                             {a.rarity}
                           </span>
                           {a.unlockedAt && <span className="text-[10px] text-white/40">{formatDate(a.unlockedAt)}</span>}
@@ -136,7 +138,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                             <span className="w-full flex items-center gap-1.5 mt-0.5">
                               <span className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
                                 <span
-                                  className="block h-full rounded-full bg-white/70"
+                                  className="block h-full rounded-full bg-[#d6aa76]/80"
                                   style={{ width: `${Math.round((a.progress.current / a.progress.target) * 100)}%` }}
                                 />
                               </span>
