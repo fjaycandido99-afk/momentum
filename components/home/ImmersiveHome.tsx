@@ -15,6 +15,8 @@ import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
 import { useHomeAudio } from '@/contexts/HomeAudioContext'
 import { StreakBadge } from '@/components/daily-guide/StreakDisplay'
 import { BottomPlayerBar } from './BottomPlayerBar'
+import { SceneBackdrop } from './SceneBackdrop'
+import { HOME_SCENES } from '@/lib/home/scenes'
 import { DailySpark } from './DailySpark'
 import { CoachGreetingBubble } from './CoachGreetingBubble'
 import { trackFeature } from '@/lib/analytics/track'
@@ -1337,7 +1339,9 @@ export function ImmersiveHome() {
   return (
     // The era's skin (lib/era/skins.ts): one accent, read by the era-* classes
     // for glows and fills only. Plain white with no era — Voxu as it was.
-    <div className="isolate voxu-scene h-[100dvh] overflow-hidden" style={eraSkinVars(era.era?.key) as React.CSSProperties}>
+    <div className="relative isolate voxu-scene h-[100dvh] overflow-hidden" style={eraSkinVars(era.era?.key) as React.CSSProperties}>
+    {/* The page's photograph, held still behind the scrolling shell. */}
+    <SceneBackdrop src={HOME_SCENES.backdrop} />
     {/* App-shell scrolling: the PAGE does not scroll, this container does.
         On iOS the document rubber-bands past its ends, and during that
         bounce the entire visual viewport moves — so a header pinned with

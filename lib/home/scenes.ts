@@ -11,6 +11,9 @@
  * painted checkerboard — these are full-bleed photographs, not cut-outs.
  */
 export const HOME_SCENES = {
+  /** The whole page's backdrop, held still behind the scroll: tall portrait,
+   *  dark sky above, mountains and a still lake in the lower half. */
+  backdrop: '/scenes/home/backdrop.jpg',
   /** Behind the greeting: a figure on a ridge at dusk, right third. */
   hero: '/scenes/home/hero.jpg',
   /** Today's mission: a desk, an open notebook, a lamp. */
