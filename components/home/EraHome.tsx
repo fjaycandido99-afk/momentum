@@ -211,7 +211,7 @@ function Greeting({ quote }: { quote: { text: string; author: string } | null })
 
 function heroShell(children: React.ReactNode, image?: string | null) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/[0.14] p-5 bg-[radial-gradient(120%_90%_at_100%_0%,rgba(255,255,255,0.10),rgba(255,255,255,0.02)_55%,rgba(0,0,0,0)_100%)]">
+    <div className="scene-hero relative overflow-hidden rounded-3xl border border-white/[0.14] p-5 bg-[radial-gradient(120%_90%_at_100%_0%,rgba(255,255,255,0.10),rgba(255,255,255,0.02)_55%,rgba(0,0,0,0)_100%)]">
       {/* Era art sits on the right and fades into the card, so the title on
           the left always reads against black. Grayscale keeps any image
           inside the app's monochrome look. */}

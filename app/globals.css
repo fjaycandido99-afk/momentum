@@ -2898,14 +2898,30 @@ html:has([data-app-shell]) body {
     radial-gradient(130% 50% at 75% 0%, rgb(30 40 70 / 0.55), transparent 62%),
     linear-gradient(180deg, #080b14 0%, #05070c 55%, #040509 100%);
 }
-.voxu-scene .card-surface-lg {
-  border-radius: 22px;
-  background: linear-gradient(180deg, rgb(24 30 48 / 0.62), rgb(9 11 19 / 0.78));
-  border-color: rgb(160 178 230 / 0.16);
+/* Every card on the page, whichever class it was built with: the big era
+   hero (.scene-hero), full-width cards, the shelves' tiles (.card-surface)
+   and the player bar (.glass-refined). One missed class is a grey card on a
+   blue page — which is exactly what the first pass left behind. */
+.voxu-scene .card-surface-lg,
+.voxu-scene .card-surface,
+.voxu-scene .scene-hero {
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgb(var(--scene-glow) / 0.10), transparent 60%),
+    linear-gradient(180deg, rgb(26 34 60 / 0.66), rgb(9 12 22 / 0.82));
+  border-color: rgb(140 165 235 / 0.22);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
     0 18px 40px -28px rgb(0 0 0 / 0.9);
 }
+.voxu-scene .card-surface-lg { border-radius: 22px; }
+.voxu-scene .glass-refined {
+  background: linear-gradient(180deg, rgb(22 30 54 / 0.9), rgb(8 11 20 / 0.94));
+  border-color: rgb(140 165 235 / 0.25);
+  box-shadow: 0 0 30px -10px rgb(var(--scene-glow) / 0.45);
+}
+/* Progress fills: white off-scene, blue into violet on it. */
+.scene-bar-fill { background: #fff; }
+.voxu-scene .scene-bar-fill { background: linear-gradient(90deg, rgb(110 150 255), rgb(150 120 255)); }
 /* Content sits above a card's scene photo. */
 .scene-content { position: relative; z-index: 1; }
 .scene-eyebrow {

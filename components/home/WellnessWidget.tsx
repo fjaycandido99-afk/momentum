@@ -62,7 +62,7 @@ export function WellnessWidget({ journalMood, streak, modulesCompletedToday, has
               <span className="text-[9px] text-white/85 w-9 shrink-0">{cat.label}</span>
               <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${cat.done ? 'bg-white' : 'bg-white/50'}`}
+                  className={`h-full rounded-full scene-bar-fill transition-all duration-500 ${cat.done ? '' : 'opacity-50'}`}
                   style={{ width: `${pct}%` }}
                 />
               </div>
