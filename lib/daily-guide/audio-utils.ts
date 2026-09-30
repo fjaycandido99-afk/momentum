@@ -168,7 +168,7 @@ export async function generateAudio(
   scope?: string,
   /** A specific voice (e.g. VOXU_VOICE_ID) instead of the tone's. */
   voiceOverride?: string,
-): Promise<{ audioBase64: string | null; duration: number }> {
+): Promise<{ audioBase64: string | null; duration: number; fellBack?: boolean }> {
   const apiKey = process.env.ELEVENLABS_API_KEY
   if (!apiKey) {
     console.error('[ElevenLabs] No API key')
@@ -197,6 +197,7 @@ export async function generateAudio(
   try {
     const toneVoice = TONE_VOICES[tone] || TONE_VOICES.calm
     let response = await speak(voiceOverride || toneVoice, script, apiKey)
+    let fellBack = false
 
     // A voice that is missing or not shared with this key (4xx) falls back
     // to the tone's voice rather than leaving the reply silent. Credits and
@@ -204,6 +205,7 @@ export async function generateAudio(
     if (voiceOverride && !response.ok && (response.status === 400 || response.status === 404 || response.status === 422)) {
       console.error(`[ElevenLabs] Voice ${voiceOverride} rejected (${response.status}) — using the ${tone} voice`)
       response = await speak(toneVoice, script, apiKey)
+      fellBack = true
     }
 
     if (!response.ok) {
@@ -221,7 +223,7 @@ export async function generateAudio(
     // Estimate duration: ~150 words per minute for calm speech, ~5 chars per word
     const estimatedDuration = Math.ceil((script.length / 5) / 150 * 60)
 
-    return { audioBase64, duration: estimatedDuration }
+    return { audioBase64, duration: estimatedDuration, fellBack }
   } catch (error) {
     console.error('[ElevenLabs] Exception:', error)
     return { audioBase64: null, duration: 0 }

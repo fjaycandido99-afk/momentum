@@ -53,6 +53,13 @@ export async function GET(request: NextRequest) {
   const shuffle = searchParams.get('shuffle') === 'true'
   const seedParam = searchParams.get('seed')
 
+  // Every list this route returns goes through here: a user's shuffle is a
+  // seeded shuffle of the pool, anything else is today's pick — and both are
+  // SHOW long. (Shuffle used to return the whole pool with no key, and today's
+  // exact list on a quota error, so the button did nothing.)
+  const shuffleSeed = shuffle && seedParam ? (parseInt(seedParam, 10) || Date.now()) : undefined
+  const pick = <T,>(list: T[]) => dailyPick(list, topic, SHOW, shuffleSeed)
+
   // When shuffle is requested, skip normal cache and use seed for deterministic selection
   if (!shuffle) {
     // Check cache first - only fetch once per day per topic
@@ -71,17 +78,7 @@ export async function GET(request: NextRequest) {
   // No API key - use stale cache or return empty
   if (!YOUTUBE_API_KEY) {
     const fallback = await getFallback(topic)
-    if (shuffle && seedParam && fallback.length > 0) {
-      const seed = parseInt(seedParam, 10) || Date.now()
-      const shuffled = [...fallback]
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const x = Math.sin(seed + i) * 10000
-        const j = Math.floor((x - Math.floor(x)) * (i + 1))
-        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-      }
-      return NextResponse.json({ videos: shuffled, topic, fallback: true })
-    }
-    return NextResponse.json({ videos: dailyPick(fallback, topic, SHOW), topic, fallback: true })
+    return NextResponse.json({ videos: pick(fallback), topic, fallback: true })
   }
 
   const searchTerms = TOPIC_SEARCHES[topic] || TOPIC_SEARCHES['Discipline']
@@ -123,7 +120,7 @@ export async function GET(request: NextRequest) {
         // Memory only — never re-date a stale list as today's (see video-cache).
         rememberForToday('motivation', topic, fallback)
       }
-      return NextResponse.json({ videos: dailyPick(fallback, topic, SHOW), topic, fallback: true })
+      return NextResponse.json({ videos: pick(fallback), topic, fallback: true })
     }
 
     const searchData = await searchResponse.json()
@@ -209,6 +206,6 @@ export async function GET(request: NextRequest) {
       // Memory only — never re-date a stale list as today's (see video-cache).
       rememberForToday('motivation', topic, fallback)
     }
-    return NextResponse.json({ videos: dailyPick(fallback, topic, SHOW), topic, fallback: true })
+    return NextResponse.json({ videos: pick(fallback), topic, fallback: true })
   }
 }

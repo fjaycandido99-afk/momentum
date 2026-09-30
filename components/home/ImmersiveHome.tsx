@@ -1527,7 +1527,10 @@ export function ImmersiveHome() {
             const p = getLatestPulse()
             const due = p?.today.items.find(i => i.kind === 'discipline' && i.status === 'due')
             return {
-              todayLeft: p && p.today.total > 0 ? p.today.total - p.today.done : null,
+              // Still open only — "Not today" is an answer, not something left.
+              todayLeft: p && p.today.total > 0
+                ? p.today.items.filter(i => i.kind !== 'step' && (i.status === 'open' || i.status === 'due' || i.status === 'upcoming')).length
+                : null,
               dueDiscipline: due?.title ?? null,
               era: era.era ? { title: era.era.title, day: era.era.day, length: era.era.lengthDays } : null,
               journaledToday: !!hasJournaledToday,

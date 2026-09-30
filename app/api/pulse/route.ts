@@ -22,7 +22,7 @@ import { PRESETS_BY_KEY } from '@/lib/practices/presets'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -60,6 +60,7 @@ export async function GET() {
         : []
 
     const pulse = buildPulse({
+      rescueOn: new URL(request.url).searchParams.get('rescue') === '1',
       now: localMinutes(tz),
       weekday,
       era: era && era.step !== 'complete'

@@ -55,13 +55,15 @@ export function minutesIn(ask: string): number | null {
 
 export function rescuePlan(input: PulseInput): RescuePlan | null {
   const due = input.practices.filter(p => p.state === 'due')
-  if (due.length < 2) return null
+  // Once accepted, the plan holds until its last step is done — it must not
+  // vanish at one left while the sheets still lead with the minimum.
+  if (due.length < (input.rescueOn ? 1 : 2)) return null
 
   const slipped = due.some(p => {
     const t = plannedTime(p.id, input)
     return t !== null && input.now > minutesOf(t) + SLIP_AFTER
   })
-  if (input.now < RESCUE_FROM && !slipped) return null
+  if (!input.rescueOn && input.now < RESCUE_FROM && !slipped) return null
 
   const steps = due
     .map((p, i) => ({ p, i, t: plannedTime(p.id, input) }))
@@ -72,7 +74,7 @@ export function rescuePlan(input: PulseInput): RescuePlan | null {
   const minutes = each.every((m): m is number => m !== null) ? each.reduce((a, b) => a + b, 0) : null
 
   return {
-    reason: `${steps.length} things are still open. Nothing is ruined — here's the day at its minimum.`,
+    reason: `${steps.length === 1 ? 'One thing is' : `${steps.length} things are`} still open. Nothing is ruined — here's the day at its minimum.`,
     steps,
     minutes,
   }

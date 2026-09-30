@@ -74,7 +74,7 @@ export function NudgeSheet({
           </button>
         </div>
         <button onClick={onOff} className="block mx-auto mt-3 text-[11px] text-white/35 hover:text-white/60">
-          Don&rsquo;t show these
+          Don&rsquo;t nudge me about disciplines
         </button>
       </div>
     </div>

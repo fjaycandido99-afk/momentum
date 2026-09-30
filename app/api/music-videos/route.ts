@@ -67,6 +67,13 @@ export async function GET(request: NextRequest) {
   const shuffle = searchParams.get('shuffle') === 'true'
   const seedParam = searchParams.get('seed')
 
+  // Every list this route returns goes through here: a user's shuffle is a
+  // seeded shuffle of the pool, anything else is today's pick — and both are
+  // SHOW long. (Shuffle used to return the whole pool with no key, and today's
+  // exact list on a quota error, so the button did nothing.)
+  const shuffleSeed = shuffle && seedParam ? (parseInt(seedParam, 10) || Date.now()) : undefined
+  const pick = <T,>(list: T[]) => dailyPick(list, genre, SHOW, shuffleSeed)
+
   // When shuffle is requested, skip normal cache and use seed for deterministic selection
   if (!shuffle) {
     // Check cache first - only fetch once per day per genre
@@ -86,17 +93,7 @@ export async function GET(request: NextRequest) {
   // No API key - use stale cache or return empty
   if (!YOUTUBE_API_KEY) {
     const fallback = await getFallback(genre)
-    if (shuffle && seedParam && fallback.length > 0) {
-      const seed = parseInt(seedParam, 10) || Date.now()
-      const shuffled = [...fallback]
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const x = Math.sin(seed + i) * 10000
-        const j = Math.floor((x - Math.floor(x)) * (i + 1))
-        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-      }
-      return NextResponse.json({ videos: shuffled, genre, todaysGenre: getTodaysGenre(), fallback: true })
-    }
-    return NextResponse.json({ videos: dailyPick(fallback, genre, SHOW), genre, todaysGenre: getTodaysGenre(), fallback: true })
+    return NextResponse.json({ videos: pick(fallback), genre, todaysGenre: getTodaysGenre(), fallback: true })
   }
 
   const searchTerms = GENRE_SEARCHES[genre] || GENRE_SEARCHES['lofi']
@@ -137,7 +134,7 @@ export async function GET(request: NextRequest) {
         // Memory only — never re-date a stale list as today's (see video-cache).
         rememberForToday('music', genre, fallback)
       }
-      return NextResponse.json({ videos: dailyPick(fallback, genre, SHOW), genre, todaysGenre: getTodaysGenre(), fallback: true })
+      return NextResponse.json({ videos: pick(fallback), genre, todaysGenre: getTodaysGenre(), fallback: true })
     }
 
     const searchData = await searchResponse.json()
@@ -207,6 +204,6 @@ export async function GET(request: NextRequest) {
       // Memory only — never re-date a stale list as today's (see video-cache).
       rememberForToday('music', genre, fallback)
     }
-    return NextResponse.json({ videos: dailyPick(fallback, genre, SHOW), genre, todaysGenre: getTodaysGenre(), fallback: true })
+    return NextResponse.json({ videos: pick(fallback), genre, todaysGenre: getTodaysGenre(), fallback: true })
   }
 }

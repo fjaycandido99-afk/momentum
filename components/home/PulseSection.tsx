@@ -56,10 +56,15 @@ export function PulseSection({
   }, [])
 
   const load = useCallback(() => {
-    fetch('/api/pulse', { cache: 'no-store' })
+    // Rescue on: the plan stays until its last step is logged, not only
+    // while two or more are open.
+    fetch(isRescueOn() ? '/api/pulse?rescue=1' : '/api/pulse', { cache: 'no-store' })
       .then(r => (r.ok ? r.json() : null))
       .then(d => {
+        // A failed refetch keeps what's on screen (and on the widget)
+        // rather than wiping Right now, Today and the plan.
         const p = d?.pulse ?? null
+        if (!p) return
         setPulse(p)
         // The one-per-open moment reads this when its timer fires, so the
         // nudge costs no second request.
@@ -96,7 +101,7 @@ export function PulseSection({
         <RescueCard
           plan={rescue!}
           active={rescueOn}
-          onAccept={() => { acceptRescue(); setRescueOn(true) }}
+          onAccept={() => { acceptRescue(); setRescueOn(true); load() }}
           onDecline={() => { declineRescue(); setRescueDeclined(true) }}
           onOpen={id => act({ type: 'practice', id })}
         />

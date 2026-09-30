@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { audioBase64, duration } = await generateAudio(text, tone, TTS_CHAT_BUDGET_KEY, VOXU_VOICE_ID)
+    const { audioBase64, duration, fellBack } = await generateAudio(text, tone, TTS_CHAT_BUDGET_KEY, VOXU_VOICE_ID)
 
     if (!audioBase64) {
       // Out of credits, or ElevenLabs is down. There is no browser-TTS
@@ -130,7 +130,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await setSharedCache(cacheKey, audioBase64, duration)
+    // Spoken in a stand-in voice (Voxu's was rejected): play it, but never
+    // cache it under the Voxu key — once the voice works, it must be heard.
+    if (!fellBack) await setSharedCache(cacheKey, audioBase64, duration)
 
     return NextResponse.json({
       audio: audioBase64,

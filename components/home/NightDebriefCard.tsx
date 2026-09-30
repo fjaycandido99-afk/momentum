@@ -9,9 +9,13 @@ import { isDismissed, setDismissed } from '@/lib/ui/dismiss'
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 const DISMISS_ID = 'night-debrief'
 
-/** Evening: 7pm until 3am, when "today" is still the day being closed. */
+/**
+ * Evening: 7pm until midnight. Not after — past midnight the day Pulse
+ * reports is already the new one, so a "close the day" then would describe
+ * a day that has only just begun.
+ */
 export function isDebriefHour(h: number = new Date().getHours()): boolean {
-  return h >= 19 || h < 3
+  return h >= 19
 }
 
 /**

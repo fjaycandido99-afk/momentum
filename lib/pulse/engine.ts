@@ -59,6 +59,8 @@ export interface PulseStep {
 }
 
 export interface PulseInput {
+  /** Rescue was accepted today: keep the plan until its last step. */
+  rescueOn?: boolean
   /** Minutes past local midnight. */
   now: number
   /** Local weekday, 0 = Sunday. */

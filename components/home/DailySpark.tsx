@@ -21,6 +21,9 @@ import { getLatestPulse } from '@/lib/pulse/store'
 import { pickNudge, type PulseNudge } from '@/lib/pulse/nudge'
 import { OPEN_DISCIPLINE } from '@/lib/pulse/events'
 
+/** Turns off discipline nudges only — never the rest of the moment slot. */
+const NUDGE_OFF_ID = 'pulse-nudge-off'
+
 /**
  * ONE MOMENT PER APP OPEN — and not always the same kind of moment.
  *
@@ -270,7 +273,9 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
       // simply doesn't happen. Queueing behind it would be two
       // interruptions, which is the thing we were fixing.
       if (window.__popupActive) return
-      const n = pickNudge(getLatestPulse(), key => isDismissed(key))
+      // Nudges have their own off switch: turning them off must not also
+      // silence the era moment, the journal prompt and the quote.
+      const n = isDismissed(NUDGE_OFF_ID) ? null : pickNudge(getLatestPulse(), key => isDismissed(key))
       const chosen = pickMoment({ ...latest.current, lastKind: lastKind(), pulseNudge: !!n })
       if (chosen === 'pulse' && n) {
         // Spent once shown: this discipline won't interrupt the same way
@@ -396,7 +401,7 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
           }
         })}
         onLater={() => dismiss()}
-        onOff={turnOff}
+        onOff={() => { setDismissed(NUDGE_OFF_ID, 'forever'); dismiss() }}
         animating={animating}
         dismissing={dismissing}
       />

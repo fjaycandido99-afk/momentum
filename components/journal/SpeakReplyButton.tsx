@@ -44,6 +44,12 @@ export function SpeakReplyButton({
 }) {
   const [state, setState] = useState<State>('idle')
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  // The button can leave while speaking (a sheet closes, the step is done):
+  // the voice goes with it, or two could talk over each other.
+  useEffect(() => () => {
+    audioRef.current?.pause()
+    audioRef.current = null
+  }, [])
   const autoPlayedRef = useRef(false)
 
   const stop = useCallback(() => {
