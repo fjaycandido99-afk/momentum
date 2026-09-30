@@ -21,3 +21,22 @@ describe('home header visibility', () => {
     expect(src).not.toMatch(/\{!audioState\.playingSound &&/)
   })
 })
+
+// The same shape of bug, one flag over: closing the video player cleared
+// playingSound but left fullPlayerOpen true, and the shell was overflow-hidden
+// on that flag alone — Home stopped scrolling with no player on screen.
+describe('home scroll after a player closes', () => {
+  const src = fs.readFileSync(path.join(process.cwd(), 'components/home/ImmersiveHome.tsx'), 'utf8')
+
+  it('closing the video player also clears the open flag', () => {
+    const close = src.slice(src.indexOf('const handleClosePlayer'), src.indexOf('const handleClosePlayer') + 200)
+    expect(close).toContain("dispatch({ type: 'CLOSE_PLAYER' })")
+    expect(close).toContain('setFullPlayerOpen(false)')
+  })
+
+  it('the shell locks only while a player is on screen, never on the flag alone', () => {
+    expect(src).toContain("${fullscreenOverlayShown ? 'overflow-hidden'")
+    expect(src).toContain('(fullPlayerOpen && (!!audioState.playingSound || !!audioState.guideLabel))')
+    expect(src).not.toMatch(/\$\{fullPlayerOpen \|\|/)
+  })
+})

@@ -859,7 +859,13 @@ export function ImmersiveHome() {
     })
   }
 
-  const handleClosePlayer = () => dispatch({ type: 'CLOSE_PLAYER' })
+  // Closing clears the video AND the open flag. CLOSE_PLAYER alone left
+  // fullPlayerOpen true with nothing on screen, and the shell below stayed
+  // overflow-hidden — Home could not scroll until the app was reopened.
+  const handleClosePlayer = () => {
+    dispatch({ type: 'CLOSE_PLAYER' })
+    setFullPlayerOpen(false)
+  }
 
   const handleShuffleTopic = useCallback(async (topic: string) => {
     setShufflingTopic(topic)
@@ -1321,6 +1327,13 @@ export function ImmersiveHome() {
     || audioState.loadingGuide
     || audioState.userPausedMusic || audioState.userPausedGuide || audioState.userPausedSoundscape)
 
+  // The shell stops scrolling only while a fullscreen player is actually ON
+  // SCREEN — the same conditions the overlays render under below. Keyed off
+  // fullPlayerOpen alone, Home froze whenever that flag outlived the player.
+  const fullscreenOverlayShown =
+    (fullPlayerOpen && (!!audioState.playingSound || !!audioState.guideLabel)) ||
+    (!!audioState.activeSoundscape && audioState.showSoundscapePlayer)
+
   return (
     // The era's skin (lib/era/skins.ts): one accent, read by the era-* classes
     // for glows and fills only. Plain white with no era — Voxu as it was.
@@ -1342,7 +1355,7 @@ export function ImmersiveHome() {
     <FirstMomentOverlay />
     <div
       ref={scrollRef}
-      className={`relative h-full text-white pb-28 ${fullPlayerOpen || audioState.showSoundscapePlayer ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
+      className={`relative h-full text-white pb-28 ${fullscreenOverlayShown ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
     
       data-app-shell
     >
