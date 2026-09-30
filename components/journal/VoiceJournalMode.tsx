@@ -26,7 +26,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Mic, Square, Loader2, Sparkles, Play, Pause } from 'lucide-react'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { getMindsetConfig } from '@/lib/mindset/configs'
-import { getMindsetVoiceId } from '@/lib/mindset/voices'
+import { fetchVoxuAudio } from '@/lib/voice/voxu-audio'
 
 interface VoiceJournalModeProps {
   /** YYYY-MM-DD of the date the entry should attach to. */
@@ -58,7 +58,6 @@ export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
   const mindsetConfig = mindsetCtx ? getMindsetConfig(mindsetCtx.mindset) : null
   const coachName = mindsetConfig?.coachName || 'Your coach'
   const reflectionLabel = mindsetConfig?.insightName || 'Reflection'
-  const voiceId = getMindsetVoiceId(mindsetCtx?.mindset)
 
   const [phase, setPhase] = useState<Phase>('idle')
   const [elapsed, setElapsed] = useState(0)
@@ -177,20 +176,16 @@ export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
     }
   }
 
+  // In Voxu's voice, through the metered, cached path (lib/voice/voxu-audio).
+  // Out of spoken replies for the day just means the reflection stays text.
   const playReflection = async (text: string) => {
     try {
-      const resp = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voiceId }),
-      })
-      if (!resp.ok) return
-      const audioBlob = await resp.blob()
-      const url = URL.createObjectURL(audioBlob)
-      const audio = new Audio(url)
+      const result = await fetchVoxuAudio(text)
+      if (!result.ok) return
+      const audio = result.audio
       audioRef.current = audio
       audio.onplay = () => setIsPlaying(true)
-      audio.onended = () => { setIsPlaying(false); URL.revokeObjectURL(url) }
+      audio.onended = () => setIsPlaying(false)
       audio.onpause = () => setIsPlaying(false)
       await audio.play().catch((e) => console.warn('[VoiceJournal] autoplay blocked:', e))
     } catch (err) {
