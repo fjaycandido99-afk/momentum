@@ -732,77 +732,79 @@ function ActiveEra({
       break
 
     case 'promise':
+      // The mockup's pair: mission and promise side by side, each its own
+      // card. Stacked under 380px — a promise box 136px wide is not a box.
       action = (
-        <div className="card-surface-lg p-4">
+        <div className="space-y-3">
           {pendingWhy && (
-            <div className="mb-4 pb-4 border-b border-white/10">
+            <div className="card-surface-lg p-4">
               <p className="text-xs text-white/60">
                 {pendingWhy.kept ? 'You kept yesterday’s promise.' : 'Yesterday didn’t happen.'}
               </p>
               {reasonChips('yesterday', pendingWhy.kept, null)}
             </div>
           )}
-          {era.mission && (
-            <div className="mb-4 pb-4 border-b border-white/10">
-              <div className="flex items-center justify-between gap-2">
+          <div className={`grid gap-3 ${era.mission ? 'grid-cols-1 min-[380px]:grid-cols-2' : ''}`}>
+            {era.mission && (
+              <div className="card-surface-lg p-4 min-w-0 flex flex-col">
                 <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
                   <Target className="w-3.5 h-3.5" /> Today&rsquo;s mission
                 </div>
-                {/* No difficulty dots here: three dots beside a label read as a
-                    pager. The phase still sets how hard the mission is — the
-                    hero's chapter line says which phase this is. */}
+                {/* No difficulty dots: three dots beside a label read as a pager. */}
+                <p className="text-[16px] text-white mt-1.5 leading-snug flex-1" style={SERIF}>{era.mission}</p>
+                <div className="flex flex-wrap items-center gap-x-3">
+                  {missionToggle}
+                  <button
+                    onClick={() => { setDraft(era.mission!); setSource('typed') }}
+                    disabled={busy}
+                    className="mt-2 text-xs text-white/60 underline underline-offset-2 hover:text-white disabled:opacity-40"
+                  >
+                    Make it my promise
+                  </button>
+                </div>
               </div>
-              <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>{era.mission}</p>
-              <div className="flex flex-wrap items-center gap-3">
-                {missionToggle}
-                <button
-                  onClick={() => { setDraft(era.mission!); setSource('typed') }}
+            )}
+            <div className="card-surface-lg p-4 min-w-0">
+              <label htmlFor="era-promise" className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+                <BookOpen className="w-3.5 h-3.5" /> Today&rsquo;s promise
+              </label>
+              <textarea
+                id="era-promise"
+                rows={3}
+                value={draft}
+                maxLength={ERA_LIMITS.promise}
+                onChange={e => { setDraft(e.target.value); setSource('typed') }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); promise() }
+                }}
+                placeholder={era.promiseHint}
+                disabled={busy}
+                // 16px: anything smaller makes iOS zoom the page on focus.
+                className="mt-2 w-full resize-none rounded-xl bg-white/[0.05] border border-white/[0.15] px-3 py-2.5 text-base text-white placeholder:text-white/35 focus:outline-none focus:border-white/40 disabled:opacity-50"
+              />
+              {/* Under the box, not beside it: in a half-width column the
+                  box would be left with no room at all. */}
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <VoiceInput
                   disabled={busy}
-                  className="mt-2 text-xs text-white/70 underline underline-offset-2 hover:text-white disabled:opacity-40"
+                  onTranscript={txt => {
+                    setDraft(prev => (prev ? `${prev} ${txt}` : txt).slice(0, ERA_LIMITS.promise))
+                    setSource('spoken')
+                  }}
+                />
+                <button
+                  onClick={() => promise('today')}
+                  disabled={busy || !draft.trim()}
+                  aria-label="Make this promise"
+                  className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center disabled:opacity-30 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none"
                 >
-                  Make it my promise
+                  {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
                 </button>
               </div>
-            </div>
-          )}
-          <label htmlFor="era-promise" className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
-            <BookOpen className="w-3.5 h-3.5" /> Today&rsquo;s promise
-          </label>
-          <div className="mt-2 flex items-end gap-2">
-            <textarea
-              id="era-promise"
-              rows={2}
-              value={draft}
-              maxLength={ERA_LIMITS.promise}
-              onChange={e => { setDraft(e.target.value); setSource('typed') }}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); promise() }
-              }}
-              placeholder={era.promiseHint}
-              disabled={busy}
-              // 16px: anything smaller makes iOS zoom the page on focus.
-              className="flex-1 resize-none rounded-xl bg-white/[0.05] border border-white/[0.15] px-3 py-2.5 text-base text-white placeholder:text-white/35 focus:outline-none focus:border-white/40 disabled:opacity-50"
-            />
-            <div className="flex flex-col gap-2 items-center">
-              <VoiceInput
-                disabled={busy}
-                onTranscript={txt => {
-                  setDraft(prev => (prev ? `${prev} ${txt}` : txt).slice(0, ERA_LIMITS.promise))
-                  setSource('spoken')
-                }}
-              />
-              <button
-                onClick={() => promise('today')}
-                disabled={busy || !draft.trim()}
-                aria-label="Make this promise"
-                className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center disabled:opacity-30 active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none"
-              >
-                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
-              </button>
+              {/* Asked before they commit, while the answer is still honest. */}
+              {draft.trim().length > 0 && confidenceRow}
             </div>
           </div>
-          {/* Asked before they commit, while the answer is still honest. */}
-          {draft.trim().length > 0 && confidenceRow}
         </div>
       )
       break

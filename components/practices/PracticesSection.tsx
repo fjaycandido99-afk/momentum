@@ -1,7 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { BookOpen, Check, ChevronDown, ChevronUp, Minus, Plus, Repeat2 } from 'lucide-react'
+import Link from 'next/link'
+import { BookOpen, Check, ChevronDown, ChevronRight, ChevronUp, Minus, Plus, Repeat2, X } from 'lucide-react'
+import { ScrollLock } from '@/components/ui/ScrollLock'
+import { domainArt, domainArtAlt } from '@/lib/practices/domain-art'
 import { AddPracticeSheet } from './AddPracticeSheet'
 import { PracticePlanSheet } from './PracticePlanSheet'
 import { PracticeGuideSheet } from './PracticeGuideSheet'
@@ -56,6 +59,14 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
   /** Which discipline's how-to is open. */
   const [guiding, setGuiding] = useState<PracticeWire | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  /**
+   * Home shows each discipline as one compact row; tapping it opens this
+   * sheet with the full row — Done / Just the minimum / Not today,
+   * yesterday, the plan, Details and Remove. /training (canAdd) keeps the
+   * full rows inline: that is where disciplines are managed.
+   */
+  const compact = !canAdd
+  const [openId, setOpenId] = useState<string | null>(null)
 
   const loadBooks = useCallback(() => {
     fetch('/api/books')
@@ -144,6 +155,11 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
           <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
             <Repeat2 className="w-3.5 h-3.5" /> Your disciplines
           </div>
+          {compact && practices.length > 0 && (
+            <Link href="/training" className="flex items-center gap-0.5 text-[11px] text-white/50 hover:text-white/80">
+              Manage <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          )}
           {canAdd && data.remaining > 0 && (
             <button
               onClick={() => { trackFeature('era', 'open', 'practice_add'); setAdding(true) }}
@@ -169,7 +185,10 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
           // One card, rows split by hairlines — not a box per discipline with
           // boxes inside it (three levels of border read as clutter).
           <div className="mt-1 divide-y divide-white/[0.08]">
-            {practices.map(p => (
+            {compact && practices.map(p => (
+              <CompactRow key={p.id} practice={p} today={data.today} onOpen={() => { haptic('light'); setOpenId(p.id) }} />
+            ))}
+            {!compact && practices.map(p => (
               <PracticeRow
                 key={p.id}
                 practice={p}
@@ -196,6 +215,26 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
         )}
       </div>
 
+      {compact && openId && (() => {
+        // Looked up by id on every render, so a reload after logging shows
+        // the answer in the open sheet.
+        const p = practices.find(x => x.id === openId)
+        if (!p) return null
+        return (
+          <DisciplineSheet label={p.label} onClose={() => setOpenId(null)}>
+            <PracticeRow
+              practice={p}
+              busy={busyId === p.id}
+              onLog={(done, minimumOnly, day) => log(p, done, minimumOnly, day)}
+              onRetire={() => { setOpenId(null); retire(p) }}
+              onGuide={() => setGuiding(p)}
+              books={books}
+              onBooksChanged={loadBooks}
+              today={data.today}
+            />
+          </DisciplineSheet>
+        )
+      })()}
       {adding && <AddPracticeSheet onClose={() => setAdding(false)} onAdded={load} />}
       {guiding && (
         <PracticeGuideSheet
@@ -697,6 +736,89 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex items-baseline justify-between gap-3">
       <dt className="text-white/40">{label}</dt>
       <dd className="text-white/80 text-right">{value}</dd>
+    </div>
+  )
+}
+
+/** What a compact row says about today, since its buttons live in the sheet. */
+function compactStatus(state: PracticeWire['state'], yesterdayOpen: boolean): { text: string; strong: boolean } {
+  if (state === 'due') return { text: 'Due today', strong: true }
+  if (yesterdayOpen) return { text: 'Yesterday is still open', strong: true }
+  if (state === 'done') return { text: 'Done today', strong: false }
+  if (state === 'minimum') return { text: 'Minimum today', strong: false }
+  if (state === 'missed') return { text: 'Not today', strong: false }
+  return { text: 'Rest today', strong: false }
+}
+
+/**
+ * One discipline on home: its picture, name, today's status, the last seven
+ * days, and the kept count. The whole row opens the sheet.
+ */
+function CompactRow({ practice, today, onOpen }: { practice: PracticeWire; today: string; onOpen: () => void }) {
+  const art = domainArt(PRESETS_BY_KEY.get(practice.presetKey)?.domain)
+  const yesterdayKey = previousDay(today)
+  const yesterdayOpen = practice.week.some(d => d.day === yesterdayKey && d.state === 'due')
+  const status = compactStatus(practice.state, yesterdayOpen)
+  return (
+    <button onClick={onOpen} className="w-full text-left flex items-center gap-3 py-3 press-scale">
+      <span className="relative w-12 h-12 shrink-0 rounded-xl overflow-hidden border border-white/[0.12] bg-white/[0.04] flex items-center justify-center">
+        {art ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={art} alt={domainArtAlt(practice.label)} className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <Repeat2 className="w-4 h-4 text-white/50" aria-hidden />
+        )}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] text-white leading-snug truncate">{practice.label}</span>
+        <span className="block text-[11px] mt-0.5 truncate">
+          <span className="text-white/45">{daysLabel(practice.days)} · </span>
+          <span className={status.strong ? 'text-white/90' : 'text-white/45'}>{status.text}</span>
+        </span>
+        <span className="flex items-center gap-1 mt-1.5" aria-hidden>
+          {practice.week.map(d => (
+            <span
+              key={d.day}
+              className={`h-1 flex-1 rounded-full ${
+                d.state === 'done' ? 'bg-white'
+                  : d.state === 'minimum' ? 'bg-white/60'
+                  : d.state === 'missed' ? 'bg-transparent border border-white/25'
+                  : d.state === 'due' ? 'bg-white/[0.18]'
+                  : 'bg-white/[0.07]'
+              }`}
+            />
+          ))}
+        </span>
+      </span>
+      {practice.of > 0 && (
+        <span className="text-[12px] text-white/50 tabular-nums shrink-0">{practice.done}/{practice.of}</span>
+      )}
+      <ChevronRight className="w-4 h-4 text-white/40 shrink-0" aria-hidden />
+    </button>
+  )
+}
+
+/** A bottom sheet holding one discipline's full row. */
+function DisciplineSheet({ label, onClose, children }: { label: string; onClose: () => void; children: React.ReactNode }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+  return (
+    <div role="dialog" aria-modal="true" aria-label={label} className="fixed inset-0 z-[70] flex items-end md:items-center justify-center">
+      <ScrollLock />
+      <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" />
+      <div className="relative w-full md:max-w-[520px] max-h-[85dvh] overflow-y-auto overflow-x-hidden overscroll-contain rounded-t-3xl md:rounded-3xl bg-[#0b0b0b] border border-white/[0.12] px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)]">
+        {/* No entrance transform on this panel: a transformed ancestor makes
+            position:fixed children (the movement and book sheets opened from
+            inside the row) lay out inside the panel instead of the screen. */}
+        <div className="mx-auto w-10 h-1 rounded-full bg-white/20 mb-1" aria-hidden />
+        <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 p-2 rounded-full text-white/60 hover:text-white hover:bg-white/10">
+          <X className="w-4 h-4" />
+        </button>
+        <div className="pr-8">{children}</div>
+      </div>
     </div>
   )
 }

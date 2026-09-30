@@ -61,7 +61,7 @@ export function PracticeCard({
         {/* No difficulty dots: three dots beside a label read as a pager,
             and people looked for the other pages. */}
         <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">
-          {done ? 'Done today' : 'Today'}
+          {done ? 'Done today' : 'Today’s training'}
         </p>
         <p className="text-xl text-white leading-tight mt-0.5 truncate" style={{ ...SERIF, fontWeight: 500 }}>
           {exercise.title}
