@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
 import Link from 'next/link'
 import {
   AlarmClock, ArrowUp, BarChart3, Zap, BookOpen, Check, ChevronRight, Flame, Loader2, Lock, Moon, Play, Share2, Shuffle, Target, X,
@@ -447,6 +448,16 @@ function ActiveEra({
 }) {
   const [draft, setDraft] = useState('')
   const [source, setSource] = useState<'typed' | 'spoken'>('typed')
+  /**
+   * The promise box expands while it's being written: the side-by-side pair
+   * stacks so the box gets the full width, and it grows with the words. At
+   * half width a real sentence didn't fit and scrolled out of sight.
+   */
+  const [writing, setWriting] = useState(false)
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const promiseRef = useRef<HTMLTextAreaElement | null>(null)
+  useAutoResizeTextarea(promiseRef, draft, 220)
+  const promiseExpanded = writing || draft.trim().length > 0
   /** How sure they are before promising, 1–5. Skipping it is fine. */
   const [confidence, setConfidence] = useState<number | null>(null)
   /** A just-answered yesterday, still owed its one-tap "why". */
@@ -747,7 +758,7 @@ function ActiveEra({
               {reasonChips('yesterday', pendingWhy.kept, null)}
             </div>
           )}
-          <div className={`grid gap-3 ${era.mission ? 'grid-cols-1 min-[380px]:grid-cols-2' : ''}`}>
+          <div className={`grid gap-3 ${era.mission && !promiseExpanded ? 'grid-cols-1 min-[380px]:grid-cols-2' : 'grid-cols-1'}`}>
             {era.mission && (
               <div className="card-surface-lg p-4 min-w-0 flex flex-col">
                 <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
@@ -773,7 +784,15 @@ function ActiveEra({
               </label>
               <textarea
                 id="era-promise"
+                ref={promiseRef}
                 rows={3}
+                onFocus={() => {
+                  if (blurTimer.current) clearTimeout(blurTimer.current)
+                  setWriting(true)
+                }}
+                // A beat before collapsing, so a tap on the mic or send button
+                // lands on the button — not on the spot it moved away from.
+                onBlur={() => { blurTimer.current = setTimeout(() => setWriting(false), 250) }}
                 value={draft}
                 maxLength={ERA_LIMITS.promise}
                 onChange={e => { setDraft(e.target.value); setSource('typed') }}
