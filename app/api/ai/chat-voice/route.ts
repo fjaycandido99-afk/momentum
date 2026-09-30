@@ -36,6 +36,7 @@ import {
   setSharedCache,
   TTS_CHAT_BUDGET_KEY,
   PRIMARY_MODEL,
+  VOXU_VOICE_ID,
 } from '@/lib/daily-guide/audio-utils'
 
 /**
@@ -86,7 +87,10 @@ export async function POST(request: NextRequest) {
     // would keep serving every previously-cached reply in the OLD voice
     // forever, so one conversation could mix two different deliveries.
     const voiceHash = createHash('sha1').update(text).digest('hex').slice(0, 32)
-    const cacheKey = `chat-${PRIMARY_MODEL}-${tone}-${voiceHash}`
+    // Keyed by the Voxu voice, not the tone: this route is Voxu speaking
+    // (the coach's replies, the wake-up call), always in its own voice — and
+    // a new key means nothing cached in the old tone voices is replayed.
+    const cacheKey = `chat-${PRIMARY_MODEL}-voxu-${VOXU_VOICE_ID}-${voiceHash}`
     const cached = await getSharedCached(cacheKey)
     if (cached) {
       return NextResponse.json({ audio: cached.audioBase64, duration: cached.duration, tone, cached: true })
@@ -114,7 +118,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { audioBase64, duration } = await generateAudio(text, tone, TTS_CHAT_BUDGET_KEY)
+    const { audioBase64, duration } = await generateAudio(text, tone, TTS_CHAT_BUDGET_KEY, VOXU_VOICE_ID)
 
     if (!audioBase64) {
       // Out of credits, or ElevenLabs is down. There is no browser-TTS

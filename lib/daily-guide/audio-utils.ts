@@ -1,6 +1,18 @@
 import { prisma } from '@/lib/prisma'
 
 // Voice ID mapping by guide tone
+/**
+ * Voxu's own voice — the product speaking, not an instructor.
+ *
+ * The three TONE_VOICES are the guided sessions' voices (calm, neutral,
+ * direct): instructors, chosen by the user's Voice Tone. When Voxu itself
+ * talks — the coach reading its replies, the wake-up call — it is always
+ * this one voice, so people learn "that's Voxu". Generated in ElevenLabs'
+ * Voice Design and named "voxu" (2026-09-29). VOXU_VOICE_ID in the
+ * environment overrides it without a deploy.
+ */
+export const VOXU_VOICE_ID = process.env.VOXU_VOICE_ID || 'ahz6lhTYyJtfoR5eZpUg'
+
 export const TONE_VOICES: Record<string, string> = {
   calm: 'jguI6DAHl2kb9EpGEjEx',     // Calm and soothing voice
   neutral: 'flHkNRp1BlvT73UL6gyz',   // Balanced neutral tone
@@ -153,7 +165,9 @@ export async function generateAudio(
    * CHAT_CREDIT_LIMIT). Omit for the daily guide, which spends only
    * against the global pool.
    */
-  scope?: string
+  scope?: string,
+  /** A specific voice (e.g. VOXU_VOICE_ID) instead of the tone's. */
+  voiceOverride?: string,
 ): Promise<{ audioBase64: string | null; duration: number }> {
   const apiKey = process.env.ELEVENLABS_API_KEY
   if (!apiKey) {
@@ -181,9 +195,16 @@ export async function generateAudio(
   }
 
   try {
-    const voiceId = TONE_VOICES[tone] || TONE_VOICES.calm
+    const toneVoice = TONE_VOICES[tone] || TONE_VOICES.calm
+    let response = await speak(voiceOverride || toneVoice, script, apiKey)
 
-    const response = await speak(voiceId, script, apiKey)
+    // A voice that is missing or not shared with this key (4xx) falls back
+    // to the tone's voice rather than leaving the reply silent. Credits and
+    // outages (5xx, 401) are not retried — another voice would not help.
+    if (voiceOverride && !response.ok && (response.status === 400 || response.status === 404 || response.status === 422)) {
+      console.error(`[ElevenLabs] Voice ${voiceOverride} rejected (${response.status}) — using the ${tone} voice`)
+      response = await speak(toneVoice, script, apiKey)
+    }
 
     if (!response.ok) {
       const error = await response.text()
