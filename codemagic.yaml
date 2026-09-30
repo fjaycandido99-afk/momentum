@@ -118,20 +118,80 @@ workflows:
           echo "=== Entitlements ==="
           /usr/libexec/PlistBuddy -c "Print Entitlements" $PP_PLIST
 
+          # The app's profile must carry the App Group, or the archive fails
+          # signing the moment the widget's shared storage is asked for.
+          if ! /usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.security.application-groups" $PP_PLIST >/dev/null 2>&1; then
+            echo "The app profile has no App Groups entitlement. Regenerate 'Voxu App Store Distribution'"
+            echo "after enabling App Groups (group.com.voxu.app) on com.voxu.app. See ios/App/VoxuWidget/README.md."
+            exit 1
+          fi
+
+      - name: Install widget provisioning profile
+        script: |
+          # The home-screen widget is its own bundle (com.voxu.app.VoxuWidget)
+          # and needs its own App Store profile, named exactly
+          # "Voxu Widget App Store Distribution" (the Xcode project asks for
+          # that name). See ios/App/VoxuWidget/README.md.
+          WPP_PATH=ios/App/Voxu_Widget_App_Store_Distribution.mobileprovision
+          WPP_PLIST=/tmp/wpp_decoded.plist
+          if [ ! -s "$WPP_PATH" ]; then
+            echo "Missing $WPP_PATH — the widget cannot be signed. See ios/App/VoxuWidget/README.md."
+            exit 1
+          fi
+          /usr/bin/security cms -D -i $WPP_PATH > $WPP_PLIST
+          WPP_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" $WPP_PLIST)
+          WPP_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" $WPP_PLIST)
+          echo "Widget profile: $WPP_NAME ($WPP_UUID)"
+          if [ "$WPP_NAME" != "Voxu Widget App Store Distribution" ]; then
+            echo "The widget profile must be named exactly 'Voxu Widget App Store Distribution' (got '$WPP_NAME')."
+            exit 1
+          fi
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$WPP_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$WPP_UUID.mobileprovision"
+
       - name: Set version and build number
         script: |
-          cd ios/App
-          # NOTE: marketing version must be HIGHER than any approved
-          # App Store version. Apple rejects re-uploads under an
-          # already-approved version even with a new build number.
-          # Bump this whenever you push a release to App Store; for
-          # TestFlight-only re-spins you can keep it and just increment
-          # the build #.
-          #
-          # 1.2.1 is approved and live, so uploads under it were being
-          # rejected — every build since then had nowhere to land.
-          agvtool new-marketing-version 1.2.2
-          agvtool new-version -all $(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0) + 1))
+          set -e
+          # ── Marketing version: COMPUTED, never hard-coded ──────────────
+          # A hard-coded version once sat on a number Apple had already
+          # approved, and every upload was rejected for weeks. Now: the version
+          # live on the App Store, plus one patch. When 1.2.2 goes live, the
+          # next build is 1.2.3 by itself. Override with VOXU_MARKETING_VERSION
+          # (e.g. if a version is approved but not yet released, which the
+          # public lookup can't see).
+          LIVE=$(curl -fsS "https://itunes.apple.com/lookup?bundleId=$BUNDLE_ID&country=us" \
+            | python3 -c "import sys,json; r=json.load(sys.stdin).get('results',[]); print(r[0]['version'] if r else '')")
+          if [ -n "$VOXU_MARKETING_VERSION" ]; then
+            VERSION="$VOXU_MARKETING_VERSION"
+          elif [ -n "$LIVE" ]; then
+            VERSION=$(python3 -c "v='$LIVE'.split('.'); v += ['0']*(3-len(v)); v[2]=str(int(v[2])+1); print('.'.join(v[:3]))")
+          else
+            echo "Could not read the live App Store version and VOXU_MARKETING_VERSION is not set."
+            exit 1
+          fi
+
+          # ── Build number: higher than anything Apple has seen ──────────
+          # The highest of TestFlight and the App Store, plus one. If neither
+          # lookup answers, STOP — guessing 1 is guaranteed to be rejected.
+          TF=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || true)
+          AS=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || true)
+          # Digits only: anything else the tool prints must not break the maths.
+          TF=$(printf "%s" "$TF" | tr -dc "0-9"); AS=$(printf "%s" "$AS" | tr -dc "0-9")
+          TF=${TF:-0}; AS=${AS:-0}
+          if [ "$TF" = "0" ] && [ "$AS" = "0" ]; then
+            echo "Could not read any existing build number from App Store Connect — refusing to guess."
+            exit 1
+          fi
+          HIGHEST=$(( TF > AS ? TF : AS ))
+          BUILD=$(( HIGHEST + 1 ))
+
+          echo "Live: ${LIVE:-unknown} → version $VERSION, build $BUILD (TestFlight $TF, App Store $AS)"
+          # Both go to the archive command as build settings, which apply to
+          # EVERY target — the app and the widget get identical numbers by
+          # construction (App Store Connect rejects a mismatch). Both
+          # Info.plists read $(MARKETING_VERSION) / $(CURRENT_PROJECT_VERSION).
+          echo "VOXU_VERSION=$VERSION" >> $CM_ENV
+          echo "VOXU_BUILD=$BUILD" >> $CM_ENV
 
       - name: Build iOS
         script: |
@@ -143,7 +203,21 @@ workflows:
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -archivePath build/App.xcarchive \
+            MARKETING_VERSION="$VOXU_VERSION" \
+            CURRENT_PROJECT_VERSION="$VOXU_BUILD" \
             archive
+
+          # Prove it: both bundles in the archive must carry the same numbers.
+          APP_PLIST=build/App.xcarchive/Products/Applications/App.app/Info.plist
+          EXT_PLIST=build/App.xcarchive/Products/Applications/App.app/PlugIns/VoxuWidget.appex/Info.plist
+          for P in "$APP_PLIST" "$EXT_PLIST"; do
+            echo "$P: $(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$P") ($(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$P"))"
+          done
+          if [ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$APP_PLIST")" != "$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$EXT_PLIST")" ] || \
+             [ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP_PLIST")" != "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$EXT_PLIST")" ]; then
+            echo "The app and the widget have different version numbers — App Store Connect would reject this."
+            exit 1
+          fi
 
       - name: Generate ExportOptions and export IPA
         script: |
@@ -171,6 +245,8 @@ workflows:
             <dict>
               <key>com.voxu.app</key>
               <string>${PP_NAME}</string>
+              <key>com.voxu.app.VoxuWidget</key>
+              <string>Voxu Widget App Store Distribution</string>
             </dict>
           </dict>
           </plist>

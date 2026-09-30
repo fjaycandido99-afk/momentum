@@ -1,87 +1,55 @@
-# Voxu iOS Home‑Screen Widget
+# Voxu home-screen widget
 
-Scaffolded WidgetKit extension. The **daily‑quote widget works with no web
-changes** (it fetches the public `/api/widget?type=quote`). The **streak +
-journey** line is an optional enhancement that reads from an App Group the app
-writes to.
+Shows the era's day ("Day 9 of 30"), today's promise in the user's own words,
+today's mission and the promise streak — on the home screen (small, medium) and
+the lock screen (rectangular, circular). With no era it shows the daily quote.
 
-These Swift/plist files are ready — but a Widget Extension is a **separate
-target**, which must be added in Xcode (the `.xcodeproj` can't be hand‑edited
-safely). One‑time setup below; after that, Codemagic builds it automatically.
+## How it works
 
----
+- `lib/widget-snapshot.ts` builds one dated JSON snapshot from the era.
+- `hooks/useEra.ts` sends it on every era load/change via
+  `WidgetBridge.write` (`ios/App/App/WidgetBridgePlugin.swift`), which stores
+  it in the App Group `group.com.voxu.app` and reloads the widget.
+- `VoxuWidget.swift` reads it, moves the day forward at midnight on its own,
+  and never shows yesterday's promise as today's.
 
-## 1. Add the Widget Extension target (Xcode, ~5 min)
+## What's already done (no Mac needed)
 
-1. Open `ios/App/App.xcworkspace` in Xcode.
-2. **File → New → Target… → Widget Extension.**
-   - Product Name: **VoxuWidget**
-   - Uncheck "Include Configuration App Intent" (we use a static config).
-   - Embed in: **App**.
-3. Xcode generates a default `VoxuWidget` group with its own files. **Delete the
-   auto‑generated `.swift` and `Info.plist`**, then **drag in the files from
-   this folder** (`VoxuWidget.swift`, `Info.plist`, `VoxuWidget.entitlements`) —
-   "Add to target: VoxuWidget".
-4. Select the **VoxuWidget** target → **General**:
-   - Bundle Identifier: **`com.voxu.app.VoxuWidget`**
-   - Deployment target: iOS 16.0+ (17 recommended).
-5. Build & run on a device → long‑press home screen → **+** → search "Voxu".
-   You should see the daily‑quote widget. ✅ (Streak line stays hidden until
-   step 3 of the optional section.)
+- The `VoxuWidget` app-extension target is in `App.xcodeproj` (added by hand;
+  the app embeds it and depends on it). Bundle ID `com.voxu.app.VoxuWidget`,
+  iOS 16+, manual signing with a profile named
+  **"Voxu Widget App Store Distribution"**.
+- `App.entitlements` and `VoxuWidget.entitlements` both claim
+  `group.com.voxu.app`.
+- `codemagic.yaml` installs the widget profile, checks the app profile carries
+  the App Group, prints both targets' versions, and maps both bundle IDs in
+  ExportOptions.
 
-## 2. Provisioning for App Store / Codemagic
+## One-time Apple setup (developer.apple.com — any browser, ~10 min)
 
-The widget ships as its own bundle, so it needs its own profile.
+1. **Identifiers → + → App Groups** → description "Voxu", identifier
+   `group.com.voxu.app`.
+2. **Identifiers → com.voxu.app → App Groups → Configure** → tick
+   `group.com.voxu.app` → Save. (Apple will say existing profiles become
+   invalid — expected.)
+3. **Identifiers → + → App IDs → App** → description "Voxu Widget", bundle ID
+   (explicit) `com.voxu.app.VoxuWidget` → enable **App Groups** → Continue →
+   Register. Then open it → App Groups → Configure → tick `group.com.voxu.app`.
+4. **Profiles → "Voxu App Store Distribution" → Edit → Save** (regenerates it
+   with the App Group) → **Download**. Replace
+   `ios/App/Voxu_App_Store_Distribution.mobileprovision` with it.
+5. **Profiles → + → App Store Connect (Distribution)** → App ID
+   `com.voxu.app.VoxuWidget` → the same distribution certificate the app uses →
+   name it exactly **`Voxu Widget App Store Distribution`** → Download. Save as
+   `ios/App/Voxu_Widget_App_Store_Distribution.mobileprovision`.
+6. Commit both profiles on the `widget-native` branch, merge to master. Codemagic
+   builds it and uploads to TestFlight.
 
-1. Apple Developer portal → **Identifiers** → add App ID **`com.voxu.app.VoxuWidget`**.
-2. Create an **App Store distribution provisioning profile** for it.
-3. In **Codemagic** (`codemagic.yaml` → "Install Provisioning Profile" step), add
-   the widget profile alongside the app's (the build embeds both). Codemagic's
-   `xcodebuild -scheme App` already compiles + embeds the widget once the target
-   exists — no scheme change needed, just the extra profile.
+## Checking it on a phone
 
-> If you use Codemagic **automatic** code signing, just add the
-> `com.voxu.app.VoxuWidget` bundle ID to the workflow's signing config.
+Install the TestFlight build → open Voxu once (that writes the first snapshot)
+→ long-press the home screen → **+** → search "Voxu". The lock-screen widgets
+are under Customize on the lock screen.
 
----
-
-## 3. (Optional) Light up the streak + journey line — App Group
-
-The quote works without this. To show **"Day 12 · Building Momentum"**, the app
-and widget share data via an App Group.
-
-**The web side is already done** — `@capacitor/preferences` is installed and
-`lib/widget-sync.ts` writes `widget_streak` + `widget_stage` from the home screen
-(`syncWidgetData` in `ImmersiveHome`). Only the native App Group wiring remains:
-
-1. Apple Developer → **App Groups** → create **`group.com.voxu.app`**.
-2. Enable the **App Groups** capability for **both** `com.voxu.app` and
-   `com.voxu.app.VoxuWidget`, adding `group.com.voxu.app` to each. Regenerate the
-   provisioning profiles.
-3. Add the group to the **app's** entitlements (`ios/App/App/App.entitlements`):
-   ```xml
-   <key>com.apple.security.application-groups</key>
-   <array><string>group.com.voxu.app</string></array>
-   ```
-   (The widget's `VoxuWidget.entitlements` already has it.)
-4. Point Preferences at the group in `capacitor.config.ts`:
-   ```ts
-   plugins: { Preferences: { group: 'group.com.voxu.app' } }
-   ```
-5. `npx cap sync ios`, rebuild via Codemagic. The widget refreshes streak/journey
-   **immediately** on change — the reload bridge is already wired
-   (`WidgetBridgePlugin.swift` + `WidgetBridge.reload()` in `lib/widget-sync.ts`,
-   registered in `codemagic.yaml`). Just make sure `WidgetBridgePlugin.swift` is
-   added to the **App** target in Xcode (same as `AudioAnalyzerPlugin.swift`):
-   select the file → File Inspector → Target Membership → check **App**.
-
-### Keys the widget reads (App Group `group.com.voxu.app`)
-| Key | Example | Source |
-|---|---|---|
-| `widget_streak` | `"12"` | gamification streak |
-| `widget_stage` | `"Building Momentum"` | `getJourney().stage` (`lib/journey.ts`) |
-| `widget_quote` | overrides the fetched quote (optional) | `getDailyMindsetQuote` |
-| `widget_author` | optional | — |
-
-The widget tries both `widget_streak` and `CapacitorStorage.widget_streak`, so
-it's robust to Capacitor's key prefix.
+If the widget shows only the quote while an era is running, the snapshot never
+arrived: the App Group is missing from one of the two profiles (step 2/4 or 3/5).
