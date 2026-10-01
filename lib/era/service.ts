@@ -209,6 +209,8 @@ export interface EraTodayWire {
    * as starting from zero. Empty after week one and on a finished era.
    */
   carried: { label: string; fromEra: string }[]
+  /** Disciplines carried forward FROM this era (complete step), their labels. */
+  stayed: string[]
   /** Today's mission from the era's bank (lib/era/missions.ts). */
   mission: string | null
   /** Has today's mission been marked done? */
@@ -309,6 +311,14 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
         select: { label: true, from_era: { select: { title: true } } },
         orderBy: { created_at: 'asc' },
       })).map(p => ({ label: p.label, fromEra: eraName(p.from_era?.title ?? '') }))
+    : []
+  // What they already carried forward from this one, for the spoken close.
+  const stayed = finished
+    ? (await prisma.practice.findMany({
+        where: { user_id: userId, from_era_id: era.id },
+        select: { label: true },
+        orderBy: { created_at: 'asc' },
+      })).map(p => p.label)
     : []
   if (finished) {
     const [missionRows, wellnessRows] = await Promise.all([
@@ -462,6 +472,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     keepOptions: finished ? keepOptions(promises) : [],
     reflection: era.reflection ?? null,
     carried,
+    stayed,
     mission: missionFor(era.era_key, day),
     missionDone: missionRow !== null,
     links: { soundscapeId: program.soundscapeId, guideId: program.guideId },

@@ -38,6 +38,7 @@ import { ERA_PRACTICE_DOMAIN, OUTCOME_LINE, eraOutcome } from '@/lib/era/keep'
 import { isDismissed, setDismissed } from '@/lib/ui/dismiss'
 import { KeepOneThingSheet } from '@/components/era/KeepOneThingSheet'
 import { EraReflection } from '@/components/era/EraReflection'
+import { eraCloseScript } from '@/lib/era/close'
 import { AddPracticeSheet } from '@/components/practices/AddPracticeSheet'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
 import { HOME_SCENES, PHASE_SCENES } from '@/lib/home/scenes'
@@ -709,6 +710,10 @@ function ActiveEra({
   const [keeping, setKeeping] = useState(false)
   /** The name they picked; null until they pick. '' = "Something else". */
   const [keptLabel, setKeptLabel] = useState<string | null>(null)
+  /** What stayed: carried forward before, plus any added on this visit — the
+   *  spoken close names them, and the wire only reloads on the next visit. */
+  const [addedNow, setAddedNow] = useState<string[]>([])
+  const stayedNow = [...era.stayed, ...addedNow.filter(l => !era.stayed.includes(l))]
   /** Chose "Take a break" on this finished era (local, per era). */
   const [onBreak, setOnBreak] = useState(false)
   useEffect(() => {
@@ -743,6 +748,23 @@ function ActiveEra({
           {era.report && <EraReportCard report={era.report} />}
           <EraRecap era={era} onLocked={openUpgradeModal} />
           <EraReflection eraId={era.id} initial={era.reflection} />
+          {/* Voxu says goodbye to the era — a fixed script of their own counts
+              (lib/era/close), so chat-voice generates it once and caches it.
+              Same meter as every spoken line; premium past the free one. */}
+          <div className="mt-4">
+            <SpeakReplyButton
+              label="Hear your era close"
+              text={eraCloseScript({
+                eraName: eraName(era.title),
+                lengthDays: era.lengthDays,
+                kept: era.stats.kept,
+                answered: era.stats.answered,
+                outcome: eraOutcome(era.stats.keptPercent),
+                stayed: stayedNow,
+              })}
+              onUpgrade={openUpgradeModal}
+            />
+          </div>
           {onBreak ? (
             /* Taking a break: their disciplines carry on without an era. */
             <div className="mt-4">
@@ -1240,7 +1262,7 @@ function ActiveEra({
             fromEraId: era.id,
           }}
           onClose={() => { setKeeping(false); setKeptLabel(null) }}
-          onAdded={() => { setKeeping(false); setKeptLabel(null) }}
+          onAdded={label => { setKeeping(false); setKeptLabel(null); if (label) setAddedNow(a => [...a, label]) }}
         />
       )}
       {wakeOpen && (

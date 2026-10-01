@@ -60,7 +60,8 @@ export function AddPracticeSheet({
   seed,
 }: {
   onClose: () => void
-  onAdded: () => void
+  /** Called with the name as saved (they can edit it in the sheet). */
+  onAdded: (label: string) => void
   seed?: PracticeSeed
 }) {
   // Seeded, so arriving from a finished era lands on the step that still
@@ -116,7 +117,7 @@ export function AddPracticeSheet({
         return
       }
       haptic('medium')
-      onAdded()
+      onAdded(label.trim())
       onClose()
     } catch {
       setError('Couldn’t reach Voxu. Check your connection.')
