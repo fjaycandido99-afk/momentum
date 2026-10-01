@@ -215,6 +215,7 @@ export const CATEGORY_BADGE_IMAGES: Partial<Record<AchievementCategory, string>>
  * path points at a missing file, so nothing ships pointing at nothing.
  */
 export const ACHIEVEMENT_BADGE_IMAGES: Partial<Record<string, string>> = {
+  perfect_week: '/achievements/perfect_week.jpg',
   // Each era's coin wears that era's own art (Marcus Aurelius for Stoic,
   // the barbell for Gym Arc…) until a struck coin is made for it — see
   // docs/achievement-art-prompts.md. Swap the path; nothing else changes.
