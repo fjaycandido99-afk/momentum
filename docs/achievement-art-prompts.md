@@ -29,10 +29,9 @@ bottom edge — a number plate covers the foot of the coin.
 
 ## Subjects — one coin per era (do these first)
 
-Earned by finishing that era. Until a coin is made, each one shows its era's
-photo (`/era/<key>.jpg`); save the new coin as
-`public/achievements/era_done_<key>.jpg` and point
-`ACHIEVEMENT_BADGE_IMAGES.era_done_<key>` at it.
+Earned by finishing that era. **All nine are made** (2026-10-01) and live as
+`public/achievements/era_done_<key>.jpg`. Also done: the rest of the Era list
+below from Second Chapter on, and every legendary.
 
 **No real living person's likeness** — the Hustler portrait once resembled a
 real athlete and had to go. Marcus Aurelius is a historical figure from

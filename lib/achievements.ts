@@ -215,19 +215,35 @@ export const CATEGORY_BADGE_IMAGES: Partial<Record<AchievementCategory, string>>
  * path points at a missing file, so nothing ships pointing at nothing.
  */
 export const ACHIEVEMENT_BADGE_IMAGES: Partial<Record<string, string>> = {
+  // Struck coins (docs/achievement-art-prompts.md). An id missing here falls
+  // back to its category coin.
+  era_carried: '/achievements/era_carried.jpg',
+  era_carried_3: '/achievements/era_carried_3.jpg',
+  era_comeback_5: '/achievements/era_comeback_5.jpg',
+  era_done_comeback: '/achievements/era_done_comeback.jpg',
+  era_done_confidence: '/achievements/era_done_confidence.jpg',
+  era_done_custom: '/achievements/era_done_custom.jpg',
+  era_done_discipline: '/achievements/era_done_discipline.jpg',
+  era_done_five_am: '/achievements/era_done_five_am.jpg',
+  era_done_gym_arc: '/achievements/era_done_gym_arc.jpg',
+  era_done_locked_in: '/achievements/era_done_locked_in.jpg',
+  era_done_stoic_mode: '/achievements/era_done_stoic_mode.jpg',
+  era_done_study: '/achievements/era_done_study.jpg',
+  era_five: '/achievements/era_five.jpg',
+  era_flawless: '/achievements/era_flawless.jpg',
+  era_kept_100: '/achievements/era_kept_100.jpg',
+  era_kept_50: '/achievements/era_kept_50.jpg',
+  era_reflection: '/achievements/era_reflection.jpg',
+  era_return: '/achievements/era_return.jpg',
+  era_second: '/achievements/era_second.jpg',
+  era_streak_30: '/achievements/era_streak_30.jpg',
+  era_three: '/achievements/era_three.jpg',
+  listener_100hr: '/achievements/listener_100hr.jpg',
   perfect_week: '/achievements/perfect_week.jpg',
-  // Each era's coin wears that era's own art (Marcus Aurelius for Stoic,
-  // the barbell for Gym Arc…) until a struck coin is made for it — see
-  // docs/achievement-art-prompts.md. Swap the path; nothing else changes.
-  era_done_locked_in: '/era/locked_in.jpg',
-  era_done_discipline: '/era/discipline.jpg',
-  era_done_comeback: '/era/comeback.jpg',
-  era_done_gym_arc: '/era/gym_arc.jpg',
-  era_done_stoic_mode: '/era/stoic_mode.jpg',
-  era_done_confidence: '/era/confidence.jpg',
-  era_done_study: '/era/study.jpg',
-  era_done_five_am: '/era/five_am.jpg',
-  era_done_custom: '/era/custom.jpg',
+  practice_kept_100: '/achievements/practice_kept_100.jpg',
+  practice_run_30: '/achievements/practice_run_30.jpg',
+  proof_365: '/achievements/proof_365.jpg',
+  streak_365: '/achievements/streak_365.jpg',
 }
 
 /** The art a badge shows: its own, else its category's, else none (emoji). */
