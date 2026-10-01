@@ -126,6 +126,7 @@ export function sampleEra(key: string): EraTodayWire | null {
     },
     report: null,
     keepOptions: [],
+    reflection: null,
     // Sample data for the share card: this one is mid-era, so there is no
     // count to show and nothing would read it anyway.
     erasFinished: null,

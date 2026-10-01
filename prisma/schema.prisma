@@ -1000,6 +1000,10 @@ model Era {
   // a second era later must still be able to say it.
   completed_notified_at DateTime?
 
+  // One line they write to remember the era by, at its end. Theirs, kept
+  // on their Era Record in Proof; never generated, never read for anything.
+  reflection String?
+
   ended_at   DateTime?
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt

@@ -90,6 +90,8 @@ export async function GET() {
         select: {
           title: true, era_key: true, change: true, why: true, length_days: true,
           start_day: true, status: true, ended_at: true, created_at: true,
+          // The line they wrote to remember it by — their words.
+          reflection: true,
           promises: {
             orderBy: { local_day: 'asc' },
             select: {

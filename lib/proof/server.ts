@@ -6,6 +6,7 @@ import { eraName } from '@/lib/era/presets'
 import { exerciseById } from '@/lib/exercises/library'
 import { parseConfidence, reasonLabel } from '@/lib/era/reasons'
 import { buildProofYear, type ProofYear } from './grid'
+import { buildEraRecord, type EraRecord } from '@/lib/era/record'
 
 /**
  * Loads one person's year in proof.
@@ -49,6 +50,8 @@ export interface ProofPayload {
   years: number[]
   details: Record<string, ProofDetail>
   today: string
+  /** Eras that are over and ended in this year, newest first — kept for good. */
+  eras: EraRecord[]
 }
 
 /** December of the previous year, so January can tell a comeback from a run. */
@@ -84,7 +87,7 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
     }),
     prisma.era.findMany({
       where: { user_id: userId },
-      select: { id: true, title: true, era_key: true, start_day: true, length_days: true, ended_at: true },
+      select: { id: true, title: true, era_key: true, start_day: true, length_days: true, ended_at: true, status: true, reflection: true },
     }),
     // Only when they turned it on. An off switch that still reads the rows
     // is not an off switch.
@@ -219,7 +222,43 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
   for (const e of eras) withData.add(Number(e.start_day.slice(0, 4)))
   const years = [...withData].filter(y => y <= thisYear).sort((a, b) => b - a)
 
-  return { year: grid, years, details, today }
+  // The Era Records: every era that is over — run to its last day, or
+  // stopped — and ended in this year. Two more reads, scoped to those eras.
+  const over = eras
+    .map((e, i) => ({ e, span: spans[i] }))
+    .filter(({ e, span }) => (e.status === 'ended' || span.to < today) && span.to >= `${year}-01-01` && span.to <= to)
+  const overIds = over.map(o => o.e.id)
+  const [eraPromises, stayed] = overIds.length
+    ? await Promise.all([
+        prisma.eraPromise.findMany({
+          where: { user_id: userId, era_id: { in: overIds } },
+          select: { era_id: true, local_day: true, kept: true },
+        }),
+        // Retired ones too: what was carried forward stays true.
+        prisma.practice.findMany({
+          where: { user_id: userId, from_era_id: { in: overIds } },
+          select: { label: true, from_era_id: true },
+          orderBy: { created_at: 'asc' },
+        }),
+      ])
+    : [[], []]
+  const eraRecords = over
+    .map(({ e, span }) => buildEraRecord({
+      id: e.id,
+      title: eraName(e.title),
+      startDay: e.start_day,
+      endDay: span.to,
+      lengthDays: e.length_days,
+      daysRun: daysBetween(e.start_day, span.to) + 1,
+      promises: eraPromises
+        .filter(p => p.era_id === e.id)
+        .map(p => ({ day: daysBetween(e.start_day, p.local_day) + 1, kept: p.kept })),
+      stayed: stayed.filter(s => s.from_era_id === e.id).map(s => s.label),
+      reflection: e.reflection,
+    }))
+    .sort((a, b) => (a.endDay < b.endDay ? 1 : -1))
+
+  return { year: grid, years, details, today, eras: eraRecords }
 }
 
 /**

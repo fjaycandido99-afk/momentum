@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { ProofGrid } from '@/components/proof/ProofGrid'
 import { ProofDaySheet } from '@/components/proof/ProofDaySheet'
+import { EraRecordCard } from '@/components/proof/EraRecordCard'
 import { CountUp } from '@/components/ui/CountUp'
 import { proofSummary } from '@/lib/proof/grid'
 import type { ProofPayload } from '@/lib/proof/server'
@@ -132,6 +133,16 @@ export default function ProofPage() {
                   {data.year.counts.open > 0 && ` · ${data.year.counts.open} never answered`}
                   {data.year.counts.missions > 0 && ` · ${data.year.counts.missions} missions done`}
                 </p>
+              )}
+
+              {/* Finished eras, kept for good: an era ends, its record doesn't. */}
+              {data.eras.length > 0 && (
+                <div className="mt-8">
+                  <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Eras</p>
+                  <div className="mt-2 space-y-2">
+                    {data.eras.map(r => <EraRecordCard key={r.id} record={r} />)}
+                  </div>
+                </div>
               )}
 
               <p className="text-[12px] text-white/40 mt-7 leading-relaxed">

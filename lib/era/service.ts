@@ -200,6 +200,8 @@ export interface EraTodayWire {
    * the Era Recap already does with it. It is never read for anything else.
    */
   keepOptions: { text: string; count: number }[]
+  /** The line they wrote to remember it by (complete step), or null. */
+  reflection: string | null
   /** Today's mission from the era's bank (lib/era/missions.ts). */
   mission: string | null
   /** Has today's mission been marked done? */
@@ -438,6 +440,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     // Free: `promises` is already loaded for the stats, so this is pure
     // computation on rows in hand, and only at the step that uses it.
     keepOptions: finished ? keepOptions(promises) : [],
+    reflection: era.reflection ?? null,
     mission: missionFor(era.era_key, day),
     missionDone: missionRow !== null,
     links: { soundscapeId: program.soundscapeId, guideId: program.guideId },

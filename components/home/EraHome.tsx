@@ -37,6 +37,7 @@ import { eraOrdinal } from '@/lib/era/logic'
 import { ERA_PRACTICE_DOMAIN, OUTCOME_LINE, eraOutcome } from '@/lib/era/keep'
 import { isDismissed, setDismissed } from '@/lib/ui/dismiss'
 import { KeepOneThingSheet } from '@/components/era/KeepOneThingSheet'
+import { EraReflection } from '@/components/era/EraReflection'
 import { AddPracticeSheet } from '@/components/practices/AddPracticeSheet'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
 import { HOME_SCENES, PHASE_SCENES } from '@/lib/home/scenes'
@@ -741,6 +742,7 @@ function ActiveEra({
               you became lands harder next to the number that earned it. */}
           {era.report && <EraReportCard report={era.report} />}
           <EraRecap era={era} onLocked={openUpgradeModal} />
+          <EraReflection eraId={era.id} initial={era.reflection} />
           {onBreak ? (
             /* Taking a break: their disciplines carry on without an era. */
             <div className="mt-4">
