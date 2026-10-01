@@ -10,7 +10,7 @@ import {
   presetsForDomain,
   type PracticeDomain,
 } from '@/lib/practices/presets'
-import { daysLabel } from '@/lib/practices/logic'
+import { daysLabel, TIMES_OF_DAY, TIME_OF_DAY_LABEL, type TimeOfDay } from '@/lib/practices/logic'
 import { BLOCKERS } from '@/lib/era/reasons'
 import { domainArt } from '@/lib/practices/domain-art'
 import { haptic } from '@/lib/haptics'
@@ -45,6 +45,8 @@ export interface PracticeSeed {
   chips?: { text: string; count: number }[]
   /** Where it came from, shown under the title — "Carried forward from Locked In". */
   note?: string
+  /** The finished era it's carried forward from; stored on the discipline. */
+  fromEraId?: string
 }
 
 // No `days` here on purpose. Picking a preset always sets the days from that
@@ -70,6 +72,7 @@ export function AddPracticeSheet({
   const [minimum, setMinimum] = useState('')
   const [days, setDays] = useState<number[]>([])
   const [blocker, setBlocker] = useState<string | null>(null)
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -105,7 +108,7 @@ export function AddPracticeSheet({
       const res = await fetch('/api/practices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', presetKey, label, minimum, days, blocker }),
+        body: JSON.stringify({ action: 'create', presetKey, label, minimum, days, blocker, timeOfDay, fromEraId: seed?.fromEraId }),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) {
@@ -301,6 +304,26 @@ export function AddPracticeSheet({
                 })}
               </div>
               <p className="text-[11px] text-white/40 mt-2">{daysLabel(days)}</p>
+            </div>
+
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">
+                When does it belong? <span className="text-white/30">Optional</span>
+              </p>
+              <div className="flex gap-1.5 mt-2">
+                {[...TIMES_OF_DAY, null].map(t => (
+                  <button
+                    key={t ?? 'any'}
+                    onClick={() => { haptic('light'); setTimeOfDay(t) }}
+                    aria-pressed={timeOfDay === t}
+                    className={`flex-1 py-2 rounded-full border text-[12px] ${
+                      timeOfDay === t ? 'bg-white text-black border-white font-medium' : 'border-white/15 text-white/70'
+                    }`}
+                  >
+                    {t ? TIME_OF_DAY_LABEL[t] : 'Anytime'}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>

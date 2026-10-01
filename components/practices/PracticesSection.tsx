@@ -13,7 +13,7 @@ import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { AddPracticeSheet } from './AddPracticeSheet'
 import { PracticePlanSheet } from './PracticePlanSheet'
 import { PracticeGuideSheet } from './PracticeGuideSheet'
-import { dayName, daysLabel, minimumLine, type PracticesPayload, type PracticeWire } from '@/lib/practices/logic'
+import { dayName, minimumLine, scheduleLabel, type PracticesPayload, type PracticeWire } from '@/lib/practices/logic'
 import { previousDay } from '@/lib/era/logic'
 import { haptic } from '@/lib/haptics'
 import { trackFeature } from '@/lib/analytics/track'
@@ -376,7 +376,10 @@ function PracticeRow({
           "N of M" count lives in Details — each used to appear here too. */}
       <div className="min-w-0">
         <p className="text-[15px] text-white leading-snug truncate">{practice.label}</p>
-        <p className="text-[11px] text-white/45 mt-0.5">{daysLabel(practice.days)}</p>
+        <p className="text-[11px] text-white/45 mt-0.5">{scheduleLabel(practice)}</p>
+        {practice.fromEra && (
+          <p className="text-[11px] text-white/35 mt-0.5 truncate">Carried forward from {practice.fromEra.title}</p>
+        )}
       </div>
 
       {/* The last seven days. Same language as the year grid on /proof:
@@ -675,7 +678,8 @@ function PracticeRow({
 
           {open && (
             <dl className="mt-2 space-y-1.5 text-[12px]">
-              <Row label="Schedule" value={daysLabel(practice.days)} />
+              <Row label="Schedule" value={scheduleLabel(practice)} />
+              {practice.fromEra && <Row label="From" value={practice.fromEra.title} />}
               <Row
                 label="Next session"
                 value={
@@ -807,7 +811,7 @@ function CompactRow({ practice, today, onOpen }: { practice: PracticeWire; today
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] text-white leading-snug truncate">{practice.label}</span>
         <span className="block text-[11px] mt-0.5 truncate">
-          <span className="text-white/45">{daysLabel(practice.days)} · </span>
+          <span className="text-white/45">{scheduleLabel(practice)} · </span>
           <span className={status.strong ? 'text-white/90' : 'text-white/45'}>{status.text}</span>
         </span>
         <span className="flex items-center gap-1 mt-1.5" aria-hidden>

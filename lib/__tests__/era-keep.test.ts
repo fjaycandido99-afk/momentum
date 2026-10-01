@@ -147,3 +147,18 @@ describe('the end of an era', () => {
     expect(leastActive([{ id: 'x', done: 0, of: 2 }, a])).toBeNull()
   })
 })
+
+import { scheduleLabel, isTimeOfDay } from '@/lib/practices/logic'
+
+describe('carried-forward disciplines', () => {
+  it('says when a discipline belongs, only if they said', () => {
+    expect(scheduleLabel({ days: [], timeOfDay: 'evening' })).toMatch(/ · evening$/)
+    expect(scheduleLabel({ days: [], timeOfDay: null })).not.toMatch(/·/)
+  })
+
+  it('accepts only the three times of day', () => {
+    expect(isTimeOfDay('morning')).toBe(true)
+    expect(isTimeOfDay('night')).toBe(false)
+    expect(isTimeOfDay(undefined)).toBe(false)
+  })
+})

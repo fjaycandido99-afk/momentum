@@ -316,6 +316,10 @@ export interface PracticeWire {
   nextDue: string | null
   /** The weekday they miss most, with its counts. Null until it is worth saying. */
   weakDay: { weekday: number; missed: number; of: number } | null
+  /** When it belongs, if they said; null = anytime. */
+  timeOfDay: TimeOfDay | null
+  /** The era it was carried forward from — "Carried forward from Locked In". */
+  fromEra: { title: string } | null
 }
 
 export interface PracticesPayload {
@@ -326,12 +330,36 @@ export interface PracticesPayload {
   max: number
 }
 
+/**
+ * When a discipline belongs, if they say. Asked once and stored; never
+ * inferred from when they happen to log it. Absent = anytime.
+ */
+export const TIMES_OF_DAY = ['morning', 'afternoon', 'evening'] as const
+export type TimeOfDay = (typeof TIMES_OF_DAY)[number]
+export const TIME_OF_DAY_LABEL: Record<TimeOfDay, string> = {
+  morning: 'Morning',
+  afternoon: 'Afternoon',
+  evening: 'Evening',
+}
+/** "Every day · evening" — the days, and when, if they said. */
+export function scheduleLabel(p: { days: number[]; timeOfDay?: TimeOfDay | null }): string {
+  const when = p.timeOfDay ? ` · ${TIME_OF_DAY_LABEL[p.timeOfDay].toLowerCase()}` : ''
+  return daysLabel(p.days) + when
+}
+
+export function isTimeOfDay(v: unknown): v is TimeOfDay {
+  return typeof v === 'string' && (TIMES_OF_DAY as readonly string[]).includes(v)
+}
+
 export interface PracticeInput {
   presetKey: unknown
   label?: unknown
   days?: unknown
   minimum?: unknown
   blocker?: unknown
+  timeOfDay?: unknown
+  /** A finished era of theirs it was carried forward from. */
+  fromEraId?: unknown
 }
 
 export interface CleanPractice {

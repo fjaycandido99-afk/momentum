@@ -1219,6 +1219,7 @@ function ActiveEra({
             domain: ERA_PRACTICE_DOMAIN[era.key],
             label: keptLabel || undefined,
             note: `Carried forward from ${eraName(era.title)}`,
+            fromEraId: era.id,
           }}
           onClose={() => { setKeeping(false); setKeptLabel(null) }}
           onAdded={() => { setKeeping(false); setKeptLabel(null) }}

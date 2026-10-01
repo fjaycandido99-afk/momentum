@@ -22,7 +22,9 @@ import {
   type PracticeInput,
   type PracticesPayload,
   type PracticeWire,
+  isTimeOfDay,
 } from './logic'
+import { eraName } from '@/lib/era/presets'
 
 // Re-exported so callers have one import site for the loader and its shapes.
 export type { PracticeWire, PracticesPayload }
@@ -50,6 +52,7 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
     orderBy: { created_at: 'asc' },
     select: {
       id: true, preset_key: true, label: true, days: true, minimum: true, blocker: true, plan: true,
+      time_of_day: true, from_era: { select: { title: true } },
       logs: {
         where: { local_day: { gte: from } },
         select: { local_day: true, done: true, minimum_only: true },
@@ -106,6 +109,8 @@ export async function loadPractices(userId: string): Promise<PracticesPayload> {
       recovery: recoveryWire,
       nextDue: nextDueDay(lite, today),
       weakDay: weakestWeekday(lite, logs, from, today),
+      timeOfDay: isTimeOfDay(row.time_of_day) ? row.time_of_day : null,
+      fromEra: row.from_era ? { title: eraName(row.from_era.title) } : null,
     }
   })
 
@@ -149,6 +154,12 @@ export async function createPractice(
     return { ok: false, reason: `Three at a time. Retire one first.` }
   }
 
+  // Only one of their own eras — anything else
+  // is dropped, never an error: the discipline is what matters here.
+  const fromEra = typeof input.fromEraId === 'string' && input.fromEraId
+    ? await prisma.era.findFirst({ where: { id: input.fromEraId, user_id: userId }, select: { id: true } })
+    : null
+
   const created = await prisma.practice.create({
     data: {
       user_id: userId,
@@ -157,6 +168,8 @@ export async function createPractice(
       days: clean.days,
       minimum: clean.minimum,
       blocker: isBlocker(input.blocker) ? input.blocker : null,
+      time_of_day: isTimeOfDay(input.timeOfDay) ? input.timeOfDay : null,
+      from_era_id: fromEra?.id ?? null,
     },
     select: { id: true },
   })

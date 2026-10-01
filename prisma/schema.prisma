@@ -1006,6 +1006,8 @@ model Era {
 
   promises EraPromise[]
   missions EraMission[]
+  /// Disciplines carried forward from this era.
+  kept_practices Practice[]
 
   @@index([user_id, status])
   @@index([era_key, status])
@@ -1248,6 +1250,15 @@ model Practice {
   /// that list rather than inventing a parallel vocabulary, so both can be
   /// counted together.
   blocker String?
+
+  /// When it belongs: "morning" | "afternoon" | "evening". Null = anytime.
+  /// Their choice, asked once; never inferred from when they log it.
+  time_of_day String?
+
+  /// The finished era it was carried forward from ("What stays with you?").
+  /// Null for one added by hand. SetNull: the history outlives the era row.
+  from_era_id String?
+  from_era    Era?    @relation(fields: [from_era_id], references: [id], onDelete: SetNull)
 
   status     String    @default("active") // "active" | "retired"
   retired_at DateTime?

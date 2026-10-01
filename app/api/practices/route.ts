@@ -44,6 +44,8 @@ export async function POST(request: NextRequest) {
         days: body?.days,
         minimum: body?.minimum,
         blocker: body?.blocker,
+        timeOfDay: body?.timeOfDay,
+        fromEraId: body?.fromEraId,
       })
       if (!result.ok) return NextResponse.json({ error: result.reason }, { status: 400 })
       return NextResponse.json({ ok: true, id: result.id })
