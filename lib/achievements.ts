@@ -36,6 +36,8 @@ export interface EraAchievementStats {
   carriedForward: number
   erasReflected: number
   eraReturns: number
+  /** Which eras they have finished, by key (one entry per finish). */
+  completedKeys: string[]
 }
 
 /**
@@ -133,6 +135,8 @@ export type AchievementCondition =
   | { type: 'era'; metric: EraMetric; count: number }
   | { type: 'practice'; metric: PracticeMetric; count: number }
   | { type: 'record'; metric: RecordMetric; count: number }
+  /** Finished an era of this kind — one coin per era, a set to collect. */
+  | { type: 'era_finished'; eraKey: string }
 
 // Rarity is monochrome, like the rest of Voxu: it reads as how much light a
 // badge gives off — a faint ring, a clear one, a bright one, one that glows —
@@ -210,7 +214,20 @@ export const CATEGORY_BADGE_IMAGES: Partial<Record<AchievementCategory, string>>
  * with no entry keeps its category's art. The achievements test fails if a
  * path points at a missing file, so nothing ships pointing at nothing.
  */
-export const ACHIEVEMENT_BADGE_IMAGES: Partial<Record<string, string>> = {}
+export const ACHIEVEMENT_BADGE_IMAGES: Partial<Record<string, string>> = {
+  // Each era's coin wears that era's own art (Marcus Aurelius for Stoic,
+  // the barbell for Gym Arc…) until a struck coin is made for it — see
+  // docs/achievement-art-prompts.md. Swap the path; nothing else changes.
+  era_done_locked_in: '/era/locked_in.jpg',
+  era_done_discipline: '/era/discipline.jpg',
+  era_done_comeback: '/era/comeback.jpg',
+  era_done_gym_arc: '/era/gym_arc.jpg',
+  era_done_stoic_mode: '/era/stoic_mode.jpg',
+  era_done_confidence: '/era/confidence.jpg',
+  era_done_study: '/era/study.jpg',
+  era_done_five_am: '/era/five_am.jpg',
+  era_done_custom: '/era/custom.jpg',
+}
 
 /** The art a badge shows: its own, else its category's, else none (emoji). */
 export function badgeImage(id: string | undefined, category: AchievementCategory): string | undefined {
@@ -239,6 +256,17 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'era_kept_50', title: 'Fifty Kept', description: 'Keep 50 promises', icon: '🫱', category: 'era', rarity: 'epic', xpReward: 400, condition: { type: 'era', metric: 'promises_kept', count: 50 } },
   { id: 'era_kept_100', title: 'A Hundred Kept', description: 'Keep 100 promises', icon: '🗝️', category: 'era', rarity: 'legendary', xpReward: 1000, condition: { type: 'era', metric: 'promises_kept', count: 100 } },
   { id: 'era_five', title: 'Five Chapters', description: 'Finish five eras', icon: '📚', category: 'era', rarity: 'legendary', xpReward: 1200, condition: { type: 'era', metric: 'eras_completed', count: 5 } },
+  // One coin per era: finishing a Gym Arc and finishing a Stoic Mode are
+  // different months, and each deserves its own mark.
+  { id: 'era_done_locked_in', title: 'Locked In Finished', description: 'Finish a Locked In era', icon: '🔒', category: 'era', rarity: 'epic', xpReward: 150, condition: { type: 'era_finished', eraKey: 'locked_in' } },
+  { id: 'era_done_discipline', title: 'Discipline Era Finished', description: 'Finish a Discipline Era', icon: '🥾', category: 'era', rarity: 'epic', xpReward: 150, condition: { type: 'era_finished', eraKey: 'discipline' } },
+  { id: 'era_done_comeback', title: 'Comeback Season Finished', description: 'Finish a Comeback Season', icon: '🛣️', category: 'era', rarity: 'epic', xpReward: 150, condition: { type: 'era_finished', eraKey: 'comeback' } },
+  { id: 'era_done_gym_arc', title: 'Gym Arc Finished', description: 'Finish a Gym Arc', icon: '🏋️', category: 'era', rarity: 'epic', xpReward: 150, condition: { type: 'era_finished', eraKey: 'gym_arc' } },
+  { id: 'era_done_stoic_mode', title: 'Stoic Mode Finished', description: 'Finish a Stoic Mode', icon: '🏛️', category: 'era', rarity: 'epic', xpReward: 150, condition: { type: 'era_finished', eraKey: 'stoic_mode' } },
+  { id: 'era_done_confidence', title: 'Confidence Mode Finished', description: 'Finish a Confidence Mode', icon: '🦁', category: 'era', rarity: 'epic', xpReward: 150, condition: { type: 'era_finished', eraKey: 'confidence' } },
+  { id: 'era_done_study', title: 'Study Era Finished', description: 'Finish a Study Era', icon: '🕯️', category: 'era', rarity: 'epic', xpReward: 150, condition: { type: 'era_finished', eraKey: 'study' } },
+  { id: 'era_done_five_am', title: '5AM Era Finished', description: 'Finish a 5AM Era', icon: '🌅', category: 'era', rarity: 'epic', xpReward: 150, condition: { type: 'era_finished', eraKey: 'five_am' } },
+  { id: 'era_done_custom', title: 'Your Own Era Finished', description: 'Finish an era you named yourself', icon: '🪶', category: 'era', rarity: 'epic', xpReward: 150, condition: { type: 'era_finished', eraKey: 'custom' } },
   { id: 'era_flawless', title: 'Flawless Era', description: 'Finish an era keeping every promise you checked in on (20+)', icon: '💠', category: 'era', rarity: 'legendary', xpReward: 1000, condition: { type: 'era', metric: 'perfect_eras', count: 1 } },
 
   // --- Practice (7) — the disciplines someone keeps ---
@@ -480,6 +508,10 @@ export function checkNewAchievements(
 
     if (c.type === 'era' && stats.era) {
       qualified = eraValue(stats.era)[c.metric] >= c.count
+    }
+
+    if (c.type === 'era_finished' && stats.era) {
+      qualified = stats.era.completedKeys.includes(c.eraKey)
     }
 
     if (c.type === 'record' && stats.record) {

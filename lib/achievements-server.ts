@@ -52,6 +52,7 @@ export async function gatherEraAchievementStats(userId: string): Promise<EraAchi
     carriedForward: carried.length,
     erasReflected: eras.filter(e => e.reflection?.trim()).length,
     eraReturns: 0,
+    completedKeys: [],
   }
 
   // A return: an era begun a week or more after the one before it ended. A
@@ -89,6 +90,7 @@ export async function gatherEraAchievementStats(userId: string): Promise<EraAchi
     const ranItsCourse = eraDayNumber(era.start_day, endDay) > era.length_days
     if (ranItsCourse && ps.length >= ERA_COMPLETE_MIN_PROMISES) {
       stats.erasCompleted++
+      stats.completedKeys.push(era.era_key)
       if (answered >= ERA_COMPLETE_MIN_PROMISES && kept === answered) stats.perfectEras++
     }
   }

@@ -27,7 +27,30 @@ bottom edge — a number plate covers the foot of the coin.
 > of the coin, with nothing near the bottom edge. No text, no letters, no
 > numbers, no border outside the coin. Photorealistic, high detail.
 
-## Subjects — Era (the core loop, do these first)
+## Subjects — one coin per era (do these first)
+
+Earned by finishing that era. Until a coin is made, each one shows its era's
+photo (`/era/<key>.jpg`); save the new coin as
+`public/achievements/era_done_<key>.jpg` and point
+`ACHIEVEMENT_BADGE_IMAGES.era_done_<key>` at it.
+
+**No real living person's likeness** — the Hustler portrait once resembled a
+real athlete and had to go. Marcus Aurelius is a historical figure from
+Roman statuary and is fine; the Gym Arc athlete must be anonymous.
+
+| id | Era | Subject |
+|---|---|---|
+| era_done_locked_in | Locked In | a hooded figure bent over a desk under a single hanging lamp, seen from behind |
+| era_done_discipline | Discipline Era | two hands pulling tight the laces of a worn running shoe |
+| era_done_comeback | Comeback Season | a lone figure walking up a long straight road toward a rising sun |
+| era_done_gym_arc | Gym Arc | a powerfully muscular anonymous athlete locking out a heavy deadlift, face turned away in shadow, like a Greek statue |
+| era_done_stoic_mode | Stoic Mode | a bust of the Roman emperor Marcus Aurelius in profile, bearded, as on a Roman coin |
+| era_done_confidence | Confidence Mode | a lion's head facing forward, mane spread, calm and steady |
+| era_done_study | Study Era | an open book beside a lit candle, a thin trail of smoke rising |
+| era_done_five_am | 5AM Era | the sun half-risen over a city skyline, rays spreading upward |
+| era_done_custom | Your Own Era | a quill writing on an unrolled blank scroll |
+
+## Subjects — Era (the core loop)
 
 | id | Badge | Subject |
 |---|---|---|

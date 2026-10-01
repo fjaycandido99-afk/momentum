@@ -16,6 +16,7 @@ import {
   type RecordAchievementStats,
 } from '../achievements'
 import { SERVER_ONLY_XP_EVENTS, XP_REWARDS } from '../gamification'
+import { ERA_PRESETS } from '../era/presets'
 
 const baseStats = {
   streak: 0, totalXP: 0, level: 1, journalCount: 0, moodLogCount: 0, breathingCount: 0,
@@ -28,7 +29,7 @@ const baseStats = {
 const noEra: EraAchievementStats = {
   promisesMade: 0, promisesKept: 0, longestPromiseStreak: 0, erasStarted: 0,
   erasCompleted: 0, perfectEras: 0, customEras: 0, comebacks: 0,
-  carriedForward: 0, erasReflected: 0, eraReturns: 0,
+  carriedForward: 0, erasReflected: 0, eraReturns: 0, completedKeys: [],
 }
 
 function eraUnlocks(era: Partial<EraAchievementStats>): string[] {
@@ -308,5 +309,26 @@ describe('per-badge art', () => {
   it('falls back to the category art', () => {
     expect(badgeImage('no_such_badge', 'era')).toBe(CATEGORY_BADGE_IMAGES.era)
     expect(badgeImage(undefined, 'growth')).toBe(CATEGORY_BADGE_IMAGES.growth)
+  })
+})
+
+describe('a coin for every era', () => {
+  it('awards the coin for the era that was finished, and only that one', () => {
+    expect(eraUnlocks({ erasCompleted: 1, completedKeys: ['gym_arc'] })).toEqual(['era_complete', 'era_done_gym_arc'])
+    expect(eraUnlocks({ erasCompleted: 1, completedKeys: ['stoic_mode'] })).toContain('era_done_stoic_mode')
+    expect(eraUnlocks({ erasCompleted: 1, completedKeys: ['stoic_mode'] })).not.toContain('era_done_gym_arc')
+  })
+
+  it('has a coin for every era there is, with its own art', () => {
+    const keys = [...ERA_PRESETS.map(p => p.key), 'custom']
+    for (const key of keys) {
+      const a = ACHIEVEMENTS.find(x => x.id === `era_done_${key}`)
+      expect(a, key).toBeDefined()
+      expect(ACHIEVEMENT_BADGE_IMAGES[`era_done_${key}`], key).toBeDefined()
+    }
+  })
+
+  it('is gold: finishing an era is hard', () => {
+    for (const a of ACHIEVEMENTS.filter(x => x.id.startsWith('era_done_'))) expect(a.rarity).toBe('epic')
   })
 })
