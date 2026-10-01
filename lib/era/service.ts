@@ -7,6 +7,7 @@ import {
   DEFAULT_ERA_LENGTH_DAYS,
   ERA_LIMITS,
   ERA_PRESETS_BY_KEY,
+  eraName,
 } from './presets'
 import {
   CHECK_IN_FROM_HOUR,
@@ -202,6 +203,12 @@ export interface EraTodayWire {
   keepOptions: { text: string; count: number }[]
   /** The line they wrote to remember it by (complete step), or null. */
   reflection: string | null
+  /**
+   * Disciplines carried forward from EARLIER eras, shown in this era's first
+   * week ("Carried with you · from Locked In era") so a new era never reads
+   * as starting from zero. Empty after week one and on a finished era.
+   */
+  carried: { label: string; fromEra: string }[]
   /** Today's mission from the era's bank (lib/era/missions.ts). */
   mission: string | null
   /** Has today's mission been marked done? */
@@ -229,6 +236,9 @@ export interface EraTodayWire {
   /** Every day with a promise, oldest first — the page draws the 30-day grid from it. */
   days: EraDayWire[]
 }
+
+/** How long a new era shows what was carried in from earlier ones. */
+export const CARRIED_DAYS = 7
 
 export async function loadEraToday(userId: string): Promise<EraTodayWire | null> {
   const era = await getActiveEra(userId)
@@ -290,6 +300,16 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     yesterdayPromise: yesterdayRow,
   }) === 'complete'
   let report: EraReport | null = null
+
+  // A new era is a new layer, not a reset: in its first week, show what came
+  // with them from earlier eras. One small read, only in that week.
+  const carried = !finished && day <= CARRIED_DAYS
+    ? (await prisma.practice.findMany({
+        where: { user_id: userId, status: 'active', from_era: { isNot: null }, NOT: { from_era_id: era.id } },
+        select: { label: true, from_era: { select: { title: true } } },
+        orderBy: { created_at: 'asc' },
+      })).map(p => ({ label: p.label, fromEra: eraName(p.from_era?.title ?? '') }))
+    : []
   if (finished) {
     const [missionRows, wellnessRows] = await Promise.all([
       prisma.eraMission.findMany({ where: { era_id: era.id }, select: { day: true } }),
@@ -441,6 +461,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     // computation on rows in hand, and only at the step that uses it.
     keepOptions: finished ? keepOptions(promises) : [],
     reflection: era.reflection ?? null,
+    carried,
     mission: missionFor(era.era_key, day),
     missionDone: missionRow !== null,
     links: { soundscapeId: program.soundscapeId, guideId: program.guideId },

@@ -1065,6 +1065,22 @@ function ActiveEra({
     <>
       <EraHero era={era} onShare={() => setSharing(true)} justKeptDay={justKeptDay} />
 
+      {/* A new era is a new layer, not a reset: in its first week, what came
+          with them from earlier eras (lib/era/service CARRIED_DAYS). */}
+      {era.carried.length > 0 && (
+        <div className="card-surface-lg p-4">
+          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Carried with you</p>
+          <ul className="mt-2 space-y-2">
+            {era.carried.map(c => (
+              <li key={c.label}>
+                <p className="text-[15px] text-white leading-snug">{c.label}</p>
+                <p className="text-[11px] text-white/45 mt-0.5">From {c.fromEra}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* What an era actually asks of you, for the first few days.
           Starting one used to drop you into a screen of cards — a promise, a
           mission, a check-in, an audio — with nothing saying which is the
