@@ -43,6 +43,8 @@ export interface PracticeSeed {
   label?: string
   /** Their own repeated promises, to pick a name from. */
   chips?: { text: string; count: number }[]
+  /** Where it came from, shown under the title — "Carried forward from Locked In". */
+  note?: string
 }
 
 // No `days` here on purpose. Picking a preset always sets the days from that
@@ -80,11 +82,11 @@ export function AddPracticeSheet({
     haptic('light')
     const p = PRESETS_BY_KEY.get(key)
     setPresetKey(key)
-    // A named preset names the discipline — picking "Read 10 pages a day" is
-    // a deliberate statement of what it is. "Something else" falls back to
-    // the era's own title when we arrived from one, so the month somebody
-    // just did is not thrown away at the last step.
-    setLabel(isCustomPreset(p?.key ?? '') ? (seed?.label ?? '') : p?.label ?? '')
+    // A name they brought with them (a promise picked on "What stays with
+    // you?") wins: it describes the behaviour in their own words, which no
+    // preset does. Otherwise a named preset names the discipline, and
+    // "Something else" starts empty.
+    setLabel(seed?.label ? seed.label : isCustomPreset(p?.key ?? '') ? '' : p?.label ?? '')
     setMinimum(p?.minimum ?? '')
     setDays(p?.days ?? [])
     setError(null)
@@ -155,6 +157,8 @@ export function AddPracticeSheet({
               <h2 className="text-[24px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
                 {!domain ? 'What do you already care about?' : !preset ? 'How often?' : 'What counts as done?'}
               </h2>
+              {seed?.label && <p className="text-[13px] text-white/80 mt-1">{seed.label}</p>}
+              {seed?.note && <p className="text-[11px] text-white/45 mt-0.5">{seed.note}</p>}
             </div>
           </div>
           <button onClick={onClose} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">

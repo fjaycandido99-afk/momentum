@@ -194,7 +194,7 @@ export interface EraTodayWire {
   erasFinished: number | null
   /**
    * Their own repeated promises from this era, most-promised first, for
-   * "Keep one thing from this". Only at the complete step.
+   * "What stays with you?" (KeepOneThingSheet). Only at the complete step.
    *
    * Their text, shown back to them, in their own session — the same thing
    * the Era Recap already does with it. It is never read for anything else.

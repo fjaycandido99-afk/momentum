@@ -103,3 +103,61 @@ export function labelFromPromise(text: string, max: number): string {
   // cut is the only option and is still better than nothing.
   return (lastSpace > max * 0.5 ? cut.slice(0, lastSpace) : cut).trim()
 }
+
+// ── The end of an era: how it went, said plainly ────────────────────────
+
+export type EraOutcome = 'strong' | 'mixed' | 'poor'
+
+/** At or above: the month held. */
+export const OUTCOME_STRONG = 70
+/** Below: it mostly didn't. Between the two: some of it held. */
+export const OUTCOME_POOR = 40
+
+/**
+ * How the month went, from the kept percentage. No answers at all reads as
+ * a month that didn't go to plan — never as a good one.
+ */
+export function eraOutcome(keptPercent: number | null): EraOutcome {
+  if (keptPercent === null) return 'poor'
+  if (keptPercent >= OUTCOME_STRONG) return 'strong'
+  if (keptPercent >= OUTCOME_POOR) return 'mixed'
+  return 'poor'
+}
+
+/**
+ * The line above "What stays with you?". It names what happened — no
+ * shame, and no celebration a bad month didn't earn. The offer itself never
+ * changes: somebody who kept 4 of 28 is who a discipline's floor serves.
+ */
+export const OUTCOME_LINE: Record<EraOutcome, string> = {
+  strong: 'You showed up this month. What should stay after it?',
+  mixed: 'Some of it held. Some of it didn’t. Keep the one thing that was real.',
+  poor: 'This era didn’t go the way you planned. You don’t need to keep the whole month — keep one thing that was still worth something.',
+}
+
+/**
+ * Whether a promise shows how often it was made. Exact wording only, so
+ * most promises were made once; a list of "1 day" under every one is noise.
+ */
+export const KEEP_COUNT_MIN = 2
+export function showKeepCount(count: number): boolean {
+  return count >= KEEP_COUNT_MIN
+}
+
+/** Enough due days in the window before "least active" means anything. */
+export const LEAST_ACTIVE_MIN_DUE = 4
+
+/**
+ * When their disciplines are full: which one has been kept least over the
+ * last four weeks, so the trade-off is visible. Null when nothing has
+ * enough due days to say, or when it's a tie for last — then nothing is
+ * singled out. The choice to remove one stays theirs.
+ */
+export function leastActive<T extends { id: string; done: number; of: number }>(practices: readonly T[]): T | null {
+  const rated = practices.filter(p => p.of >= LEAST_ACTIVE_MIN_DUE)
+  if (rated.length < 2) return null
+  const rate = (p: T) => p.done / p.of
+  const sorted = [...rated].sort((a, b) => rate(a) - rate(b))
+  if (rate(sorted[0]) === rate(sorted[1])) return null
+  return sorted[0]
+}

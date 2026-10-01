@@ -109,3 +109,41 @@ describe('a promise cut down to a name', () => {
     expect(labelFromPromise('  Gym   before    work  ', MAX)).toBe('Gym before work')
   })
 })
+
+import { eraOutcome, OUTCOME_LINE, showKeepCount, leastActive } from '@/lib/era/keep'
+
+describe('the end of an era', () => {
+  it('reads the month from the kept percentage', () => {
+    expect(eraOutcome(86)).toBe('strong')
+    expect(eraOutcome(70)).toBe('strong')
+    expect(eraOutcome(55)).toBe('mixed')
+    expect(eraOutcome(40)).toBe('mixed')
+    expect(eraOutcome(14)).toBe('poor')
+  })
+
+  it('never calls a month with no answers a good one', () => {
+    expect(eraOutcome(null)).toBe('poor')
+  })
+
+  it('never celebrates a month that went badly', () => {
+    for (const line of [OUTCOME_LINE.mixed, OUTCOME_LINE.poor]) {
+      expect(line).not.toMatch(/!|crushed|amazing|great|proud/i)
+    }
+  })
+
+  it('only counts a promise made more than once', () => {
+    expect(showKeepCount(1)).toBe(false)
+    expect(showKeepCount(2)).toBe(true)
+  })
+
+  it('names the least active discipline only when it is clear', () => {
+    const a = { id: 'a', done: 20, of: 24 }
+    const b = { id: 'b', done: 6, of: 20 }
+    const c = { id: 'c', done: 10, of: 12 }
+    expect(leastActive([a, b, c])?.id).toBe('b')
+    // a tie for last singles nobody out
+    expect(leastActive([{ id: 'x', done: 2, of: 8 }, { id: 'y', done: 2, of: 8 }])).toBeNull()
+    // too few due days to say anything
+    expect(leastActive([{ id: 'x', done: 0, of: 2 }, a])).toBeNull()
+  })
+})

@@ -34,7 +34,9 @@ import { CircleSection } from './CircleSection'
 import { ReminderAsk } from '@/components/notifications/ReminderAsk'
 import { clockLabel } from '@/lib/era/wake'
 import { eraOrdinal } from '@/lib/era/logic'
-import { ERA_PRACTICE_DOMAIN } from '@/lib/era/keep'
+import { ERA_PRACTICE_DOMAIN, OUTCOME_LINE, eraOutcome } from '@/lib/era/keep'
+import { isDismissed, setDismissed } from '@/lib/ui/dismiss'
+import { KeepOneThingSheet } from '@/components/era/KeepOneThingSheet'
 import { AddPracticeSheet } from '@/components/practices/AddPracticeSheet'
 import { ERA_COMPLETE_IMAGE, ERA_START_IMAGE } from '@/lib/era/programs'
 import { HOME_SCENES, PHASE_SCENES } from '@/lib/home/scenes'
@@ -702,8 +704,15 @@ function ActiveEra({
   const t = era.today
   /** "third", or null for a first era — see eraOrdinal. */
   const ordinal = era.erasFinished ? eraOrdinal(era.erasFinished) : null
-  /** "Keep one thing from this" — the seeded add-a-discipline sheet. */
+  /** "What stays with you?" — the pick, then the seeded add-a-discipline sheet. */
   const [keeping, setKeeping] = useState(false)
+  /** The name they picked; null until they pick. '' = "Something else". */
+  const [keptLabel, setKeptLabel] = useState<string | null>(null)
+  /** Chose "Take a break" on this finished era (local, per era). */
+  const [onBreak, setOnBreak] = useState(false)
+  useEffect(() => {
+    if (era.step === 'complete') setOnBreak(isDismissed(`era-break:${era.id}`))
+  }, [era.step, era.id])
 
   let action: React.ReactNode = null
   switch (era.step) {
@@ -721,44 +730,68 @@ function ActiveEra({
               Your {ordinal} era
             </p>
           )}
-          <p className="text-[15px] text-white">
-            You finished your {eraName(era.title)}.
-            {era.stats.keptPercent !== null && <> You kept {era.stats.kept} of {era.stats.answered} promises.</>}
+          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+            {eraName(era.title)} · Complete
+          </p>
+          <p className="text-[15px] text-white mt-1">
+            {era.lengthDays} days.
+            {era.stats.keptPercent !== null && <> {era.stats.kept} of {era.stats.answered} promises kept.</>}
           </p>
           {/* The arithmetic, above the coach's letter: a sentence about who
               you became lands harder next to the number that earned it. */}
           {era.report && <EraReportCard report={era.report} />}
           <EraRecap era={era} onLocked={openUpgradeModal} />
-          {/*
-            The other thing day 31 can be.
+          {onBreak ? (
+            /* Taking a break: their disciplines carry on without an era. */
+            <div className="mt-4">
+              <p className="text-[13px] text-white/70 leading-relaxed">
+                On a break. Your disciplines keep going — start an era when you&rsquo;re ready.
+              </p>
+              <Link href="/era" className="mt-3 w-full block text-center py-3 rounded-xl border border-white/15 text-sm text-white/85">
+                Start your next era
+              </Link>
+            </div>
+          ) : (
+            <>
+              {/*
+                What happens next. Finish → reflect → keep → then begin again:
+                jumping straight into another thirty days makes eras feel
+                disposable, so keeping comes first and the next era second.
 
-            It used to offer one option — start another era — so the month
-            somebody just spent promising the same sort of thing daily ended
-            with no way to carry it. Voxu's own answer to "is thirty days
-            enough?" is a discipline, with a schedule and a floor, and it was
-            never suggested at the one moment it is obviously the question.
-
-            Shown after every era, including one that went badly, and the
-            wording does not change. Somebody who kept 4 of 28 is exactly who
-            a commitment with a FLOOR would serve — that is what a discipline
-            has and an era does not. The offer is about what happens next, not
-            a verdict on the month, so it must not read like a reward for a
-            good one.
-
-            Second, not first: starting the next era is still the headline.
-          */}
-          <Link href="/era" className="mt-3 w-full block text-center py-3 rounded-xl bg-white text-black text-sm font-medium">
-            Start your next era
-          </Link>
-          <button
-            onClick={() => { haptic('light'); setKeeping(true) }}
-            className="mt-2 w-full py-3 rounded-xl border border-white/15 text-sm text-white/85 active:scale-[0.99]"
-          >
-            Keep one thing from this
-          </button>
-          <p className="text-[11px] text-white/40 text-center mt-1.5 leading-relaxed">
-            Thirty days is a push. A discipline is what you keep.
-          </p>
+                Shown after every era. The line above it names how the month
+                went (lib/era/keep OUTCOME_LINE) — no shame, no celebration a
+                bad month didn't earn — but the offer never changes: somebody
+                who kept 4 of 28 is exactly who a discipline's floor serves.
+              */}
+              <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-5">What stays with you?</p>
+              <p className="text-[14px] text-white/80 leading-relaxed mt-1.5">
+                {OUTCOME_LINE[eraOutcome(era.stats.keptPercent)]}
+              </p>
+              <button
+                onClick={() => { haptic('light'); setKeeping(true) }}
+                className="mt-3 w-full py-3 rounded-xl bg-white text-black text-sm font-medium active:scale-[0.99]"
+              >
+                Choose what stays
+              </button>
+              <p className="text-[11px] text-white/40 text-center mt-1.5 leading-relaxed">
+                Turn something from this era into a discipline.
+              </p>
+              <div className="mt-5 pt-4 border-t border-white/[0.08]">
+                <p className="text-[12px] text-white/50">Ready for another chapter?</p>
+                <div className="mt-2 flex gap-2">
+                  <Link href="/era" className="flex-1 text-center py-2.5 rounded-xl border border-white/15 text-[13px] text-white/85">
+                    Start your next era
+                  </Link>
+                  <button
+                    onClick={() => { haptic('light'); setDismissed(`era-break:${era.id}`); setOnBreak(true) }}
+                    className="flex-1 py-2.5 rounded-xl border border-white/15 text-[13px] text-white/70"
+                  >
+                    Take a break
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )
       break
@@ -1169,19 +1202,26 @@ function ActiveEra({
       )}
 
       {sharing && <ShareEraSheet era={era} onClose={() => setSharing(false)} />}
-      {/* Seeded from the era: its domain where one genuinely maps, its title
-          as a fallback name, and their own repeated promises to pick from.
-          No minimum — the floor is theirs to write, and it is the part a
-          discipline exists for. */}
-      {keeping && (
+      {/* First they point at what they kept returning to (their own
+          promises); then the add sheet, named after THAT behaviour — never
+          the era, which is the container, not the habit — with where it came
+          from underneath. No minimum: the floor is theirs to write. */}
+      {keeping && keptLabel === null && (
+        <KeepOneThingSheet
+          options={era.keepOptions}
+          onChoose={label => setKeptLabel(label)}
+          onClose={() => setKeeping(false)}
+        />
+      )}
+      {keeping && keptLabel !== null && (
         <AddPracticeSheet
           seed={{
             domain: ERA_PRACTICE_DOMAIN[era.key],
-            label: eraName(era.title),
-            chips: era.keepOptions,
+            label: keptLabel || undefined,
+            note: `Carried forward from ${eraName(era.title)}`,
           }}
-          onClose={() => setKeeping(false)}
-          onAdded={() => setKeeping(false)}
+          onClose={() => { setKeeping(false); setKeptLabel(null) }}
+          onAdded={() => { setKeeping(false); setKeptLabel(null) }}
         />
       )}
       {wakeOpen && (
