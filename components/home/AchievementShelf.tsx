@@ -126,7 +126,7 @@ export function AchievementShelf() {
           <div className="flex gap-4 overflow-x-auto pt-4 pb-1 -mx-4 px-4 scrollbar-hide">
             {recent.map(a => (
               <Link key={a.id} href="/progress" className="flex flex-col items-center gap-2 w-[68px] shrink-0">
-                <AchievementBadge category={a.category} icon={a.icon} rarity={a.rarity} unlocked mark={a.mark} size={56} />
+                <AchievementBadge id={a.id} category={a.category} icon={a.icon} rarity={a.rarity} unlocked mark={a.mark} size={56} />
                 <span className="text-[10px] text-white/70 text-center leading-tight line-clamp-2">{a.title}</span>
               </Link>
             ))}

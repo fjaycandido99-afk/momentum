@@ -5,12 +5,15 @@ import {
   CATEGORY_LABELS,
   CATEGORY_ICONS,
   CATEGORY_BADGE_IMAGES,
+  ACHIEVEMENT_BADGE_IMAGES,
+  badgeImage,
   checkNewAchievements,
   achievementMark,
   achievementProgress,
   visibleAchievements,
   type EraAchievementStats,
   type PracticeAchievementStats,
+  type RecordAchievementStats,
 } from '../achievements'
 import { SERVER_ONLY_XP_EVENTS, XP_REWARDS } from '../gamification'
 
@@ -25,6 +28,7 @@ const baseStats = {
 const noEra: EraAchievementStats = {
   promisesMade: 0, promisesKept: 0, longestPromiseStreak: 0, erasStarted: 0,
   erasCompleted: 0, perfectEras: 0, customEras: 0, comebacks: 0,
+  carriedForward: 0, erasReflected: 0, eraReturns: 0,
 }
 
 function eraUnlocks(era: Partial<EraAchievementStats>): string[] {
@@ -42,7 +46,7 @@ describe('era achievements', () => {
     expect(eraUnlocks({ comebacks: 1 })).toEqual(['era_comeback'])
     expect(eraUnlocks({ customEras: 1 })).toEqual(['era_custom'])
     expect(eraUnlocks({ erasCompleted: 1 })).toEqual(['era_complete'])
-    expect(eraUnlocks({ erasCompleted: 3, perfectEras: 1 })).toEqual(['era_complete', 'era_flawless', 'era_three'])
+    expect(eraUnlocks({ erasCompleted: 3, perfectEras: 1 })).toEqual(['era_complete', 'era_flawless', 'era_second', 'era_three'])
   })
 
   it("can't unlock without era stats — a caller that didn't load them unlocks nothing", () => {
@@ -151,7 +155,7 @@ describe('practice and exercise achievements', () => {
     expect(practiceUnlocks({ practicesKept: 1 })).toEqual(['practice_first_kept'])
     expect(practiceUnlocks({ practicesKept: 10 })).toEqual(['practice_first_kept', 'practice_kept_10'])
     expect(practiceUnlocks({ practiceComebacks: 1 })).toEqual(['practice_back_on'])
-    expect(practiceUnlocks({ longestPracticeRun: 14 })).toEqual(['practice_run_14'])
+    expect(practiceUnlocks({ longestPracticeRun: 14 })).toEqual(['practice_run_14', 'practice_run_7'])
     expect(practiceUnlocks({ disciplinesKept: 3 })).toEqual(['practice_three'])
   })
 
@@ -245,5 +249,64 @@ describe('retired achievements', () => {
     const live = ACHIEVEMENTS.filter(a => !a.retired)
     expect(live.length).toBeGreaterThan(50)
     expect(visibleAchievements(new Set()).length).toBe(live.length)
+  })
+})
+
+describe('what an era leaves behind', () => {
+  it('names finishing, carrying forward, writing the line, and coming back', () => {
+    expect(eraUnlocks({ erasCompleted: 2 })).toEqual(['era_complete', 'era_second'])
+    expect(eraUnlocks({ carriedForward: 1 })).toEqual(['era_carried'])
+    expect(eraUnlocks({ carriedForward: 3 })).toEqual(['era_carried', 'era_carried_3'])
+    expect(eraUnlocks({ erasReflected: 1 })).toEqual(['era_reflection'])
+    expect(eraUnlocks({ eraReturns: 1 })).toEqual(['era_return'])
+  })
+
+  it('goes further on the long counts', () => {
+    expect(eraUnlocks({ promisesKept: 100 })).toEqual(
+      ['era_first_kept', 'era_kept_100', 'era_kept_25', 'era_kept_50', 'era_kept_7'],
+    )
+    expect(eraUnlocks({ comebacks: 5 })).toEqual(['era_comeback', 'era_comeback_5'])
+  })
+})
+
+describe('proof days and Right now', () => {
+  const none: RecordAchievementStats = { proofDays: 0, resetsDone: 0, resetsHelped: 0 }
+  const unlocks = (r: Partial<RecordAchievementStats>) =>
+    checkNewAchievements({ ...baseStats, record: { ...none, ...r } }, new Set())
+      .filter(a => a.condition.type === 'record')
+      .map(a => a.id)
+      .sort()
+
+  it('counts days with something kept, Proof’s own unit', () => {
+    expect(unlocks({ proofDays: 30 })).toEqual(['proof_30', 'proof_7'])
+  })
+
+  it('rewards finishing a session, and their own rating when it helped', () => {
+    expect(unlocks({ resetsDone: 1 })).toEqual(['reset_first'])
+    expect(unlocks({ resetsDone: 10, resetsHelped: 1 })).toEqual(['reset_10', 'reset_first', 'reset_helped'])
+  })
+
+  it('awards nothing when the record stats were not loaded', () => {
+    expect(checkNewAchievements({ ...baseStats }, new Set()).some(a => a.condition.type === 'record')).toBe(false)
+  })
+
+  it('reports progress with its denominator', () => {
+    const a = ACHIEVEMENTS.find(x => x.id === 'proof_100')!
+    expect(achievementProgress(a, { ...baseStats, record: { ...none, proofDays: 42 } })).toEqual({ current: 42, target: 100 })
+    expect(achievementProgress(a, { ...baseStats })).toBeNull()
+  })
+})
+
+describe('per-badge art', () => {
+  it('points only at committed files, for real achievements', () => {
+    for (const [id, src] of Object.entries(ACHIEVEMENT_BADGE_IMAGES)) {
+      expect(ACHIEVEMENTS.some(a => a.id === id), id).toBe(true)
+      expect(existsSync(`public${src}`), String(src)).toBe(true)
+    }
+  })
+
+  it('falls back to the category art', () => {
+    expect(badgeImage('no_such_badge', 'era')).toBe(CATEGORY_BADGE_IMAGES.era)
+    expect(badgeImage(undefined, 'growth')).toBe(CATEGORY_BADGE_IMAGES.growth)
   })
 })

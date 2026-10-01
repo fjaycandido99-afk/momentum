@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { createPractice, loadPractices, logPractice, retirePractice, savePlan } from '@/lib/practices/server'
+import { checkAchievementsNow } from '@/lib/achievements-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +49,9 @@ export async function POST(request: NextRequest) {
         fromEraId: body?.fromEraId,
       })
       if (!result.ok) return NextResponse.json({ error: result.reason }, { status: 400 })
-      return NextResponse.json({ ok: true, id: result.id })
+      // Carrying one forward from an era earns "What Stayed" right away.
+      const newAchievements = body?.fromEraId ? await checkAchievementsNow(user.id) : []
+      return NextResponse.json({ ok: true, id: result.id, newAchievements })
     }
 
     if (action === 'log') {
@@ -63,7 +66,10 @@ export async function POST(request: NextRequest) {
         day: typeof body?.day === 'string' ? body.day : undefined,
       })
       if (!result.ok) return NextResponse.json({ error: result.reason }, { status: 400 })
-      return NextResponse.json({ ok: true })
+      // Discipline and proof badges used to wait for some unrelated XP event.
+      // Only a kept day can earn one, so a miss skips the check.
+      const newAchievements = body.done ? await checkAchievementsNow(user.id) : []
+      return NextResponse.json({ ok: true, newAchievements })
     }
 
     if (action === 'plan') {

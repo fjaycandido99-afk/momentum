@@ -118,7 +118,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                           : hidden ? 'Secret achievement, locked' : `${a.title}, locked. ${a.description}`
                       }
                     >
-                      <AchievementBadge category={a.category} icon={a.icon} rarity={a.rarity} unlocked={a.unlocked} mark={hidden ? null : a.mark} size={48} />
+                      <AchievementBadge id={a.id} category={a.category} icon={a.icon} rarity={a.rarity} unlocked={a.unlocked} mark={hidden ? null : a.mark} size={48} />
 
                       <span className={`text-[11px] font-medium text-center leading-tight line-clamp-2 ${
                         a.unlocked ? 'text-white' : 'text-white/45'

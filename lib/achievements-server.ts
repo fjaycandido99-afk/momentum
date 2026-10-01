@@ -5,10 +5,14 @@ import {
   type AchievementStats,
   type EraAchievementStats,
   type PracticeAchievementStats,
+  type RecordAchievementStats,
 } from '@/lib/achievements'
 import { practiceHistory } from '@/lib/practices/logic'
 import { localDay } from '@/lib/assessment/service'
-import { eraDayNumber, previousDay } from '@/lib/era/logic'
+import { daysBetween, eraDayNumber, previousDay } from '@/lib/era/logic'
+
+/** Days with no era between two eras before starting again counts as a return. */
+export const ERA_RETURN_GAP_DAYS = 7
 
 /**
  * Server-side XP + achievements. Used by /api/gamification/xp (events the
@@ -21,15 +25,23 @@ import { eraDayNumber, previousDay } from '@/lib/era/logic'
 export const ERA_COMPLETE_MIN_PROMISES = 20
 
 export async function gatherEraAchievementStats(userId: string): Promise<EraAchievementStats> {
-  const [eras, prefs] = await Promise.all([
+  const [eras, prefs, carried] = await Promise.all([
     prisma.era.findMany({
       where: { user_id: userId },
+      orderBy: { start_day: 'asc' },
       select: {
         era_key: true, start_day: true, length_days: true, status: true, ended_at: true,
+        reflection: true,
         promises: { select: { local_day: true, kept: true }, orderBy: { local_day: 'asc' } },
       },
     }),
     prisma.userPreferences.findUnique({ where: { user_id: userId }, select: { timezone: true } }),
+    // Retired ones too: having carried something forward stays true.
+    prisma.practice.findMany({
+      where: { user_id: userId, from_era_id: { not: null } },
+      select: { from_era_id: true },
+      distinct: ['from_era_id'],
+    }),
   ])
   const tz = prefs?.timezone ?? null
   const today = localDay(tz)
@@ -37,6 +49,19 @@ export async function gatherEraAchievementStats(userId: string): Promise<EraAchi
   const stats: EraAchievementStats = {
     promisesMade: 0, promisesKept: 0, longestPromiseStreak: 0, erasStarted: eras.length,
     erasCompleted: 0, perfectEras: 0, customEras: 0, comebacks: 0,
+    carriedForward: carried.length,
+    erasReflected: eras.filter(e => e.reflection?.trim()).length,
+    eraReturns: 0,
+  }
+
+  // A return: an era begun a week or more after the one before it ended. A
+  // rest between eras is healthy, and coming back after one is worth naming.
+  for (let i = 1; i < eras.length; i++) {
+    const prev = eras[i - 1]
+    const plannedEnd = addDaysTo(prev.start_day, prev.length_days - 1)
+    const endedDay = prev.ended_at ? localDay(tz, prev.ended_at) : plannedEnd
+    const prevEnd = endedDay < plannedEnd ? endedDay : plannedEnd
+    if (daysBetween(prevEnd, eras[i].start_day) > ERA_RETURN_GAP_DAYS) stats.eraReturns++
   }
 
   for (const era of eras) {
@@ -127,6 +152,7 @@ export async function gatherAchievementStats(
     gatherPracticeAchievementStats(userId),
     prisma.userPreferences.findUnique({ where: { user_id: userId }, select: { timezone: true } }),
   ])
+  const record = await gatherRecordAchievementStats(userId)
 
   // Full day completions and unique module types
   let fullDayCount = 0
@@ -181,7 +207,74 @@ export async function gatherAchievementStats(
     consecutiveFullDays,
     era,
     practice,
+    record,
   }
+}
+
+/**
+ * Days of proof and Right now sessions, from rows. A proof day is any day
+ * with something KEPT: a promise kept, a discipline done, an exercise
+ * finished — the same unit as the grid on /proof.
+ */
+export async function gatherRecordAchievementStats(userId: string): Promise<RecordAchievementStats> {
+  const [promiseDays, practiceDays, exerciseDays, resets] = await Promise.all([
+    prisma.eraPromise.findMany({
+      where: { user_id: userId, kept: true },
+      select: { local_day: true },
+      distinct: ['local_day'],
+    }),
+    prisma.practiceLog.findMany({
+      where: { user_id: userId, done: true },
+      select: { local_day: true },
+      distinct: ['local_day'],
+    }),
+    prisma.exerciseRun.findMany({
+      where: { user_id: userId, completed: true },
+      select: { local_day: true },
+      distinct: ['local_day'],
+    }),
+    prisma.resetSession.findMany({
+      where: { user_id: userId, completed: true },
+      select: { before: true, after: true },
+    }),
+  ])
+  const days = new Set<string>()
+  for (const r of [...promiseDays, ...practiceDays, ...exerciseDays]) days.add(r.local_day)
+  return {
+    proofDays: days.size,
+    resetsDone: resets.length,
+    // Their own two numbers, and only when they gave both.
+    resetsHelped: resets.filter(r => r.before !== null && r.after !== null && r.after < r.before).length,
+  }
+}
+
+/**
+ * Award whatever has become true, without an XP event of its own — for
+ * actions that earn achievements but no XP (a discipline logged, a Right
+ * now session finished, an era's line written), which otherwise waited for
+ * some unrelated XP event to be noticed. Never throws.
+ */
+export async function checkAchievementsNow(userId: string): Promise<AwardedAchievement[]> {
+  try {
+    const prefs = await prisma.userPreferences.findUnique({
+      where: { user_id: userId },
+      select: { total_xp: true, current_streak: true },
+    })
+    const { achievements } = await evaluateAndAwardAchievements(userId, {
+      totalXP: prefs?.total_xp ?? 0,
+      streak: prefs?.current_streak ?? 0,
+    })
+    return achievements
+  } catch (err) {
+    console.warn('[achievements] check failed:', err)
+    return []
+  }
+}
+
+function addDaysTo(day: string, n: number): string {
+  const d = new Date(`${day}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
 }
 
 /** Check every achievement against current stats; insert and pay out new ones. */

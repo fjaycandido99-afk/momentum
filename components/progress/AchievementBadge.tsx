@@ -2,7 +2,7 @@
 
 import { Lock } from 'lucide-react'
 import {
-  CATEGORY_BADGE_IMAGES,
+  badgeImage,
   type AchievementCategory,
   type AchievementRarity,
 } from '@/lib/achievements'
@@ -61,6 +61,7 @@ const FINISH: Record<AchievementRarity, { filter: string; ring: string; shadow?:
 }
 
 export function AchievementBadge({
+  id,
   category,
   icon,
   rarity,
@@ -68,6 +69,8 @@ export function AchievementBadge({
   mark = null,
   size = 56,
 }: {
+  /** Which achievement — picks its own art when it has some (ACHIEVEMENT_BADGE_IMAGES). */
+  id?: string
   category: AchievementCategory
   icon: string
   rarity: AchievementRarity
@@ -76,7 +79,7 @@ export function AchievementBadge({
   mark?: string | null
   size?: number
 }) {
-  const image = CATEGORY_BADGE_IMAGES[category]
+  const image = badgeImage(id, category)
   const finish = FINISH[rarity]
   const plateFont = Math.max(9, Math.round(size * 0.19))
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { finishReset, startReset } from '@/lib/reset/server'
+import { checkAchievementsNow } from '@/lib/achievements-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +34,8 @@ export async function POST(request: NextRequest) {
 
     if (body?.action === 'finish') {
       const result = await finishReset(user.id, body?.id, body?.after, body?.completed === true)
-      return NextResponse.json({ ok: result.ok })
+      const newAchievements = result.ok && body?.completed === true ? await checkAchievementsNow(user.id) : []
+      return NextResponse.json({ ok: result.ok, newAchievements })
     }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 })

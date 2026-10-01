@@ -16,6 +16,7 @@ import { domainArt } from '@/lib/practices/domain-art'
 import { haptic } from '@/lib/haptics'
 import { labelFromPromise } from '@/lib/era/keep'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
+import { useAchievementOptional } from '@/contexts/AchievementContext'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
@@ -74,6 +75,7 @@ export function AddPracticeSheet({
   const [days, setDays] = useState<number[]>([])
   const [blocker, setBlocker] = useState<string | null>(null)
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay | null>(null)
+  const achievements = useAchievementOptional()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -117,6 +119,7 @@ export function AddPracticeSheet({
         return
       }
       haptic('medium')
+      if (data?.newAchievements?.length) achievements?.triggerAchievements(data.newAchievements)
       onAdded(label.trim())
       onClose()
     } catch {

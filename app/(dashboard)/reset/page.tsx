@@ -15,6 +15,7 @@ import { haptic } from '@/lib/haptics'
 import { trackFeature } from '@/lib/analytics/track'
 import { SceneImage } from '@/components/home/SceneImage'
 import { RESET_SCENES } from '@/lib/home/scenes'
+import { useAchievementOptional } from '@/contexts/AchievementContext'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -44,6 +45,7 @@ type Phase = 'pick' | 'before' | 'run' | 'after'
  */
 export default function ResetPage() {
   const [phase, setPhase] = useState<Phase>('pick')
+  const achievements = useAchievementOptional()
   const [stateId, setStateId] = useState<ResetStateId | null>(null)
   const [before, setBefore] = useState<number | null>(null)
   const [after, setAfter] = useState<number | null>(null)
@@ -83,15 +85,17 @@ export default function ResetPage() {
   const finish = useCallback(async (level: number | null, completed: boolean) => {
     setAfter(level)
     try {
-      await fetch('/api/reset', {
+      const res = await fetch('/api/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'finish', id: sessionId, after: level, completed }),
       })
+      const data = await res.json().catch(() => null)
+      if (data?.newAchievements?.length) achievements?.triggerAchievements(data.newAchievements)
     } catch {
       // As above.
     }
-  }, [sessionId])
+  }, [sessionId, achievements])
 
   return (
     // App shell: this container scrolls (only when the content is taller than

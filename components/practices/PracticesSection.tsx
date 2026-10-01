@@ -25,6 +25,7 @@ import { BookSheet } from '@/components/books/BookSheet'
 import { PagePrompt } from '@/components/books/PagePrompt'
 import { bookForTitles } from '@/lib/books/lookup'
 import { PRESETS_BY_KEY } from '@/lib/practices/presets'
+import { useAchievementOptional } from '@/contexts/AchievementContext'
 
 /** What the section needs of a book. */
 interface BookLite {
@@ -80,6 +81,7 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
       .catch(() => {})
   }, [])
 
+  const achievements = useAchievementOptional()
   const load = useCallback(() => {
     fetch('/api/practices')
       .then(r => (r.ok ? r.json() : null))
@@ -128,11 +130,13 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
       })
     }
     try {
-      await fetch('/api/practices', {
+      const res = await fetch('/api/practices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'log', practiceId: practice.id, done, minimumOnly, day }),
       })
+      const data = await res.json().catch(() => null)
+      if (data?.newAchievements?.length) achievements?.triggerAchievements(data.newAchievements)
       load()
       window.dispatchEvent(new Event(PRACTICES_CHANGED))
     } catch {

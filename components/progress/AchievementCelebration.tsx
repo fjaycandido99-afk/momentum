@@ -154,6 +154,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
           style={{ animation: 'achievement-icon-reveal 400ms ease-out 200ms both' }}
         >
           <AchievementBadge
+            id={achievement.id}
             category={getAchievementById(achievement.id)?.category ?? 'secret'}
             icon={achievement.icon}
             rarity={achievement.rarity}

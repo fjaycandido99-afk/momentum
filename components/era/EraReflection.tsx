@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { haptic } from '@/lib/haptics'
 import { REFLECTION_MAX } from '@/lib/era/record'
+import { useAchievementOptional } from '@/contexts/AchievementContext'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -19,6 +20,7 @@ export function EraReflection({ eraId, initial }: { eraId: string; initial: stri
   const [draft, setDraft] = useState(initial ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const achievements = useAchievementOptional()
 
   const save = async () => {
     setBusy(true)
@@ -33,6 +35,7 @@ export function EraReflection({ eraId, initial }: { eraId: string; initial: stri
       if (!res.ok) { setError(data?.error ?? 'Couldn’t save that'); return }
       haptic('light')
       setSaved(data?.reflection ?? null)
+      if (data?.newAchievements?.length) achievements?.triggerAchievements(data.newAchievements)
       setEditing(false)
     } catch {
       setError('Couldn’t reach Voxu. Check your connection.')
