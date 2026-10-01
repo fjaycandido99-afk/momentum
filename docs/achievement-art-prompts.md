@@ -98,3 +98,101 @@ Roman statuary and is fine; the Gym Arc athlete must be anonymous.
 | proof_7 | A Week of Proof | a small scroll tied with a cord |
 | proof_30 | Thirty Days of Proof | a grid of small square tiles, every one marked with a carved notch |
 | proof_100 | A Hundred Days of Proof | an unrolled scroll covered in tally marks |
+
+## Subjects — everything else
+
+### Disciplines
+
+| id | Badge | Subject |
+|---|---|---|
+| practice_first_kept | Kept It | a single smooth river stone resting on an open palm |
+| practice_floor | The Floor | one solid brick laid level on bare ground |
+| practice_kept_10 | Ten Days In | a short row of footprints pressed into wet sand |
+| practice_back_on | Back On It | a hand gripping the next rung of a ladder |
+| practice_run_7 | A Week Straight | a straight row of fence posts receding into the distance |
+| practice_run_14 | Fourteen Straight | a long stone bridge with many arches in an unbroken line |
+| practice_three | Three Disciplines | three interlocking iron rings |
+| practice_kept_30 | Thirty Kept | a neat stack of split firewood logs |
+
+### Mindset exercises
+
+| id | Badge | Subject |
+|---|---|---|
+| exercise_first | Sat With It | a figure seated cross-legged, eyes closed, hands resting on knees |
+| exercise_10 | Ten Sessions | a lotus flower opening on still water |
+| exercise_variety_5 | Range | an open fan with its ribs spread wide |
+| exercise_50 | Fifty Sessions | a tall pine tree standing alone on a hillside |
+| exercise_days_30 | Thirty Days of It | a full moon above calm water, its reflection below |
+
+### Books
+
+| id | Badge | Subject |
+|---|---|---|
+| book_first | Finished It | a closed book with a ribbon bookmark hanging from the last page |
+| book_5 | Five Books | a short stack of books lying flat, spines facing out |
+| book_12 | A Book a Month | a tall bookshelf, every shelf full |
+
+### Streaks
+
+| id | Badge | Subject |
+|---|---|---|
+| streak_3 | Getting Started | a small flame just catching on a match head |
+| streak_7 | Week Warrior | a steady candle flame |
+| streak_14 | Two Week Titan | a torch with a strong upright flame |
+| streak_30 | Monthly Master | a campfire burning in a ring of stones |
+| streak_60 | Unstoppable | a lit lighthouse beam cutting through dark sky |
+| streak_100 | Century Club | a blazing forge with sparks rising |
+
+### Journal, mood, goals
+
+| id | Badge | Subject |
+|---|---|---|
+| first_journal | Dear Diary | a closed leather journal tied with a cord |
+| journal_7 | Journaling Habit | an open journal with lines of handwriting (no readable words) |
+| journal_30 | Journaling Pro | a stack of filled journals tied together with string |
+| mood_tracker | Self-Aware | a face in profile with a small spiral above the brow |
+| breathing_10 | Breathe Deep | a soft gust of wind curling into a spiral |
+| goal_complete | Goal Getter | an arrow struck dead centre in a target |
+
+### Audio and listening
+
+| id | Badge | Subject |
+|---|---|---|
+| first_soundscape | Sound Explorer | a seashell spiral with sound lines curving out of it |
+| genre_explorer | Genre Explorer | a compass rose with a small musical note at its centre |
+| genre_explorer_audio | Sound Seeker | a pair of old headphones resting on a stone |
+| all_genres | Genre Master | a lyre with every string intact |
+| listener_1hr | First Hour | an hourglass with all the sand run through |
+| listener_5hr | Dedicated Listener | a vinyl record with its grooves catching the light |
+| listener_10hr | Sound Devotee | a tuning fork vibrating, faint waves around it |
+| flow_master | Flow Master | a river winding smoothly between two banks |
+| deep_flow | Deep Flow | a deep ocean wave curling, seen from the side |
+| listening_streak_7 | Weekly Listener | a small bell hanging from a curved bracket |
+| listening_streak_30 | Monthly Listener | a large temple bell with a wooden striker beside it |
+
+### Daily sessions
+
+| id | Badge | Subject |
+|---|---|---|
+| early_bird | Early Bird | a songbird perched on a branch against a rising sun |
+| night_owl | Night Owl | an owl perched on a branch under a crescent moon |
+| full_day_5x | All-In | a sundial with its shadow sweeping the full dial |
+| weekend_warrior | Weekend Warrior | a round shield with a single raised boss |
+| modules_50 | Module Machine | a set of interlocking gears turning together |
+| all_modules | Full Experience | a compass with all four points lit |
+
+### XP and levels
+
+| id | Badge | Subject |
+|---|---|---|
+| xp_500 | Rising Star | a single star rising above a horizon line |
+| xp_2000 | XP Collector | a cluster of stars forming a small constellation |
+| xp_5000 | XP Legend | a comet streaking across the night sky |
+| level_5 | Warrior Status | a crossed sword and shield |
+
+### Secret
+
+| id | Badge | Subject |
+|---|---|---|
+| midnight_owl | Midnight Owl | a clock face with both hands pointing straight up, no numerals |
+| midnight_listener | Midnight Listener | a crescent moon cradling a single musical note |
