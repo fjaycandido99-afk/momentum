@@ -980,7 +980,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md" />
                 </div>
               </div>
-              <div className="flex justify-between mt-1.5 text-[11px] text-white/50 font-medium">
+              <div className="flex justify-between mt-1.5 text-px-11 text-white/50 font-medium">
                 <span>{formatTime(activeCurrentTime)}</span>
                 <span>{activeDuration > 0 ? `-${formatTime(remainingTime)}` : '--:--'}</span>
               </div>

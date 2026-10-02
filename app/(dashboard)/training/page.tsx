@@ -49,17 +49,17 @@ export default function TrainingPage() {
         </Link>
 
         <div className="mt-3">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Training</p>
-          <h1 className="text-[34px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Training</p>
+          <h1 className="text-px-34 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
             The work, not the wanting.
           </h1>
           {era ? (
-            <p className="text-[13px] text-white/55 mt-2 leading-relaxed">
+            <p className="text-px-13 text-white/55 mt-2 leading-relaxed">
               Your {eraName(era.title)} is training{' '}
               {trains.map(a => attributeLabel(a).toLowerCase()).join(', ')}.
             </p>
           ) : loaded ? (
-            <p className="text-[13px] text-white/55 mt-2 leading-relaxed">
+            <p className="text-px-13 text-white/55 mt-2 leading-relaxed">
               Practices work on their own. Start an era and you also get a guided exercise each day,
               sized to where you are in it.
             </p>
@@ -94,7 +94,7 @@ export default function TrainingPage() {
         {/* What it has noticed. Last on the page on purpose: the answer for
             today comes before any observation about the last three months. */}
         <div className="mt-7 space-y-3">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Patterns</p>
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Patterns</p>
           <PatternsBlock />
         </div>
 

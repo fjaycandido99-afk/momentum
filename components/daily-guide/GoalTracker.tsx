@@ -173,7 +173,7 @@ export function GoalTracker() {
             <div className="text-left">
               <h3 className="font-medium text-white flex items-center gap-2">
                 Goals
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-medium">PRO</span>
+                <span className="text-px-10 px-1.5 py-0.5 rounded bg-white/20 text-white font-medium">PRO</span>
               </h3>
               <p className="text-xs text-white/50">Track habits & achieve more</p>
             </div>
@@ -250,10 +250,10 @@ export function GoalTracker() {
                       />
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-[10px] text-white/50">
+                      <span className="text-px-10 text-white/50">
                         {goal.current_count}/{goal.target_count} {goal.frequency}
                       </span>
-                      <span className="text-[10px] text-white">{Math.round(progress)}%</span>
+                      <span className="text-px-10 text-white">{Math.round(progress)}%</span>
                     </div>
                   </div>
                   <button
@@ -274,7 +274,7 @@ export function GoalTracker() {
                 <button
                   onClick={() => handleDecompose(goal.id)}
                   disabled={decomposingId === goal.id}
-                  className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium transition-colors disabled:opacity-40"
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-px-10 font-medium transition-colors disabled:opacity-40"
                 >
                   {decomposingId === goal.id ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -291,11 +291,11 @@ export function GoalTracker() {
                       <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-white/5">
                         <div className="w-4 h-4 rounded border border-white/25 shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-[11px] text-white/90 leading-snug">{ma.action}</p>
+                          <p className="text-px-11 text-white/90 leading-snug">{ma.action}</p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[9px] text-white/60 capitalize">{ma.when}</span>
+                            <span className="text-px-9 text-white/60 capitalize">{ma.when}</span>
                             <Clock className="w-2.5 h-2.5 text-white/50" />
-                            <span className="text-[9px] text-white/60">{ma.durationMinutes}m</span>
+                            <span className="text-px-9 text-white/60">{ma.durationMinutes}m</span>
                           </div>
                         </div>
                       </div>

@@ -246,7 +246,7 @@ export function BookSheet({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">
+            <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">
               {book ? 'What you’re reading' : 'Find this book'}
             </p>
             <h2 className="text-2xl text-white mt-1 leading-tight" style={SERIF}>
@@ -271,7 +271,7 @@ export function BookSheet({
             {/* Said out loud because it is true: the catalogue takes four to
                 nine seconds to answer. A spinner with no explanation for that
                 long reads as broken. */}
-            <p className="text-[11px] text-white/30">The book catalogue is slow. A few seconds.</p>
+            <p className="text-px-11 text-white/30">The book catalogue is slow. A few seconds.</p>
           </div>
         )}
 
@@ -306,8 +306,8 @@ export function BookSheet({
                         </div>
                       )}
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[15px] text-white truncate">{match.title}</span>
-                        <span className="block text-[12px] text-white/50 truncate">
+                        <span className="block text-px-15 text-white truncate">{match.title}</span>
+                        <span className="block text-px-12 text-white/50 truncate">
                           {[match.author, match.year, match.pages ? `${match.pages} pages` : null]
                             .filter(Boolean)
                             .join(' · ')}
@@ -339,20 +339,20 @@ export function BookSheet({
                   // "recent pace", not "your pace": it is two readings, and
                   // saying so is the difference between a number you can
                   // argue with and one that sounds like a verdict.
-                  <p className="text-[12px] text-white/45 mt-1 leading-relaxed">
+                  <p className="text-px-12 text-white/45 mt-1 leading-relaxed">
                     About {finish.days} {finish.days === 1 ? 'day' : 'days'} left at your recent pace
                     {' '}({finish.pace} {finish.pace === 1 ? 'page' : 'pages'} a day).
                   </p>
                 )}
                 {book.finished_at && (
-                  <p className="text-[12px] text-white/45 mt-1">Finished.</p>
+                  <p className="text-px-12 text-white/45 mt-1">Finished.</p>
                 )}
               </div>
             </div>
 
             {!book.finished_at && (
               <div>
-                <label className="text-[11px] uppercase tracking-[0.2em] text-white/45" htmlFor="book-page">
+                <label className="text-px-11 uppercase tracking-[0.2em] text-white/45" htmlFor="book-page">
                   Page you’re on
                 </label>
                 <div className="flex gap-2 mt-2">
@@ -364,12 +364,12 @@ export function BookSheet({
                     value={pageDraft}
                     onChange={e => setPageDraft(e.target.value)}
                     placeholder={book.current_page != null ? String(book.current_page) : '0'}
-                    className="w-24 shrink-0 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/25 text-center"
+                    className="w-24 shrink-0 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-15 text-white placeholder:text-white/25 text-center"
                   />
                   <button
                     onClick={savePage}
                     disabled={busy || !pageDraft.trim()}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[14px] text-white disabled:opacity-40 active:scale-[0.99]"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-14 text-white disabled:opacity-40 active:scale-[0.99]"
                   >
                     Save
                   </button>
@@ -380,15 +380,15 @@ export function BookSheet({
             {/* ── What Voxu makes of it ───────────────────────────────── */}
             {book.summary ? (
               <div className="rounded-2xl border border-white/[0.12] bg-white/[0.04] p-4 space-y-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">What Voxu makes of it</p>
-                <p className="text-[14px] text-white/75 leading-relaxed">{book.summary.about}</p>
+                <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">What Voxu makes of it</p>
+                <p className="text-px-14 text-white/75 leading-relaxed">{book.summary.about}</p>
                 <div className="border-l-2 border-white/25 pl-3">
-                  <p className="text-[14px] text-white leading-relaxed">{book.summary.forYourEra}</p>
+                  <p className="text-px-14 text-white leading-relaxed">{book.summary.forYourEra}</p>
                 </div>
                 {book.summary.whileYouRead && (
-                  <p className="text-[13px] text-white/55 leading-relaxed">{book.summary.whileYouRead}</p>
+                  <p className="text-px-13 text-white/55 leading-relaxed">{book.summary.whileYouRead}</p>
                 )}
-                <p className="text-[11px] text-white/30 leading-relaxed">
+                <p className="text-px-11 text-white/30 leading-relaxed">
                   Voxu hasn’t read this book — that’s a pointer, not a substitute.
                 </p>
                 {/*
@@ -403,14 +403,14 @@ export function BookSheet({
                 */}
                 <div className="flex items-center justify-between gap-3 pt-1">
                   {book.summary_day != null ? (
-                    <p className="text-[11px] text-white/30">Written on day {book.summary_day}.</p>
+                    <p className="text-px-11 text-white/30">Written on day {book.summary_day}.</p>
                   ) : (
                     <span />
                   )}
                   <button
                     onClick={() => { setSummaryState('idle'); void patch({ summary: null }) }}
                     disabled={busy}
-                    className="text-[11px] text-white/45 underline underline-offset-4 decoration-white/15 disabled:opacity-40 shrink-0"
+                    className="text-px-11 text-white/45 underline underline-offset-4 decoration-white/15 disabled:opacity-40 shrink-0"
                   >
                     Write it again
                   </button>
@@ -440,7 +440,7 @@ export function BookSheet({
               <button
                 onClick={() => { haptic(book.finished_at ? 'light' : 'success'); void patch({ finished: !book.finished_at }) }}
                 disabled={busy}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[13px] text-white/70 disabled:opacity-40 active:scale-[0.99]"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-13 text-white/70 disabled:opacity-40 active:scale-[0.99]"
               >
                 <Check className="w-3.5 h-3.5" />
                 {book.finished_at ? 'Not finished after all' : 'Finished it'}

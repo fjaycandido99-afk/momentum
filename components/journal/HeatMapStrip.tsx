@@ -74,8 +74,8 @@ export function HeatMapStrip({ entries }: HeatMapStripProps) {
         ))}
       </div>
       <div className="flex justify-between mt-1.5">
-        <span className="text-[9px] text-white/75">{startLabel}</span>
-        <span className="text-[9px] text-white/75">{endLabel}</span>
+        <span className="text-px-9 text-white/75">{startLabel}</span>
+        <span className="text-px-9 text-white/75">{endLabel}</span>
       </div>
     </div>
   )

@@ -42,7 +42,7 @@ export function WellnessWidget({ journalMood, streak, modulesCompletedToday, has
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-medium text-white">Daily Wellness</h2>
-          <p className="text-[10px] text-white/80">{zone.label}</p>
+          <p className="text-px-10 text-white/80">{zone.label}</p>
         </div>
         <div className="relative w-10 h-10 shrink-0 grid place-items-center">
           <AuraRing size={40} stroke={2.5} progress={wellness.score / 100} breathe={false}>
@@ -59,21 +59,21 @@ export function WellnessWidget({ journalMood, streak, modulesCompletedToday, has
           return (
             <div key={cat.label} className="flex items-center gap-1.5">
               <Icon className={`w-2.5 h-2.5 shrink-0 ${cat.done ? 'text-white' : 'text-white/50'}`} />
-              <span className="text-[9px] text-white/85 w-9 shrink-0">{cat.label}</span>
+              <span className="text-px-9 text-white/85 w-9 shrink-0">{cat.label}</span>
               <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
                 <div
                   className={`h-full rounded-full scene-bar-fill transition-all duration-500 ${cat.done ? '' : 'opacity-50'}`}
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <span className="text-[8px] text-white/60 w-5 text-right shrink-0">{cat.value}</span>
+              <span className="text-px-8 text-white/60 w-5 text-right shrink-0">{cat.value}</span>
             </div>
           )
         })}
       </div>
 
       {/* Tip */}
-      <p className="text-[9px] text-white/70 mt-1.5 truncate">{tip}</p>
+      <p className="text-px-9 text-white/70 mt-1.5 truncate">{tip}</p>
     </div>
   )
 }

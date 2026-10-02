@@ -40,7 +40,7 @@ export default async function AdminPage() {
     <>
       <div className="bg-black text-white px-4 pt-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Signed in as {admin.email}</p>
+          <p className="text-px-10 tracking-[0.2em] uppercase text-white/40">Signed in as {admin.email}</p>
           <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/admin/movements"

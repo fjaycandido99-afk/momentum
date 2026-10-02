@@ -61,9 +61,9 @@ export default function JoinEraPage({
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 px-6 pb-6">
-          <p className="text-[10px] tracking-[0.3em] uppercase text-white/60">You&rsquo;re invited to an era</p>
-          <h1 className="text-[52px] leading-[0.9] uppercase mt-2" style={{ ...SERIF, fontWeight: 600 }}>{preset.title}</h1>
-          <p className="text-[17px] text-white/80 mt-3 leading-snug" style={SERIF}>{preset.tagline}</p>
+          <p className="text-px-10 tracking-[0.3em] uppercase text-white/60">You&rsquo;re invited to an era</p>
+          <h1 className="text-px-52 leading-[0.9] uppercase mt-2" style={{ ...SERIF, fontWeight: 600 }}>{preset.title}</h1>
+          <p className="text-px-17 text-white/80 mt-3 leading-snug" style={SERIF}>{preset.tagline}</p>
         </div>
       </div>
 
@@ -75,26 +75,26 @@ export default function JoinEraPage({
 
         {firstWeek.length > 0 && (
           <section>
-            <h2 className="text-[10px] uppercase tracking-[0.24em] text-white/45 mb-3">How it starts</h2>
+            <h2 className="text-px-10 uppercase tracking-[0.24em] text-white/45 mb-3">How it starts</h2>
             <ol className="space-y-2.5">
               {firstWeek.map((m, i) => (
                 <li key={i} className="flex gap-3 rounded-xl border border-white/[0.12] bg-white/[0.03] p-3">
-                  <span className="text-[11px] text-white/45 tabular-nums pt-0.5 shrink-0">Day {i + 1}</span>
-                  <span className="text-[15px] text-white leading-snug" style={SERIF}>{m}</span>
+                  <span className="text-px-11 text-white/45 tabular-nums pt-0.5 shrink-0">Day {i + 1}</span>
+                  <span className="text-px-15 text-white leading-snug" style={SERIF}>{m}</span>
                 </li>
               ))}
             </ol>
           </section>
         )}
 
-        <p className="text-[11px] text-white/40">
+        <p className="text-px-11 text-white/40">
           Free to start. The era, your promises and check-ins are free forever.
         </p>
 
         {/* Said before they join, not after: a shared link puts them in the
             sharer's circle (lib/era/circle.ts), and this is all it shows. */}
         {from && (
-          <p className="text-[11px] text-white/40 -mt-4">
+          <p className="text-px-11 text-white/40 -mt-4">
             Joining from a shared link puts you in their circle: they&rsquo;ll see your first name, your era and how
             far in you are — never what you promise. You can hide yourself any time.
           </p>

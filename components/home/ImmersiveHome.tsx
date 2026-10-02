@@ -1539,7 +1539,7 @@ export function ImmersiveHome() {
                       strokeDashoffset={2 * Math.PI * 15 * (1 - Math.min(1, era.era.day / era.era.lengthDays))}
                     />
                   </svg>
-                  <span className="text-[10px] text-white/85 tabular-nums">{Math.round(Math.min(1, era.era.day / era.era.lengthDays) * 100)}</span>
+                  <span className="text-px-10 text-white/85 tabular-nums">{Math.round(Math.min(1, era.era.day / era.era.lengthDays) * 100)}</span>
                 </Link>
               )}
             </div>

@@ -84,6 +84,19 @@ export default function RootLayout({
         <link rel="preconnect" href="https://www.youtube.com" />
         <link rel="preconnect" href="https://i.ytimg.com" />
         <link rel="preconnect" href="https://jkrpreixylczfdfdyxrm.supabase.co" crossOrigin="anonymous" />
+        {/* Text size follows the iPhone's (Settings → Display → Text Size).
+            -apple-system-body is the body font at the user's Dynamic Type
+            size — 17px by default — so --ts = that ÷ 17, clamped 0.85–1.5.
+            Every font size is base × --ts (tailwind.config fontSize); only
+            text scales, never layout. iPhone/iPad only: on a Mac the same
+            font is a 13px desktop size and would shrink everything. Runs in
+            <head> so text never jumps, and again whenever the app returns
+            to the foreground (the setting may have changed). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){function read(){try{var r=document.documentElement,s=1,ua=navigator.userAgent||'';var ios=/iP(hone|ad|od)/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);if(ios&&window.CSS&&CSS.supports&&CSS.supports('font','-apple-system-body')){var p=document.createElement('span');p.style.font='-apple-system-body';p.style.position='absolute';p.style.visibility='hidden';r.appendChild(p);var px=parseFloat(getComputedStyle(p).fontSize);r.removeChild(p);if(px>0)s=px/17}s=Math.min(1.5,Math.max(0.85,Math.round(s*100)/100));r.style.setProperty('--ts',String(s))}catch(e){}}read();document.addEventListener('visibilitychange',function(){if(!document.hidden)read()})})();`,
+          }}
+        />
       </head>
       <body className={`${inter.className} ${cormorant.variable} antialiased`}>
         <SkipToContent />

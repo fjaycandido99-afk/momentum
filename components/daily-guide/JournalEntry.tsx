@@ -231,7 +231,7 @@ export function JournalEntry({ date, onClose, showAsModal = false }: JournalEntr
                 <div className="flex items-start gap-2">
                   <Sparkles className="w-3.5 h-3.5 text-white mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-[10px] font-medium tracking-wider text-white/70 uppercase mb-1">Reflection</p>
+                    <p className="text-px-10 font-medium tracking-wider text-white/70 uppercase mb-1">Reflection</p>
                     <p className="text-sm text-white/70 leading-relaxed italic">{reflection}</p>
                   </div>
                 </div>

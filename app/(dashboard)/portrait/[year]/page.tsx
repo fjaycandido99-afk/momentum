@@ -90,7 +90,7 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
       <div className="px-6 lg:max-w-2xl lg:mx-auto">
         {/* Hero — title + spiral artifact */}
         <div className="text-center pt-6">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-white/45 font-semibold">
+          <p className="text-px-11 uppercase tracking-[0.28em] text-white/45 font-semibold">
             You in
           </p>
           <h1 className="text-5xl font-bold tracking-tight mt-1 mb-7">{data.year}</h1>
@@ -104,7 +104,7 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
             />
           </div>
 
-          <p className="mt-5 text-[12.5px] text-white/55 italic max-w-xs mx-auto">
+          <p className="mt-5 text-px-12.5 text-white/55 italic max-w-xs mx-auto">
             One stroke for every time you showed up. Every ring you earned, you earned.
           </p>
         </div>
@@ -113,18 +113,18 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
         <div className="grid grid-cols-3 gap-3 mt-9">
           <div className="text-center p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
             <p className="text-3xl font-bold tabular-nums">{data.minute_count}</p>
-            <p className="text-[10.5px] uppercase tracking-wider text-white/50 mt-1">minutes</p>
+            <p className="text-px-10.5 uppercase tracking-wider text-white/50 mt-1">minutes</p>
           </div>
           <div className="text-center p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
             <p className="text-3xl font-bold tabular-nums">{data.show_days}</p>
-            <p className="text-[10.5px] uppercase tracking-wider text-white/50 mt-1">days</p>
+            <p className="text-px-10.5 uppercase tracking-wider text-white/50 mt-1">days</p>
           </div>
           <div className="text-center p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
             <p className="text-3xl font-bold tabular-nums inline-flex items-center justify-center gap-1">
               <Flame className="w-5 h-5 text-white/85" />
               {data.longest_streak}
             </p>
-            <p className="text-[10.5px] uppercase tracking-wider text-white/50 mt-1">longest run</p>
+            <p className="text-px-10.5 uppercase tracking-wider text-white/50 mt-1">longest run</p>
           </div>
         </div>
 
@@ -137,14 +137,14 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
             <div className="space-y-2">
               {data.dominant_moods.map(m => (
                 <div key={m.mood} className="flex items-center gap-3">
-                  <span className="capitalize text-[13px] text-white/85 min-w-[80px]">{m.mood}</span>
+                  <span className="capitalize text-px-13 text-white/85 min-w-[80px]">{m.mood}</span>
                   <div className="flex-1 h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
                     <div
                       className="h-full bg-white/80 rounded-full"
                       style={{ width: `${m.pct}%` }}
                     />
                   </div>
-                  <span className="text-[11.5px] text-white/55 tabular-nums">{m.pct}%</span>
+                  <span className="text-px-11.5 text-white/55 tabular-nums">{m.pct}%</span>
                 </div>
               ))}
             </div>
@@ -163,11 +163,11 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
             <div className="space-y-5">
               {data.recent_minutes.map((m, i) => (
                 <div key={i} className="pb-5 border-b border-white/[0.06] last:border-b-0">
-                  <p className="text-[10.5px] text-white/40 uppercase tracking-wider mb-1.5">
+                  <p className="text-px-10.5 text-white/40 uppercase tracking-wider mb-1.5">
                     {new Date(m.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                   </p>
                   <p
-                    className="text-[16px] leading-snug text-white font-medium italic"
+                    className="text-px-16 leading-snug text-white font-medium italic"
                     style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
                   >
                     &ldquo;{m.response}&rdquo;
@@ -179,7 +179,7 @@ export default function YearPortraitPage({ params }: { params: { year: string } 
         )}
 
         {/* Footer */}
-        <p className="mt-12 text-center text-[10.5px] text-white/35 italic">
+        <p className="mt-12 text-center text-px-10.5 text-white/35 italic">
           Built from your sixty-second minutes.
         </p>
       </div>

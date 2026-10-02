@@ -52,8 +52,8 @@ export function MovementPicker({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">The library</p>
-            <h2 className="text-[26px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">The library</p>
+            <h2 className="text-px-26 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               Pick an exercise
             </h2>
           </div>
@@ -62,7 +62,7 @@ export function MovementPicker({
           </button>
         </div>
 
-        <p className="text-[13px] text-white/55 mt-2 leading-relaxed">
+        <p className="text-px-13 text-white/55 mt-2 leading-relaxed">
           Grouped by what the movement trains. Tap one to put it in your day — you can still write
           your own instead.
         </p>
@@ -97,10 +97,10 @@ export function MovementPicker({
                     </span>
                   )}
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[14px] text-white leading-snug">
+                    <span className="block text-px-14 text-white leading-snug">
                       {PATTERN_LABELS[group.pattern]}
                     </span>
-                    <span className="block text-[11px] text-white/40 tabular-nums">
+                    <span className="block text-px-11 text-white/40 tabular-nums">
                       {group.movements.length} options
                     </span>
                   </span>
@@ -114,10 +114,10 @@ export function MovementPicker({
                           onClick={() => { haptic('medium'); onPick(movement) }}
                           className="w-full text-left px-3.5 py-2.5 hover:bg-white/[0.04] flex items-baseline justify-between gap-3"
                         >
-                          <span className="min-w-0 text-[14px] text-white/85 leading-snug">
+                          <span className="min-w-0 text-px-14 text-white/85 leading-snug">
                             {movement.name}
                           </span>
-                          <span className="text-[11px] text-white/40 shrink-0">
+                          <span className="text-px-11 text-white/40 shrink-0">
                             {movement.equipment[0]}
                           </span>
                         </button>
@@ -130,7 +130,7 @@ export function MovementPicker({
           })}
         </div>
 
-        <p className="text-[11px] text-white/35 mt-4 leading-relaxed">{MOVEMENT_TECHNIQUE_PENDING}</p>
+        <p className="text-px-11 text-white/35 mt-4 leading-relaxed">{MOVEMENT_TECHNIQUE_PENDING}</p>
       </div>
     </div>
   )

@@ -53,7 +53,7 @@ export function JournalInsights() {
         <div className="relative">
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-white/60" />
-            <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">What your journal reveals</span>
+            <span className="text-px-10 uppercase tracking-wider text-white/50 font-semibold">What your journal reveals</span>
           </div>
 
           {state === 'loading' && (
@@ -64,7 +64,7 @@ export function JournalInsights() {
 
           {state === 'locked' && (
             <button onClick={openUpgradeModal} className="mt-3 block w-full text-left press-scale">
-              <p className="text-[15px] text-white/90 leading-snug">
+              <p className="text-px-15 text-white/90 leading-snug">
                 Unlock the <span className="text-white font-medium">themes, emotional trends and patterns</span> across your entries — the bigger picture only your journal can show.
               </p>
               <span className="inline-flex items-center gap-1 text-sm font-medium text-white mt-3">
@@ -74,7 +74,7 @@ export function JournalInsights() {
           )}
 
           {state === 'insufficient' && (
-            <p className="mt-3 text-[15px] text-white/70 leading-snug">
+            <p className="mt-3 text-px-15 text-white/70 leading-snug">
               A few more entries and the patterns will surface here — keep showing up and your journal will start revealing its threads.
             </p>
           )}
@@ -92,7 +92,7 @@ export function JournalInsights() {
               )}
 
               {data.emotionalTrend && (
-                <p className="text-[15px] text-white leading-relaxed">{data.emotionalTrend}</p>
+                <p className="text-px-15 text-white leading-relaxed">{data.emotionalTrend}</p>
               )}
 
               <div className="space-y-2.5">

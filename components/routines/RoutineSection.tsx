@@ -262,10 +262,10 @@ export function RoutineSection() {
     <div className="mt-7 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Your routine</p>
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Your routine</p>
           {/* Only a subtitle that carries data — the name and the days. */}
           {routine && (
-            <p className="text-[12px] text-white/45 mt-0.5">
+            <p className="text-px-12 text-white/45 mt-0.5">
               {`${routine.label} · ${daysLabel(routine.days)}`}
             </p>
           )}
@@ -282,13 +282,13 @@ export function RoutineSection() {
             */}
             <button
               onClick={togglePaused}
-              className="text-[11px] text-white/45 hover:text-white/80"
+              className="text-px-11 text-white/45 hover:text-white/80"
             >
               {routine.enabled ? 'Pause' : 'Resume'}
             </button>
             <button
               onClick={() => { haptic('light'); setEditing(true) }}
-              className="text-[11px] text-white/45 hover:text-white/80"
+              className="text-px-11 text-white/45 hover:text-white/80"
             >
               Edit
             </button>
@@ -307,10 +307,10 @@ export function RoutineSection() {
           <div className="flex items-start gap-2.5">
             <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-white/50" />
             <div className="min-w-0">
-              <p className="text-[15px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
+              <p className="text-px-15 text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
                 Build the day you want to repeat
               </p>
-              <p className="text-[12px] text-white/55 mt-1 leading-relaxed">
+              <p className="text-px-12 text-white/55 mt-1 leading-relaxed">
                 Your audio, your promise, your disciplines — in the order you do them, or at the
                 times you do them. Voxu walks you through it.
               </p>
@@ -319,7 +319,7 @@ export function RoutineSection() {
           <div className="flex gap-2 mt-3">
             <button
               onClick={() => openTemplate()}
-              className="flex-1 py-2.5 rounded-xl bg-white text-black text-[13px] font-medium active:scale-[0.99]"
+              className="flex-1 py-2.5 rounded-xl bg-white text-black text-px-13 font-medium active:scale-[0.99]"
             >
               {/* Named after their era when they have one, because "the Gym
                   Arc routine" is a thing somebody wants to see and "a
@@ -328,7 +328,7 @@ export function RoutineSection() {
             </button>
             <button
               onClick={() => { haptic('light'); setSeed(null); setEditing(true) }}
-              className="px-3.5 py-2.5 rounded-xl border border-white/15 text-[13px] text-white/70 active:scale-[0.99] inline-flex items-center gap-1"
+              className="px-3.5 py-2.5 rounded-xl border border-white/15 text-px-13 text-white/70 active:scale-[0.99] inline-flex items-center gap-1"
             >
               <Plus className="w-3 h-3" /> Blank
             </button>
@@ -341,7 +341,7 @@ export function RoutineSection() {
           */}
           <button
             onClick={() => { haptic('light'); setDescribing(true) }}
-            className="mt-2 w-full py-2.5 rounded-xl border border-white/[0.1] text-[12.5px] text-white/60 active:scale-[0.99] inline-flex items-center justify-center gap-1.5"
+            className="mt-2 w-full py-2.5 rounded-xl border border-white/[0.1] text-px-12.5 text-white/60 active:scale-[0.99] inline-flex items-center justify-center gap-1.5"
           >
             <Sparkles className="w-3 h-3" /> Tell Voxu about your day instead
           </button>
@@ -359,30 +359,30 @@ export function RoutineSection() {
                     no times — a step happens when the last one is done — so
                     the position takes that column instead, and the shape of
                     the list survives. */}
-                <span className="w-[62px] shrink-0 text-[11px] tabular-nums text-white/45 pt-0.5">
+                <span className="w-[62px] shrink-0 text-px-11 tabular-nums text-white/45 pt-0.5">
                   {step.time ? timeLabel(step.time) : `${i + 1}.`}
                 </span>
                 <span className="shrink-0 pt-0.5">
                   <Icon className="w-3.5 h-3.5 text-white/35" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[14px] text-white leading-snug truncate">
+                  <span className="block text-px-14 text-white leading-snug truncate">
                     {title}
                     {/* Said on the row, because "why did that one not remind
                         me?" has to be answerable from the day itself. */}
                     {step.weight === 'optional' && (
-                      <span className="text-[11px] text-white/35 font-normal"> · optional</span>
+                      <span className="text-px-11 text-white/35 font-normal"> · optional</span>
                     )}
                     {step.weight === 'minimum_only' && (
-                      <span className="text-[11px] text-white/35 font-normal"> · bad days only</span>
+                      <span className="text-px-11 text-white/35 font-normal"> · bad days only</span>
                     )}
                   </span>
                   {missing ? (
-                    <span className="block text-[11px] text-white/35 mt-0.5">
+                    <span className="block text-px-11 text-white/35 mt-0.5">
                       That discipline is paused — edit the routine to point it somewhere
                     </span>
                   ) : minimum ? (
-                    <span className="block text-[11px] text-white/40 mt-0.5">Minimum: {minimum}</span>
+                    <span className="block text-px-11 text-white/40 mt-0.5">Minimum: {minimum}</span>
                   ) : null}
                 </span>
               </>
@@ -430,7 +430,7 @@ export function RoutineSection() {
               />
             ))}
           </div>
-          <p className="text-[11px] text-white/45 leading-relaxed">{reviewLine(review)}</p>
+          <p className="text-px-11 text-white/45 leading-relaxed">{reviewLine(review)}</p>
         </div>
       )}
 
@@ -444,13 +444,13 @@ export function RoutineSection() {
         weeks for most people.
       */}
       {observation && (
-        <p className="text-[12px] text-white/55 leading-relaxed italic">{observation}</p>
+        <p className="text-px-12 text-white/55 leading-relaxed italic">{observation}</p>
       )}
 
       {/* Paused is a state worth seeing: a timeline that looks live and
           reminds you of nothing is the thing to avoid. */}
       {routine && !routine.enabled && steps.length > 0 && (
-        <p className="text-[11px] text-white/45 leading-relaxed">
+        <p className="text-px-11 text-white/45 leading-relaxed">
           Paused. The day is still here — nothing will nudge you until you resume it.
         </p>
       )}
@@ -458,7 +458,7 @@ export function RoutineSection() {
       {/* Said plainly, because a timeline that reminds you of nothing is
           worse than no timeline: they would think it was working. */}
       {remindersOff && routine?.enabled && steps.length > 0 && (
-        <p className="text-[11px] text-white/45 leading-relaxed">
+        <p className="text-px-11 text-white/45 leading-relaxed">
           Notifications are off for Voxu, so this routine will not nudge you. Turn them on in your
           phone&rsquo;s settings and it will start.
         </p>

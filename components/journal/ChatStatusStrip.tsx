@@ -106,7 +106,7 @@ export function ChatStatusStrip({ quota, memoryConsented, isPremium, blocked, on
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 px-1">
       {showCount ? (
-        <p className="text-[11px] text-white/45">
+        <p className="text-px-11 text-white/45">
           {quota!.remaining} of {quota!.limit} messages left today
         </p>
       ) : (
@@ -116,7 +116,7 @@ export function ChatStatusStrip({ quota, memoryConsented, isPremium, blocked, on
       {showMemoryNudge && (
         <Link
           href="/settings#ai-memory"
-          className="inline-flex items-center gap-1.5 text-[11px] text-white/55 underline-offset-2 transition-colors hover:text-white/80 hover:underline"
+          className="inline-flex items-center gap-1.5 text-px-11 text-white/55 underline-offset-2 transition-colors hover:text-white/80 hover:underline"
         >
           <BookLock className="h-3 w-3" />
           {/* Names both halves: the memory covers what you wrote AND how

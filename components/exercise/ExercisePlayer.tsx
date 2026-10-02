@@ -131,7 +131,7 @@ export function ExercisePlayer({
     >
       <ScrollLock />
       <div className="flex items-center justify-between px-5 pt-4">
-        <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+        <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">
           {/* Not "practice" any more: a practice is a discipline you keep
               for months, and /training renamed the pair so a reader doesn't
               have to work out the difference. This is the one exercise. */}
@@ -144,17 +144,17 @@ export function ExercisePlayer({
 
       {phase === 'intro' && (
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 pt-6 pb-8">
-          <h2 className="text-[32px] text-white leading-tight" style={{ ...SERIF, fontWeight: 600 }}>
+          <h2 className="text-px-32 text-white leading-tight" style={{ ...SERIF, fontWeight: 600 }}>
             {exercise.title}
           </h2>
 
           <div className="flex flex-wrap items-center gap-2 mt-3">
             {trains.slice(0, 2).map(a => (
-              <span key={a} className="text-[11px] text-white/70 rounded-full border border-white/15 px-2 py-0.5">
+              <span key={a} className="text-px-11 text-white/70 rounded-full border border-white/15 px-2 py-0.5">
                 Trains {attributeLabel(a).toLowerCase()}
               </span>
             ))}
-            <span className="text-[11px] text-white/50">{exercise.minutes} min</span>
+            <span className="text-px-11 text-white/50">{exercise.minutes} min</span>
             <span className="flex items-center gap-1" aria-label={`Difficulty: ${difficulty}`}>
               {[0, 1, 2].map(i => (
                 <span
@@ -165,15 +165,15 @@ export function ExercisePlayer({
             </span>
           </div>
 
-          <p className="text-[15px] text-white/70 leading-relaxed mt-5">{exercise.why}</p>
+          <p className="text-px-15 text-white/70 leading-relaxed mt-5">{exercise.why}</p>
 
           <ol className="mt-6 space-y-3">
             {exercise.steps.map((step, i) => (
               <li key={i} className="flex gap-3">
-                <span className="w-6 h-6 shrink-0 rounded-full border border-white/20 text-[11px] text-white/60 flex items-center justify-center tabular-nums">
+                <span className="w-6 h-6 shrink-0 rounded-full border border-white/20 text-px-11 text-white/60 flex items-center justify-center tabular-nums">
                   {i + 1}
                 </span>
-                <span className="text-[15px] text-white leading-snug">{step}</span>
+                <span className="text-px-15 text-white leading-snug">{step}</span>
               </li>
             ))}
           </ol>
@@ -189,14 +189,14 @@ export function ExercisePlayer({
 
       {(phase === 'running' || phase === 'paused') && (
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-          <p className="text-[11px] tracking-[0.2em] uppercase text-white/40">{exercise.title}</p>
-          <p className="text-[64px] leading-none text-white tabular-nums mt-3" style={{ ...SERIF, fontWeight: 600 }}>
+          <p className="text-px-11 tracking-[0.2em] uppercase text-white/40">{exercise.title}</p>
+          <p className="text-px-64 leading-none text-white tabular-nums mt-3" style={{ ...SERIF, fontWeight: 600 }}>
             {mmss(remaining)}
           </p>
 
           {/* One line, replaced as the exercise moves. */}
           <p
-            className="text-[20px] text-white/90 leading-snug mt-8 min-h-[3.5rem] max-w-[22rem]"
+            className="text-px-20 text-white/90 leading-snug mt-8 min-h-[3.5rem] max-w-[22rem]"
             style={SERIF}
             aria-live="polite"
           >
@@ -216,7 +216,7 @@ export function ExercisePlayer({
           </button>
 
           {phase === 'paused' && (
-            <button onClick={leave} className="mt-6 text-[13px] text-white/45 hover:text-white/70">
+            <button onClick={leave} className="mt-6 text-px-13 text-white/45 hover:text-white/70">
               Leave it here — {mmss(elapsed)} counts
             </button>
           )}
@@ -229,12 +229,12 @@ export function ExercisePlayer({
             <span className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">
               <Check className="w-4 h-4" />
             </span>
-            <p className="text-[13px] text-white/60">
+            <p className="text-px-13 text-white/60">
               {exercise.minutes} minutes of {attributeLabel(trains[0] ?? '').toLowerCase()}, practised.
             </p>
           </div>
 
-          <h2 className="text-[28px] text-white leading-tight mt-6" style={{ ...SERIF, fontWeight: 600 }}>
+          <h2 className="text-px-28 text-white leading-tight mt-6" style={{ ...SERIF, fontWeight: 600 }}>
             {exercise.after}
           </h2>
           {/* Not a mood rating: it asks about the exercise, so it needs no
@@ -254,7 +254,7 @@ export function ExercisePlayer({
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-white/35 mt-3 leading-relaxed">
+          <p className="text-px-11 text-white/35 mt-3 leading-relaxed">
             Voxu uses this to give you more of what works for you, and less of what doesn&rsquo;t.
           </p>
 

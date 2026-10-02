@@ -19,7 +19,7 @@ export function XPProgress({ totalXP = 0, todaysXP }: XPProgressProps) {
         <AuraRing size={96} stroke={4} progress={progress} breathe={false}>
           <div className="flex flex-col items-center justify-center leading-tight">
             <span className="text-lg font-bold text-white">{xp}</span>
-            <span className="text-[9px] text-white/60">XP</span>
+            <span className="text-px-9 text-white/60">XP</span>
           </div>
         </AuraRing>
       </div>
@@ -29,12 +29,12 @@ export function XPProgress({ totalXP = 0, todaysXP }: XPProgressProps) {
         <p className="text-sm font-semibold text-white">Level {current.level}</p>
         <p className="text-white text-xs">{current.title}</p>
         {next && (
-          <p className="text-[10px] text-white/60 mt-1">
+          <p className="text-px-10 text-white/60 mt-1">
             {next.minXP - xp} XP to {next.title}
           </p>
         )}
         {todaysXP !== undefined && todaysXP > 0 && (
-          <p className="text-[10px] text-white/55 mt-0.5">
+          <p className="text-px-10 text-white/55 mt-0.5">
             +{todaysXP} today
           </p>
         )}

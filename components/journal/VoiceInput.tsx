@@ -269,7 +269,7 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
 
   if (backend === 'none') {
     return (
-      <p className="text-[10px] text-white/50 italic">Voice not supported on this device</p>
+      <p className="text-px-10 text-white/50 italic">Voice not supported on this device</p>
     )
   }
 
@@ -317,7 +317,7 @@ export function VoiceInput({ onTranscript, onInterim, disabled }: VoiceInputProp
           // w-max, not just max-w: an absolute box inside a button-wide
           // wrapper shrinks to the button, which set the message one word
           // per line. left-0 because this is the left-most control in the row.
-          className="absolute top-full left-0 mt-2 w-max max-w-[260px] px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-[11px] text-red-200 text-left leading-snug shadow-lg z-10"
+          className="absolute top-full left-0 mt-2 w-max max-w-[260px] px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-px-11 text-red-200 text-left leading-snug shadow-lg z-10"
         >
           {error}
         </button>

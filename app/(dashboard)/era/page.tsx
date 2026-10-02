@@ -107,7 +107,7 @@ export default function EraPage() {
             </div>
             <div>
               <h1 className="text-base font-medium text-white leading-tight">Your Era</h1>
-              <p className="text-[11px] text-white/50 leading-tight">30 days. One promise a day.</p>
+              <p className="text-px-11 text-white/50 leading-tight">30 days. One promise a day.</p>
             </div>
           </div>
         </div>
@@ -210,7 +210,7 @@ function Picker({
   if (crisis) {
     return (
       <div className="pt-6 space-y-4">
-        <p className="text-[15px] text-white">Your era has started. Before you go — this matters more.</p>
+        <p className="text-px-15 text-white">Your era has started. Before you go — this matters more.</p>
         <CrisisBanner content={crisis} />
         <Link href="/" className="block text-center py-3 rounded-xl bg-white text-black text-sm font-medium">
           Go to today
@@ -234,7 +234,7 @@ function Picker({
               className="relative overflow-hidden text-left p-4 min-h-[104px] flex flex-col justify-end rounded-2xl bg-black border border-white/[0.12] hover:border-white/30 active:scale-[0.99] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
               <EraArt eraKey={p.key} />
-              <span className="relative block text-[22px] leading-none text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>{p.title}</span>
+              <span className="relative block text-px-22 leading-none text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>{p.title}</span>
               <span className="relative block text-xs text-white/65 mt-1.5 max-w-[62%]">{p.tagline}</span>
             </button>
           ))}
@@ -243,7 +243,7 @@ function Picker({
             className="relative overflow-hidden text-left p-4 min-h-[104px] flex flex-col justify-end rounded-2xl bg-black border border-dashed border-white/30 hover:border-white/50 active:scale-[0.99] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
           >
             <EraArt eraKey={CUSTOM_ERA_KEY} className="opacity-50" />
-            <span className="relative block text-[22px] leading-none text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>Name your own</span>
+            <span className="relative block text-px-22 leading-none text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>Name your own</span>
             <span className="relative block text-xs text-white/65 mt-1.5 max-w-[62%]">Healing Era. Dad Mode. Whatever it is.</span>
           </button>
         </div>
@@ -263,7 +263,7 @@ function Picker({
         {/* The chosen era as a banner — the same art the home hero will show. */}
         <div className="relative overflow-hidden mt-3 rounded-2xl border border-white/[0.12] bg-black p-5 min-h-[120px] flex flex-col justify-end">
           <EraArt eraKey={key} />
-          <h2 className="relative text-[32px] leading-none text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>
+          <h2 className="relative text-px-32 leading-none text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>
             {isCustom ? (title.trim() || 'Your own era') : preset?.title}
           </h2>
           {preset && <p className="relative text-sm text-white/70 mt-2 max-w-[62%]">{preset.tagline}</p>}
@@ -295,7 +295,7 @@ function Picker({
           placeholder={preset?.changeHint ?? 'Say it the way you’d say it to a friend.'}
           className={`${inputClass} resize-none`}
         />
-        <p className="text-[11px] text-white/40 mt-1.5">Your coach will remind you of this, in your own words.</p>
+        <p className="text-px-11 text-white/40 mt-1.5">Your coach will remind you of this, in your own words.</p>
       </div>
 
       <div>
@@ -329,7 +329,7 @@ function Picker({
         <button
           onClick={start}
           disabled={!canStart || busy}
-          className="w-full py-3.5 rounded-xl bg-white text-black text-[15px] font-medium disabled:opacity-30 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+          className="w-full py-3.5 rounded-xl bg-white text-black text-px-15 font-medium disabled:opacity-30 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
         >
           {busy && <Loader2 className="w-4 h-4 animate-spin" />}
           Start day 1
@@ -369,7 +369,7 @@ function ActiveEra({
   return (
     <div className="pt-4 space-y-7">
       <div>
-        <p className="text-[11px] tracking-[0.18em] text-white/50 uppercase">{era.title}</p>
+        <p className="text-px-11 tracking-[0.18em] text-white/50 uppercase">{era.title}</p>
         <p className="text-4xl font-medium text-white mt-1">
           Day {era.day}<span className="text-white/35 text-xl font-normal"> / {era.lengthDays}</span>
         </p>
@@ -402,7 +402,7 @@ function ActiveEra({
                 role="listitem"
                 aria-label={label}
                 title={label}
-                className={`aspect-square rounded-md flex items-center justify-center text-[10px] ${
+                className={`aspect-square rounded-md flex items-center justify-center text-px-10 ${
                   state === 'kept'
                     ? 'bg-white text-black font-medium'
                     : state === 'broken'
@@ -428,13 +428,13 @@ function ActiveEra({
       {era.mission && (
         <div className="rounded-2xl border border-white/[0.12] p-4">
           <p className="text-xs text-white/50">Today&rsquo;s mission</p>
-          <p className="text-[15px] text-white mt-1 leading-snug">{era.mission}</p>
+          <p className="text-px-15 text-white mt-1 leading-snug">{era.mission}</p>
         </div>
       )}
 
       <div className="rounded-2xl bg-white/[0.04] border border-white/[0.12] p-4">
         <p className="text-xs text-white/50">On day 1 you said</p>
-        <p className="text-[15px] text-white mt-1 leading-snug">&ldquo;{era.change}&rdquo;</p>
+        <p className="text-px-15 text-white mt-1 leading-snug">&ldquo;{era.change}&rdquo;</p>
         {era.why && <p className="text-sm text-white/65 mt-2 leading-snug">Because &ldquo;{era.why}&rdquo;</p>}
       </div>
 
@@ -442,23 +442,23 @@ function ActiveEra({
           /training now — an era is what you're working on, that page is
           the work. */}
       <Link href="/training" className="block rounded-2xl border border-white/[0.12] p-4 hover:bg-white/[0.03]">
-        <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+        <div className="flex items-center gap-1.5 text-px-10 tracking-[0.2em] uppercase text-white/50">
           <Dumbbell className="w-3.5 h-3.5" /> Training
         </div>
-        <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>
+        <p className="text-px-17 text-white mt-1.5 leading-snug" style={SERIF}>
           Today&rsquo;s practice, and the things you keep.
         </p>
       </Link>
 
       {/* The record this era is adding to — days kept, across every era. */}
       <Link href="/proof" className="block rounded-2xl border border-white/[0.12] p-4 hover:bg-white/[0.03]">
-        <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+        <div className="flex items-center gap-1.5 text-px-10 tracking-[0.2em] uppercase text-white/50">
           <Grid3x3 className="w-3.5 h-3.5" /> Your year in proof
         </div>
-        <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>
+        <p className="text-px-17 text-white mt-1.5 leading-snug" style={SERIF}>
           Every day you kept a promise, on one page.
         </p>
-        <p className="text-[11px] text-white/45 mt-2">
+        <p className="text-px-11 text-white/45 mt-2">
           Tap a day to see the promise, the mission and how you were.
         </p>
       </Link>
@@ -466,11 +466,11 @@ function ActiveEra({
       {/* Is the Daily Read moving toward who this era is about? */}
       {era.alignment && (
         <Link href="/daily-read" className="block rounded-2xl border border-white/[0.12] p-4 hover:bg-white/[0.03]">
-          <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+          <div className="flex items-center gap-1.5 text-px-10 tracking-[0.2em] uppercase text-white/50">
             <Compass className="w-3.5 h-3.5" /> Alignment
           </div>
-          <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>{alignmentLine(era.alignment)}</p>
-          <p className="text-[11px] text-white/45 mt-2">
+          <p className="text-px-17 text-white mt-1.5 leading-snug" style={SERIF}>{alignmentLine(era.alignment)}</p>
+          <p className="text-px-11 text-white/45 mt-2">
             From your Daily Read — one question a day, self-reported, so it only ever says a direction.
           </p>
         </Link>

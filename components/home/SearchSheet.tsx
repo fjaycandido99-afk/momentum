@@ -77,7 +77,7 @@ export function SearchSheet({
               autoCapitalize="none"
               autoCorrect="off"
               aria-label="Search Voxu"
-              className="flex-1 bg-transparent py-3 text-[16px] text-white placeholder:text-white/35 outline-none"
+              className="flex-1 bg-transparent py-3 text-px-16 text-white placeholder:text-white/35 outline-none"
             />
             {query && (
               <button onClick={() => setQuery('')} aria-label="Clear search" className="p-1 text-white/45">
@@ -85,7 +85,7 @@ export function SearchSheet({
               </button>
             )}
           </div>
-          <button onClick={onClose} className="text-[14px] text-white/70 px-1 py-2">
+          <button onClick={onClose} className="text-px-14 text-white/70 px-1 py-2">
             Cancel
           </button>
         </div>
@@ -93,7 +93,7 @@ export function SearchSheet({
         <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-5 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
           {!query.trim() && !kind && (
             <>
-              <p className="text-[10px] tracking-[0.24em] uppercase text-white/40 mt-2 mb-1.5">Browse</p>
+              <p className="text-px-10 tracking-[0.24em] uppercase text-white/40 mt-2 mb-1.5">Browse</p>
               <ul className="divide-y divide-white/[0.07]">
                 {([['guide', 'Guided sessions', 'Breathing, focus, sleep, confidence', Headphones], ['soundscape', 'Soundscapes', 'Ambient sound for any moment', Waves]] as const).map(([k, title, sub, Icon]) => (
                   <li key={k}>
@@ -102,8 +102,8 @@ export function SearchSheet({
                         <Icon className="w-4 h-4 text-white/75" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[15px] text-white">{title}</span>
-                        <span className="block text-[12px] text-white/45">{sub}</span>
+                        <span className="block text-px-15 text-white">{title}</span>
+                        <span className="block text-px-12 text-white/45">{sub}</span>
                       </span>
                       <ChevronRight className="w-4 h-4 text-white/40 shrink-0" />
                     </button>
@@ -113,12 +113,12 @@ export function SearchSheet({
             </>
           )}
           {!query.trim() && kind && (
-            <button onClick={() => setKind(null)} className="text-[12px] text-white/55 mt-2 mb-1 flex items-center gap-1">
+            <button onClick={() => setKind(null)} className="text-px-12 text-white/55 mt-2 mb-1 flex items-center gap-1">
               ‹ Browse
             </button>
           )}
           {query.trim() && results.length === 0 && (
-            <p className="text-[14px] text-white/50 mt-6 text-center">Nothing matches &ldquo;{query.trim()}&rdquo;.</p>
+            <p className="text-px-14 text-white/50 mt-6 text-center">Nothing matches &ldquo;{query.trim()}&rdquo;.</p>
           )}
           <ul className="divide-y divide-white/[0.07]">
             {results.map(item => {
@@ -133,8 +133,8 @@ export function SearchSheet({
                     )}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[15px] text-white truncate">{item.title}</span>
-                    <span className="block text-[12px] text-white/45 truncate">{item.subtitle}</span>
+                    <span className="block text-px-15 text-white truncate">{item.title}</span>
+                    <span className="block text-px-12 text-white/45 truncate">{item.subtitle}</span>
                   </span>
                   {item.kind !== 'page' && <Play className="w-4 h-4 text-white/50 shrink-0" />}
                 </>

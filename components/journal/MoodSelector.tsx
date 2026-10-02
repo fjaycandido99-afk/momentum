@@ -70,7 +70,7 @@ export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: M
               >
                 {m.emoji}
               </span>
-              <span className={`text-[9px] font-medium transition-colors ${
+              <span className={`text-px-9 font-medium transition-colors ${
                 isSelected ? 'text-white' : 'text-white/40'
               }`}>
                 {m.label}
@@ -87,7 +87,7 @@ export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: M
   // a calm, on-brand way to make the daily ritual feel deliberate.
   return (
     <div className="space-y-2.5">
-      <p className="text-[11px] text-white/50 uppercase tracking-wider font-medium">How are you feeling?</p>
+      <p className="text-px-11 text-white/50 uppercase tracking-wider font-medium">How are you feeling?</p>
       <div className="flex items-stretch gap-1.5">
         {MOODS.map((m) => {
           const isSelected = mood === m.value
@@ -108,7 +108,7 @@ export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: M
               >
                 {m.emoji}
               </span>
-              <span className={`text-[10px] font-medium transition-colors ${isSelected ? 'text-white' : 'text-white/45'}`}>
+              <span className={`text-px-10 font-medium transition-colors ${isSelected ? 'text-white' : 'text-white/45'}`}>
                 {m.label}
               </span>
             </button>
@@ -119,7 +119,7 @@ export function MoodSelector({ mood, onSelect, moodHistory, compact = false }: M
       {/* 14-day trend — monochrome sparkline */}
       {sparklinePoints && (
         <div className="flex items-center gap-2 px-0.5 pt-0.5">
-          <span className="text-[10px] text-white/40 shrink-0">14-day trend</span>
+          <span className="text-px-10 text-white/40 shrink-0">14-day trend</span>
           <svg width={120} height={28} viewBox="0 0 120 28" className="text-white/60">
             <polyline
               fill="none"

@@ -74,7 +74,7 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
       <div className="absolute inset-0 bg-gradient-to-t from-[#070504] via-[#070504]/75 to-transparent" />
 
       <div className="absolute inset-x-0 bottom-0 p-3.5">
-        <p className="gold-eyebrow !text-[9px] !tracking-[0.22em]">{TAGLINE(id)}</p>
+        <p className="gold-eyebrow !text-px-9 !tracking-[0.22em]">{TAGLINE(id)}</p>
         {/* Sized to the card, by its longest WORD: a name may wrap between
             words (Samurai / Code) but never inside one — break-words split
             MANIFESTOR into "MANIFESTO / R". cqw is the card's own width
@@ -86,7 +86,7 @@ function MindsetCard({ id, index, onTap }: { id: MindsetId; index: number; onTap
         >
           {config.name}
         </p>
-        <p className="text-[11px] md:text-[13px] text-white/75 leading-snug mt-1.5 line-clamp-2">{config.subtitle}</p>
+        <p className="text-px-11 md:text-px-13 text-white/75 leading-snug mt-1.5 line-clamp-2">{config.subtitle}</p>
       </div>
     </button>
   )
@@ -141,12 +141,12 @@ export function MindsetSelectionScreen({ isReset }: MindsetSelectionScreenProps)
         <p className="gold-eyebrow mb-3">
           {isReset ? 'Change your coach' : 'Your coach'}
         </p>
-        <h1 className="text-[52px] md:text-[64px] leading-[0.92] text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>
+        <h1 className="text-px-52 md:text-px-64 leading-[0.92] text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>
           {isReset
             ? <>A new<br /><span className="gold-title">voice</span></>
             : <>How should<br /><span className="gold-title">it talk to you?</span></>}
         </h1>
-        <p className="text-white/80 text-[15px] max-w-[320px] mx-auto leading-relaxed mt-4">
+        <p className="text-white/80 text-px-15 max-w-[320px] mx-auto leading-relaxed mt-4">
           Your era is what you&rsquo;re working on. Your mindset is how your coach talks to you about it.
         </p>
       </div>
@@ -157,7 +157,7 @@ export function MindsetSelectionScreen({ isReset }: MindsetSelectionScreenProps)
         ))}
       </div>
 
-      <p className={`relative text-white/50 text-[11px] mt-8 transition-all duration-700 delay-700 ${headerVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <p className={`relative text-white/50 text-px-11 mt-8 transition-all duration-700 delay-700 ${headerVisible ? 'opacity-100' : 'opacity-0'}`}>
         Tap one to see how it talks. You can change it anytime.
       </p>
     </div>

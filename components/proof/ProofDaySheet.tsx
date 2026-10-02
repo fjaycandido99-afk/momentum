@@ -29,20 +29,20 @@ const HELPED_LABELS: Record<string, string> = {
 function StateBadge({ kept }: { kept: boolean | null }) {
   if (kept === true) {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] text-black bg-white rounded-full px-2 py-0.5 font-medium">
+      <span className="inline-flex items-center gap-1 text-px-11 text-black bg-white rounded-full px-2 py-0.5 font-medium">
         <Check className="w-3 h-3" /> Kept
       </span>
     )
   }
   if (kept === false) {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] text-white/70 border border-white/25 rounded-full px-2 py-0.5">
+      <span className="inline-flex items-center gap-1 text-px-11 text-white/70 border border-white/25 rounded-full px-2 py-0.5">
         <X className="w-3 h-3" /> Missed
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] text-white/50 border border-dashed border-white/20 rounded-full px-2 py-0.5">
+    <span className="inline-flex items-center gap-1 text-px-11 text-white/50 border border-dashed border-white/20 rounded-full px-2 py-0.5">
       <Minus className="w-3 h-3" /> Never answered
     </span>
   )
@@ -86,12 +86,12 @@ export function ProofDaySheet({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">
               {detail?.era
                 ? `${detail.era}${detail.eraDay ? ` · Day ${detail.eraDay}` : ''}`
                 : isToday ? 'Today' : 'That day'}
             </p>
-            <h2 className="text-[26px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <h2 className="text-px-26 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               {longDayLabel(day)}
             </h2>
           </div>
@@ -108,12 +108,12 @@ export function ProofDaySheet({
             {detail.promise && (
               <div className="rounded-2xl border border-white/[0.12] p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Promise</p>
+                  <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">Promise</p>
                   <StateBadge kept={detail.kept} />
                 </div>
-                <p className="text-[17px] text-white mt-2 leading-snug">&ldquo;{detail.promise}&rdquo;</p>
+                <p className="text-px-17 text-white mt-2 leading-snug">&ldquo;{detail.promise}&rdquo;</p>
                 {detail.confidence && (
-                  <p className="text-[11px] text-white/45 mt-2">
+                  <p className="text-px-11 text-white/45 mt-2">
                     Before you started: {CONFIDENCE_LABELS[detail.confidence]?.toLowerCase() ?? `${detail.confidence}/5 sure`}
                   </p>
                 )}
@@ -122,7 +122,7 @@ export function ProofDaySheet({
 
             {detail.practices.length > 0 && (
               <div className="rounded-2xl border border-white/[0.12] p-4">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Practices</p>
+                <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">Practices</p>
                 <ul className="mt-2 space-y-1.5">
                   {detail.practices.map((p, i) => (
                     <li key={i} className="flex items-start gap-2">
@@ -132,8 +132,8 @@ export function ProofDaySheet({
                           : <X className="w-3.5 h-3.5 text-white/40" />}
                       </span>
                       <span className="min-w-0">
-                        <span className="text-[15px] text-white leading-snug">{p.label}</span>
-                        <span className="block text-[11px] text-white/45">
+                        <span className="text-px-15 text-white leading-snug">{p.label}</span>
+                        <span className="block text-px-11 text-white/45">
                           {p.kept
                             ? p.minimumOnly ? `The minimum — ${p.minimum}. Still a kept day.` : 'Done'
                             : 'Not that day'}
@@ -148,18 +148,18 @@ export function ProofDaySheet({
             {detail.exercise && (
               <div className="rounded-2xl border border-white/[0.12] p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Practice session</p>
+                  <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">Practice session</p>
                   {detail.exercise.completed ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] text-white/70">
+                    <span className="inline-flex items-center gap-1 text-px-11 text-white/70">
                       <Check className="w-3 h-3" /> {detail.exercise.minutes} min
                     </span>
                   ) : (
-                    <span className="text-[11px] text-white/40">Started</span>
+                    <span className="text-px-11 text-white/40">Started</span>
                   )}
                 </div>
-                <p className="text-[15px] text-white mt-1 leading-snug">{detail.exercise.title}</p>
+                <p className="text-px-15 text-white mt-1 leading-snug">{detail.exercise.title}</p>
                 {detail.exercise.helped && (
-                  <p className="text-[11px] text-white/45 mt-1.5">
+                  <p className="text-px-11 text-white/45 mt-1.5">
                     Helped: {HELPED_LABELS[detail.exercise.helped] ?? detail.exercise.helped}
                   </p>
                 )}
@@ -168,35 +168,35 @@ export function ProofDaySheet({
 
             {detail.reason && (
               <div className="rounded-2xl border border-white/[0.12] p-4">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">
+                <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">
                   {detail.reasonKind === 'blocker' ? 'What got in the way' : 'What helped'}
                 </p>
-                <p className="text-[15px] text-white mt-1">{detail.reason}</p>
+                <p className="text-px-15 text-white mt-1">{detail.reason}</p>
               </div>
             )}
 
             {detail.mission && (
               <div className="rounded-2xl border border-white/[0.12] p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Mission</p>
+                  <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">Mission</p>
                   {detail.missionDone && (
-                    <span className="inline-flex items-center gap-1 text-[11px] text-white/70">
+                    <span className="inline-flex items-center gap-1 text-px-11 text-white/70">
                       <Check className="w-3 h-3" /> Done
                     </span>
                   )}
                 </div>
-                <p className="text-[15px] text-white mt-1 leading-snug">{detail.mission}</p>
+                <p className="text-px-15 text-white mt-1 leading-snug">{detail.mission}</p>
               </div>
             )}
 
             {(state || tags.length > 0) && (
               <div className="rounded-2xl border border-white/[0.12] p-4">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">How you were</p>
-                {state && <p className="text-[15px] text-white mt-1 leading-snug">{state}</p>}
+                <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">How you were</p>
+                {state && <p className="text-px-15 text-white mt-1 leading-snug">{state}</p>}
                 {tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {tags.map(t => (
-                      <span key={t} className="text-[11px] text-white/65 rounded-full border border-white/15 px-2 py-0.5">
+                      <span key={t} className="text-px-11 text-white/65 rounded-full border border-white/15 px-2 py-0.5">
                         {tagLabel(t)}
                       </span>
                     ))}
@@ -207,8 +207,8 @@ export function ProofDaySheet({
 
             {detail.coachReply && (
               <div className="rounded-2xl bg-white/[0.04] border border-white/[0.12] p-4">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Voxu said</p>
-                <p className="text-[16px] text-white/90 mt-1.5 leading-snug" style={SERIF}>
+                <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">Voxu said</p>
+                <p className="text-px-16 text-white/90 mt-1.5 leading-snug" style={SERIF}>
                   {detail.coachReply}
                 </p>
               </div>

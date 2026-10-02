@@ -99,19 +99,19 @@ export function CoachingPlanDetail({ plan, onBack, onActivate }: CoachingPlanDet
                 <div className="px-4 pb-4 space-y-3 animate-fade-in-up">
                   <div className="space-y-2.5">
                     <div className="p-3 rounded-xl bg-white/[0.04]">
-                      <p className="text-[10px] uppercase tracking-wider text-white/70 mb-1">Morning</p>
+                      <p className="text-px-10 uppercase tracking-wider text-white/70 mb-1">Morning</p>
                       <p className="text-sm text-white/80 leading-relaxed">{day.morning}</p>
                     </div>
                     <div className="p-3 rounded-xl bg-white/[0.04]">
-                      <p className="text-[10px] uppercase tracking-wider text-white/70 mb-1">Afternoon</p>
+                      <p className="text-px-10 uppercase tracking-wider text-white/70 mb-1">Afternoon</p>
                       <p className="text-sm text-white/80 leading-relaxed">{day.afternoon}</p>
                     </div>
                     <div className="p-3 rounded-xl bg-white/[0.04]">
-                      <p className="text-[10px] uppercase tracking-wider text-white/70 mb-1">Evening</p>
+                      <p className="text-px-10 uppercase tracking-wider text-white/70 mb-1">Evening</p>
                       <p className="text-sm text-white/80 leading-relaxed">{day.evening}</p>
                     </div>
                     <div className="p-3 rounded-xl bg-white/[0.04] border border-white/15">
-                      <p className="text-[10px] uppercase tracking-wider text-white/70 mb-1">Reflection</p>
+                      <p className="text-px-10 uppercase tracking-wider text-white/70 mb-1">Reflection</p>
                       <p className="text-sm text-white/80 leading-relaxed italic">{day.reflection}</p>
                     </div>
                   </div>

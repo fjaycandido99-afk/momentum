@@ -114,10 +114,10 @@ export function MovementSheet({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">
               {PATTERN_LABELS[current.pattern]}
             </p>
-            <h2 className="text-[28px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <h2 className="text-px-28 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               {current.name}
             </h2>
           </div>
@@ -130,15 +130,15 @@ export function MovementSheet({
             several, and how much practice it asks for. Facts about the
             movement — none of them tell anyone what to do. */}
         <div className="flex flex-wrap gap-1.5 mt-3">
-          <span className="text-[11px] text-white/65 rounded-full border border-white/15 px-2.5 py-0.5 capitalize">
+          <span className="text-px-11 text-white/65 rounded-full border border-white/15 px-2.5 py-0.5 capitalize">
             {mechanicOf(current)}
           </span>
           {current.equipment.map(e => (
-            <span key={e} className="text-[11px] text-white/65 rounded-full border border-white/15 px-2.5 py-0.5">
+            <span key={e} className="text-px-11 text-white/65 rounded-full border border-white/15 px-2.5 py-0.5">
               {e}
             </span>
           ))}
-          <span className="text-[11px] text-white/45 rounded-full border border-white/10 px-2.5 py-0.5">
+          <span className="text-px-11 text-white/45 rounded-full border border-white/10 px-2.5 py-0.5">
             {LEVEL_LABEL[current.level]}
           </span>
         </div>
@@ -168,32 +168,32 @@ export function MovementSheet({
                   className="w-full aspect-[3/4] object-cover"
                   loading="lazy"
                 />
-                <p className="text-[10px] text-white/70 text-center py-1.5">{REGION_LABELS[region]}</p>
+                <p className="text-px-10 text-white/70 text-center py-1.5">{REGION_LABELS[region]}</p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-[13px] text-white/60 mt-2.5">
+          <p className="text-px-13 text-white/60 mt-2.5">
             <span className="text-white/40">Works </span>
             {regionsOf(current).map(r => REGION_LABELS[r].toLowerCase()).join(' · ')}
           </p>
         )}
 
 
-        {current.pick && <p className="text-[13px] text-white/60 mt-3 leading-snug">{current.pick}</p>}
+        {current.pick && <p className="text-px-13 text-white/60 mt-3 leading-snug">{current.pick}</p>}
 
         {/* How to do it: content with a reviewer's name on it, or the
             reason there isn't any. Never invented. */}
-        <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-6">How to do it</p>
+        <p className="text-px-11 uppercase tracking-[0.2em] text-white/45 mt-6">How to do it</p>
         {technique ? (
           <div className="mt-2 rounded-2xl border border-white/[0.12] p-4">
-            <p className="text-[10px] tracking-[0.18em] uppercase text-white/40">
+            <p className="text-px-10 tracking-[0.18em] uppercase text-white/40">
               Reviewed by {technique.reviewedBy} · {technique.reviewedOn}
             </p>
             <ol className="mt-2.5 space-y-2">
               {technique.steps.map((step, i) => (
-                <li key={i} className="text-[14px] text-white/80 leading-snug flex gap-2.5">
-                  <span className="text-[11px] text-white/35 tabular-nums mt-0.5 shrink-0">{i + 1}</span>
+                <li key={i} className="text-px-14 text-white/80 leading-snug flex gap-2.5">
+                  <span className="text-px-11 text-white/35 tabular-nums mt-0.5 shrink-0">{i + 1}</span>
                   <span className="min-w-0">{step}</span>
                 </li>
               ))}
@@ -201,13 +201,13 @@ export function MovementSheet({
 
             {technique.cues && technique.cues.length > 0 && (
               <div className="mt-4 pt-3 border-t border-white/[0.08]">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Key cues</p>
+                <p className="text-px-10 tracking-[0.2em] uppercase text-white/40">Key cues</p>
                 <div className="mt-2 grid grid-cols-1 gap-1.5">
                   {technique.cues.map(cue => (
                     <div key={cue.label}>
-                      <p className="text-[13px] text-white/85 leading-snug">{cue.label}</p>
+                      <p className="text-px-13 text-white/85 leading-snug">{cue.label}</p>
                       {cue.detail && (
-                        <p className="text-[11px] text-white/45 leading-snug">{cue.detail}</p>
+                        <p className="text-px-11 text-white/45 leading-snug">{cue.detail}</p>
                       )}
                     </div>
                   ))}
@@ -217,12 +217,12 @@ export function MovementSheet({
 
             {technique.mistakes && technique.mistakes.length > 0 && (
               <div className="mt-4 pt-3 border-t border-white/[0.08]">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-white/40">Common mistakes</p>
+                <p className="text-px-10 tracking-[0.2em] uppercase text-white/40">Common mistakes</p>
                 <div className="mt-2 space-y-1.5">
                   {technique.mistakes.map(m => (
                     <div key={m.label}>
-                      <p className="text-[13px] text-white/85 leading-snug">{m.label}</p>
-                      {m.detail && <p className="text-[11px] text-white/45 leading-snug">{m.detail}</p>}
+                      <p className="text-px-13 text-white/85 leading-snug">{m.label}</p>
+                      {m.detail && <p className="text-px-11 text-white/45 leading-snug">{m.detail}</p>}
                     </div>
                   ))}
                 </div>
@@ -230,13 +230,13 @@ export function MovementSheet({
             )}
           </div>
         ) : (
-          <p className="text-[12px] text-white/40 mt-2 leading-relaxed">{MOVEMENT_TECHNIQUE_PENDING}</p>
+          <p className="text-px-12 text-white/40 mt-2 leading-relaxed">{MOVEMENT_TECHNIQUE_PENDING}</p>
         )}
 
         {/* Variations: the relatives, navigable. */}
         {variations.length > 0 && (
           <>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-6">Variations</p>
+            <p className="text-px-11 uppercase tracking-[0.2em] text-white/45 mt-6">Variations</p>
             <div className="mt-2 grid grid-cols-2 gap-2">
               {variations.slice(0, 6).map(v => {
                 const thumb = ownArt(v)
@@ -259,8 +259,8 @@ export function MovementSheet({
                     </span>
                   )}
                   <span className="block p-3">
-                    <span className="block text-[13px] text-white leading-snug">{v.name}</span>
-                    <span className="block text-[11px] text-white/40 mt-0.5 truncate">
+                    <span className="block text-px-13 text-white leading-snug">{v.name}</span>
+                    <span className="block text-px-11 text-white/40 mt-0.5 truncate">
                       {v.equipment.join(' · ')}
                     </span>
                   </span>
@@ -272,13 +272,13 @@ export function MovementSheet({
         )}
 
         {/* The substitution engine. */}
-        <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-6">Swap movement</p>
+        <p className="text-px-11 uppercase tracking-[0.2em] text-white/45 mt-6">Swap movement</p>
         <div className="flex flex-wrap gap-1.5 mt-2">
           {SWAP_REASONS.map(r => (
             <button
               key={r.key}
               onClick={() => { haptic('light'); setReason(reason === r.key ? null : r.key) }}
-              className={`text-[13px] rounded-full px-3 py-1.5 border ${
+              className={`text-px-13 rounded-full px-3 py-1.5 border ${
                 reason === r.key ? 'bg-white text-black border-white' : 'border-white/20 text-white/75'
               }`}
             >
@@ -289,16 +289,16 @@ export function MovementSheet({
 
         {reason === 'hurts' && (
           <div className="mt-3 rounded-2xl border border-white/[0.14] bg-white/[0.04] p-4">
-            <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+            <div className="flex items-center gap-1.5 text-px-10 tracking-[0.2em] uppercase text-white/50">
               <AlertTriangle className="w-3.5 h-3.5" /> Before you swap
             </div>
-            <p className="text-[13px] text-white/75 mt-1.5 leading-relaxed">{HURTS_NOTE}</p>
+            <p className="text-px-13 text-white/75 mt-1.5 leading-relaxed">{HURTS_NOTE}</p>
           </div>
         )}
 
         {reason && (
           <div className="mt-3">
-            <p className="text-[12px] text-white/50">{swapIntro(reason, current)}</p>
+            <p className="text-px-12 text-white/50">{swapIntro(reason, current)}</p>
             {swaps.length > 0 ? (
               <div className="mt-2 space-y-2">
                 {swaps.map(swap => (
@@ -306,7 +306,7 @@ export function MovementSheet({
                     <div className="flex items-center justify-between gap-3">
                       <button
                         onClick={() => show(swap)}
-                        className="text-[15px] text-white leading-snug flex items-center gap-2 min-w-0 text-left"
+                        className="text-px-15 text-white leading-snug flex items-center gap-2 min-w-0 text-left"
                       >
                         <span className="text-white/45 shrink-0">
                           <PatternGlyph pattern={swap.pattern} className="w-4 h-4" />
@@ -316,13 +316,13 @@ export function MovementSheet({
                       {onSwap && (
                         <button
                           onClick={() => { haptic('medium'); onSwap(swap) }}
-                          className="text-[12px] text-black bg-white rounded-full px-2.5 py-1 font-medium shrink-0"
+                          className="text-px-12 text-black bg-white rounded-full px-2.5 py-1 font-medium shrink-0"
                         >
                           Use this
                         </button>
                       )}
                     </div>
-                    <p className="text-[11px] text-white/45 mt-0.5">
+                    <p className="text-px-11 text-white/45 mt-0.5">
                       {swap.equipment.join(' · ')}
                       {swap.pick ? ` — ${swap.pick}` : ''}
                     </p>
@@ -330,7 +330,7 @@ export function MovementSheet({
                 ))}
               </div>
             ) : (
-              <p className="text-[13px] text-white/45 mt-2">
+              <p className="text-px-13 text-white/45 mt-2">
                 Nothing in the library fits that. Skipping the movement today costs you nothing.
               </p>
             )}
@@ -339,13 +339,13 @@ export function MovementSheet({
 
         {/* Safety, which is not technique: a stop rule. */}
         <div className="mt-6 rounded-2xl border border-white/[0.1] p-4">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">Stop if</p>
+          <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">Stop if</p>
           <ul className="mt-2 space-y-1">
             {MOVEMENT_STOP_SIGNALS.map(signal => (
-              <li key={signal} className="text-[13px] text-white/70 leading-snug">{signal}</li>
+              <li key={signal} className="text-px-13 text-white/70 leading-snug">{signal}</li>
             ))}
           </ul>
-          <p className="text-[11px] text-white/40 mt-2.5 leading-relaxed">{MOVEMENT_STOP_NOTE}</p>
+          <p className="text-px-11 text-white/40 mt-2.5 leading-relaxed">{MOVEMENT_STOP_NOTE}</p>
         </div>
       </div>
     </div>

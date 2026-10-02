@@ -117,7 +117,7 @@ export function NavSheet({
         className="absolute inset-y-0 right-0 w-[min(92vw,420px)] bg-[#070708] border-l border-white/[0.1] flex flex-col"
       >
         <div className="safe-area-pt px-5 pt-3 pb-2 flex items-center justify-between">
-          <p className="text-[12px] tracking-[0.5em] uppercase text-white/70 pl-0.5">Voxu</p>
+          <p className="text-px-12 tracking-[0.5em] uppercase text-white/70 pl-0.5">Voxu</p>
           <button onClick={onClose} aria-label="Close menu" className="w-9 h-9 rounded-full border border-white/[0.14] flex items-center justify-center press-scale">
             <X className="w-4 h-4 text-white/80" />
           </button>
@@ -125,7 +125,7 @@ export function NavSheet({
         <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
           {sections.map(sec => (
             <section key={sec.title} className="mt-4">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-white/40 px-1 mb-2">{sec.title}</p>
+              <p className="text-px-10 tracking-[0.3em] uppercase text-white/40 px-1 mb-2">{sec.title}</p>
               <ul className="space-y-1.5">
                 {sec.items.map(it => {
                   const Icon = it.icon
@@ -135,10 +135,10 @@ export function NavSheet({
                         <Icon className="w-4 h-4 text-white/80" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[16px] text-white leading-tight" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 500 }}>
+                        <span className="block text-px-16 text-white leading-tight" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 500 }}>
                           {it.label}
                         </span>
-                        <span className="block text-[12px] text-white/50 truncate">{it.sub}</span>
+                        <span className="block text-px-12 text-white/50 truncate">{it.sub}</span>
                         {it.progress !== undefined && (
                           <span className="block h-1 rounded-full bg-white/10 mt-1.5 overflow-hidden" aria-hidden>
                             <span className="block h-full rounded-full era-accent-bg" style={{ width: `${Math.max(3, it.progress * 100)}%` }} />
@@ -146,7 +146,7 @@ export function NavSheet({
                         )}
                       </span>
                       {it.status && (
-                        <span className={`text-[11px] shrink-0 ${it.live ? 'text-white/85' : 'text-white/45'}`}>{it.status}</span>
+                        <span className={`text-px-11 shrink-0 ${it.live ? 'text-white/85' : 'text-white/45'}`}>{it.status}</span>
                       )}
                       <ChevronRight className="w-4 h-4 text-white/35 shrink-0" aria-hidden />
                     </>

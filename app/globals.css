@@ -3060,6 +3060,14 @@ html .text-white\/50 {
   }
 }
 
+/* Larger text can make a long word wider than a phone. Headings may break
+   a word as a last resort rather than run off the edge. */
+h1,
+h2,
+h3 {
+  overflow-wrap: break-word;
+}
+
 /* A 44pt hit area around a smaller visible control (Apple's minimum). The
    control looks the same; the invisible edge around it takes the tap. */
 /* Positioned controls (absolute/fixed/sticky) already anchor the ::after;

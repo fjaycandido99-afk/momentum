@@ -47,9 +47,9 @@ export function EraReflection({ eraId, initial }: { eraId: string; initial: stri
   if (saved && !editing) {
     return (
       <div className="mt-4">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">What you&rsquo;ll remember</p>
-        <p className="text-[18px] text-white leading-snug mt-1.5" style={SERIF}>&ldquo;{saved}&rdquo;</p>
-        <button onClick={() => { setDraft(saved); setEditing(true) }} className="text-[12px] text-white/50 mt-1">
+        <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">What you&rsquo;ll remember</p>
+        <p className="text-px-18 text-white leading-snug mt-1.5" style={SERIF}>&ldquo;{saved}&rdquo;</p>
+        <button onClick={() => { setDraft(saved); setEditing(true) }} className="text-px-12 text-white/50 mt-1">
           Edit
         </button>
       </div>
@@ -58,7 +58,7 @@ export function EraReflection({ eraId, initial }: { eraId: string; initial: stri
 
   return (
     <div className="mt-4">
-      <label htmlFor="era-reflection" className="block text-[11px] uppercase tracking-[0.2em] text-white/45">
+      <label htmlFor="era-reflection" className="block text-px-11 uppercase tracking-[0.2em] text-white/45">
         One line to remember it by <span className="text-white/30">Optional</span>
       </label>
       <input
@@ -67,15 +67,15 @@ export function EraReflection({ eraId, initial }: { eraId: string; initial: stri
         onChange={e => setDraft(e.target.value)}
         maxLength={REFLECTION_MAX}
         placeholder="What did this month teach you?"
-        className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/30"
+        className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-15 text-white placeholder:text-white/30"
       />
-      <p className="text-[11px] text-white/40 mt-1.5">Kept on this era&rsquo;s record in Proof.</p>
-      {error && <p className="text-[12px] text-white/70 mt-1.5" role="alert">{error}</p>}
+      <p className="text-px-11 text-white/40 mt-1.5">Kept on this era&rsquo;s record in Proof.</p>
+      {error && <p className="text-px-12 text-white/70 mt-1.5" role="alert">{error}</p>}
       {(draft.trim() || saved) && (
         <button
           onClick={save}
           disabled={busy}
-          className="mt-2 px-4 py-2 rounded-xl border border-white/20 text-[13px] text-white/85 disabled:opacity-40 inline-flex items-center gap-2"
+          className="mt-2 px-4 py-2 rounded-xl border border-white/20 text-px-13 text-white/85 disabled:opacity-40 inline-flex items-center gap-2"
         >
           {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
           Save

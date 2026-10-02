@@ -46,8 +46,8 @@ export function PracticeGuideSheet({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">{label}</p>
-            <h2 className="text-[26px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">{label}</p>
+            <h2 className="text-px-26 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               {guide.title}
             </h2>
           </div>
@@ -74,23 +74,23 @@ export function PracticeGuideSheet({
         <ol className="mt-5 space-y-3.5">
           {guide.steps.map((step, i) => (
             <li key={i} className="flex gap-3">
-              <span className="w-6 h-6 shrink-0 rounded-full border border-white/20 text-[11px] text-white/60 flex items-center justify-center tabular-nums">
+              <span className="w-6 h-6 shrink-0 rounded-full border border-white/20 text-px-11 text-white/60 flex items-center justify-center tabular-nums">
                 {i + 1}
               </span>
               <span className="min-w-0">
-                <span className="block text-[15px] text-white leading-snug">{step.label}</span>
-                <span className="block text-[13px] text-white/55 mt-0.5 leading-snug">{step.detail}</span>
+                <span className="block text-px-15 text-white leading-snug">{step.label}</span>
+                <span className="block text-px-13 text-white/55 mt-0.5 leading-snug">{step.detail}</span>
               </span>
             </li>
           ))}
         </ol>
 
         <div className="mt-5 rounded-2xl bg-white/[0.04] border border-white/[0.12] p-4">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">The one that matters</p>
-          <p className="text-[16px] text-white/90 mt-1.5 leading-snug" style={SERIF}>{guide.keystone}</p>
+          <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">The one that matters</p>
+          <p className="text-px-16 text-white/90 mt-1.5 leading-snug" style={SERIF}>{guide.keystone}</p>
         </div>
 
-        <p className="text-[11px] text-white/35 mt-4 leading-relaxed">{GUIDE_LIMIT_NOTE}</p>
+        <p className="text-px-11 text-white/35 mt-4 leading-relaxed">{GUIDE_LIMIT_NOTE}</p>
       </div>
     </div>
   )

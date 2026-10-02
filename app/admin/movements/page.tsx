@@ -51,7 +51,7 @@ export default async function AdminMovementsPage() {
   return (
     <div className="min-h-screen bg-black text-white px-5 py-8">
       <div className="max-w-2xl mx-auto">
-        <Link href="/admin" className="text-[11px] text-white/45 hover:text-white/80">
+        <Link href="/admin" className="text-px-11 text-white/45 hover:text-white/80">
           ← Admin
         </Link>
         <h1 className="text-2xl mt-3">Movement guidance</h1>
@@ -61,7 +61,7 @@ export default async function AdminMovementsPage() {
           rest show &ldquo;Voxu doesn&rsquo;t teach technique&rdquo;, which is the honest state until
           somebody qualified fills them in.
         </p>
-        <p className="text-[12px] text-white/40 mt-2 leading-relaxed">
+        <p className="text-px-12 text-white/40 mt-2 leading-relaxed">
           Whoever is named here is the person standing behind these words on a paying customer&rsquo;s
           screen. Sets, reps, loads and times are refused — how to move is the reviewer&rsquo;s call,
           how much belongs to the person and their own coach.

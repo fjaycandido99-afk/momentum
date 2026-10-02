@@ -174,10 +174,10 @@ export function CoachGreetingBubble({ mindsetId, onVisibleChange }: CoachGreetin
           borderLeft: '6px solid rgba(0,0,0,0.8)',
         }}
       />
-      <p className="text-[10px] font-medium mb-0.5" style={{ color: accent }}>
+      <p className="text-px-10 font-medium mb-0.5" style={{ color: accent }}>
         {coachName}
       </p>
-      <p className="text-[11px] leading-tight text-white/80">
+      <p className="text-px-11 leading-tight text-white/80">
         {message}
       </p>
     </div>

@@ -110,26 +110,26 @@ export function PulseSection({
       {r && !(showRescue && rescueOn) && (
         <div>
           <section className="card-surface-lg era-glow p-5" aria-label="Right now">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">{r.eyebrow}</p>
-            <h2 className="text-[26px] leading-[1.1] text-white mt-1.5" style={{ ...SERIF, fontWeight: 500 }}>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">{r.eyebrow}</p>
+            <h2 className="text-px-26 leading-[1.1] text-white mt-1.5" style={{ ...SERIF, fontWeight: 500 }}>
               {r.title}
             </h2>
             {r.quote && (
-              <p className="text-[15px] text-white/75 mt-2 leading-snug italic" style={SERIF}>
+              <p className="text-px-15 text-white/75 mt-2 leading-snug italic" style={SERIF}>
                 &ldquo;{r.quote}&rdquo;
               </p>
             )}
-            {r.context && <p className="text-[13px] text-white/55 mt-2 leading-snug">{r.context}</p>}
+            {r.context && <p className="text-px-13 text-white/55 mt-2 leading-snug">{r.context}</p>}
             {r.action && (
               <button
                 onClick={() => act(r.action!.target)}
-                className="mt-4 w-full py-3 rounded-xl bg-white text-black text-[14px] font-medium active:scale-[0.98] transition-all"
+                className="mt-4 w-full py-3 rounded-xl bg-white text-black text-px-14 font-medium active:scale-[0.98] transition-all"
               >
                 {r.action.label}
               </button>
             )}
             {pulse.next && (
-              <p className="text-[12px] text-white/45 mt-3">
+              <p className="text-px-12 text-white/45 mt-3">
                 Next: <span className="text-white/75">{pulse.next.title}</span> · {timeLabel(pulse.next.time)}
               </p>
             )}
@@ -138,7 +138,7 @@ export function PulseSection({
               what the app says to do now, on purpose. */}
           <Link
             href="/reset"
-            className="inline-block text-[12px] text-white/40 hover:text-white/70 mt-1.5 px-1 underline underline-offset-4 decoration-white/20"
+            className="inline-block text-px-12 text-white/40 hover:text-white/70 mt-1.5 px-1 underline underline-offset-4 decoration-white/20"
           >
             Not feeling it?
           </Link>
@@ -148,9 +148,9 @@ export function PulseSection({
       {items.length >= 2 && (
         <section className="card-surface-lg p-4" aria-label="Today">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Today</p>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Today</p>
             {pulse.today.total > 0 && (
-              <p className="text-[12px] text-white/55 tabular-nums">
+              <p className="text-px-12 text-white/55 tabular-nums">
                 {pulse.today.done} of {pulse.today.total}
               </p>
             )}
@@ -171,8 +171,8 @@ export function PulseSection({
                     {it.status === 'missed' && <Minus className="w-3 h-3 text-white/45" />}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className={`block text-[14px] truncate ${ticked ? 'text-white/60' : 'text-white'}`}>{it.title}</span>
-                    <span className="block text-[11px] text-white/45">
+                    <span className={`block text-px-14 truncate ${ticked ? 'text-white/60' : 'text-white'}`}>{it.title}</span>
+                    <span className="block text-px-11 text-white/45">
                       {it.time ? `${timeLabel(it.time)} · ` : ''}
                       <span className={due ? 'text-white/85' : ''}>{due && it.time ? 'Due now' : STATUS_TEXT[it.status]}</span>
                     </span>

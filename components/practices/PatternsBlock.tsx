@@ -41,7 +41,7 @@ export function PatternsBlock() {
 
   return (
     <div className="card-surface-lg p-4">
-      <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+      <div className="flex items-center gap-1.5 text-px-10 tracking-[0.2em] uppercase text-white/50">
         <Telescope className="w-3.5 h-3.5" /> What Voxu noticed
       </div>
 
@@ -50,17 +50,17 @@ export function PatternsBlock() {
           {patterns.map(pattern => (
             <li key={pattern.id} className="flex gap-2.5">
               <span className="mt-2 w-1 h-1 rounded-full bg-white/40 shrink-0" aria-hidden />
-              <p className="text-[16px] text-white/90 leading-snug" style={SERIF}>
+              <p className="text-px-16 text-white/90 leading-snug" style={SERIF}>
                 {pattern.line}
               </p>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[13px] text-white/50 mt-2 leading-relaxed">{pending}</p>
+        <p className="text-px-13 text-white/50 mt-2 leading-relaxed">{pending}</p>
       )}
 
-      <p className="text-[11px] text-white/30 mt-4 leading-relaxed">
+      <p className="text-px-11 text-white/30 mt-4 leading-relaxed">
         Counted from your own answers, never guessed. Each line shows what it&rsquo;s counting so
         you can disagree with it.
       </p>

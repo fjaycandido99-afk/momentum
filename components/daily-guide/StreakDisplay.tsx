@@ -131,12 +131,12 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
             </span>
           </div>
           {currentMilestone && (
-            <span className="text-[10px] text-white/50">{currentMilestone.label}</span>
+            <span className="text-px-10 text-white/50">{currentMilestone.label}</span>
           )}
         </div>
         {nextMilestone && (
           <div className="ml-2 pl-2 border-l border-white/15">
-            <div className="text-[10px] text-white/50">
+            <div className="text-px-10 text-white/50">
               {nextMilestone.days - streak} to {nextMilestone.label}
             </div>
           </div>
@@ -293,7 +293,7 @@ export function StreakBadge({ streak, freezeCount }: { streak: number; freezeCou
       {freezes > 0 && (
         <span className="flex items-center gap-0.5 text-white/45">
           <Snowflake className="w-3 h-3" />
-          <span className="text-[10px] tabular-nums">{freezes}</span>
+          <span className="text-px-10 tabular-nums">{freezes}</span>
         </span>
       )}
     </Link>

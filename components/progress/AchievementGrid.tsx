@@ -68,7 +68,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
           <Trophy className="w-4 h-4 text-[#e8c79a]" />
           <div>
             <h3 className="text-sm font-semibold text-white">Achievements</h3>
-            <p className="text-[11px] text-white/60">{unlockedCount} of {totalCount} unlocked</p>
+            <p className="text-px-11 text-white/60">{unlockedCount} of {totalCount} unlocked</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -78,7 +78,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
               style={{ width: `${pct}%` }}
             />
           </div>
-          <span className="text-[11px] font-medium text-white">{pct}%</span>
+          <span className="text-px-11 font-medium text-white">{pct}%</span>
         </div>
       </div>
 
@@ -90,8 +90,8 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
             <div key={group.category}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xs grayscale">{group.icon}</span>
-                <span className="text-[11px] font-medium text-white/80 uppercase tracking-[0.16em]">{group.label}</span>
-                <span className="text-[11px] text-white/45 ml-auto tabular-nums">{groupUnlocked}/{group.achievements.length}</span>
+                <span className="text-px-11 font-medium text-white/80 uppercase tracking-[0.16em]">{group.label}</span>
+                <span className="text-px-11 text-white/45 ml-auto tabular-nums">{groupUnlocked}/{group.achievements.length}</span>
               </div>
 
               <div className="grid grid-cols-3 gap-2">
@@ -120,7 +120,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                     >
                       <AchievementBadge id={a.id} category={a.category} icon={a.icon} rarity={a.rarity} unlocked={a.unlocked} mark={hidden ? null : a.mark} size={48} />
 
-                      <span className={`text-[11px] font-medium text-center leading-tight line-clamp-2 ${
+                      <span className={`text-px-11 font-medium text-center leading-tight line-clamp-2 ${
                         a.unlocked ? 'text-white' : 'text-white/45'
                       }`}>
                         {hidden ? 'Secret' : a.title}
@@ -128,14 +128,14 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
 
                       {a.unlocked ? (
                         <span className="flex items-center gap-1.5">
-                          <span className="text-[9px] uppercase tracking-[0.16em] font-medium" style={{ color: `rgb(${METAL_RGB[METAL[a.rarity]]})` }}>
+                          <span className="text-px-9 uppercase tracking-[0.16em] font-medium" style={{ color: `rgb(${METAL_RGB[METAL[a.rarity]]})` }}>
                             {a.rarity}
                           </span>
-                          {a.unlockedAt && <span className="text-[10px] text-white/40">{formatDate(a.unlockedAt)}</span>}
+                          {a.unlockedAt && <span className="text-px-10 text-white/40">{formatDate(a.unlockedAt)}</span>}
                         </span>
                       ) : (
                         <>
-                          <span className="text-[10px] text-white/35 text-center leading-snug line-clamp-2">
+                          <span className="text-px-10 text-white/35 text-center leading-snug line-clamp-2">
                             {hidden ? 'Keep going to find it' : a.description}
                           </span>
                           {!hidden && a.progress && a.progress.current > 0 && (
@@ -146,7 +146,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                                   style={{ width: `${Math.round((a.progress.current / a.progress.target) * 100)}%` }}
                                 />
                               </span>
-                              <span className="text-[10px] text-white/55 tabular-nums">{a.progress.current}/{a.progress.target}</span>
+                              <span className="text-px-10 text-white/55 tabular-nums">{a.progress.current}/{a.progress.target}</span>
                             </span>
                           )}
                         </>
@@ -163,7 +163,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
       {grouped.length > 3 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="press-scale w-full flex items-center justify-center gap-1.5 py-2.5 mt-4 text-[12px] text-white/70 hover:text-white/85 transition-colors"
+          className="press-scale w-full flex items-center justify-center gap-1.5 py-2.5 mt-4 text-px-12 text-white/70 hover:text-white/85 transition-colors"
         >
           {expanded ? 'Show less' : `Show ${hiddenCount} more`}
           <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />

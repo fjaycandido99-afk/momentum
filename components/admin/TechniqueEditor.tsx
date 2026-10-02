@@ -194,8 +194,8 @@ export function TechniqueEditor({
     }
   }
 
-  const field = 'w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-[14px] text-white'
-  const label = 'block text-[11px] uppercase tracking-[0.18em] text-white/45 mt-5'
+  const field = 'w-full px-3 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-px-14 text-white'
+  const label = 'block text-px-11 uppercase tracking-[0.18em] text-white/45 mt-5'
 
   return (
     <div className="mt-6">
@@ -215,7 +215,7 @@ export function TechniqueEditor({
           </option>
         ))}
       </select>
-      <p className="text-[11px] text-white/35 mt-1.5">
+      <p className="text-px-11 text-white/35 mt-1.5">
         ✓ published · ◌ drafted, nobody can see it · · nothing yet
       </p>
 
@@ -223,10 +223,10 @@ export function TechniqueEditor({
           page should never mistake the model's words for a person's. */}
       {isDraft && (
         <div className="mt-3 rounded-xl border border-amber-300/30 bg-amber-300/[0.06] p-3">
-          <p className="text-[13px] text-amber-100/90 leading-snug">
+          <p className="text-px-13 text-amber-100/90 leading-snug">
             This is an unsigned draft. No reader has seen a word of it.
           </p>
-          <p className="text-[12px] text-amber-100/60 mt-1 leading-snug">
+          <p className="text-px-12 text-amber-100/60 mt-1 leading-snug">
             Written by the model to save you typing. It is wrong until you have checked it — and
             whoever you name below is the person a paying customer will hold to it.
           </p>
@@ -237,13 +237,13 @@ export function TechniqueEditor({
         <button
           onClick={draft}
           disabled={busy || !!bulk || (!!current && current.published)}
-          className="text-[12px] text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 disabled:opacity-40"
+          className="text-px-12 text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 disabled:opacity-40"
         >
           {current?.published ? 'Already published — withdraw to redraft' : 'Draft this one with AI'}
         </button>
 
         {bulk ? (
-          <span className="flex items-center gap-2 text-[12px] text-white/60">
+          <span className="flex items-center gap-2 text-px-12 text-white/60">
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
             Drafting {bulk.done + bulk.rejected} of {bulk.total}
             {bulk.rejected > 0 ? ` · ${bulk.rejected} skipped` : ''}
@@ -258,7 +258,7 @@ export function TechniqueEditor({
           <button
             onClick={draftAll}
             disabled={busy}
-            className="text-[12px] text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 disabled:opacity-40"
+            className="text-px-12 text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 disabled:opacity-40"
           >
             Draft all {movements.filter(m => !existing[m.id]).length} missing
           </button>
@@ -296,7 +296,7 @@ export function TechniqueEditor({
         value={steps}
         onChange={e => setSteps(e.target.value)}
         rows={6}
-        className={`${field} mt-1.5 font-mono text-[13px]`}
+        className={`${field} mt-1.5 font-mono text-px-13`}
       />
 
       <label className={label} htmlFor="cues">
@@ -308,7 +308,7 @@ export function TechniqueEditor({
         onChange={e => setCues(e.target.value)}
         rows={4}
         placeholder="Chest proud | Ribs down, eyes forward"
-        className={`${field} mt-1.5 font-mono text-[13px]`}
+        className={`${field} mt-1.5 font-mono text-px-13`}
       />
 
       <label className={label} htmlFor="mistakes">
@@ -320,7 +320,7 @@ export function TechniqueEditor({
         onChange={e => setMistakes(e.target.value)}
         rows={4}
         placeholder="Knees falling in | Let them track over your toes"
-        className={`${field} mt-1.5 font-mono text-[13px]`}
+        className={`${field} mt-1.5 font-mono text-px-13`}
       />
 
       <label className={label} htmlFor="callouts">
@@ -332,9 +332,9 @@ export function TechniqueEditor({
         onChange={e => setCallouts(e.target.value)}
         rows={4}
         placeholder="Chest proud | Ribs down | 30 | 25 | left"
-        className={`${field} mt-1.5 font-mono text-[13px]`}
+        className={`${field} mt-1.5 font-mono text-px-13`}
       />
-      <p className="text-[11px] text-white/35 mt-1.5 leading-snug">
+      <p className="text-px-11 text-white/35 mt-1.5 leading-snug">
         x and y are percentages of the image — 0,0 is top left. The dot in the preview marks the
         point each label refers to, so you can tell whether it landed on the right part of the body.
       </p>
@@ -357,20 +357,20 @@ export function TechniqueEditor({
         </>
       )}
 
-      {error && <p className="text-[13px] text-red-300 mt-4">{error}</p>}
-      {message && <p className="text-[13px] text-white/70 mt-4">{message}</p>}
+      {error && <p className="text-px-13 text-red-300 mt-4">{error}</p>}
+      {message && <p className="text-px-13 text-white/70 mt-4">{message}</p>}
 
       <div className="flex items-center gap-3 mt-5">
         <button
           onClick={save}
           disabled={busy}
-          className="px-4 py-2.5 rounded-xl bg-white text-black text-[14px] font-medium disabled:opacity-50 flex items-center gap-2"
+          className="px-4 py-2.5 rounded-xl bg-white text-black text-px-14 font-medium disabled:opacity-50 flex items-center gap-2"
         >
           {busy && <Loader2 className="w-4 h-4 animate-spin" />}
           Publish to the app
         </button>
         {current && (
-          <button onClick={remove} disabled={busy} className="text-[12px] text-white/45 hover:text-white/80">
+          <button onClick={remove} disabled={busy} className="text-px-12 text-white/45 hover:text-white/80">
             Withdraw
           </button>
         )}

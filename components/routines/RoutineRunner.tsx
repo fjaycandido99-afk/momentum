@@ -127,10 +127,10 @@ export function RoutineRunner({
             <div className="mx-auto w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.12] grid place-items-center mb-5">
               <Check className="w-7 h-7 text-white" />
             </div>
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">
+            <p className="text-px-11 uppercase tracking-[0.24em] text-white/45">
               {minimum ? 'Minimum day' : routineLabel}
             </p>
-            <h2 className="text-[28px] text-white mt-2 leading-tight" style={{ ...SERIF, fontWeight: 600 }}>
+            <h2 className="text-px-28 text-white mt-2 leading-tight" style={{ ...SERIF, fontWeight: 600 }}>
               That&rsquo;s the routine.
             </h2>
             {/* A count with its denominator. Never a percentage, never a
@@ -141,7 +141,7 @@ export function RoutineRunner({
                 : `${total - skipped} of ${total}. The rest can wait.`}
             </p>
             {minimum && (
-              <p className="text-[12px] text-white/40 mt-2 leading-relaxed">
+              <p className="text-px-12 text-white/40 mt-2 leading-relaxed">
                 A minimum day still counts. The routine is alive.
               </p>
             )}
@@ -154,7 +154,7 @@ export function RoutineRunner({
           </>
         ) : (
           <>
-            <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">
+            <p className="text-px-11 uppercase tracking-[0.24em] text-white/45">
               {index + 1} of {total}
               {minimum && <span className="text-white/30"> · minimum day</span>}
               {/* Said here so skipping it costs nothing: they already
@@ -164,11 +164,11 @@ export function RoutineRunner({
               )}
             </p>
 
-            <h2 className="text-[30px] text-white mt-3 leading-[1.1]" style={{ ...SERIF, fontWeight: 600 }}>
+            <h2 className="text-px-30 text-white mt-3 leading-[1.1]" style={{ ...SERIF, fontWeight: 600 }}>
               {title}
             </h2>
 
-            {step.time && <p className="text-[12px] text-white/35 mt-2">{timeLabel(step.time)}</p>}
+            {step.time && <p className="text-px-12 text-white/35 mt-2">{timeLabel(step.time)}</p>}
 
             {/* On a minimum day the floor IS the ask, so it is said plainly
                 rather than tucked underneath as a fallback. */}

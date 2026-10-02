@@ -158,7 +158,7 @@ export default function ProgressPage() {
                 </div>
                 <div className="text-left flex-1">
                   <p className="text-sm font-medium text-white">{streak}-day milestone!</p>
-                  <p className="text-[10px] text-white/75">Read a letter from your future self</p>
+                  <p className="text-px-10 text-white/75">Read a letter from your future self</p>
                 </div>
                 <span className="text-xs text-white font-medium shrink-0">View</span>
               </button>
@@ -234,10 +234,10 @@ export default function ProgressPage() {
           {/* The other calendar, and the difference is the point: this page
               counts what the app gave you, /proof counts what you did. */}
           <Link href="/proof" className="block rounded-2xl border border-white/[0.12] p-4 hover:bg-white/[0.03]">
-            <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+            <div className="flex items-center gap-1.5 text-px-10 tracking-[0.2em] uppercase text-white/50">
               <Grid3x3 className="w-3.5 h-3.5" /> Your year in proof
             </div>
-            <p className="text-[15px] text-white mt-1.5 leading-snug">
+            <p className="text-px-15 text-white mt-1.5 leading-snug">
               Every day you kept a promise — and what was going on that day.
             </p>
           </Link>

@@ -49,10 +49,10 @@ export function PracticeCard({
           <Check className="w-5 h-5 text-white/70" />
         ) : (
           <>
-            <span className="text-[19px] leading-none text-white tabular-nums" style={{ ...SERIF, fontWeight: 600 }}>
+            <span className="text-px-19 leading-none text-white tabular-nums" style={{ ...SERIF, fontWeight: 600 }}>
               {exercise.minutes}
             </span>
-            <span className="text-[9px] tracking-[0.14em] uppercase text-white/45 mt-0.5">min</span>
+            <span className="text-px-9 tracking-[0.14em] uppercase text-white/45 mt-0.5">min</span>
           </>
         )}
       </div>
@@ -60,7 +60,7 @@ export function PracticeCard({
       <div className="min-w-0 flex-1">
         {/* No difficulty dots: three dots beside a label read as a pager,
             and people looked for the other pages. */}
-        <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">
+        <p className="text-px-10 tracking-[0.24em] uppercase text-white/50">
           {done ? 'Done today' : 'Today’s training'}
         </p>
         <p className="text-xl text-white leading-tight mt-0.5 truncate" style={{ ...SERIF, fontWeight: 500 }}>

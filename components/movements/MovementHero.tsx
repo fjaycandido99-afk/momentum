@@ -40,7 +40,7 @@ export function MovementHero({
         <span className="text-white/75">
           <PatternGlyph pattern={movement.pattern} className="w-16 h-16" />
         </span>
-        <p className="text-[13px] text-white/60 mt-3 leading-snug max-w-[26ch]">
+        <p className="text-px-13 text-white/60 mt-3 leading-snug max-w-[26ch]">
           {PATTERN_MEANS[movement.pattern]}
         </p>
       </div>
@@ -75,11 +75,11 @@ export function MovementHero({
               top: `${callout.labelY}%`,
             }}
           >
-            <p className="text-[11px] text-white leading-tight font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+            <p className="text-px-11 text-white leading-tight font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
               {callout.label}
             </p>
             {callout.detail && (
-              <p className="text-[10px] text-white/70 leading-snug mt-0.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+              <p className="text-px-10 text-white/70 leading-snug mt-0.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
                 {callout.detail}
               </p>
             )}
@@ -101,7 +101,7 @@ export function MovementHero({
         <span className="text-white/70 shrink-0">
           <PatternGlyph pattern={movement.pattern} className="w-5 h-5" />
         </span>
-        <p className="text-[12px] text-white/75 leading-snug">{PATTERN_MEANS[movement.pattern]}</p>
+        <p className="text-px-12 text-white/75 leading-snug">{PATTERN_MEANS[movement.pattern]}</p>
       </div>
     </div>
   )

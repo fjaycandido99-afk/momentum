@@ -71,7 +71,7 @@ export function WellnessScore() {
           <AuraRing size={96} stroke={6} progress={score / 100} breathe={false}>
             <div className="flex flex-col items-center justify-center leading-tight">
               <span className="text-2xl font-bold text-white">{score}</span>
-              <span className="text-[9px] text-white/70">{getScoreLabel(score)}</span>
+              <span className="text-px-9 text-white/70">{getScoreLabel(score)}</span>
             </div>
           </AuraRing>
         </div>
@@ -80,7 +80,7 @@ export function WellnessScore() {
         <div className="flex-1 space-y-2">
           {factors.map(f => (
             <div key={f.label}>
-              <div className="flex justify-between text-[10px] mb-0.5">
+              <div className="flex justify-between text-px-10 mb-0.5">
                 <span className="text-white/75">{f.label}</span>
                 <span className="text-white/60">{f.value}/{f.max}</span>
               </div>
@@ -93,7 +93,7 @@ export function WellnessScore() {
             </div>
           ))}
           {data.daysTracked && (
-            <p className="text-[9px] text-white/60 mt-1">{data.daysTracked} day avg</p>
+            <p className="text-px-9 text-white/60 mt-1">{data.daysTracked} day avg</p>
           )}
         </div>
       </div>

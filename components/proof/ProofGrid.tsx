@@ -66,14 +66,14 @@ export function ProofGrid({
       <div className="grid grid-cols-[1.75rem_repeat(7,1fr)] gap-y-1.5 gap-x-1.5 mb-1.5" aria-hidden>
         <span />
         {WEEKDAYS.map((d, i) => (
-          <span key={i} className="text-center text-[10px] text-white/30">{d}</span>
+          <span key={i} className="text-center text-px-10 text-white/30">{d}</span>
         ))}
       </div>
 
       <div className="grid grid-cols-[1.75rem_repeat(7,1fr)] gap-y-1.5 gap-x-1.5">
         {rows.map((week, wi) => (
           <div key={wi} className="contents">
-            <span className="text-[10px] text-white/35 self-center tabular-nums">{week.label ?? ''}</span>
+            <span className="text-px-10 text-white/35 self-center tabular-nums">{week.label ?? ''}</span>
             {week.days.map((day, di) =>
               day === null ? (
                 <span key={di} />
@@ -98,7 +98,7 @@ export function ProofGrid({
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5 text-[11px] text-white/45">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5 text-px-11 text-white/45">
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-white" /> kept something
         </span>

@@ -253,8 +253,8 @@ export function RoutineEditor({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Your routine</p>
-            <h2 className="text-[24px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Your routine</p>
+            <h2 className="text-px-24 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               What does your day look like?
             </h2>
           </div>
@@ -272,13 +272,13 @@ export function RoutineEditor({
 
         {/* Where this draft came from, when it did not come from them. */}
         {notice && (
-          <p className="text-[12px] text-white/55 leading-relaxed mt-3 px-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.1]">
+          <p className="text-px-12 text-white/55 leading-relaxed mt-3 px-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.1]">
             {notice}
           </p>
         )}
 
         <div className="mt-4">
-          <label htmlFor="routine-label" className="block text-[11px] uppercase tracking-[0.2em] text-white/45">
+          <label htmlFor="routine-label" className="block text-px-11 uppercase tracking-[0.2em] text-white/45">
             Call it
           </label>
           <input
@@ -287,7 +287,7 @@ export function RoutineEditor({
             onChange={e => setLabel(e.target.value)}
             maxLength={ROUTINE_LIMITS.label}
             placeholder="My mornings"
-            className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/30"
+            className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-15 text-white placeholder:text-white/30"
           />
         </div>
 
@@ -298,7 +298,7 @@ export function RoutineEditor({
           through it, so the order is theirs and the times are gone.
         */}
         <div className="mt-4">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">How it runs</p>
+          <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">How it runs</p>
           <div className="grid grid-cols-2 gap-2 mt-2">
             {MODES.map(m => (
               <button
@@ -309,8 +309,8 @@ export function RoutineEditor({
                   mode === m.id ? 'bg-white/[0.08] border-white/40' : 'border-white/15 hover:bg-white/[0.04]'
                 }`}
               >
-                <span className="block text-[14px] text-white">{m.label}</span>
-                <span className="block text-[11px] text-white/50 mt-1 leading-snug">{m.line}</span>
+                <span className="block text-px-14 text-white">{m.label}</span>
+                <span className="block text-px-11 text-white/50 mt-1 leading-snug">{m.line}</span>
               </button>
             ))}
           </div>
@@ -320,7 +320,7 @@ export function RoutineEditor({
             start their morning without being told to. */}
         {mode === 'sequence' && (
           <div className="mt-4">
-            <label htmlFor="routine-start" className="block text-[11px] uppercase tracking-[0.2em] text-white/45">
+            <label htmlFor="routine-start" className="block text-px-11 uppercase tracking-[0.2em] text-white/45">
               Nudge me to start at
             </label>
             <input
@@ -328,13 +328,13 @@ export function RoutineEditor({
               type="time"
               value={startTime}
               onChange={e => setStartTime(e.target.value)}
-              className="w-[124px] mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white"
+              className="w-[124px] mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-15 text-white"
             />
           </div>
         )}
 
         <div className="mt-4">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">Which days</p>
+          <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">Which days</p>
           <div className="flex gap-1.5 mt-2">
             {DAY_NAMES.map((name, d) => {
               const on = days.length === 0 || days.includes(d)
@@ -343,7 +343,7 @@ export function RoutineEditor({
                   key={d}
                   onClick={() => toggleDay(d)}
                   aria-pressed={on}
-                  className={`flex-1 py-2.5 rounded-xl border text-[13px] ${
+                  className={`flex-1 py-2.5 rounded-xl border text-px-13 ${
                     on ? 'bg-white text-black border-white font-medium' : 'border-white/15 text-white/60'
                   }`}
                 >
@@ -352,11 +352,11 @@ export function RoutineEditor({
               )
             })}
           </div>
-          <p className="text-[11px] text-white/35 mt-1.5">None picked means every day.</p>
+          <p className="text-px-11 text-white/35 mt-1.5">None picked means every day.</p>
         </div>
 
         <div className="mt-5 space-y-2.5">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">The day</p>
+          <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">The day</p>
           {steps.map((step, i) => (
             <div key={i} className="rounded-xl border border-white/[0.12] bg-white/[0.03] p-3">
               <div className="flex gap-2">
@@ -370,7 +370,7 @@ export function RoutineEditor({
                     value={step.time ?? ''}
                     onChange={e => setStep(i, { time: e.target.value })}
                     aria-label={`Step ${i + 1} time`}
-                    className="w-[104px] shrink-0 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-[14px] text-white"
+                    className="w-[104px] shrink-0 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-px-14 text-white"
                   />
                 ) : (
                   /*
@@ -390,7 +390,7 @@ export function RoutineEditor({
                     >
                       <ChevronUp className="w-3.5 h-3.5" />
                     </button>
-                    <span className="text-[11px] tabular-nums text-white/35 leading-none">{i + 1}</span>
+                    <span className="text-px-11 tabular-nums text-white/35 leading-none">{i + 1}</span>
                     <button
                       onClick={() => move(i, i + 1)}
                       disabled={i === steps.length - 1}
@@ -405,7 +405,7 @@ export function RoutineEditor({
                   value={step.kind}
                   onChange={e => setStep(i, { kind: e.target.value as RoutineStepKind, ref: null })}
                   aria-label={`Step ${i + 1} kind`}
-                  className="min-w-0 flex-1 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-[14px] text-white"
+                  className="min-w-0 flex-1 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-px-14 text-white"
                 >
                   {ROUTINE_STEP_KINDS.map(kind => (
                     <option key={kind} value={kind} className="bg-[#0b0b0b]">
@@ -431,7 +431,7 @@ export function RoutineEditor({
                     value={step.ref ?? ''}
                     onChange={e => setStep(i, { ref: e.target.value || null })}
                     aria-label={`Step ${i + 1} discipline`}
-                    className="w-full mt-2 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-[14px] text-white"
+                    className="w-full mt-2 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-px-14 text-white"
                   >
                     <option value="" className="bg-[#0b0b0b]">Which one?</option>
                     {practices.map(p => (
@@ -439,7 +439,7 @@ export function RoutineEditor({
                     ))}
                   </select>
                 ) : (
-                  <p className="text-[11px] text-white/40 mt-2 leading-relaxed">
+                  <p className="text-px-11 text-white/40 mt-2 leading-relaxed">
                     You have no disciplines yet. Add one below and it can go in here.
                   </p>
                 )
@@ -456,7 +456,7 @@ export function RoutineEditor({
                     maxLength={ROUTINE_LIMITS.stepLabel}
                     placeholder="Phone out of the room"
                     aria-label={`Step ${i + 1} name`}
-                    className="min-w-0 flex-1 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-[14px] text-white placeholder:text-white/25"
+                    className="min-w-0 flex-1 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-px-14 text-white placeholder:text-white/25"
                   />
                   <input
                     value={step.minimum}
@@ -464,7 +464,7 @@ export function RoutineEditor({
                     maxLength={ROUTINE_LIMITS.stepLabel}
                     placeholder="5 pages"
                     aria-label={`Step ${i + 1} minimum`}
-                    className="w-24 shrink-0 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-[14px] text-white placeholder:text-white/25 text-center"
+                    className="w-24 shrink-0 px-2.5 py-2 rounded-lg bg-white/[0.06] border border-white/15 text-px-14 text-white placeholder:text-white/25 text-center"
                   />
                 </div>
               )}
@@ -484,7 +484,7 @@ export function RoutineEditor({
                     onClick={() => { haptic('light'); setStep(i, { weight: w }) }}
                     aria-pressed={step.weight === w}
                     title={STEP_WEIGHT_META[w].line}
-                    className={`flex-1 py-1.5 rounded-lg text-[11px] border ${
+                    className={`flex-1 py-1.5 rounded-lg text-px-11 border ${
                       step.weight === w
                         ? 'bg-white/[0.1] border-white/35 text-white'
                         : 'border-white/[0.1] text-white/45'
@@ -494,7 +494,7 @@ export function RoutineEditor({
                   </button>
                 ))}
               </div>
-              <p className="text-[10.5px] text-white/30 mt-1 leading-relaxed">
+              <p className="text-px-10.5 text-white/30 mt-1 leading-relaxed">
                 {STEP_WEIGHT_META[step.weight].line}
               </p>
             </div>
@@ -503,7 +503,7 @@ export function RoutineEditor({
           {steps.length < MAX_ROUTINE_STEPS && (
             <button
               onClick={() => { haptic('light'); setPicking(true) }}
-              className="flex items-center gap-1 text-[12px] text-white/55 hover:text-white"
+              className="flex items-center gap-1 text-px-12 text-white/55 hover:text-white"
             >
               <Plus className="w-3 h-3" /> Add a step
             </button>
@@ -523,8 +523,8 @@ export function RoutineEditor({
         */}
         {steps.length > 0 && (
           <div className="mt-5">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">When life gets messy</p>
-            <p className="text-[12px] text-white/50 mt-1 leading-relaxed">
+            <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">When life gets messy</p>
+            <p className="text-px-12 text-white/50 mt-1 leading-relaxed">
               Which of these survive a bad day? Voxu can run just those, at whatever the smallest
               version is.
             </p>
@@ -544,8 +544,8 @@ export function RoutineEditor({
                       <span aria-hidden className="h-4 w-4 shrink-0 rounded grid place-items-center bg-white/70">
                         <Check className="w-3 h-3 text-black" />
                       </span>
-                      <span className="min-w-0 flex-1 text-[13px] text-white/80 truncate">{name}</span>
-                      <span className="shrink-0 text-[11px] text-white/40">this is the bad day</span>
+                      <span className="min-w-0 flex-1 text-px-13 text-white/80 truncate">{name}</span>
+                      <span className="shrink-0 text-px-11 text-white/40">this is the bad day</span>
                     </div>
                   )
                 }
@@ -565,15 +565,15 @@ export function RoutineEditor({
                     >
                       {step.inMinimum && <Check className="w-3 h-3 text-black" />}
                     </span>
-                    <span className="min-w-0 flex-1 text-[13px] text-white/80 truncate">{name}</span>
+                    <span className="min-w-0 flex-1 text-px-13 text-white/80 truncate">{name}</span>
                     {step.minimum.trim() && (
-                      <span className="shrink-0 text-[11px] text-white/40">{step.minimum.trim()}</span>
+                      <span className="shrink-0 text-px-11 text-white/40">{step.minimum.trim()}</span>
                     )}
                   </button>
                 )
               })}
             </div>
-            <p className="text-[11px] text-white/30 mt-2 leading-relaxed">
+            <p className="text-px-11 text-white/30 mt-2 leading-relaxed">
               {steps.some(s => s.inMinimum || s.weight === 'minimum_only')
                 ? 'A minimum day still counts as keeping the routine.'
                 : 'Pick none and there is no minimum day to offer.'}
@@ -581,7 +581,7 @@ export function RoutineEditor({
           </div>
         )}
 
-        {error && <p className="text-[12px] text-amber-300/90 mt-3">{error}</p>}
+        {error && <p className="text-px-12 text-amber-300/90 mt-3">{error}</p>}
 
         <button
           onClick={save}
@@ -590,7 +590,7 @@ export function RoutineEditor({
         >
           {busy ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : 'Save the routine'}
         </button>
-        <p className="text-[11px] text-white/35 text-center mt-2 leading-relaxed">
+        <p className="text-px-11 text-white/35 text-center mt-2 leading-relaxed">
           Reminders arrive in the app. On the web the routine still shows — the notifications need
           the app.
         </p>
@@ -608,20 +608,20 @@ export function RoutineEditor({
           <div className="mt-4 pt-4 border-t border-white/[0.07] text-center">
             {confirmDelete ? (
               <>
-                <p className="text-[12px] text-white/60 leading-relaxed">
+                <p className="text-px-12 text-white/60 leading-relaxed">
                   Delete the routine and its steps? Pausing keeps the day and stops the reminders.
                 </p>
                 <div className="flex gap-2 mt-2.5">
                   <button
                     onClick={() => setConfirmDelete(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-white/15 text-[13px] text-white/70"
+                    className="flex-1 py-2.5 rounded-xl border border-white/15 text-px-13 text-white/70"
                   >
                     Keep it
                   </button>
                   <button
                     onClick={remove}
                     disabled={busy}
-                    className="flex-1 py-2.5 rounded-xl border border-amber-300/30 text-[13px] text-amber-300/90 disabled:opacity-60"
+                    className="flex-1 py-2.5 rounded-xl border border-amber-300/30 text-px-13 text-amber-300/90 disabled:opacity-60"
                   >
                     Delete it
                   </button>
@@ -630,7 +630,7 @@ export function RoutineEditor({
             ) : (
               <button
                 onClick={() => { haptic('light'); setConfirmDelete(true) }}
-                className="text-[11px] text-white/35 hover:text-white/70"
+                className="text-px-11 text-white/35 hover:text-white/70"
               >
                 Delete this routine
               </button>

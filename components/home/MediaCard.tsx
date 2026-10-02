@@ -126,7 +126,7 @@ export function MediaCard({
         </span>
 
         {video.duration && video.duration > 0 ? (
-          <span className="absolute bottom-3 right-2.5 z-10 px-2.5 py-1 rounded-full bg-black/60 border border-white/15 text-[11px] text-white font-medium tabular-nums">
+          <span className="absolute bottom-3 right-2.5 z-10 px-2.5 py-1 rounded-full bg-black/60 border border-white/15 text-px-11 text-white font-medium tabular-nums">
             {formatDuration(video.duration)}
           </span>
         ) : null}
@@ -134,11 +134,11 @@ export function MediaCard({
         {locked && !active && <SoftLockBadge isLocked={true} size="md" />}
       </div>
 
-      <span className="inline-block mt-2.5 rounded-full border border-white/20 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.12em] text-white/80">
+      <span className="inline-block mt-2.5 rounded-full border border-white/20 px-2.5 py-0.5 text-px-10 uppercase tracking-[0.12em] text-white/80">
         {chip}
       </span>
-      <p className="text-[15px] font-semibold text-white mt-1.5 leading-snug line-clamp-2">{main}</p>
-      {rest && <p className="text-[13px] text-[#8ea6ff] mt-0.5 leading-snug line-clamp-1">{rest}</p>}
+      <p className="text-px-15 font-semibold text-white mt-1.5 leading-snug line-clamp-2">{main}</p>
+      {rest && <p className="text-px-13 text-[#8ea6ff] mt-0.5 leading-snug line-clamp-1">{rest}</p>}
     </button>
   )
 }

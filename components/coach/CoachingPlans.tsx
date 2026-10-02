@@ -59,11 +59,11 @@ export function CoachingPlans() {
                 <Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
               </div>
               <h3 className="text-sm font-medium text-white mb-1">{plan.title}</h3>
-              <p className="text-[10px] text-white/75 mb-2 line-clamp-2">{plan.description}</p>
+              <p className="text-px-10 text-white/75 mb-2 line-clamp-2">{plan.description}</p>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-white/60">7 days</span>
+                <span className="text-px-10 text-white/60">7 days</span>
                 {completedDays > 0 && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                  <span className={`text-px-10 px-2 py-0.5 rounded-full ${
                     isActive
                       ? 'bg-white/20 text-white'
                       : 'bg-white/10 text-white/75'

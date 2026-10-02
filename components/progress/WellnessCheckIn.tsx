@@ -134,7 +134,7 @@ export function WellnessCheckIn() {
               </li>
             ))}
           </ul>
-          <p className="text-[11px] text-white/40 mt-3 leading-relaxed">{WELLNESS_NOTE}</p>
+          <p className="text-px-11 text-white/40 mt-3 leading-relaxed">{WELLNESS_NOTE}</p>
           <button
             onClick={() => setConsent(true)}
             disabled={busy}
@@ -151,7 +151,7 @@ export function WellnessCheckIn() {
               <div key={scale.id}>
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="text-xs text-white/70">{scale.question}</p>
-                  <p className="text-[11px] text-white/45">
+                  <p className="text-px-11 text-white/45">
                     {value ? scale.labels[value - 1] : 'Skip if you like'}
                   </p>
                 </div>
@@ -166,7 +166,7 @@ export function WellnessCheckIn() {
                         aria-pressed={on}
                         disabled={busy}
                         onClick={() => save({ [scale.id]: on ? null : score } as Partial<Row>)}
-                        className={`flex-1 py-2 rounded-lg text-[11px] border transition-all active:scale-[0.97] disabled:opacity-50 ${
+                        className={`flex-1 py-2 rounded-lg text-px-11 border transition-all active:scale-[0.97] disabled:opacity-50 ${
                           on ? 'bg-white text-black border-white' : 'bg-white/[0.04] text-white/55 border-white/[0.12]'
                         }`}
                       >
@@ -202,24 +202,24 @@ export function WellnessCheckIn() {
             </div>
           </div>
 
-          <p className="text-[11px] text-white/40 leading-relaxed">{WELLNESS_NOTE}</p>
+          <p className="text-px-11 text-white/40 leading-relaxed">{WELLNESS_NOTE}</p>
 
           <div className="flex items-center justify-between gap-3 pt-1 border-t border-white/5">
-            <button onClick={() => setConsent(false)} disabled={busy} className="text-[11px] text-white/50 disabled:opacity-40">
+            <button onClick={() => setConsent(false)} disabled={busy} className="text-px-11 text-white/50 disabled:opacity-40">
               Turn off check-ins
             </button>
             {confirmDelete ? (
               <span className="flex items-center gap-2">
-                <button onClick={eraseAll} disabled={busy} className="text-[11px] text-white disabled:opacity-40">
+                <button onClick={eraseAll} disabled={busy} className="text-px-11 text-white disabled:opacity-40">
                   Delete them all
                 </button>
-                <button onClick={() => setConfirmDelete(false)} className="text-[11px] text-white/50">Cancel</button>
+                <button onClick={() => setConfirmDelete(false)} className="text-px-11 text-white/50">Cancel</button>
               </span>
             ) : (
               <button
                 onClick={() => setConfirmDelete(true)}
                 disabled={busy || state.recent.length === 0}
-                className="text-[11px] text-white/50 flex items-center gap-1 disabled:opacity-30"
+                className="text-px-11 text-white/50 flex items-center gap-1 disabled:opacity-30"
               >
                 <Trash2 className="w-3 h-3" /> Delete my check-ins
               </button>

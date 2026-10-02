@@ -41,10 +41,10 @@ export function RecordPatterns() {
               <p className="text-2xl text-white leading-none">
                 {s.value}<span className="text-sm text-white/50">{s.unit === '%' ? '%' : ' days'}</span>
               </p>
-              <p className="text-[11px] text-white/70 mt-1.5">{s.label}</p>
+              <p className="text-px-11 text-white/70 mt-1.5">{s.label}</p>
               {/* The counts, always — a rate with no denominator is how people
                   come to believe things about themselves that aren't true. */}
-              <p className="text-[10px] text-white/40 mt-0.5 leading-snug">{s.detail}</p>
+              <p className="text-px-10 text-white/40 mt-0.5 leading-snug">{s.detail}</p>
             </div>
           ))}
         </div>
@@ -61,7 +61,7 @@ export function RecordPatterns() {
               ? `${report.scores.length > 0 ? 'No patterns yet' : 'Nothing to show yet'} — ${report.needs.answeredPromises} more answered ${report.needs.answeredPromises === 1 ? 'promise' : 'promises'} and this starts comparing your own days against each other.`
               : 'No pattern has separated out yet — your days look much alike so far, which is its own kind of answer.'}
           </p>
-          <p className="text-[11px] text-white/40 mt-2">
+          <p className="text-px-11 text-white/40 mt-2">
             It stays quiet until each side of a comparison has enough days behind it. A pattern from four days would just be noise.
           </p>
         </div>
@@ -70,30 +70,30 @@ export function RecordPatterns() {
           <ul className="mt-3 space-y-3">
             {report.patterns.map(p => (
               <li key={p.id} className="bg-white/[0.03] rounded-xl p-3.5">
-                <p className="text-[15px] text-white leading-snug">{p.headline}</p>
+                <p className="text-px-15 text-white leading-snug">{p.headline}</p>
                 <p className="text-xs text-white/55 mt-1.5 leading-relaxed">{p.detail}</p>
                 <div className="mt-2.5 space-y-1.5">
                   {p.groups.map(g => (
                     <div key={g.label} className="flex items-center gap-2">
-                      <span className="text-[10px] text-white/45 w-[8.5rem] shrink-0 truncate">{g.label}</span>
+                      <span className="text-px-10 text-white/45 w-[8.5rem] shrink-0 truncate">{g.label}</span>
                       <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-white/50 rounded-full" style={{ width: `${Math.min(100, g.rate)}%` }} />
                       </div>
-                      <span className="text-[10px] text-white/45 tabular-nums shrink-0">{g.hits}/{g.of}</span>
+                      <span className="text-px-10 text-white/45 tabular-nums shrink-0">{g.hits}/{g.of}</span>
                     </div>
                   ))}
                 </div>
                 {/* Honest about what hasn't been established yet: the numbers
                     are real, the pattern might still be chance. */}
                 {p.strength === 'early' && (
-                  <p className="text-[10px] text-white/35 mt-2">
+                  <p className="text-px-10 text-white/35 mt-2">
                     Early — real numbers, but not yet more than chance could explain.
                   </p>
                 )}
               </li>
             ))}
           </ul>
-          <p className="text-[11px] text-white/40 mt-3 leading-relaxed">
+          <p className="text-px-11 text-white/40 mt-3 leading-relaxed">
             {report.disclaimer} From {report.basis.answeredPromises} answered {report.basis.answeredPromises === 1 ? 'promise' : 'promises'}
             {report.basis.moodDays > 0 && ` and ${report.basis.moodDays} days you logged a mood`}.
           </p>

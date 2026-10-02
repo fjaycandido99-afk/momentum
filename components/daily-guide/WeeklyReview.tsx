@@ -282,21 +282,21 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
               <div className="grid grid-cols-2 gap-3">
                 {/* Energy Distribution */}
                 <div>
-                  <p className="text-[10px] text-white/50 uppercase tracking-wide mb-1.5">Energy</p>
+                  <p className="text-px-10 text-white/50 uppercase tracking-wide mb-1.5">Energy</p>
                   {(stats?.energyDistribution.low || stats?.energyDistribution.normal || stats?.energyDistribution.high) ? (
                     <>
                       <div className="flex gap-1.5 mt-1">
                         <div className="flex items-center gap-0.5">
                           <div className="w-2 h-2 rounded-full bg-white/60" />
-                          <span className="text-[10px] text-white/50">Low {stats.energyDistribution.low}</span>
+                          <span className="text-px-10 text-white/50">Low {stats.energyDistribution.low}</span>
                         </div>
                         <div className="flex items-center gap-0.5">
                           <div className="w-2 h-2 rounded-full bg-white/60" />
-                          <span className="text-[10px] text-white/50">Normal {stats.energyDistribution.normal}</span>
+                          <span className="text-px-10 text-white/50">Normal {stats.energyDistribution.normal}</span>
                         </div>
                         <div className="flex items-center gap-0.5">
                           <div className="w-2 h-2 rounded-full bg-white/60" />
-                          <span className="text-[10px] text-white/50">High {stats.energyDistribution.high}</span>
+                          <span className="text-px-10 text-white/50">High {stats.energyDistribution.high}</span>
                         </div>
                       </div>
                     </>
@@ -307,21 +307,21 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
 
                 {/* Completion Rate */}
                 <div>
-                  <p className="text-[10px] text-white/50 uppercase tracking-wide mb-1.5">Completion</p>
+                  <p className="text-px-10 text-white/50 uppercase tracking-wide mb-1.5">Completion</p>
                   <p className="text-lg font-bold text-white">{stats?.completionRate || 0}<span className="text-xs text-white/50 font-normal">%</span></p>
-                  <p className="text-[10px] text-white/50">{stats?.completedDays || 0} full days</p>
+                  <p className="text-px-10 text-white/50">{stats?.completedDays || 0} full days</p>
                 </div>
 
                 {/* Journal Count */}
                 <div>
-                  <p className="text-[10px] text-white/50 uppercase tracking-wide mb-1.5">Journals</p>
+                  <p className="text-px-10 text-white/50 uppercase tracking-wide mb-1.5">Journals</p>
                   <p className="text-lg font-bold text-white">{stats?.journalEntries || 0}<span className="text-xs text-white/50 font-normal">/7</span></p>
-                  <p className="text-[10px] text-white/50">entries written</p>
+                  <p className="text-px-10 text-white/50">entries written</p>
                 </div>
 
                 {/* Mood Improvement */}
                 <div>
-                  <p className="text-[10px] text-white/50 uppercase tracking-wide mb-1.5">Mood Shift</p>
+                  <p className="text-px-10 text-white/50 uppercase tracking-wide mb-1.5">Mood Shift</p>
                   {stats && stats.moodImprovedPercent > 0 ? (
                     <>
                       <p className="text-lg font-bold text-white">
@@ -329,7 +329,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                       </p>
                       <div className="flex items-center gap-1">
                         <TrendingUp className="w-3 h-3 text-white/60" />
-                        <span className="text-[10px] text-white/50">improved</span>
+                        <span className="text-px-10 text-white/50">improved</span>
                       </div>
                     </>
                   ) : (
@@ -564,7 +564,7 @@ export function WeeklyReview({ onClose, isModal = false }: WeeklyReviewProps) {
                     }`}>
                       {day.date.getDate()}
                     </span>
-                    <span className="text-[10px] text-white/50">
+                    <span className="text-px-10 text-white/50">
                       {day.dayName.slice(0, 3)}
                     </span>
                   </div>

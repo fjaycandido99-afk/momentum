@@ -168,13 +168,13 @@ export function WisdomSection({
           </div>
 
           <blockquote
-            className="text-[19px] text-white leading-snug"
+            className="text-px-19 text-white leading-snug"
             style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 500 }}
           >
             &ldquo;{dailyQuote.text}&rdquo;
           </blockquote>
           {displayAuthor(dailyQuote.author) && (
-            <p className="text-[11px] text-white/50 mt-2">
+            <p className="text-px-11 text-white/50 mt-2">
               — {displayAuthor(dailyQuote.author)}
             </p>
           )}
@@ -193,7 +193,7 @@ export function WisdomSection({
                   it. The question itself is the reason. Collapsed, it
                   reads as an invitation; before, it read as a filing
                   cabinet drawer. */}
-              <span className="text-[11px] text-white/60 font-medium text-left pr-3 line-clamp-1">
+              <span className="text-px-11 text-white/60 font-medium text-left pr-3 line-clamp-1">
                 {expanded ? 'Daily Reflection' : dailyQuestion}
               </span>
               <ChevronDown
@@ -227,12 +227,12 @@ export function WisdomSection({
                     </button>
                   )}
                   {reflectionSaved && (
-                    <p className="text-[10px] text-emerald-400/70 mt-1.5">
+                    <p className="text-px-10 text-emerald-400/70 mt-1.5">
                       Reflection saved
                     </p>
                   )}
                   {reflectionError && (
-                    <p className="text-[10px] text-red-400/70 mt-1.5">
+                    <p className="text-px-10 text-red-400/70 mt-1.5">
                       Couldn&apos;t save — tap to retry
                     </p>
                   )}

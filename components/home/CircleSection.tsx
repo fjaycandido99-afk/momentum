@@ -83,10 +83,10 @@ export function CircleSection({ onShare }: { onShare: () => void }) {
             <p className="scene-eyebrow">Your circle</p>
             {data.circle.length === 0 && (
               <>
-                <p className="text-[18px] text-white leading-snug mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
+                <p className="text-px-18 text-white leading-snug mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
                   Nobody has joined your era yet.
                 </p>
-                <p className="text-[13px] text-white/60 mt-1 leading-snug">
+                <p className="text-px-13 text-white/60 mt-1 leading-snug">
                   Share it. Whoever starts from your link shows up here, on day 1 with you.
                 </p>
               </>
@@ -107,10 +107,10 @@ export function CircleSection({ onShare }: { onShare: () => void }) {
               {data.circle.map((m, i) => (
                 <li key={`${m.name}-${i}`} className="py-3 flex items-center gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[17px] text-white leading-tight truncate" style={{ ...SERIF, fontWeight: 500 }}>
+                    <p className="text-px-17 text-white leading-tight truncate" style={{ ...SERIF, fontWeight: 500 }}>
                       {m.name}
                     </p>
-                    <p className="text-[11px] text-white/55 mt-0.5 truncate">
+                    <p className="text-px-11 text-white/55 mt-0.5 truncate">
                       {m.era
                         ? `${eraName(m.era.title)} · day ${m.era.day} of ${m.era.lengthDays}`
                         : m.direction === 'joined_you' ? 'joined your era' : 'you joined their era'}
@@ -136,7 +136,7 @@ export function CircleSection({ onShare }: { onShare: () => void }) {
             <button
               onClick={() => setVisible(!data.visible)}
               disabled={saving}
-              className="mt-2 px-1 text-[11px] text-white/45 flex items-center gap-1.5 disabled:opacity-50"
+              className="mt-2 px-1 text-px-11 text-white/45 flex items-center gap-1.5 disabled:opacity-50"
             >
               {data.visible
                 ? <><Eye className="w-3 h-3" /> They see your era, day and streak — hide me</>
@@ -150,12 +150,12 @@ export function CircleSection({ onShare }: { onShare: () => void }) {
       {/* Only ever rendered with real counts behind it. */}
       {data.trending.length > 0 && (
         <section>
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 px-1">Trending on Voxu</p>
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45 px-1">Trending on Voxu</p>
           <ul className="mt-2 space-y-1.5">
             {data.trending.map(t => (
               <li key={t.key}>
                 <Link href={`/join/${eraSlug(t.key)}`} className="card-surface-lg px-4 py-3 flex items-center justify-between gap-3">
-                  <span className="text-[17px] text-white truncate" style={{ ...SERIF, fontWeight: 500 }}>{t.title}</span>
+                  <span className="text-px-17 text-white truncate" style={{ ...SERIF, fontWeight: 500 }}>{t.title}</span>
                   <span className="text-xs text-white/60 shrink-0">{t.people.toLocaleString()} in it</span>
                 </Link>
               </li>

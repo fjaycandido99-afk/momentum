@@ -56,7 +56,7 @@ export function MindsetEvolution() {
       </p>
 
       {data.journalEvidence && (
-        <p className="text-[10px] text-white/70 italic mb-3">
+        <p className="text-px-10 text-white/70 italic mb-3">
           &ldquo;{data.journalEvidence}&rdquo;
         </p>
       )}

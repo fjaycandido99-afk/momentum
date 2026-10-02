@@ -56,7 +56,7 @@ export function MoodTimeline() {
       <div className="relative">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-3.5 h-3.5 text-white/60" />
-          <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">Mood timeline</span>
+          <span className="text-px-10 uppercase tracking-wider text-white/50 font-semibold">Mood timeline</span>
         </div>
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full mt-4" style={{ maxHeight: 110 }} aria-hidden>
           <defs>
@@ -74,7 +74,7 @@ export function MoodTimeline() {
             <circle key={i} cx={c.x} cy={c.y} r={i === coords.length - 1 ? 3 : 1.8} fill="white" fillOpacity={i === coords.length - 1 ? 1 : 0.6} />
           ))}
         </svg>
-        <div className="flex items-center justify-between mt-1 text-[10px] text-white/40">
+        <div className="flex items-center justify-between mt-1 text-px-10 text-white/40">
           <span>{points.length} check-ins</span>
           <span>Now: <span className="text-white/70">{MOOD_LABEL[last]}</span></span>
         </div>

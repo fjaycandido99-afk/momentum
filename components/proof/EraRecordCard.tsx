@@ -23,17 +23,17 @@ export function EraRecordCard({ record }: { record: EraRecord }) {
 
   return (
     <div className="rounded-2xl border border-white/[0.12] bg-white/[0.03] p-4">
-      <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+      <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">
         {record.completed ? 'Complete' : `Stopped on day ${record.daysRun}`} · {short(record.startDay)} – {short(record.endDay)}
       </p>
-      <p className="text-[22px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>{record.title}</p>
+      <p className="text-px-22 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>{record.title}</p>
 
       {rows.length > 0 && (
         <dl className="mt-3 space-y-1.5">
           {rows.map(([label, value]) => (
             <div key={label} className="flex items-baseline justify-between gap-3">
-              <dt className="text-[12px] text-white/55">{label}</dt>
-              <dd className="text-[13px] text-white tabular-nums text-right">{value}</dd>
+              <dt className="text-px-12 text-white/55">{label}</dt>
+              <dd className="text-px-13 text-white tabular-nums text-right">{value}</dd>
             </div>
           ))}
         </dl>
@@ -41,15 +41,15 @@ export function EraRecordCard({ record }: { record: EraRecord }) {
 
       {record.stayed.length > 0 && (
         <div className="mt-3">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">What stayed</p>
+          <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">What stayed</p>
           {record.stayed.map(label => (
-            <p key={label} className="text-[14px] text-white/90 mt-0.5">{label}</p>
+            <p key={label} className="text-px-14 text-white/90 mt-0.5">{label}</p>
           ))}
         </div>
       )}
 
       {record.reflection && (
-        <p className="text-[17px] text-white/90 leading-snug mt-3" style={SERIF}>&ldquo;{record.reflection}&rdquo;</p>
+        <p className="text-px-17 text-white/90 leading-snug mt-3" style={SERIF}>&ldquo;{record.reflection}&rdquo;</p>
       )}
     </div>
   )

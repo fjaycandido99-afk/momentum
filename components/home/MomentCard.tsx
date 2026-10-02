@@ -54,7 +54,7 @@ export function MomentCard({
         </button>
       </div>
 
-      <p className="text-[22px] text-white leading-snug" style={{ ...SERIF, fontWeight: 600 }}>
+      <p className="text-px-22 text-white leading-snug" style={{ ...SERIF, fontWeight: 600 }}>
         {line}
       </p>
 
@@ -75,7 +75,7 @@ export function MomentCard({
         </button>
       )}
 
-      <button onClick={onOff} className="block mx-auto mt-3 text-[11px] text-white/35 hover:text-white/60">
+      <button onClick={onOff} className="block mx-auto mt-3 text-px-11 text-white/35 hover:text-white/60">
         Don&rsquo;t show these
       </button>
     </>

@@ -112,11 +112,11 @@ export default function ResetPage() {
 
         {phase === 'pick' && (
           <div className="mt-3">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Right now</p>
-            <h1 className="text-[34px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Right now</p>
+            <h1 className="text-px-34 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               What&rsquo;s going on?
             </h1>
-            <p className="text-[13px] text-white/55 mt-2 leading-relaxed">
+            <p className="text-px-13 text-white/55 mt-2 leading-relaxed">
               No promise, no streak, nothing to keep. A few minutes to come down, and your era
               waits — today doesn&rsquo;t count against you for being here.
             </p>
@@ -145,10 +145,10 @@ export default function ResetPage() {
                     )
                   })()}
                   <span className="scene-content flex-1 min-w-0">
-                    <span className="block text-[19px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
+                    <span className="block text-px-19 text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
                       {s.label}
                     </span>
-                    <span className="block text-[12px] text-white/60 mt-1 leading-snug">{s.recognise}</span>
+                    <span className="block text-px-12 text-white/60 mt-1 leading-snug">{s.recognise}</span>
                   </span>
                   <span className="scene-content shrink-0 w-9 h-9 rounded-full border border-white/25 bg-black/40 flex items-center justify-center">
                     <ChevronRight className="w-4 h-4 text-white/80" />
@@ -157,7 +157,7 @@ export default function ResetPage() {
               ))}
             </div>
 
-            <p className="text-[11px] text-white/35 mt-6 leading-relaxed">
+            <p className="text-px-11 text-white/35 mt-6 leading-relaxed">
               This is a few minutes of breathing and attention, not treatment. If things are worse
               than that, please talk to someone who can help — a doctor, a crisis line, or someone
               who loves you.
@@ -167,11 +167,11 @@ export default function ResetPage() {
 
         {phase === 'before' && state && (
           <div className="mt-3">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">{state.label}</p>
-            <h1 className="text-[28px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">{state.label}</p>
+            <h1 className="text-px-28 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               {state.scale.question}
             </h1>
-            <p className="text-[13px] text-white/50 mt-2">
+            <p className="text-px-13 text-white/50 mt-2">
               Optional — it just lets you see the difference afterwards.
             </p>
 
@@ -180,7 +180,7 @@ export default function ResetPage() {
                 <button
                   key={label}
                   onClick={() => start(i + 1)}
-                  className="card-surface w-full text-left px-4 py-3 rounded-xl border border-white/[0.14] text-[15px] text-white hover:bg-white/[0.06]"
+                  className="card-surface w-full text-left px-4 py-3 rounded-xl border border-white/[0.14] text-px-15 text-white hover:bg-white/[0.06]"
                 >
                   {label}
                 </button>
@@ -189,7 +189,7 @@ export default function ResetPage() {
 
             <button
               onClick={() => start(null)}
-              className="block mx-auto mt-5 text-[13px] text-white/45 hover:text-white/75"
+              className="block mx-auto mt-5 text-px-13 text-white/45 hover:text-white/75"
             >
               Skip — just start
             </button>
@@ -198,10 +198,10 @@ export default function ResetPage() {
 
         {phase === 'after' && state && (
           <div className="mt-3">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">{state.label}</p>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">{state.label}</p>
             {after === null && before !== null ? (
               <>
-                <h1 className="text-[28px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+                <h1 className="text-px-28 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
                   And now?
                 </h1>
                 <div className="mt-5 space-y-2">
@@ -209,7 +209,7 @@ export default function ResetPage() {
                     <button
                       key={label}
                       onClick={() => finish(i + 1, true)}
-                      className="card-surface w-full text-left px-4 py-3 rounded-xl border border-white/[0.14] text-[15px] text-white hover:bg-white/[0.06]"
+                      className="card-surface w-full text-left px-4 py-3 rounded-xl border border-white/[0.14] text-px-15 text-white hover:bg-white/[0.06]"
                     >
                       {label}
                     </button>
@@ -218,10 +218,10 @@ export default function ResetPage() {
               </>
             ) : (
               <>
-                <h1 className="text-[30px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+                <h1 className="text-px-30 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
                   {deltaLine(state, before, after)}
                 </h1>
-                <p className="text-[13px] text-white/55 mt-3 leading-relaxed">
+                <p className="text-px-13 text-white/55 mt-3 leading-relaxed">
                   Nothing is owed for the rest of tonight. Your era is where you left it.
                 </p>
                 <div className="mt-6 space-y-2">

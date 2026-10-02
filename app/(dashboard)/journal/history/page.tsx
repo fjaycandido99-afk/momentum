@@ -202,7 +202,7 @@ export default function JournalHistoryPage() {
         <div className="px-6">
           {grouped.map(group => (
             <section key={group.label} className="mb-8">
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/45 mb-3">
+              <h2 className="text-px-11 font-semibold uppercase tracking-[0.22em] text-white/45 mb-3">
                 {group.label}
               </h2>
               <div className="space-y-3">
@@ -216,7 +216,7 @@ export default function JournalHistoryPage() {
                       className="group w-full text-left p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] hover:border-white/15 transition-all"
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[11px] text-white/55 uppercase tracking-wide">
+                        <span className="text-px-11 text-white/55 uppercase tracking-wide">
                           {formatDayLong(entry.date)}
                         </span>
                         {moodGlyph && (
@@ -225,25 +225,25 @@ export default function JournalHistoryPage() {
                           </span>
                         )}
                         {entry.journal_ai_reflection && (
-                          <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-[10px] text-white/65">
+                          <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-px-10 text-white/65">
                             <Sparkles className="w-3 h-3" /> Reflection
                           </span>
                         )}
                       </div>
                       {preview && (
-                        <p className="text-[15px] text-white/85 leading-snug line-clamp-3">
+                        <p className="text-px-15 text-white/85 leading-snug line-clamp-3">
                           {preview}
                         </p>
                       )}
                       {entry.journal_ai_reflection && (
-                        <p className="mt-2.5 pt-2.5 border-t border-white/[0.06] text-[13px] italic text-white/65 line-clamp-2">
+                        <p className="mt-2.5 pt-2.5 border-t border-white/[0.06] text-px-13 italic text-white/65 line-clamp-2">
                           &ldquo;{entry.journal_ai_reflection.replace(/^"|"$/g, '')}&rdquo;
                         </p>
                       )}
                       {entry.journal_tags && entry.journal_tags.length > 0 && (
                         <div className="mt-2.5 flex flex-wrap gap-1.5">
                           {entry.journal_tags.slice(0, 4).map(tag => (
-                            <span key={tag} className="px-2 py-0.5 rounded-full bg-white/[0.05] text-[10px] text-white/60">
+                            <span key={tag} className="px-2 py-0.5 rounded-full bg-white/[0.05] text-px-10 text-white/60">
                               #{tag}
                             </span>
                           ))}

@@ -199,10 +199,10 @@ function Greeting({ quote }: { quote: { text: string; author: string } | null })
       <div className="relative flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="scene-eyebrow">{g.label}</p>
-          <p className="text-[34px] leading-[1.02] text-white mt-2 max-w-[80%]" style={{ ...SERIF, fontWeight: 500 }}>{g.line}</p>
+          <p className="text-px-34 leading-[1.02] text-white mt-2 max-w-[80%]" style={{ ...SERIF, fontWeight: 500 }}>{g.line}</p>
         </div>
         {showQuote && (
-          <p className="max-w-[38%] text-[12px] leading-snug italic text-white/60 text-right pt-1" style={SERIF}>
+          <p className="max-w-[38%] text-px-12 leading-snug italic text-white/60 text-right pt-1" style={SERIF}>
             &ldquo;{quote!.text}&rdquo;
           </p>
         )}
@@ -251,8 +251,8 @@ function StartHero() {
     <Link href="/era" className="block group press-scale">
       {heroShell(
         <>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-white/50">30 days</p>
-          <h2 className="text-[40px] leading-[0.95] text-white mt-2 uppercase" style={{ ...SERIF, fontWeight: 600 }}>
+          <p className="text-px-10 tracking-[0.3em] uppercase text-white/50">30 days</p>
+          <h2 className="text-px-40 leading-[0.95] text-white mt-2 uppercase" style={{ ...SERIF, fontWeight: 600 }}>
             Who are you<br />becoming?
           </h2>
           <p className="text-sm text-white/70 mt-3">Pick an era. Make one promise a day. Your coach keeps count.</p>
@@ -275,14 +275,14 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
     <Link href="/era" className="block group" aria-label={`${era.title}, day ${era.day} of ${era.lengthDays}. Open your era.`}>
       {heroShell(
         <>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-white/50">Current era</p>
+          <p className="text-px-10 tracking-[0.3em] uppercase text-white/50">Current era</p>
           <h2
-            className="text-[40px] leading-[0.95] text-white mt-2 uppercase break-words"
+            className="text-px-40 leading-[0.95] text-white mt-2 uppercase break-words"
             style={{ ...SERIF, fontWeight: 600 }}
           >
             {era.title}
           </h2>
-          <p className="text-[15px] text-white/75 mt-2 leading-snug" style={SERIF}>
+          <p className="text-px-15 text-white/75 mt-2 leading-snug" style={SERIF}>
             {era.step === 'complete' ? `${era.lengthDays} days. You finished it.` : era.stage.line}
           </p>
 
@@ -290,7 +290,7 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
               the coach's pitch moving through them — and nothing ever said
               so, which is why it read as a themed streak. */}
           {era.step !== 'complete' && (
-            <p className="text-[10px] tracking-[0.18em] uppercase text-white/45 mt-2.5">
+            <p className="text-px-10 tracking-[0.18em] uppercase text-white/45 mt-2.5">
               Chapter {['I', 'II', 'III', 'IV'][era.phase.index - 1]} · {era.phase.label}
               <span className="text-white/30"> · day {era.phase.dayInPhase} of {era.phase.phaseDays}</span>
             </p>
@@ -300,7 +300,7 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
           {era.step !== 'complete' && (
             <div className="flex flex-wrap gap-1.5 mt-2.5" aria-label="This era trains">
               {attributesForEra(era.key).map(id => (
-                <span key={id} className="era-chip rounded-full px-2 py-0.5 text-[10px] tracking-wide text-white/80">
+                <span key={id} className="era-chip rounded-full px-2 py-0.5 text-px-10 tracking-wide text-white/80">
                   {attributeLabel(id)}
                 </span>
               ))}
@@ -342,7 +342,7 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
                 )
               })}
             </div>
-            <span className="text-[11px] text-white/60 tabular-nums">{pct}%</span>
+            <span className="text-px-11 text-white/60 tabular-nums">{pct}%</span>
           </div>
         </>,
         // A finished era gets the summit, whichever era it was.
@@ -428,7 +428,7 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
           )}
         </span>
         {audio.durationSec !== null && (
-          <span className="text-[11px] text-white/50 tabular-nums">{formatDuration(audio.durationSec)}</span>
+          <span className="text-px-11 text-white/50 tabular-nums">{formatDuration(audio.durationSec)}</span>
         )}
       </div>
     </button>
@@ -437,7 +437,7 @@ function AudioCard({ audio }: { audio: TodaysAudio }) {
       <div className="flex justify-end mt-1.5">
         <button
           onClick={audio.onSwap}
-          className="flex items-center gap-1.5 rounded-full border border-white/[0.12] px-2.5 py-1 text-[11px] text-white/55 hover:text-white/85 press-scale"
+          className="flex items-center gap-1.5 rounded-full border border-white/[0.12] px-2.5 py-1 text-px-11 text-white/55 hover:text-white/85 press-scale"
         >
           <Shuffle className="w-3 h-3" />
           Something else
@@ -606,7 +606,7 @@ function ActiveEra({
    */
   const confidenceRow = (
     <div className="mt-3">
-      <p className="text-[11px] text-white/45">How sure are you? <span className="text-white/30">Optional</span></p>
+      <p className="text-px-11 text-white/45">How sure are you? <span className="text-white/30">Optional</span></p>
       <div className="flex gap-1.5 mt-1.5" role="group" aria-label="How sure are you?">
         {[1, 2, 3, 4, 5].map(n => (
           <button
@@ -626,7 +626,7 @@ function ActiveEra({
         ))}
       </div>
       {confidence !== null && (
-        <p className="text-[11px] text-white/45 mt-1.5">{CONFIDENCE_LABELS[confidence]}</p>
+        <p className="text-px-11 text-white/45 mt-1.5">{CONFIDENCE_LABELS[confidence]}</p>
       )}
     </div>
   )
@@ -640,14 +640,14 @@ function ActiveEra({
     const options = kept ? HELPERS : BLOCKERS
     if (answered) {
       return (
-        <p className="text-[11px] text-white/45 mt-2.5">
+        <p className="text-px-11 text-white/45 mt-2.5">
           {kept ? 'What helped: ' : 'What got in the way: '}{reasonLabel(answered)}
         </p>
       )
     }
     return (
       <div className="mt-3">
-        <p className="text-[11px] text-white/45">{kept ? 'What helped?' : 'What got in the way?'} <span className="text-white/30">Optional</span></p>
+        <p className="text-px-11 text-white/45">{kept ? 'What helped?' : 'What got in the way?'} <span className="text-white/30">Optional</span></p>
         <div className="flex flex-wrap gap-1.5 mt-1.5">
           {options.map(o => (
             <button
@@ -732,14 +732,14 @@ function ActiveEra({
               Nothing renders for a first era: "your first era" on the day
               you finish your first one is a strange thing to be told. */}
           {ordinal && (
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 mb-1.5">
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45 mb-1.5">
               Your {ordinal} era
             </p>
           )}
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">
             {eraName(era.title)} · Complete
           </p>
-          <p className="text-[15px] text-white mt-1">
+          <p className="text-px-15 text-white mt-1">
             {era.lengthDays} days.
             {era.stats.keptPercent !== null && <> {era.stats.kept} of {era.stats.answered} promises kept.</>}
           </p>
@@ -768,7 +768,7 @@ function ActiveEra({
           {onBreak ? (
             /* Taking a break: their disciplines carry on without an era. */
             <div className="mt-4">
-              <p className="text-[13px] text-white/70 leading-relaxed">
+              <p className="text-px-13 text-white/70 leading-relaxed">
                 On a break. Your disciplines keep going — start an era when you&rsquo;re ready.
               </p>
               <Link href="/era" className="mt-3 w-full block text-center py-3 rounded-xl border border-white/15 text-sm text-white/85">
@@ -787,8 +787,8 @@ function ActiveEra({
                 bad month didn't earn — but the offer never changes: somebody
                 who kept 4 of 28 is exactly who a discipline's floor serves.
               */}
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-5">What stays with you?</p>
-              <p className="text-[14px] text-white/80 leading-relaxed mt-1.5">
+              <p className="text-px-11 uppercase tracking-[0.2em] text-white/45 mt-5">What stays with you?</p>
+              <p className="text-px-14 text-white/80 leading-relaxed mt-1.5">
                 {OUTCOME_LINE[eraOutcome(era.stats.keptPercent)]}
               </p>
               <button
@@ -797,18 +797,18 @@ function ActiveEra({
               >
                 Choose what stays
               </button>
-              <p className="text-[11px] text-white/40 text-center mt-1.5 leading-relaxed">
+              <p className="text-px-11 text-white/40 text-center mt-1.5 leading-relaxed">
                 Turn something from this era into a discipline.
               </p>
               <div className="mt-5 pt-4 border-t border-white/[0.08]">
-                <p className="text-[12px] text-white/50">Ready for another chapter?</p>
+                <p className="text-px-12 text-white/50">Ready for another chapter?</p>
                 <div className="mt-2 flex gap-2">
-                  <Link href="/era" className="flex-1 text-center py-2.5 rounded-xl border border-white/15 text-[13px] text-white/85">
+                  <Link href="/era" className="flex-1 text-center py-2.5 rounded-xl border border-white/15 text-px-13 text-white/85">
                     Start your next era
                   </Link>
                   <button
                     onClick={() => { haptic('light'); setDismissed(`era-break:${era.id}`); setOnBreak(true) }}
-                    className="flex-1 py-2.5 rounded-xl border border-white/15 text-[13px] text-white/70"
+                    className="flex-1 py-2.5 rounded-xl border border-white/15 text-px-13 text-white/70"
                   >
                     Take a break
                   </button>
@@ -824,7 +824,7 @@ function ActiveEra({
       action = (
         <div className="card-surface-lg p-4">
           <p className="text-xs text-white/60">Did you keep yesterday&rsquo;s promise?</p>
-          <p className="text-[17px] text-white mt-1 leading-snug" style={SERIF}>&ldquo;{era.yesterday?.text}&rdquo;</p>
+          <p className="text-px-17 text-white mt-1 leading-snug" style={SERIF}>&ldquo;{era.yesterday?.text}&rdquo;</p>
           {yesNo('yesterday')}
         </div>
       )
@@ -852,7 +852,7 @@ function ActiveEra({
                   <Target className="w-3.5 h-3.5 scene-eyebrow-glow" /> Today&rsquo;s mission
                 </div>
                 {/* No difficulty dots: three dots beside a label read as a pager. */}
-                <p className="text-[16px] text-white mt-1.5 leading-snug flex-1" style={SERIF}>{era.mission}</p>
+                <p className="text-px-16 text-white mt-1.5 leading-snug flex-1" style={SERIF}>{era.mission}</p>
                 <div className="flex flex-wrap items-center gap-x-3">
                   {missionToggle}
                   <button
@@ -930,11 +930,11 @@ function ActiveEra({
         <>
           <div className={`grid gap-3 ${era.mission && t?.text !== era.mission ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <Tile icon={BookOpen} label="Today's promise" scene={HOME_SCENES.promise}>
-              <p className="text-[17px] text-white leading-snug" style={SERIF}>{t?.text}</p>
+              <p className="text-px-17 text-white leading-snug" style={SERIF}>{t?.text}</p>
             </Tile>
             {era.mission && t?.text !== era.mission && (
               <Tile icon={Target} label="Today's mission" scene={HOME_SCENES.mission}>
-                <p className="text-[17px] text-white leading-snug" style={SERIF}>{era.mission}</p>
+                <p className="text-px-17 text-white leading-snug" style={SERIF}>{era.mission}</p>
                 {missionToggle}
               </Tile>
             )}
@@ -1019,10 +1019,10 @@ function ActiveEra({
     ? null
     : era.tomorrow && !writingAhead ? (
       <div className="card-surface-lg p-4">
-        <p className="text-[10px] tracking-[0.2em] uppercase text-white/50 flex items-center gap-1.5">
+        <p className="text-px-10 tracking-[0.2em] uppercase text-white/50 flex items-center gap-1.5">
           <Moon className="w-3.5 h-3.5" /> Tomorrow
         </p>
-        <p className="text-[17px] text-white mt-1.5 leading-snug" style={SERIF}>{era.tomorrow.text}</p>
+        <p className="text-px-17 text-white mt-1.5 leading-snug" style={SERIF}>{era.tomorrow.text}</p>
         {era.tomorrow.coachReply && (
           <p className="text-sm text-white/75 mt-2.5 leading-relaxed border-l-2 border-white/25 pl-3">
             {era.tomorrow.coachReply}
@@ -1037,7 +1037,7 @@ function ActiveEra({
       </div>
     ) : writingAhead ? (
       <div className="card-surface-lg p-4">
-        <label htmlFor="era-tomorrow" className="text-[10px] tracking-[0.2em] uppercase text-white/50 flex items-center gap-1.5">
+        <label htmlFor="era-tomorrow" className="text-px-10 tracking-[0.2em] uppercase text-white/50 flex items-center gap-1.5">
           <Moon className="w-3.5 h-3.5" /> Tomorrow’s promise
         </label>
         <div className="mt-2 flex items-end gap-2">
@@ -1091,12 +1091,12 @@ function ActiveEra({
           with them from earlier eras (lib/era/service CARRIED_DAYS). */}
       {era.carried.length > 0 && (
         <div className="card-surface-lg p-4">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Carried with you</p>
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Carried with you</p>
           <ul className="mt-2 space-y-2">
             {era.carried.map(c => (
               <li key={c.label}>
-                <p className="text-[15px] text-white leading-snug">{c.label}</p>
-                <p className="text-[11px] text-white/45 mt-0.5">From {c.fromEra}</p>
+                <p className="text-px-15 text-white leading-snug">{c.label}</p>
+                <p className="text-px-11 text-white/45 mt-0.5">From {c.fromEra}</p>
               </li>
             ))}
           </ul>
@@ -1109,7 +1109,7 @@ function ActiveEra({
           thing to do or how they relate. Three lines, once per era. */}
       {era.day <= 3 && era.step !== 'complete' && !primerDismissed && (
         <div className="card-surface-lg p-4">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">How an era works</p>
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">How an era works</p>
           <ol className="mt-2.5 space-y-2">
             {[
               ['Each morning', 'you promise yourself one thing. Your coach answers it.'],
@@ -1121,7 +1121,7 @@ function ActiveEra({
               </li>
             ))}
           </ol>
-          <p className="text-[11px] text-white/45 mt-3">
+          <p className="text-px-11 text-white/45 mt-3">
             Miss a day and the era carries on — {era.lengthDays} days either way.
           </p>
           <button onClick={dismissPrimer} className="mt-2 text-xs text-white/60 underline underline-offset-2">
@@ -1167,7 +1167,7 @@ function ActiveEra({
       {error && <p className="text-xs text-white/70" role="alert">{error}</p>}
       {trialOffer && (
         <div className="card-surface-lg p-4 border border-white/20">
-          <p className="text-[19px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
+          <p className="text-px-19 text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
             {era.stats.kept} for {era.stats.answered}. You&rsquo;re someone who keeps promises.
           </p>
           <p className="text-sm text-white/70 mt-1.5">
@@ -1195,7 +1195,7 @@ function ActiveEra({
             <BarChart3 className="w-[18px] h-[18px] text-white/80" />
           </span>
           <div>
-            <p className="text-[11px] text-white/55">Promises kept</p>
+            <p className="text-px-11 text-white/55">Promises kept</p>
             <p className="text-2xl text-white leading-none mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
               {era.stats.keptPercent === null
                 ? '—'
@@ -1204,7 +1204,7 @@ function ActiveEra({
             {/* A dash beside a streak of 1 reads like a contradiction; it
                 isn't, it's just waiting for the first answer. */}
             {era.stats.keptPercent === null && (
-              <p className="text-[10px] text-white/40 mt-1">after your first check-in</p>
+              <p className="text-px-10 text-white/40 mt-1">after your first check-in</p>
             )}
           </div>
         </div>
@@ -1213,13 +1213,13 @@ function ActiveEra({
             <Flame className="w-[18px] h-[18px] text-white/80" />
           </span>
           <div>
-            <p className="text-[11px] text-white/55">Streak</p>
+            <p className="text-px-11 text-white/55">Streak</p>
             <p className="text-2xl text-white leading-none mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
               {era.stats.promiseStreak}
             </p>
             {/* Says what the number counts: days with a promise MADE, which
                 is not the same as days kept (lib/era/logic computeStats). */}
-            <p className="text-[10px] text-white/40 mt-1">
+            <p className="text-px-10 text-white/40 mt-1">
               {era.stats.promiseStreak === 1 ? 'day with a promise' : 'days with a promise'}
             </p>
           </div>
@@ -1228,7 +1228,7 @@ function ActiveEra({
 
       {milestone && !milestoneDismissed && (
         <div className="card-surface-lg p-4 border border-white/20">
-          <p className="text-[19px] text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
+          <p className="text-px-19 text-white leading-snug" style={{ ...SERIF, fontWeight: 500 }}>
             {milestone === 'complete' ? 'You finished it.' : milestone === '7' ? 'One week in.' : milestone === '14' ? 'Two weeks in.' : 'Three weeks in.'}
           </p>
           <p className="text-sm text-white/70 mt-1">Show someone — they can start your era with you.</p>
@@ -1274,7 +1274,7 @@ function ActiveEra({
           to answer today's question. */}
       {era.alignment && era.step !== 'complete' && (
         <Link href="/daily-read" className="flex items-start gap-2.5 px-1 -mt-0.5">
-          <span className="text-[10px] tracking-[0.2em] uppercase text-white/45 pt-0.5 shrink-0">Alignment</span>
+          <span className="text-px-10 tracking-[0.2em] uppercase text-white/45 pt-0.5 shrink-0">Alignment</span>
           <span className="text-xs text-white/75 leading-snug">{alignmentLine(era.alignment)}</span>
         </Link>
       )}
@@ -1287,7 +1287,7 @@ function ActiveEra({
           guide this era leans on. */}
       {era.step !== 'complete' && (
         <div className="card-surface-lg p-4">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
             <Zap className="w-3 h-3" /> For your era
           </p>
           <div className="flex flex-wrap gap-2 mt-2.5">
@@ -1322,7 +1322,7 @@ function ActiveEra({
 function EraReportCard({ report }: { report: NonNullable<EraToday['report']> }) {
   return (
     <div className="mt-4 rounded-2xl border border-white/[0.12] bg-white/[0.03] p-4">
-      <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+      <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">
         Your {eraName(report.title)} · {report.lengthDays} days
       </p>
 
@@ -1331,8 +1331,8 @@ function EraReportCard({ report }: { report: NonNullable<EraToday['report']> }) 
           <div key={line.label} className="flex items-baseline justify-between gap-3">
             <dt className="text-xs text-white/60 shrink-0">{line.label}</dt>
             <dd className="text-right min-w-0">
-              <span className="text-[17px] text-white" style={{ ...SERIF, fontWeight: 500 }}>{line.value}</span>
-              {line.detail && <span className="block text-[10px] text-white/40 leading-tight">{line.detail}</span>}
+              <span className="text-px-17 text-white" style={{ ...SERIF, fontWeight: 500 }}>{line.value}</span>
+              {line.detail && <span className="block text-px-10 text-white/40 leading-tight">{line.detail}</span>}
             </dd>
           </div>
         ))}
@@ -1340,14 +1340,14 @@ function EraReportCard({ report }: { report: NonNullable<EraToday['report']> }) 
 
       {report.halves && (
         <div className="mt-4 pt-3 border-t border-white/[0.08]">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">{report.halves.label}</p>
-          <p className="text-[17px] text-white mt-1" style={{ ...SERIF, fontWeight: 500 }}>
+          <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">{report.halves.label}</p>
+          <p className="text-px-17 text-white mt-1" style={{ ...SERIF, fontWeight: 500 }}>
             {report.halves.firstHalf.percent}% → {report.halves.secondHalf.percent}%
             <span className={`ml-2 text-xs ${report.halves.change >= 0 ? 'text-white/70' : 'text-white/50'}`}>
               {report.halves.change >= 0 ? '+' : ''}{report.halves.change} pts
             </span>
           </p>
-          <p className="text-[10px] text-white/40 mt-0.5">
+          <p className="text-px-10 text-white/40 mt-0.5">
             {report.halves.firstHalf.kept} of {report.halves.firstHalf.answered}, then{' '}
             {report.halves.secondHalf.kept} of {report.halves.secondHalf.answered}
           </p>
@@ -1356,7 +1356,7 @@ function EraReportCard({ report }: { report: NonNullable<EraToday['report']> }) 
 
       {report.phases.some(p => p.days > 0) && (
         <div className="mt-4 pt-3 border-t border-white/[0.08] space-y-1.5">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/45">By chapter</p>
+          <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">By chapter</p>
           {report.phases.map(p => (
             <div key={p.phase} className="flex items-center justify-between text-xs">
               <span className="text-white/70">
@@ -1373,7 +1373,7 @@ function EraReportCard({ report }: { report: NonNullable<EraToday['report']> }) 
       {report.missing.length > 0 && (
         <div className="mt-4 pt-3 border-t border-white/[0.08]">
           {report.missing.map(m => (
-            <p key={m} className="text-[10px] text-white/35 leading-relaxed">{m}</p>
+            <p key={m} className="text-px-10 text-white/35 leading-relaxed">{m}</p>
           ))}
         </div>
       )}
@@ -1417,10 +1417,10 @@ function EraRecap({ era, onLocked }: { era: EraToday; onLocked: () => void }) {
     return (
       <div className="mt-4 rounded-xl border border-white/15 bg-white/[0.03] p-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/50">Your Era Recap</p>
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/50">Your Era Recap</p>
           <SpeakReplyButton text={recap} onUpgrade={onLocked} />
         </div>
-        <p className="text-[16px] text-white/90 leading-relaxed mt-2 whitespace-pre-line" style={SERIF}>{recap}</p>
+        <p className="text-px-16 text-white/90 leading-relaxed mt-2 whitespace-pre-line" style={SERIF}>{recap}</p>
       </div>
     )
   }

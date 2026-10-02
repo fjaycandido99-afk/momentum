@@ -27,7 +27,7 @@ export function JourneyCard({ day }: { day: number }) {
           ) : (
             <Compass className="w-3.5 h-3.5 text-white/60" />
           )}
-          <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">{j.pathName} Path</span>
+          <span className="text-px-10 uppercase tracking-wider text-white/50 font-semibold">{j.pathName} Path</span>
         </div>
 
         {/* The arc */}

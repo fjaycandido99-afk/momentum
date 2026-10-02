@@ -65,7 +65,7 @@ export default function ProofPage() {
                 <button
                   key={y}
                   onClick={() => { setYear(y); load(y) }}
-                  className={`text-[12px] tabular-nums rounded-full px-3 py-1 border transition-colors ${
+                  className={`text-px-12 tabular-nums rounded-full px-3 py-1 border transition-colors ${
                     y === year ? 'bg-white text-black border-white' : 'text-white/60 border-white/20 hover:text-white'
                   }`}
                 >
@@ -77,7 +77,7 @@ export default function ProofPage() {
         </div>
 
         <div className="mt-4">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Your year in proof</p>
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Your year in proof</p>
           {loading && !data ? (
             <div className="flex items-center gap-2 text-white/50 text-sm mt-6">
               <Loader2 className="w-4 h-4 animate-spin" /> Counting your days…
@@ -91,16 +91,16 @@ export default function ProofPage() {
             </div>
           ) : (
             <>
-              <h1 className="text-[52px] leading-none text-white mt-2 tabular-nums" style={{ ...SERIF, fontWeight: 600 }}>
+              <h1 className="text-px-52 leading-none text-white mt-2 tabular-nums" style={{ ...SERIF, fontWeight: 600 }}>
                 <CountUp value={data.year.counts.proofs} />
               </h1>
-              <p className="text-[15px] text-white/70 mt-1">
+              <p className="text-px-15 text-white/70 mt-1">
                 {data.year.counts.proofs === 1 ? 'day kept' : 'days kept'} in {data.year.year}
               </p>
-              <p className="text-[13px] text-white/45 mt-2 leading-relaxed">{proofSummary(data.year)}</p>
+              <p className="text-px-13 text-white/45 mt-2 leading-relaxed">{proofSummary(data.year)}</p>
               {/* Said out loud, so an opening month is a start and not a gap. */}
               {data.year.from !== `${data.year.year}-01-01` && (
-                <p className="text-[12px] text-white/35 mt-1">
+                <p className="text-px-12 text-white/35 mt-1">
                   Your record starts {monthName(data.year.from)}.
                 </p>
               )}
@@ -128,7 +128,7 @@ export default function ProofPage() {
               {/* The misses stay on the page. A record that only counts the
                   good days is a highlight reel, not a record. */}
               {(data.year.counts.missed > 0 || data.year.counts.open > 0) && (
-                <p className="text-[11px] text-white/35 mt-3 tabular-nums">
+                <p className="text-px-11 text-white/35 mt-3 tabular-nums">
                   {data.year.counts.missed} day{data.year.counts.missed === 1 ? '' : 's'} nothing was kept
                   {data.year.counts.open > 0 && ` · ${data.year.counts.open} never answered`}
                   {data.year.counts.missions > 0 && ` · ${data.year.counts.missions} missions done`}
@@ -138,14 +138,14 @@ export default function ProofPage() {
               {/* Finished eras, kept for good: an era ends, its record doesn't. */}
               {data.eras.length > 0 && (
                 <div className="mt-8">
-                  <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Eras</p>
+                  <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Eras</p>
                   <div className="mt-2 space-y-2">
                     {data.eras.map(r => <EraRecordCard key={r.id} record={r} />)}
                   </div>
                 </div>
               )}
 
-              <p className="text-[12px] text-white/40 mt-7 leading-relaxed">
+              <p className="text-px-12 text-white/40 mt-7 leading-relaxed">
                 Don&rsquo;t track time. Collect proof. A day counts when you keep something you said
                 you&rsquo;d do — a promise, a practice, a session. A missed day leaves a gap and takes
                 nothing away.
@@ -188,8 +188,8 @@ function monthName(day: string): string {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-2xl border border-white/[0.12] py-3">
-      <p className="text-[20px] text-white tabular-nums">{value}</p>
-      <p className="text-[10px] tracking-[0.12em] uppercase text-white/40 mt-0.5">{label}</p>
+      <p className="text-px-20 text-white tabular-nums">{value}</p>
+      <p className="text-px-10 tracking-[0.12em] uppercase text-white/40 mt-0.5">{label}</p>
     </div>
   )
 }

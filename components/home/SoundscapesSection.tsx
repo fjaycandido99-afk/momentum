@@ -108,9 +108,9 @@ export function SoundscapesSection({ activeSoundscape, soundscapeIsPlaying, isCo
                   <SoftLockBadge isLocked={true} size="sm" className="top-0 right-0" />
                 )}
               </div>
-              <span className={`text-[11px] ${isActive ? 'text-white' : 'text-white/90'}`}>{item.label}</span>
+              <span className={`text-px-11 ${isActive ? 'text-white' : 'text-white/90'}`}>{item.label}</span>
               {item.id === eraPickId && (
-                <span className="text-[8px] tracking-[0.18em] uppercase text-white/55 -mt-0.5" title={eraTitle ? `For your ${eraName(eraTitle)}` : undefined}>
+                <span className="text-px-8 tracking-[0.18em] uppercase text-white/55 -mt-0.5" title={eraTitle ? `For your ${eraName(eraTitle)}` : undefined}>
                   Your era
                 </span>
               )}

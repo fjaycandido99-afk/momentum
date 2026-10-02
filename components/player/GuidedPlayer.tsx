@@ -211,7 +211,7 @@ export function GuidedPlayer({
         >
           <ChevronDown className="w-5 h-5 text-white" />
         </button>
-        <span className="absolute left-1/2 -translate-x-1/2 text-[11px] font-medium uppercase tracking-[0.34em] text-white/80">
+        <span className="absolute left-1/2 -translate-x-1/2 text-px-11 font-medium uppercase tracking-[0.34em] text-white/80">
           Guided
         </span>
         <div className="w-11" />
@@ -234,7 +234,7 @@ export function GuidedPlayer({
         </div>
 
         {/* Guide name */}
-        <h1 className="text-[44px] leading-tight text-white text-center" style={{ ...SERIF, fontWeight: 600 }}>{guideName}</h1>
+        <h1 className="text-px-44 leading-tight text-white text-center" style={{ ...SERIF, fontWeight: 600 }}>{guideName}</h1>
         {activeGuide && (
           <p className="text-lg text-white/60 mt-1 text-center">{activeGuide.tagline}</p>
         )}
@@ -261,8 +261,8 @@ export function GuidedPlayer({
             />
           </div>
           <div className="flex justify-between mt-2">
-            <span className="text-[13px] text-white/70 tabular-nums">{formatTime(currentTime)}</span>
-            <span className="text-[13px] text-white/70 tabular-nums">{duration > 0 ? formatTime(duration) : '--:--'}</span>
+            <span className="text-px-13 text-white/70 tabular-nums">{formatTime(currentTime)}</span>
+            <span className="text-px-13 text-white/70 tabular-nums">{duration > 0 ? formatTime(duration) : '--:--'}</span>
           </div>
         </div>
 
@@ -272,7 +272,7 @@ export function GuidedPlayer({
           <button
             onClick={autoplay.toggle}
             aria-pressed={autoplay.enabled}
-            className={`inline-flex items-center gap-2 h-11 px-5 rounded-full text-[14px] font-medium backdrop-blur-sm transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+            className={`inline-flex items-center gap-2 h-11 px-5 rounded-full text-px-14 font-medium backdrop-blur-sm transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
               autoplay.enabled
                 ? 'bg-black/40 border border-white/30 text-white'
                 : 'bg-black/30 border border-white/15 text-white/55 hover:text-white/80'
@@ -332,7 +332,7 @@ export function GuidedPlayer({
                     />
                   ))}
                 </div>
-                <span className={`text-[12px] transition-colors whitespace-nowrap ${isActive ? 'text-white font-semibold' : 'text-white/60'}`}>
+                <span className={`text-px-12 transition-colors whitespace-nowrap ${isActive ? 'text-white font-semibold' : 'text-white/60'}`}>
                   {guide.name}
                 </span>
               </button>

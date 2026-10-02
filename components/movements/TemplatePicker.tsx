@@ -51,8 +51,8 @@ export function TemplatePicker({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Instead of writing it</p>
-            <h2 className="text-[26px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Instead of writing it</p>
+            <h2 className="text-px-26 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               Start from a session
             </h2>
           </div>
@@ -61,18 +61,18 @@ export function TemplatePicker({
           </button>
         </div>
 
-        <p className="text-[13px] text-white/55 mt-2 leading-relaxed">
+        <p className="text-px-13 text-white/55 mt-2 leading-relaxed">
           Pick what you train with and a shape for the week. Voxu fills in which movements — how
           much is yours to write, and you can change any row afterwards.
         </p>
 
-        <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-4">What you have</p>
+        <p className="text-px-11 uppercase tracking-[0.2em] text-white/45 mt-4">What you have</p>
         <div className="flex flex-wrap gap-1.5 mt-2">
           {KITS.map(k => (
             <button
               key={k}
               onClick={() => { haptic('light'); setKit(k) }}
-              className={`text-[13px] rounded-full px-3 py-1.5 border ${
+              className={`text-px-13 rounded-full px-3 py-1.5 border ${
                 kit === k ? 'bg-white text-black border-white' : 'border-white/20 text-white/75'
               }`}
             >
@@ -96,21 +96,21 @@ export function TemplatePicker({
                   aria-expanded={isOpen}
                   className="w-full text-left px-3.5 py-3"
                 >
-                  <span className="block text-[15px] text-white leading-snug">{template.name}</span>
-                  <span className="block text-[12px] text-white/45 mt-0.5 leading-snug">{template.what}</span>
+                  <span className="block text-px-15 text-white leading-snug">{template.name}</span>
+                  <span className="block text-px-12 text-white/45 mt-0.5 leading-snug">{template.what}</span>
                 </button>
 
                 {isOpen && (
                   <div className="border-t border-white/[0.08] px-3.5 py-3">
                     {sessions.map((session, i) => (
                       <div key={i} className={i > 0 ? 'mt-3 pt-3 border-t border-white/[0.06]' : ''}>
-                        <p className="text-[10px] tracking-[0.18em] uppercase text-white/40">
+                        <p className="text-px-10 tracking-[0.18em] uppercase text-white/40">
                           {slotLabels[i] ?? session.label} · {session.label}
                         </p>
                         {session.movements.length > 0 ? (
                           <ul className="mt-1.5 space-y-1">
                             {session.movements.map(m => (
-                              <li key={m.id} className="flex items-center gap-2 text-[13px] text-white/80">
+                              <li key={m.id} className="flex items-center gap-2 text-px-13 text-white/80">
                                 <span className="text-white/35 shrink-0">
                                   <PatternGlyph pattern={m.pattern} className="w-3.5 h-3.5" />
                                 </span>
@@ -119,12 +119,12 @@ export function TemplatePicker({
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-[12px] text-white/35 mt-1">Nothing fits that kit.</p>
+                          <p className="text-px-12 text-white/35 mt-1">Nothing fits that kit.</p>
                         )}
                       </div>
                     ))}
 
-                    {note && <p className="text-[11px] text-white/40 mt-3 leading-snug">{note}</p>}
+                    {note && <p className="text-px-11 text-white/40 mt-3 leading-snug">{note}</p>}
 
                     {!empty && (
                       <button
@@ -135,7 +135,7 @@ export function TemplatePicker({
                             template.name,
                           )
                         }}
-                        className="w-full mt-3 py-2.5 rounded-xl bg-white text-black text-[14px] font-medium"
+                        className="w-full mt-3 py-2.5 rounded-xl bg-white text-black text-px-14 font-medium"
                       >
                         Use this
                       </button>
@@ -147,7 +147,7 @@ export function TemplatePicker({
           })}
         </div>
 
-        <p className="text-[11px] text-white/35 mt-4 leading-relaxed">
+        <p className="text-px-11 text-white/35 mt-4 leading-relaxed">
           A shape, not a programme. Voxu doesn’t know your body, so it writes no sets, reps or
           weights — and it won’t tell you this one works better than another.
         </p>

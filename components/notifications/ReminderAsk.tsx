@@ -106,7 +106,7 @@ export function ReminderAsk({ hasPromise }: { hasPromise: boolean }) {
             {/* The real constraint, stated plainly. iPhone Safari cannot do
                 notifications for a site — only for one added to the home
                 screen — so the ask is the install, not a toggle. */}
-            <p className="text-[11px] leading-relaxed text-white/60">
+            <p className="text-px-11 leading-relaxed text-white/60">
               On iPhone, Voxu can only send reminders once it&rsquo;s on your home screen.
               Tap Share, then <span className="text-white/80">Add to Home Screen</span>, and
               open it from there.
@@ -129,7 +129,7 @@ export function ReminderAsk({ hasPromise }: { hasPromise: boolean }) {
         <Bell className="mt-0.5 h-4 w-4 shrink-0 text-white/70" />
         <div className="space-y-1">
           <p className="text-xs font-medium text-white">Want a reminder tonight?</p>
-          <p className="text-[11px] leading-relaxed text-white/60">
+          <p className="text-px-11 leading-relaxed text-white/60">
             One nudge to mark whether you kept it. You can change or stop them in Settings.
           </p>
         </div>

@@ -66,8 +66,8 @@ export function Shelf() {
   return (
     <div className="mt-7 space-y-3">
       <div>
-        <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Books</p>
-        <p className="text-[12px] text-white/45 mt-0.5">
+        <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Books</p>
+        <p className="text-px-12 text-white/45 mt-0.5">
           {thisYear > 0
             ? `${thisYear} finished this year.`
             : reading.length
@@ -101,8 +101,8 @@ export function Shelf() {
               </div>
             )}
             <span className="min-w-0 flex-1">
-              <span className="block text-[14px] text-white truncate">{book.title}</span>
-              <span className="block text-[12px] text-white/45 truncate">
+              <span className="block text-px-14 text-white truncate">{book.title}</span>
+              <span className="block text-px-12 text-white/45 truncate">
                 {line ?? book.author ?? 'Reading'}
               </span>
             </span>
@@ -139,7 +139,7 @@ export function Shelf() {
                 <BookOpen className="w-4 h-4 text-white/25" />
               </div>
             )}
-            <p className="text-[11px] text-white/60 mt-1.5 leading-tight line-clamp-2">{book.title}</p>
+            <p className="text-px-11 text-white/60 mt-1.5 leading-tight line-clamp-2">{book.title}</p>
           </button>
         ))}
       </div>

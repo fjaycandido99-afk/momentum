@@ -501,7 +501,7 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
 
           {/* Content — stagger 2 */}
           <div className="spark-text-in" style={{ animationDelay: '0.25s' }}>
-            <p className="text-[15px] text-white leading-relaxed font-medium">
+            <p className="text-px-15 text-white leading-relaxed font-medium">
               {/* An assessment item is a statement about the reader, not a
                   quotation — wrapping it in quote marks reads as someone
                   else's words. */}
@@ -529,7 +529,7 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
                       aria-label={point.label}
                       disabled={rating !== null}
                       onClick={() => handleRate(point.score)}
-                      className={`flex-1 min-h-[3.25rem] px-1 py-2 rounded-xl border text-[11px] leading-tight font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
+                      className={`flex-1 min-h-[3.25rem] px-1 py-2 rounded-xl border text-px-11 leading-tight font-medium transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
                         chosen
                           ? 'bg-violet-500/40 border-violet-300/50 text-white scale-[1.04]'
                           : rating !== null
@@ -616,7 +616,7 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
               the reason people close an app instead of a card. */}
           <button
             onClick={turnOff}
-            className="block mx-auto mt-4 text-[11px] text-white/35 hover:text-white/60"
+            className="block mx-auto mt-4 text-px-11 text-white/35 hover:text-white/60"
           >
             Don&rsquo;t show these
           </button>

@@ -35,7 +35,7 @@ function Ring({ current, target }: { current: number; target: number }) {
           className="transition-[stroke-dashoffset] duration-700"
         />
       </svg>
-      <span className="text-[10px] text-white/85 tabular-nums">{current}/{target}</span>
+      <span className="text-px-10 text-white/85 tabular-nums">{current}/{target}</span>
     </span>
   )
 }
@@ -80,18 +80,18 @@ export function AchievementShelf() {
     <section className="px-5 mt-2 mb-8 space-y-3" aria-label="Achievements">
       <div className="card-surface-lg p-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
             <Trophy className="w-3.5 h-3.5" /> Achievements
           </p>
           <div className="flex items-center gap-3">
             <button
               onClick={hide}
-              className="text-[11px] text-white/35 hover:text-white/80"
+              className="text-px-11 text-white/35 hover:text-white/80"
               aria-label="Hide until something new is earned"
             >
               Hide
             </button>
-            <Link href="/progress" className="flex items-center gap-0.5 text-[11px] text-white/55 hover:text-white tabular-nums">
+            <Link href="/progress" className="flex items-center gap-0.5 text-px-11 text-white/55 hover:text-white tabular-nums">
               {unlocked.length} of {all.length} earned <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -104,7 +104,7 @@ export function AchievementShelf() {
             {next.map(a => (
               <Link key={a.id} href="/progress" className="flex items-center gap-2 min-w-0" title={a.description}>
                 <Ring current={a.progress!.current} target={a.progress!.target} />
-                <span className="text-[12px] text-white/85 leading-tight line-clamp-2 min-w-0">{a.title}</span>
+                <span className="text-px-12 text-white/85 leading-tight line-clamp-2 min-w-0">{a.title}</span>
               </Link>
             ))}
           </div>
@@ -114,10 +114,10 @@ export function AchievementShelf() {
       {recent.length > 0 && (
         <div className="card-surface-lg p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
               <Medal className="w-3.5 h-3.5" /> Recently earned
             </p>
-            <Link href="/progress" className="flex items-center gap-0.5 text-[11px] text-white/55 hover:text-white">
+            <Link href="/progress" className="flex items-center gap-0.5 text-px-11 text-white/55 hover:text-white">
               See all <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -127,7 +127,7 @@ export function AchievementShelf() {
             {recent.map(a => (
               <Link key={a.id} href="/progress" className="flex flex-col items-center gap-2 w-[68px] shrink-0">
                 <AchievementBadge id={a.id} category={a.category} icon={a.icon} rarity={a.rarity} unlocked mark={a.mark} size={56} />
-                <span className="text-[10px] text-white/70 text-center leading-tight line-clamp-2">{a.title}</span>
+                <span className="text-px-10 text-white/70 text-center leading-tight line-clamp-2">{a.title}</span>
               </Link>
             ))}
           </div>

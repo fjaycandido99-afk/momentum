@@ -202,8 +202,8 @@ function RelicSheet({ data, onChange, onClose }: {
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Your relics</p>
-            <h2 className="text-[26px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Your relics</p>
+            <h2 className="text-px-26 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               What you wear
             </h2>
           </div>
@@ -224,7 +224,7 @@ function RelicSheet({ data, onChange, onClose }: {
               className="flex flex-col items-center gap-2 press-scale"
             >
               <Coin id={id} size={id === data.featured ? 72 : 60} />
-              <span className={`text-[10px] uppercase tracking-[0.18em] ${id === data.featured ? 'text-white/80' : 'text-white/35'}`}>
+              <span className={`text-px-10 uppercase tracking-[0.18em] ${id === data.featured ? 'text-white/80' : 'text-white/35'}`}>
                 {id === data.featured ? 'In your header' : 'Tap to feature'}
               </span>
             </button>
@@ -232,13 +232,13 @@ function RelicSheet({ data, onChange, onClose }: {
         </div>
         {featured && (
           <div className="text-center mt-4">
-            <p className="text-[18px] text-white" style={{ ...SERIF, fontWeight: 600 }}>{featured.title}</p>
+            <p className="text-px-18 text-white" style={{ ...SERIF, fontWeight: 600 }}>{featured.title}</p>
             {achievementLine(featured.id) && (
-              <p className="text-[15px] text-white/70 leading-snug mt-0.5" style={SERIF}>{achievementLine(featured.id)}</p>
+              <p className="text-px-15 text-white/70 leading-snug mt-0.5" style={SERIF}>{achievementLine(featured.id)}</p>
             )}
             <button
               onClick={() => { haptic('light'); setSharing(featured.id) }}
-              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/20 text-[13px] text-white/85 press-scale"
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/20 text-px-13 text-white/85 press-scale"
             >
               <Share2 className="w-3.5 h-3.5" /> Share this relic
             </button>
@@ -255,8 +255,8 @@ function RelicSheet({ data, onChange, onClose }: {
           className="mt-6 w-full flex items-center justify-between gap-3 p-3.5 rounded-xl border border-white/15 text-left"
         >
           <span className="min-w-0">
-            <span className="block text-[14px] text-white">Show my relics in my circle</span>
-            <span className="block text-[11px] text-white/45 mt-0.5">The three you wear, beside your name. Nothing else.</span>
+            <span className="block text-px-14 text-white">Show my relics in my circle</span>
+            <span className="block text-px-11 text-white/45 mt-0.5">The three you wear, beside your name. Nothing else.</span>
           </span>
           <span className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${data.inCircle ? 'bg-white' : 'bg-white/15'}`} aria-hidden>
             <span className={`absolute top-0.5 w-5 h-5 rounded-full transition-all ${data.inCircle ? 'left-[22px] bg-black' : 'left-0.5 bg-white/70'}`} />
@@ -264,7 +264,7 @@ function RelicSheet({ data, onChange, onClose }: {
         </button>
 
         <div className="flex items-end justify-between gap-3 mt-7">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">
+          <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">
             Your collection <span className="text-white/30 normal-case tracking-normal">· {data.earned.length} earned · wear up to {MAX_EQUIPPED}</span>
           </p>
           {/* Coins or a text list — for anyone who can't tell the coin art
@@ -275,14 +275,14 @@ function RelicSheet({ data, onChange, onClose }: {
                 key={v}
                 onClick={() => setView(v)}
                 aria-pressed={view === v}
-                className={`tap-44 px-3 py-1 rounded-full text-[11px] capitalize ${view === v ? 'bg-white text-black font-medium' : 'text-white/70'}`}
+                className={`tap-44 px-3 py-1 rounded-full text-px-11 capitalize ${view === v ? 'bg-white text-black font-medium' : 'text-white/70'}`}
               >
                 {v}
               </button>
             ))}
           </div>
         </div>
-        {note && <p className="text-[12px] text-white/70 mt-2" role="status">{note}</p>}
+        {note && <p className="text-px-12 text-white/70 mt-2" role="status">{note}</p>}
         {view === 'list' ? (
           <ul className="mt-3 divide-y divide-white/[0.08]">
             {data.earned.map(e => {
@@ -297,12 +297,12 @@ function RelicSheet({ data, onChange, onClose }: {
                     aria-pressed={on}
                     className="tap-44 min-w-0 flex-1 text-left"
                   >
-                    <span className="block text-[15px] text-white leading-snug">{e.title}</span>
-                    <span className="block text-[12px] text-white/70 mt-0.5 capitalize">
+                    <span className="block text-px-15 text-white leading-snug">{e.title}</span>
+                    <span className="block text-px-12 text-white/70 mt-0.5 capitalize">
                       {e.rarity} · Earned {shortDate(e.unlockedAt)}
                     </span>
-                    {a && <span className="block text-[12px] text-white/60 mt-0.5">{a.description}</span>}
-                    <span className="block text-[12px] mt-1 text-white/85">
+                    {a && <span className="block text-px-12 text-white/60 mt-0.5">{a.description}</span>}
+                    <span className="block text-px-12 mt-1 text-white/85">
                       {isFeatured ? 'Featured · worn' : on ? 'Worn' : 'Not worn — tap to wear'}
                     </span>
                   </button>
@@ -310,7 +310,7 @@ function RelicSheet({ data, onChange, onClose }: {
                     <button
                       onClick={() => feature(e.id)}
                       disabled={busy}
-                      className="tap-44 shrink-0 px-3 py-1.5 rounded-full border border-white/20 text-[12px] text-white/85"
+                      className="tap-44 shrink-0 px-3 py-1.5 rounded-full border border-white/20 text-px-12 text-white/85"
                     >
                       Feature
                     </button>
@@ -338,7 +338,7 @@ function RelicSheet({ data, onChange, onClose }: {
                     <Check className="w-3 h-3" />
                   </span>
                 )}
-                <span className={`text-[10px] text-center leading-tight line-clamp-2 ${on ? 'text-white' : 'text-white/55'}`}>{e.title}</span>
+                <span className={`text-px-10 text-center leading-tight line-clamp-2 ${on ? 'text-white' : 'text-white/55'}`}>{e.title}</span>
               </button>
             )
           })}

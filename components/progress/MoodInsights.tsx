@@ -64,8 +64,8 @@ export function MoodInsights({ insights }: MoodInsightsProps) {
           <p className={`text-lg font-bold ${getMoodColor(insights.averageMood)}`}>
             {insights.averageMood.toFixed(1)}
           </p>
-          <p className="text-[9px] text-white/60">Avg Mood</p>
-          <p className={`text-[8px] ${getMoodColor(insights.averageMood)}`}>{getMoodLabel(insights.averageMood)}</p>
+          <p className="text-px-9 text-white/60">Avg Mood</p>
+          <p className={`text-px-8 ${getMoodColor(insights.averageMood)}`}>{getMoodLabel(insights.averageMood)}</p>
         </div>
         <div className="p-2 rounded-xl bg-white/[0.03] text-center">
           <div className="flex items-center justify-center gap-0.5">
@@ -74,11 +74,11 @@ export function MoodInsights({ insights }: MoodInsightsProps) {
               {Math.abs(insights.improvementPercent)}%
             </p>
           </div>
-          <p className="text-[9px] text-white/60">30d Trend</p>
+          <p className="text-px-9 text-white/60">30d Trend</p>
         </div>
         <div className="p-2 rounded-xl bg-white/[0.03] text-center">
           <p className="text-lg font-bold text-white">{insights.totalEntries}</p>
-          <p className="text-[9px] text-white/60">Entries</p>
+          <p className="text-px-9 text-white/60">Entries</p>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export function MoodInsights({ insights }: MoodInsightsProps) {
         {insights.bestDay && (
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.02]">
             <Calendar className="w-3.5 h-3.5 text-white/60 shrink-0" />
-            <p className="text-[11px] text-white/75">
+            <p className="text-px-11 text-white/75">
               Your best day is <span className="text-white font-medium">{insights.bestDay}</span>
             </p>
           </div>
@@ -95,7 +95,7 @@ export function MoodInsights({ insights }: MoodInsightsProps) {
         {insights.journalCorrelation && (
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.02]">
             <BookOpen className="w-3.5 h-3.5 text-white/60 shrink-0" />
-            <p className="text-[11px] text-white/75">
+            <p className="text-px-11 text-white/75">
               Your mood is <span className="text-white font-medium">higher</span> on days you journal
             </p>
           </div>
@@ -105,7 +105,7 @@ export function MoodInsights({ insights }: MoodInsightsProps) {
       {/* Weekly breakdown mini bars */}
       {insights.weeklyBreakdown.length > 0 && (
         <div className="mt-3">
-          <p className="text-[10px] text-white/50 mb-2">Weekly Pattern</p>
+          <p className="text-px-10 text-white/50 mb-2">Weekly Pattern</p>
           <div className="flex items-end gap-1 h-10">
             {insights.weeklyBreakdown.map(d => (
               <div key={d.day} className="flex-1 flex flex-col items-center gap-0.5">
@@ -113,7 +113,7 @@ export function MoodInsights({ insights }: MoodInsightsProps) {
                   className={`w-full rounded-t-sm ${getMoodColor(d.average).replace('text-', 'bg-')}/30`}
                   style={{ height: `${(d.average / 5) * 100}%` }}
                 />
-                <span className="text-[7px] text-white/50">{d.day.slice(0, 2)}</span>
+                <span className="text-px-7 text-white/50">{d.day.slice(0, 2)}</span>
               </div>
             ))}
           </div>

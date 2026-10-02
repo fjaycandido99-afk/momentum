@@ -66,11 +66,11 @@ export function MoodTrends({ moodData }: MoodTrendsProps) {
       <div className="flex items-center gap-4 mt-2">
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-0.5 rounded-full bg-white/40" />
-          <span className="text-[10px] text-white/60">Before</span>
+          <span className="text-px-10 text-white/60">Before</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-0.5 rounded-full bg-white" />
-          <span className="text-[10px] text-white/60">After</span>
+          <span className="text-px-10 text-white/60">After</span>
         </div>
       </div>
     </div>

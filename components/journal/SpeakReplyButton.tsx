@@ -124,7 +124,7 @@ export function SpeakReplyButton({
     return (
       <Link
         href="/signup"
-        className="inline-flex items-center gap-1 text-[10px] text-white/45 underline-offset-2 hover:text-white/80 hover:underline"
+        className="inline-flex items-center gap-1 text-px-10 text-white/45 underline-offset-2 hover:text-white/80 hover:underline"
       >
         <Volume2 className="h-3 w-3" />
         sign up to hear this
@@ -134,7 +134,7 @@ export function SpeakReplyButton({
 
   if (state === 'unavailable') {
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] text-white/35">
+      <span className="inline-flex items-center gap-1 text-px-10 text-white/35">
         <VolumeX className="h-3 w-3" />
         voice unavailable
       </span>
@@ -145,7 +145,7 @@ export function SpeakReplyButton({
     return (
       <button
         onClick={() => play(true)}
-        className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.16] px-3 py-1.5 text-[12px] text-white/80 hover:text-white active:scale-[0.98] transition-all"
+        className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.16] px-3 py-1.5 text-px-12 text-white/80 hover:text-white active:scale-[0.98] transition-all"
       >
         {state === 'loading' ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />

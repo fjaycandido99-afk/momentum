@@ -297,21 +297,21 @@ export function CalendarView({ onSelectDate, currentStreak = 0 }: CalendarViewPr
         <div className="grid grid-cols-3 gap-2">
           <div className="p-3 rounded-xl bg-white/10 border border-white/20 text-center">
             <p className="text-lg font-bold text-white">{stats.completedDays}</p>
-            <p className="text-[10px] text-white/70 uppercase tracking-wide">Complete</p>
+            <p className="text-px-10 text-white/70 uppercase tracking-wide">Complete</p>
           </div>
           <div className="p-3 rounded-xl bg-white/10 border border-white/20 text-center">
             <p className="text-lg font-bold text-white">{stats.partialDays}</p>
-            <p className="text-[10px] text-white/70 uppercase tracking-wide">Partial</p>
+            <p className="text-px-10 text-white/70 uppercase tracking-wide">Partial</p>
           </div>
           <div className="p-3 rounded-xl bg-white/10 border border-white/20 text-center">
             <p className="text-lg font-bold text-white">{stats.journalDays}</p>
-            <p className="text-[10px] text-white/70 uppercase tracking-wide">Journals</p>
+            <p className="text-px-10 text-white/70 uppercase tracking-wide">Journals</p>
           </div>
         </div>
       </div>
 
       {/* Legend */}
-      <div className="px-4 pb-4 flex items-center justify-center gap-4 text-[10px] text-white/50">
+      <div className="px-4 pb-4 flex items-center justify-center gap-4 text-px-10 text-white/50">
         <div className="flex items-center gap-1">
           <Check className="w-3 h-3 text-white" />
           <span>Complete</span>

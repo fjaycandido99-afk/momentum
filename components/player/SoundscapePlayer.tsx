@@ -106,7 +106,7 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
           <ChevronDown className="w-7 h-7 text-white" />
         </button>
 
-        <span className="absolute left-1/2 -translate-x-1/2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/70">
+        <span className="absolute left-1/2 -translate-x-1/2 text-px-11 font-semibold uppercase tracking-[0.12em] text-white/70">
           Soundscape
         </span>
 
@@ -167,7 +167,7 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
                     <Lock className="absolute -top-0.5 -right-0.5 w-3 h-3 text-white" />
                   )}
                 </div>
-                <span className={`text-[10px] transition-colors ${isActive ? 'text-white' : 'text-white/50'}`}>{item.label}</span>
+                <span className={`text-px-10 transition-colors ${isActive ? 'text-white' : 'text-white/50'}`}>{item.label}</span>
               </button>
             )
           })}

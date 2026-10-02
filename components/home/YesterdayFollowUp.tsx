@@ -83,7 +83,7 @@ export function YesterdayFollowUp() {
         <div className="relative">
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-white/60" />
-            <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">Yesterday</span>
+            <span className="text-px-10 uppercase tracking-wider text-white/50 font-semibold">Yesterday</span>
           </div>
 
           {ackMsg ? (
@@ -91,11 +91,11 @@ export function YesterdayFollowUp() {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.12]">
                 <Check className="w-4 h-4 text-white" />
               </div>
-              <p className="text-[15px] text-white leading-snug">{ackMsg}</p>
+              <p className="text-px-15 text-white leading-snug">{ackMsg}</p>
             </div>
           ) : followUp.kind === 'intention' ? (
             <>
-              <p className="mt-3 text-[15px] text-white/90 leading-snug">
+              <p className="mt-3 text-px-15 text-white/90 leading-snug">
                 You set out to <span className="text-white font-medium">&ldquo;{followUp.text}&rdquo;</span>. How&rsquo;d it go?
               </p>
               <div className="flex items-center gap-2 mt-4">
@@ -115,7 +115,7 @@ export function YesterdayFollowUp() {
             </>
           ) : followUp.kind === 'mood' ? (
             <>
-              <p className="mt-3 text-[15px] text-white/90 leading-snug">
+              <p className="mt-3 text-px-15 text-white/90 leading-snug">
                 You were feeling <span className="text-white font-medium">{followUp.moodLabel}</span> yesterday. Want to journal about today?
               </p>
               <Link
@@ -128,7 +128,7 @@ export function YesterdayFollowUp() {
             </>
           ) : (
             <>
-              <p className="mt-3 text-[15px] text-white/90 leading-snug">
+              <p className="mt-3 text-px-15 text-white/90 leading-snug">
                 You took a moment to reflect yesterday. Pick up where you left off?
               </p>
               <Link

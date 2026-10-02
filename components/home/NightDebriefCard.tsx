@@ -42,10 +42,10 @@ export function NightDebriefCard({ script, done, total }: { script: string; done
           <Moon className="w-[18px] h-[18px] text-white/80" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+          <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">
             Close the day · {length}
           </p>
-          <p className="text-[17px] text-white leading-snug mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
+          <p className="text-px-17 text-white leading-snug mt-0.5" style={{ ...SERIF, fontWeight: 500 }}>
             {total > 0 ? `${done} of ${total} done today.` : 'Today, closed.'}
           </p>
         </div>
@@ -57,14 +57,14 @@ export function NightDebriefCard({ script, done, total }: { script: string; done
           <X className="w-4 h-4" />
         </button>
       </div>
-      <p className="text-[13px] text-white/60 mt-2.5 leading-snug">{script}</p>
+      <p className="text-px-13 text-white/60 mt-2.5 leading-snug">{script}</p>
       <div className="mt-3">
         {premium ? (
           <SpeakReplyButton label="Hear it" text={script} onUpgrade={subscription?.openUpgradeModal} />
         ) : (
           <button
             onClick={() => subscription?.openUpgradeModal()}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.16] px-3 py-1.5 text-[12px] text-white/80"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.16] px-3 py-1.5 text-px-12 text-white/80"
           >
             <Lock className="h-3.5 w-3.5" /> Hear it · Premium
           </button>

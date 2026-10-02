@@ -113,7 +113,7 @@ export function GuideReminderSettings({ values, onChange }: Props) {
 
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-white">{row.label}</p>
-                <p className="text-[11px] leading-snug text-white/50">{row.hint}</p>
+                <p className="text-px-11 leading-snug text-white/50">{row.hint}</p>
               </div>
 
               <button

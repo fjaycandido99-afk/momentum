@@ -139,7 +139,7 @@ export function DesktopDock() {
               {/* Label peek on hover — small floating chip above the icon. */}
               <span
                 aria-hidden
-                className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-white/10 text-[10.5px] font-medium text-white/85 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-white/10 text-px-10.5 font-medium text-white/85 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
               >
                 {item.label}
               </span>

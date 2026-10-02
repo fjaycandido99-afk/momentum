@@ -78,7 +78,7 @@ export function ReferralLinks() {
         <h2 className="text-sm font-semibold text-white/70 flex items-center gap-2">
           <Link2 className="w-4 h-4" /> Referral links
         </h2>
-        <p className="text-[10px] text-white/35 mt-0.5">
+        <p className="text-px-10 text-white/35 mt-0.5">
           One link per person or channel. Clicks are anonymous; a signup counts once per person, ever.
         </p>
       </div>
@@ -110,11 +110,11 @@ export function ReferralLinks() {
         </div>
         {/* The exact link that will exist, before it exists. */}
         {suggestion && (
-          <p className="text-[11px] text-white/45">
+          <p className="text-px-11 text-white/45">
             Will be <span className="text-white/75">voxu.app/i/{suggestion}</span>
           </p>
         )}
-        {error && <p className="text-[11px] text-white/80">{error}</p>}
+        {error && <p className="text-px-11 text-white/80">{error}</p>}
       </div>
 
       {/* Existing links */}
@@ -131,7 +131,7 @@ export function ReferralLinks() {
                   <p className="text-sm text-white truncate">{c.label}</p>
                   <button
                     onClick={() => copy(c.url)}
-                    className="mt-0.5 flex items-center gap-1.5 text-[11px] text-white/55 hover:text-white/85"
+                    className="mt-0.5 flex items-center gap-1.5 text-px-11 text-white/55 hover:text-white/85"
                     aria-label={`Copy ${c.url}`}
                   >
                     {copied === c.url ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -153,8 +153,8 @@ export function ReferralLinks() {
                       <p className={`text-lg font-bold leading-none tabular-nums ${label === 'pro' && value > 0 ? 'text-emerald-300' : ''}`}>
                         {value}
                       </p>
-                      <p className="text-[10px] text-white/45 uppercase tracking-wider">{label}</p>
-                      {sub && <p className="text-[9px] text-white/30 leading-tight">{sub}</p>}
+                      <p className="text-px-10 text-white/45 uppercase tracking-wider">{label}</p>
+                      {sub && <p className="text-px-9 text-white/30 leading-tight">{sub}</p>}
                     </div>
                   ))}
                 </div>
@@ -162,7 +162,7 @@ export function ReferralLinks() {
               <button
                 onClick={() => toggle(c.code, !c.active)}
                 disabled={busy}
-                className="mt-2 text-[11px] text-white/45 hover:text-white/75 disabled:opacity-40"
+                className="mt-2 text-px-11 text-white/45 hover:text-white/75 disabled:opacity-40"
               >
                 {c.active ? 'Retire this link' : 'Bring it back'}
               </button>

@@ -420,7 +420,7 @@ function SettingsContent() {
           {/* User Type */}
           <div>
             <p className="text-sm text-white/85 mb-1">I am a</p>
-            <p className="text-[11px] text-white/40 mb-3">Personalizes your daily guide content</p>
+            <p className="text-px-11 text-white/40 mb-3">Personalizes your daily guide content</p>
             <div className="grid grid-cols-3 gap-2">
               {USER_TYPES.map((type) => {
                 const Icon = type.icon
@@ -447,7 +447,7 @@ function SettingsContent() {
           {(userType === 'professional' || userType === 'hybrid') && (
             <div>
               <p className="text-sm text-white/85 mb-1">Work Days</p>
-              <p className="text-[11px] text-white/40 mb-3">Off days get a lighter, rest-focused guide</p>
+              <p className="text-px-11 text-white/40 mb-3">Off days get a lighter, rest-focused guide</p>
               <div className="grid grid-cols-7 gap-1.5">
                 {DAYS.map((day) => (
                   <button
@@ -472,7 +472,7 @@ function SettingsContent() {
           {(userType === 'student' || userType === 'hybrid') && (
             <div>
               <p className="text-sm text-white/85 mb-1">Class Days</p>
-              <p className="text-[11px] text-white/40 mb-3">Study-focused modules on class days</p>
+              <p className="text-px-11 text-white/40 mb-3">Study-focused modules on class days</p>
               <div className="grid grid-cols-7 gap-1.5">
                 {DAYS.map((day) => (
                   <button
@@ -624,7 +624,7 @@ function SettingsContent() {
                       <Icon className={`w-4 h-4 ${isEnabled ? 'text-white' : 'text-white/50'}`} />
                       <span className={isEnabled ? 'text-white' : 'text-white/70'}>{segment.label}</span>
                       {segment.required && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/50">Required</span>
+                        <span className="text-px-10 px-1.5 py-0.5 rounded bg-white/10 text-white/50">Required</span>
                       )}
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
@@ -705,7 +705,7 @@ function SettingsContent() {
               silently set the morning reminder time; those are separate
               now, so a reminder can sit where the user wants it. */}
           <div className="mb-4">
-            <label htmlFor="wake-time-notif" className="block text-[11px] text-white/40 mb-1.5">Wake time</label>
+            <label htmlFor="wake-time-notif" className="block text-px-11 text-white/40 mb-1.5">Wake time</label>
             <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
               <input
                 id="wake-time-notif"
@@ -1005,7 +1005,7 @@ function SettingsContent() {
                   <Download className="w-5 h-5" />
                   Export My Data
                 </a>
-                <p className="text-[11px] text-white/45 text-center -mt-1">
+                <p className="text-px-11 text-white/45 text-center -mt-1">
                   Your journal, saved items, goals and preferences, as JSON.
                 </p>
 

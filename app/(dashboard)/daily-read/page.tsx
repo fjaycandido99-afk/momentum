@@ -134,7 +134,7 @@ export default function DailyReadPage() {
             </div>
             <div>
               <h1 className="text-base font-medium text-white leading-tight">Daily Read</h1>
-              <p className="text-[11px] text-white/50 leading-tight">How you tick, a question at a time</p>
+              <p className="text-px-11 text-white/50 leading-tight">How you tick, a question at a time</p>
             </div>
           </div>
         </div>
@@ -194,7 +194,7 @@ export default function DailyReadPage() {
                     const left = offset >= 0 ? 50 : 50 - width
                     return (
                       <div key={axis.id}>
-                        <div className="flex justify-between text-[10px] text-white/40 mb-1">
+                        <div className="flex justify-between text-px-10 text-white/40 mb-1">
                           <span>{axis.low}</span>
                           <span>{axis.high}</span>
                         </div>
@@ -220,7 +220,7 @@ export default function DailyReadPage() {
                 {/* The mindset, demoted to what it always was: a comparison,
                     offered — not a verdict on the one they chose. */}
                 {read.leanName && (
-                  <p className="text-[11px] text-white/35 mt-3 pt-3 border-t border-white/[0.07]">
+                  <p className="text-px-11 text-white/35 mt-3 pt-3 border-t border-white/[0.07]">
                     Answers like these usually sit near {read.leanIcon} {read.leanName}.
                   </p>
                 )}
@@ -264,7 +264,7 @@ export default function DailyReadPage() {
                   style={{ width: `${(index / Math.max(total, 1)) * 100}%` }}
                 />
               </div>
-              <span className="text-[11px] text-white/40 tabular-nums">{index + 1}/{total}</span>
+              <span className="text-px-11 text-white/40 tabular-nums">{index + 1}/{total}</span>
             </div>
 
             <p className="text-2xl text-white leading-snug font-medium min-h-[5rem]">
@@ -282,7 +282,7 @@ export default function DailyReadPage() {
                       key={i}
                       disabled={busy}
                       onClick={() => answer(null, i)}
-                      className="w-full py-5 rounded-xl bg-white/[0.05] border border-white/[0.12] text-[16px] text-white/90 font-medium hover:bg-white/[0.12] hover:text-white hover:border-white/25 active:scale-[0.98] disabled:opacity-40 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                      className="w-full py-5 rounded-xl bg-white/[0.05] border border-white/[0.12] text-px-16 text-white/90 font-medium hover:bg-white/[0.12] hover:text-white hover:border-white/25 active:scale-[0.98] disabled:opacity-40 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       {opt.text}
                     </button>
@@ -292,14 +292,14 @@ export default function DailyReadPage() {
                       key={point.score}
                       disabled={busy}
                       onClick={() => answer(point.score)}
-                      className="w-full py-4 rounded-xl bg-white/[0.05] border border-white/[0.12] text-[15px] text-white/85 font-medium hover:bg-white/[0.12] hover:text-white hover:border-white/25 active:scale-[0.98] disabled:opacity-40 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                      className="w-full py-4 rounded-xl bg-white/[0.05] border border-white/[0.12] text-px-15 text-white/85 font-medium hover:bg-white/[0.12] hover:text-white hover:border-white/25 active:scale-[0.98] disabled:opacity-40 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                     >
                       {point.label}
                     </button>
                   ))}
             </div>
 
-            <p className="text-[11px] text-white/35 mt-6 text-center">
+            <p className="text-px-11 text-white/35 mt-6 text-center">
               First instinct is the useful one — don&rsquo;t overthink it.
             </p>
           </div>

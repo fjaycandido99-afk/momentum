@@ -147,7 +147,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
           <X className="w-4 h-4" />
         </button>
 
-        <p className="text-[10px] uppercase tracking-[0.34em] mb-5 mt-1.5" style={{ color: `rgb(${GOLD})` }}>Achievement unlocked</p>
+        <p className="text-px-10 uppercase tracking-[0.34em] mb-5 mt-1.5" style={{ color: `rgb(${GOLD})` }}>Achievement unlocked</p>
 
         {/* Icon with staged reveal */}
         <div
@@ -189,7 +189,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
 
         {/* Title with staged entry */}
         <h3
-          className="text-[32px] leading-tight text-white mt-2 mb-1.5"
+          className="text-px-32 leading-tight text-white mt-2 mb-1.5"
           style={{ ...SERIF, fontWeight: 600, animation: 'achievement-title-in 300ms ease-out 500ms both' }}
         >
           {achievement.title}
@@ -197,14 +197,14 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
         {/* What the coin MEANS (lib/achievement-lines), then what it took. */}
         {achievementLine(achievement.id) && (
           <p
-            className="text-[19px] text-white/90 leading-snug mb-2 px-2"
+            className="text-px-19 text-white/90 leading-snug mb-2 px-2"
             style={{ ...SERIF, animation: 'achievement-title-in 300ms ease-out 600ms both' }}
           >
             {achievementLine(achievement.id)}
           </p>
         )}
         <p
-          className="text-[12px] text-white/50 leading-relaxed mb-5"
+          className="text-px-12 text-white/50 leading-relaxed mb-5"
           style={{ animation: 'achievement-title-in 300ms ease-out 700ms both' }}
         >
           {achievement.description}
@@ -217,12 +217,12 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
         >
           <button
             onClick={viewProgress}
-            className="h-12 rounded-full border flex items-center justify-center gap-1.5 text-[11px] tracking-[0.2em] uppercase text-white active:scale-[0.97] transition-transform"
+            className="h-12 rounded-full border flex items-center justify-center gap-1.5 text-px-11 tracking-[0.2em] uppercase text-white active:scale-[0.97] transition-transform"
             style={{ borderColor: `rgb(${GOLD} / 0.8)` }}
           >
             View progress <ChevronRight className="w-3.5 h-3.5" />
           </button>
-          <span className="h-12 rounded-full border border-white/15 bg-black/40 flex items-center justify-center gap-1.5 text-white font-semibold text-[15px]">
+          <span className="h-12 rounded-full border border-white/15 bg-black/40 flex items-center justify-center gap-1.5 text-white font-semibold text-px-15">
             <Sparkle className="w-4 h-4" style={{ color: `rgb(${GOLD})` }} fill="currentColor" />
             +{achievement.xpReward} XP
           </span>

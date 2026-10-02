@@ -169,7 +169,7 @@ export default function SavedPage() {
                 <div className="relative">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-white/60" />
-                    <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">Memory resurfaced</span>
+                    <span className="text-px-10 uppercase tracking-wider text-white/50 font-semibold">Memory resurfaced</span>
                   </div>
                   <p className="mt-4 text-2xl leading-snug text-white" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
                     &ldquo;{featuredText(featured)}&rdquo;
@@ -182,7 +182,7 @@ export default function SavedPage() {
             )}
 
             {showFeatured && listItems.length > 0 && (
-              <h2 className="text-[11px] font-medium text-white/45 uppercase tracking-wider pt-3 pb-0.5">Recent reflections</h2>
+              <h2 className="text-px-11 font-medium text-white/45 uppercase tracking-wider pt-3 pb-0.5">Recent reflections</h2>
             )}
 
             {listItems.map(item => (
@@ -197,10 +197,10 @@ export default function SavedPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-white/70 capitalize">
+                      <span className="px-2 py-0.5 rounded-full text-px-10 font-medium bg-white/10 text-white/70 capitalize">
                         {item.content_type}
                       </span>
-                      <span className="text-[10px] text-white/50">
+                      <span className="text-px-10 text-white/50">
                         {new Date(item.created_at).toLocaleDateString()}
                       </span>
                     </div>
@@ -267,8 +267,8 @@ export default function SavedPage() {
             </button>
 
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-white/70 capitalize">{expanded.content_type}</span>
-              <span className="text-[10px] text-white/45">
+              <span className="px-2 py-0.5 rounded-full text-px-10 font-medium bg-white/10 text-white/70 capitalize">{expanded.content_type}</span>
+              <span className="text-px-10 text-white/45">
                 {new Date(expanded.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
               </span>
             </div>

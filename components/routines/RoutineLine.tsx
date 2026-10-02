@@ -39,7 +39,7 @@ export function RoutineLine() {
       className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-white/[0.1] bg-white/[0.03] active:scale-[0.99]"
     >
       <CalendarClock className="w-3.5 h-3.5 shrink-0 text-white/45" />
-      <span className="min-w-0 flex-1 text-[12.5px] leading-snug truncate">
+      <span className="min-w-0 flex-1 text-px-12.5 leading-snug truncate">
         <span className="text-white/85">{glance.label}</span>
         <span className="text-white/45"> · {glance.line}</span>
       </span>

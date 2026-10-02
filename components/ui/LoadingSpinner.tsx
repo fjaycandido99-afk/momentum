@@ -79,7 +79,7 @@ export function LoadingScreen() {
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-40">
       <span
-        className="text-[44px] font-medium tracking-[0.35em] lowercase text-white select-none"
+        className="text-px-44 font-medium tracking-[0.35em] lowercase text-white select-none"
         style={{
           fontFamily: 'var(--font-cormorant), Georgia, serif',
           opacity: visible ? 1 : 0,

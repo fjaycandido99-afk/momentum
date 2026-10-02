@@ -60,12 +60,12 @@ export function BottomPlayerBar({ mode, isPlaying, onTogglePlay, onOpenPlayer, l
                 {isPlaying ? 'Playing' : 'Paused'}
               </p>
               {playlistPosition && (
-                <span className="text-[10px] text-white/60 font-medium shrink-0">{playlistPosition}</span>
+                <span className="text-px-10 text-white/60 font-medium shrink-0">{playlistPosition}</span>
               )}
             </div>
             <p className="text-xs text-white/70 leading-tight truncate">{displayLabel}</p>
             {nextTrackTitle && isPlaying && (
-              <p className="text-[10px] text-white/60 leading-tight truncate mt-0.5">
+              <p className="text-px-10 text-white/60 leading-tight truncate mt-0.5">
                 Up next: {nextTrackTitle}
               </p>
             )}

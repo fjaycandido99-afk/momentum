@@ -28,9 +28,9 @@ export function WeeklyMissions({ missions }: WeeklyMissionsProps) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-sm font-semibold text-white">Weekly Missions</h3>
-          <p className="text-[10px] text-white/60">Resets every Monday</p>
+          <p className="text-px-10 text-white/60">Resets every Monday</p>
         </div>
-        <span className="text-[10px] text-white/60">{completedCount}/{missions.length} done</span>
+        <span className="text-px-10 text-white/60">{completedCount}/{missions.length} done</span>
       </div>
 
       <div className="space-y-3">
@@ -53,10 +53,10 @@ export function WeeklyMissions({ missions }: WeeklyMissionsProps) {
                 <p className={`text-xs font-medium ${m.completed ? 'text-white' : 'text-white'}`}>
                   {m.title}
                 </p>
-                <p className="text-[10px] text-white/60 truncate">{m.description}</p>
+                <p className="text-px-10 text-white/60 truncate">{m.description}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[10px] text-white/70">+{m.xpReward}</span>
+                <span className="text-px-10 text-white/70">+{m.xpReward}</span>
                 {m.completed && (
                   <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
                     <Check className="w-3 h-3 text-white" />
@@ -77,7 +77,7 @@ export function WeeklyMissions({ missions }: WeeklyMissionsProps) {
                   style={{ width: `${(m.progress / m.target) * 100}%` }}
                 />
               </div>
-              <span className="text-[10px] text-white/60 tabular-nums">{m.progress}/{m.target}</span>
+              <span className="text-px-10 text-white/60 tabular-nums">{m.progress}/{m.target}</span>
             </div>
           </Row>
           )

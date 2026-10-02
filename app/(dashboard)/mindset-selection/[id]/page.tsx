@@ -73,8 +73,8 @@ export default function MindsetDetailPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 px-6 pb-5">
-          <p className="text-[10px] tracking-[0.28em] uppercase text-white/60">{voice.tagline}</p>
-          <h1 className={`${config.name.length > 11 ? 'text-[38px]' : 'text-[48px]'} leading-[0.9] uppercase mt-1.5 break-words`} style={{ ...SERIF, fontWeight: 600 }}>
+          <p className="text-px-10 tracking-[0.28em] uppercase text-white/60">{voice.tagline}</p>
+          <h1 className={`${config.name.length > 11 ? 'text-px-38' : 'text-px-48'} leading-[0.9] uppercase mt-1.5 break-words`} style={{ ...SERIF, fontWeight: 600 }}>
             {config.name}
           </h1>
           <p className="text-xs text-white/55 mt-2">
@@ -84,44 +84,44 @@ export default function MindsetDetailPage() {
       </div>
 
       <div className="px-6 pb-40 space-y-8">
-        <p className="text-[19px] text-white/85 leading-snug italic mt-2" style={SERIF}>
+        <p className="text-px-19 text-white/85 leading-snug italic mt-2" style={SERIF}>
           &ldquo;{detail.quote}&rdquo;
         </p>
 
         {/* The voice itself: the same promise every mindset answers. */}
         <section>
-          <h3 className="text-[10px] uppercase tracking-[0.24em] text-white/45 mb-3">How your coach will sound</h3>
+          <h3 className="text-px-10 uppercase tracking-[0.24em] text-white/45 mb-3">How your coach will sound</h3>
           <div className="rounded-2xl border border-white/[0.14] bg-white/[0.03] p-4 space-y-3">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">You promise</p>
+              <p className="text-px-10 uppercase tracking-[0.18em] text-white/40">You promise</p>
               <p className="text-sm text-white/80 mt-1">&ldquo;{SAMPLE_PROMISE}&rdquo;</p>
             </div>
             <div className="border-l-2 border-white/30 pl-3">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">{config.coachName}</p>
-              <p className="text-[17px] text-white leading-snug mt-1" style={SERIF}>{voice.reply}</p>
+              <p className="text-px-10 uppercase tracking-[0.18em] text-white/40">{config.coachName}</p>
+              <p className="text-px-17 text-white leading-snug mt-1" style={SERIF}>{voice.reply}</p>
             </div>
           </div>
         </section>
 
         {pairs.length > 0 && (
           <section>
-            <h3 className="text-[10px] uppercase tracking-[0.24em] text-white/45 mb-3">Pairs well with</h3>
+            <h3 className="text-px-10 uppercase tracking-[0.24em] text-white/45 mb-3">Pairs well with</h3>
             <div className="flex flex-wrap gap-2">
               {pairs.map(t => (
                 <span key={t} className="rounded-full border border-white/20 px-3 py-1.5 text-xs text-white/85">{t}</span>
               ))}
             </div>
-            <p className="text-[11px] text-white/40 mt-2">Any era works with any voice — these just fit naturally.</p>
+            <p className="text-px-11 text-white/40 mt-2">Any era works with any voice — these just fit naturally.</p>
           </section>
         )}
 
         <section>
-          <h3 className="text-[10px] uppercase tracking-[0.24em] text-white/45 mb-3">The philosophy</h3>
+          <h3 className="text-px-10 uppercase tracking-[0.24em] text-white/45 mb-3">The philosophy</h3>
           <p className="text-white/65 text-sm leading-relaxed">{detail.overview}</p>
         </section>
 
         <section>
-          <h3 className="text-[10px] uppercase tracking-[0.24em] text-white/45 mb-4">Core principles</h3>
+          <h3 className="text-px-10 uppercase tracking-[0.24em] text-white/45 mb-4">Core principles</h3>
           <div className="space-y-4">
             {detail.principles.map(p => (
               <div key={p.title} className="pl-3 border-l border-white/15">
@@ -133,7 +133,7 @@ export default function MindsetDetailPage() {
         </section>
 
         <section>
-          <h3 className="text-[10px] uppercase tracking-[0.24em] text-white/45 mb-4">What changes for you</h3>
+          <h3 className="text-px-10 uppercase tracking-[0.24em] text-white/45 mb-4">What changes for you</h3>
           <div className="space-y-2.5">
             {detail.appExperience.map((item, i) => (
               <div key={i} className="flex items-start gap-2.5">

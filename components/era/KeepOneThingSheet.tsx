@@ -103,10 +103,10 @@ export function KeepOneThingSheet({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">
               {full ? 'Your disciplines are full' : 'Keep one thing'}
             </p>
-            <h2 className="text-[26px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <h2 className="text-px-26 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               {full ? 'Make room for it?' : 'What stays with you?'}
             </h2>
           </div>
@@ -120,7 +120,7 @@ export function KeepOneThingSheet({
             <p className="text-sm text-white/60 leading-relaxed mt-2">
               An era ends. The useful part doesn&rsquo;t have to.
             </p>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-5">What did you keep returning to?</p>
+            <p className="text-px-11 uppercase tracking-[0.2em] text-white/45 mt-5">What did you keep returning to?</p>
             <div className="mt-2 space-y-2">
               {options.map(o => (
                 <button
@@ -128,9 +128,9 @@ export function KeepOneThingSheet({
                   onClick={() => choose(labelFromPromise(o.text, PRACTICE_LIMITS.label))}
                   className="w-full text-left p-3.5 rounded-xl border border-white/15 hover:bg-white/[0.06] press-scale"
                 >
-                  <span className="block text-[15px] text-white leading-snug">{o.text}</span>
+                  <span className="block text-px-15 text-white leading-snug">{o.text}</span>
                   {showKeepCount(o.count) && (
-                    <span className="block text-[11px] text-white/45 mt-0.5">Promised on {o.count} days</span>
+                    <span className="block text-px-11 text-white/45 mt-0.5">Promised on {o.count} days</span>
                   )}
                 </button>
               ))}
@@ -138,11 +138,11 @@ export function KeepOneThingSheet({
                 onClick={() => choose('')}
                 className="w-full text-left p-3.5 rounded-xl border border-white/15 hover:bg-white/[0.06] press-scale"
               >
-                <span className="block text-[15px] text-white/80">Something else</span>
-                <span className="block text-[11px] text-white/45 mt-0.5">Name it yourself</span>
+                <span className="block text-px-15 text-white/80">Something else</span>
+                <span className="block text-px-11 text-white/45 mt-0.5">Name it yourself</span>
               </button>
             </div>
-            <p className="text-[11px] text-white/40 leading-relaxed mt-4">
+            <p className="text-px-11 text-white/40 leading-relaxed mt-4">
               Not everything needs to come with you. The rest of the month stays in the era.
             </p>
           </>
@@ -154,7 +154,7 @@ export function KeepOneThingSheet({
               You can hold three. To carry this forward, remove one — its record is kept.
             </p>
             {weakest && (
-              <p className="text-[13px] text-white/75 leading-relaxed mt-3">
+              <p className="text-px-13 text-white/75 leading-relaxed mt-3">
                 {weakest.label} has been your least kept over the last four weeks.
               </p>
             )}
@@ -162,15 +162,15 @@ export function KeepOneThingSheet({
               {practices.map(p => (
                 <div key={p.id} className="flex items-center gap-3 p-3.5 rounded-xl border border-white/15">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] text-white truncate">{p.label}</p>
-                    <p className="text-[11px] text-white/45 mt-0.5">
+                    <p className="text-px-15 text-white truncate">{p.label}</p>
+                    <p className="text-px-11 text-white/45 mt-0.5">
                       {p.of > 0 ? `Kept ${p.done} of ${p.of} days, last four weeks` : 'Nothing due yet'}
                     </p>
                   </div>
                   <button
                     onClick={() => remove(p)}
                     disabled={busy}
-                    className={`shrink-0 px-3 py-2 rounded-lg text-[12px] border disabled:opacity-40 ${
+                    className={`shrink-0 px-3 py-2 rounded-lg text-px-12 border disabled:opacity-40 ${
                       confirmId === p.id ? 'bg-white text-black border-white font-medium' : 'border-white/20 text-white/80'
                     }`}
                   >
@@ -179,7 +179,7 @@ export function KeepOneThingSheet({
                 </div>
               ))}
             </div>
-            {error && <p className="text-[12px] text-white/70 mt-3">{error}</p>}
+            {error && <p className="text-px-12 text-white/70 mt-3">{error}</p>}
             <button
               onClick={onClose}
               className="mt-4 w-full py-3 rounded-xl border border-white/15 text-sm text-white/85"

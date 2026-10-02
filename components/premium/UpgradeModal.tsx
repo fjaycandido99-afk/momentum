@@ -221,7 +221,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               {error}
             </p>
           )}
-          <p className="text-center text-white/40 text-[11px] mt-3 leading-relaxed">
+          <p className="text-center text-white/40 text-px-11 mt-3 leading-relaxed">
             {billingPeriod === 'monthly'
               ? `Voxu Premium: $${monthlyPrice}/month. `
               : `Voxu Premium: $${yearlyPrice}/year ($${yearlyMonthly}/month). `}
@@ -241,7 +241,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               <span>Instant access</span>
             </div>
           </div>
-          <div className="flex items-center justify-center gap-3 text-white/40 text-[11px]">
+          <div className="flex items-center justify-center gap-3 text-white/40 text-px-11">
             <Link href="/terms" className="underline hover:text-white/60 transition-colors">
               Terms of Use
             </Link>

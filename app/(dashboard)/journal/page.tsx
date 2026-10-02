@@ -1083,7 +1083,7 @@ function JournalContent() {
             <ChevronLeft className="w-4 h-4 text-white/75" />
           </button>
           <span className="text-sm font-medium text-white">{dateLabel}</span>
-          {isToday && <span className="text-[10px] text-white font-medium">Today</span>}
+          {isToday && <span className="text-px-10 text-white font-medium">Today</span>}
           <button
             aria-label="Next day"
             onClick={() => goDay(1)}
@@ -1094,7 +1094,7 @@ function JournalContent() {
           </button>
           <Link
             href="/journal/history"
-            className="ml-auto text-[11px] text-white/60 hover:text-white transition-colors"
+            className="ml-auto text-px-11 text-white/60 hover:text-white transition-colors"
           >
             View all →
           </Link>
@@ -1141,8 +1141,8 @@ function JournalContent() {
             tap opens Free write with the prompt still in view above it. */}
         {isToday && era.era && era.era.step !== 'complete' && (
           <div className="rounded-2xl border border-white/[0.14] bg-white/[0.03] p-4">
-            <p className="text-[10px] tracking-[0.22em] uppercase text-white/50">Tonight, for your era</p>
-            <p className="text-[16px] text-white leading-snug mt-1.5" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+            <p className="text-px-10 tracking-[0.22em] uppercase text-white/50">Tonight, for your era</p>
+            <p className="text-px-16 text-white leading-snug mt-1.5" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
               {eraJournalPrompt(era.era)}
             </p>
             {mode !== 'freewrite' && (
@@ -1220,7 +1220,7 @@ function JournalContent() {
                             <button
                               key={q}
                               onClick={() => setConversation([{ role: 'assistant', content: q }])}
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.12] text-[13px] text-white/85 leading-snug hover:bg-white/[0.09] transition-colors press-scale text-left"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.12] text-px-13 text-white/85 leading-snug hover:bg-white/[0.09] transition-colors press-scale text-left"
                             >
                               {q}
                             </button>
@@ -1229,7 +1229,7 @@ function JournalContent() {
                       )
                     })()}
 
-                    <p className="text-[11px] text-white/45 mt-4">Or say where you are:</p>
+                    <p className="text-px-11 text-white/45 mt-4">Or say where you are:</p>
                     {/* Coach-style quick prompts — moved here from the
                         retired /coach page so the chat home has a
                         zero-friction starting point. */}
@@ -1287,7 +1287,7 @@ function JournalContent() {
                     model said. Saying so is better than letting a vague
                     sentence pass as the coach's considered answer. */}
                 {chatDegraded && !chatLoading && (
-                  <p className="px-1 text-[11px] text-white/40">
+                  <p className="px-1 text-px-11 text-white/40">
                     Couldn&apos;t reach your coach just then — that reply is a stock one. Try sending again.
                   </p>
                 )}
@@ -1318,8 +1318,8 @@ function JournalContent() {
                 >
                   <Volume2 className={`w-4 h-4 shrink-0 ${voiceMode ? 'text-white' : 'text-white/45'}`} />
                   <span className="flex-1 min-w-0">
-                    <span className="block text-[13px] text-white/85">Read replies aloud</span>
-                    <span className="block text-[11px] text-white/40">
+                    <span className="block text-px-13 text-white/85">Read replies aloud</span>
+                    <span className="block text-px-11 text-white/40">
                       {voiceMode ? 'Every reply is spoken' : 'Off — tap the speaker on a reply to hear it'}
                     </span>
                   </span>
@@ -1400,7 +1400,7 @@ function JournalContent() {
             {journalTags.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {journalTags.map((tag, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-[10px] text-white">
+                  <span key={i} className="px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-px-10 text-white">
                     {tag}
                   </span>
                 ))}
@@ -1430,7 +1430,7 @@ function JournalContent() {
                 rows={6}
                 maxLength={3000}
               />
-              <p className="text-right text-[10px] text-white/40 mt-1">{dreamText.length}/3000</p>
+              <p className="text-right text-px-10 text-white/40 mt-1">{dreamText.length}/3000</p>
             </div>
 
             {/* Submit dream */}
@@ -1456,7 +1456,7 @@ function JournalContent() {
                 {/* Symbols */}
                 {dreamInterpretation.symbols.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-semibold text-white uppercase tracking-wider mb-2">Key Symbols</p>
+                    <p className="text-px-10 font-semibold text-white uppercase tracking-wider mb-2">Key Symbols</p>
                     <div className="space-y-1.5">
                       {dreamInterpretation.symbols.map((s, i) => (
                         <div key={i} className="flex items-start gap-2">
@@ -1471,7 +1471,7 @@ function JournalContent() {
                 {/* Emotional theme */}
                 {dreamInterpretation.emotionalTheme && (
                   <div className="border-t border-white/15 pt-3">
-                    <p className="text-[10px] font-semibold text-white uppercase tracking-wider mb-1">Emotional Theme</p>
+                    <p className="text-px-10 font-semibold text-white uppercase tracking-wider mb-1">Emotional Theme</p>
                     <p className="text-sm text-white/90 leading-relaxed">{dreamInterpretation.emotionalTheme}</p>
                   </div>
                 )}
@@ -1479,7 +1479,7 @@ function JournalContent() {
                 {/* Connection to life */}
                 {dreamInterpretation.connectionToLife && (
                   <div className="border-t border-white/15 pt-3">
-                    <p className="text-[10px] font-semibold text-white uppercase tracking-wider mb-1">Life Connection</p>
+                    <p className="text-px-10 font-semibold text-white uppercase tracking-wider mb-1">Life Connection</p>
                     <p className="text-sm text-white/90 leading-relaxed">{dreamInterpretation.connectionToLife}</p>
                   </div>
                 )}
@@ -1487,7 +1487,7 @@ function JournalContent() {
                 {/* Mindset reflection */}
                 {dreamInterpretation.mindsetReflection && (
                   <div className="border-t border-white/15 pt-3">
-                    <p className="text-[10px] font-semibold text-white uppercase tracking-wider mb-1">Reflection</p>
+                    <p className="text-px-10 font-semibold text-white uppercase tracking-wider mb-1">Reflection</p>
                     <p className="text-sm text-white/90 leading-relaxed italic">{dreamInterpretation.mindsetReflection}</p>
                   </div>
                 )}
@@ -1521,7 +1521,7 @@ function JournalContent() {
                     rows={3}
                     maxLength={500}
                   />
-                  <p className="text-right text-[10px] text-white/40 mt-1">{win.length}/500</p>
+                  <p className="text-right text-px-10 text-white/40 mt-1">{win.length}/500</p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-black border border-white/15">
@@ -1544,7 +1544,7 @@ function JournalContent() {
                     rows={3}
                     maxLength={500}
                   />
-                  <p className="text-right text-[10px] text-white/40 mt-1">{gratitude.length}/500</p>
+                  <p className="text-right text-px-10 text-white/40 mt-1">{gratitude.length}/500</p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-black border border-white/15">
@@ -1567,7 +1567,7 @@ function JournalContent() {
                     rows={2}
                     maxLength={300}
                   />
-                  <p className="text-right text-[10px] text-white/40 mt-1">{intention.length}/300</p>
+                  <p className="text-right text-px-10 text-white/40 mt-1">{intention.length}/300</p>
                 </div>
                 </>
               )
@@ -1673,7 +1673,7 @@ function JournalContent() {
                     <button
                       onClick={talkItThrough}
                       disabled={chatLoading}
-                      className="flex items-center gap-1.5 text-[11px] text-white/55 hover:text-white disabled:opacity-40 transition-colors"
+                      className="flex items-center gap-1.5 text-px-11 text-white/55 hover:text-white disabled:opacity-40 transition-colors"
                     >
                       <MessageCircle className="w-3 h-3" />
                       Talk it through
@@ -1681,7 +1681,7 @@ function JournalContent() {
                   ) : (
                     <span />
                   )}
-                  <p className="text-[10px] text-white/30">{freeText.length}/5000</p>
+                  <p className="text-px-10 text-white/30">{freeText.length}/5000</p>
                 </div>
               </div>
             )}
@@ -1731,7 +1731,7 @@ function JournalContent() {
             )}
             {/* Reassurance — private-by-default warmth before saving */}
             {!isSaved && (
-              <p className="flex items-center justify-center gap-1.5 text-[11px] text-white/40">
+              <p className="flex items-center justify-center gap-1.5 text-px-11 text-white/40">
                 <Lock className="w-3 h-3" />
                 Your thoughts are safe here
               </p>
@@ -1771,7 +1771,7 @@ function JournalContent() {
             <div className="flex items-start gap-2">
               <Sparkles className="w-4 h-4 text-white mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] font-medium tracking-wider text-white uppercase mb-1">{mindsetCtx?.config?.insightName || 'Reflection'}</p>
+                <p className="text-px-10 font-medium tracking-wider text-white uppercase mb-1">{mindsetCtx?.config?.insightName || 'Reflection'}</p>
                 <p className="text-sm text-white leading-relaxed italic">{reflection}</p>
               </div>
             </div>
@@ -1779,7 +1779,7 @@ function JournalContent() {
             {journalTags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3 pl-6">
                 {journalTags.map((tag, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-[10px] text-white">
+                  <span key={i} className="px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-px-10 text-white">
                     {tag}
                   </span>
                 ))}
@@ -1929,15 +1929,15 @@ function JournalContent() {
                           <p className="text-sm text-white line-clamp-2 italic">{entry.journal_gratitude}</p>
                         ) : null}
                         <div className="flex items-center gap-2 mt-2">
-                          {entry.journal_freetext && <span className="text-[10px] text-white">✎ Free Write</span>}
-                          {entry.journal_win && <span className="text-[10px] text-white">✦ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt1.tag : 'Learned'}</span>}
-                          {entry.journal_gratitude && <span className="text-[10px] text-white">♥ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt2.tag : 'Grateful'}</span>}
-                          {entry.journal_intention && <span className="text-[10px] text-white">◎ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt3.tag : 'Intention'}</span>}
+                          {entry.journal_freetext && <span className="text-px-10 text-white">✎ Free Write</span>}
+                          {entry.journal_win && <span className="text-px-10 text-white">✦ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt1.tag : 'Learned'}</span>}
+                          {entry.journal_gratitude && <span className="text-px-10 text-white">♥ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt2.tag : 'Grateful'}</span>}
+                          {entry.journal_intention && <span className="text-px-10 text-white">◎ {mindsetCtx ? MINDSET_JOURNAL_PROMPTS[mindsetCtx.mindset].prompt3.tag : 'Intention'}</span>}
                         </div>
                         {entry.journal_tags && entry.journal_tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
                             {entry.journal_tags.map((tag, ti) => (
-                              <span key={ti} className="px-1.5 py-0.5 rounded-full bg-white/15 border border-white/20 text-[9px] text-white">
+                              <span key={ti} className="px-1.5 py-0.5 rounded-full bg-white/15 border border-white/20 text-px-9 text-white">
                                 {tag}
                               </span>
                             ))}
@@ -1992,7 +1992,7 @@ function JournalContent() {
           >
             <div className="min-w-0">
               <p className="text-sm text-white">You&apos;re seeing the last 7 days</p>
-              <p className="text-[11px] text-white/55 mt-0.5">
+              <p className="text-px-11 text-white/55 mt-0.5">
                 Premium keeps every entry, and lets the AI read a month of them.
               </p>
             </div>

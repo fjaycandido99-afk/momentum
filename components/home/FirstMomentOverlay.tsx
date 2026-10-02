@@ -61,7 +61,7 @@ export function FirstMomentOverlay() {
             <div className="mx-auto w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.12] grid place-items-center mb-5">
               <MindsetIcon mindsetId={mindset} className="w-7 h-7 text-white" />
             </div>
-            <p className="text-[11px] uppercase tracking-wider text-white/50 font-semibold">A moment to begin</p>
+            <p className="text-px-11 uppercase tracking-wider text-white/50 font-semibold">A moment to begin</p>
             <h1 className="text-2xl font-bold text-white mt-2 tracking-tight">I&rsquo;m {coach}.</h1>
             {/* Not "your guide on the {name} path" — a mindset stopped being
                 a path when eras arrived. It is the VOICE the coach speaks
@@ -84,7 +84,7 @@ export function FirstMomentOverlay() {
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-2 justify-center">
               <Sparkles className="w-3.5 h-3.5 text-white/60" />
-              <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">First moment</span>
+              <span className="text-px-10 uppercase tracking-wider text-white/50 font-semibold">First moment</span>
             </div>
             <h2 className="text-xl font-bold text-white text-center mt-3 tracking-tight">What&rsquo;s on your mind right now?</h2>
             <p className="text-sm text-white/60 text-center mt-2">A sentence is enough — {coach} will reflect it back.</p>
@@ -114,7 +114,7 @@ export function FirstMomentOverlay() {
           <div className="text-center animate-fade-in-up">
             <div className="flex items-center gap-2 justify-center">
               <Sparkles className="w-3.5 h-3.5 text-white/60" />
-              <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">{coach}</span>
+              <span className="text-px-10 uppercase tracking-wider text-white/50 font-semibold">{coach}</span>
             </div>
             {reflection ? (
               <p className="text-lg text-white mt-4 leading-relaxed italic">&ldquo;{reflection}&rdquo;</p>

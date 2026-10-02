@@ -262,14 +262,14 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                 ].map(c => (
                   <div key={c.label} className="bg-white/[0.03] rounded-lg p-3 text-center">
                     <div className="text-xl font-bold">{c.n}</div>
-                    <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1 leading-tight">{c.label}</div>
-                    <div className="text-[10px] text-white/30 mt-0.5">{c.sub}</div>
+                    <div className="text-px-10 text-white/50 uppercase tracking-wider mt-1 leading-tight">{c.label}</div>
+                    <div className="text-px-10 text-white/30 mt-0.5">{c.sub}</div>
                   </div>
                 ))}
               </div>
               {data.era.byEra.length > 0 && (
                 <div className="pt-2 space-y-1">
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Which era, and whether they keep it</p>
+                  <p className="text-px-10 text-white/40 uppercase tracking-wider">Which era, and whether they keep it</p>
                   {data.era.byEra.map(e => (
                     <div key={e.key} className="flex justify-between text-xs text-white/70">
                       <span>{formatFeature(e.key)}</span>
@@ -290,7 +290,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
               </div>
               {data.era.missions.top.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Missions people actually do</p>
+                  <p className="text-px-10 text-white/40 uppercase tracking-wider">Missions people actually do</p>
                   {data.era.missions.top.map(m => (
                     <div key={`${m.eraKey}-${m.day}`} className="flex justify-between gap-3 text-xs text-white/70">
                       <span className="truncate">{m.text}</span>
@@ -306,7 +306,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
             <div className="bg-white/5 rounded-xl p-4 space-y-3">
               <div>
                 <h2 className="text-sm font-semibold text-white/70">Wellness check-ins ({period})</h2>
-                <p className="text-[10px] text-white/35 mt-0.5">
+                <p className="text-px-10 text-white/35 mt-0.5">
                   {data.wellness.optedIn} opted in · {data.wellness.days} days from {data.wellness.people} · self-reported, not clinical
                 </p>
               </div>
@@ -316,8 +316,8 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                   {data.wellness.scales.map(s => (
                     <div key={s.scale} className="bg-white/[0.03] rounded-lg p-3 text-center">
                       <div className="text-xl font-bold">{s.mean}</div>
-                      <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">{s.scale}</div>
-                      <div className="text-[10px] text-white/30 mt-0.5">{s.answers} answers</div>
+                      <div className="text-px-10 text-white/50 uppercase tracking-wider mt-1">{s.scale}</div>
+                      <div className="text-px-10 text-white/30 mt-0.5">{s.answers} answers</div>
                     </div>
                   ))}
                 </div>
@@ -327,7 +327,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
 
               {data.wellness.keptByState.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Promises kept, by the state they were in</p>
+                  <p className="text-px-10 text-white/40 uppercase tracking-wider">Promises kept, by the state they were in</p>
                   {data.wellness.keptByState.map(r => (
                     <div key={`${r.scale}-${r.end}`} className="flex justify-between text-xs text-white/70">
                       <span>{formatFeature(r.scale)} · {r.end === 'high' ? '4–5' : '1–2'}</span>
@@ -341,7 +341,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
 
               {data.wellness.tags.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">What was going on</p>
+                  <p className="text-px-10 text-white/40 uppercase tracking-wider">What was going on</p>
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {data.wellness.tags.map(t => (
                       <span key={t.tag} className="text-xs bg-white/[0.06] rounded-full px-2.5 py-1">
@@ -366,13 +366,13 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                 ].map(c => (
                   <div key={c.label} className="bg-white/[0.03] rounded-lg p-3 text-center">
                     <div className="text-xl font-bold">{c.n}</div>
-                    <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1 leading-tight">{c.label}</div>
+                    <div className="text-px-10 text-white/50 uppercase tracking-wider mt-1 leading-tight">{c.label}</div>
                   </div>
                 ))}
               </div>
               {data.money.byStatus.length > 0 && (
                 <div className="pt-1 space-y-1">
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider">Everyone, right now</p>
+                  <p className="text-px-10 text-white/40 uppercase tracking-wider">Everyone, right now</p>
                   {data.money.byStatus.map(s => (
                     <div key={`${s.tier}-${s.status}`} className="flex justify-between text-xs text-white/70">
                       <span>{formatFeature(s.tier)} · {formatFeature(s.status)}</span>
@@ -389,11 +389,11 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
             <div className="bg-white/5 rounded-xl p-4 space-y-4">
               <div>
                 <h2 className="text-sm font-semibold text-white/70">What people think ({period})</h2>
-                <p className="text-[10px] text-white/35 mt-0.5">From what they tapped — answers, moods, tags. Never what they wrote.</p>
+                <p className="text-px-10 text-white/35 mt-0.5">From what they tapped — answers, moods, tags. Never what they wrote.</p>
               </div>
 
               <div>
-                <p className="text-[10px] text-white/40 uppercase tracking-wider">
+                <p className="text-px-10 text-white/40 uppercase tracking-wider">
                   Daily Read · {data.thoughts.read.answers} answers from {data.thoughts.read.people}
                 </p>
                 <div className="mt-2 space-y-2">
@@ -421,7 +421,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                 </div>
                 {data.thoughts.read.signatures.length > 0 && (
                   <div className="mt-3 space-y-1">
-                    <p className="text-[10px] text-white/40 uppercase tracking-wider">Signatures (5+ answers behind them)</p>
+                    <p className="text-px-10 text-white/40 uppercase tracking-wider">Signatures (5+ answers behind them)</p>
                     {data.thoughts.read.signatures.map(s => (
                       <div key={s.signature} className="flex justify-between text-xs text-white/70">
                         <span className="truncate">{s.signature}</span>
@@ -433,7 +433,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
               </div>
 
               <div>
-                <p className="text-[10px] text-white/40 uppercase tracking-wider">
+                <p className="text-px-10 text-white/40 uppercase tracking-wider">
                   Journal mood · {data.thoughts.journal.days} days from {data.thoughts.journal.people}
                 </p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
@@ -459,7 +459,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                 <div className="space-y-3">
                   {data.thoughts.promises.confidence.length > 0 && (
                     <div>
-                      <p className="text-[10px] text-white/40 uppercase tracking-wider">Did their own certainty predict it?</p>
+                      <p className="text-px-10 text-white/40 uppercase tracking-wider">Did their own certainty predict it?</p>
                       <div className="mt-1.5 space-y-1">
                         {data.thoughts.promises.confidence.map(c => (
                           <div key={c.bucket} className="flex justify-between text-xs text-white/70">
@@ -475,7 +475,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                   {([['blockers', 'What stopped them'], ['helpers', 'What helped']] as const).map(([field, title]) =>
                     data.thoughts.promises[field].length > 0 ? (
                       <div key={field}>
-                        <p className="text-[10px] text-white/40 uppercase tracking-wider">{title}</p>
+                        <p className="text-px-10 text-white/40 uppercase tracking-wider">{title}</p>
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           {data.thoughts.promises[field].map(r => (
                             <span key={r.key} className="text-xs bg-white/[0.06] rounded-full px-2.5 py-1">
@@ -493,7 +493,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                 <div className="grid grid-cols-1 gap-3">
                   {data.thoughts.journal.tags.length > 0 && (
                     <div>
-                      <p className="text-[10px] text-white/40 uppercase tracking-wider">Tags they chose</p>
+                      <p className="text-px-10 text-white/40 uppercase tracking-wider">Tags they chose</p>
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {data.thoughts.journal.tags.map(t => (
                           <span key={t.tag} className="text-xs bg-white/[0.06] rounded-full px-2.5 py-1">
@@ -505,7 +505,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                   )}
                   {data.thoughts.journal.prompts.length > 0 && (
                     <div>
-                      <p className="text-[10px] text-white/40 uppercase tracking-wider">Prompts they answered</p>
+                      <p className="text-px-10 text-white/40 uppercase tracking-wider">Prompts they answered</p>
                       <div className="mt-1.5 space-y-1">
                         {data.thoughts.journal.prompts.map(p => (
                           <div key={p.prompt} className="flex justify-between gap-3 text-xs text-white/70">
@@ -532,7 +532,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                 ].map(s => (
                   <div key={s.label} className="bg-white/[0.03] rounded-lg p-3 text-center">
                     <div className="text-2xl font-bold text-white">{s.n}</div>
-                    <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">{s.label}</div>
+                    <div className="text-px-10 text-white/50 uppercase tracking-wider mt-1">{s.label}</div>
                     {data.funnel.active > 0 && (
                       <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-white/40 rounded-full" style={{ width: `${(s.n / data.funnel.active) * 100}%` }} />
@@ -549,17 +549,17 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-white/[0.03] rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-white">{data.retention.cohort}</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">Cohort</div>
+                  <div className="text-px-10 text-white/50 uppercase tracking-wider mt-1">Cohort</div>
                 </div>
                 <div className="bg-white/[0.03] rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-white">{data.retention.cohort ? Math.round((data.retention.d1 / data.retention.cohort) * 100) : 0}%</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">D1</div>
-                  <div className="text-[10px] text-white/30 mt-0.5">{data.retention.d1}/{data.retention.cohort}</div>
+                  <div className="text-px-10 text-white/50 uppercase tracking-wider mt-1">D1</div>
+                  <div className="text-px-10 text-white/30 mt-0.5">{data.retention.d1}/{data.retention.cohort}</div>
                 </div>
                 <div className="bg-white/[0.03] rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-white">{data.retention.cohort ? Math.round((data.retention.d7 / data.retention.cohort) * 100) : 0}%</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">D7</div>
-                  <div className="text-[10px] text-white/30 mt-0.5">{data.retention.d7}/{data.retention.cohort}</div>
+                  <div className="text-px-10 text-white/50 uppercase tracking-wider mt-1">D7</div>
+                  <div className="text-px-10 text-white/30 mt-0.5">{data.retention.d7}/{data.retention.cohort}</div>
                 </div>
               </div>
             </div>
@@ -601,7 +601,7 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
                         title={`${d.day}: ${d.events} events, ${d.users} users`}
                       />
                     </div>
-                    <span className="text-[9px] text-white/30 -rotate-45 origin-top-left whitespace-nowrap">
+                    <span className="text-px-9 text-white/30 -rotate-45 origin-top-left whitespace-nowrap">
                       {d.day.slice(5)}
                     </span>
                   </div>
@@ -662,15 +662,15 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-white/[0.03] rounded-lg p-3 text-center">
                   <div className="text-xl font-bold text-white">{data.aiCost.calls.toLocaleString()}</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">Calls</div>
+                  <div className="text-px-10 text-white/50 uppercase tracking-wider mt-1">Calls</div>
                 </div>
                 <div className="bg-white/[0.03] rounded-lg p-3 text-center">
                   <div className="text-xl font-bold text-white">{Math.round((data.aiCost.promptTokens + data.aiCost.completionTokens) / 1000).toLocaleString()}k</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">Tokens</div>
+                  <div className="text-px-10 text-white/50 uppercase tracking-wider mt-1">Tokens</div>
                 </div>
                 <div className="bg-white/[0.03] rounded-lg p-3 text-center">
                   <div className="text-xl font-bold text-white">{data.aiCost.calls ? Math.round((data.aiCost.failures / data.aiCost.calls) * 100) : 0}%</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">Failed</div>
+                  <div className="text-px-10 text-white/50 uppercase tracking-wider mt-1">Failed</div>
                 </div>
               </div>
               <div className="divide-y divide-white/5">

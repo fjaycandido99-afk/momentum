@@ -202,8 +202,8 @@ export function PracticePlanSheet({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">{practice.label}</p>
-            <h2 className="text-[26px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">{practice.label}</p>
+            <h2 className="text-px-26 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
               {copy.ask}
             </h2>
           </div>
@@ -218,11 +218,11 @@ export function PracticePlanSheet({
             are. Writing "run 4 miles" and being told how to breathe while
             doing it belong on the same screen. */}
         <div className="mt-3 rounded-xl bg-white/[0.04] border border-white/[0.1] p-3">
-          <p className="text-[13px] text-white/75 leading-snug">{guide.title}</p>
-          <p className="text-[12px] text-white/45 mt-0.5 leading-snug">{guide.keystone}</p>
+          <p className="text-px-13 text-white/75 leading-snug">{guide.title}</p>
+          <p className="text-px-12 text-white/45 mt-0.5 leading-snug">{guide.keystone}</p>
           <button
             onClick={() => setShowGuide(true)}
-            className="text-[12px] text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 mt-1.5"
+            className="text-px-12 text-white/70 hover:text-white underline underline-offset-4 decoration-white/20 mt-1.5"
           >
             Read the steps
           </button>
@@ -234,8 +234,8 @@ export function PracticePlanSheet({
           <div className="mt-3 rounded-xl border border-white/[0.12] p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[13px] text-white/80 leading-snug">Don’t want to write it?</p>
-                <p className="text-[11px] text-white/45 mt-0.5 leading-snug">
+                <p className="text-px-13 text-white/80 leading-snug">Don’t want to write it?</p>
+                <p className="text-px-11 text-white/45 mt-0.5 leading-snug">
                   {applied
                     ? `${applied} filled the empty days. Change any row.`
                     : 'Start from a session shape and change what you like.'}
@@ -243,7 +243,7 @@ export function PracticePlanSheet({
               </div>
               <button
                 onClick={() => { haptic('light'); setTemplating(true) }}
-                className="text-[12px] text-black bg-white rounded-full px-3 py-1.5 font-medium shrink-0"
+                className="text-px-12 text-black bg-white rounded-full px-3 py-1.5 font-medium shrink-0"
               >
                 {applied ? 'Change' : 'Browse'}
               </button>
@@ -256,7 +256,7 @@ export function PracticePlanSheet({
             const slotDraft = draft[slot.key]
             return (
               <div key={slot.key}>
-                <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">{slot.label}</p>
+                <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">{slot.label}</p>
 
                 <div className="mt-2 space-y-2">
                   {slotDraft.items.map((item, i) => {
@@ -270,7 +270,7 @@ export function PracticePlanSheet({
                         maxLength={PLAN_MAX_ITEM_LENGTH}
                         placeholder={copy.rowPlaceholder}
                         aria-label={`${slot.label}: ${copy.noun} ${i + 1}`}
-                        className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/25"
+                        className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-15 text-white placeholder:text-white/25"
                       />
                       {copy.showsDetail && (
                         <input
@@ -279,7 +279,7 @@ export function PracticePlanSheet({
                           maxLength={PLAN_MAX_DETAIL_LENGTH}
                           placeholder={copy.detailPlaceholder}
                           aria-label={`${slot.label}: how much, row ${i + 1}`}
-                          className="w-24 shrink-0 px-2.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[14px] text-white placeholder:text-white/25 text-center"
+                          className="w-24 shrink-0 px-2.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-14 text-white placeholder:text-white/25 text-center"
                         />
                       )}
                       <button
@@ -297,7 +297,7 @@ export function PracticePlanSheet({
                     {matched && (
                       <button
                         onClick={() => { haptic('light'); setSwapRow({ slotKey: slot.key, index: i }) }}
-                        className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/80 mt-1 ml-1"
+                        className="flex items-center gap-1.5 text-px-11 text-white/40 hover:text-white/80 mt-1 ml-1"
                       >
                         <PatternGlyph pattern={matched.pattern} className="w-4 h-4 shrink-0" />
                         <span className="underline underline-offset-4 decoration-white/15">
@@ -313,7 +313,7 @@ export function PracticePlanSheet({
                     {domain === 'read' && item.name.trim().length > 2 && (
                       <button
                         onClick={() => { haptic('light'); setBookTitle(item.name.trim()) }}
-                        className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/80 mt-1 ml-1"
+                        className="flex items-center gap-1.5 text-px-11 text-white/40 hover:text-white/80 mt-1 ml-1"
                       >
                         <BookOpen className="w-3.5 h-3.5 shrink-0" />
                         <span className="underline underline-offset-4 decoration-white/15">
@@ -330,7 +330,7 @@ export function PracticePlanSheet({
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
                     <button
                       onClick={() => addRow(slot.key)}
-                      className="flex items-center gap-1 text-[12px] text-white/55 hover:text-white"
+                      className="flex items-center gap-1 text-px-12 text-white/55 hover:text-white"
                     >
                       <Plus className="w-3 h-3" /> Add {copy.noun}
                     </button>
@@ -344,7 +344,7 @@ export function PracticePlanSheet({
                     {canPick && slotDraft.items.every(item => !item.name.trim()) && (
                       <button
                         onClick={() => { haptic('light'); setPickingFor(slot.key) }}
-                        className="flex items-center gap-1 text-[12px] text-white/45 hover:text-white"
+                        className="flex items-center gap-1 text-px-12 text-white/45 hover:text-white"
                       >
                         <Dumbbell className="w-3 h-3" /> Pick from the library
                       </button>
@@ -360,7 +360,7 @@ export function PracticePlanSheet({
                   maxLength={PLAN_MAX_ITEM_LENGTH}
                   placeholder={`Minimum for ${slot.label.toLowerCase()} — else “${practice.minimum}”`}
                   aria-label={`Minimum for ${slot.label}`}
-                  className="w-full mt-3 px-3 py-2 rounded-xl bg-transparent border border-white/[0.12] text-[13px] text-white/80 placeholder:text-white/25"
+                  className="w-full mt-3 px-3 py-2 rounded-xl bg-transparent border border-white/[0.12] text-px-13 text-white/80 placeholder:text-white/25"
                 />
               </div>
             )
@@ -369,7 +369,7 @@ export function PracticePlanSheet({
 
         {error && <p className="text-sm text-white/80 mt-3" role="alert">{error}</p>}
 
-        <p className="text-[11px] text-white/35 mt-4 leading-relaxed">
+        <p className="text-px-11 text-white/35 mt-4 leading-relaxed">
           Your words, shown back on the day. Voxu doesn&rsquo;t grade them, count them or write
           them for you — it doesn&rsquo;t know your body{domain === 'gym' ? ', your gym' : ''} or
           your shelf.

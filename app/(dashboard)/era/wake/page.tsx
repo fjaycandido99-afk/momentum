@@ -124,7 +124,7 @@ export default function WakeCallPage() {
       <div className="absolute inset-x-0 top-0 h-[60vh] bg-gradient-to-b from-black/30 via-black/50 to-black" />
 
       <div className="relative flex items-center justify-between px-5" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
-        <p className="text-[10px] tracking-[0.28em] uppercase text-white/60 flex items-center gap-1.5">
+        <p className="text-px-10 tracking-[0.28em] uppercase text-white/60 flex items-center gap-1.5">
           <AlarmClock className="w-3 h-3" /> Wake-up call{time ? ` · ${time}` : ''}
         </p>
         <button onClick={close} aria-label="Close" className="tap-44 p-2 rounded-full bg-white/10 hover:bg-white/20">
@@ -139,14 +139,14 @@ export default function WakeCallPage() {
           <Loader2 className="w-6 h-6 animate-spin text-white/50 self-center mb-24" />
         ) : !call ? (
           <div className="mb-10">
-            <h1 className="text-[40px] leading-[0.95]" style={{ ...SERIF, fontWeight: 600 }}>No era yet.</h1>
+            <h1 className="text-px-40 leading-[0.95]" style={{ ...SERIF, fontWeight: 600 }}>No era yet.</h1>
             <p className="text-sm text-white/70 mt-3">Your coach wakes you up during an era. Pick one to start.</p>
             <Link href="/era" className="inline-block mt-5 px-5 py-3 rounded-2xl bg-white text-black text-sm font-medium">Pick an era</Link>
           </div>
         ) : (
           <>
-            <h1 className="text-[46px] leading-[0.95]" style={{ ...SERIF, fontWeight: 600 }}>{call.title}</h1>
-            <p className="text-[19px] text-white/80 leading-snug mt-4" style={{ ...SERIF, fontWeight: 500 }}>{rest}</p>
+            <h1 className="text-px-46 leading-[0.95]" style={{ ...SERIF, fontWeight: 600 }}>{call.title}</h1>
+            <p className="text-px-19 text-white/80 leading-snug mt-4" style={{ ...SERIF, fontWeight: 500 }}>{rest}</p>
 
             <div className="flex items-center gap-4 mt-7">
               <button

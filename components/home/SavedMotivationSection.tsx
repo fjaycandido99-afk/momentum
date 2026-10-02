@@ -64,7 +64,7 @@ export function SavedMotivationSection({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20" />
 
                 {video.duration && video.duration > 0 && (
-                  <span className="absolute bottom-2 right-2 z-10 px-1.5 py-0.5 rounded-md bg-black/70 text-[10px] text-white/90 font-medium">
+                  <span className="absolute bottom-2 right-2 z-10 px-1.5 py-0.5 rounded-md bg-black/70 text-px-10 text-white/90 font-medium">
                     {formatDuration(video.duration)}
                   </span>
                 )}

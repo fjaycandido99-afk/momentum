@@ -140,7 +140,7 @@ export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => 
         >
           {status === 'copied' ? <><Check className="w-4 h-4" /> Link copied</> : <><Link2 className="w-4 h-4" /> Copy the join link</>}
         </button>
-        <p className="text-[11px] text-white/40 text-center pt-1">
+        <p className="text-px-11 text-white/40 text-center pt-1">
           {showNumbers
             ? 'The card shows your era and your record — never what you promised.'
             : 'The card shows your era and the day — no numbers, never what you promised.'}

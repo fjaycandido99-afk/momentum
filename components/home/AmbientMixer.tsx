@@ -135,7 +135,7 @@ export function AmbientMixer({ onClose }: AmbientMixerProps) {
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-white/70" />
             <h3 className="text-sm font-semibold text-white/90">Ambient Mixer</h3>
-            <span className="text-[11px] text-white/40">{activeCount}/{MAX_LAYERS}</span>
+            <span className="text-px-11 text-white/40">{activeCount}/{MAX_LAYERS}</span>
           </div>
           <button onClick={onClose} aria-label="Close mixer" className="p-2 rounded-full hover:bg-white/10 transition-colors">
             <X className="w-4 h-4 text-white/60" />

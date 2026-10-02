@@ -230,7 +230,7 @@ export function MorningMinute() {
           </h2>
           {streakDays >= 2 && (
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.10] text-[11px] font-semibold text-white tabular-nums"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.10] text-px-11 font-semibold text-white tabular-nums"
               title={`${streakDays} day streak`}
             >
               <Flame className="w-3 h-3" />
@@ -257,10 +257,10 @@ export function MorningMinute() {
               bet". The question was set at 15px — the same size as body
               copy in the card below it — so nothing on the screen said it
               mattered more than anything else. */}
-          <p className="text-[19px] text-white leading-snug max-w-xs mx-auto">
+          <p className="text-px-19 text-white leading-snug max-w-xs mx-auto">
             What&apos;s on your mind right now?
           </p>
-          <p className="text-[11.5px] text-white/45 mt-1.5">
+          <p className="text-px-11.5 text-white/45 mt-1.5">
             Talk for up to a minute. I&apos;ll listen.
           </p>
           <button
@@ -270,7 +270,7 @@ export function MorningMinute() {
           >
             <Mic className="w-6 h-6" />
           </button>
-          <p className="mt-3 text-[10.5px] text-white/35">Tap to begin</p>
+          <p className="mt-3 text-px-10.5 text-white/35">Tap to begin</p>
 
           {/* Voice is the intended ritual, but it is not always available:
               people are on a train, in an office, next to someone asleep.
@@ -280,7 +280,7 @@ export function MorningMinute() {
               rescue the moment. */}
           <Link
             href="/journal?mode=chat"
-            className="mt-4 inline-flex items-center gap-1.5 text-[11px] text-white/45 transition-colors hover:text-white/80"
+            className="mt-4 inline-flex items-center gap-1.5 text-px-11 text-white/45 transition-colors hover:text-white/80"
           >
             <MessageCircle className="w-3 h-3" />
             Rather type it out?
@@ -291,7 +291,7 @@ export function MorningMinute() {
       {/* RECORDING */}
       {phase === 'recording' && (
         <div className="text-center pt-2 pb-1">
-          <p className="text-[12px] text-white/55">Listening…</p>
+          <p className="text-px-12 text-white/55">Listening…</p>
           <button
             onClick={stopRecord}
             aria-label="Stop and reflect"
@@ -300,10 +300,10 @@ export function MorningMinute() {
             <Square className="w-5 h-5 text-red-300" fill="rgb(248 113 113)" />
             <span className="absolute inset-0 rounded-full border-2 border-red-400/40 animate-ping" />
           </button>
-          <p className="mt-3 text-[13px] font-mono tabular-nums text-white/85">
+          <p className="mt-3 text-px-13 font-mono tabular-nums text-white/85">
             {fmtTime(elapsed)} / {fmtTime(MAX_SECONDS)}
           </p>
-          <p className="mt-1 text-[10.5px] text-white/40">Tap to finish</p>
+          <p className="mt-1 text-px-10.5 text-white/40">Tap to finish</p>
         </div>
       )}
 
@@ -311,7 +311,7 @@ export function MorningMinute() {
       {phase === 'reflecting' && (
         <div className="text-center pt-4 pb-3">
           <Loader2 className="w-5 h-5 text-white/70 animate-spin mx-auto" />
-          <p className="mt-3 text-[13px] text-white/75 italic">Reflecting on what you said…</p>
+          <p className="mt-3 text-px-13 text-white/75 italic">Reflecting on what you said…</p>
         </div>
       )}
 
@@ -319,7 +319,7 @@ export function MorningMinute() {
       {phase === 'done' && minute && (
         <div className="pt-1 pb-1">
           <p
-            className="text-[18px] lg:text-[20px] leading-snug text-white font-medium italic text-center"
+            className="text-px-18 lg:text-px-20 leading-snug text-white font-medium italic text-center"
             style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
           >
             &ldquo;{minute.response}&rdquo;
@@ -336,7 +336,7 @@ export function MorningMinute() {
               than a monologue. */}
           <Link
             href="/journal?mode=chat&from=minute"
-            className="mt-4 flex items-center justify-center gap-2 w-full px-3.5 py-3 rounded-xl bg-white text-black text-[13.5px] font-semibold hover:bg-white/90 transition-colors press-scale"
+            className="mt-4 flex items-center justify-center gap-2 w-full px-3.5 py-3 rounded-xl bg-white text-black text-px-13.5 font-semibold hover:bg-white/90 transition-colors press-scale"
           >
             <MessageCircle className="w-4 h-4" />
             Talk it through
@@ -360,7 +360,7 @@ export function MorningMinute() {
           {streakDays >= 7 && (
             <Link
               href={`/portrait/${new Date().getFullYear()}`}
-              className="mt-2.5 block text-center text-[11px] text-white/50 hover:text-white/85 underline-offset-2 hover:underline transition-colors"
+              className="mt-2.5 block text-center text-px-11 text-white/50 hover:text-white/85 underline-offset-2 hover:underline transition-colors"
             >
               See your year so far →
             </Link>
@@ -372,7 +372,7 @@ export function MorningMinute() {
       {phase === 'error' && (
         <div className="text-center pt-3 pb-1">
           <AlertTriangle className="w-4 h-4 text-amber-300 mx-auto mb-2" />
-          <p className="text-[13px] text-white/85 leading-snug max-w-xs mx-auto">{errMsg}</p>
+          <p className="text-px-13 text-white/85 leading-snug max-w-xs mx-auto">{errMsg}</p>
           <button
             onClick={() => void startRecord()}
             className="mt-4 px-4 py-2 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/95 press-scale"

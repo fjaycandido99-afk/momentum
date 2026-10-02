@@ -57,7 +57,7 @@ export function DailyReadCard({
   }
 
   const progress = (
-    <p className="text-[11px] text-white/60">
+    <p className="text-px-11 text-white/60">
       {remaining > 0
         ? `${count} answered · ${remaining} more before this can say anything`
         : `${count} answered · reading forming`}
@@ -87,7 +87,7 @@ export function DailyReadCard({
             others and nobody could find it. */}
         {data.signatureName && (
           <div className="mt-3">
-            <p className="text-[11px] text-white/50 mb-0.5">Your read</p>
+            <p className="text-px-11 text-white/50 mb-0.5">Your read</p>
             <p className="text-xl font-medium text-white">{data.signatureName}</p>
           </div>
         )}
@@ -121,18 +121,18 @@ export function DailyReadCard({
           <Compass className="w-[18px] h-[18px] text-white/80" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-[10px] tracking-[0.24em] uppercase text-white/45 font-normal">Daily Read</h2>
-          <p className="text-[12px] text-white/55 mt-0.5">One tap, and it learns how you tick.</p>
+          <h2 className="text-px-10 tracking-[0.24em] uppercase text-white/45 font-normal">Daily Read</h2>
+          <p className="text-px-12 text-white/55 mt-0.5">One tap, and it learns how you tick.</p>
         </div>
         <Link
           href="/daily-read"
-          className="shrink-0 flex items-center gap-0.5 text-[11px] text-white/55 hover:text-white tabular-nums"
+          className="shrink-0 flex items-center gap-0.5 text-px-11 text-white/55 hover:text-white tabular-nums"
         >
           {count} answered <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
 
-      <p className="text-[18px] text-white leading-snug mt-3" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 500 }}>
+      <p className="text-px-18 text-white leading-snug mt-3" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 500 }}>
         {data.item.text}
       </p>
 
@@ -157,7 +157,7 @@ export function DailyReadCard({
                   aria-checked={false}
                   aria-label={opt.text}
                   onClick={() => rate(null, i)}
-                  className="w-full min-h-[2.5rem] px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.12] text-[12px] leading-tight text-white/85 font-medium hover:bg-white/[0.12] hover:text-white active:scale-[0.98] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  className="w-full min-h-[2.5rem] px-3 py-2 rounded-lg bg-white/[0.06] border border-white/[0.12] text-px-12 leading-tight text-white/85 font-medium hover:bg-white/[0.12] hover:text-white active:scale-[0.98] transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   {opt.text}
                 </button>
@@ -169,7 +169,7 @@ export function DailyReadCard({
                   aria-checked={false}
                   aria-label={point.label}
                   onClick={() => rate(point.score)}
-                  className="flex-1 min-h-[2.75rem] px-1 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12] text-[10px] leading-tight text-white/80 font-medium hover:bg-white/[0.12] hover:text-white active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+                  className="flex-1 min-h-[2.75rem] px-1 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12] text-px-10 leading-tight text-white/80 font-medium hover:bg-white/[0.12] hover:text-white active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   {point.label}
                 </button>
@@ -179,7 +179,7 @@ export function DailyReadCard({
           {progress}
           <Link
             href="/daily-read"
-            className="shrink-0 text-[11px] text-white/60 hover:text-white underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded"
+            className="shrink-0 text-px-11 text-white/60 hover:text-white underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none rounded"
           >
             Do the rest
           </Link>

@@ -109,10 +109,10 @@ export function WakeCallSheet({
         <ScrollLock />
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
+            <p className="text-px-10 tracking-[0.24em] uppercase text-white/45 flex items-center gap-1.5">
               <AlarmClock className="w-3 h-3" /> Wake-up call
             </p>
-            <h2 className="text-[26px] text-white leading-tight mt-1.5" style={{ ...SERIF, fontWeight: 600 }}>
+            <h2 className="text-px-26 text-white leading-tight mt-1.5" style={{ ...SERIF, fontWeight: 600 }}>
               Let your coach wake you up.
             </h2>
           </div>
@@ -126,7 +126,7 @@ export function WakeCallSheet({
           for today&rsquo;s promise. Tap the notification to hear it.
         </p>
 
-        <label htmlFor="wake-time" className="block mt-5 text-[11px] uppercase tracking-[0.2em] text-white/45">
+        <label htmlFor="wake-time" className="block mt-5 text-px-11 uppercase tracking-[0.2em] text-white/45">
           Wake me at
         </label>
         <input
@@ -135,7 +135,7 @@ export function WakeCallSheet({
           step={300}
           value={time}
           onChange={e => setTime(e.target.value)}
-          className="mt-2 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3 text-[34px] leading-none text-white [color-scheme:dark] focus:outline-none focus:border-white/40"
+          className="mt-2 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3 text-px-34 leading-none text-white [color-scheme:dark] focus:outline-none focus:border-white/40"
           style={{ ...SERIF, fontWeight: 500 }}
         />
 
@@ -166,7 +166,7 @@ export function WakeCallSheet({
           )}
         </div>
 
-        <p className="text-[11px] text-white/40 text-center mt-3 leading-relaxed">
+        <p className="text-px-11 text-white/40 text-center mt-3 leading-relaxed">
           It&rsquo;s a notification, not an alarm — it won&rsquo;t ring through Silent or a Focus mode.
         </p>
       </div>

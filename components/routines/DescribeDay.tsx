@@ -92,8 +92,8 @@ export function DescribeDay({
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Your routine</p>
-              <h2 className="text-[24px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+              <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Your routine</p>
+              <h2 className="text-px-24 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
                 What does your day look like?
               </h2>
             </div>
@@ -114,13 +114,13 @@ export function DescribeDay({
             rows={5}
             placeholder={PLACEHOLDER}
             aria-label="Your day"
-            className="w-full mt-3 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/25 leading-relaxed resize-none"
+            className="w-full mt-3 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-15 text-white placeholder:text-white/25 leading-relaxed resize-none"
           />
-          <p className="text-[11px] text-white/30 mt-1">
+          <p className="text-px-11 text-white/30 mt-1">
             It only uses what you say. It will not add habits you did not mention.
           </p>
 
-          {error && <p className="text-[12px] text-amber-300/90 mt-3">{error}</p>}
+          {error && <p className="text-px-12 text-amber-300/90 mt-3">{error}</p>}
 
           <button
             onClick={submit}

@@ -39,7 +39,7 @@ export function FocusModeToolbar({
       </div>
 
       {/* Center: word count + autosave */}
-      <div className="flex items-center gap-2 text-[11px] text-white/60">
+      <div className="flex items-center gap-2 text-px-11 text-white/60">
         <span><span className="font-medium text-white/70">{words}</span> {words === 1 ? 'word' : 'words'}</span>
         <span className="text-white/20">|</span>
         <span>{chars}</span>

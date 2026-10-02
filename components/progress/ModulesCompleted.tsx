@@ -16,13 +16,13 @@ export function ModulesCompleted({ count, activeDays }: ModulesCompletedProps) {
           <CheckCircle className="w-5 h-5 text-white" />
           <div>
             <p className="text-2xl font-bold text-white">{count}</p>
-            <p className="text-[10px] text-white/60">modules</p>
+            <p className="text-px-10 text-white/60">modules</p>
           </div>
         </div>
         <div className="w-px h-8 bg-white/10" />
         <div>
           <p className="text-2xl font-bold text-white">{activeDays}</p>
-          <p className="text-[10px] text-white/60">active days</p>
+          <p className="text-px-10 text-white/60">active days</p>
         </div>
       </div>
     </div>

@@ -160,12 +160,12 @@ export function AddPracticeSheet({
               </button>
             )}
             <div>
-              <p className="text-[10px] tracking-[0.24em] uppercase text-white/45">Add a practice</p>
-              <h2 className="text-[24px] text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
+              <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Add a practice</p>
+              <h2 className="text-px-24 text-white leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>
                 {!domain ? 'What do you already care about?' : !preset ? 'How often?' : 'What counts as done?'}
               </h2>
-              {seed?.label && <p className="text-[13px] text-white/80 mt-1">{seed.label}</p>}
-              {seed?.note && <p className="text-[11px] text-white/45 mt-0.5">{seed.note}</p>}
+              {seed?.label && <p className="text-px-13 text-white/80 mt-1">{seed.label}</p>}
+              {seed?.note && <p className="text-px-11 text-white/45 mt-0.5">{seed.note}</p>}
             </div>
           </div>
           <button onClick={onClose} aria-label="Close" className="tap-44 p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
@@ -226,12 +226,12 @@ export function AddPracticeSheet({
                 onClick={() => choosePreset(p.key)}
                 className="w-full text-left p-3.5 rounded-xl border border-white/15 hover:bg-white/[0.06]"
               >
-                <p className="text-[15px] text-white leading-snug">{p.label}</p>
-                <p className="text-[12px] text-white/50 mt-1">
+                <p className="text-px-15 text-white leading-snug">{p.label}</p>
+                <p className="text-px-12 text-white/50 mt-1">
                   {daysLabel(p.days)}
                   {p.minimum ? ` · minimum ${p.minimum}` : ''}
                 </p>
-                <p className="text-[12px] text-white/40 mt-1">{p.hint}</p>
+                <p className="text-px-12 text-white/40 mt-1">{p.hint}</p>
               </button>
             ))}
           </div>
@@ -240,7 +240,7 @@ export function AddPracticeSheet({
         {preset && (
           <div className="mt-4 space-y-5">
             <div>
-              <label htmlFor="practice-label" className="block text-[11px] uppercase tracking-[0.2em] text-white/45">
+              <label htmlFor="practice-label" className="block text-px-11 uppercase tracking-[0.2em] text-white/45">
                 Call it
               </label>
               <input
@@ -249,7 +249,7 @@ export function AddPracticeSheet({
                 onChange={e => setLabel(e.target.value)}
                 maxLength={PRACTICE_LIMITS.label}
                 placeholder={isCustomPreset(preset.key) ? 'Piano, cold showers, Spanish…' : preset.label}
-                className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/30"
+                className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-15 text-white placeholder:text-white/30"
               />
               {/*
                 Their own promises from the era they just finished, most
@@ -269,17 +269,17 @@ export function AddPracticeSheet({
               */}
               {seed?.chips && seed.chips.length > 0 && (
                 <div className="mt-2.5">
-                  <p className="text-[11px] text-white/40">What you promised most:</p>
+                  <p className="text-px-11 text-white/40">What you promised most:</p>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     {seed.chips.map(chip => (
                       <button
                         key={chip.text}
                         onClick={() => { haptic('light'); setLabel(labelFromPromise(chip.text, PRACTICE_LIMITS.label)) }}
-                        className="max-w-full px-2.5 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12] text-[12px] text-white/75 text-left active:scale-[0.98]"
+                        className="max-w-full px-2.5 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12] text-px-12 text-white/75 text-left active:scale-[0.98]"
                       >
                         <span className="block truncate">{chip.text}</span>
                         {chip.count > 1 && (
-                          <span className="block text-[10px] text-white/40">{chip.count} days</span>
+                          <span className="block text-px-10 text-white/40">{chip.count} days</span>
                         )}
                       </button>
                     ))}
@@ -289,7 +289,7 @@ export function AddPracticeSheet({
             </div>
 
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">Which days</p>
+              <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">Which days</p>
               <div className="flex gap-1.5 mt-2">
                 {DAY_NAMES.map((name, d) => {
                   const on = days.length === 0 || days.includes(d)
@@ -298,7 +298,7 @@ export function AddPracticeSheet({
                       key={d}
                       onClick={() => toggleDay(d)}
                       aria-pressed={on}
-                      className={`flex-1 py-2.5 rounded-xl border text-[13px] ${
+                      className={`flex-1 py-2.5 rounded-xl border text-px-13 ${
                         on ? 'bg-white text-black border-white font-medium' : 'border-white/15 text-white/60'
                       }`}
                     >
@@ -307,11 +307,11 @@ export function AddPracticeSheet({
                   )
                 })}
               </div>
-              <p className="text-[11px] text-white/40 mt-2">{daysLabel(days)}</p>
+              <p className="text-px-11 text-white/40 mt-2">{daysLabel(days)}</p>
             </div>
 
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">
+              <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">
                 When does it belong? <span className="text-white/30">Optional</span>
               </p>
               <div className="flex gap-1.5 mt-2">
@@ -320,7 +320,7 @@ export function AddPracticeSheet({
                     key={t ?? 'any'}
                     onClick={() => { haptic('light'); setTimeOfDay(t) }}
                     aria-pressed={timeOfDay === t}
-                    className={`flex-1 py-2 rounded-full border text-[12px] ${
+                    className={`flex-1 py-2 rounded-full border text-px-12 ${
                       timeOfDay === t ? 'bg-white text-black border-white font-medium' : 'border-white/15 text-white/70'
                     }`}
                   >
@@ -331,7 +331,7 @@ export function AddPracticeSheet({
             </div>
 
             <div>
-              <label htmlFor="practice-min" className="block text-[11px] uppercase tracking-[0.2em] text-white/45">
+              <label htmlFor="practice-min" className="block text-px-11 uppercase tracking-[0.2em] text-white/45">
                 Minimum that still counts
               </label>
               <input
@@ -340,17 +340,17 @@ export function AddPracticeSheet({
                 onChange={e => setMinimum(e.target.value)}
                 maxLength={PRACTICE_LIMITS.minimum}
                 placeholder="20 minutes"
-                className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-[15px] text-white placeholder:text-white/30"
+                className="w-full mt-2 px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-15 text-white placeholder:text-white/30"
               />
               {/* The floor is the point: set it now, calmly, so the tired
                   version of you has something to obey instead of decide. */}
-              <p className="text-[12px] text-white/45 mt-2 leading-relaxed">
+              <p className="text-px-12 text-white/45 mt-2 leading-relaxed">
                 On the days you don&rsquo;t want to, Voxu asks for this and nothing more.
               </p>
             </div>
 
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">
+              <p className="text-px-11 uppercase tracking-[0.2em] text-white/45">
                 What usually makes you skip? <span className="text-white/30">Optional</span>
               </p>
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -358,7 +358,7 @@ export function AddPracticeSheet({
                   <button
                     key={b.key}
                     onClick={() => { haptic('light'); setBlocker(blocker === b.key ? null : b.key) }}
-                    className={`text-[13px] rounded-full px-3 py-1.5 border ${
+                    className={`text-px-13 rounded-full px-3 py-1.5 border ${
                       blocker === b.key ? 'bg-white text-black border-white' : 'border-white/15 text-white/70'
                     }`}
                   >

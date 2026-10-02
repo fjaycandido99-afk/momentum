@@ -174,18 +174,18 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
     <>
       <div className="card-surface-lg p-4">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-white/50">
+          <div className="flex items-center gap-1.5 text-px-10 tracking-[0.2em] uppercase text-white/50">
             <Repeat2 className="w-3.5 h-3.5" /> Your disciplines
           </div>
           {compact && practices.length > 0 && (
-            <Link href="/training" className="flex items-center gap-0.5 text-[11px] text-white/50 hover:text-white/80">
+            <Link href="/training" className="flex items-center gap-0.5 text-px-11 text-white/50 hover:text-white/80">
               Manage <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           )}
           {canAdd && data.remaining > 0 && (
             <button
               onClick={() => { trackFeature('era', 'open', 'practice_add'); setAdding(true) }}
-              className="flex items-center gap-1 text-[11px] text-white/70 rounded-full border border-white/[0.14] px-2 py-1 press-scale"
+              className="flex items-center gap-1 text-px-11 text-white/70 rounded-full border border-white/[0.14] px-2 py-1 press-scale"
             >
               <Plus className="w-3 h-3" /> Add
             </button>
@@ -194,10 +194,10 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
 
         {practices.length === 0 ? (
           <>
-            <p className="text-[17px] text-white leading-snug mt-2" style={{ ...SERIF, fontWeight: 500 }}>
+            <p className="text-px-17 text-white leading-snug mt-2" style={{ ...SERIF, fontWeight: 500 }}>
               What do you already care about?
             </p>
-            <p className="text-[13px] text-white/60 mt-1.5 leading-snug">
+            <p className="text-px-13 text-white/60 mt-1.5 leading-snug">
               The long-term things you stay consistent with — a gym split, ten pages a day, two
               hours of deep work. Voxu won&rsquo;t replace those apps; it keeps you showing up for
               them. Up to {data.max}.
@@ -229,7 +229,7 @@ export function PracticesSection({ canAdd = false }: { canAdd?: boolean }) {
               />
             ))}
             {canAdd && data.remaining === 0 && (
-              <p className="text-[11px] text-white/35">
+              <p className="text-px-11 text-white/35">
                 Three at a time. Pause one to swap it — its record is kept.
               </p>
             )}
@@ -379,10 +379,10 @@ function PracticeRow({
       {/* The minimum is said once, in the line above the buttons, and the
           "N of M" count lives in Details — each used to appear here too. */}
       <div className="min-w-0">
-        <p className="text-[15px] text-white leading-snug truncate">{practice.label}</p>
-        <p className="text-[11px] text-white/45 mt-0.5">{scheduleLabel(practice)}</p>
+        <p className="text-px-15 text-white leading-snug truncate">{practice.label}</p>
+        <p className="text-px-11 text-white/45 mt-0.5">{scheduleLabel(practice)}</p>
         {practice.fromEra && (
-          <p className="text-[11px] text-white/35 mt-0.5 truncate">Carried forward from {practice.fromEra.title}</p>
+          <p className="text-px-11 text-white/35 mt-0.5 truncate">Carried forward from {practice.fromEra.title}</p>
         )}
       </div>
 
@@ -422,7 +422,7 @@ function PracticeRow({
           above today's Done / Minimum / – and the two sets looked the same.
           The ability is unchanged; only its weight is. */}
       {unansweredYesterday && (
-        <div className="mt-2 flex flex-wrap items-center gap-x-1 text-[12px]">
+        <div className="mt-2 flex flex-wrap items-center gap-x-1 text-px-12">
           <span className="text-white/50 mr-1">Yesterday?</span>
           <button
             onClick={() => { haptic('medium'); onLog(true, false, unansweredYesterday) }}
@@ -457,7 +457,7 @@ function PracticeRow({
           Done / Minimum / Not today is still the only thing recorded. */}
       {practice.recovery && !answered && (
         <div className="mt-2.5 rounded-lg bg-white/[0.05] px-3 py-2.5">
-          <p className="text-[13px] text-white/85 leading-snug">{practice.recovery.line}</p>
+          <p className="text-px-13 text-white/85 leading-snug">{practice.recovery.line}</p>
           {practice.recovery.options.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {practice.recovery.options.map(opt => (
@@ -470,7 +470,7 @@ function PracticeRow({
                       setShownSlot(practice.recovery.slotKey)
                     }
                   }}
-                  className={`text-[12px] rounded-full px-2.5 py-1 border ${
+                  className={`text-px-12 rounded-full px-2.5 py-1 border ${
                     recoveryChoice === opt.key
                       ? 'bg-white text-black border-white'
                       : 'border-white/20 text-white/75'
@@ -491,11 +491,11 @@ function PracticeRow({
         // A rule down the side, not another box inside the row.
         <div className="mt-2.5 border-l border-white/[0.14] pl-3 py-0.5">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[10px] tracking-[0.18em] uppercase text-white/40">
+            <p className="text-px-10 tracking-[0.18em] uppercase text-white/40">
               {shownContent.label}
             </p>
             {onEditPlan && (
-              <button onClick={onEditPlan} className="text-[11px] text-white/45 hover:text-white/80">
+              <button onClick={onEditPlan} className="text-px-11 text-white/45 hover:text-white/80">
                 {shownContent.items.length > 0 ? 'Edit' : 'Add'}
               </button>
             )}
@@ -505,7 +505,7 @@ function PracticeRow({
               {shownContent.items.map((item, i) => {
                 const matched = matchMovement(item.name)
                 return (
-                <li key={i} className="text-[13px] text-white/80 leading-snug flex justify-between gap-3">
+                <li key={i} className="text-px-13 text-white/80 leading-snug flex justify-between gap-3">
                   {/* A recognised movement opens its alternatives. Read-only
                       here on purpose: swapping mid-session is for today, and
                       rewriting the day's list would change every future
@@ -553,13 +553,13 @@ function PracticeRow({
               })}
             </ul>
           ) : (
-            <p className="text-[12px] text-white/35 mt-1">Nothing written for this one yet.</p>
+            <p className="text-px-12 text-white/35 mt-1">Nothing written for this one yet.</p>
           )}
         </div>
       )}
 
       {practice.state === 'rest' && !answered && (
-        <p className="text-[12px] text-white/40 mt-2">
+        <p className="text-px-12 text-white/40 mt-2">
           Rest today.{' '}
           {practice.nextDue
             ? `${dayName(practice.nextDue, today)} you show up.`
@@ -573,14 +573,14 @@ function PracticeRow({
           tone. It never lowers the ask by itself: it says what it noticed
           and the choice below is still theirs. */}
       {choosing && practice.intervention && (
-        <p className="text-[13px] text-white/80 mt-2 leading-snug">
+        <p className="text-px-13 text-white/80 mt-2 leading-snug">
           {practice.intervention}
         </p>
       )}
 
       {choosing && (
         <>
-          <p className="text-[13px] text-white/70 mt-2 leading-snug">
+          <p className="text-px-13 text-white/70 mt-2 leading-snug">
             {/* The minimum line is redundant once the intervention has
                 already named it. */}
             {practice.intervention ? null : minimumLine({ ...practice, minimum: practice.todaysMinimum })}
@@ -591,14 +591,14 @@ function PracticeRow({
             <button
               onClick={() => choose(true)}
               disabled={busy}
-              className={`flex-1 py-2 rounded-lg text-[13px] disabled:opacity-40 ${rescue ? 'border border-white/20 text-white' : 'bg-white text-black font-medium'}`}
+              className={`flex-1 py-2 rounded-lg text-px-13 disabled:opacity-40 ${rescue ? 'border border-white/20 text-white' : 'bg-white text-black font-medium'}`}
             >
               Done
             </button>
             <button
               onClick={() => choose(true, true)}
               disabled={busy}
-              className={`flex-1 py-2 rounded-lg text-[13px] disabled:opacity-40 ${rescue ? 'order-first bg-white text-black font-medium' : 'border border-white/20 text-white'}`}
+              className={`flex-1 py-2 rounded-lg text-px-13 disabled:opacity-40 ${rescue ? 'order-first bg-white text-black font-medium' : 'border border-white/20 text-white'}`}
             >
               Just the minimum
             </button>
@@ -628,7 +628,7 @@ function PracticeRow({
 
       {answered && (
         <div className="flex items-center justify-between gap-2 mt-2">
-          <p className="text-[13px] text-white/70 flex items-center gap-1.5">
+          <p className="text-px-13 text-white/70 flex items-center gap-1.5">
             {practice.state === 'missed' ? (
               <>
                 Not today.{' '}
@@ -647,7 +647,7 @@ function PracticeRow({
           <button
             onClick={() => setEditing(true)}
             disabled={busy}
-            className="text-[11px] text-white/40 hover:text-white/70 shrink-0"
+            className="text-px-11 text-white/40 hover:text-white/70 shrink-0"
           >
             Change
           </button>
@@ -674,14 +674,14 @@ function PracticeRow({
           <button
             onClick={() => setOpen(o => !o)}
             aria-expanded={open}
-            className="flex items-center gap-1 text-[11px] text-white/40 hover:text-white/70 mt-2.5"
+            className="flex items-center gap-1 text-px-11 text-white/40 hover:text-white/70 mt-2.5"
           >
             {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             {open ? 'Less' : 'Details'}
           </button>
 
           {open && (
-            <dl className="mt-2 space-y-1.5 text-[12px]">
+            <dl className="mt-2 space-y-1.5 text-px-12">
               <Row label="Schedule" value={scheduleLabel(practice)} />
               {practice.fromEra && <Row label="From" value={practice.fromEra.title} />}
               <Row
@@ -702,7 +702,7 @@ function PracticeRow({
               {practice.run > 0 && <Row label="Current run" value={`${practice.run} in a row`} />}
               {onGuide && (
                 <div className="pt-1">
-                  <button onClick={onGuide} className="text-[12px] text-white/60 hover:text-white underline underline-offset-4 decoration-white/20">
+                  <button onClick={onGuide} className="text-px-12 text-white/60 hover:text-white underline underline-offset-4 decoration-white/20">
                     How to do this well
                   </button>
                 </div>
@@ -720,19 +720,19 @@ function PracticeRow({
       {onRetire && open && (
         confirmRetire ? (
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
-            <p className="text-[12px] text-white/70 flex-1">
+            <p className="text-px-12 text-white/70 flex-1">
               Remove it from your list? Nothing you logged is deleted.
             </p>
             <button
               onClick={() => { setConfirmRetire(false); onRetire() }}
               disabled={busy}
-              className="text-[12px] text-white rounded-lg border border-white/20 px-2.5 py-1 disabled:opacity-40"
+              className="text-px-12 text-white rounded-lg border border-white/20 px-2.5 py-1 disabled:opacity-40"
             >
               Remove
             </button>
             <button
               onClick={() => setConfirmRetire(false)}
-              className="text-[12px] text-white/50 px-1"
+              className="text-px-12 text-white/50 px-1"
             >
               Keep
             </button>
@@ -740,7 +740,7 @@ function PracticeRow({
         ) : (
           <button
             onClick={() => setConfirmRetire(true)}
-            className="text-[12px] text-white/50 hover:text-white/80 mt-2.5"
+            className="text-px-12 text-white/50 hover:text-white/80 mt-2.5"
           >
             {/* "Remove", not "Pause": there is no way back from retired, and
                 a pause you cannot resume is a delete with a softer name. */}
@@ -813,8 +813,8 @@ function CompactRow({ practice, today, onOpen }: { practice: PracticeWire; today
         )}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] text-white leading-snug truncate">{practice.label}</span>
-        <span className="block text-[11px] mt-0.5 truncate">
+        <span className="block text-px-15 text-white leading-snug truncate">{practice.label}</span>
+        <span className="block text-px-11 mt-0.5 truncate">
           <span className="text-white/45">{scheduleLabel(practice)} · </span>
           <span className={status.strong ? 'text-white/90' : 'text-white/45'}>{status.text}</span>
         </span>
@@ -834,7 +834,7 @@ function CompactRow({ practice, today, onOpen }: { practice: PracticeWire; today
         </span>
       </span>
       {practice.of > 0 && (
-        <span className="text-[12px] text-white/50 tabular-nums shrink-0">{practice.done}/{practice.of}</span>
+        <span className="text-px-12 text-white/50 tabular-nums shrink-0">{practice.done}/{practice.of}</span>
       )}
       <ChevronRight className="w-4 h-4 text-white/40 shrink-0" aria-hidden />
     </button>

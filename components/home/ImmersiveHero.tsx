@@ -94,7 +94,7 @@ export function ImmersiveHero({ session, isCompleted, onBegin , override }: Imme
     >
       {/* Eyebrow — small uppercase context line so the big title doesn't
           stand alone without a frame. Reads like a chapter heading. */}
-      <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-white/40 mb-7 animate-fade-in-down">
+      <p className="text-px-11 font-medium uppercase tracking-[0.32em] text-white/40 mb-7 animate-fade-in-down">
         {copy.eyebrow}
       </p>
 
@@ -149,7 +149,7 @@ export function ImmersiveHero({ session, isCompleted, onBegin , override }: Imme
       {!isCompleted && (
         <button
           onClick={onBegin}
-          className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-black font-semibold text-[15px] hover:bg-white/95 transition-colors press-scale shadow-[0_0_50px_rgba(255,255,255,0.18)] focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+          className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-black font-semibold text-px-15 hover:bg-white/95 transition-colors press-scale shadow-[0_0_50px_rgba(255,255,255,0.18)] focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           <span>{active.cta}</span>
           <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />

@@ -274,7 +274,7 @@ export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
       {transcript && phase !== 'idle' && phase !== 'recording' && (
         <div className="mt-8 w-full max-w-xl px-2">
           <div className="card-eyebrow mb-2">You said</div>
-          <p className="text-[15px] text-white/85 leading-relaxed italic whitespace-pre-wrap">
+          <p className="text-px-15 text-white/85 leading-relaxed italic whitespace-pre-wrap">
             &ldquo;{transcript}&rdquo;
           </p>
         </div>
@@ -290,13 +290,13 @@ export function VoiceJournalMode({ dateISO, onSaved }: VoiceJournalModeProps) {
               <button
                 onClick={togglePlayback}
                 aria-label={isPlaying ? 'Pause reflection' : 'Play reflection'}
-                className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 text-[11px] text-white/85 transition-colors"
+                className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 text-px-11 text-white/85 transition-colors"
               >
                 {isPlaying ? <Pause className="w-3 h-3" fill="currentColor" /> : <Play className="w-3 h-3 ml-0.5" fill="currentColor" />}
                 {isPlaying ? 'Pause' : 'Play'}
               </button>
             </div>
-            <p className="text-[15px] text-white/90 leading-relaxed italic">
+            <p className="text-px-15 text-white/90 leading-relaxed italic">
               &ldquo;{reflection.replace(/^"|"$/g, '')}&rdquo;
             </p>
           </div>
