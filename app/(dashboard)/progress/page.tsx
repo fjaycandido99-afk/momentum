@@ -10,6 +10,7 @@ import { ModulesCompleted } from '@/components/progress/ModulesCompleted'
 import { MoodTrends } from '@/components/progress/MoodTrends'
 import { XPProgress } from '@/components/progress/XPProgress'
 import { AchievementGrid } from '@/components/progress/AchievementGrid'
+import { RelicDetailSheet } from '@/components/relics/RelicDetailSheet'
 import { AchievementCelebration } from '@/components/progress/AchievementCelebration'
 import { DailyChallenges } from '@/components/progress/DailyChallenges'
 import { WeeklyMissions } from '@/components/progress/WeeklyMissions'
@@ -74,10 +75,11 @@ export default function ProgressPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  // Any coin, earned or not, opens its detail: the coin up close, its line,
+  // what it took, and its chain (components/relics/RelicDetailSheet).
+  const [detailId, setDetailId] = useState<string | null>(null)
   const handleAchievementClick = useCallback((achievement: any) => {
-    if (achievement.unlocked) {
-      setCelebratingAchievement(achievement)
-    }
+    setDetailId(achievement.id)
   }, [])
 
   return (
@@ -259,6 +261,14 @@ export default function ProgressPage() {
       )}
 
       {/* Achievement Celebration Modal */}
+      {detailId && gamification?.achievements && (
+        <RelicDetailSheet
+          id={detailId}
+          statusOf={id => gamification.achievements.find((x: { id: string }) => x.id === id)}
+          onClose={() => setDetailId(null)}
+        />
+      )}
+
       {celebratingAchievement && (
         <AchievementCelebration
           achievement={celebratingAchievement}

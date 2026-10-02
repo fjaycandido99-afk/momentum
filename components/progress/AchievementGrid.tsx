@@ -10,6 +10,7 @@ import {
   
 } from '@/lib/achievements'
 import { AchievementBadge, METAL, METAL_RGB } from './AchievementBadge'
+import { nearest, remainingLabel, SECRET_CLUES } from '@/lib/relic-paths'
 
 interface AchievementWithStatus extends Achievement {
   unlocked: boolean
@@ -45,6 +46,8 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
   const [expanded, setExpanded] = useState(false)
 
   const unlockedCount = achievements.filter(a => a.unlocked).length
+  // Secret ones never count as "close": their requirement is the surprise.
+  const closest = nearest(achievements.filter(a => a.category !== 'secret'))
   const totalCount = achievements.length
   const pct = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0
 
@@ -67,8 +70,8 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
         <div className="flex items-center gap-2.5">
           <Trophy className="w-4 h-4 text-[#e8c79a]" />
           <div>
-            <h3 className="text-sm font-semibold text-white">Achievements</h3>
-            <p className="text-px-11 text-white/60">{unlockedCount} of {totalCount} unlocked</p>
+            <h3 className="text-sm font-semibold text-white">Your relics</h3>
+            <p className="text-px-11 text-white/60">{unlockedCount} of {totalCount} earned</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -82,7 +85,31 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
         </div>
       </div>
 
-      {/* Category groups */}
+      {/* Closest to unlocking — real progress only, nearest first. */}
+      {closest.length > 0 && (
+        <div className="mb-6">
+          <p className="text-px-11 font-medium text-white/80 uppercase tracking-[0.16em] mb-2">Closest to unlocking</p>
+          <ul className="space-y-1.5">
+            {closest.map(a => (
+              <li key={a.id}>
+                <button
+                  onClick={() => onAchievementClick?.(a)}
+                  className="tap-44 w-full flex items-center gap-3 p-2 rounded-xl border border-white/[0.08] text-left press-scale"
+                >
+                  <AchievementBadge id={a.id} category={a.category} icon={a.icon} rarity={a.rarity} unlocked={false} plain size={36} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-px-13 text-white truncate">{a.title}</span>
+                    <span className="block text-px-11 text-white/65">{remainingLabel(a, a.progress!)}</span>
+                  </span>
+                  <span className="text-px-11 text-white/60 tabular-nums shrink-0">{a.progress!.current}/{a.progress!.target}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Paths — one per family, with how far along it is. */}
       <div className="space-y-6">
         {visibleGroups.map(group => {
           const groupUnlocked = group.achievements.filter(a => a.unlocked).length
@@ -92,6 +119,9 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                 <span className="text-xs grayscale">{group.icon}</span>
                 <span className="text-px-11 font-medium text-white/80 uppercase tracking-[0.16em]">{group.label}</span>
                 <span className="text-px-11 text-white/45 ml-auto tabular-nums">{groupUnlocked}/{group.achievements.length}</span>
+              </div>
+              <div className="h-1 rounded-full bg-white/[0.08] overflow-hidden -mt-1.5 mb-3" aria-hidden>
+                <div className="h-full rounded-full bg-[#d6aa76]/70" style={{ width: `${Math.round((groupUnlocked / group.achievements.length) * 100)}%` }} />
               </div>
 
               <div className="grid grid-cols-3 gap-2">
@@ -136,7 +166,7 @@ export function AchievementGrid({ achievements, onAchievementClick }: Achievemen
                       ) : (
                         <>
                           <span className="text-px-10 text-white/35 text-center leading-snug line-clamp-2">
-                            {hidden ? 'Keep going to find it' : a.description}
+                            {hidden ? (SECRET_CLUES[a.id] ?? 'Keep going to find it') : a.description}
                           </span>
                           {!hidden && a.progress && a.progress.current > 0 && (
                             <span className="w-full flex items-center gap-1.5 mt-0.5">
