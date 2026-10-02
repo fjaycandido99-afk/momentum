@@ -223,7 +223,7 @@ export function GuidedPlayer({
               <X className="w-5 h-5 text-white" />
             </button>
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 pb-[calc(env(safe-area-inset-bottom)+2rem)] md:max-w-[640px] md:mx-auto md:w-full">
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-6 pb-[calc(env(safe-area-inset-bottom)+2rem)] md:max-w-[640px] md:mx-auto md:w-full">
             <h2 className="text-px-28 text-white leading-tight mt-2" style={SERIF}>{guideName}</h2>
             <div className="mt-5 space-y-4">
               {paragraphs.map((p, i) => (
