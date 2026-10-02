@@ -39,6 +39,7 @@ import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { SettingsCategory } from '@/components/settings/SettingsCategory'
+import { WidgetSettingsSection } from '@/components/widget/WidgetSetup'
 import { HomeShelvesSetting } from '@/components/settings/HomeShelvesSetting'
 import { GuideReminderSettings } from '@/components/settings/GuideReminderSettings'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
@@ -591,6 +592,9 @@ function SettingsContent() {
               home — so the hint says what the schedule actually does. */}
           <FeatureHint id="schedule" text="Your schedule sets when each audio session is ready" mode="once" />
         </SettingsCategory>
+
+        {/* Only on a build that has the widget (components/widget/WidgetSetup). */}
+        <WidgetSettingsSection />
 
         {/* ═══════════════ 2. Daily Experience ═══════════════ */}
         <SettingsCategory

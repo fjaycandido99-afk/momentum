@@ -68,6 +68,23 @@ export async function syncWidgetPulse(pulse: Pulse | null): Promise<void> {
   if (eraLoaded) await writeSnapshot()
 }
 
+/** Set once a write reached the widget — this build HAS one. Remembered on the device. */
+const READY_KEY = 'voxu.widget.ready'
+export const WIDGET_READY_EVENT = 'voxu:widget-ready'
+
+/** Has this phone's build got a working widget? (A write to the App Group succeeded.) */
+export function widgetReady(): boolean {
+  try { return localStorage.getItem(READY_KEY) === '1' } catch { return false }
+}
+
+function markWidgetReady() {
+  try {
+    if (localStorage.getItem(READY_KEY) === '1') return
+    localStorage.setItem(READY_KEY, '1')
+  } catch { /* storage off: the tip just won't show */ }
+  window.dispatchEvent(new Event(WIDGET_READY_EVENT))
+}
+
 let lastEra: EraTodayWire | null = null
 let lastPulse: Pulse | null = null
 let eraLoaded = false
@@ -80,6 +97,7 @@ async function writeSnapshot(): Promise<void> {
     const res = await WidgetBridge.write({ json })
     if (res?.written) {
       lastWritten = json
+      markWidgetReady()
       await WidgetBridge.reload()
     }
   } catch {

@@ -37,6 +37,7 @@ import { eraOrdinal } from '@/lib/era/logic'
 import { ERA_PRACTICE_DOMAIN, OUTCOME_LINE, eraOutcome } from '@/lib/era/keep'
 import { isDismissed, setDismissed } from '@/lib/ui/dismiss'
 import { KeepOneThingSheet } from '@/components/era/KeepOneThingSheet'
+import { WidgetSetupTip } from '@/components/widget/WidgetSetup'
 import { EraReflection } from '@/components/era/EraReflection'
 import { eraCloseScript } from '@/lib/era/close'
 import { AddPracticeSheet } from '@/components/practices/AddPracticeSheet'
@@ -1142,6 +1143,8 @@ function ActiveEra({
       />
       {/* Mornings only; renders nothing otherwise. */}
       <MorningBriefCard />
+      {/* Once, and only on a build that really has the widget. */}
+      <WidgetSetupTip />
 
       {/*
         The routine, one line, right under what the loop says to do now.
