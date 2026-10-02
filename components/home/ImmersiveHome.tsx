@@ -7,6 +7,7 @@ import { Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, BarChart3, W
 import { useReset } from '@/contexts/ResetContext'
 import { SearchSheet } from './SearchSheet'
 import { HeaderRelic } from '@/components/relics/HeaderRelic'
+import { PRACTICES_CHANGED } from '@/lib/pulse/events'
 import { SpiralLogo } from './SpiralLogo'
 import { NavSheet } from './NavSheet'
 import { getLatestPulse } from '@/lib/pulse/store'
@@ -1277,8 +1278,15 @@ export function ImmersiveHome() {
   // URL so a refresh or back doesn't replay it.
   useEffect(() => {
     if (!mounted) return
+    // The Today list's guide item asks for a guide this way.
+    const onPlayGuide = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id
+      const g = VOICE_GUIDES.find(v => v.id === id)
+      if (g) handleGuidePlay(g.id, g.name, !isContentFree('voiceGuide', g.id))
+    }
+    window.addEventListener('voxu:play-guide', onPlayGuide)
     const play = new URLSearchParams(window.location.search).get('play')
-    if (!play) return
+    if (!play) return () => window.removeEventListener('voxu:play-guide', onPlayGuide)
     window.history.replaceState(null, '', window.location.pathname)
     const [kind, id] = play.split(':')
     if (kind === 'guide') {
@@ -1288,6 +1296,7 @@ export function ImmersiveHome() {
       const item = SOUNDSCAPE_ITEMS.find(i => i.id === id)
       if (item) handleSoundscapePlay(item, !isContentFree('soundscape', item.id))
     }
+    return () => window.removeEventListener('voxu:play-guide', onPlayGuide)
     // Runs once, after mount; the handlers read current state when called.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted])
@@ -1307,7 +1316,11 @@ export function ImmersiveHome() {
         body: JSON.stringify({ kind: 'guide', itemId: guideId, title: name, seconds: Math.round(guideAudioRef.current?.duration || 0), completed: true }),
       })
         .then(r => r.json())
-        .then(d => { if (d?.newAchievements?.length) achievementCtx?.triggerAchievements(d.newAchievements) })
+        .then(d => {
+          if (d?.newAchievements?.length) achievementCtx?.triggerAchievements(d.newAchievements)
+          // The Today list ticks its guide item (it refreshes on this event).
+          window.dispatchEvent(new Event(PRACTICES_CHANGED))
+        })
         .catch(() => {})
     }
     const session = activeSessionRef.current

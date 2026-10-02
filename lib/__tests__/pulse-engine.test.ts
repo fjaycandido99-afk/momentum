@@ -125,3 +125,20 @@ describe('timeLabel', () => {
     expect(timeLabel('12:05')).toBe('12:05 PM')
   })
 })
+
+describe('the guided session on today', () => {
+  it('lists the era guide, ticked once a guided session is finished', () => {
+    const open = buildPulse(input({ guide: { id: 'focus_meditation', name: 'Focus', done: false } }))
+    const item = open.today.items.find(i => i.kind === 'guide')
+    expect(item?.title).toBe('Focus · guided')
+    expect(item?.status).toBe('open')
+    expect(item?.target).toEqual({ type: 'guide', id: 'focus_meditation', name: 'Focus' })
+    const done = buildPulse(input({ guide: { id: 'focus_meditation', name: 'Focus', done: true } }))
+    expect(done.today.items.find(i => i.kind === 'guide')?.status).toBe('done')
+  })
+
+  it('stays off the list without an era, or once the era is complete', () => {
+    expect(buildPulse(input({ era: null, guide: { id: 'x', name: 'X', done: false } })).today.items.some(i => i.kind === 'guide')).toBe(false)
+    expect(buildPulse(input({ era: era('complete'), guide: { id: 'x', name: 'X', done: false } })).today.items.some(i => i.kind === 'guide')).toBe(false)
+  })
+})

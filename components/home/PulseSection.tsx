@@ -83,6 +83,8 @@ export function PulseSection({
   const act = (target: ActionTarget | null) => {
     if (!target) return
     if (target.type === 'era') onEra()
+    // Home plays it (ImmersiveHome listens): the same path as a guide card.
+    else if (target.type === 'guide') window.dispatchEvent(new CustomEvent('voxu:play-guide', { detail: { id: target.id } }))
     else window.dispatchEvent(new CustomEvent(OPEN_DISCIPLINE, { detail: { id: target.id } }))
   }
 

@@ -86,8 +86,14 @@ export function MediaCard({
         onPointerLeave={onMagneticLeave}
       >
         {image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={image} alt="" className="scene-photo absolute inset-0 w-full h-full object-cover opacity-90" />
+          <>
+            {/* Third-party thumbnails (YouTube art: bright, saturated, anime) toned
+                into the scene: less colour, a touch darker, a faint navy wash.
+                Still recognisable — just not shouting over the rest of Voxu. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={image} alt="" className="scene-photo absolute inset-0 w-full h-full object-cover opacity-90 [filter:saturate(0.45)_brightness(0.82)_contrast(1.06)]" />
+            <div className="absolute inset-0 bg-[rgb(10_18_40/0.22)] pointer-events-none" aria-hidden />
+          </>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/15" />
 

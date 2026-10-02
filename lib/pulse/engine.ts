@@ -69,11 +69,18 @@ export interface PulseInput {
   practices: PulsePractice[]
   /** Today's timed routine steps, already filtered to a day it runs. */
   steps: PulseStep[]
+  /**
+   * The era's guided session for today, and whether ANY guided session was
+   * finished today (lib/audio-sessions) — a finished guide is proof, so it
+   * belongs on the day's list. Null without an era or a guide.
+   */
+  guide?: { id: string; name: string; done: boolean } | null
 }
 
 export type ActionTarget =
   | { type: 'era' }
   | { type: 'practice'; id: string }
+  | { type: 'guide'; id: string; name: string }
 
 export interface RightNow {
   kind: 'era' | 'slipping' | 'due_now' | 'due_today' | 'mission' | 'done'
@@ -92,7 +99,7 @@ export type TodayStatus = 'done' | 'minimum' | 'kept' | 'missed' | 'open' | 'due
 
 export interface TodayItem {
   key: string
-  kind: 'promise' | 'mission' | 'discipline' | 'step'
+  kind: 'promise' | 'mission' | 'discipline' | 'step' | 'guide'
   title: string
   /** "HH:MM" when the routine gives it a time. */
   time: string | null
@@ -275,6 +282,17 @@ export function todayItems(input: PulseInput): TodayItem[] {
       time: null,
       status: era.missionDone ? 'done' : 'open',
       target: { type: 'era' },
+    })
+  }
+
+  if (input.guide && era && era.loop.step !== 'complete') {
+    items.push({
+      key: 'guide',
+      kind: 'guide',
+      title: `${input.guide.name} · guided`,
+      time: null,
+      status: input.guide.done ? 'done' : 'open',
+      target: { type: 'guide', id: input.guide.id, name: input.guide.name },
     })
   }
 
