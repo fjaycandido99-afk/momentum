@@ -3,14 +3,26 @@ import { dayPhase, sceneFor } from '@/lib/home/time-of-day'
 import { GUIDED_SCENE, PHASE_SCENES } from '@/lib/home/scenes'
 
 describe('home time of day', () => {
-  it('splits the clock into sunrise, sunset and night', () => {
-    expect(dayPhase(4)).toBe('night')
-    expect(dayPhase(5)).toBe('sunrise')
-    expect(dayPhase(11)).toBe('sunrise')
-    expect(dayPhase(12)).toBe('sunset')
-    expect(dayPhase(19)).toBe('sunset')
-    expect(dayPhase(20)).toBe('night')
-    expect(dayPhase(0)).toBe('night')
+  it('splits a summer clock into sunrise, sunset and night', () => {
+    const JUNE = 5
+    expect(dayPhase(4, JUNE)).toBe('night')
+    expect(dayPhase(5, JUNE)).toBe('sunrise')
+    expect(dayPhase(11, JUNE)).toBe('sunrise')
+    expect(dayPhase(12, JUNE)).toBe('sunset')
+    expect(dayPhase(19, JUNE)).toBe('sunset')
+    expect(dayPhase(20, JUNE)).toBe('night')
+    expect(dayPhase(0, JUNE)).toBe('night')
+  })
+
+  it('lets night fall earlier as the year darkens', () => {
+    const OCTOBER = 9, DECEMBER = 11
+    // 7pm in October is after dark — the bug that showed a sunset sky.
+    expect(dayPhase(19, OCTOBER)).toBe('night')
+    expect(dayPhase(17, OCTOBER)).toBe('sunset')
+    expect(dayPhase(17, DECEMBER)).toBe('night')
+    // and the winter morning stays dark until six
+    expect(dayPhase(5, DECEMBER)).toBe('night')
+    expect(dayPhase(6, DECEMBER)).toBe('sunrise')
   })
 
   it('never leaves a phase without a sky: missing photos borrow sunset', () => {
