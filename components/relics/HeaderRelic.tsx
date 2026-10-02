@@ -9,12 +9,20 @@ import { AchievementBadge } from '@/components/progress/AchievementBadge'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import { getAchievementById } from '@/lib/achievements'
 import { achievementLine } from '@/lib/achievement-lines'
-import { MAX_EQUIPPED, nextShown, type RelicsPayload } from '@/lib/relics'
+import { MAX_EQUIPPED, nextShown, randomOther, type RelicsPayload } from '@/lib/relics'
 import { haptic } from '@/lib/haptics'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 /** Which coin the header showed last, so the next open turns to the next one. */
 const LAST_SHOWN_KEY = 'voxu.relic.lastShown'
+/** Shuffle mode: the header turns to a random earned coin each open. */
+const SHUFFLE_KEY = 'voxu.relic.shuffle'
+function readShuffle(): boolean {
+  try { return localStorage.getItem(SHUFFLE_KEY) === '1' } catch { return false }
+}
+function writeShuffle(on: boolean) {
+  try { localStorage.setItem(SHUFFLE_KEY, on ? '1' : '0') } catch { /* this session only */ }
+}
 /** Coins or the text list in the collection. */
 const VIEW_KEY = 'voxu.relic.view'
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -42,7 +50,8 @@ function Coin({ id, size, plain = true }: { id: string; size: number; plain?: bo
  * The relic in the Home header: the coin they chose to wear (or their rarest
  * until they choose). It holds still — the header is the one thing on screen
  * that should — except for ONE coin-flip when the app opens, turning to the
- * next of their equipped coins, and a flip when tapped. Nothing earned,
+ * next of their equipped coins (or, in shuffle mode, to a random coin from
+ * everything earned). Nothing earned,
  * nothing shown: no empty slot asking for something.
  *
  * One GET per Home mount; not polled.
@@ -52,6 +61,22 @@ export function HeaderRelic() {
   const [shown, setShown] = useState<string | null>(null)
   const [flipKey, setFlipKey] = useState(0)
   const [open, setOpen] = useState(false)
+  const [shuffle, setShuffleState] = useState(false)
+
+  /** Turn the header to `next` with one flip, and remember it. */
+  const flipTo = useCallback((next: string | null) => {
+    if (!next) return
+    setShown(next)
+    setFlipKey(k => k + 1)
+    writeLast(next)
+  }, [])
+
+  const setShuffle = (on: boolean) => {
+    setShuffleState(on)
+    writeShuffle(on)
+    if (!data) return
+    flipTo(on ? randomOther(data.earned.map(e => e.id), shown) : data.featured)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -61,9 +86,12 @@ export function HeaderRelic() {
         if (cancelled || !d) return
         setData(d)
         const last = readLast()
-        const next = nextShown(d.equipped, last, d.featured)
+        const on = readShuffle()
+        setShuffleState(on)
+        const pool = on ? d.earned.map(e => e.id) : d.equipped
+        const next = on ? randomOther(pool, last) : nextShown(d.equipped, last, d.featured)
         // Start on the coin from last time, then flip once to the next.
-        const start = last && d.equipped.includes(last) ? last : next
+        const start = last && pool.includes(last) ? last : next
         setShown(start)
         if (next && next !== start) {
           window.setTimeout(() => { if (!cancelled) { setShown(next); setFlipKey(k => k + 1) } }, 700)
@@ -82,7 +110,7 @@ export function HeaderRelic() {
       <style>{'@keyframes relic-flip{0%{transform:rotateY(90deg)}100%{transform:rotateY(0deg)}}'}</style>
       <button
         onClick={() => { haptic('light'); setOpen(true) }}
-        aria-label={`Featured relic: ${getAchievementById(shown)?.title ?? ''}. Opens your relics.`}
+        aria-label={`${shuffle ? 'Relic' : 'Featured relic'}: ${getAchievementById(shown)?.title ?? ''}. Opens your relics.`}
         // Below 360px wide the header can't hold title + bell + search + coin + ring.
         className="hidden min-[360px]:flex items-center justify-center h-11 w-11 -mx-0.5 rounded-full press-scale [perspective:400px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
       >
@@ -101,9 +129,12 @@ export function HeaderRelic() {
       {open && typeof document !== 'undefined' && createPortal(
         <RelicSheet
           data={data}
+          shuffle={shuffle}
+          onShuffle={setShuffle}
           onChange={d => {
             setData(d)
-            if (d.featured && d.featured !== shown) { setShown(d.featured); setFlipKey(k => k + 1); writeLast(d.featured) }
+            // In shuffle mode the header is random; featuring a coin doesn't pin it.
+            if (!shuffle && d.featured && d.featured !== shown) flipTo(d.featured)
           }}
           onClose={() => setOpen(false)}
         />,
@@ -118,8 +149,10 @@ export function HeaderRelic() {
  * and the whole collection (tap a coin to wear it or take it off). Saves as
  * they tap; the server keeps only coins they have actually earned.
  */
-function RelicSheet({ data, onChange, onClose }: {
+function RelicSheet({ data, shuffle, onShuffle, onChange, onClose }: {
   data: RelicsPayload
+  shuffle: boolean
+  onShuffle: (on: boolean) => void
   onChange: (d: RelicsPayload) => void
   onClose: () => void
 }) {
@@ -245,6 +278,26 @@ function RelicSheet({ data, onChange, onClose }: {
           </div>
         )}
 
+        {/* Shuffle: the header turns to a random coin from everything earned,
+            once per open. Only the header — the circle still shows the worn
+            three, so what others see stays their choice. On this device. */}
+        <button
+          onClick={() => { haptic('light'); onShuffle(!shuffle) }}
+          role="switch"
+          aria-checked={shuffle}
+          className="mt-6 w-full flex items-center justify-between gap-3 p-3.5 rounded-xl border border-white/15 text-left"
+        >
+          <span className="min-w-0">
+            <span className="block text-px-14 text-white">Shuffle all my relics</span>
+            <span className="block text-px-11 text-white/60 mt-0.5">
+              Your header shows a different one of your {data.earned.length} each time you open Voxu.
+            </span>
+          </span>
+          <span className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${shuffle ? 'bg-white' : 'bg-white/15'}`} aria-hidden>
+            <span className={`absolute top-0.5 w-5 h-5 rounded-full transition-all ${shuffle ? 'left-[22px] bg-black' : 'left-0.5 bg-white/70'}`} />
+          </span>
+        </button>
+
         {/* Opt-in, off by default: the first thing about their achievements
             anyone else can see. Only matters if they appear in circles. */}
         <button
@@ -252,7 +305,7 @@ function RelicSheet({ data, onChange, onClose }: {
           disabled={busy}
           role="switch"
           aria-checked={data.inCircle}
-          className="mt-6 w-full flex items-center justify-between gap-3 p-3.5 rounded-xl border border-white/15 text-left"
+          className="mt-2 w-full flex items-center justify-between gap-3 p-3.5 rounded-xl border border-white/15 text-left"
         >
           <span className="min-w-0">
             <span className="block text-px-14 text-white">Show my relics in my circle</span>

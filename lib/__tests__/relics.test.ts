@@ -47,3 +47,21 @@ describe('relics', () => {
     expect(nextShown([], 'a', 'a')).toBeNull()
   })
 })
+
+import { randomOther } from '@/lib/relics'
+
+describe('shuffle all relics', () => {
+  it('never shows the same coin twice in a row', () => {
+    for (let i = 0; i < 50; i++) expect(randomOther(['a', 'b', 'c'], 'b')).not.toBe('b')
+  })
+
+  it('reaches every other coin', () => {
+    expect(randomOther(['a', 'b', 'c'], 'b', () => 0)).toBe('a')
+    expect(randomOther(['a', 'b', 'c'], 'b', () => 0.99)).toBe('c')
+  })
+
+  it('shows the only coin there is, and nothing with none', () => {
+    expect(randomOther(['a'], 'a')).toBe('a')
+    expect(randomOther([], null)).toBeNull()
+  })
+})

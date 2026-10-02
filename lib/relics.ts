@@ -85,3 +85,13 @@ export function nextShown(equipped: readonly string[], lastShown: string | null,
   if (!lastShown || !equipped.includes(lastShown)) return featured && equipped.includes(featured) ? featured : equipped[0]
   return equipped[(equipped.indexOf(lastShown) + 1) % equipped.length]
 }
+
+/**
+ * Shuffle mode: a random coin from everything earned, never the one shown
+ * last time (unless it is the only one). `rand` is injectable for tests.
+ */
+export function randomOther(ids: readonly string[], last: string | null, rand: () => number = Math.random): string | null {
+  if (ids.length === 0) return null
+  const pool = ids.length > 1 && last ? ids.filter(id => id !== last) : [...ids]
+  return pool[Math.min(pool.length - 1, Math.floor(rand() * pool.length))]
+}
