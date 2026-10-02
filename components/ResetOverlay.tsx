@@ -5,6 +5,7 @@ import { X } from 'lucide-react'
 import { useAudioOptional } from '@/contexts/AudioContext'
 import { AuraRing } from '@/components/ui/Aura'
 import { ScrollLock } from '@/components/ui/ScrollLock'
+import { transcriptParagraphs } from '@/lib/voice/transcript'
 
 interface ResetOverlayProps {
   open: boolean
@@ -20,6 +21,9 @@ export function ResetOverlay({ open, onClose }: ResetOverlayProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioCtx = useAudioOptional()
   const [phase, setPhase] = useState<'in' | 'out'>('in')
+  /** The grounding voice's own script — its exact words — when the cache kept it. */
+  const [script, setScript] = useState<string | null>(null)
+  const [showWords, setShowWords] = useState(false)
 
   // Paced breath label, synced to the 8s breathe animation (4s in / 4s out).
   useEffect(() => {
@@ -43,7 +47,9 @@ export function ResetOverlay({ open, onClose }: ResetOverlayProps) {
         })
         if (!res.ok || cancelled) return
         const data = await res.json()
-        if (cancelled || !data?.audioBase64) return
+        if (cancelled) return
+        setScript(typeof data?.script === 'string' && data.script.trim() ? data.script : null)
+        if (!data?.audioBase64) return
         const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`)
         audioRef.current = audio
         audio.play().catch(() => {})
@@ -51,6 +57,7 @@ export function ResetOverlay({ open, onClose }: ResetOverlayProps) {
     })()
     return () => {
       cancelled = true
+      setShowWords(false)
       const a = audioRef.current
       if (a) { try { a.pause() } catch { /* no-op */ } a.src = ''; audioRef.current = null }
     }
@@ -79,8 +86,11 @@ export function ResetOverlay({ open, onClose }: ResetOverlayProps) {
       {/* Breathing pulse — the signature aura ring, scaled by the paced breath
           (4s in / 4s out). The halo stays steady so the ring's own rhythm
           doesn't fight the guidance; the wrapper does the inhale/exhale. */}
+      {/* keep-motion: the slow grow/shrink IS the breathing guide. Under Reduce
+          Motion the global rule would turn it into a jump every 4s — worse
+          for someone trying to calm down — so this one keeps its pace. */}
       <div
-        className="relative flex items-center justify-center mb-12 ease-in-out"
+        className="keep-motion relative flex items-center justify-center mb-12 ease-in-out"
         style={{
           width: 256,
           height: 256,
@@ -96,6 +106,26 @@ export function ResetOverlay({ open, onClose }: ResetOverlayProps) {
       <p className="text-white/55 text-sm text-center max-w-xs px-8 leading-relaxed">
         You&rsquo;re safe. Follow the circle &mdash; in as it grows, out as it falls. This will pass.
       </p>
+
+      {/* The voice's words, for anyone who can't hear it or would rather read. */}
+      {script && (
+        <>
+          <button
+            onClick={() => setShowWords(v => !v)}
+            aria-expanded={showWords}
+            className="tap-44 mt-5 text-px-13 text-white/70 underline underline-offset-4"
+          >
+            {showWords ? 'Hide the words' : 'Show the words'}
+          </button>
+          {showWords && (
+            <div className="mt-3 w-full max-w-sm px-8 max-h-[32dvh] overflow-y-auto overflow-x-hidden overscroll-contain space-y-3">
+              {transcriptParagraphs(script).map((p, i) => (
+                <p key={i} className="text-px-14 text-white/80 leading-relaxed">{p}</p>
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
       <button
         onClick={onClose}

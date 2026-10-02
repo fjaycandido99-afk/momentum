@@ -19,13 +19,17 @@ function getGroq() {
 }
 
 // DB-backed cache for audio (persists across Vercel cold starts)
-async function getCachedAudio(cacheKey: string): Promise<{ script: string; audioBase64: string } | null> {
+// The script comes back WITH its audio: it is the exact text the audio was
+// generated from. Rows cached before scripts were kept have none — those
+// play without a transcript rather than show another script's words.
+async function getCachedAudio(cacheKey: string): Promise<{ script: string | null; audioBase64: string } | null> {
   try {
     const cached = await prisma.audioCache.findUnique({
       where: { cache_key: cacheKey },
+      select: { audio: true, script: true },
     })
     if (cached) {
-      return { script: '', audioBase64: cached.audio }
+      return { script: cached.script ?? null, audioBase64: cached.audio }
     }
   } catch (e) {
     console.error('[Calm Voice Cache] DB read error:', e)
@@ -38,8 +42,8 @@ async function setCachedAudio(cacheKey: string, script: string, audioBase64: str
   try {
     await prisma.audioCache.upsert({
       where: { cache_key: cacheKey },
-      update: { audio: audioBase64, duration: 0 },
-      create: { cache_key: cacheKey, audio: audioBase64, duration: 0 },
+      update: { audio: audioBase64, script, duration: 0 },
+      create: { cache_key: cacheKey, audio: audioBase64, script, duration: 0 },
     })
   } catch (e) {
     console.error('[Calm Voice Cache] DB write error:', e)
@@ -128,16 +132,17 @@ export async function POST(request: NextRequest) {
       if (!cached) {
         const oldKeys = await prisma.audioCache.findFirst({
           where: { cache_key: { startsWith: `calm-${type}-${tone}-` } },
-          select: { audio: true },
+          select: { audio: true, script: true },
         })
-        if (oldKeys) cached = { script: '', audioBase64: oldKeys.audio }
+        if (oldKeys) cached = { script: oldKeys.script ?? null, audioBase64: oldKeys.audio }
       }
     }
     if (cached) {
       console.log(`[DB Cache HIT] Reusing cached audio for ${type}-${tone}`)
-      const fallbackIndex = getFallbackScriptIndex(type)
+      // The cached audio's OWN script, or null. It used to send a pre-written
+      // fallback here — a different text from the (usually AI-written) audio.
       return NextResponse.json({
-        script: preWritten?.[fallbackIndex] || '',
+        script: cached.script,
         audioBase64: textOnly ? null : cached.audioBase64,
         color: contentType.color,
         type,

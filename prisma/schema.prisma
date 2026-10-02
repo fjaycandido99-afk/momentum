@@ -633,6 +633,10 @@ model AudioCache {
   id         String   @id @default(cuid())
   cache_key  String   @unique // "breathing-s0-calm", "work_prime-s1-direct"
   audio      String // Base64 audio data
+  /// The exact text this audio was generated from, for its transcript.
+  /// Null on rows cached before it was kept — those get no transcript,
+  /// never a different script's words.
+  script     String?
   duration   Int // Duration in seconds
   created_at DateTime @default(now())
 
