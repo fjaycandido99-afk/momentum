@@ -5,6 +5,7 @@ import { ChevronRight, Sparkle, X } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { getAchievementById, achievementMark } from '@/lib/achievements'
 import { AchievementBadge, METAL, METAL_RGB } from './AchievementBadge'
+import { achievementLine } from '@/lib/achievement-lines'
 
 interface AchievementCelebrationProps {
   achievement: {
@@ -193,9 +194,18 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
         >
           {achievement.title}
         </h3>
+        {/* What the coin MEANS (lib/achievement-lines), then what it took. */}
+        {achievementLine(achievement.id) && (
+          <p
+            className="text-[19px] text-white/90 leading-snug mb-2 px-2"
+            style={{ ...SERIF, animation: 'achievement-title-in 300ms ease-out 600ms both' }}
+          >
+            {achievementLine(achievement.id)}
+          </p>
+        )}
         <p
-          className="text-[14px] text-white/70 leading-relaxed mb-5"
-          style={{ animation: 'achievement-title-in 300ms ease-out 600ms both' }}
+          className="text-[12px] text-white/50 leading-relaxed mb-5"
+          style={{ animation: 'achievement-title-in 300ms ease-out 700ms both' }}
         >
           {achievement.description}
         </p>

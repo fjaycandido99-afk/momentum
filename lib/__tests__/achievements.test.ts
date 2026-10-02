@@ -332,3 +332,24 @@ describe('a coin for every era', () => {
     for (const a of ACHIEVEMENTS.filter(x => x.id.startsWith('era_done_'))) expect(a.rarity).toBe('epic')
   })
 })
+
+import { ACHIEVEMENT_LINES } from '../achievement-lines'
+
+describe('the line on every coin', () => {
+  it('every achievement has one, and no line is orphaned', () => {
+    for (const a of ACHIEVEMENTS) expect(ACHIEVEMENT_LINES[a.id], a.id).toBeTruthy()
+    for (const id of Object.keys(ACHIEVEMENT_LINES)) expect(ACHIEVEMENTS.some(a => a.id === id), id).toBe(true)
+  })
+
+  it('is short and in Voxu’s voice: no exclamation marks, no hype', () => {
+    for (const [id, line] of Object.entries(ACHIEVEMENT_LINES)) {
+      expect(line.length, id).toBeLessThanOrEqual(60)
+      expect(line, id).not.toMatch(/!|amazing|awesome|crushed|legend|beast|incredible/i)
+    }
+  })
+
+  it('never repeats another coin’s line', () => {
+    const lines = Object.values(ACHIEVEMENT_LINES)
+    expect(new Set(lines).size).toBe(lines.length)
+  })
+})
