@@ -8,6 +8,7 @@ import {
   type PatternReport,
   type PromiseRecord,
 } from './rules'
+import { loadPractices } from '@/lib/practices/server'
 
 /**
  * Loads one person's history for the pattern engine.
@@ -66,7 +67,7 @@ function localParts(at: Date, timezone: string | null): { hour: number; weekday:
 export async function loadPatterns(userId: string): Promise<PatternReport> {
   const since = new Date(Date.now() - WINDOW_DAYS * 86400000)
 
-  const [prefs, promiseRows, guideRows, wellnessRows] = await Promise.all([
+  const [prefs, promiseRows, guideRows, wellnessRows, guidedRows, practices] = await Promise.all([
     prisma.userPreferences.findUnique({
       where: { user_id: userId },
       select: { timezone: true, wellness_enabled: true },
@@ -90,6 +91,14 @@ export async function loadPatterns(userId: string): Promise<PatternReport> {
       select: { local_day: true, mood: true, energy: true, stress: true, rested: true },
       orderBy: { local_day: 'asc' },
     }),
+    // Days a guided session was finished — the day only, nothing else.
+    prisma.audioSession.findMany({
+      where: { user_id: userId, kind: 'guide', completed: true, local_day: { gte: since.toISOString().slice(0, 10) } },
+      select: { local_day: true },
+      distinct: ['local_day'],
+    }),
+    // Each discipline's kept/due over the last four weeks (lib/practices).
+    loadPractices(userId).catch(() => null),
   ])
 
   const tz = prefs?.timezone ?? null
@@ -129,6 +138,8 @@ export async function loadPatterns(userId: string): Promise<PatternReport> {
       })),
     today: localParts(new Date(), tz).day,
     reasonLabel: key => reasonLabel(key) ?? key,
+    guidedDays: guidedRows.map(r => r.local_day),
+    disciplines: (practices?.practices ?? []).map(p => ({ label: p.label, kept: p.done, due: p.of })),
     wellness: prefs?.wellness_enabled
       ? wellnessRows.map(w => ({
           day: w.local_day,

@@ -120,6 +120,10 @@ export interface PatternInput {
    * imported so this file stays free of era concepts and testable on its own.
    */
   reasonLabel?: (key: string) => string
+  /** Days a guided session was finished (lib/audio-sessions). */
+  guidedDays?: string[]
+  /** Each discipline's kept/due over the recent window. Their own labels. */
+  disciplines?: { label: string; kept: number; due: number }[]
 }
 
 export interface PatternGroup {
@@ -136,6 +140,7 @@ export type PatternKind =
   | 'timing' | 'weekday' | 'follow_through' | 'size' | 'voice' | 'momentum' | 'mood' | 'guide'
   | 'confidence' | 'blocker' | 'helper'
   | 'energy' | 'stress' | 'rested'
+  | 'guided_day' | 'discipline'
 
 export interface Pattern {
   id: string
@@ -511,6 +516,50 @@ function guidePattern(guideMoods: GuideMoodDay[]): RawPattern | null {
 
 // ─── Report ──────────────────────────────────────────────────────────────────
 
+/**
+ * Promises on days a guided session was finished, against days it wasn't.
+ * They happen TOGETHER — a good day brings both — so the copy never says
+ * one causes the other.
+ */
+function guidedDayPattern(answered: PromiseRecord[], guidedDays: string[]): RawPattern | null {
+  if (guidedDays.length === 0) return null
+  const days = new Set(guidedDays)
+  const withGuide = keptGroup('on days you finish a guided session', answered.filter(p => days.has(p.day)))
+  const without = keptGroup('on days you don’t', answered.filter(p => !days.has(p.day)))
+  if (withGuide.of < MIN_PER_GROUP || without.of < MIN_PER_GROUP) return null
+  const gap = Math.round(Math.abs(withGuide.rate - without.rate) * 10) / 10
+  if (gap < MIN_GAP_POINTS) return null
+  return {
+    id: 'guided_day',
+    kind: 'guided_day',
+    headline: `On days you finish a guided session you keep ${withGuide.rate}% of your promises — ${without.rate}% on days you don’t.`,
+    detail: `${withGuide.hits} of ${withGuide.of} against ${without.hits} of ${without.of}. They happen together; this doesn’t say one causes the other.`,
+    groups: [withGuide, without],
+    gap,
+    strength: strengthOf(withGuide, without),
+  }
+}
+
+/**
+ * Their best-kept discipline against their least-kept, over the recent
+ * window. Stands on its own data (not gated on promises). Their own labels,
+ * shown back to them only.
+ */
+function disciplinePattern(disciplines: { label: string; kept: number; due: number }[]): RawPattern | null {
+  const groups = disciplines.map(d => group(d.label, d.kept, d.due))
+  const c = compare(groups, MIN_PER_GROUP, MIN_GAP_POINTS)
+  if (!c) return null
+  return {
+    id: 'discipline',
+    kind: 'discipline',
+    headline: `${c.best.label} holds best: kept ${c.best.hits} of the last ${c.best.of} times it was due — ${c.worst.label}, ${c.worst.hits} of ${c.worst.of}.`,
+    detail: `${c.best.rate}% against ${c.worst.rate}%. Worth asking what ${c.best.label} has that ${c.worst.label} doesn’t — a time, a smaller minimum, a cue.`,
+    groups: [c.best, c.worst],
+    gap: c.gap,
+    strength: strengthOf(c.best, c.worst),
+  }
+}
+
 export function findPatterns(input: PatternInput): PatternReport {
   const answered = input.promises.filter(p => p.kept !== null)
   const moodDaysWithPromise = new Set(
@@ -546,9 +595,13 @@ export function findPatterns(input: PatternInput): PatternReport {
           high: 'rested days', low: 'days you woke up tired',
           note: 'The night before shows up in the next day’s promise.',
         }),
+        guidedDayPattern(answered, input.guidedDays ?? []),
       ].filter((x): x is RawPattern => x !== null),
     )
   }
+  // Disciplines stand on their own data, like the guide pattern.
+  const discipline = disciplinePattern(input.disciplines ?? [])
+  if (discipline) raw.push(discipline)
   const guide = guidePattern(input.guideMoods)
   if (guide) raw.push(guide)
 

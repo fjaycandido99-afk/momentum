@@ -371,3 +371,44 @@ describe('coachPatternLine', () => {
     expect(coachPatternLine(moodOnly)).toBeNull()
   })
 })
+
+import { findPatterns as findPatterns2, type PromiseRecord as PR } from '@/lib/patterns/rules'
+
+describe('guided days and disciplines', () => {
+  const day = (n: number) => `2026-09-${String(n).padStart(2, '0')}`
+  const promise = (n: number, kept: boolean): PR => ({
+    day: day(n), hour: 9, weekday: n % 7, kept, answeredSameDay: true, source: 'typed', length: 20,
+    confidence: null, blocker: null, helper: null,
+  })
+
+  it('compares promises on guided days with the rest — together, never cause', () => {
+    const promises = [
+      ...[1, 2, 3, 4, 5, 6, 7, 8].map(n => promise(n, true)),
+      ...[9, 10, 11, 12, 13, 14, 15, 16].map(n => promise(n, n % 2 === 0)),
+    ]
+    const r = findPatterns2({ promises, moods: [], guideMoods: [], guidedDays: [1, 2, 3, 4, 5, 6, 7, 8].map(day) })
+    const p = r.patterns.find(x => x.kind === 'guided_day')
+    expect(p?.headline).toContain('On days you finish a guided session you keep 100%')
+    expect(p?.detail).toMatch(/doesn’t say one causes/)
+  })
+
+  it('says nothing without enough days on each side', () => {
+    const promises = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => promise(n, n < 4))
+    const r = findPatterns2({ promises, moods: [], guideMoods: [], guidedDays: [day(1), day(2)] })
+    expect(r.patterns.some(x => x.kind === 'guided_day')).toBe(false)
+  })
+
+  it('names the best- and least-kept discipline with both counts', () => {
+    const r = findPatterns2({
+      promises: [], moods: [], guideMoods: [],
+      disciplines: [{ label: 'Reading', kept: 23, due: 27 }, { label: 'Gym', kept: 6, due: 15 }],
+    })
+    const p = r.patterns.find(x => x.kind === 'discipline')
+    expect(p?.headline).toBe('Reading holds best: kept 23 of the last 27 times it was due — Gym, 6 of 15.')
+  })
+
+  it('needs two disciplines with real numbers', () => {
+    const r = findPatterns2({ promises: [], moods: [], guideMoods: [], disciplines: [{ label: 'Reading', kept: 23, due: 27 }] })
+    expect(r.patterns.some(x => x.kind === 'discipline')).toBe(false)
+  })
+})
