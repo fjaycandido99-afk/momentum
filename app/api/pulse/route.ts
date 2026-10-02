@@ -20,6 +20,7 @@ import { runsOn } from '@/lib/routines/glance'
 import { buildPulse, type PulseStep } from '@/lib/pulse/engine'
 import { PRESETS_BY_KEY } from '@/lib/practices/presets'
 import { VOICE_GUIDES } from '@/components/home/home-types'
+import { loadExperiments } from '@/lib/patterns/experiments-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +51,8 @@ export async function GET(request: Request) {
     // The era's guide on today's list — ticked by ANY guided session finished
     // today, since each one is proof (lib/audio-sessions).
     const eraGuide = era && era.step !== 'complete' ? VOICE_GUIDES.find(g => g.id === era.links.guideId) : null
+    const experiments = await loadExperiments(user.id).catch(() => null)
+    const running = experiments?.active
     const guideDone = eraGuide
       ? (await prisma.audioSession.count({ where: { user_id: user.id, kind: 'guide', completed: true, local_day: day } })) > 0
       : false
@@ -89,6 +92,7 @@ export async function GET(request: Request) {
       })),
       steps,
       guide: eraGuide ? { id: eraGuide.id, name: eraGuide.name, done: guideDone } : null,
+      experiment: running && running.day ? { title: running.title, day: running.day, followedToday: !!running.followedToday } : null,
     })
 
     return NextResponse.json({ pulse })

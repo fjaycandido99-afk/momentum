@@ -79,7 +79,7 @@ describe('the data export', () => {
   it('exports the five tables that were found missing', () => {
     // Named explicitly so a future refactor that drops one fails loudly
     // rather than quietly returning less of somebody's life than it did.
-    for (const accessor of ['book', 'practice', 'practiceLog', 'exerciseRun', 'resetSession', 'audioSession']) {
+    for (const accessor of ['book', 'practice', 'practiceLog', 'exerciseRun', 'resetSession', 'audioSession', 'patternExperiment']) {
       expect(route, accessor).toContain(`prisma.${accessor}.`)
     }
   })

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect } from 'react'
 import {
   BarChart3, Bookmark, BookOpen, ChevronRight, Compass, Dumbbell, Headphones, HeartPulse, Home,
-  Mic2, PenLine, Settings, Trophy, Waves, X, type LucideIcon,
+  Mic2, PenLine, Settings, Trophy, Waves, FlaskConical, X, type LucideIcon,
 } from 'lucide-react'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 
@@ -87,6 +87,7 @@ export function NavSheet({
         },
         { label: 'Progress', sub: 'Streaks, listening, journal stats', icon: BarChart3, href: '/progress' },
         { label: 'Proof', sub: 'What you’ve actually done', icon: Trophy, href: '/proof' },
+        { label: 'Your laws', sub: 'What your record shows, and tests', icon: FlaskConical, href: '/patterns' },
       ],
     },
     {

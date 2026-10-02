@@ -85,6 +85,7 @@ export function PulseSection({
     if (target.type === 'era') onEra()
     // Home plays it (ImmersiveHome listens): the same path as a guide card.
     else if (target.type === 'guide') window.dispatchEvent(new CustomEvent('voxu:play-guide', { detail: { id: target.id } }))
+    else if (target.type === 'patterns') window.location.href = '/patterns'
     else window.dispatchEvent(new CustomEvent(OPEN_DISCIPLINE, { detail: { id: target.id } }))
   }
 

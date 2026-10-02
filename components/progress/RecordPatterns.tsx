@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { BarChart3, Loader2 } from 'lucide-react'
 import type { PatternReport } from '@/lib/patterns/rules'
 
@@ -30,6 +31,7 @@ export function RecordPatterns() {
 
   return (
     <div className="bg-white/5 rounded-2xl p-4">
+      <Link href="/patterns" className="tap-44 float-right text-px-12 text-white/75 underline underline-offset-4">Your laws →</Link>
       <h2 className="text-sm font-semibold text-white/80 flex items-center gap-2">
         <BarChart3 className="w-4 h-4" /> What your record shows
       </h2>

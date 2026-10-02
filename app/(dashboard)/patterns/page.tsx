@@ -1,0 +1,198 @@
+'use client'
+
+import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Check, ChevronLeft, FlaskConical, Loader2 } from 'lucide-react'
+import type { Pattern, PatternReport } from '@/lib/patterns/rules'
+import { EXPERIMENTS, experimentFor } from '@/lib/patterns/experiments'
+import type { ExperimentWire } from '@/lib/patterns/experiments-server'
+import { haptic } from '@/lib/haptics'
+
+const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
+
+const KIND_LABEL: Partial<Record<Pattern['kind'], string>> = {
+  timing: 'Timing', weekday: 'Rhythm', follow_through: 'Follow-through', size: 'Size', voice: 'Voice',
+  momentum: 'Recovery', mood: 'Mood', guide: 'Guided', confidence: 'Confidence', blocker: 'Friction',
+  helper: 'What helps', energy: 'Energy', stress: 'Stress', rested: 'Rest', guided_day: 'Guided days',
+  discipline: 'Disciplines',
+}
+
+interface ExperimentsPayload { active: ExperimentWire | null; finished: ExperimentWire[] }
+
+/**
+ * Your Pattern — the rules your own record shows, and small experiments to
+ * test them.
+ *
+ * A LAW is a pattern that passed the chance test (Fisher + Holm in
+ * lib/patterns/rules) with real numbers on both sides; it is shown with its
+ * counts, as a rule. Patterns that haven't passed are "still watching",
+ * labelled. An experiment changes one thing for 7 days and is judged
+ * against the person's own previous four weeks (lib/patterns/experiments).
+ *
+ * No labels about anyone's mind, no forecasts, never their words.
+ */
+export default function PatternsPage() {
+  const [report, setReport] = useState<PatternReport | null>(null)
+  const [exp, setExp] = useState<ExperimentsPayload | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/patterns', { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(setReport).catch(() => {})
+    fetch('/api/patterns/experiments', { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(setExp).catch(() => {})
+  }, [])
+
+  const act = useCallback(async (body: { action: 'start'; key: string } | { action: 'stop' }) => {
+    haptic('light')
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/patterns/experiments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) { setError(data?.error ?? 'Couldn’t save that.'); return }
+      setExp(data)
+    } catch {
+      setError('Couldn’t reach Voxu. Check your connection.')
+    } finally {
+      setBusy(false)
+    }
+  }, [])
+
+  const laws = report?.patterns.filter(p => p.strength === 'solid') ?? []
+  const watching = report?.patterns.filter(p => p.strength === 'early') ?? []
+  const active = exp?.active ?? null
+
+  return (
+    <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
+      <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
+        <Link href="/progress" aria-label="Back" className="tap-44 inline-flex p-2 -ml-2 rounded-full hover:bg-white/10">
+          <ChevronLeft className="w-5 h-5 text-white/80" />
+        </Link>
+        <p className="text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">Your pattern</p>
+        <h1 className="text-px-40 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>Your laws</h1>
+        <p className="text-px-14 text-white/75 mt-2 leading-relaxed">
+          Rules your own record shows — each with its counts. A law has to pass a chance test first; until then it stays below as something Voxu is still watching.
+        </p>
+
+        {!report ? (
+          <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-white/50" /></div>
+        ) : (
+          <>
+            {/* Laws */}
+            <div className="mt-6 space-y-3">
+              {laws.length === 0 ? (
+                <div className="card-surface rounded-2xl p-4">
+                  <p className="text-px-15 text-white">No laws yet.</p>
+                  <p className="text-px-13 text-white/70 mt-1 leading-snug">
+                    A law needs enough days on both sides and has to pass a chance test.
+                    {report.needs.answeredPromises > 0 && ` ${report.needs.answeredPromises} more answered promises before the first comparisons can run.`}
+                  </p>
+                </div>
+              ) : laws.map((p, i) => {
+                const test = experimentFor(p)
+                return (
+                  <div key={p.id} className="card-surface rounded-2xl p-4">
+                    <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">
+                      Law {i + 1} · {KIND_LABEL[p.kind] ?? p.kind}
+                    </p>
+                    <p className="text-px-18 text-white leading-snug mt-1.5" style={SERIF}>{p.headline}</p>
+                    <p className="text-px-12 text-white/65 mt-1.5 leading-snug">{p.detail}</p>
+                    {test && !active && (
+                      <button
+                        onClick={() => act({ action: 'start', key: test.key })}
+                        disabled={busy}
+                        className="tap-44 mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-white/25 text-px-13 text-white press-scale disabled:opacity-50"
+                      >
+                        <FlaskConical className="w-4 h-4" /> Test it for 7 days
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Still watching */}
+            {watching.length > 0 && (
+              <div className="mt-8">
+                <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Still watching</p>
+                <p className="text-px-12 text-white/60 mt-1">Your own record — but chance could still explain these.</p>
+                <ul className="mt-3 space-y-2">
+                  {watching.map(p => (
+                    <li key={p.id} className="rounded-xl border border-white/[0.14] p-3">
+                      <p className="text-px-14 text-white/90 leading-snug">{p.headline}</p>
+                      <p className="text-px-12 text-white/60 mt-1">{p.detail}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Experiments */}
+        <div className="mt-10">
+          <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Experiments</p>
+          <p className="text-px-12 text-white/60 mt-1">One change for 7 days, compared with your own last four weeks.</p>
+          {error && <p className="text-px-12 text-white/80 mt-2" role="alert">{error}</p>}
+
+          {active && (
+            <div className="mt-3 card-surface rounded-2xl p-4">
+              <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Running · day {active.day} of 7</p>
+              <p className="text-px-20 text-white leading-snug mt-1" style={{ ...SERIF, fontWeight: 600 }}>{active.title}</p>
+              <p className="text-px-13 text-white/75 mt-1">{active.ask}</p>
+              <p className="text-px-13 mt-2 flex items-center gap-1.5 text-white/85">
+                {active.followedToday ? <><Check className="w-4 h-4" /> Done today</> : 'Not done yet today'}
+              </p>
+              <button onClick={() => act({ action: 'stop' })} disabled={busy} className="tap-44 mt-3 text-px-12 text-white/65 underline underline-offset-4">
+                Stop this experiment
+              </button>
+            </div>
+          )}
+
+          {!active && (
+            <ul className="mt-3 space-y-2">
+              {EXPERIMENTS.map(e => (
+                <li key={e.key} className="rounded-xl border border-white/[0.14] p-3 flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-px-15 text-white">{e.title}</p>
+                    <p className="text-px-12 text-white/65 mt-0.5">{e.ask}</p>
+                  </div>
+                  <button
+                    onClick={() => act({ action: 'start', key: e.key })}
+                    disabled={busy}
+                    className="tap-44 shrink-0 px-3 py-1.5 rounded-full bg-white text-black text-px-12 font-medium disabled:opacity-50"
+                  >
+                    Start
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {(exp?.finished ?? []).filter(f => f.result).length > 0 && (
+            <div className="mt-6">
+              <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Results</p>
+              <ul className="mt-2 space-y-2">
+                {exp!.finished.filter(f => f.result).map(f => (
+                  <li key={f.id} className="rounded-xl border border-white/[0.14] p-3">
+                    <p className="text-px-14 text-white">{f.title} <span className="text-white/55 text-px-12">· {f.startDay} → {f.endDay}</span></p>
+                    <p className="text-px-13 text-white/80 mt-1 leading-snug">{f.result!.line}</p>
+                    <p className="text-px-11 text-white/55 mt-1">Followed on {f.result!.daysFollowed} of 7 days.</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <p className="text-px-11 text-white/55 mt-10 leading-relaxed">
+          {report?.disclaimer ?? 'Counts from what you logged — your own record, not advice or a diagnosis.'}
+        </p>
+      </div>
+    </div>
+  )
+}

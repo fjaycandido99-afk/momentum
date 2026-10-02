@@ -75,12 +75,15 @@ export interface PulseInput {
    * belongs on the day's list. Null without an era or a guide.
    */
   guide?: { id: string; name: string; done: boolean } | null
+  /** The running 7-day experiment (lib/patterns/experiments), if any. */
+  experiment?: { title: string; day: number; followedToday: boolean } | null
 }
 
 export type ActionTarget =
   | { type: 'era' }
   | { type: 'practice'; id: string }
   | { type: 'guide'; id: string; name: string }
+  | { type: 'patterns' }
 
 export interface RightNow {
   kind: 'era' | 'slipping' | 'due_now' | 'due_today' | 'mission' | 'done'
@@ -99,7 +102,7 @@ export type TodayStatus = 'done' | 'minimum' | 'kept' | 'missed' | 'open' | 'due
 
 export interface TodayItem {
   key: string
-  kind: 'promise' | 'mission' | 'discipline' | 'step' | 'guide'
+  kind: 'promise' | 'mission' | 'discipline' | 'step' | 'guide' | 'experiment'
   title: string
   /** "HH:MM" when the routine gives it a time. */
   time: string | null
@@ -293,6 +296,17 @@ export function todayItems(input: PulseInput): TodayItem[] {
       time: null,
       status: input.guide.done ? 'done' : 'open',
       target: { type: 'guide', id: input.guide.id, name: input.guide.name },
+    })
+  }
+
+  if (input.experiment) {
+    items.push({
+      key: 'experiment',
+      kind: 'experiment',
+      title: `${input.experiment.title} · day ${input.experiment.day} of 7`,
+      time: null,
+      status: input.experiment.followedToday ? 'done' : 'open',
+      target: { type: 'patterns' },
     })
   }
 
