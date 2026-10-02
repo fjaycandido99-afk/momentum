@@ -126,7 +126,7 @@ ${input.stageNote}`
   const facts = [
     `Day ${input.day} of ${input.lengthDays}.`,
     input.mission ? `Today's suggested mission for this era: "${input.mission}"` : null,
-    showDayOne ? `On day 1 they said they want to change: "${input.change}"` : null,
+    showDayOne ? `On day 1 they named what this era leaves behind (what they want to change): "${input.change}"` : null,
     showDayOne && input.why ? `And why it matters to them: "${input.why}"` : null,
     input.stats.answered > 0
       ? `Promises kept so far: ${input.stats.kept} of ${input.stats.answered} answered.`
@@ -182,7 +182,7 @@ export function formatEraChatBlock(input: {
     `THE USER'S CURRENT ERA — a ${input.lengthDays}-day commitment they chose, called "${input.eraTitle}". Today is day ${input.day}${input.stageLabel ? ` (stage: ${input.stageLabel})` : ''}.`,
     input.coachFocus ?? null,
     input.mission ? `Today's mission for this era: "${input.mission}"` : null,
-    dayOne ? `On day 1 they said they want to change: "${input.change}"` : null,
+    dayOne ? `On day 1 they named what this era leaves behind (what they want to change): "${input.change}"` : null,
     dayOne && input.why ? `Why it matters to them: "${input.why}"` : null,
     input.stats.answered > 0
       ? `Promises kept so far: ${input.stats.kept} of ${input.stats.answered} answered.`

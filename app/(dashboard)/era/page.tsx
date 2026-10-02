@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Compass, Dumbbell, Flame, Grid3x3, Loader2 } from 'lucide-react'
+import { Check, ChevronLeft, Compass, Dumbbell, Flame, Grid3x3, Loader2 } from 'lucide-react'
 import { useEra, type EraToday } from '@/hooks/useEra'
 import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY, eraName } from '@/lib/era/presets'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
@@ -251,23 +251,49 @@ function Picker({
     )
   }
 
+  // Solid, not glass: on the scene background a see-through field
+  // disappeared into the photo.
   const inputClass =
-    'mt-2 w-full rounded-xl bg-white/[0.05] border border-white/[0.15] px-3 py-3 text-base text-white placeholder:text-white/35 focus:outline-none focus:border-white/40'
+    'mt-2 w-full rounded-xl bg-[#111216] border border-white/[0.22] px-3 py-3 text-base text-white placeholder:text-white/40 focus:outline-none focus:border-white/50'
 
   return (
     <div className="pt-4 space-y-6">
       <div>
-        <button onClick={() => setKey(null)} className="text-xs text-white/50 hover:text-white underline underline-offset-2">
-          Choose a different era
+        <button
+          onClick={() => setKey(null)}
+          className="tap-44 inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/20 bg-black/40 text-px-12 text-white/80 hover:text-white"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" /> Choose a different era
         </button>
-        {/* The chosen era as a banner — the same art the home hero will show. */}
-        <div className="relative overflow-hidden mt-3 rounded-2xl border border-white/[0.12] bg-black p-5 min-h-[120px] flex flex-col justify-end">
+        {/* The chosen era as a banner — the same art the home hero will show.
+            Taller than a picker card: this is the one they chose. */}
+        <div className="relative overflow-hidden mt-3 rounded-2xl border border-white/[0.16] bg-black p-5 min-h-[180px] flex flex-col justify-end">
           <EraArt eraKey={key} />
           <h2 className="relative text-px-32 leading-none text-white uppercase" style={{ ...SERIF, fontWeight: 600 }}>
             {isCustom ? (title.trim() || 'Your own era') : preset?.title}
           </h2>
-          {preset && <p className="relative text-sm text-white/70 mt-2 max-w-[62%]">{preset.tagline}</p>}
+          {preset && <p className="relative text-sm text-white/80 mt-2 max-w-[62%]">{preset.tagline}</p>}
+          <p className="relative text-px-11 uppercase tracking-[0.2em] text-white/70 mt-3">30 days. One promise a day.</p>
         </div>
+      </div>
+
+      {/* What Voxu does for these 30 days — only what is true for everyone.
+          The Era Recap letter is premium, so it is not promised here; the
+          30-day report is free. */}
+      <div className="rounded-2xl border border-white/[0.14] bg-[#0d0e12] p-4">
+        <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">During this era</p>
+        <ul className="mt-2.5 space-y-2">
+          {[
+            'One promise a day, in your own words',
+            'A coach and missions built for this era',
+            'Training and audio that match it',
+            'Your progress — and a 30-day report at the end',
+          ].map(line => (
+            <li key={line} className="flex items-start gap-2.5 text-px-14 text-white/90 leading-snug">
+              <Check className="w-4 h-4 mt-0.5 shrink-0 text-white/70" aria-hidden /> {line}
+            </li>
+          ))}
+        </ul>
       </div>
 
       {isCustom && (
@@ -285,7 +311,7 @@ function Picker({
       )}
 
       <div>
-        <label htmlFor="era-change" className="text-sm text-white/80">What are you trying to change?</label>
+        <label htmlFor="era-change" className="text-px-17 text-white" style={{ ...SERIF, fontWeight: 600 }}>What are you leaving behind?</label>
         <textarea
           id="era-change"
           rows={3}
@@ -299,8 +325,8 @@ function Picker({
       </div>
 
       <div>
-        <label htmlFor="era-why" className="text-sm text-white/80">
-          Why does it matter? <span className="text-white/40">(optional)</span>
+        <label htmlFor="era-why" className="text-px-17 text-white" style={{ ...SERIF, fontWeight: 600 }}>
+          Why does this matter to you? <span className="font-sans text-px-12 font-normal text-white/60">(optional)</span>
         </label>
         <textarea
           id="era-why"
@@ -308,7 +334,7 @@ function Picker({
           value={why}
           maxLength={ERA_LIMITS.why}
           onChange={e => setWhy(e.target.value)}
-          placeholder="Because…"
+          placeholder="Because I’m tired of knowing what to do and not doing it."
           className={`${inputClass} resize-none`}
         />
       </div>
@@ -326,14 +352,19 @@ function Picker({
           </div>
         </div>
       ) : (
-        <button
-          onClick={start}
-          disabled={!canStart || busy}
-          className="w-full py-3.5 rounded-xl bg-white text-black text-px-15 font-medium disabled:opacity-30 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
-        >
-          {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-          Start day 1
-        </button>
+        <div>
+          <p className="text-px-12 text-white/70 text-center mb-2.5">
+            For the next 30 days, this becomes your active era.
+          </p>
+          <button
+            onClick={start}
+            disabled={!canStart || busy}
+            className="w-full py-3.5 rounded-xl bg-white text-black text-px-15 font-medium disabled:opacity-30 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+          >
+            {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isCustom ? `Begin ${title.trim() || 'my era'}` : `Begin ${preset?.title ?? 'my era'}`}
+          </button>
+        </div>
       )}
       {error && <p className="text-xs text-white/70" role="alert">{error}</p>}
     </div>
