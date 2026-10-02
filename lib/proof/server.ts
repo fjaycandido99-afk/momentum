@@ -7,6 +7,7 @@ import { exerciseById } from '@/lib/exercises/library'
 import { parseConfidence, reasonLabel } from '@/lib/era/reasons'
 import { buildProofYear, type ProofYear } from './grid'
 import { buildEraRecord, type EraRecord } from '@/lib/era/record'
+import { audioLine, countsAsProof } from '@/lib/audio-sessions'
 
 /**
  * Loads one person's year in proof.
@@ -41,6 +42,12 @@ export interface ProofDetail {
   practices: { label: string; kept: boolean; minimumOnly: boolean; minimum: string }[]
   /** The guided exercise, if one was run that day. */
   exercise: { title: string; completed: boolean; minutes: number; helped: string | null } | null
+  /**
+   * Listening on the record: a finished guide ("Breathing · finished"), and
+   * music or motivation sittings of 10+ minutes ("52 min of Lo-Fi") — the
+   * last two as context only; they never make a day count (lib/audio-sessions).
+   */
+  audio: string[]
   state: { mood: number | null; energy: number | null; stress: number | null; rested: number | null; tags: string[] } | null
 }
 
@@ -113,6 +120,21 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
     }),
   ])
 
+  // Listening on the record — one more read, scoped to the user and range.
+  const audioSessions = await prisma.audioSession.findMany({
+    where: { user_id: userId, local_day: { gte: from, lte: to } },
+    select: { local_day: true, kind: true, title: true, seconds: true, completed: true },
+    orderBy: { created_at: 'asc' },
+  })
+  const audioByDay = new Map<string, typeof audioSessions>()
+  for (const a of audioSessions) {
+    const list = audioByDay.get(a.local_day) ?? []
+    list.push(a)
+    audioByDay.set(a.local_day, list)
+  }
+  // A finished guide counts like a finished exercise: something deliberately done.
+  const guideProof = audioSessions.filter(countsAsProof).map(a => ({ day: a.local_day, completed: true }))
+
   const eraById = new Map(eras.map(e => [e.id, e]))
   const missionByDay = new Map(missions.map(m => [m.local_day, m]))
   const checkInByDay = new Map(checkIns.map(c => [c.local_day, c]))
@@ -146,6 +168,7 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
     ...promises.map(p => p.local_day),
     ...practiceLogs.map(l => l.local_day),
     ...exerciseRuns.map(r => r.local_day),
+    ...audioSessions.map(a => a.local_day),
   ])].filter(d => d >= `${year}-01-01` && d <= to)
 
   const details: Record<string, ProofDetail> = {}
@@ -190,6 +213,7 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
       state: state
         ? { mood: state.mood, energy: state.energy, stress: state.stress, rested: state.rested, tags: state.tags }
         : null,
+      audio: (audioByDay.get(day) ?? []).map(audioLine),
     }
   }
 
@@ -200,6 +224,7 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
     ...promises.map(p => p.local_day),
     ...practiceLogs.map(l => l.local_day),
     ...exerciseRuns.map(r => r.local_day),
+    ...guideProof.map(g => g.day),
     ...eras.map(e => e.start_day),
   ].filter(d => d >= `${year}-01-01` && d <= to).sort()[0]
 
@@ -210,7 +235,7 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
     promises: promises.map(p => ({ day: p.local_day, kept: p.kept })),
     // The minimum counts as kept — that is the whole point of having a floor.
     practices: practiceLogs.map(l => ({ day: l.local_day, kept: l.done })),
-    exercises: exerciseRuns.map(r => ({ day: r.local_day, completed: r.completed })),
+    exercises: [...exerciseRuns.map(r => ({ day: r.local_day, completed: r.completed })), ...guideProof],
     missionDays: missions.map(m => m.local_day),
     checkInDays: checkIns.map(c => c.local_day),
     eraSpans: spans,

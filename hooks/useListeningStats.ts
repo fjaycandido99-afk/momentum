@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
+import { MIN_CONTEXT_SECONDS } from '@/lib/audio-sessions'
 
 const STORAGE_KEY = 'voxu_listening_stats'
 
@@ -68,30 +69,61 @@ export function useListeningStats(
   isPlaying: boolean,
   category?: string | null, // 'motivation' | 'music' | 'soundscape' | 'guide'
   genreId?: string | null,
+  /** What is playing, for the day's record (music/motivation only). */
+  item?: { id: string; title: string } | null,
 ) {
   const statsRef = useRef(loadStats())
   const sessionStartRef = useRef<number | null>(null)
+  /** Minutes the 60s tick already added for this session. */
+  const tickedRef = useRef(0)
+  // The item and category as they were DURING the session: by the time
+  // isPlaying turns false, state may already describe the next thing.
+  const sessionItemRef = useRef<{ kind: string; id: string; title: string } | null>(null)
+  useEffect(() => {
+    if (isPlaying && item && (category === 'music' || category === 'motivation')) {
+      sessionItemRef.current = { kind: category, id: item.id, title: item.title }
+    }
+  }, [isPlaying, category, item?.id, item?.title]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track session start/stop
   useEffect(() => {
     if (isPlaying) {
       sessionStartRef.current = Date.now()
+      tickedRef.current = 0
     } else if (sessionStartRef.current) {
       // Session ended — calculate duration
-      const sessionMinutes = Math.round((Date.now() - sessionStartRef.current) / 60000)
+      const sessionSeconds = Math.round((Date.now() - sessionStartRef.current) / 1000)
+      const sessionMinutes = Math.round(sessionSeconds / 60)
       sessionStartRef.current = null
 
+      // Only what the 60s tick has NOT already counted. Adding the whole
+      // session here as well counted every listening minute twice — the
+      // listening relics unlocked at about half the real time.
+      const remaining = Math.max(0, sessionMinutes - tickedRef.current)
+      tickedRef.current = 0
       if (sessionMinutes > 0) {
         const stats = statsRef.current
-        stats.totalMinutes += sessionMinutes
-        stats.todayMinutes += sessionMinutes
+        stats.totalMinutes += remaining
+        stats.todayMinutes += remaining
         stats.todayDate = getToday()
         stats.longestSession = Math.max(stats.longestSession, sessionMinutes)
 
         if (category) {
-          stats.categoryCounts[category] = (stats.categoryCounts[category] || 0) + sessionMinutes
+          stats.categoryCounts[category] = (stats.categoryCounts[category] || 0) + remaining
         }
         saveStats(stats)
+      }
+
+      // The day's record: a real sitting of music or motivation (the server
+      // keeps only 10+ minutes — lib/audio-sessions). Context, never proof.
+      const it = sessionItemRef.current
+      sessionItemRef.current = null
+      if (it && sessionSeconds >= MIN_CONTEXT_SECONDS) {
+        fetch('/api/audio-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind: it.kind, itemId: it.id, title: it.title, seconds: sessionSeconds, completed: false }),
+        }).catch(() => { /* the record is best-effort */ })
       }
     }
   }, [isPlaying, category])
@@ -112,6 +144,7 @@ export function useListeningStats(
     if (!isPlaying) return
     const interval = setInterval(() => {
       const stats = statsRef.current
+      tickedRef.current += 1
       stats.totalMinutes += 1
       stats.todayMinutes += 1
       stats.todayDate = getToday()

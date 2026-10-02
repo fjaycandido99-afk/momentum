@@ -75,11 +75,13 @@ export default function ProgressPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Any coin, earned or not, opens its detail: the coin up close, its line,
-  // what it took, and its chain (components/relics/RelicDetailSheet).
+  // An earned coin opens the unlock popup again (Francis prefers it), now
+  // with its chain; a locked one opens the detail popup — progress and chain.
   const [detailId, setDetailId] = useState<string | null>(null)
+  const [viewing, setViewing] = useState(false)
   const handleAchievementClick = useCallback((achievement: any) => {
-    setDetailId(achievement.id)
+    if (achievement.unlocked) { setViewing(true); setCelebratingAchievement(achievement) }
+    else setDetailId(achievement.id)
   }, [])
 
   return (
@@ -272,7 +274,9 @@ export default function ProgressPage() {
       {celebratingAchievement && (
         <AchievementCelebration
           achievement={celebratingAchievement}
-          onClose={() => setCelebratingAchievement(null)}
+          viewOnly={viewing}
+          statusOf={id => gamification?.achievements?.find((x: { id: string }) => x.id === id)}
+          onClose={() => { setCelebratingAchievement(null); setViewing(false) }}
         />
       )}
     </div>

@@ -1,15 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, Loader2, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { AchievementBadge, METAL, METAL_RGB } from '@/components/progress/AchievementBadge'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import { ACHIEVEMENTS, getAchievementById } from '@/lib/achievements'
 import { achievementLine } from '@/lib/achievement-lines'
 import { chainFor, remainingLabel, SECRET_CLUES } from '@/lib/relic-paths'
-import { MAX_EQUIPPED, type RelicsPayload } from '@/lib/relics'
-import { haptic } from '@/lib/haptics'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -27,8 +24,8 @@ function longDate(iso: string): string {
 /**
  * One relic, up close: the coin large, what it means, what it took, when it
  * was earned (or how far away it is), and its CHAIN — the same goal at every
- * threshold, with this one marked (lib/relic-paths). An earned relic can be
- * worn from here; it goes in the header and joins the three worn.
+ * threshold, with this one marked (lib/relic-paths). A centered popup, like
+ * the unlock card. No wear button: wearing lives in the header's relic sheet.
  *
  * Every word is the coin's own: its line, its real requirement. Nothing is
  * renamed or re-explained.
@@ -45,9 +42,6 @@ export function RelicDetailSheet({
 }) {
   const a = getAchievementById(id)
   const me = statusOf(id)
-  const [busy, setBusy] = useState(false)
-  const [worn, setWorn] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   if (!a || !me) return null
 
   const hiddenSecret = a.category === 'secret' && !me.unlocked
@@ -56,35 +50,18 @@ export function RelicDetailSheet({
   const chain = chainFor(id, held)
   const metal = METAL[a.rarity]
 
-  const wear = async () => {
-    setBusy(true)
-    setError(null)
-    try {
-      const cur: RelicsPayload = await fetch('/api/relics', { cache: 'no-store' }).then(r => r.json())
-      const equipped = [id, ...cur.equipped.filter(x => x !== id)].slice(0, MAX_EQUIPPED)
-      const res = await fetch('/api/relics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ featured: id, equipped }),
-      })
-      if (!res.ok) { setError('Couldn’t wear it. Try again.'); return }
-      haptic('medium')
-      setWorn(true)
-    } catch {
-      setError('Couldn’t reach Voxu. Check your connection.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
   if (typeof document === 'undefined') return null
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-end md:items-center justify-center" role="dialog" aria-modal="true" aria-label={hiddenSecret ? 'Secret relic' : a.title}>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 py-6" role="dialog" aria-modal="true" aria-label={hiddenSecret ? 'Secret relic' : a.title}>
       <ScrollLock />
       <button className="absolute inset-0 bg-black/85 backdrop-blur-sm" aria-label="Close" onClick={onClose} />
       <div
-        className="relative w-full md:max-w-[520px] max-h-[88dvh] overflow-y-auto overflow-x-hidden overscroll-contain rounded-t-3xl md:rounded-3xl bg-[#0b0b0b] border border-white/[0.12] px-5 pt-5"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
+        className="relative w-full max-w-[420px] max-h-[88dvh] overflow-y-auto overflow-x-hidden overscroll-contain rounded-3xl bg-[#0b0b0b] border px-5 pt-5"
+        style={{
+          paddingBottom: '1.5rem',
+          borderColor: `rgb(${METAL_RGB[metal]} / 0.35)`,
+          boxShadow: `0 0 60px rgb(${METAL_RGB[metal]} / 0.12)`,
+        }}
       >
         <div className="flex justify-end">
           <button onClick={onClose} aria-label="Close" className="tap-44 p-2 rounded-full bg-white/10 hover:bg-white/20">
@@ -161,17 +138,6 @@ export function RelicDetailSheet({
           </div>
         )}
 
-        {error && <p className="text-px-12 text-white/75 mt-4 text-center" role="alert">{error}</p>}
-        {me.unlocked && (
-          <button
-            onClick={wear}
-            disabled={busy || worn}
-            className="mt-6 w-full py-3.5 rounded-xl bg-white text-black text-sm font-medium disabled:opacity-70 flex items-center justify-center gap-2"
-          >
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : worn ? <Check className="w-4 h-4" /> : null}
-            {worn ? 'Wearing it — in your header' : 'Wear this relic'}
-          </button>
-        )}
       </div>
     </div>,
     document.body,

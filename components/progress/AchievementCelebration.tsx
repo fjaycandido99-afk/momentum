@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { Check, Loader2, Sparkle, X } from 'lucide-react'
+import { ChevronRight, Sparkle, X } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { chainFor } from '@/lib/relic-paths'
 import { getAchievementById, achievementMark } from '@/lib/achievements'
 import { AchievementBadge, METAL, METAL_RGB } from './AchievementBadge'
 import { achievementLine } from '@/lib/achievement-lines'
-import { MAX_EQUIPPED, type RelicsPayload } from '@/lib/relics'
 
 interface AchievementCelebrationProps {
   achievement: {
@@ -17,6 +18,10 @@ interface AchievementCelebrationProps {
     xpReward: number
   }
   onClose: () => void
+  /** Opened by tapping an earned coin (not a fresh unlock): no "new". */
+  viewOnly?: boolean
+  /** Earned state of any id — shows the coin's chain when given. */
+  statusOf?: (id: string) => { unlocked: boolean } | undefined
 }
 
 /*
@@ -42,30 +47,21 @@ const particleConfig = (GOLD: string): Record<string, { count: number; opacity: 
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
-export function AchievementCelebration({ achievement, onClose }: AchievementCelebrationProps) {
+export function AchievementCelebration({ achievement, onClose, viewOnly = false, statusOf }: AchievementCelebrationProps) {
   const metal = METAL[achievement.rarity]
   const GOLD = METAL_RGB[metal]
   const warm = metal === 'gold'
   const [visible, setVisible] = useState(false)
   const [fadeOut, setFadeOut] = useState(false)
-  const [wearing, setWearing] = useState<'idle' | 'busy' | 'done'>('idle')
-  /** Wear it now: into the header, and first of the three worn. */
-  const wear = async () => {
-    setWearing('busy')
-    try {
-      const cur: RelicsPayload = await fetch('/api/relics', { cache: 'no-store' }).then(r => r.json())
-      const equipped = [achievement.id, ...cur.equipped.filter(x => x !== achievement.id)].slice(0, MAX_EQUIPPED)
-      const res = await fetch('/api/relics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ featured: achievement.id, equipped }),
-      })
-      setWearing(res.ok ? 'done' : 'idle')
-      if (res.ok) window.setTimeout(onClose, 900)
-    } catch {
-      setWearing('idle')
-    }
+  const router = useRouter()
+  const pathname = usePathname()
+  // Already on Progress (the grid opened this)? Then "view" just closes it.
+  // Wearing a relic lives in the header's relic sheet, not here (Francis).
+  const viewProgress = () => {
+    onClose()
+    if (!pathname?.startsWith('/progress')) router.push('/progress')
   }
+  const chain = statusOf ? chainFor(achievement.id) : []
 
   // Generate confetti particles (falling from top — existing style)
   const confettiParticles = useMemo(() => {
@@ -158,7 +154,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
           <X className="w-4 h-4" />
         </button>
 
-        <p className="text-px-10 uppercase tracking-[0.34em] mb-5 mt-1.5" style={{ color: `rgb(${GOLD})` }}>New relic earned</p>
+        <p className="text-px-10 uppercase tracking-[0.34em] mb-5 mt-1.5" style={{ color: `rgb(${GOLD})` }}>{viewOnly ? 'Your relic' : 'New relic earned'}</p>
 
         {/* Icon with staged reveal */}
         {/* Plain <style>, not styled-jsx: it scopes keyframe names, and this one is
@@ -225,31 +221,40 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
           style={{ animation: 'achievement-title-in 300ms ease-out 700ms both' }}
         >
           {achievement.description}
-          <span className="inline-flex items-center gap-1 ml-2 text-white/80">
-            <Sparkle className="w-3 h-3" style={{ color: `rgb(${GOLD})` }} fill="currentColor" />+{achievement.xpReward} XP
-          </span>
         </p>
+
+        {/* The coin's chain — the same goal at every threshold, this one ringed. */}
+        {chain.length > 1 && (
+          <ol className="flex justify-center flex-wrap gap-2 mb-5 -mt-1" aria-label="This relic's chain">
+            {chain.map(step => {
+              const earned = !!statusOf?.(step.id)?.unlocked
+              const here = step.id === achievement.id
+              return (
+                <li key={step.id} aria-current={here ? 'step' : undefined} className={`rounded-full ${here ? 'ring-2 ring-offset-2 ring-offset-black' : ''}`} style={here ? { ['--tw-ring-color' as string]: `rgb(${GOLD})` } : undefined}>
+                  <AchievementBadge id={step.id} category={step.category} icon={step.icon} rarity={step.rarity} unlocked={earned} plain size={30} />
+                  <span className="sr-only">{step.title}{earned ? ', earned' : ', not earned'}</span>
+                </li>
+              )
+            })}
+          </ol>
+        )}
 
         {/* XP and rarity with staged entry */}
         <div
-          className="flex flex-col gap-2.5"
+          className="grid grid-cols-2 gap-2.5"
           style={{ animation: 'achievement-xp-count 300ms ease-out 1200ms both' }}
         >
           <button
-            onClick={wear}
-            disabled={wearing !== 'idle'}
-            className="h-12 rounded-full bg-white text-black font-medium text-px-14 flex items-center justify-center gap-2 active:scale-[0.97] transition-transform disabled:opacity-80"
+            onClick={viewProgress}
+            className="h-12 rounded-full border flex items-center justify-center gap-1.5 text-px-11 tracking-[0.2em] uppercase text-white active:scale-[0.97] transition-transform"
+            style={{ borderColor: `rgb(${GOLD} / 0.8)` }}
           >
-            {wearing === 'busy' ? <Loader2 className="w-4 h-4 animate-spin" /> : wearing === 'done' ? <Check className="w-4 h-4" /> : null}
-            {wearing === 'done' ? 'Wearing it' : 'Wear this relic'}
+            View progress <ChevronRight className="w-3.5 h-3.5" />
           </button>
-          <button
-            onClick={onClose}
-            className="h-12 rounded-full border text-white text-px-14 active:scale-[0.97] transition-transform"
-            style={{ borderColor: `rgb(${GOLD} / 0.5)` }}
-          >
-            Keep in collection
-          </button>
+          <span className="h-12 rounded-full border border-white/15 bg-black/40 flex items-center justify-center gap-1.5 text-white font-semibold text-px-15">
+            <Sparkle className="w-4 h-4" style={{ color: `rgb(${GOLD})` }} fill="currentColor" />
+            +{achievement.xpReward} XP
+          </span>
         </div>
       </div>
 

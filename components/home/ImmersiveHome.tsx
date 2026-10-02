@@ -151,10 +151,20 @@ export function ImmersiveHome() {
   // Listening stats (#6 — persistent tracking)
   const listeningCategory = audioState.backgroundMusic ? (audioState.currentPlaylist?.type || 'music') : audioState.activeSoundscape ? 'soundscape' : null
   const listeningGenre = audioState.currentPlaylist?.genreId || null
+  // For the day's record: music by genre ("Lo-Fi"), motivation by topic.
+  const listeningItem = audioState.currentPlaylist
+    ? {
+        id: audioState.currentPlaylist.genreId || audioState.currentPlaylist.type,
+        title: audioState.currentPlaylist.type === 'music'
+          ? (audioState.currentPlaylist.genreWord || 'music')
+          : `${audioState.currentPlaylist.genreWord || 'Motivation'}${audioState.currentPlaylist.genreWord ? ' motivation' : ''}`,
+      }
+    : null
   const { getStats } = useListeningStats(
     audioState.musicPlaying || audioState.soundscapeIsPlaying,
     listeningCategory,
     listeningGenre,
+    listeningItem,
   )
 
   // Audio achievement check — runs every 60s while playing
@@ -1286,6 +1296,20 @@ export function ImmersiveHome() {
     // Played to the end — the difference between "opened" and "listened",
     // and the only honest measure of whether a session holds people.
     trackFeature('guided', 'complete', activeGuideIdRef.current ?? undefined)
+    // A finished guide is on the record and makes today a proof day
+    // (lib/audio-sessions) — the voice guides and Today's Audio alike.
+    const guideId = activeGuideIdRef.current
+    if (guideId) {
+      const name = VOICE_GUIDES.find(g => g.id === guideId)?.name ?? audioState.guideLabel ?? 'Guided session'
+      fetch('/api/audio-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'guide', itemId: guideId, title: name, seconds: Math.round(guideAudioRef.current?.duration || 0), completed: true }),
+      })
+        .then(r => r.json())
+        .then(d => { if (d?.newAchievements?.length) achievementCtx?.triggerAchievements(d.newAchievements) })
+        .catch(() => {})
+    }
     const session = activeSessionRef.current
     if (!session) return
     activeSessionRef.current = null
@@ -1297,7 +1321,7 @@ export function ImmersiveHome() {
     })
       .then(() => mutateSWR(`/api/daily-guide/journal?date=${today}`))
       .catch(() => {})
-  }, [today])
+  }, [today, audioState.guideLabel, achievementCtx])
 
   // The 'ended' listener is attached to the audio element when it's created,
   // long before this callback exists in that closure — so it calls through a

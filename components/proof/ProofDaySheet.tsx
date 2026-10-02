@@ -145,6 +145,16 @@ export function ProofDaySheet({
               </div>
             )}
 
+            {detail.audio.length > 0 && (
+              <div className="mt-4">
+                <p className="text-px-10 uppercase tracking-[0.2em] text-white/60">Listened</p>
+                <ul className="mt-1.5 space-y-1">
+                  {detail.audio.map(line => (
+                    <li key={line} className="text-px-14 text-white/85">{line}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {detail.exercise && (
               <div className="rounded-2xl border border-white/[0.12] p-4">
                 <div className="flex items-center justify-between gap-3">

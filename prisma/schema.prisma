@@ -85,6 +85,7 @@ model User {
 
   // Their day, as they arranged it (lib/routines). One per person.
   routine Routine?
+  audioSessions AudioSession[]
 }
 
 model Subscription {
@@ -1620,4 +1621,30 @@ model RoutineRun {
 
   @@unique([routine_id, local_day])
   @@index([routine_id, local_day])
+}
+
+/// One listening session worth keeping on the record (lib/audio-sessions).
+/// A FINISHED guided session counts as proof for its day; music and
+/// motivation (10+ minutes in one sitting) are recorded as context only —
+/// background listening is not "keeping something".
+model AudioSession {
+  id         String   @id @default(cuid())
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  /// "guide" | "music" | "motivation"
+  kind       String
+  /// The guide id, music genre id or motivation video id.
+  item_id    String
+  /// What it was called, as shown in the app.
+  title      String
+  /// Seconds listened (a guide: its full length).
+  seconds    Int
+  /// A guide played to its end.
+  completed  Boolean  @default(false)
+  local_day  String // YYYY-MM-DD, user timezone
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([user_id, kind, item_id, local_day])
+  @@index([user_id, local_day])
 }

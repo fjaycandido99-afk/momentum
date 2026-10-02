@@ -35,7 +35,7 @@ export async function GET() {
     // this is, so there is no way to ask for somebody else's.
     const [
       account, preferences, guides, favorites, goals, playlists, assessment, eras,
-      wellness, missions, books, practices, practiceLogs, exerciseRuns, resetSessions, routine,
+      wellness, missions, books, practices, practiceLogs, exerciseRuns, resetSessions, routine, audioSessions,
     ] = await Promise.all([
       prisma.user.findUnique({
         where: { id: user.id },
@@ -136,6 +136,7 @@ export async function GET() {
         where: { user_id: user.id },
         include: { steps: { orderBy: { time: 'asc' } } },
       }),
+      prisma.audioSession.findMany({ where: { user_id: user.id }, orderBy: { created_at: 'asc' } }),
     ])
 
     const payload = {
@@ -162,6 +163,8 @@ export async function GET() {
       exercise_runs: exerciseRuns,
       reset_sessions: resetSessions,
       routine,
+      // Their listening record: finished guides, and music/motivation sittings.
+      audio_sessions: audioSessions,
     }
 
     const filename = `voxu-export-${new Date().toISOString().slice(0, 10)}.json`

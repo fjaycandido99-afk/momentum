@@ -215,11 +215,11 @@ export async function gatherAchievementStats(
 
 /**
  * Days of proof and Right now sessions, from rows. A proof day is any day
- * with something KEPT: a promise kept, a discipline done, an exercise
- * finished — the same unit as the grid on /proof.
+ * with something KEPT: a promise kept, a discipline done, an exercise or a
+ * guided session finished — the same unit as the grid on /proof.
  */
 export async function gatherRecordAchievementStats(userId: string): Promise<RecordAchievementStats> {
-  const [promiseDays, practiceDays, exerciseDays, resets] = await Promise.all([
+  const [promiseDays, practiceDays, exerciseDays, resets, guideDays] = await Promise.all([
     prisma.eraPromise.findMany({
       where: { user_id: userId, kept: true },
       select: { local_day: true },
@@ -239,9 +239,16 @@ export async function gatherRecordAchievementStats(userId: string): Promise<Reco
       where: { user_id: userId, completed: true },
       select: { before: true, after: true },
     }),
+    // A finished guide is proof too (lib/audio-sessions). Music and
+    // motivation never are.
+    prisma.audioSession.findMany({
+      where: { user_id: userId, kind: 'guide', completed: true },
+      select: { local_day: true },
+      distinct: ['local_day'],
+    }),
   ])
   const days = new Set<string>()
-  for (const r of [...promiseDays, ...practiceDays, ...exerciseDays]) days.add(r.local_day)
+  for (const r of [...promiseDays, ...practiceDays, ...exerciseDays, ...guideDays]) days.add(r.local_day)
   return {
     proofDays: days.size,
     resetsDone: resets.length,
