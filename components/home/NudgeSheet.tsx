@@ -46,7 +46,7 @@ export function NudgeSheet({
       <div className="relative w-full max-w-[520px] mx-3 mb-[calc(env(safe-area-inset-bottom)+0.75rem)] rounded-3xl border border-white/[0.14] bg-[#0d0d0f]/95 backdrop-blur-xl p-5 shadow-2xl">
         <div className="flex items-start justify-between gap-3">
           <p className="text-[10px] tracking-[0.24em] uppercase text-white/45 pt-1">{rightNow.eyebrow}</p>
-          <button onClick={onLater} aria-label="Close" className="p-1.5 -m-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10">
+          <button onClick={onLater} aria-label="Close" className="tap-44 p-1.5 -m-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10">
             <X className="w-4 h-4" />
           </button>
         </div>

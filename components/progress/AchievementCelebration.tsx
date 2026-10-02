@@ -142,7 +142,7 @@ export function AchievementCelebration({ achievement, onClose }: AchievementCele
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full border border-white/25 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+          className="tap-44 absolute top-3.5 right-3.5 w-8 h-8 rounded-full border border-white/25 flex items-center justify-center text-white/80 hover:text-white transition-colors"
         >
           <X className="w-4 h-4" />
         </button>

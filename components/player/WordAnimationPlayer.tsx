@@ -836,7 +836,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
           <button
             aria-label="Close player"
             onClick={onClose}
-            className="p-2 -ml-2 focus-visible:outline-none"
+            className="tap-44 p-2 -ml-2 focus-visible:outline-none"
           >
             <ChevronDown className="w-7 h-7 text-white" />
           </button>
@@ -940,7 +940,7 @@ export function WordAnimationPlayer({ word, color, youtubeId, backgroundImage, b
           <button
             aria-label="Close player"
             onClick={onClose}
-            className="p-2.5 -mr-1 rounded-full bg-white/10 flex-shrink-0 focus-visible:outline-none"
+            className="tap-44 p-2.5 -mr-1 rounded-full bg-white/10 flex-shrink-0 focus-visible:outline-none"
           >
             <X className="w-5 h-5 text-white/80" />
           </button>

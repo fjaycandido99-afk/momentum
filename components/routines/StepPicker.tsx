@@ -52,7 +52,7 @@ export function StepPicker({
           <h2 className="text-[22px] text-white leading-tight" style={{ ...SERIF, fontWeight: 600 }}>
             What goes in the day?
           </h2>
-          <button onClick={onClose} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
+          <button onClick={onClose} aria-label="Close" className="tap-44 p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
             <X className="w-4 h-4 text-white" />
           </button>
         </div>

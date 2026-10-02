@@ -192,7 +192,7 @@ function RelicSheet({ data, onChange, onClose }: {
               What you wear
             </h2>
           </div>
-          <button onClick={onClose} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
+          <button onClick={onClose} aria-label="Close" className="tap-44 p-2 rounded-full bg-white/10 hover:bg-white/20 shrink-0">
             <X className="w-4 h-4 text-white" />
           </button>
         </div>
@@ -200,7 +200,14 @@ function RelicSheet({ data, onChange, onClose }: {
         {/* The three they wear. Tap one to put it in the header. */}
         <div className="flex justify-center gap-5 mt-5">
           {data.equipped.map(id => (
-            <button key={id} onClick={() => feature(id)} disabled={busy} className="flex flex-col items-center gap-2 press-scale">
+            <button
+              key={id}
+              onClick={() => feature(id)}
+              disabled={busy}
+              aria-label={`${getAchievementById(id)?.title ?? 'Relic'}, ${getAchievementById(id)?.rarity ?? ''}${id === data.featured ? ', featured in your header' : ', worn. Tap to feature it.'}`}
+              aria-pressed={id === data.featured}
+              className="flex flex-col items-center gap-2 press-scale"
+            >
               <Coin id={id} size={id === data.featured ? 72 : 60} />
               <span className={`text-[10px] uppercase tracking-[0.18em] ${id === data.featured ? 'text-white/80' : 'text-white/35'}`}>
                 {id === data.featured ? 'In your header' : 'Tap to feature'}

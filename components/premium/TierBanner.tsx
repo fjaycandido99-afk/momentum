@@ -110,7 +110,7 @@ export function TierBanner({ page }: TierBannerProps) {
       <button
         onClick={handleDismiss}
         aria-label="Dismiss"
-        className="p-1 rounded-lg hover:bg-white/10 transition-colors shrink-0"
+        className="tap-44 p-1 rounded-lg hover:bg-white/10 transition-colors shrink-0"
       >
         <X className="w-3.5 h-3.5 text-white/40" />
       </button>

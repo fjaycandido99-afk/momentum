@@ -2992,3 +2992,87 @@ html:has([data-app-shell]) body {
 }
 .gold-card:focus-visible { outline: none; box-shadow: 0 0 0 2px rgb(214 170 118 / 0.7); }
 .gold-tone { filter: grayscale(1) sepia(0.55) saturate(1.25) brightness(0.9) contrast(1.05); }
+
+/* ── Accessibility (Phase 1) ──────────────────────────────────────────
+   Voxu follows the PHONE's own settings rather than keeping its own copies
+   of them: Reduce Motion, Increase Contrast and Reduce Transparency are set
+   once, in iOS, and obeyed here. Nothing is a separate "accessibility mode":
+   the normal app has to work with these on. */
+
+/* A floor for readable text. On Voxu's near-black, white text below ~46%
+   opacity fails WCAG AA (4.5:1) for small sizes — and 470 places used 30–45%
+   for real information (dates, labels, metadata). Raised to 55% (≈6:1 on
+   black, ≈5.7:1 on the solid cards). Hover/placeholder variants are separate
+   classes and keep their own values; 20–25% stays for purely decorative
+   marks. */
+html .text-white\/30,
+html .text-white\/35,
+html .text-white\/40,
+html .text-white\/45,
+html .text-white\/50 {
+  color: rgb(255 255 255 / 0.58);
+}
+
+/* Reduce Motion: everything goes still — coin flips, page transitions,
+   glows, sheens, shimmer, parallax. Animations still END in their final
+   state (duration ~0, not "none"), so nothing is left half-faded. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Increase Contrast: secondary text and hairline borders get stronger. */
+@media (prefers-contrast: more) {
+  html .text-white\/30,
+  html .text-white\/35,
+  html .text-white\/40,
+  html .text-white\/45,
+  html .text-white\/50,
+  html .text-white\/55,
+  html .text-white\/60 {
+    color: rgb(255 255 255 / 0.82);
+  }
+  html [class*="border-white\/"] {
+    border-color: rgb(255 255 255 / 0.4);
+  }
+  .voxu-scene .card-surface-lg,
+  .voxu-scene .card-surface {
+    border-color: rgb(255 255 255 / 0.35);
+  }
+}
+
+/* Reduce Transparency: no frosted glass, and the backdrop photo steps far
+   back so nothing is read through an image. */
+@media (prefers-reduced-transparency: reduce) {
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: rgb(0 0 0 / 0.94) !important;
+  }
+  .scene-backdrop img {
+    opacity: 0.25 !important;
+  }
+}
+
+/* A 44pt hit area around a smaller visible control (Apple's minimum). The
+   control looks the same; the invisible edge around it takes the tap. */
+/* Positioned controls (absolute/fixed/sticky) already anchor the ::after;
+   forcing relative on them would move them. */
+.tap-44:not(.absolute):not(.fixed):not(.sticky) {
+  position: relative;
+}
+.tap-44::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}

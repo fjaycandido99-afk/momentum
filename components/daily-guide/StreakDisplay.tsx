@@ -170,6 +170,7 @@ export function StreakDisplay({ streak, showCelebration, onCelebrationClose }: S
             <div className={`relative p-8 rounded-3xl bg-gradient-to-br ${currentMilestone.bg} border ${currentMilestone.border} text-center`}>
               <button
                 onClick={handleCloseCelebration}
+                aria-label="Close"
                 className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
               >
                 <X className="w-4 h-4 text-white" />

@@ -101,7 +101,7 @@ export function SoundscapePlayer({ soundId, label, subtitle, youtubeId, isPlayin
         <button
           aria-label="Close player"
           onClick={onClose}
-          className="p-2 -ml-2 focus-visible:outline-none"
+          className="tap-44 p-2 -ml-2 focus-visible:outline-none"
         >
           <ChevronDown className="w-7 h-7 text-white" />
         </button>

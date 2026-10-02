@@ -257,7 +257,7 @@ export function BookSheet({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="shrink-0 p-2 rounded-full text-white/40 hover:text-white hover:bg-white/[0.06]"
+            className="tap-44 shrink-0 p-2 rounded-full text-white/40 hover:text-white hover:bg-white/[0.06]"
           >
             <X className="w-4 h-4" />
           </button>

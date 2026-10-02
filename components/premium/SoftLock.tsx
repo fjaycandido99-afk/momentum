@@ -93,7 +93,7 @@ export function PreviewPaywall({
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10"
+          className="tap-44 absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10"
         >
           <X className="w-5 h-5 text-white/85" />
         </button>

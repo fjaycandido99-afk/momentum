@@ -137,7 +137,7 @@ export function ExercisePlayer({
               have to work out the difference. This is the one exercise. */}
           {phase === 'done' ? 'Exercise done' : 'Today’s exercise'}
         </p>
-        <button onClick={leave} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20">
+        <button onClick={leave} aria-label="Close" className="tap-44 p-2 rounded-full bg-white/10 hover:bg-white/20">
           <X className="w-4 h-4 text-white" />
         </button>
       </div>

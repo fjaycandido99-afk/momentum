@@ -1516,7 +1516,7 @@ export function ImmersiveHome() {
               <button
                 onClick={() => { setSearchKind(null); setShowSearch(true) }}
                 aria-label="Search"
-                className="flex items-center justify-center h-10 w-10 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
+                className="tap-44 flex items-center justify-center h-10 w-10 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
               >
                 <Search className="w-[18px] h-[18px] text-white/85" />
               </button>
@@ -1527,8 +1527,8 @@ export function ImmersiveHome() {
               {era.era && (
                 <Link
                   href="/era"
-                  aria-label={`${era.era.title}, day ${era.era.day} of ${era.era.lengthDays}. Open your era.`}
-                  className="relative flex items-center justify-center h-10 w-10 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
+                  aria-label={`${era.era.title}, day ${era.era.day} of ${era.era.lengthDays}, ${Math.round(Math.min(1, era.era.day / era.era.lengthDays) * 100)} percent. Opens your era.`}
+                  className="tap-44 relative flex items-center justify-center h-10 w-10 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
                 >
                   <svg viewBox="0 0 40 40" className="absolute inset-0 -rotate-90" aria-hidden>
                     <circle cx="20" cy="20" r="15" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="2.5" />
@@ -1677,7 +1677,7 @@ export function ImmersiveHome() {
             <button
               onClick={weekReview.dismissForToday}
               aria-label="Dismiss"
-              className="absolute top-2 right-2 p-1.5 rounded-full text-white/40 hover:text-white/80 hover:bg-white/10"
+              className="tap-44 absolute top-2 right-2 p-1.5 rounded-full text-white/40 hover:text-white/80 hover:bg-white/10"
             >
               <X className="w-3.5 h-3.5" />
             </button>

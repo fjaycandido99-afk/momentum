@@ -857,7 +857,7 @@ function DisciplineSheet({ label, onClose, children }: { label: string; onClose:
             position:fixed children (the movement and book sheets opened from
             inside the row) lay out inside the panel instead of the screen. */}
         <div className="mx-auto w-10 h-1 rounded-full bg-white/20 mb-1" aria-hidden />
-        <button onClick={onClose} aria-label="Close" className="absolute top-3 right-3 p-2 rounded-full text-white/60 hover:text-white hover:bg-white/10">
+        <button onClick={onClose} aria-label="Close" className="tap-44 absolute top-3 right-3 p-2 rounded-full text-white/60 hover:text-white hover:bg-white/10">
           <X className="w-4 h-4" />
         </button>
         <div className="pr-8">{children}</div>

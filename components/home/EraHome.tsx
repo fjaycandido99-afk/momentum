@@ -316,7 +316,7 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
               not kept is dim, a day without a promise is faint, today glows
               until it's answered, and the days ahead are empty. */}
           <div className="flex items-center gap-3 mt-3">
-            <div className="flex-1 flex gap-[3px]" role="img" aria-label={`Day ${era.day} of ${era.lengthDays}, ${era.stats.kept} promises kept`}>
+            <div className="flex-1 flex gap-[3px]" role="img" aria-label={`${eraName(era.title)}, day ${era.day} of ${era.lengthDays}, ${Math.round(Math.min(1, era.day / era.lengthDays) * 100)} percent, ${era.stats.kept} ${era.stats.kept === 1 ? 'promise' : 'promises'} kept`}>
               {Array.from({ length: era.lengthDays }, (_, i) => {
                 const n = i + 1
                 const kept = byDay.get(n)

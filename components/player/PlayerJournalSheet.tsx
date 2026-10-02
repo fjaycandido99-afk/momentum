@@ -145,7 +145,7 @@ export function PlayerJournalSheet({ open, onClose }: PlayerJournalSheetProps) {
           <button
             aria-label="Close"
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+            className="tap-44 p-1.5 rounded-full hover:bg-white/10 transition-colors"
           >
             <X className="w-4 h-4 text-white/85" />
           </button>

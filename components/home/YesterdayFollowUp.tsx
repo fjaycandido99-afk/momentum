@@ -75,7 +75,7 @@ export function YesterdayFollowUp() {
         <div className="absolute -top-16 -right-10 w-40 h-40 rounded-full bg-white/[0.05] blur-3xl pointer-events-none" aria-hidden />
 
         {!ackMsg && (
-          <button onClick={dismiss} aria-label="Dismiss" className="absolute top-3 right-3 p-1 rounded-full text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors">
+          <button onClick={dismiss} aria-label="Dismiss" className="tap-44 absolute top-3 right-3 p-1 rounded-full text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors">
             <X className="w-4 h-4" />
           </button>
         )}

@@ -120,7 +120,7 @@ export function MorningHeroPopup({ morningPrimeDone, onBegin, era = null, onEraB
         <button
           onClick={dismiss}
           aria-label="Close"
-          className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 flex items-center justify-center transition-colors press-scale"
+          className="tap-44 absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 flex items-center justify-center transition-colors press-scale"
         >
           <X className="w-4 h-4 text-white/85" />
         </button>

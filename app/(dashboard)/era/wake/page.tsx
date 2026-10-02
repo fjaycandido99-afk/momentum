@@ -127,7 +127,7 @@ export default function WakeCallPage() {
         <p className="text-[10px] tracking-[0.28em] uppercase text-white/60 flex items-center gap-1.5">
           <AlarmClock className="w-3 h-3" /> Wake-up call{time ? ` · ${time}` : ''}
         </p>
-        <button onClick={close} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20">
+        <button onClick={close} aria-label="Close" className="tap-44 p-2 rounded-full bg-white/10 hover:bg-white/20">
           <X className="w-5 h-5" />
         </button>
       </div>

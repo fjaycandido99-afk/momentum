@@ -21,7 +21,7 @@ export function WelcomeBackCard({ daysAway, lastStreak, onDismiss }: WelcomeBack
         <button
           onClick={onDismiss}
           aria-label="Dismiss"
-          className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors"
+          className="tap-44 absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors"
         >
           <X className="w-3.5 h-3.5 text-white/50" />
         </button>

@@ -60,7 +60,7 @@ export function ShareRelicSheet({ id, onClose }: { id: string; onClose: () => vo
     <div className="fixed inset-0 z-[80] bg-black/90 backdrop-blur-sm flex flex-col" role="dialog" aria-modal="true" aria-label="Share your relic">
       <ScrollLock />
       <div className="flex justify-end px-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
-        <button onClick={onClose} aria-label="Close" className="p-2 rounded-full bg-white/10 hover:bg-white/20">
+        <button onClick={onClose} aria-label="Close" className="tap-44 p-2 rounded-full bg-white/10 hover:bg-white/20">
           <X className="w-5 h-5 text-white" />
         </button>
       </div>

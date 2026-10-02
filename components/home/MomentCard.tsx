@@ -48,7 +48,7 @@ export function MomentCard({
         <button
           onClick={onClose}
           aria-label="Dismiss"
-          className="p-1.5 rounded-full hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+          className="tap-44 p-1.5 rounded-full hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
         >
           <X className="w-4 h-4 text-white/70" />
         </button>

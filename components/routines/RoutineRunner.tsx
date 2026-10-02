@@ -116,7 +116,7 @@ export function RoutineRunner({
       <button
         onClick={onClose}
         aria-label="Close"
-        className="absolute right-4 top-[calc(env(safe-area-inset-top,0px)+1rem)] z-10 p-2 rounded-full text-white/40 hover:text-white hover:bg-white/10"
+        className="tap-44 absolute right-4 top-[calc(env(safe-area-inset-top,0px)+1rem)] z-10 p-2 rounded-full text-white/40 hover:text-white hover:bg-white/10"
       >
         <X className="w-5 h-5" />
       </button>

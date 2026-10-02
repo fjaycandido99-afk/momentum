@@ -29,7 +29,7 @@ export function SceneBackdrop({
   const [loaded, setLoaded] = useState(false)
   if (!src || missing) return null
   return (
-    <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden>
+    <div className="scene-backdrop absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden>
       <picture>
         {wideSrc && <source media="(min-aspect-ratio: 4/3)" srcSet={wideSrc} />}
         {/* eslint-disable-next-line @next/next/no-img-element */}
