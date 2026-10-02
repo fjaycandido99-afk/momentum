@@ -11,6 +11,7 @@ import { getAchievementById } from '@/lib/achievements'
 import { achievementLine } from '@/lib/achievement-lines'
 import { MAX_EQUIPPED, nextShown, randomOther, type RelicsPayload } from '@/lib/relics'
 import { haptic } from '@/lib/haptics'
+import { useApp } from '@/components/AppWrapper'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 /** Which coin the header showed last, so the next open turns to the next one. */
@@ -54,7 +55,7 @@ function Coin({ id, size, plain = true }: { id: string; size: number; plain?: bo
  * everything earned). Nothing earned,
  * nothing shown: no empty slot asking for something.
  *
- * One GET per Home mount; not polled.
+ * One GET per Home mount, and one per return after 20s+ away; not polled.
  */
 export function HeaderRelic() {
   const [data, setData] = useState<RelicsPayload | null>(null)
@@ -78,29 +79,79 @@ export function HeaderRelic() {
     flipTo(on ? randomOther(data.earned.map(e => e.id), shown) : data.featured)
   }
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/relics', { cache: 'no-store' })
-      .then(r => (r.ok ? r.json() : null))
-      .then((d: RelicsPayload | null) => {
-        if (cancelled || !d) return
-        setData(d)
-        const last = readLast()
-        const on = readShuffle()
-        setShuffleState(on)
-        const pool = on ? d.earned.map(e => e.id) : d.equipped
-        const next = on ? randomOther(pool, last) : nextShown(d.equipped, last, d.featured)
-        // Start on the coin from last time, then flip once to the next.
-        const start = last && pool.includes(last) ? last : next
-        setShown(start)
-        if (next && next !== start) {
-          window.setTimeout(() => { if (!cancelled) { setShown(next); setFlipKey(k => k + 1) } }, 700)
-        }
-        if (next) writeLast(next)
-      })
-      .catch(() => {})
-    return () => { cancelled = true }
+  /** The coin to flip to once it can actually be seen. */
+  const [pending, setPending] = useState<string | null>(null)
+  // On native the launch splash covers the app for several seconds with the
+  // page at opacity 0 (AppWrapper) — a flip timed from mount played behind
+  // it and was never seen. Flip only once the splash is gone.
+  const { showSplash } = useApp()
+
+  /**
+   * Load the relics and decide the next coin. `first`: start on the coin
+   * from last time so the flip has somewhere to turn from.
+   */
+  const load = useCallback(async (first: boolean) => {
+    try {
+      const r = await fetch('/api/relics', { cache: 'no-store' })
+      const d: RelicsPayload | null = r.ok ? await r.json() : null
+      if (!d) return
+      setData(d)
+      const last = readLast()
+      const on = readShuffle()
+      setShuffleState(on)
+      const pool = on ? d.earned.map(e => e.id) : d.equipped
+      const next = on ? randomOther(pool, last) : nextShown(d.equipped, last, d.featured)
+      if (first) setShown(last && pool.includes(last) ? last : next)
+      setPending(next)
+    } catch { /* the header just keeps its coin */ }
   }, [])
+
+  useEffect(() => { load(true) }, [load])
+
+  // Play the pending flip once nothing covers the header.
+  useEffect(() => {
+    if (!pending || showSplash) return
+    const t = window.setTimeout(() => {
+      setPending(null)
+      if (pending !== shown) flipTo(pending)
+      else writeLast(pending)
+    }, 600)
+    return () => window.clearTimeout(t)
+  }, [pending, showSplash, shown, flipTo])
+
+  // Coming back to the app is "opening" it: on iPhone, Home is rarely
+  // remounted — the app resumes from the background — so without this the
+  // coin only ever turned on a cold start. Back after 20s+ away: reload (new
+  // coins count) and flip once. Quick app-switches don't.
+  useEffect(() => {
+    let hiddenAt: number | null = null
+    let lastResume = 0
+    const AWAY_MS = 20_000
+    const resumed = () => {
+      const now = Date.now()
+      if (now - lastResume < 2000) return // visibilitychange + Capacitor resume both fire
+      lastResume = now
+      if (hiddenAt !== null && now - hiddenAt >= AWAY_MS) load(false)
+      hiddenAt = null
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') hiddenAt = Date.now()
+      else resumed()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    // WKWebView doesn't always send visibilitychange; Capacitor's events do.
+    const removers: (() => void)[] = []
+    if ((window as any).Capacitor) {
+      import('@capacitor/app').then(({ App }) => {
+        App.addListener('pause', () => { hiddenAt = Date.now() }).then(h => removers.push(() => h.remove()))
+        App.addListener('resume', resumed).then(h => removers.push(() => h.remove()))
+      }).catch(() => {})
+    }
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      removers.forEach(r => r())
+    }
+  }, [load])
 
   if (!data || !shown) return null
 
