@@ -298,6 +298,7 @@ export const ACHIEVEMENT_BADGE_IMAGES: Partial<Record<string, string>> = {
   proof_365: '/achievements/proof_365.jpg',
   proof_7: '/achievements/proof_7.jpg',
   reset_10: '/achievements/reset_10.jpg',
+  reset_first: '/achievements/reset_first.jpg',
   reset_helped: '/achievements/reset_helped.jpg',
   streak_100: '/achievements/streak_100.jpg',
   streak_14: '/achievements/streak_14.jpg',
