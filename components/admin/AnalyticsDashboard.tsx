@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Loader2, BarChart3, Users, Activity, TrendingUp } from 'lucide-react'
+import { GrowthSection } from './GrowthSection'
 
 interface FunnelRow {
   key: string
@@ -685,6 +686,10 @@ export function AnalyticsDashboard({ apiKey = null }: { apiKey?: string | null }
             </div>
           </>
         ) : null}
+
+        {/* Retention, eras, disciplines, notifications and the patterns
+            across everyone — totals only (lib/analytics/growth). */}
+        <GrowthSection apiKey={apiKey} />
       </div>
     </div>
   )
