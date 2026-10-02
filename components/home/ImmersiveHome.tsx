@@ -272,6 +272,8 @@ export function ImmersiveHome() {
   // The full-screen players open on request now (the bottom bar), never
   // because something started playing — see HomeAudioContext.fullPlayerOpen.
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null)
+  /** The playing guide's script — the exact text its audio was made from. */
+  const [guideTranscript, setGuideTranscript] = useState<string | null>(null)
   /**
    * Which of today's audios to show, when the user asked for another one.
    * Null means "whatever the day says".
@@ -336,6 +338,7 @@ export function ImmersiveHome() {
     activeSessionRef.current = pendingSessionRef.current
     pendingSessionRef.current = null
     setActiveGuideId(guideId)
+    setGuideTranscript(null)
     // Deliberately does NOT open the full player: the audio starts, the
     // bottom bar carries it, and tapping that bar opens the player.
     // Stop any existing guide audio
@@ -384,6 +387,7 @@ export function ImmersiveHome() {
       const data = await response.json()
 
       if (guideRequestId.current !== thisRequest) return
+      setGuideTranscript(typeof data.script === 'string' && data.script.trim() ? data.script : null)
 
       if (data.audioBase64) {
         // Convert base64 to blob URL on all platforms for consistent playback
@@ -1433,6 +1437,7 @@ export function ImmersiveHome() {
           isPlaying={audioState.guideIsPlaying}
           isLoading={!!audioState.loadingGuide}
           audioElement={guideAudioElement}
+          transcript={guideTranscript}
           onTogglePlay={toggleGuidePlay}
           onClose={() => setFullPlayerOpen(false)}
           onSwitchGuide={(id, name) => {

@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Play, Pause, ChevronDown, Loader2, Lock, Repeat } from 'lucide-react'
+import { Play, Pause, ChevronDown, Loader2, Lock, Repeat, FileText, X } from 'lucide-react'
+import { transcriptParagraphs } from '@/lib/voice/transcript'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useAutoplayNext } from '@/hooks/useAutoplayNext'
 import { CircularVisualizer } from './CircularVisualizer'
@@ -31,6 +32,8 @@ interface GuidedPlayerProps {
   /** Fires when the track plays to its end (not on close or switch). Home
    *  uses it to mark a Daily Guide session done when it was played there. */
   onEnded?: () => void
+  /** The guide's script — the exact words of the audio — for reading along. */
+  transcript?: string | null
 }
 
 function formatTime(s: number) {
@@ -54,7 +57,10 @@ export function GuidedPlayer({
   onSwitchGuide,
   onLockedGuide,
   onEnded,
+  transcript = null,
 }: GuidedPlayerProps) {
+  const [showTranscript, setShowTranscript] = useState(false)
+  const paragraphs = transcriptParagraphs(transcript)
   const selectorRef = useRef<HTMLDivElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -202,6 +208,31 @@ export function GuidedPlayer({
           one still photograph behind everything, tall on a phone and wide
           on an iPad in landscape. */}
       <SceneBackdrop key={room?.tall ?? 'none'} src={room?.tall} wideSrc={room?.wide} opacity={0.9} />
+      {/* Transcript: the guide's exact words, over the player — the audio keeps
+          playing, and closing it returns to the ring. For reading along, or
+          reading instead of listening. */}
+      {showTranscript && (
+        <div className="absolute inset-0 z-40 bg-black/95 flex flex-col" role="dialog" aria-modal="true" aria-label={`${guideName} transcript`}>
+          <div className="flex items-center justify-between px-4 pt-[env(safe-area-inset-top)] h-16 shrink-0">
+            <span className="text-px-11 font-medium uppercase tracking-[0.34em] text-white/80">Transcript</span>
+            <button
+              onClick={() => setShowTranscript(false)}
+              aria-label="Close transcript"
+              className="tap-44 w-11 h-11 rounded-full border border-white/25 flex items-center justify-center"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 pb-[calc(env(safe-area-inset-bottom)+2rem)] md:max-w-[640px] md:mx-auto md:w-full">
+            <h2 className="text-px-28 text-white leading-tight mt-2" style={SERIF}>{guideName}</h2>
+            <div className="mt-5 space-y-4">
+              {paragraphs.map((p, i) => (
+                <p key={i} className="text-px-17 text-white/90 leading-relaxed">{p}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Top bar */}
       <div className="relative flex items-center justify-between px-4 pt-[env(safe-area-inset-top)] h-16 z-20">
         <button
@@ -214,7 +245,17 @@ export function GuidedPlayer({
         <span className="absolute left-1/2 -translate-x-1/2 text-px-11 font-medium uppercase tracking-[0.34em] text-white/80">
           Guided
         </span>
-        <div className="w-11" />
+        {paragraphs.length > 0 ? (
+          <button
+            onClick={() => setShowTranscript(true)}
+            aria-label="Show transcript"
+            className="tap-44 w-11 h-11 rounded-full border border-white/25 bg-black/30 backdrop-blur-sm flex items-center justify-center"
+          >
+            <FileText className="w-5 h-5 text-white" />
+          </button>
+        ) : (
+          <div className="w-11" />
+        )}
       </div>
 
       {/* Center: circular visualizer + title */}
