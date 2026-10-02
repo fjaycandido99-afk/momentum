@@ -55,12 +55,16 @@ export interface CircleMemberInput {
   era: { title: string; key: string; day: number; lengthDays: number; streak: number } | null
   /** False when they've chosen not to appear in circles. */
   visible: boolean
+  /** The relics they wear — empty unless THEY chose to show them in circles. */
+  relics?: string[]
 }
 
 export interface CircleMember {
   name: string
   direction: 'joined_you' | 'you_joined'
   era: { title: string; key: string; day: number; lengthDays: number; streak: number } | null
+  /** Achievement ids of the coins they wear, when they opted in. */
+  relics: string[]
 }
 
 /**
@@ -86,6 +90,7 @@ export function shapeCircle(members: CircleMemberInput[]): CircleMember[] {
       name: firstName(m.name),
       direction: m.direction,
       era: m.era,
+      relics: m.relics ?? [],
     }))
 }
 

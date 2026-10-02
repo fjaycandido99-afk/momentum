@@ -154,6 +154,10 @@ model UserPreferences {
   // ids, checked against what they have actually earned on every write.
   relic_featured String?
   relic_equipped String[] @default([])
+  // Show the equipped relics beside their name in other people's circles.
+  // OFF until they turn it on: it is the first thing about their achievements
+  // anyone else can see.
+  relics_in_circle Boolean @default(false)
 
   // Daily wellness check-in (lib/wellness). OFF until the user turns it on
   // from the consent card, and never inferred — nothing is written to

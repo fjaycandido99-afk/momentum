@@ -10,6 +10,8 @@ import {
   type CircleMemberInput,
   type TrendingEra,
 } from './circle'
+import { getAchievementById } from '@/lib/achievements'
+import { MAX_EQUIPPED } from '@/lib/relics'
 
 /**
  * Loads a user's circle, and Trending.
@@ -48,7 +50,7 @@ export async function loadCircle(userId: string): Promise<CircleMember[]> {
       where: { id: { in: ids } },
       select: {
         id: true, name: true, preferred_name: true,
-        preferences: { select: { circle_visible: true, timezone: true } },
+        preferences: { select: { circle_visible: true, timezone: true, relics_in_circle: true, relic_equipped: true } },
       },
     }),
     prisma.era.findMany({
@@ -64,6 +66,26 @@ export async function loadCircle(userId: string): Promise<CircleMember[]> {
     }),
   ])
   const eraByUser = new Map(eras.map(e => [e.user_id, e]))
+
+  // Relics, only for people who chose to show them — and only coins they
+  // still hold, checked against their achievements rather than trusted.
+  const optedIn = people.filter(p => p.preferences?.relics_in_circle && p.preferences.relic_equipped.length > 0)
+  const held = optedIn.length
+    ? await prisma.userAchievement.findMany({
+        where: { user_id: { in: optedIn.map(p => p.id) } },
+        select: { user_id: true, achievement_id: true },
+      })
+    : []
+  const heldBy = new Map<string, Set<string>>()
+  for (const h of held) {
+    const set = heldBy.get(h.user_id) ?? new Set<string>()
+    set.add(h.achievement_id)
+    heldBy.set(h.user_id, set)
+  }
+  const relicsFor = (p: (typeof people)[number]): string[] =>
+    p.preferences?.relics_in_circle
+      ? p.preferences.relic_equipped.filter(id => heldBy.get(p.id)?.has(id) && getAchievementById(id)).slice(0, MAX_EQUIPPED)
+      : []
 
   const members: CircleMemberInput[] = people.map(p => {
     const link = links.get(p.id)!
@@ -89,6 +111,7 @@ export async function loadCircle(userId: string): Promise<CircleMember[]> {
         : null,
       // Preferences may not exist yet (nothing set) — that's visible.
       visible: p.preferences?.circle_visible ?? true,
+      relics: relicsFor(p),
     }
   })
 

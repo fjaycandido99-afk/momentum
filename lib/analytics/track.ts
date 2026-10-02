@@ -24,6 +24,8 @@ export type FeatureName =
   // metadata says which — 'picker', 'share_opened', 'share_sent',
   // 'join_page', 'wake_call', 'proof_year'.
   | 'era'
+  // Relics — the share card for a worn coin: 'share_opened', 'share_sent'.
+  | 'relics'
   // A push that got opened — the only proof a notification did anything.
   // metadata is the notification type ('era_wake', 'daily_quote', …).
   | 'notification'

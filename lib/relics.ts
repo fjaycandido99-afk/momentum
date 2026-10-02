@@ -23,6 +23,8 @@ export interface RelicsPayload {
   earned: { id: string; title: string; rarity: AchievementRarity; unlockedAt: string }[]
   featured: string | null
   equipped: string[]
+  /** Whether their worn coins show beside their name in circles. Off by default. */
+  inCircle: boolean
 }
 
 export interface EarnedRelic {

@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Check, X } from 'lucide-react'
+import { Check, Share2, X } from 'lucide-react'
+import { ShareRelicSheet } from './ShareRelicSheet'
 import { AchievementBadge } from '@/components/progress/AchievementBadge'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import { getAchievementById } from '@/lib/achievements'
@@ -110,6 +111,7 @@ function RelicSheet({ data, onChange, onClose }: {
 }) {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  const [sharing, setSharing] = useState<string | null>(null)
 
   const save = useCallback(async (featured: string | null, equipped: string[]) => {
     // Optimistic: the coins move now, the server confirms.
@@ -148,6 +150,23 @@ function RelicSheet({ data, onChange, onClose }: {
     haptic('light')
     setNote(null)
     save(id, data.equipped)
+  }
+
+  const toggleCircle = async () => {
+    haptic('light')
+    const inCircle = !data.inCircle
+    onChange({ ...data, inCircle })
+    try {
+      const res = await fetch('/api/relics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inCircle }),
+      })
+      if (res.ok) onChange(await res.json())
+      else onChange(data)
+    } catch {
+      onChange(data)
+    }
   }
 
   const featured = data.featured ? getAchievementById(data.featured) : null
@@ -189,8 +208,32 @@ function RelicSheet({ data, onChange, onClose }: {
             {achievementLine(featured.id) && (
               <p className="text-[15px] text-white/70 leading-snug mt-0.5" style={SERIF}>{achievementLine(featured.id)}</p>
             )}
+            <button
+              onClick={() => { haptic('light'); setSharing(featured.id) }}
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/20 text-[13px] text-white/85 press-scale"
+            >
+              <Share2 className="w-3.5 h-3.5" /> Share this relic
+            </button>
           </div>
         )}
+
+        {/* Opt-in, off by default: the first thing about their achievements
+            anyone else can see. Only matters if they appear in circles. */}
+        <button
+          onClick={toggleCircle}
+          disabled={busy}
+          role="switch"
+          aria-checked={data.inCircle}
+          className="mt-6 w-full flex items-center justify-between gap-3 p-3.5 rounded-xl border border-white/15 text-left"
+        >
+          <span className="min-w-0">
+            <span className="block text-[14px] text-white">Show my relics in my circle</span>
+            <span className="block text-[11px] text-white/45 mt-0.5">The three you wear, beside your name. Nothing else.</span>
+          </span>
+          <span className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${data.inCircle ? 'bg-white' : 'bg-white/15'}`} aria-hidden>
+            <span className={`absolute top-0.5 w-5 h-5 rounded-full transition-all ${data.inCircle ? 'left-[22px] bg-black' : 'left-0.5 bg-white/70'}`} />
+          </span>
+        </button>
 
         <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-7">
           Your collection <span className="text-white/30 normal-case tracking-normal">· {data.earned.length} earned · wear up to {MAX_EQUIPPED}</span>
@@ -224,6 +267,7 @@ function RelicSheet({ data, onChange, onClose }: {
           See every achievement
         </Link>
       </div>
+      {sharing && <ShareRelicSheet id={sharing} onClose={() => setSharing(null)} />}
     </div>
   )
 }

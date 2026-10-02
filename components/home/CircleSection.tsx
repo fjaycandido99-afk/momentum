@@ -9,6 +9,8 @@ import { eraSlug } from '@/lib/era/share'
 import type { CircleMember, TrendingEra } from '@/lib/era/circle'
 import { HOME_SCENES } from '@/lib/home/scenes'
 import { SceneImage } from './SceneImage'
+import { AchievementBadge } from '@/components/progress/AchievementBadge'
+import { getAchievementById } from '@/lib/achievements'
 
 /**
  * Your circle — the people who started an era from your link, or whose link
@@ -114,6 +116,15 @@ export function CircleSection({ onShare }: { onShare: () => void }) {
                         : m.direction === 'joined_you' ? 'joined your era' : 'you joined their era'}
                     </p>
                   </div>
+                  {/* The coins they wear — only if they chose to show them. */}
+                  {m.relics.length > 0 && (
+                    <span className="flex items-center -space-x-1.5 shrink-0" aria-label={`${m.name} wears ${m.relics.map(id => getAchievementById(id)?.title).filter(Boolean).join(', ')}`}>
+                      {m.relics.map(id => {
+                        const a = getAchievementById(id)
+                        return a ? <AchievementBadge key={id} id={a.id} category={a.category} icon={a.icon} rarity={a.rarity} unlocked plain size={24} /> : null
+                      })}
+                    </span>
+                  )}
                   {m.era && m.era.streak > 1 && (
                     <span className="flex items-center gap-1 text-xs text-white/75 shrink-0">
                       <Flame className="w-3.5 h-3.5" /> {m.era.streak}

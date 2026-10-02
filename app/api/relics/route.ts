@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
-import { getRelics, saveRelics } from '@/lib/relics-server'
+import { getRelics, saveRelics, setRelicsInCircle } from '@/lib/relics-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +29,10 @@ export async function POST(request: NextRequest) {
     if (!allowed) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 
     const body = await request.json().catch(() => null)
+    // { inCircle } alone flips the circle opt-in; anything else is the selection.
+    if (typeof body?.inCircle === 'boolean' && body?.equipped === undefined) {
+      return NextResponse.json(await setRelicsInCircle(user.id, body.inCircle))
+    }
     return NextResponse.json(await saveRelics(user.id, { featured: body?.featured, equipped: body?.equipped }))
   } catch (error) {
     console.error('[relics POST] error:', error)

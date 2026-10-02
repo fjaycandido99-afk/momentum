@@ -23,7 +23,7 @@ export async function getRelics(userId: string): Promise<RelicsPayload> {
     earnedFor(userId),
     prisma.userPreferences.findUnique({
       where: { user_id: userId },
-      select: { relic_featured: true, relic_equipped: true },
+      select: { relic_featured: true, relic_equipped: true, relics_in_circle: true },
     }),
   ])
   earned.sort(byPrestige)
@@ -31,7 +31,17 @@ export async function getRelics(userId: string): Promise<RelicsPayload> {
     { featured: prefs?.relic_featured ?? null, equipped: prefs?.relic_equipped ?? [] },
     earned,
   )
-  return { earned, ...shown }
+  return { earned, ...shown, inCircle: prefs?.relics_in_circle ?? false }
+}
+
+/** Show the worn coins in circles, or not. */
+export async function setRelicsInCircle(userId: string, inCircle: boolean): Promise<RelicsPayload> {
+  await prisma.userPreferences.upsert({
+    where: { user_id: userId },
+    update: { relics_in_circle: inCircle },
+    create: { user_id: userId, relics_in_circle: inCircle },
+  })
+  return getRelics(userId)
 }
 
 /** Save their choice, keeping only coins they have actually earned. */

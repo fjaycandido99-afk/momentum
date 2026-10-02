@@ -49,8 +49,15 @@ describe('circle', () => {
       name: 'Marco',
       direction: 'joined_you',
       era: { title: 'Locked In', key: 'locked_in', day: 4, lengthDays: 30, streak: 4 },
+      relics: [],
     })
-    expect(Object.keys(row)).toEqual(['name', 'direction', 'era'])
+    // relics: the coins they wear, only when THEY opted in (circle-server).
+    expect(Object.keys(row)).toEqual(['name', 'direction', 'era', 'relics'])
+  })
+
+  it('shows no relics unless the member chose to show them', () => {
+    expect(shapeCircle([member({ userId: 'u1' })])[0].relics).toEqual([])
+    expect(shapeCircle([member({ userId: 'u1', relics: ['era_complete'] })])[0].relics).toEqual(['era_complete'])
   })
 
   it('leaves out anyone who chose not to appear', () => {
