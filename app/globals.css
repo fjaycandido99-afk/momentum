@@ -3013,13 +3013,17 @@ html .text-white\/50 {
   color: rgb(255 255 255 / 0.58);
 }
 
-/* Reduce Motion: everything goes still — coin flips, page transitions,
-   glows, sheens, shimmer, parallax. Animations still END in their final
-   state (duration ~0, not "none"), so nothing is left half-faded. */
+/* Reduce Motion — reduce, not remove (Apple's guidance). The movement that
+   unsettles people stops: page slides and zooms, parallax, sheens, shimmer,
+   entrances. Gentle rotation in place stays: the Voxu spiral and loading
+   spinners (inline "spin" or animate-spin), and anything marked
+   .keep-motion (the relic header uses a fade there instead of its flip).
+   Stopped animations END in their final state (duration ~0, not "none"),
+   so nothing is left half-faded. Francis: the frozen spiral read as broken. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *:not(.keep-motion):not([style*="spin"]):not([class*="animate-spin"]),
+  *:not(.keep-motion):not([style*="spin"]):not([class*="animate-spin"])::before,
+  *:not(.keep-motion):not([style*="spin"]):not([class*="animate-spin"])::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
