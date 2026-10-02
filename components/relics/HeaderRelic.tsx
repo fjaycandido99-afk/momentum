@@ -15,6 +15,14 @@ import { haptic } from '@/lib/haptics'
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 /** Which coin the header showed last, so the next open turns to the next one. */
 const LAST_SHOWN_KEY = 'voxu.relic.lastShown'
+/** Coins or the text list in the collection. */
+const VIEW_KEY = 'voxu.relic.view'
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+/** "Sep 28" — the day it was earned, on this device's calendar. */
+function shortDate(iso: string): string {
+  const d = new Date(iso)
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}`
+}
 
 function readLast(): string | null {
   try { return localStorage.getItem(LAST_SHOWN_KEY) } catch { return null }
@@ -118,6 +126,13 @@ function RelicSheet({ data, onChange, onClose }: {
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [sharing, setSharing] = useState<string | null>(null)
+  const [view, setViewState] = useState<'coins' | 'list'>(() => {
+    try { return localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'coins' } catch { return 'coins' }
+  })
+  const setView = (v: 'coins' | 'list') => {
+    setViewState(v)
+    try { localStorage.setItem(VIEW_KEY, v) } catch { /* storage off: just this time */ }
+  }
 
   const save = useCallback(async (featured: string | null, equipped: string[]) => {
     // Optimistic: the coins move now, the server confirms.
@@ -248,10 +263,63 @@ function RelicSheet({ data, onChange, onClose }: {
           </span>
         </button>
 
-        <p className="text-[11px] uppercase tracking-[0.2em] text-white/45 mt-7">
-          Your collection <span className="text-white/30 normal-case tracking-normal">· {data.earned.length} earned · wear up to {MAX_EQUIPPED}</span>
-        </p>
+        <div className="flex items-end justify-between gap-3 mt-7">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">
+            Your collection <span className="text-white/30 normal-case tracking-normal">· {data.earned.length} earned · wear up to {MAX_EQUIPPED}</span>
+          </p>
+          {/* Coins or a text list — for anyone who can't tell the coin art
+              apart. Remembered on this device. */}
+          <div className="flex shrink-0 rounded-full border border-white/15 p-0.5" role="group" aria-label="Collection view">
+            {(['coins', 'list'] as const).map(v => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                aria-pressed={view === v}
+                className={`tap-44 px-3 py-1 rounded-full text-[11px] capitalize ${view === v ? 'bg-white text-black font-medium' : 'text-white/70'}`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        </div>
         {note && <p className="text-[12px] text-white/70 mt-2" role="status">{note}</p>}
+        {view === 'list' ? (
+          <ul className="mt-3 divide-y divide-white/[0.08]">
+            {data.earned.map(e => {
+              const a = getAchievementById(e.id)
+              const on = data.equipped.includes(e.id)
+              const isFeatured = data.featured === e.id
+              return (
+                <li key={e.id} className="py-3 flex items-start gap-3">
+                  <button
+                    onClick={() => toggle(e.id)}
+                    disabled={busy}
+                    aria-pressed={on}
+                    className="tap-44 min-w-0 flex-1 text-left"
+                  >
+                    <span className="block text-[15px] text-white leading-snug">{e.title}</span>
+                    <span className="block text-[12px] text-white/70 mt-0.5 capitalize">
+                      {e.rarity} · Earned {shortDate(e.unlockedAt)}
+                    </span>
+                    {a && <span className="block text-[12px] text-white/60 mt-0.5">{a.description}</span>}
+                    <span className="block text-[12px] mt-1 text-white/85">
+                      {isFeatured ? 'Featured · worn' : on ? 'Worn' : 'Not worn — tap to wear'}
+                    </span>
+                  </button>
+                  {on && !isFeatured && (
+                    <button
+                      onClick={() => feature(e.id)}
+                      disabled={busy}
+                      className="tap-44 shrink-0 px-3 py-1.5 rounded-full border border-white/20 text-[12px] text-white/85"
+                    >
+                      Feature
+                    </button>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        ) : (
         <div className="grid grid-cols-4 gap-x-2 gap-y-4 mt-3">
           {data.earned.map(e => {
             const on = data.equipped.includes(e.id)
@@ -275,6 +343,7 @@ function RelicSheet({ data, onChange, onClose }: {
             )
           })}
         </div>
+        )}
 
         <Link href="/progress" onClick={onClose} className="block text-center mt-6 py-3 rounded-xl border border-white/15 text-sm text-white/85">
           See every achievement
