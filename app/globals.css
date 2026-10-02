@@ -3013,21 +3013,75 @@ html .text-white\/50 {
   color: rgb(255 255 255 / 0.58);
 }
 
-/* Reduce Motion — reduce, not remove (Apple's guidance). The movement that
-   unsettles people stops: page slides and zooms, parallax, sheens, shimmer,
-   entrances. Gentle rotation in place stays: the Voxu spiral and loading
-   spinners (inline "spin" or animate-spin), and anything marked
-   .keep-motion (the relic header uses a fade there instead of its flip).
-   Stopped animations END in their final state (duration ~0, not "none"),
-   so nothing is left half-faded. Francis: the frozen spiral read as broken. */
+/* Reduce Motion — reduce, not remove (Apple's guidance). Only MOVEMENT
+   stops: things that slide, rise, zoom, fly in, bounce, float, drift or
+   fall — the motion that unsettles people. Everything ambient and in place
+   keeps its life: the "Today" shimmer, the spiral, glows, pulses, spinners,
+   breathing rings, the relic flip (which fades instead, see HeaderRelic).
+   A stopped animation ENDS in its final state (duration ~0), so nothing is
+   left half-faded or off-screen. Francis has Reduce Motion on: the first
+   two versions froze far too much and read as a broken app.
+   New movement animation? Add its class here. */
 @media (prefers-reduced-motion: reduce) {
-  *:not(.keep-motion):not([style*="spin"]):not([class*="animate-spin"]),
-  *:not(.keep-motion):not([style*="spin"]):not([class*="animate-spin"])::before,
-  *:not(.keep-motion):not([style*="spin"]):not([class*="animate-spin"])::after {
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-fade-in-down,
+  [class*="animate-fade-up"],
+  [class*="animate-slide"],
+  .animate-sheet-slide-up,
+  .animate-scale-in,
+  .animate-card-appear,
+  .animate-achievement-enter,
+  .animate-focus-enter,
+  .animate-nudge-in,
+  .animate-spark-in,
+  .animate-spark-out,
+  .animate-bounce,
+  .animate-coach-bounce,
+  .animate-icon-bounce,
+  .animate-float,
+  .spark-text-in,
+  .scroll-reveal.revealed,
+  .liquid-reveal.revealed,
+  .section-heading-reveal,
+  .card-stagger,
+  .stagger-item,
+  .card-enter,
+  .tarot-card-enter,
+  .word-cascade > span,
+  .icon-morph,
+  .heart-pop,
+  .overlay-enter,
+  .overlay-exit,
+  .toast-enter,
+  .toast-exit,
+  .nice-work-toast,
+  .module-next-reveal,
+  .accordion-spring-enter,
+  .nav-pill-active,
+  .ripple-burst,
+  .page-enter,
+  .page-transition-enter,
+  .page-transition-exit,
+  .card-gradient-border-round,
+  .gl-active-float,
+  .gl-active-drift-a,
+  .gl-active-drift-b,
+  .gl-active-drift-c,
+  .gl-active-overlay-rise,
+  .ambient-orb--a,
+  .ambient-orb--b,
+  .ambient-orb--c,
+  .ken-burns,
+  .rain-drop,
+  .rain-drop-fast,
+  .rain-overlay::before,
+  .rain-overlay::after,
+  .confetti-particle,
+  .confetti-burst {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }
 

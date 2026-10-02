@@ -63,15 +63,6 @@ export function HeaderRelic() {
   const [flipKey, setFlipKey] = useState(0)
   const [open, setOpen] = useState(false)
   const [shuffle, setShuffleState] = useState(false)
-  const [reduceMotion, setReduceMotion] = useState(false)
-  useEffect(() => {
-    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)')
-    if (!mq) return
-    setReduceMotion(mq.matches)
-    const on = () => setReduceMotion(mq.matches)
-    mq.addEventListener?.('change', on)
-    return () => mq.removeEventListener?.('change', on)
-  }, [])
 
   /** Turn the header to `next` with one flip, and remember it. */
   const flipTo = useCallback((next: string | null) => {
@@ -167,7 +158,7 @@ export function HeaderRelic() {
   return (
     <>
       {/* Keyframes local to the coin (globals.css has mixed line endings). */}
-      <style>{'@keyframes relic-flip{0%{transform:rotateY(90deg)}100%{transform:rotateY(0deg)}}@keyframes relic-fade{0%{opacity:0}100%{opacity:1}}'}</style>
+      <style>{'@keyframes relic-flip{0%{transform:rotateY(90deg)}100%{transform:rotateY(0deg)}}'}</style>
       <button
         onClick={() => { haptic('light'); setOpen(true) }}
         aria-label={`${shuffle ? 'Relic' : 'Featured relic'}: ${getAchievementById(shown)?.title ?? ''}. Opens your relics.`}
@@ -176,11 +167,12 @@ export function HeaderRelic() {
       >
         <span
           key={flipKey}
-          // Reduce Motion: a fade instead of the flip — the coin still visibly
-          // changes, without turning. keep-motion exempts it from the global
-          // stop-everything rule (globals.css).
+          // A coin turning in place is ambient, not movement across the screen,
+          // so it flips under Reduce Motion too (globals.css stops only
+          // movement). The faint fade it used to get there read as 'nothing
+          // happened' on Francis's phone.
           className="block keep-motion"
-          style={flipKey > 0 ? { animation: reduceMotion ? 'relic-fade 300ms ease-out both' : 'relic-flip 420ms ease-out both' } : undefined}
+          style={flipKey > 0 ? { animation: 'relic-flip 420ms ease-out both' } : undefined}
         >
           <Coin id={shown} size={36} />
         </span>
