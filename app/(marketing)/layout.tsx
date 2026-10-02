@@ -54,13 +54,19 @@ export default function MarketingLayout({
   // rendering it. Replace, not push, so Back doesn't bounce them into it
   // again. Privacy, terms and support stay reachable — review requires it.
   const isInstallPage = isNative && pathname === '/download'
+  // /download is the landing page and draws its own fixed header (logo +
+  // Download Free); this one stacked on top of it at the same spot.
+  const ownHeader = pathname === '/download'
 
   useEffect(() => {
     if (isInstallPage) router.replace('/')
   }, [isInstallPage, router])
 
   return (
-    <div className="min-h-screen bg-black">
+    // overflow-x-hidden: the landing page's decorative glows sit past the
+    // edge and made the whole page scroll sideways on a phone.
+    <div className="min-h-screen bg-black overflow-x-hidden">
+      {!ownHeader && (
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-white/5">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
@@ -79,8 +85,9 @@ export default function MarketingLayout({
           </Link>
         </div>
       </header>
+      )}
 
-      <main className="pt-16">
+      <main className={ownHeader ? '' : 'pt-16'}>
         {isInstallPage ? null : children}
       </main>
     </div>
