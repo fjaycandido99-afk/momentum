@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { Check, Share2, X } from 'lucide-react'
 import { ShareRelicSheet } from './ShareRelicSheet'
@@ -73,9 +74,9 @@ export function HeaderRelic() {
       <style>{'@keyframes relic-flip{0%{transform:rotateY(90deg)}100%{transform:rotateY(0deg)}}'}</style>
       <button
         onClick={() => { haptic('light'); setOpen(true) }}
-        aria-label={`Your relic: ${getAchievementById(shown)?.title ?? ''}. Open your relics.`}
+        aria-label={`Featured relic: ${getAchievementById(shown)?.title ?? ''}. Opens your relics.`}
         // Below 360px wide the header can't hold title + bell + search + coin + ring.
-        className="hidden min-[360px]:flex items-center justify-center h-10 w-10 rounded-full press-scale [perspective:400px]"
+        className="hidden min-[360px]:flex items-center justify-center h-11 w-11 -mx-0.5 rounded-full press-scale [perspective:400px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
       >
         <span
           key={flipKey}
@@ -85,7 +86,11 @@ export function HeaderRelic() {
           <Coin id={shown} size={36} />
         </span>
       </button>
-      {open && (
+      {/* Portalled to <body>: the Home header animates in with a transform,
+          which makes it the containing block for anything position:fixed
+          inside it — the sheet rendered INSIDE the header instead of over
+          the screen. */}
+      {open && typeof document !== 'undefined' && createPortal(
         <RelicSheet
           data={data}
           onChange={d => {
@@ -93,7 +98,8 @@ export function HeaderRelic() {
             if (d.featured && d.featured !== shown) { setShown(d.featured); setFlipKey(k => k + 1); writeLast(d.featured) }
           }}
           onClose={() => setOpen(false)}
-        />
+        />,
+        document.body,
       )}
     </>
   )
