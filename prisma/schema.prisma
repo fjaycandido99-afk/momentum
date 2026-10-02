@@ -149,6 +149,12 @@ model UserPreferences {
   wake_call_enabled Boolean @default(false)
   wake_call_time    String? // "06:30" format, user-local
 
+  // Relics (lib/relics): the achievement coins they chose to wear. Up to three
+  // equipped, one of them featured in the Home header. Ids are achievement
+  // ids, checked against what they have actually earned on every write.
+  relic_featured String?
+  relic_equipped String[] @default([])
+
   // Daily wellness check-in (lib/wellness). OFF until the user turns it on
   // from the consent card, and never inferred — nothing is written to
   // WellnessCheckIn while this is false. consented_at records when they

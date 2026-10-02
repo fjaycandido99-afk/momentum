@@ -68,6 +68,7 @@ export function AchievementBadge({
   unlocked,
   mark = null,
   size = 56,
+  plain = false,
 }: {
   /** Which achievement — picks its own art when it has some (ACHIEVEMENT_BADGE_IMAGES). */
   id?: string
@@ -78,6 +79,8 @@ export function AchievementBadge({
   /** The achievement's number ("7", "30", "2K"), or null to stamp its glyph. */
   mark?: string | null
   size?: number
+  /** No number plate — just the coin (the Home header's relic). */
+  plain?: boolean
 }) {
   const image = badgeImage(id, category)
   const finish = FINISH[rarity]
@@ -123,7 +126,7 @@ export function AchievementBadge({
       </div>
 
       {/* The stamp: sits over the foot of the coin, like a struck plate. */}
-      <span
+      {!plain && <span
         className={`absolute left-1/2 -translate-x-1/2 bottom-[-6%] rounded-full border px-[0.45em] leading-[1.5] font-semibold tabular-nums whitespace-nowrap ${
           unlocked
             ? rarity === 'legendary'
@@ -138,7 +141,7 @@ export function AchievementBadge({
         style={{ fontSize: plateFont }}
       >
         {mark ?? <span className="grayscale">{icon}</span>}
-      </span>
+      </span>}
     </div>
   )
 }

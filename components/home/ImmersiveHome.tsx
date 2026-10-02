@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import { Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, BarChart3, Wind, MessageCircle, X, Search } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
 import { SearchSheet } from './SearchSheet'
+import { HeaderRelic } from '@/components/relics/HeaderRelic'
 import { SpiralLogo } from './SpiralLogo'
 import { NavSheet } from './NavSheet'
 import { getLatestPulse } from '@/lib/pulse/store'
@@ -1519,6 +1520,9 @@ export function ImmersiveHome() {
               >
                 <Search className="w-[18px] h-[18px] text-white/85" />
               </button>
+              {/* The relic they wear (components/relics/HeaderRelic): one coin,
+                  still, flipping once per open through their equipped three. */}
+              <HeaderRelic />
               {/* The era at a glance: its progress as a ring. Opens the era. */}
               {era.era && (
                 <Link
