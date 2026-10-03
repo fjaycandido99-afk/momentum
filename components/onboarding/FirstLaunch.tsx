@@ -5,12 +5,12 @@ import { createPortal } from 'react-dom'
 import { ArrowRight, AudioLines, Clock, Headphones, Keyboard, Landmark, Loader2, MessageCircle, Mic, Volume2, VolumeX } from 'lucide-react'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { ScrollLock } from '@/components/ui/ScrollLock'
-import { VoiceInput } from '@/components/journal/VoiceInput'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { fetchVoxuAudio } from '@/lib/voice/voxu-audio'
 import { ERA_PRESETS_BY_KEY, eraName, DEFAULT_ERA_LENGTH_DAYS } from '@/lib/era/presets'
 import { programFor } from '@/lib/era/programs'
 import { GUIDED_TASTE, type FirstMoment } from '@/lib/onboarding/first-launch'
+import { useListen } from './useListen'
 import { trackFeature } from '@/lib/analytics/track'
 import { haptic } from '@/lib/haptics'
 
@@ -44,7 +44,7 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 const KEY = 'voxu_first_moment_done_v1'
 const VOICE_KEY = 'voxu.talk.voice'
 /** Said as the opener appears — the same words for everyone, so voiced once. */
-const INTRO = 'Let\'s begin with one thing. What do you want to change right now?'
+const INTRO = 'Hey, I\'m Voxu. Before I show you anything, what\'s one thing you want to change right now?'
 
 const PREVIEW = [
   { icon: Landmark, title: 'Choose an Era', text: 'Thirty days. One promise a day.' },
@@ -75,7 +75,11 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   /** How they'll answer — chosen on the first screen. */
+  /** Typing instead of talking — a small link, never a choice up front. */
   const [inputMode, setInputMode] = useState<'voice' | 'type' | null>(null)
+  const listener = useListen()
+  /** Set after the early return: the conversation turn, for the effect to start. */
+  const converseRef = useRef<(() => void) | null>(null)
   /** Sound was blocked before a tap (Safari on the web): offer "Tap to hear". */
   const [needsTap, setNeedsTap] = useState(false)
   const introPlayed = useRef(false)
@@ -119,7 +123,12 @@ export function FirstLaunch({ hasEra, onEraChange }: {
     if (!showing || introPlayed.current) return
     introPlayed.current = true
     trackFeature('first_launch', 'open')
-    void say(INTRO).then(r => { if (r === 'blocked') setNeedsTap(true) })
+    // Then it listens, by itself. Where sound was blocked (a browser before
+    // any tap), one tap on the orb does both.
+    void say(INTRO).then(r => {
+      if (r === 'blocked') setNeedsTap(true)
+      else converseRef.current?.()
+    })
   }, [showing, say])
 
   if (hidden || hasEra !== false || !mindsetCtx?.mindset) return null
@@ -132,10 +141,27 @@ export function FirstLaunch({ hasEra, onEraChange }: {
     try { localStorage.setItem(VOICE_KEY, next ? 'on' : 'off') } catch { /* ignore */ }
   }
 
-  const hearIt = () => {
+  /** One turn: listen for their answer, then send it. */
+  const converse = async () => {
+    if (inputMode === 'type') return
+    const text = await listener.listen()
+    if (text) { setSaid(text); void send(text) }
+    else if (!listener.error) listener.setError('I didn’t catch that. Tap the orb and say it again, or type it.')
+  }
+  converseRef.current = () => { void converse() }
+
+  /** The orb: tap to start (sound blocked), to stop listening, or to try again. */
+  const tapOrb = () => {
     haptic('light')
-    setNeedsTap(false)
-    void say(INTRO)
+    if (listener.phase === 'listening') { listener.stop(); return }
+    if (listener.phase === 'transcribing') return
+    setInputMode(null)
+    if (needsTap) {
+      setNeedsTap(false)
+      void say(INTRO).then(() => converseRef.current?.())
+      return
+    }
+    void converse()
   }
 
   const send = async (raw: string) => {
@@ -281,50 +307,49 @@ export function FirstLaunch({ hasEra, onEraChange }: {
           <div className="w-full text-center animate-fade-in-up">
             <p className="text-px-11 uppercase tracking-[0.34em] text-white/55">Voxu</p>
             <button
-              onClick={needsTap ? hearIt : undefined}
-              aria-label={needsTap ? 'Tap to hear Voxu' : 'Voxu'}
-              className="relative mx-auto mt-6 w-24 h-24 rounded-full flex items-center justify-center voxu-orb-glow"
-              style={{ background: 'radial-gradient(circle at 50% 40%, rgb(var(--era-accent, 160 170 255) / 0.35), rgb(10 12 20 / 0.95) 70%)', border: '1px solid rgb(var(--era-accent, 160 170 255) / 0.55)' }}
+              onClick={tapOrb}
+              aria-label={needsTap ? 'Tap to talk with Voxu' : listener.phase === 'listening' ? 'Stop — I’m done' : 'Talk to Voxu'}
+              className="keep-motion relative mx-auto mt-6 w-24 h-24 rounded-full flex items-center justify-center voxu-orb-glow transition-transform duration-100"
+              style={{
+                background: 'radial-gradient(circle at 50% 40%, rgb(var(--era-accent, 160 170 255) / 0.35), rgb(10 12 20 / 0.95) 70%)',
+                border: '1px solid rgb(var(--era-accent, 160 170 255) / 0.55)',
+                // Breathes with their voice while listening.
+                transform: `scale(${1 + listener.level * 0.18})`,
+              }}
             >
-              <AudioLines className="w-8 h-8 text-white" aria-hidden />
+              {listener.phase === 'transcribing'
+                ? <Loader2 className="w-8 h-8 animate-spin text-white" aria-hidden />
+                : listener.phase === 'listening'
+                  ? <Mic className="w-8 h-8 text-white" aria-hidden />
+                  : <AudioLines className="w-8 h-8 text-white" aria-hidden />}
             </button>
-            {needsTap && <p className="text-px-12 text-white/70 mt-2">Tap to hear Voxu</p>}
+            <p className="text-px-12 text-white/70 mt-3 min-h-[1.25rem]" aria-live="polite">
+              {needsTap ? 'Tap to talk with Voxu'
+                : listener.phase === 'listening' ? 'Listening… tap when you’re done'
+                : listener.phase === 'transcribing' ? 'One moment…'
+                : ''}
+            </p>
 
-            <h1 className="text-px-38 leading-tight mt-6" style={{ ...SERIF, fontWeight: 600 }}>Let&rsquo;s begin with one thing.</h1>
-            <p className="text-px-14 text-white/70 mt-2">Choose an era, start a short guided moment, and make your first promise.</p>
+            <h1 className="text-px-38 leading-tight mt-4" style={{ ...SERIF, fontWeight: 600 }}>Let&rsquo;s begin with one thing.</h1>
 
-            {/* Voxu's question, as something it said. */}
-            <div className="mt-6 flex items-center justify-center gap-2.5">
+            {/* What Voxu asked, as something it said. */}
+            <div className="mt-5 flex items-start justify-center gap-2.5">
               <span className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center border border-white/25 bg-[#0d1018]" aria-hidden>
                 <AudioLines className="w-4 h-4 text-white" />
               </span>
-              <p className="px-4 py-2.5 rounded-2xl rounded-bl-md bg-white/[0.08] border border-white/[0.12] text-px-14 text-white text-left">
-                What do you want to change right now?
+              <p className="px-4 py-2.5 rounded-2xl rounded-tl-md bg-white/[0.08] border border-white/[0.12] text-px-14 text-white text-left">
+                Hey, I&rsquo;m Voxu. Before I show you anything, what&rsquo;s one thing you want to change right now?
               </p>
             </div>
 
-            {error && <p className="text-px-13 text-white/85 mt-3" role="alert">{error}</p>}
-
-            {inputMode === null && (
-              <div className="mt-6 flex flex-col min-[380px]:flex-row gap-2.5 justify-center">
-                <button onClick={() => { haptic('light'); setInputMode('voice') }} className="tap-44 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white text-black text-px-14 font-medium press-scale">
-                  <Mic className="w-4 h-4" /> Start with voice <ArrowRight className="w-4 h-4" />
-                </button>
-                <button onClick={() => setInputMode('type')} className="tap-44 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-white/20 bg-white/[0.04] text-px-14 text-white">
-                  <Keyboard className="w-4 h-4" /> Type instead
-                </button>
-              </div>
+            {/* Their words, live, as they say them. */}
+            {listener.interim && (
+              <p className="mt-4 text-px-20 leading-snug text-white" style={SERIF}>&ldquo;{listener.interim}&rdquo;</p>
             )}
 
-            {inputMode === 'voice' && (
-              <div className="mt-6 flex flex-col items-center">
-                <div className="scale-125"><VoiceInput onTranscript={t => { setSaid(t); void send(t) }} /></div>
-                <p className="text-px-13 text-white/70 mt-3">Tap the mic and say it in your own words.</p>
-                <button onClick={() => setInputMode('type')} className="tap-44 mt-2 text-px-12 text-white/60 underline underline-offset-4">Type instead</button>
-              </div>
-            )}
+            {(listener.error || error) && <p className="text-px-13 text-white/85 mt-3" role="alert">{listener.error ?? error}</p>}
 
-            {inputMode === 'type' && (
+            {inputMode === 'type' ? (
               <form className="mt-6 text-left" onSubmit={e => { e.preventDefault(); void send(said) }}>
                 <textarea
                   value={said}
@@ -340,9 +365,16 @@ export function FirstLaunch({ hasEra, onEraChange }: {
                   Tell Voxu
                 </button>
               </form>
+            ) : (
+              <button
+                onClick={() => { listener.stop(); listener.setError(null); setInputMode('type') }}
+                className="tap-44 mt-5 inline-flex items-center gap-1.5 text-px-13 text-white/60 underline underline-offset-4"
+              >
+                <Keyboard className="w-4 h-4" aria-hidden /> Type instead
+              </button>
             )}
 
-            <p className="mt-4 inline-flex items-center gap-1.5 text-px-12 text-white/50"><Clock className="w-3.5 h-3.5" aria-hidden /> Takes less than 2 minutes.</p>
+            <p className="mt-4 flex items-center justify-center gap-1.5 text-px-12 text-white/50"><Clock className="w-3.5 h-3.5" aria-hidden /> Takes less than 2 minutes.</p>
 
             {/* What's ahead — a preview, not a step counter. */}
             <ul className="mt-8 grid grid-cols-3 gap-2 text-left">
