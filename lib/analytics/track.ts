@@ -44,6 +44,10 @@ export type FeatureName =
   | 'psychology'
   // Voxu Guide — 'use' = a walkthrough played; metadata is the screen.
   | 'voice_guide'
+  // The first launch (components/onboarding/FirstLaunch): 'open' = began,
+  // 'use' = replied / era:<key>, 'complete' = first promise made. The old
+  // wizard's events had zero call sites, so drop-off was invisible.
+  | 'first_launch'
 
 // enable/disable exist so opt-OUT is measurable, not just adoption. Two new
 // daily pushes shipped with no way to see who turned them off.

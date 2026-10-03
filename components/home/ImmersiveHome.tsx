@@ -76,7 +76,7 @@ import { autoplayNextEnabled } from '@/hooks/useAutoplayNext'
 import { SmartHomeNudge } from './SmartHomeNudge'
 import { DailyIntentionCard } from './DailyIntentionCard'
 import { YesterdayFollowUp } from './YesterdayFollowUp'
-import { FirstMomentOverlay } from './FirstMomentOverlay'
+import { FirstLaunch } from '@/components/onboarding/FirstLaunch'
 import { useToast } from '@/contexts/ToastContext'
 import { usePreferences, useJournalMood, useMotivationVideos, useFavorites, useWelcomeStatus, useGamificationStatus } from '@/hooks/useHomeSWR'
 import { useListeningStats, checkAudioAchievements } from '@/hooks/useListeningStats'
@@ -1408,7 +1408,9 @@ export function ImmersiveHome() {
         That div never scrolled, so all four have been reading 0 — the
         shrink-on-scroll header, the parallax and the reveals have never
         once fired. */}
-    <FirstMomentOverlay />
+    {/* The first launch: AI, era, a guided taste, the first promise — for
+        someone with no era yet (components/onboarding/FirstLaunch). */}
+    <FirstLaunch hasEra={era.loaded ? !!era.era : null} onEraChange={era.refresh} />
     <div
       ref={scrollRef}
       className={`relative h-full text-white pb-28 ${fullscreenOverlayShown ? 'overflow-hidden' : 'overflow-y-auto overscroll-contain'}`}
