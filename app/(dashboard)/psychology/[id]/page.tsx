@@ -26,7 +26,13 @@ export default function LessonPage() {
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
         <div className="flex items-center justify-between">
           <BackButton fallback="/psychology" />
-          {lesson && <VoxuGuide screen="lesson" lines={lessonScript(lesson)} />}
+          {lesson && (
+            <VoxuGuide
+              screen="lesson"
+              lines={lessonScript(lesson)}
+              next={lesson.tryThis.href ? { say: 'Here\'s where to try it.', href: lesson.tryThis.href } : null}
+            />
+          )}
         </div>
 
         {!lesson ? (

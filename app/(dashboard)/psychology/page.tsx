@@ -38,7 +38,14 @@ export default function PsychologyPage() {
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
         <div className="flex items-center justify-between">
           <BackButton />
-          <VoxuGuide screen="psychology" lines={psychologyScript({ forYou: forYou.length })} />
+          <VoxuGuide
+            screen="psychology"
+            lines={psychologyScript({ forYou: forYou.length })}
+            next={(() => {
+              const first = forYou[0] ?? LESSONS[0]
+              return { say: `Start with ${first.title}.`, href: `/psychology/${first.id}` }
+            })()}
+          />
         </div>
         <SectionTabs section="learn" className="mt-2" />
         <div className="relative -mx-5 px-5 pt-1 pb-2 overflow-hidden" data-voxu-spot="psych-title">

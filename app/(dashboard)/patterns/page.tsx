@@ -99,7 +99,13 @@ export default function PatternsPage() {
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
         <div className="flex items-center justify-between">
           <BackButton />
-          <VoxuGuide screen="laws" lines={guideLines} />
+          <VoxuGuide
+            screen="laws"
+            lines={guideLines}
+            next={active
+              ? { say: 'Here\'s today. Your experiment runs through your promise.', href: '/' }
+              : { say: 'Here are the experiments. Pick one when you\'re ready.', href: '/patterns', spot: 'laws-experiments' }}
+          />
         </div>
         <SectionTabs section="record" className="mt-2" />
         <div className="relative -mx-5 px-5 pt-1 pb-2 overflow-hidden" data-voxu-spot="laws-title">

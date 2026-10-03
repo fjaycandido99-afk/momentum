@@ -119,7 +119,7 @@ export default function EraPage() {
               <p className="text-px-11 text-white/50 leading-tight">30 days. One promise a day.</p>
             </div>
           </div>
-          <div className="ml-auto"><VoxuGuide screen="era" lines={guideLines} /></div>
+          <div className="ml-auto"><VoxuGuide screen="era" lines={guideLines} next={{ say: "Here's today. Your promise is there.", href: '/' }} /></div>
         </div>
       </header>
 

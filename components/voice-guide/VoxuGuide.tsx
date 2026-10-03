@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { AudioLines, Pause, Play, X } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
+import { ArrowRight, AudioLines, Pause, Play, X } from 'lucide-react'
+import { VoiceInput } from '@/components/journal/VoiceInput'
+import { navHref, resolveNav, type NavContext } from '@/lib/voice-guide/navigate'
 import { fetchVoxuAudio, type VoxuAudioResult } from '@/lib/voice/voxu-audio'
 import { FIRST_VISIT_ASK, type GuideLine, type GuideScreen } from '@/lib/voice-guide/scripts'
 import { haptic } from '@/lib/haptics'
@@ -22,6 +25,11 @@ import { trackFeature } from '@/lib/analytics/track'
  * metered). A line it can't voice — out of today's lines, offline — shows as
  * a caption for a reading-length pause instead, so the walkthrough always
  * finishes. Captions are always on.
+ *
+ * Phase 2 — the orb opens a small panel: Explain this, a mic ("say where to
+ * go"), and this screen's suggestions. Where it goes comes from a fixed list
+ * (lib/voice-guide/navigate) — never a guess, never an action. Arriving
+ * with ?spot=… lights that part of the destination up.
  */
 
 const SEEN = (screen: GuideScreen) => `voxu.guide.${screen}.v1`
@@ -49,7 +57,30 @@ function spotlight(spot: string | undefined) {
   el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' })
 }
 
-export function VoxuGuide({ screen, lines }: { screen: GuideScreen; lines: GuideLine[] | null }) {
+/** Common places offered as chips, besides this screen's next step. */
+const CHIPS: { label: string; text: string; href: string }[] = [
+  { label: 'Today', text: 'today', href: '/' },
+  { label: 'Your era', text: 'my era', href: '/era' },
+  { label: 'Your laws', text: 'my laws', href: '/patterns' },
+  { label: 'Psychology', text: 'psychology', href: '/psychology' },
+]
+
+export function VoxuGuide({
+  screen,
+  lines,
+  next = null,
+}: {
+  screen: GuideScreen | 'profile' | 'proof'
+  /** What "explain this" says; null when the screen has nothing to explain. */
+  lines: GuideLine[] | null
+  /** Where "show me" / "what should I press" goes from here. */
+  next?: NavContext['next']
+}) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [open, setOpen] = useState(false)
+  const [reply, setReply] = useState<string | null>(null)
+  const [typed, setTyped] = useState('')
   const [offer, setOffer] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [paused, setPaused] = useState(false)
@@ -63,7 +94,7 @@ export function VoxuGuide({ screen, lines }: { screen: GuideScreen; lines: Guide
 
   // First visit: glow and ask, once the screen has something to explain.
   useEffect(() => {
-    if (lines && lines.length && !readSeen(screen)) setOffer(true)
+    if (screen in FIRST_VISIT_ASK && lines && lines.length && !readSeen(screen as GuideScreen)) setOffer(true)
   }, [screen, lines])
 
   const stop = useCallback(() => {
@@ -80,11 +111,51 @@ export function VoxuGuide({ screen, lines }: { screen: GuideScreen; lines: Guide
 
   useEffect(() => stop, [stop])
 
+  // Arrived with ?spot=…: read in the effect (during render an in-app
+  // navigation still shows the PREVIOUS page's URL) and kept in a ref, so an
+  // effect that runs twice (React dev mode) still knows what to light after
+  // the first run has tidied the URL.
+  const arrivalSpot = useRef<string | null>(null)
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const fromUrl = url.searchParams.get('spot')
+    if (fromUrl) {
+      arrivalSpot.current = fromUrl
+      url.searchParams.delete('spot')
+      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
+    }
+    const spot = arrivalSpot.current
+    if (!spot) return
+    const on = window.setTimeout(() => spotlight(spot), 700)
+    const off = window.setTimeout(() => spotlight(undefined), 3700)
+    return () => { window.clearTimeout(on); window.clearTimeout(off) }
+  }, [])
+
+  /** Said or tapped: one place from the list, or what it can do instead. */
+  const go = useCallback((text: string) => {
+    const res = resolveNav(text, { next })
+    trackFeature('voice_guide', 'use', res.kind === 'go' ? `nav:${res.href}` : 'nav:unknown')
+    setReply(res.say)
+    if (res.kind !== 'go') return
+    haptic('light')
+    window.setTimeout(() => {
+      setOpen(false)
+      setReply(null)
+      // Already here: light it up rather than reload the page.
+      if (res.href === pathname) {
+        if (res.spot) { spotlight(res.spot); window.setTimeout(() => spotlight(undefined), 3000) }
+        return
+      }
+      router.push(navHref(res))
+    }, 650)
+  }, [next, pathname, router])
+
   const start = useCallback(async () => {
     if (!lines?.length) return
     haptic('light')
-    markSeen(screen)
+    if (screen in FIRST_VISIT_ASK) markSeen(screen as GuideScreen)
     setOffer(false)
+    setOpen(false)
     trackFeature('voice_guide', 'use', screen)
     const id = ++run.current
     setPlaying(true)
@@ -142,15 +213,16 @@ export function VoxuGuide({ screen, lines }: { screen: GuideScreen; lines: Guide
   }
 
   const ready = !!lines?.length
+  const chips = CHIPS.filter(c => c.href !== pathname).slice(0, 3)
 
   return (
     <>
       <div className="relative">
         <button
-          onClick={() => (playing ? stop() : start())}
-          disabled={!ready}
-          aria-label={playing ? 'Stop Voxu' : 'Ask Voxu to explain this page'}
-          className={`tap-44 w-10 h-10 rounded-full flex items-center justify-center border transition-colors disabled:opacity-40 ${
+          onClick={() => { if (playing) stop(); else { setOffer(false); setReply(null); setOpen(o => !o) } }}
+          aria-label={playing ? 'Stop Voxu' : 'Ask Voxu'}
+          aria-expanded={open}
+          className={`tap-44 w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${
             offer || playing ? 'voxu-orb-glow' : ''
           }`}
           style={{
@@ -169,16 +241,62 @@ export function VoxuGuide({ screen, lines }: { screen: GuideScreen; lines: Guide
             aria-label="Voxu"
             className="absolute right-0 top-12 z-[55] w-64 rounded-2xl border border-white/[0.16] bg-[#0d1018] p-3 shadow-2xl"
           >
-            <p className="text-px-13 text-white leading-snug">{FIRST_VISIT_ASK[screen]}</p>
+            <p className="text-px-13 text-white leading-snug">{FIRST_VISIT_ASK[screen as GuideScreen]}</p>
             <div className="flex gap-2 mt-2.5">
               <button onClick={start} className="tap-44 px-3 py-1.5 rounded-full bg-white text-black text-px-12 font-medium">
                 Walk me through
               </button>
-              <button onClick={() => { markSeen(screen); setOffer(false) }} className="tap-44 px-3 py-1.5 rounded-full border border-white/20 text-px-12 text-white/80">
+              <button onClick={() => { markSeen(screen as GuideScreen); setOffer(false) }} className="tap-44 px-3 py-1.5 rounded-full border border-white/20 text-px-12 text-white/80">
                 Not now
               </button>
             </div>
           </div>
+        )}
+
+        {open && !playing && (
+          <>
+            {/* Tap outside closes it. Not a dialog — nothing behind it freezes. */}
+            <button aria-label="Close" className="fixed inset-0 z-[54] cursor-default" onClick={() => { setOpen(false); setReply(null) }} />
+            <div role="group" aria-label="Voxu" className="absolute right-0 top-12 z-[55] w-72 rounded-2xl border border-white/[0.16] bg-[#0d1018] p-3 shadow-2xl">
+              {ready && (
+                <button onClick={start} className="tap-44 w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white text-black text-px-13 font-medium">
+                  <Play className="w-4 h-4" /> Explain this page
+                </button>
+              )}
+
+              <p className="text-px-11 uppercase tracking-[0.18em] text-white/60 mt-3">Take me somewhere</p>
+              <div className="flex items-center gap-2 mt-1.5">
+                <VoiceInput onTranscript={go} />
+                <form
+                  className="flex-1 min-w-0"
+                  onSubmit={e => { e.preventDefault(); if (typed.trim()) { go(typed); setTyped('') } }}
+                >
+                  <input
+                    value={typed}
+                    onChange={e => setTyped(e.target.value)}
+                    placeholder="Say or type a place"
+                    aria-label="Where do you want to go?"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/15 text-px-14 text-white placeholder:text-white/40"
+                  />
+                </form>
+              </div>
+
+              {reply && <p className="text-px-13 text-white mt-2 leading-snug" aria-live="polite">{reply}</p>}
+
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {next && (
+                  <button onClick={() => go('show me')} className="tap-44 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-px-12 text-black bg-white/90">
+                    Next step <ArrowRight className="w-3 h-3" />
+                  </button>
+                )}
+                {chips.map(c => (
+                  <button key={c.href} onClick={() => go(c.text)} className="tap-44 px-2.5 py-1.5 rounded-full border border-white/20 text-px-12 text-white/85">
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </div>
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { SectionTabs } from '@/components/ui/SectionTabs'
 import { BackButton } from '@/components/ui/BackButton'
+import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { ProofGrid } from '@/components/proof/ProofGrid'
 import { ProofDaySheet } from '@/components/proof/ProofDaySheet'
@@ -74,6 +75,7 @@ export default function ProofPage() {
               ))}
             </div>
           )}
+          <VoxuGuide screen="proof" lines={null} next={{ say: 'Here\'s what your record shows.', href: '/patterns' }} />
         </div>
 
         <SectionTabs section="record" className="mt-2" />

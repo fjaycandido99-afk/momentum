@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Loader2 } from 'lucide-react'
 import { BackButton } from '@/components/ui/BackButton'
+import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
 import { SceneImage } from '@/components/home/SceneImage'
 import { SectionTabs } from '@/components/ui/SectionTabs'
 import { AchievementBadge } from '@/components/progress/AchievementBadge'
@@ -71,7 +72,10 @@ export default function ProfilePage() {
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-        <BackButton />
+        <div className="flex items-center justify-between">
+          <BackButton />
+          <VoxuGuide screen="profile" lines={null} next={{ say: 'Here\'s your era.', href: '/era' }} />
+        </div>
         <SectionTabs section="you" className="mt-2" />
 
         {/* Who, and the coin they chose to lead with */}
