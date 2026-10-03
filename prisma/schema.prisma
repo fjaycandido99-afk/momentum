@@ -1666,6 +1666,8 @@ model PatternExperiment {
   end_day    String // inclusive, start_day + 6
   /// "active" | "done" | "stopped"
   status     String   @default("active")
+  /// When they first opened /patterns after it finished — the Today "result is in" item stops then.
+  seen_at    DateTime?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 

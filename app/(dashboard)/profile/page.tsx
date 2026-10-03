@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { ChevronRight, Loader2 } from 'lucide-react'
+import { BackButton } from '@/components/ui/BackButton'
 import { AchievementBadge } from '@/components/progress/AchievementBadge'
 import { AchievementCelebration } from '@/components/progress/AchievementCelebration'
 import type { RelicStatus } from '@/components/relics/RelicDetailSheet'
@@ -68,9 +69,7 @@ export default function ProfilePage() {
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-        <Link href="/" aria-label="Back" className="tap-44 inline-flex p-2 -ml-2 rounded-full hover:bg-white/10">
-          <ChevronLeft className="w-5 h-5 text-white/80" />
-        </Link>
+        <BackButton />
 
         {/* Who, and the coin they chose to lead with */}
         <div className="flex flex-col items-center text-center mt-2">

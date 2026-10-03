@@ -60,6 +60,8 @@ export interface ExperimentWire {
   followedToday: boolean | null
   /** Finished only: the verdict against their own previous four weeks. */
   result: ExperimentResult | null
+  /** Whether they have opened /patterns since it finished. */
+  seen: boolean
 }
 
 async function tzOf(userId: string) {
@@ -88,7 +90,7 @@ export async function loadExperiments(userId: string): Promise<{ active: Experim
   for (const r of rows) {
     const def = EXPERIMENT_BY_KEY.get(r.kind as never)
     if (!def) continue
-    const base = { id: r.id, key: def.key, title: def.title, ask: def.ask, startDay: r.start_day, endDay: r.end_day, status: r.status as ExperimentWire['status'] }
+    const base = { id: r.id, key: def.key, title: def.title, ask: def.ask, startDay: r.start_day, endDay: r.end_day, status: r.status as ExperimentWire['status'], seen: !!r.seen_at }
     if (r.status === 'active') {
       const facts = await dayFacts(userId, tz, today, today)
       const f = facts.get(today)
@@ -138,6 +140,18 @@ export async function finishedExperimentsBetween(userId: string, from: string, t
     out.push({ startDay: r.start_day, endDay: r.end_day, title: def.title, result: await judge(userId, tz, def, r.start_day, r.end_day) })
   }
   return out
+}
+
+/**
+ * They've looked: finished results stop showing as "your result is in" on
+ * Today. Called only by the /patterns screen's read — never by the coach or
+ * Today, which also load experiments.
+ */
+export async function markExperimentsSeen(userId: string): Promise<void> {
+  await prisma.patternExperiment.updateMany({
+    where: { user_id: userId, status: 'done', seen_at: null },
+    data: { seen_at: new Date() },
+  })
 }
 
 /** Start one — only one runs at a time, so each result is about one change. */

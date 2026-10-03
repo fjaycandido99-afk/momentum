@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Check, ChevronLeft, FlaskConical, Loader2 } from 'lucide-react'
+import { Check, FlaskConical, Loader2 } from 'lucide-react'
 import type { Pattern, PatternReport } from '@/lib/patterns/rules'
 import { EXPERIMENTS, experimentFor } from '@/lib/patterns/experiments'
 import type { ExperimentWire } from '@/lib/patterns/experiments-server'
 import { haptic } from '@/lib/haptics'
+import { BackButton } from '@/components/ui/BackButton'
 import { LESSON_BY_ID, LESSON_FOR_EXPERIMENT, LESSON_FOR_PATTERN } from '@/lib/psychology/lessons'
 
 /** "Related lesson" — never "why": a pattern in a record doesn't prove the mechanism. */
@@ -81,9 +82,7 @@ export default function PatternsPage() {
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-        <Link href="/progress" aria-label="Back" className="tap-44 inline-flex p-2 -ml-2 rounded-full hover:bg-white/10">
-          <ChevronLeft className="w-5 h-5 text-white/80" />
-        </Link>
+        <BackButton fallback="/progress" />
         <p className="text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">Your pattern</p>
         <h1 className="text-px-40 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>Your laws</h1>
         <p className="text-px-14 text-white/75 mt-2 leading-relaxed">

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
-import { loadExperiments, startExperiment, stopExperiment } from '@/lib/patterns/experiments-server'
+import { loadExperiments, markExperimentsSeen, startExperiment, stopExperiment } from '@/lib/patterns/experiments-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +11,11 @@ export async function GET() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    return NextResponse.json(await loadExperiments(user.id))
+    // Load first (it settles finished ones), answer with what they had not
+    // seen yet, then mark it seen so Today's "result is in" item stops.
+    const data = await loadExperiments(user.id)
+    await markExperimentsSeen(user.id).catch(() => {})
+    return NextResponse.json(data)
   } catch (error) {
     console.error('[experiments GET] error:', error)
     return NextResponse.json({ error: 'Could not load experiments' }, { status: 500 })

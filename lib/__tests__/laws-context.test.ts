@@ -8,7 +8,7 @@ const pattern = (id: string, strength: Pattern['strength'], headline: string) =>
 
 const exp = (over: Partial<ExperimentWire>): ExperimentWire => ({
   id: 'e', key: 'morning_promise', title: 'Morning promise', ask: 'Make your promise before 9 AM.',
-  startDay: '2026-10-01', endDay: '2026-10-07', status: 'active', day: 3, followedToday: false, result: null, ...over,
+  startDay: '2026-10-01', endDay: '2026-10-07', status: 'active', day: 3, followedToday: false, result: null, seen: false, ...over,
 })
 
 describe('the coach’s laws block', () => {

@@ -77,6 +77,8 @@ export interface PulseInput {
   guide?: { id: string; name: string; done: boolean } | null
   /** The running 7-day experiment (lib/patterns/experiments), if any. */
   experiment?: { title: string; day: number; followedToday: boolean } | null
+  /** A finished experiment whose result they haven't opened yet. */
+  experimentResult?: { title: string } | null
 }
 
 export type ActionTarget =
@@ -306,6 +308,16 @@ export function todayItems(input: PulseInput): TodayItem[] {
       title: `${input.experiment.title} · day ${input.experiment.day} of 7`,
       time: null,
       status: input.experiment.followedToday ? 'done' : 'open',
+      target: { type: 'patterns' },
+    })
+  } else if (input.experimentResult) {
+    // Open until they look — then /patterns marks it seen and it goes.
+    items.push({
+      key: 'experiment-result',
+      kind: 'experiment',
+      title: `${input.experimentResult.title} · your result is in`,
+      time: null,
+      status: 'open',
       target: { type: 'patterns' },
     })
   }

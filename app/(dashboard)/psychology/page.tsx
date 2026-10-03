@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
+import { BackButton } from '@/components/ui/BackButton'
 import { LESSON_GROUPS, LESSONS } from '@/lib/psychology/lessons'
 import { trackFeature } from '@/lib/analytics/track'
 
@@ -18,9 +19,7 @@ export default function PsychologyPage() {
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-        <Link href="/" aria-label="Back" className="tap-44 inline-flex p-2 -ml-2 rounded-full hover:bg-white/10">
-          <ChevronLeft className="w-5 h-5 text-white/80" />
-        </Link>
+        <BackButton />
         <p className="text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">Library</p>
         <h1 className="text-px-40 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>Psychology</h1>
         <p className="text-px-14 text-white/75 mt-2 leading-relaxed">

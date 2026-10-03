@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Check, ChevronRight, Minus } from 'lucide-react'
 import { timeLabel, type ActionTarget, type Pulse, type TodayItem } from '@/lib/pulse/engine'
 import { OPEN_DISCIPLINE, PRACTICES_CHANGED } from '@/lib/pulse/events'
@@ -55,6 +56,8 @@ export function PulseSection({
     setRescueDeclined(isRescueDeclined())
   }, [])
 
+  const router = useRouter()
+
   const load = useCallback(() => {
     // Rescue on: the plan stays until its last step is logged, not only
     // while two or more are open.
@@ -85,7 +88,8 @@ export function PulseSection({
     if (target.type === 'era') onEra()
     // Home plays it (ImmersiveHome listens): the same path as a guide card.
     else if (target.type === 'guide') window.dispatchEvent(new CustomEvent('voxu:play-guide', { detail: { id: target.id } }))
-    else if (target.type === 'patterns') window.location.href = '/patterns'
+    // In-app navigation: a full page load restarts the whole app in the shell.
+    else if (target.type === 'patterns') router.push('/patterns')
     else window.dispatchEvent(new CustomEvent(OPEN_DISCIPLINE, { detail: { id: target.id } }))
   }
 

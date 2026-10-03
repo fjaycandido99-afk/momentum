@@ -93,6 +93,10 @@ export async function GET(request: Request) {
       steps,
       guide: eraGuide ? { id: eraGuide.id, name: eraGuide.name, done: guideDone } : null,
       experiment: running && running.day ? { title: running.title, day: running.day, followedToday: !!running.followedToday } : null,
+      experimentResult: (() => {
+        const unseen = experiments?.finished.find(f => f.status === 'done' && !f.seen && f.result)
+        return unseen ? { title: unseen.title } : null
+      })(),
     })
 
     return NextResponse.json({ pulse })
