@@ -86,6 +86,13 @@ function markWidgetReady() {
 }
 
 let lastEra: EraTodayWire | null = null
+/** From SubscriptionContext once it knows: the widget locks Guided/Noticed for free. */
+let lastPremium: boolean | undefined = undefined
+export async function setWidgetPremium(premium: boolean): Promise<void> {
+  if (lastPremium === premium) return
+  lastPremium = premium
+  if (eraLoaded) await writeSnapshot()
+}
 let lastPulse: Pulse | null = null
 let eraLoaded = false
 
@@ -132,7 +139,7 @@ function newestLaw(): string | null {
 
 async function writeSnapshot(force = false): Promise<void> {
   if (!Capacitor.isNativePlatform()) return
-  const json = JSON.stringify(buildWidgetSnapshot(lastEra, new Date(), lastPulse, newestLaw()))
+  const json = JSON.stringify(buildWidgetSnapshot(lastEra, new Date(), lastPulse, newestLaw(), lastPremium))
   if (json === lastWritten && !force) return
   let res: { written: boolean } | null = null
   try {

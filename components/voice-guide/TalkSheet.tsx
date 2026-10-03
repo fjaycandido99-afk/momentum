@@ -9,6 +9,7 @@ import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBan
 import { fetchVoxuAudio } from '@/lib/voice/voxu-audio'
 import { isCommand } from '@/lib/voice-guide/intents'
 import { trackFeature } from '@/lib/analytics/track'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 
 /**
  * Voxu Guide phase 4 — "Talk it through".
@@ -52,6 +53,9 @@ export function TalkSheet({
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [crisis, setCrisis] = useState<CrisisContent | null>(null)
+  /** Ran into a daily limit — Premium lifts it (free users only see the offer). */
+  const [limited, setLimited] = useState(false)
+  const sub = useSubscriptionOptional()
   const [voiceOn, setVoiceOn] = useState(() => {
     try { return localStorage.getItem(VOICE_KEY) !== 'off' } catch { return true }
   })
@@ -65,7 +69,7 @@ export function TalkSheet({
     if (!voiceOn) return
     const res = await fetchVoxuAudio(text)
     if (!res.ok) {
-      if (res.reason === 'locked') setNote('Spoken replies are used up for today, so here it is in words.')
+      if (res.reason === 'locked') { setNote('Today’s spoken replies are used up, so here it is in words.'); setLimited(true) }
       return
     }
     audio.current = res.audio
@@ -115,6 +119,7 @@ export function TalkSheet({
           : data?.reason === 'locked'
             ? 'Talking with Voxu is part of Premium.'
             : data?.error ?? 'Couldn’t reach Voxu just now.')
+        if (data?.upgrade) setLimited(true)
         return
       }
       if (data?.crisis) setCrisis(data.crisis)
@@ -174,6 +179,11 @@ export function TalkSheet({
           )}
           {crisis && <CrisisBanner content={crisis} />}
           {note && <p className="text-px-12 text-white/60">{note}</p>}
+          {limited && sub && !sub.isPremium && (
+            <button onClick={() => { hush(); sub.openUpgradeModal() }} className="tap-44 px-3.5 py-2 rounded-full bg-white text-black text-px-13 font-medium">
+              Keep talking with Premium
+            </button>
+          )}
         </div>
 
         <form

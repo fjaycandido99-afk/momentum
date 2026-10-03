@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
-import { isPremiumUser } from '@/lib/subscription-check'
-import { consumeAiQuota } from '@/lib/ai/quota'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
 import { parseModelJson } from '@/lib/ai/json'
 import { detectCrisisLevel, detectRegion, crisisResourceForLevel } from '@/lib/ai/crisis-detect'
@@ -53,8 +51,10 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const quota = await consumeAiQuota(user.id, 'chat', await isPremiumUser(user.id), prefs?.timezone).catch(() => null)
-    if (!quota?.allowed) return fallback()
+    // Onboarding doesn't spend a free user's chat messages. It's free ONCE —
+    // for someone who hasn't started an era — so it can't become a free AI
+    // endpoint; past that, the pure fallback answers.
+    if ((await prisma.era.count({ where: { user_id: user.id } })) > 0) return fallback()
 
     const eraList = ERA_PRESETS.map(p => `- ${p.key}: ${p.title} — ${p.tagline}`).join('\n')
     const prompt = `Someone just opened Voxu for the first time and told you one thing they want to change:

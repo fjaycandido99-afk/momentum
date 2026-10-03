@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react'
+import { setWidgetPremium } from '@/lib/widget-sync'
 import { FREE_TIER_LIMITS, FREEMIUM_LIMITS, isContentFree, FreemiumContentType } from '@/lib/subscription-constants'
 
 // Helper to get today's date key for localStorage
@@ -237,6 +238,20 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     setShowUpgradeModal(false)
   }, [])
 
+  // Anything can ask for the upgrade screen without the context: a lock
+  // card, or the widget's "Unlock with Premium" (voxu://app/?upgrade=1 →
+  // hooks/useDeepLink).
+  useEffect(() => {
+    const open = () => setShowUpgradeModal(true)
+    window.addEventListener(OPEN_UPGRADE_EVENT, open)
+    return () => window.removeEventListener(OPEN_UPGRADE_EVENT, open)
+  }, [])
+
+  // The widget shows Guided and Noticed only to Premium, so it needs to know.
+  useEffect(() => {
+    if (!isLoading) setWidgetPremium(subscriptionData.isPremium)
+  }, [isLoading, subscriptionData.isPremium])
+
   // Memoize billingPeriodEnd to avoid creating new Date on every render
   const billingPeriodEnd = useMemo(() => {
     return subscriptionData.billingPeriodEnd
@@ -295,6 +310,10 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     </SubscriptionContext.Provider>
   )
 }
+
+/** Fire to open the upgrade screen from anywhere (SubscriptionContext listens). */
+export const OPEN_UPGRADE_EVENT = 'voxu:open-upgrade'
+export function openUpgrade() { if (typeof window !== 'undefined') window.dispatchEvent(new Event(OPEN_UPGRADE_EVENT)) }
 
 export function useSubscription() {
   const context = useContext(SubscriptionContext)

@@ -8,7 +8,9 @@ import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
 import { psychologyScript, talkOpener } from '@/lib/voice-guide/scripts'
 import { SceneImage } from '@/components/home/SceneImage'
 import { SectionTabs } from '@/components/ui/SectionTabs'
-import { LESSON_GROUPS, LESSONS, lessonsForLaws, readMinutes, type Lesson, type LessonGroup } from '@/lib/psychology/lessons'
+import { LESSON_GROUPS, LESSONS, lessonsForLaws, lessonUnlocked, readMinutes, type Lesson, type LessonGroup } from '@/lib/psychology/lessons'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { Lock } from 'lucide-react'
 import type { PatternReport } from '@/lib/patterns/rules'
 import { trackFeature } from '@/lib/analytics/track'
 
@@ -110,6 +112,8 @@ export default function PsychologyPage() {
 
 function LessonCard({ l }: { l: Lesson }) {
   const group = LESSON_GROUPS.find(g => g.key === l.group)
+  const sub = useSubscriptionOptional()
+  const locked = !!sub && !sub.isLoading && !lessonUnlocked(l.id, sub.isPremium)
   return (
     <li>
       <Link
@@ -124,6 +128,7 @@ function LessonCard({ l }: { l: Lesson }) {
           <p className="text-px-13 text-white/70 mt-0.5 leading-snug">{l.line}</p>
           <p className="text-px-10 uppercase tracking-[0.16em] mt-1.5" style={{ color: 'rgb(var(--era-accent, 255 255 255))' }}>
             {group?.title} <span className="text-white/55 normal-case tracking-normal text-px-11">· {readMinutes(l)} min read</span>
+            {locked && <span className="ml-1.5 inline-flex items-center gap-0.5 normal-case tracking-normal text-px-11 text-white/70"><Lock className="w-3 h-3" aria-hidden /> Premium</span>}
           </p>
         </div>
         <ChevronRight className="relative w-4 h-4 text-white/50 shrink-0" />

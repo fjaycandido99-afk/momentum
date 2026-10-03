@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { loadExperiments, markExperimentsSeen, startExperiment, stopExperiment } from '@/lib/patterns/experiments-server'
+import { isPremiumUser } from '@/lib/subscription-check'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +34,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => null)
     if (body?.action === 'start') {
+      // Experiments are Premium (laws stay free). Stopping, and seeing a
+      // result, never are — nobody loses what they already ran.
+      if (!(await isPremiumUser(user.id))) {
+        return NextResponse.json({ error: 'Experiments are part of Premium', reason: 'locked', upgrade: true }, { status: 403 })
+      }
       const r = await startExperiment(user.id, body?.key)
       if (!r.ok) return NextResponse.json({ error: r.reason }, { status: 400 })
     } else if (body?.action === 'stop') {

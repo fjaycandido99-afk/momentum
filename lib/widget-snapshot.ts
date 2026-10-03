@@ -56,6 +56,8 @@ export interface WidgetSnapshot {
   guide?: { id: string; name: string } | null
   /** Their newest SOLID law's headline (lib/patterns), for "Voxu noticed". Counts, never a score. */
   law?: string | null
+  /** Premium unlocks the Guided and Noticed widgets; absent = unknown (an older app). */
+  premium?: boolean
 }
 
 export interface WidgetPulse {
@@ -109,12 +111,12 @@ export function widgetGuide(pulse: Pulse | null | undefined): { id: string; name
   return t && t.type === 'guide' ? { id: t.id, name: clip(t.name, 28) } : null
 }
 
-export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Date(), pulse?: Pulse | null, law: string | null = null): WidgetSnapshot {
+export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Date(), pulse?: Pulse | null, law: string | null = null, premium?: boolean): WidgetSnapshot {
   const date = localDay(now)
   const p = widgetPulse(pulse)
   const guide = widgetGuide(pulse)
   const lawLine = law ? clip(law, 120) : null
-  if (!era) return { v: WIDGET_SNAPSHOT_VERSION, date, era: null, promise: null, mission: null, streak: 0, pulse: p, accent: eraAccentHex(null), guide, law: lawLine }
+  if (!era) return { v: WIDGET_SNAPSHOT_VERSION, date, era: null, promise: null, mission: null, streak: 0, pulse: p, accent: eraAccentHex(null), guide, law: lawLine, ...(premium === undefined ? {} : { premium }) }
   return {
     v: WIDGET_SNAPSHOT_VERSION,
     date,
@@ -132,5 +134,6 @@ export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Da
     tomorrowReady: !!era.tomorrow,
     guide,
     law: lawLine,
+    ...(premium === undefined ? {} : { premium }),
   }
 }

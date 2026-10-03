@@ -48,3 +48,15 @@ describe('psychology library', () => {
     }
   })
 })
+
+describe('library gating', () => {
+  it('keeps exactly one lesson free in each group, and unlocks all for Premium', async () => {
+    const { FREE_LESSON_IDS, lessonUnlocked, LESSON_GROUPS, LESSONS } = await import('@/lib/psychology/lessons')
+    expect(FREE_LESSON_IDS.size).toBe(LESSON_GROUPS.length)
+    for (const g of LESSON_GROUPS) {
+      expect(LESSONS.filter(l => l.group === g.key && FREE_LESSON_IDS.has(l.id))).toHaveLength(1)
+    }
+    for (const l of LESSONS) expect(lessonUnlocked(l.id, true)).toBe(true)
+    expect(LESSONS.filter(l => lessonUnlocked(l.id, false))).toHaveLength(LESSON_GROUPS.length)
+  })
+})

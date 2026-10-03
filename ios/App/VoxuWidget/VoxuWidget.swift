@@ -63,6 +63,8 @@ struct Snapshot: Decodable {
     let tomorrowReady: Bool?
     let guide: Guide?
     let law: String?
+    /// Premium unlocks the Guided and Noticed widgets. Absent (an older app) = shown.
+    let premium: Bool?
 }
 
 extension Color {
@@ -116,6 +118,8 @@ struct Today {
     var guideId: String? = nil
     var guideName: String? = nil
     var law: String? = nil
+    /// false only when the app said so — Guided and Noticed then show the unlock card.
+    var premium: Bool? = nil
     // Fallback
     var quote = "Small steps, repeated, become a life."
     var author = "Voxu"
@@ -199,6 +203,7 @@ func loadToday(at now: Date = Date()) -> Today {
     t.streak = daysSince <= 1 ? (snap.streak ?? 0) : 0
     t.accent = Color(hex: snap.accent)
     t.law = snap.law
+    t.premium = snap.premium
     // Today's words, guide and list only on the day they were written.
     guard daysSince == 0 else { return t }
 
@@ -533,6 +538,23 @@ struct QuoteBody: View {
     }
 }
 
+/// Shown in Guided and Noticed to a free account. Opens the upgrade screen.
+struct UnlockCard: View {
+    let title: String
+    let line: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Eyebrow(text: "Voxu Premium")
+            Spacer(minLength: 0)
+            Image(systemName: "lock.fill").font(.system(size: 14)).foregroundColor(dim)
+            Text(title).font(.system(size: 16, weight: .semibold, design: .serif)).foregroundColor(.white).lineLimit(2)
+            Text(line).font(.system(size: 11)).foregroundColor(Color.white.opacity(0.75)).lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .widgetURL(appLink("/?upgrade=1"))
+    }
+}
+
 // MARK: - Voxu (the original widget): Progress · Today's Promise · Overview
 
 struct TodayWidgetView: View {
@@ -793,6 +815,14 @@ struct GuidedWidgetView: View {
     private var name: String { t.guideName ?? "Guided session" }
 
     var body: some View {
+        if t.premium == false {
+            UnlockCard(title: "Guided audio", line: "Unlock to play today’s session from here.")
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         Group {
             if family == .systemMedium {
                 HStack(spacing: 12) {
@@ -844,6 +874,14 @@ struct NoticedWidgetView: View {
     let entry: VoxuEntry
     private var t: Today { entry.today }
     var body: some View {
+        if t.premium == false {
+            UnlockCard(title: "Voxu noticed", line: "Unlock to see what your record shows, here.")
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: 6) {
             Eyebrow(text: "Voxu noticed")
             if let law = t.law {

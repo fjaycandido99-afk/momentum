@@ -8,7 +8,9 @@ import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
 import { lessonScript, talkOpener } from '@/lib/voice-guide/scripts'
 import { SceneImage } from '@/components/home/SceneImage'
 import { LoopDiagram } from '@/components/psychology/LoopDiagram'
-import { LESSON_BY_ID, LESSON_FOR_EXPERIMENT, LESSON_GROUPS } from '@/lib/psychology/lessons'
+import { LESSON_BY_ID, LESSON_FOR_EXPERIMENT, LESSON_GROUPS, lessonUnlocked } from '@/lib/psychology/lessons'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
+import { Lock } from 'lucide-react'
 import { trackFeature } from '@/lib/analytics/track'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -18,6 +20,10 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 export default function LessonPage() {
   const { id } = useParams<{ id: string }>()
   const lesson = LESSON_BY_ID.get(id)
+  const sub = useSubscriptionOptional()
+  // One lesson per group is free; the rest are Premium (lib/psychology/lessons).
+  // While the tier is loading, show it — never flash a lock at a subscriber.
+  const open = !lesson || !sub || sub.isLoading || lessonUnlocked(lesson.id, sub.isPremium)
 
   useEffect(() => { if (lesson) trackFeature('psychology', 'use', lesson.id) }, [lesson])
 
@@ -30,7 +36,7 @@ export default function LessonPage() {
             <VoxuGuide
               screen="lesson"
               opener={talkOpener({ screen: 'lesson', lessonTitle: lesson.title })}
-              lines={lessonScript(lesson)}
+              lines={open ? lessonScript(lesson) : null}
               experiment={(Object.entries(LESSON_FOR_EXPERIMENT).find(([, id]) => id === lesson.id)?.[0] ?? null) as 'morning_promise' | 'small_promise' | 'guide_first' | null}
               next={lesson.tryThis.href ? { say: 'Here\'s where to try it.', href: lesson.tryThis.href } : null}
             />
@@ -52,13 +58,26 @@ export default function LessonPage() {
             <p className="relative text-px-17 text-white/90 mt-3 leading-snug" style={SERIF}>{lesson.line}</p>
 
             <div className="mt-5 space-y-3" data-voxu-spot="lesson-body">
-              {lesson.body.map((para, i) => (
+              {(open ? lesson.body : lesson.body.slice(0, 1)).map((para, i) => (
                 <p key={i} className="text-px-15 text-white/80 leading-relaxed">{para}</p>
               ))}
             </div>
 
-            {lesson.loop && <LoopDiagram loop={lesson.loop} />}
+            {!open && (
+              <div className="mt-6 card-surface rounded-2xl p-4">
+                <p className="text-px-11 uppercase tracking-[0.2em] text-white/70 flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" aria-hidden /> Premium lesson</p>
+                <p className="text-px-15 text-white mt-1.5 leading-snug">
+                  The rest of this lesson{lesson.loop ? ', its loop' : ''}, something to try, and the study behind it are part of Premium.
+                </p>
+                <button onClick={() => sub?.openUpgradeModal()} className="tap-44 mt-3 inline-flex items-center px-3.5 py-2 rounded-full bg-white text-black text-px-13 font-medium press-scale">
+                  Unlock with Premium
+                </button>
+              </div>
+            )}
 
+            {open && lesson.loop && <LoopDiagram loop={lesson.loop} />}
+
+            {open && (<>
             <div className="mt-6 card-surface rounded-2xl p-4" data-voxu-spot="lesson-try">
               <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Try this</p>
               <p className="text-px-15 text-white mt-1.5 leading-snug">{lesson.tryThis.text}</p>
@@ -83,6 +102,7 @@ export default function LessonPage() {
                 ))}
               </ul>
             </div>
+            </>)}
 
             <p className="text-px-11 text-white/55 mt-8 leading-relaxed">
               A general finding about how people tend to work — not advice for your situation, and not a diagnosis.

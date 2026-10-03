@@ -12,6 +12,7 @@ import type { RescuePlan } from '@/lib/pulse/rescue'
 import { fetchVoxuAudio, type VoxuAudioResult } from '@/lib/voice/voxu-audio'
 import { FIRST_VISIT_ASK, type GuideLine, type GuideScreen } from '@/lib/voice-guide/scripts'
 import { haptic } from '@/lib/haptics'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { spotlight, useArrivalSpot } from './spotlight'
 import { TalkSheet } from './TalkSheet'
 import { trackFeature } from '@/lib/analytics/track'
@@ -107,6 +108,9 @@ export function VoxuGuide({
   const [paused, setPaused] = useState(false)
   const [index, setIndex] = useState(0)
   const [quiet, setQuiet] = useState(false) // a line fell back to captions
+  /** The day's spoken lines ran out (a 403 from chat-voice), not just a hiccup. */
+  const [outOfVoice, setOutOfVoice] = useState(false)
+  const sub = useSubscriptionOptional()
   const run = useRef(0)
   const audio = useRef<HTMLAudioElement | null>(null)
   const timer = useRef<number | null>(null)
@@ -211,6 +215,7 @@ export function VoxuGuide({
     setPaused(false)
     pausedRef.current = false
     setQuiet(false)
+    setOutOfVoice(false)
 
     // Fetch ahead: the next line is on its way while this one plays.
     const fetches: Promise<VoxuAudioResult>[] = []
@@ -233,6 +238,7 @@ export function VoxuGuide({
           wait()
         }
         if (!res.ok) {
+          if (res.reason === 'locked') setOutOfVoice(true)
           // Paused between lines: hold the caption until they resume.
           if (pausedRef.current) { resume.current = fallBack; return }
           return fallBack()
@@ -439,9 +445,14 @@ export function VoxuGuide({
             <div className="min-w-0 flex-1">
               <p className="text-px-14 text-white leading-snug" aria-live="polite">{script[index]?.text}</p>
               <p className="text-px-10 text-white/50 mt-1 tabular-nums">
-                {index + 1} of {script.length}{quiet ? ' · voice is resting, here it is in words' : ''}
+                {index + 1} of {script.length}{quiet && !outOfVoice ? ' · voice is resting, here it is in words' : ''}{outOfVoice ? ' · today’s spoken lines are used up' : ''}
               </p>
             </div>
+            {outOfVoice && sub && !sub.isPremium && (
+              <button onClick={() => { stop(); sub.openUpgradeModal() }} className="tap-44 shrink-0 self-center px-2.5 py-1.5 rounded-full bg-white text-black text-px-11 font-medium">
+                Hear Voxu with Premium
+              </button>
+            )}
             <button onClick={togglePause} aria-label={paused ? 'Resume' : 'Pause'} className="tap-44 p-1.5 rounded-full hover:bg-white/10">
               {paused ? <Play className="w-4 h-4 text-white" /> : <Pause className="w-4 h-4 text-white" />}
             </button>

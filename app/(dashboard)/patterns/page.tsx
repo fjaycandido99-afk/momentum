@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Check, FlaskConical, Loader2 } from 'lucide-react'
+import { Check, FlaskConical, Loader2, Lock } from 'lucide-react'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import type { Pattern, PatternReport } from '@/lib/patterns/rules'
 import type { PatternCharts } from '@/lib/patterns/charts'
 import { ColumnChart, CountBars, DayProgress, ResultBars } from '@/components/patterns/Charts'
@@ -52,7 +53,10 @@ interface ExperimentsPayload { active: ExperimentWire | null; finished: Experime
  * No labels about anyone's mind, no forecasts, never their words.
  */
 export default function PatternsPage() {
-  const [report, setReport] = useState<(PatternReport & { charts?: PatternCharts }) | null>(null)
+  const [report, setReport] = useState<(PatternReport & { charts?: PatternCharts | null; chartsLocked?: boolean }) | null>(null)
+  const sub = useSubscriptionOptional()
+  /** Experiments and the charts are Premium; laws are free (their own record). */
+  const premium = !!sub?.isPremium
   const [exp, setExp] = useState<ExperimentsPayload | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -180,6 +184,17 @@ export default function PatternsPage() {
                 </ul>
               </div>
             )}
+            {/* Premium: the charts. Free sees what they'd get, never a blank. */}
+            {report.chartsLocked && (
+              <div className="mt-8 card-surface rounded-2xl p-4" data-voxu-spot="laws-rhythm">
+                <p className="text-px-11 uppercase tracking-[0.2em] text-white/70 flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" aria-hidden /> Your rhythm · What gets in the way</p>
+                <p className="text-px-14 text-white mt-1.5 leading-snug">When you make your promises, which days you keep them, and what you tap when you miss — drawn from your own record.</p>
+                <button onClick={() => sub?.openUpgradeModal()} className="tap-44 mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white text-black text-px-13 font-medium">
+                  Unlock with Premium
+                </button>
+              </div>
+            )}
+
             {/* Your rhythm — counts by hour and weekday */}
             {report.charts?.byHour && (
               <div className="mt-8" data-voxu-spot="laws-rhythm">
@@ -256,9 +271,9 @@ export default function PatternsPage() {
                       counts — and the experiment starts from there. */}
                   <Link
                     href={experimentSetupHref(e.key)}
-                    className="tap-44 shrink-0 px-3 py-1.5 rounded-full bg-white text-black text-px-12 font-medium"
+                    className="tap-44 shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-black text-px-12 font-medium"
                   >
-                    Start
+                    {!premium && <Lock className="w-3 h-3" aria-label="Premium" />} Start
                   </Link>
                 </li>
               ))}

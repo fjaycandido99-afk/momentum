@@ -443,3 +443,17 @@ export function lessonsForLaws(kinds: readonly PatternKind[]): Lesson[] {
   const ids = [...new Set(kinds.map(k => LESSON_FOR_PATTERN[k]).filter((x): x is string => !!x))]
   return ids.map(id => LESSON_BY_ID.get(id)).filter((l): l is Lesson => !!l)
 }
+
+/**
+ * Premium gating (Francis, 2026-10-03): ONE lesson per group is free — the
+ * first in each — so everyone tastes the library; the rest are Premium.
+ * A soft lock, like the guided voices (isContentFree): the words ship with
+ * the app, the screen shows a preview and the upgrade.
+ */
+export const FREE_LESSON_IDS: ReadonlySet<string> = new Set(
+  LESSON_GROUPS.map(g => LESSONS.find(l => l.group === g.key)?.id).filter((id): id is string => !!id),
+)
+
+export function lessonUnlocked(id: string, isPremium: boolean): boolean {
+  return isPremium || FREE_LESSON_IDS.has(id)
+}

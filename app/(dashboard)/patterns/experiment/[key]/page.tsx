@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { CalendarDays, Check, FlaskConical, Lightbulb, Loader2, Scale } from 'lucide-react'
+import { CalendarDays, Check, FlaskConical, Lightbulb, Loader2, Lock, Scale } from 'lucide-react'
+import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { BackButton } from '@/components/ui/BackButton'
 import { SceneImage } from '@/components/home/SceneImage'
 import { EXPERIMENT_BY_KEY, EXPERIMENT_DAYS, BASELINE_DAYS } from '@/lib/patterns/experiments'
@@ -33,6 +34,7 @@ export default function ExperimentSetupPage() {
   const [active, setActive] = useState<ExperimentWire | null | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const sub = useSubscriptionOptional()
 
   useEffect(() => {
     fetch('/api/patterns/experiments', { cache: 'no-store' })
@@ -53,6 +55,7 @@ export default function ExperimentSetupPage() {
         body: JSON.stringify({ action: 'start', key: def.key }),
       })
       const data = await res.json().catch(() => null)
+      if (res.status === 403 && data?.upgrade) { sub?.openUpgradeModal(); return }
       if (!res.ok) { setError(data?.error ?? 'Couldn’t start it.'); return }
       router.replace('/patterns?spot=laws-experiments')
     } catch {
@@ -129,6 +132,17 @@ export default function ExperimentSetupPage() {
                   You&rsquo;re running {active!.title} — one experiment at a time, so each result is about one change.
                 </p>
                 <Link href="/patterns?spot=laws-experiments" className="tap-44 inline-block mt-2 text-px-13 text-white/80 underline underline-offset-4">See it on Your laws →</Link>
+              </div>
+            ) : sub && !sub.isLoading && !sub.isPremium ? (
+              // Experiments are Premium; everything above stays readable.
+              <div className="mt-6">
+                <button
+                  onClick={() => sub.openUpgradeModal()}
+                  className="tap-44 w-full py-3.5 rounded-2xl bg-white text-black text-px-15 font-medium press-scale inline-flex items-center justify-center gap-2"
+                >
+                  <Lock className="w-4 h-4" /> Unlock experiments with Premium
+                </button>
+                <p className="text-px-12 text-white/60 text-center mt-2">Your laws stay free. Testing them is Premium.</p>
               </div>
             ) : (
               <button

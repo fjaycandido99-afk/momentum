@@ -26,6 +26,12 @@ export function useDeepLink() {
           // segment lost, and picked one from the clock instead.
           const target = url.pathname + url.search + url.hash
 
+          // The widget's "Unlock with Premium".
+          if (url.searchParams.get('upgrade') === '1') {
+            router.push(url.pathname || '/')
+            window.dispatchEvent(new Event('voxu:open-upgrade'))
+            return
+          }
           // The widget's ▶ (voxu://app/?play=guide:<id>). Home plays a
           // ?play= link as it opens (ImmersiveHome); already open on Home,
           // it won't reopen, so it's asked directly.
