@@ -96,9 +96,13 @@ export default function ProgressPage() {
       so the header actually holds still. */}
       <div className="sticky top-0 z-50 px-6 safe-area-pt pb-4 mb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
+        {/* Same centered column as You, its tab partner — on iPad the page
+            used to stretch the phone layout edge to edge. */}
+        <div className="max-w-md md:max-w-lg mx-auto">
         <SectionTabs section="you" className="mb-3" />
         <h1 className="text-2xl font-semibold shimmer-text">Progress</h1>
         <FeatureHint id="progress-intro" text="Your streaks, listening time & journal stats at a glance" mode="once" />
+        </div>
       </div>
 
       <TierBanner page="progress" />
@@ -119,7 +123,7 @@ export default function ProgressPage() {
           </Link>
         </div>
       ) : (
-        <div className="px-6 space-y-4">
+        <div className="px-6 space-y-4 max-w-md md:max-w-lg mx-auto">
           {/* Journey — the felt arc (Day N of becoming more ___), ahead of the raw numbers */}
           <JourneyCard day={gamification?.streak ?? data.streak} />
 
