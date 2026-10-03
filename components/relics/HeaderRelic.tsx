@@ -453,9 +453,14 @@ function RelicSheet({ data, shuffle, onShuffle, onChange, onClose }: {
         </div>
         )}
 
-        <Link href="/progress" onClick={onClose} className="block text-center mt-6 py-3 rounded-xl border border-white/15 text-sm text-white/85">
-          See every achievement
-        </Link>
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          <Link href="/profile" onClick={onClose} className="block text-center py-3 rounded-xl border border-white/15 text-sm text-white/85">
+            Your profile
+          </Link>
+          <Link href="/progress" onClick={onClose} className="block text-center py-3 rounded-xl border border-white/15 text-sm text-white/85">
+            Every achievement
+          </Link>
+        </div>
       </div>
       {sharing && <ShareRelicSheet id={sharing} onClose={() => setSharing(null)} />}
     </div>

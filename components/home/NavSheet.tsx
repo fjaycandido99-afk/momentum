@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect } from 'react'
 import {
   BarChart3, Bookmark, BookOpen, ChevronRight, Compass, Dumbbell, Headphones, HeartPulse, Home,
-  Mic2, PenLine, Settings, Trophy, Waves, FlaskConical, Brain, X, type LucideIcon,
+  Mic2, PenLine, Settings, Trophy, Waves, FlaskConical, Brain, UserRound, X, type LucideIcon,
 } from 'lucide-react'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 
@@ -80,6 +80,7 @@ export function NavSheet({
     {
       title: 'Your journey',
       items: [
+        { label: 'You', sub: 'Recent relics and your collection', icon: UserRound, href: '/profile' },
         {
           label: 'Your era', icon: Compass, href: '/era',
           sub: era ? `${era.title} · Day ${Math.min(era.day, era.length)} of ${era.length}` : 'Who are you becoming?',

@@ -7,7 +7,7 @@ import { cleanPreferredName, displayNameFrom, NAME_MAX } from '@/lib/user/displa
 export const dynamic = 'force-dynamic'
 
 /**
- * GET — { preferredName, fallbackName, displayName }: what they chose, what
+ * GET — { preferredName, fallbackName, displayName, memberSince }: what they chose, what
  *       the auth provider gave us, and what Voxu will actually say.
  * PUT — { preferredName } sets it. An empty string clears it, which falls
  *       back to the provider's first name rather than to nothing.
@@ -20,12 +20,14 @@ export async function GET() {
 
     const row = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { preferred_name: true, name: true },
+      select: { preferred_name: true, name: true, created_at: true },
     })
     return NextResponse.json({
       preferredName: row?.preferred_name ?? null,
       fallbackName: row?.name ?? null,
       displayName: displayNameFrom(row),
+      /** When they joined — the profile's "With Voxu since". */
+      memberSince: row?.created_at?.toISOString() ?? null,
     })
   } catch (error) {
     console.error('[user profile GET] error:', error)
