@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import type { UpgradeReason } from '@/contexts/SubscriptionContext'
 import Link from 'next/link'
 import { X, Check, Crown, Sparkles, Zap, Clock, Music, Book, Download, Loader2 } from 'lucide-react'
 import { useSubscription } from '@/contexts/SubscriptionContext'
@@ -11,6 +12,8 @@ import { ScrollLock } from '@/components/ui/ScrollLock'
 interface UpgradeModalProps {
   isOpen: boolean
   onClose: () => void
+  /** What they reached for; the screen leads with it. */
+  reason?: UpgradeReason | null
 }
 
 /**
@@ -28,16 +31,28 @@ interface UpgradeModalProps {
  * (chat, chat_voice), AI_MEMORY_DEPTH, the voiceGuides free ids, the journal
  * and progress windows, and the Era Recap check in lib/era/service.ts.
  */
-const PREMIUM_BENEFITS = [
-  { icon: Book, text: 'A coach that remembers day one, every callback day' },
-  { icon: Sparkles, text: 'Unlimited coach messages (free: 5 a day)' },
-  { icon: Music, text: '30 spoken replies a day (free: 1)' },
-  { icon: Zap, text: 'AI that reads your last 30 days, not just today' },
-  { icon: Clock, text: 'Your full journal and a year of progress' },
-  { icon: Crown, text: 'The Era Recap — the letter at day 30' },
+const PREMIUM_BENEFITS: { key: string; icon: typeof Book; text: string }[] = [
+  { key: 'talk', icon: Sparkles, text: 'Talk with Voxu as much as you like (free: 5 a day)' },
+  { key: 'voice', icon: Music, text: 'Voxu’s voice — 30 spoken replies a day (free: 1)' },
+  { key: 'experiments', icon: Zap, text: '7-day experiments that test what works for you' },
+  { key: 'charts', icon: Clock, text: 'Your rhythm, and what gets in your way' },
+  { key: 'lesson', icon: Book, text: 'All 15 psychology lessons (free: 4)' },
+  { key: 'memory', icon: Book, text: 'A coach that remembers day one, and your last 30 days' },
+  { key: 'widget', icon: Crown, text: 'Guided and Voxu-noticed home screen widgets' },
+  { key: 'recap', icon: Crown, text: 'Your full journal, and the Era Recap at day 30' },
 ]
 
-export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
+/** What they reached for, said back to them first. Every line is a real gate. */
+const REASON_HEADLINE: Record<UpgradeReason, { title: string; line: string }> = {
+  experiments: { title: 'Test what actually works for you', line: 'Change one thing for 7 days, compared with your own last four weeks.' },
+  charts: { title: 'See your rhythm', line: 'When you keep your promises, and what gets in the way — from your own record.' },
+  lesson: { title: 'The whole library', line: 'Every lesson, its loop, something to try, and the study behind it.' },
+  voice: { title: 'Hear Voxu', line: 'Today’s spoken lines are used up. Premium gives you 30 a day.' },
+  talk: { title: 'Keep talking', line: 'Today’s messages are used up. With Premium, talk as much as you like.' },
+  widget: { title: 'Voxu on your home screen', line: 'Play today’s guided session and see what your record shows, from a widget.' },
+}
+
+export function UpgradeModal({ isOpen, onClose, reason = null }: UpgradeModalProps) {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -127,10 +142,10 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               <Crown className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">
-              Unlock Premium
+              {reason ? REASON_HEADLINE[reason].title : 'Unlock Premium'}
             </h2>
             <p className="text-white/70 text-sm">
-              Get the full Voxu experience
+              {reason ? REASON_HEADLINE[reason].line : 'Get the full Voxu experience'}
             </p>
           </div>
         </div>
@@ -138,7 +153,8 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         {/* Benefits list */}
         <div className="px-6 pb-6">
           <div className="space-y-3">
-            {PREMIUM_BENEFITS.map((benefit, index) => (
+            {/* What they reached for first, then the rest. */}
+            {[...PREMIUM_BENEFITS].sort((a, b) => Number(b.key === reason) - Number(a.key === reason)).map((benefit, index) => (
               <div key={index} className="flex items-center gap-3">
                 <div className="p-1.5 rounded-lg bg-amber-500/20">
                   <benefit.icon className="w-4 h-4 text-amber-400" />
@@ -258,6 +274,6 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
 // Wrapper component that uses context
 export function UpgradeModalWithContext() {
-  const { showUpgradeModal, closeUpgradeModal } = useSubscription()
-  return <UpgradeModal isOpen={showUpgradeModal} onClose={closeUpgradeModal} />
+  const { showUpgradeModal, closeUpgradeModal, upgradeReason } = useSubscription()
+  return <UpgradeModal isOpen={showUpgradeModal} onClose={closeUpgradeModal} reason={upgradeReason} />
 }

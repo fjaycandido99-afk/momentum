@@ -449,7 +449,7 @@ export function VoxuGuide({
               </p>
             </div>
             {outOfVoice && sub && !sub.isPremium && (
-              <button onClick={() => { stop(); sub.openUpgradeModal() }} className="tap-44 shrink-0 self-center px-2.5 py-1.5 rounded-full bg-white text-black text-px-11 font-medium">
+              <button onClick={() => { stop(); sub.openUpgradeModal('voice') }} className="tap-44 shrink-0 self-center px-2.5 py-1.5 rounded-full bg-white text-black text-px-11 font-medium">
                 Hear Voxu with Premium
               </button>
             )}

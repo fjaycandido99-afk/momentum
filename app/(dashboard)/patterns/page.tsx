@@ -189,7 +189,7 @@ export default function PatternsPage() {
               <div className="mt-8 card-surface rounded-2xl p-4" data-voxu-spot="laws-rhythm">
                 <p className="text-px-11 uppercase tracking-[0.2em] text-white/70 flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" aria-hidden /> Your rhythm · What gets in the way</p>
                 <p className="text-px-14 text-white mt-1.5 leading-snug">When you make your promises, which days you keep them, and what you tap when you miss — drawn from your own record.</p>
-                <button onClick={() => sub?.openUpgradeModal()} className="tap-44 mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white text-black text-px-13 font-medium">
+                <button onClick={() => sub?.openUpgradeModal('charts')} className="tap-44 mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white text-black text-px-13 font-medium">
                   Unlock with Premium
                 </button>
               </div>

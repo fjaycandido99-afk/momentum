@@ -180,7 +180,7 @@ export function TalkSheet({
           {crisis && <CrisisBanner content={crisis} />}
           {note && <p className="text-px-12 text-white/60">{note}</p>}
           {limited && sub && !sub.isPremium && (
-            <button onClick={() => { hush(); sub.openUpgradeModal() }} className="tap-44 px-3.5 py-2 rounded-full bg-white text-black text-px-13 font-medium">
+            <button onClick={() => { hush(); sub.openUpgradeModal('talk') }} className="tap-44 px-3.5 py-2 rounded-full bg-white text-black text-px-13 font-medium">
               Keep talking with Premium
             </button>
           )}

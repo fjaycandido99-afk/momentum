@@ -55,7 +55,7 @@ export default function ExperimentSetupPage() {
         body: JSON.stringify({ action: 'start', key: def.key }),
       })
       const data = await res.json().catch(() => null)
-      if (res.status === 403 && data?.upgrade) { sub?.openUpgradeModal(); return }
+      if (res.status === 403 && data?.upgrade) { sub?.openUpgradeModal('experiments'); return }
       if (!res.ok) { setError(data?.error ?? 'Couldn’t start it.'); return }
       router.replace('/patterns?spot=laws-experiments')
     } catch {
@@ -137,7 +137,7 @@ export default function ExperimentSetupPage() {
               // Experiments are Premium; everything above stays readable.
               <div className="mt-6">
                 <button
-                  onClick={() => sub.openUpgradeModal()}
+                  onClick={() => sub.openUpgradeModal('experiments')}
                   className="tap-44 w-full py-3.5 rounded-2xl bg-white text-black text-px-15 font-medium press-scale inline-flex items-center justify-center gap-2"
                 >
                   <Lock className="w-4 h-4" /> Unlock experiments with Premium

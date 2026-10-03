@@ -29,7 +29,7 @@ export function useDeepLink() {
           // The widget's "Unlock with Premium".
           if (url.searchParams.get('upgrade') === '1') {
             router.push(url.pathname || '/')
-            window.dispatchEvent(new Event('voxu:open-upgrade'))
+            window.dispatchEvent(new CustomEvent('voxu:open-upgrade', { detail: { reason: 'widget' } }))
             return
           }
           // The widget's ▶ (voxu://app/?play=guide:<id>). Home plays a

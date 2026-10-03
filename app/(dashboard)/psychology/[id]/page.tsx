@@ -69,7 +69,7 @@ export default function LessonPage() {
                 <p className="text-px-15 text-white mt-1.5 leading-snug">
                   The rest of this lesson{lesson.loop ? ', its loop' : ''}, something to try, and the study behind it are part of Premium.
                 </p>
-                <button onClick={() => sub?.openUpgradeModal()} className="tap-44 mt-3 inline-flex items-center px-3.5 py-2 rounded-full bg-white text-black text-px-13 font-medium press-scale">
+                <button onClick={() => sub?.openUpgradeModal('lesson')} className="tap-44 mt-3 inline-flex items-center px-3.5 py-2 rounded-full bg-white text-black text-px-13 font-medium press-scale">
                   Unlock with Premium
                 </button>
               </div>

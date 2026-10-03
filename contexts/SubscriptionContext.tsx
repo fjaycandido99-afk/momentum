@@ -60,7 +60,9 @@ interface SubscriptionContextType {
 
   // UI state
   showUpgradeModal: boolean
-  openUpgradeModal: () => void
+  /** `reason`: what they reached for — the screen leads with it. */
+  openUpgradeModal: (reason?: UpgradeReason | object) => void
+  upgradeReason: UpgradeReason | null
   closeUpgradeModal: () => void
 }
 
@@ -102,6 +104,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [upgradeReason, setUpgradeReason] = useState<UpgradeReason | null>(null)
   const isMountedRef = useRef(true)
 
   // Daily free unlock state
@@ -230,7 +233,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   }, [fetchSubscription])
 
   // UI actions
-  const openUpgradeModal = useCallback(() => {
+  const openUpgradeModal = useCallback((reason?: UpgradeReason | object) => {
+    // A React onClick passes its event here; only a real reason counts.
+    setUpgradeReason(typeof reason === 'string' ? reason : null)
     setShowUpgradeModal(true)
   }, [])
 
@@ -242,7 +247,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   // card, or the widget's "Unlock with Premium" (voxu://app/?upgrade=1 →
   // hooks/useDeepLink).
   useEffect(() => {
-    const open = () => setShowUpgradeModal(true)
+    const open = (e: Event) => {
+      const r = (e as CustomEvent<{ reason?: UpgradeReason }>).detail?.reason
+      setUpgradeReason(typeof r === 'string' ? r : null)
+      setShowUpgradeModal(true)
+    }
     window.addEventListener(OPEN_UPGRADE_EVENT, open)
     return () => window.removeEventListener(OPEN_UPGRADE_EVENT, open)
   }, [])
@@ -279,6 +288,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     recordSession,
     refreshSubscription,
     showUpgradeModal,
+    upgradeReason,
     openUpgradeModal,
     closeUpgradeModal,
   }), [
@@ -300,6 +310,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     recordSession,
     refreshSubscription,
     showUpgradeModal,
+    upgradeReason,
     openUpgradeModal,
     closeUpgradeModal,
   ])
@@ -313,7 +324,10 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
 /** Fire to open the upgrade screen from anywhere (SubscriptionContext listens). */
 export const OPEN_UPGRADE_EVENT = 'voxu:open-upgrade'
-export function openUpgrade() { if (typeof window !== 'undefined') window.dispatchEvent(new Event(OPEN_UPGRADE_EVENT)) }
+export function openUpgrade(reason?: UpgradeReason) { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(OPEN_UPGRADE_EVENT, { detail: { reason } })) }
+
+/** What someone reached for when the upgrade screen opened (components/premium/UpgradeModal). */
+export type UpgradeReason = 'experiments' | 'charts' | 'lesson' | 'voice' | 'talk' | 'widget'
 
 export function useSubscription() {
   const context = useContext(SubscriptionContext)
