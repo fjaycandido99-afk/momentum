@@ -276,6 +276,11 @@ export default function ProgressPage() {
           achievement={celebratingAchievement}
           viewOnly={viewing}
           statusOf={id => gamification?.achievements?.find((x: { id: string }) => x.id === id)}
+          note={gamification?.achievements?.find((x: { id: string }) => x.id === celebratingAchievement.id)?.note ?? null}
+          onNoteSaved={(id, note) => setGamification(g => g && {
+            ...g,
+            achievements: g.achievements.map((x: { id: string }) => (x.id === id ? { ...x, note } : x)),
+          })}
           onClose={() => { setCelebratingAchievement(null); setViewing(false) }}
         />
       )}

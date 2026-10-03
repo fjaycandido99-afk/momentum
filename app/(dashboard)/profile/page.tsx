@@ -19,6 +19,8 @@ interface StatusAchievement extends RelicStatus {
   category: AchievementCategory
   rarity: AchievementRarity
   mark: string | null
+  /** Their own line on it (lib/relic-notes). */
+  note: string | null
 }
 
 interface Profile { displayName: string | null; memberSince: string | null }
@@ -101,7 +103,8 @@ export default function ProfilePage() {
           ) : (
             <ul className="mt-3 space-y-2">
               {recent.map(a => {
-                const line = achievementLine(a.id)
+                // Their own memory, when they wrote one, over the coin's meaning.
+                const line = a.note ? `“${a.note}”` : achievementLine(a.id)
                 return (
                   <li key={a.id}>
                     <button onClick={() => setDetailId(a.id)} className="card-surface rounded-2xl p-3 w-full flex items-center gap-3 text-left press-scale">
@@ -183,7 +186,16 @@ export default function ProfilePage() {
         </section>
       </div>
 
-      {viewing && <AchievementCelebration achievement={viewing} viewOnly statusOf={statusOf} onClose={() => setDetailId(null)} />}
+      {viewing && (
+        <AchievementCelebration
+          achievement={viewing}
+          viewOnly
+          statusOf={statusOf}
+          note={statusOf(viewing.id)?.note ?? null}
+          onNoteSaved={(id, note) => setAchievements(list => list && list.map(x => (x.id === id ? { ...x, note } : x)))}
+          onClose={() => setDetailId(null)}
+        />
+      )}
     </div>
   )
 }

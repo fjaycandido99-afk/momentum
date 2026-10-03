@@ -43,7 +43,7 @@ export async function GET() {
       }),
       prisma.userAchievement.findMany({
         where: { user_id: user.id },
-        select: { achievement_id: true, unlocked_at: true },
+        select: { achievement_id: true, unlocked_at: true, note: true },
       }),
       prisma.dailyGuide.findFirst({
         where: { user_id: user.id, date: new Date(todayStr) },
@@ -105,6 +105,8 @@ export async function GET() {
         ...a,
         unlocked,
         unlockedAt: achievements.find(ua => ua.achievement_id === a.id)?.unlocked_at || null,
+        // Their own line on it (lib/relic-notes) — returned to them only.
+        note: achievements.find(ua => ua.achievement_id === a.id)?.note ?? null,
         mark: achievementMark(a),
         progress: !unlocked && stats ? achievementProgress(a, stats) : null,
       }

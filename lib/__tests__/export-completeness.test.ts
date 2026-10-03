@@ -47,7 +47,6 @@ const DELIBERATELY_EXCLUDED: Record<string, string> = {
   AiUsageDaily: 'the quota meter — our counter, not their data',
   XPEvent: 'derived from actions that are themselves exported',
   FeatureEvent: 'product analytics on taps; route patterns only, no content',
-  UserAchievement: 'derived — unlocked from the exported activity',
   UserAlertPreference: 'covered by preferences',
   ScheduledAlert: 'queue state for pending sends',
   AlertHistory: 'our send history, same as NotificationSendLog',

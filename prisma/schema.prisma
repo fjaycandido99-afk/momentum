@@ -751,6 +751,9 @@ model UserAchievement {
   user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   achievement_id String
   unlocked_at    DateTime @default(now())
+  /// Their own one line about this coin (lib/relic-notes). Never shown to anyone else.
+  note           String?
+  note_at        DateTime?
 
   @@unique([user_id, achievement_id])
   @@index([user_id])

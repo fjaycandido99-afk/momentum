@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { ACHIEVEMENTS } from '@/lib/achievements'
 import { byPrestige, cleanSelection, resolveRelics, type RelicsPayload } from '@/lib/relics'
+import { cleanRelicNote } from '@/lib/relic-notes'
 export type { RelicsPayload }
 
 const BY_ID = new Map(ACHIEVEMENTS.map(a => [a.id, a]))
@@ -54,4 +55,23 @@ export async function saveRelics(userId: string, input: { featured: unknown; equ
     create: { user_id: userId, relic_featured: clean.featured, relic_equipped: clean.equipped },
   })
   return getRelics(userId)
+}
+
+/**
+ * Their one line on a coin (lib/relic-notes). Only on a coin they hold —
+ * there is nothing to remember about one not yet earned. Empty clears it.
+ */
+export async function saveRelicNote(
+  userId: string,
+  achievementId: unknown,
+  text: unknown,
+): Promise<{ ok: true; note: string | null } | { ok: false; status: number; error: string }> {
+  if (typeof achievementId !== 'string' || !achievementId) return { ok: false, status: 400, error: 'Which relic?' }
+  const note = cleanRelicNote(text)
+  const res = await prisma.userAchievement.updateMany({
+    where: { user_id: userId, achievement_id: achievementId },
+    data: { note, note_at: note ? new Date() : null },
+  })
+  if (res.count === 0) return { ok: false, status: 404, error: 'You haven’t earned that one yet' }
+  return { ok: true, note }
 }

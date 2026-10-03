@@ -7,6 +7,8 @@ import { chainFor } from '@/lib/relic-paths'
 import { getAchievementById, achievementMark } from '@/lib/achievements'
 import { AchievementBadge, METAL, METAL_RGB } from './AchievementBadge'
 import { achievementLine } from '@/lib/achievement-lines'
+import { RelicNote } from '@/components/relics/RelicNote'
+import { ScrollLock } from '@/components/ui/ScrollLock'
 
 interface AchievementCelebrationProps {
   achievement: {
@@ -22,6 +24,9 @@ interface AchievementCelebrationProps {
   viewOnly?: boolean
   /** Earned state of any id — shows the coin's chain when given. */
   statusOf?: (id: string) => { unlocked: boolean } | undefined
+  /** viewOnly: their own line on this coin (lib/relic-notes), and where a change goes. */
+  note?: string | null
+  onNoteSaved?: (id: string, note: string | null) => void
 }
 
 /*
@@ -47,7 +52,7 @@ const particleConfig = (GOLD: string): Record<string, { count: number; opacity: 
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
-export function AchievementCelebration({ achievement, onClose, viewOnly = false, statusOf }: AchievementCelebrationProps) {
+export function AchievementCelebration({ achievement, onClose, viewOnly = false, statusOf, note = null, onNoteSaved }: AchievementCelebrationProps) {
   const metal = METAL[achievement.rarity]
   const GOLD = METAL_RGB[metal]
   const warm = metal === 'gold'
@@ -91,6 +96,9 @@ export function AchievementCelebration({ achievement, onClose, viewOnly = false,
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
+    // A coin they opened to look at stays until they close it — it holds
+    // their memory note, and nobody can type into a popup that leaves.
+    if (viewOnly) return
 
     // Long enough to read it and reach "View progress" — 3.5s was not.
     const fadeTimer = setTimeout(() => setFadeOut(true), 5500)
@@ -99,7 +107,7 @@ export function AchievementCelebration({ achievement, onClose, viewOnly = false,
       clearTimeout(fadeTimer)
       clearTimeout(closeTimer)
     }
-  }, [onClose])
+  }, [onClose, viewOnly])
 
   return (
     <div
@@ -107,6 +115,7 @@ export function AchievementCelebration({ achievement, onClose, viewOnly = false,
       style={fadeOut ? { animation: 'achievement-fade-out 500ms ease-out forwards' } : undefined}
       onClick={onClose}
     >
+      <ScrollLock />
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
 
       {/* White flash overlay */}
@@ -137,7 +146,7 @@ export function AchievementCelebration({ achievement, onClose, viewOnly = false,
 
       {/* Card */}
       <div
-        className={`relative z-10 max-w-[340px] md:max-w-[400px] w-full mx-5 rounded-[26px] border px-6 pt-6 pb-6 text-center
+        className={`relative z-10 max-w-[340px] md:max-w-[400px] w-full mx-5 max-h-[90dvh] overflow-y-auto overflow-x-hidden overscroll-contain rounded-[26px] border px-6 pt-6 pb-6 text-center
           ${warm
             ? 'bg-[radial-gradient(90%_60%_at_50%_30%,rgb(70_48_26/0.55),rgb(12_9_6/0.97)_70%)]'
             : 'bg-[radial-gradient(90%_60%_at_50%_30%,rgb(44_48_56/0.55),rgb(8_9_11/0.97)_70%)]'}
@@ -237,6 +246,10 @@ export function AchievementCelebration({ achievement, onClose, viewOnly = false,
               )
             })}
           </ol>
+        )}
+
+        {viewOnly && (
+          <RelicNote id={achievement.id} initial={note} onSaved={n => onNoteSaved?.(achievement.id, n)} />
         )}
 
         {/* XP and rarity with staged entry */}
