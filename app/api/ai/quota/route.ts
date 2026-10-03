@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       limit: quota.limit,
       reason: quota.reason,
       label: quota.label,
+      period: quota.period,
       // Bundled so the chat can render its consent nudge on arrival too,
       // rather than waiting for the first reply to tell it.
       memoryConsented: !!prefs?.ai_memory_enabled,

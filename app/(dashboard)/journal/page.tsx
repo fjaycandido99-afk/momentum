@@ -165,7 +165,7 @@ function JournalContent() {
   const [chatMemoryConsented, setChatMemoryConsented] = useState<boolean | null>(null)
   const [chatCrisis, setChatCrisis] = useState<CrisisContent | null>(null)
   const [chatDegraded, setChatDegraded] = useState(false)
-  const [chatBlocked, setChatBlocked] = useState<{ reason?: 'locked' | 'exhausted' | 'signin'; limit: number | null } | null>(null)
+  const [chatBlocked, setChatBlocked] = useState<{ reason?: 'locked' | 'exhausted' | 'signin'; limit: number | null; period?: 'day' | 'week' } | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   // Dream journal state
@@ -240,9 +240,9 @@ function JournalContent() {
         if (!res.ok) return
         const data = await res.json()
         if (cancelled) return
-        setChatQuota({ remaining: data.remaining, limit: data.limit })
+        setChatQuota({ remaining: data.remaining, limit: data.limit, period: data.period })
         setChatMemoryConsented(!!data.memoryConsented)
-        if (data.reason) setChatBlocked({ reason: data.reason, limit: data.limit ?? null })
+        if (data.reason) setChatBlocked({ reason: data.reason, limit: data.limit ?? null, period: data.period })
       } catch {
         // Non-fatal: the reply itself reports the quota too.
       }
@@ -767,7 +767,7 @@ function JournalContent() {
         const err = await res.json().catch(() => ({}))
         setConversation(prev => prev.slice(0, -1))
         setChatInput(userMessage)
-        setChatBlocked({ reason: err?.reason, limit: err?.limit ?? null })
+        setChatBlocked({ reason: err?.reason, limit: err?.limit ?? null, period: err?.period })
         return
       }
 

@@ -209,6 +209,7 @@ export function hasFeatureAccess(
 export type AiFeatureKey =
   | 'chat'
   | 'chat_voice'
+  | 'explain_voice'
   | 'reflections'
   | 'dream'
   | 'smart_session'
@@ -225,9 +226,15 @@ export type AiFeatureKey =
   | 'mindset_evolution'
 
 export interface AiFeatureLimit {
-  /** Calls per local day. 0 = locked, null = unlimited. */
+  /** Calls per local day (or per week, see freePer). 0 = locked, null = unlimited. */
   free: number | null
   premium: number | null
+  /**
+   * 'week': the FREE allowance is per local week (Monday start), not per day.
+   * Conversations come in bursts — a free user should be able to have one
+   * real talk on a hard day, not five sentences and a wall.
+   */
+  freePer?: 'week'
   /** Shown in the paywall when a free user runs out. */
   label: string
 }
@@ -238,7 +245,9 @@ export interface AiFeatureLimit {
 // you write to your future self) stays fully premium: metering something
 // you'd only ever use once a month communicates nothing.
 export const AI_FEATURE_LIMITS: Record<AiFeatureKey, AiFeatureLimit> = {
-  chat:              { free: 5, premium: null, label: 'AI chat' },
+  // Weekly for free (Francis, 2026-10-03): "a few deeper conversations each
+  // week", friendlier than a daily count. 20/week ≈ the old 5/day on average.
+  chat:              { free: 20, premium: null, label: 'Conversations', freePer: 'week' },
   // Spoken replies cost real ElevenLabs characters, so premium is capped
   // too — the only feature here where that is true. See CHAT_CREDIT_LIMIT.
   // Free gets ONE a day, not zero. At zero a free user never hears the
@@ -246,7 +255,13 @@ export const AI_FEATURE_LIMITS: Record<AiFeatureKey, AiFeatureLimit> = {
   // locked door. One is enough to know what it is and not enough to live
   // on. It is also guarded by a reserve (see chat-voice route) so this
   // taste can never eat into what a paying subscriber has left.
-  chat_voice:        { free: 1, premium: 30, label: 'Spoken replies' },
+  chat_voice:        { free: 7, premium: 30, label: 'Spoken replies', freePer: 'week' },
+  // "Explain this" and navigation — Voxu explaining the app, not coaching.
+  // FREE on purpose: it is how people learn the product. Its own meter so it
+  // never spends a conversation; the cap is there only so it can't become
+  // free text-to-speech (lines are short — see the chat-voice route). Most
+  // lines are identical for everyone and served from cache without counting.
+  explain_voice:     { free: 30, premium: 60, label: 'Explanations' },
   quote_explain:     { free: 3, premium: null, label: 'Quote insights' },
   // Per BOOK, not per day, in practice — you change books every week or
   // two, and the result is cached per book and era day, so opening the same

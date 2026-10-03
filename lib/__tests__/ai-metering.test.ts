@@ -37,7 +37,7 @@ beforeEach(() => {
 // per use. Spoken replies burn ElevenLabs characters out of a shared
 // monthly pool, so premium is capped there too. Anything added to this
 // list is a deliberate decision to charge someone and still say no.
-const METERED_FOR_PREMIUM: AiFeatureKey[] = ['chat_voice']
+const METERED_FOR_PREMIUM: AiFeatureKey[] = ['chat_voice', 'explain_voice']
 
 describe('aiFeatureAllowance', () => {
   it('gives premium an unlimited allowance except where each call costs money', () => {
@@ -51,10 +51,15 @@ describe('aiFeatureAllowance', () => {
   })
 
   it('keeps every free allowance small enough to still be a taste', () => {
+    // Per DAY on average: a weekly allowance counts a seventh. Explaining
+    // the app is deliberately generous — it is how people learn Voxu, not
+    // the coaching Premium sells — and is excluded here.
     for (const key of Object.keys(AI_FEATURE_LIMITS) as AiFeatureKey[]) {
+      if (key === 'explain_voice') continue
       const free = aiFeatureAllowance(key, false)
       expect(free).not.toBeNull()
-      expect(free as number).toBeLessThanOrEqual(5)
+      const perDay = AI_FEATURE_LIMITS[key].freePer === 'week' ? (free as number) / 7 : (free as number)
+      expect(perDay, key).toBeLessThanOrEqual(5)
     }
   })
 
@@ -228,18 +233,20 @@ describe('spoken replies — the free taste', () => {
   })
 
   it('keeps the free allowance well below premium', () => {
-    const { free, premium } = AI_FEATURE_LIMITS.chat_voice
+    // Free is weekly, premium daily: compare a week of each.
+    const { free, premium, freePer } = AI_FEATURE_LIMITS.chat_voice
     expect(premium).not.toBeNull()
-    expect(free).toBeLessThan((premium as number) / 5)
+    expect(freePer).toBe('week')
+    expect(free).toBeLessThan(((premium as number) * 7) / 5)
   })
 
-  it('is the only feature where premium is also capped', () => {
+  it('caps premium only where each call is spoken (ElevenLabs)', () => {
     // Every other premium allowance is unlimited. Voice is capped because
     // ElevenLabs characters are a real, shared, monthly cost — if that ever
     // stops being true this test should be the thing that asks why.
     const capped = Object.entries(AI_FEATURE_LIMITS)
       .filter(([, v]) => v.premium !== null)
       .map(([k]) => k)
-    expect(capped).toEqual(['chat_voice'])
+    expect(capped).toEqual(['chat_voice', 'explain_voice'])
   })
 })

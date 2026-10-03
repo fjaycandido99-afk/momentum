@@ -50,6 +50,12 @@ export const dynamic = 'force-dynamic'
 
 /** Long replies are a prompt bug, not a thing to pay ElevenLabs for. */
 const MAX_CHARS = 600
+/**
+ * "Explain this" lines are short by construction (lib/voice-guide/scripts).
+ * The tighter cap keeps the free explain meter from being used as free
+ * text-to-speech for anything longer.
+ */
+const EXPLAIN_MAX_CHARS = 280
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,7 +76,10 @@ export async function POST(request: NextRequest) {
     if (!text) {
       return NextResponse.json({ error: 'text is required' }, { status: 400 })
     }
-    if (text.length > MAX_CHARS) {
+    // 'explain' = Voxu explaining the app (the orb, the opener) — free, on
+    // its own meter. Anything else is a conversation reply.
+    const explain = body?.purpose === 'explain'
+    if (text.length > (explain ? EXPLAIN_MAX_CHARS : MAX_CHARS)) {
       return NextResponse.json({ error: 'text too long' }, { status: 413 })
     }
 
@@ -96,7 +105,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ audio: cached.audioBase64, duration: cached.duration, tone, cached: true })
     }
 
-    const gate = await aiGate(user.id, 'chat_voice')
+    const gate = await aiGate(user.id, explain ? 'explain_voice' : 'chat_voice')
     if (!gate.ok) return gate.response
 
     // Free users get a taste of spoken replies, but never out of a paying

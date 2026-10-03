@@ -58,10 +58,11 @@ export async function aiGate(userId: string, feature: AiFeatureKey): Promise<AiG
       ok: false,
       response: NextResponse.json(
         {
-          error: quota.reason === 'locked' ? 'Premium required' : 'Daily limit reached',
+          error: quota.reason === 'locked' ? 'Premium required' : quota.period === 'week' ? 'Weekly limit reached' : 'Daily limit reached',
           reason: quota.reason,
           limit: quota.limit,
           label: quota.label,
+          period: quota.period,
           feature,
           upgrade: true,
         },

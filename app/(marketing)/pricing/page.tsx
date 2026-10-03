@@ -65,14 +65,14 @@ const FEATURES = [
     icon: Music,
   },
   {
-    name: 'Coach messages',
-    free: '5 a day',
+    name: 'Coaching conversations',
+    free: '20 a week',
     premium: 'Unlimited',
     icon: Sparkles,
   },
   {
     name: 'Spoken replies',
-    free: '1 a day',
+    free: '7 a week',
     premium: '30 a day',
     icon: Sparkles,
   },

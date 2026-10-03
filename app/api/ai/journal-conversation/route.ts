@@ -67,9 +67,10 @@ export async function POST(request: NextRequest) {
     if (!quota.allowed) {
       return NextResponse.json(
         {
-          error: quota.reason === 'locked' ? 'Premium required' : 'Daily limit reached',
+          error: quota.reason === 'locked' ? 'Premium required' : quota.period === 'week' ? 'Weekly limit reached' : 'Daily limit reached',
           reason: quota.reason,
           limit: quota.limit,
+          period: quota.period,
           feature: 'chat',
           upgrade: true,
         },
@@ -248,7 +249,7 @@ IMPORTANT — this person has just said something that may indicate ${
       degraded: !generated,
       // Lets the UI show "2 left today" and prompt for memory consent
       // without a second round trip.
-      quota: { remaining: quota.remaining, limit: quota.limit },
+      quota: { remaining: quota.remaining, limit: quota.limit, period: quota.period },
       memory: { consented: memory.consented, active: memory.block !== '' },
     })
   } catch (error) {

@@ -32,8 +32,8 @@ interface UpgradeModalProps {
  * and progress windows, and the Era Recap check in lib/era/service.ts.
  */
 const PREMIUM_BENEFITS: { key: string; icon: typeof Book; text: string }[] = [
-  { key: 'talk', icon: Sparkles, text: 'Talk with Voxu as much as you like (free: 5 a day)' },
-  { key: 'voice', icon: Music, text: 'Voxu’s voice — 30 spoken replies a day (free: 1)' },
+  { key: 'talk', icon: Sparkles, text: 'Unlimited coaching conversations (free: 20 a week)' },
+  { key: 'voice', icon: Music, text: 'Voxu’s voice — 30 spoken replies a day (free: 7 a week)' },
   { key: 'experiments', icon: Zap, text: '7-day experiments that test what works for you' },
   { key: 'charts', icon: Clock, text: 'Your rhythm, and what gets in your way' },
   { key: 'lesson', icon: Book, text: 'All 15 psychology lessons (free: 4)' },
@@ -47,8 +47,8 @@ const REASON_HEADLINE: Record<UpgradeReason, { title: string; line: string }> = 
   experiments: { title: 'Test what actually works for you', line: 'Change one thing for 7 days, compared with your own last four weeks.' },
   charts: { title: 'See your rhythm', line: 'When you keep your promises, and what gets in the way — from your own record.' },
   lesson: { title: 'The whole library', line: 'Every lesson, its loop, something to try, and the study behind it.' },
-  voice: { title: 'Hear Voxu', line: 'Today’s spoken lines are used up. Premium gives you 30 a day.' },
-  talk: { title: 'Keep talking', line: 'Today’s messages are used up. With Premium, talk as much as you like.' },
+  voice: { title: 'Hear Voxu', line: 'Your spoken replies are used up for now. Premium gives you 30 a day.' },
+  talk: { title: 'Keep talking with Voxu', line: 'Premium gives you unlimited coaching conversations — and a Voxu that reads your last 30 days.' },
   widget: { title: 'Voxu on your home screen', line: 'Play today’s guided session and see what your record shows, from a widget.' },
 }
 

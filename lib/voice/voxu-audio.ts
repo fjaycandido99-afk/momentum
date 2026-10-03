@@ -26,12 +26,17 @@ export type VoxuAudioResult =
   | { ok: false; reason: 'locked' | 'signin' | 'unavailable' }
 
 /** Fetch a line in Voxu's voice, ready to play. Never throws. */
-export async function fetchVoxuAudio(text: string): Promise<VoxuAudioResult> {
+/**
+ * `purpose: 'explain'` — Voxu explaining the app (the orb's walkthroughs,
+ * the first-launch opener). Free, on its own meter; never spends a
+ * conversation's spoken reply.
+ */
+export async function fetchVoxuAudio(text: string, purpose: 'explain' | 'talk' = 'talk'): Promise<VoxuAudioResult> {
   try {
     const res = await fetch('/api/ai/chat-voice', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: clipForVoice(text) }),
+      body: JSON.stringify({ text: clipForVoice(text), purpose }),
     })
     if (res.status === 403) return { ok: false, reason: 'locked' }
     if (res.status === 401) return { ok: false, reason: 'signin' }

@@ -219,7 +219,7 @@ export function VoxuGuide({
 
     // Fetch ahead: the next line is on its way while this one plays.
     const fetches: Promise<VoxuAudioResult>[] = []
-    const get = (i: number) => (fetches[i] ??= fetchVoxuAudio(lines[i].text))
+    const get = (i: number) => (fetches[i] ??= fetchVoxuAudio(lines[i].text, 'explain'))
     get(0)
 
     for (let i = 0; i < lines.length; i++) {
@@ -445,7 +445,7 @@ export function VoxuGuide({
             <div className="min-w-0 flex-1">
               <p className="text-px-14 text-white leading-snug" aria-live="polite">{script[index]?.text}</p>
               <p className="text-px-10 text-white/50 mt-1 tabular-nums">
-                {index + 1} of {script.length}{quiet && !outOfVoice ? ' · voice is resting, here it is in words' : ''}{outOfVoice ? ' · today’s spoken lines are used up' : ''}
+                {index + 1} of {script.length}{quiet && !outOfVoice ? ' · voice is resting, here it is in words' : ''}{outOfVoice ? ' · spoken lines are used up for now' : ''}
               </p>
             </div>
             {outOfVoice && sub && !sub.isPremium && (

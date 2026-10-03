@@ -138,12 +138,15 @@ describe('the free tier is described as it actually is', () => {
     expect(pricing).toMatch(/Journal history[\s\S]{0,120}Last 7 days/)
   })
 
-  it('quotes the real daily allowances', () => {
-    expect(AI_FEATURE_LIMITS.chat.free).toBe(5)
-    expect(AI_FEATURE_LIMITS.chat_voice.free).toBe(1)
-    const pricing = copyOnly(read('app/(marketing)/pricing/page.tsx'))
-    expect(pricing).toMatch(/5 a day/)
-    expect(pricing).toMatch(/1 a day/)
+  it('quotes the real weekly allowances', () => {
+    expect(AI_FEATURE_LIMITS.chat).toMatchObject({ free: 20, freePer: 'week' })
+    expect(AI_FEATURE_LIMITS.chat_voice).toMatchObject({ free: 7, freePer: 'week', premium: 30 })
+    for (const f of ['app/(marketing)/pricing/page.tsx', 'components/premium/UpgradeModal.tsx', 'app/(dashboard)/settings/page.tsx']) {
+      const copy = copyOnly(read(f))
+      expect(copy, f).toMatch(/20 (coaching conversations )?a week/)
+      expect(copy, f).toMatch(/7 (spoken replies )?a week/)
+      expect(copy, f).not.toMatch(/5 a day/)
+    }
   })
 
   it('quotes the real memory depth', () => {

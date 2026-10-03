@@ -37,6 +37,32 @@ export function dayKeyFor(timezone: string | null | undefined, now: Date = new D
   }
 }
 
+/**
+ * The row key for this feature's allowance: the local day, or — for a
+ * weekly free allowance — that week's Monday with a "/w" suffix. The suffix
+ * keeps a weekly row from ever sharing a key with a daily one (a premium
+ * user's Monday row after they cancel), and the key still sorts by date, so
+ * cleanupAiUsage's string comparison keeps working.
+ */
+export function periodKeyFor(
+  feature: AiFeatureKey,
+  isPremium: boolean,
+  timezone: string | null | undefined,
+  now: Date = new Date(),
+): string {
+  const day = dayKeyFor(timezone, now)
+  if (isPremium || AI_FEATURE_LIMITS[feature]?.freePer !== 'week') return day
+  const d = new Date(day + 'T12:00:00Z')
+  const back = (d.getUTCDay() + 6) % 7 // days since Monday
+  d.setUTCDate(d.getUTCDate() - back)
+  return d.toISOString().slice(0, 10) + '/w'
+}
+
+/** 'day' or 'week' — what "resets" means for this tier's allowance. */
+export function quotaPeriod(feature: AiFeatureKey, isPremium: boolean): 'day' | 'week' {
+  return !isPremium && AI_FEATURE_LIMITS[feature]?.freePer === 'week' ? 'week' : 'day'
+}
+
 export interface QuotaVerdict {
   allowed: boolean
   /** Calls left AFTER this one, when the allowance is finite. */
@@ -46,6 +72,8 @@ export interface QuotaVerdict {
   /** Present when denied, for the paywall to render. */
   reason?: 'locked' | 'exhausted'
   label: string
+  /** What the allowance resets with. */
+  period?: 'day' | 'week'
 }
 
 /**
@@ -64,12 +92,13 @@ export async function consumeAiQuota(
   timezone?: string | null
 ): Promise<QuotaVerdict> {
   const label = AI_FEATURE_LIMITS[feature]?.label ?? feature
+  const period = quotaPeriod(feature, isPremium)
   const limit = aiFeatureAllowance(feature, isPremium)
 
-  if (limit === null) return { allowed: true, remaining: null, limit: null, label }
-  if (limit <= 0) return { allowed: false, remaining: 0, limit: 0, reason: 'locked', label }
+  if (limit === null) return { allowed: true, remaining: null, limit: null, label, period }
+  if (limit <= 0) return { allowed: false, remaining: 0, limit: 0, reason: 'locked', label, period }
 
-  const day = dayKeyFor(timezone)
+  const day = periodKeyFor(feature, isPremium, timezone)
 
   const row = await prisma.aiUsageDaily.upsert({
     where: { user_id_feature_day: { user_id: userId, feature, day } },
@@ -79,7 +108,7 @@ export async function consumeAiQuota(
   })
 
   if (row.count >= limit) {
-    return { allowed: false, remaining: 0, limit, reason: 'exhausted', label }
+    return { allowed: false, remaining: 0, limit, reason: 'exhausted', label, period }
   }
 
   const updated = await prisma.aiUsageDaily.update({
@@ -93,6 +122,7 @@ export async function consumeAiQuota(
     remaining: Math.max(0, limit - updated.count),
     limit,
     label,
+    period,
   }
 }
 
@@ -107,13 +137,14 @@ export async function peekAiQuota(
   timezone?: string | null
 ): Promise<QuotaVerdict> {
   const label = AI_FEATURE_LIMITS[feature]?.label ?? feature
+  const period = quotaPeriod(feature, isPremium)
   const limit = aiFeatureAllowance(feature, isPremium)
 
-  if (limit === null) return { allowed: true, remaining: null, limit: null, label }
-  if (limit <= 0) return { allowed: false, remaining: 0, limit: 0, reason: 'locked', label }
+  if (limit === null) return { allowed: true, remaining: null, limit: null, label, period }
+  if (limit <= 0) return { allowed: false, remaining: 0, limit: 0, reason: 'locked', label, period }
 
   const row = await prisma.aiUsageDaily.findUnique({
-    where: { user_id_feature_day: { user_id: userId, feature, day: dayKeyFor(timezone) } },
+    where: { user_id_feature_day: { user_id: userId, feature, day: periodKeyFor(feature, isPremium, timezone) } },
     select: { count: true },
   })
 
@@ -125,6 +156,7 @@ export async function peekAiQuota(
     limit,
     reason: remaining > 0 ? undefined : 'exhausted',
     label,
+    period,
   }
 }
 
@@ -157,7 +189,7 @@ export async function refundAiQuota(
   if (aiFeatureAllowance(feature, isPremium) === null) return
 
   try {
-    const where = { user_id_feature_day: { user_id: userId, feature, day: dayKeyFor(timezone) } }
+    const where = { user_id_feature_day: { user_id: userId, feature, day: periodKeyFor(feature, isPremium, timezone) } }
     const row = await prisma.aiUsageDaily.findUnique({ where, select: { count: true } })
     if (!row || row.count <= 0) return
     await prisma.aiUsageDaily.update({ where, data: { count: { decrement: 1 } } })

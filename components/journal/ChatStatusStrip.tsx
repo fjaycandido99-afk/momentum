@@ -20,7 +20,16 @@ import { Sparkles, BookLock, UserPlus } from 'lucide-react'
 export interface ChatQuota {
   remaining: number | null
   limit: number | null
+  /** Free conversations are weekly; anything else is daily. */
+  period?: 'day' | 'week'
 }
+
+/**
+ * Below this many left, say so — gently. Above it, say nothing: a running
+ * "14 of 20 left" makes a conversation feel like a meter (Francis,
+ * 2026-10-03: "avoid something harsh like '3 messages remaining'").
+ */
+export const NEARLY_USED = 5
 
 interface Props {
   quota: ChatQuota | null
@@ -28,7 +37,7 @@ interface Props {
   memoryConsented: boolean | null
   isPremium: boolean
   /** Set when the server refused the last send. */
-  blocked: { reason?: 'locked' | 'exhausted' | 'signin'; limit: number | null } | null
+  blocked: { reason?: 'locked' | 'exhausted' | 'signin'; limit: number | null; period?: 'day' | 'week' } | null
   onUpgrade: () => void
 }
 
@@ -54,7 +63,7 @@ export function ChatStatusStrip({ quota, memoryConsented, isPremium, blocked, on
             <p className="text-sm font-medium text-white">Create an account to talk to your coach</p>
             <p className="text-xs leading-relaxed text-white/70">
               A conversation needs somewhere to live — it is your entries the
-              coach reads back to you. Free accounts get five messages a day.
+              coach reads back to you. Free accounts get a few conversations every week.
               Your message is still in the box.
             </p>
           </div>
@@ -78,12 +87,12 @@ export function ChatStatusStrip({ quota, memoryConsented, isPremium, blocked, on
           <div className="space-y-1">
             <p className="text-sm font-medium text-white">
               {exhausted
-                ? `That's your ${blocked.limit} messages for today`
+                ? (blocked.period === 'week' ? 'That’s this week’s conversations' : `That's your ${blocked.limit} messages for today`)
                 : 'This one needs Premium'}
             </p>
             <p className="text-xs leading-relaxed text-white/70">
               {exhausted
-                ? 'They come back tomorrow. Premium removes the cap — and lets the chat read a month of your journal instead of just today, so it can notice what keeps coming up.'
+                ? `${blocked.period === 'week' ? 'They come back on Monday, and Voxu can still explain and find things for you.' : 'They come back tomorrow.'} Premium removes the cap — and lets the chat read a month of your journal instead of just today, so it can notice what keeps coming up.`
                 : 'Premium unlocks this, along with a chat that remembers what you have written and saved.'}
             </p>
           </div>
@@ -98,7 +107,7 @@ export function ChatStatusStrip({ quota, memoryConsented, isPremium, blocked, on
     )
   }
 
-  const showCount = quota?.limit != null && quota.remaining != null
+  const showCount = quota?.limit != null && quota.remaining != null && quota.remaining <= NEARLY_USED
   const showMemoryNudge = memoryConsented === false
 
   if (!showCount && !showMemoryNudge) return null
@@ -107,7 +116,9 @@ export function ChatStatusStrip({ quota, memoryConsented, isPremium, blocked, on
     <div className="flex flex-wrap items-center justify-between gap-2 px-1">
       {showCount ? (
         <p className="text-px-11 text-white/45">
-          {quota!.remaining} of {quota!.limit} messages left today
+          {quota!.period === 'week'
+            ? 'You’ve used most of this week’s conversations.'
+            : `${quota!.remaining} of ${quota!.limit} messages left today`}
         </p>
       ) : (
         <span />

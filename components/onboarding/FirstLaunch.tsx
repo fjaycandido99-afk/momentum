@@ -105,7 +105,7 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   const say = useCallback(async (text: string): Promise<'played' | 'blocked' | 'quiet'> => {
     audio.current?.pause()
     if (!voiceOn) return 'quiet'
-    const res = await fetchVoxuAudio(text)
+    const res = await fetchVoxuAudio(text, 'explain')
     if (!res.ok) return 'quiet'
     audio.current = res.audio
     return new Promise(done => {

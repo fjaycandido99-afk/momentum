@@ -69,7 +69,7 @@ export function TalkSheet({
     if (!voiceOn) return
     const res = await fetchVoxuAudio(text)
     if (!res.ok) {
-      if (res.reason === 'locked') { setNote('Today’s spoken replies are used up, so here it is in words.'); setLimited(true) }
+      if (res.reason === 'locked') { setNote('Spoken replies are used up for now, so here it is in words.'); setLimited(true) }
       return
     }
     audio.current = res.audio
@@ -115,7 +115,9 @@ export function TalkSheet({
       const data = await res.json().catch(() => null)
       if (!res.ok) {
         setNote(data?.reason === 'exhausted'
-          ? 'That’s today’s messages used. They come back tomorrow.'
+          ? (data?.period === 'week'
+            ? 'That’s this week’s conversations. They come back Monday — and I can still explain things and take you places.'
+            : 'That’s today’s messages used. They come back tomorrow.')
           : data?.reason === 'locked'
             ? 'Talking with Voxu is part of Premium.'
             : data?.error ?? 'Couldn’t reach Voxu just now.')

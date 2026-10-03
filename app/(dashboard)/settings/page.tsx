@@ -945,11 +945,11 @@ function SettingsContent() {
                   <ul className="space-y-2 text-sm text-white/70">
                     <li className="flex items-center gap-2">
                       <Lock className="w-3.5 h-3.5" />
-                      Coach messages capped at 5 a day
+                      20 coaching conversations a week
                     </li>
                     <li className="flex items-center gap-2">
                       <Lock className="w-3.5 h-3.5" />
-                      One spoken reply a day
+                      7 spoken replies a week
                     </li>
                     <li className="flex items-center gap-2">
                       <Lock className="w-3.5 h-3.5" />
