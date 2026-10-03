@@ -89,7 +89,7 @@ export default function PatternsPage() {
         <BackButton />
         <SectionTabs section="record" className="mt-2" />
         <div className="relative -mx-5 px-5 pt-1 pb-2 overflow-hidden">
-        <SceneImage src="/scenes/laws/header.jpg" fade="left-down" className="inset-y-0 right-0 w-[70%] h-full" opacity={0.75} />
+        <SceneImage src="/scenes/laws/header.jpg" fade="left-down" className="inset-y-0 right-0 w-[72%] h-full" opacity={1} />
         <p className="relative text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">Your pattern</p>
         <h1 className="relative text-px-40 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>Your laws</h1>
         <p className="relative text-px-14 text-white/75 mt-2 leading-relaxed">

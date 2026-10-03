@@ -1,13 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Bookmark, BookOpen, ChevronRight, Compass, Dumbbell, Headphones, HeartPulse, Home,
   PenLine, Settings, Trophy, UserRound, X, type LucideIcon,
 } from 'lucide-react'
 import { ScrollLock } from '@/components/ui/ScrollLock'
-import { SceneImage } from '@/components/home/SceneImage'
 
 /**
  * The menu — where Voxu's places live, opened from the spiral.
@@ -137,11 +136,8 @@ export function NavSheet({
                   const Icon = it.icon
                   const body = (
                     <>
-                      <SceneImage src={it.scene ? `/scenes/menu/${it.scene}.jpg` : null} className="inset-y-0 right-0 w-[48%] h-full" opacity={0.5} />
                       <span className="relative flex items-center gap-3 w-full min-w-0">
-                      <span className="w-9 h-9 shrink-0 rounded-full border border-white/[0.12] flex items-center justify-center">
-                        <Icon className="w-4 h-4 text-white/80" />
-                      </span>
+                      <RowArt scene={it.scene} icon={Icon} />
                       <span className="min-w-0 flex-1">
                         <span className="block text-px-16 text-white leading-tight" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 500 }}>
                           {it.label}
@@ -177,5 +173,34 @@ export function NavSheet({
         </div>
       </nav>
     </div>
+  )
+}
+
+/**
+ * A row's picture: a small rounded photo (public/scenes/menu/<scene>.jpg),
+ * as in the mockup's tiles — these are dark night scenes, and faded behind
+ * the text they vanished. The icon is the fallback for a row without one,
+ * or a file that fails to load.
+ */
+function RowArt({ scene, icon: Icon }: { scene?: string; icon: LucideIcon }) {
+  const [failed, setFailed] = useState(false)
+  if (scene && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={`/scenes/menu/${scene}.jpg`}
+        alt=""
+        aria-hidden
+        loading="lazy"
+        decoding="async"
+        onError={() => setFailed(true)}
+        className="w-14 h-11 shrink-0 rounded-xl object-cover border border-white/[0.12]"
+      />
+    )
+  }
+  return (
+    <span className="w-9 h-9 shrink-0 rounded-full border border-white/[0.12] flex items-center justify-center">
+      <Icon className="w-4 h-4 text-white/80" />
+    </span>
   )
 }
