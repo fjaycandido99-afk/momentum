@@ -15,7 +15,7 @@ import type { LoopStep } from '@/lib/era/day-loop'
  * last time go in; a kind comes out.
  */
 
-export type MomentKind = 'era' | 'journal' | 'spark' | 'pulse'
+export type MomentKind = 'era' | 'journal' | 'spark' | 'pulse' | 'noticed'
 
 /** Steps where something is genuinely waiting for the user. */
 const OPEN_STEPS: LoopStep[] = ['state', 'promise', 'check', 'check_yesterday']
@@ -32,6 +32,12 @@ export interface MomentInput {
    * it, so when this is true nothing on the era is more urgent.
    */
   pulseNudge?: boolean
+  /**
+   * Voxu has something new to say from their record (lib/home/noticed) —
+   * rare, once per observation, at most one a day. Behind anything of
+   * theirs that is open; ahead of the journal prompt and the quote.
+   */
+  noticed?: boolean
 }
 
 export function pickMoment(input: MomentInput): MomentKind {
@@ -43,6 +49,7 @@ export function pickMoment(input: MomentInput): MomentKind {
   // An open commitment always wins, even twice running: it is the user's own
   // unfinished business, not something the app decided to say.
   if (eraOpen) return 'era'
+  if (input.noticed) return 'noticed'
 
   const wantsJournal = !input.hasJournalToday
   // Between the other two, don't say the same kind twice in a row — a

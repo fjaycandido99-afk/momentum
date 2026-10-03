@@ -1908,6 +1908,8 @@ export function ImmersiveHome() {
           loopStep={era.era?.loop.step ?? null}
           eraLabel={era.era ? `${era.era.title} · Day ${era.era.day}` : null}
           hasJournalToday={hasJournaledToday}
+          eraId={era.era?.id ?? null}
+          eraDays={era.era?.days ?? []}
         />
       )}
 

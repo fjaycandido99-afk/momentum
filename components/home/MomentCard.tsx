@@ -17,6 +17,7 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 export function MomentCard({
   label,
   line,
+  detail,
   action,
   href,
   onAction,
@@ -27,6 +28,8 @@ export function MomentCard({
 }: {
   label: string
   line: string
+  /** A second, smaller line — "Voxu noticed something" puts the law here, with its counts. */
+  detail?: string
   action: string
   /** Set when the action is a place to go; otherwise it just closes. */
   href?: string
@@ -57,6 +60,7 @@ export function MomentCard({
       <p className="text-px-22 text-white leading-snug" style={{ ...SERIF, fontWeight: 600 }}>
         {line}
       </p>
+      {detail && <p className="text-px-15 text-white/80 leading-snug mt-2">{detail}</p>}
 
       {href ? (
         <Link

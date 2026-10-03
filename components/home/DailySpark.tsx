@@ -20,6 +20,11 @@ import { NudgeSheet } from './NudgeSheet'
 import { getLatestPulse } from '@/lib/pulse/store'
 import { pickNudge, type PulseNudge } from '@/lib/pulse/nudge'
 import { OPEN_DISCIPLINE } from '@/lib/pulse/events'
+import { keptRun, pickNoticed, rememberNoticed, type EraDayKept, type Noticed } from '@/lib/home/noticed'
+import { TalkSheet } from '@/components/voice-guide/TalkSheet'
+import { resolveIntent } from '@/lib/voice-guide/intents'
+import { navHref } from '@/lib/voice-guide/navigate'
+import { useRouter } from 'next/navigation'
 
 /** Turns off discipline nudges only — never the rest of the moment slot. */
 const NUDGE_OFF_ID = 'pulse-nudge-off'
@@ -57,6 +62,16 @@ const INITIAL_DELAY = 6 * 1000           // let home finish arriving first
  * This caps the SLOT: never two moments in one session, whatever they are.
  */
 const SHOWN_KEY = 'voxu_spark_shown'
+// "Voxu noticed something" (lib/home/noticed): what's been said, the day it
+// last spoke (one a day), and their solid laws — fetched at most once a day,
+// never on every open.
+const NOTICED_SEEN_KEY = 'voxu.noticed.seen'
+const NOTICED_DAY_KEY = 'voxu.noticed.day'
+const NOTICED_LAWS_KEY = 'voxu.noticed.laws'
+
+function readJson<T>(key: string, fallback: T): T {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) as T : fallback } catch { return fallback }
+}
 /**
  * The quote's own limit: a few per LOCAL day, on top of the session cap.
  *
@@ -112,13 +127,16 @@ function markShown(kind: MomentKind) {
 function lastKind(): MomentKind | null {
   try {
     const value = localStorage.getItem(LAST_KIND_KEY)
-    return value === 'era' || value === 'journal' || value === 'spark' || value === 'pulse' ? value : null
+    return value === 'era' || value === 'journal' || value === 'spark' || value === 'pulse' || value === 'noticed' ? value : null
   } catch {
     return null
   }
 }
 
-export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday = true }: {
+export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday = true, eraId = null, eraDays = [] }: {
+  /** The era, for "Voxu noticed something" — its id and each day's kept. */
+  eraId?: string | null
+  eraDays?: EraDayKept[]
   /** Their era's loop step, or null with no era (lib/era/day-loop.ts). */
   loopStep?: LoopStep | null
   /** "Locked In · Day 2" — the era moment names where they are. */
@@ -129,6 +147,11 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
   const [visible, setVisible] = useState(false)
   /** Which kind of moment this is. Decided when it's shown. */
   const [kind, setKind] = useState<MomentKind>('spark')
+  /** What Voxu noticed, when kind is 'noticed'. */
+  const [noticed, setNoticed] = useState<Noticed | null>(null)
+  /** "Talk about it" — the conversation opened from a noticed moment. */
+  const [talkOpener, setTalkOpener] = useState<string | null>(null)
+  const router = useRouter()
   /** The Pulse nudge being shown, when kind is 'pulse'. */
   const [nudge, setNudge] = useState<PulseNudge | null>(null)
   const [animating, setAnimating] = useState(false)
@@ -261,8 +284,24 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
    * was. A ref reads the current value at fire time while the effect still
    * runs exactly once per app open.
    */
-  const latest = useRef({ loopStep, hasJournalToday })
-  latest.current = { loopStep, hasJournalToday }
+  const latest = useRef({ loopStep, hasJournalToday, eraId, eraDays })
+  latest.current = { loopStep, hasJournalToday, eraId, eraDays }
+
+  // Their solid laws, for the noticed moment — one read a day at most.
+  useEffect(() => {
+    const today = localDayKey()
+    if (readJson<{ day?: string }>(NOTICED_LAWS_KEY, {}).day === today) return
+    fetch('/api/patterns', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!d?.patterns) return
+        const laws = d.patterns
+          .filter((p: { strength: string }) => p.strength === 'solid')
+          .map((p: { id: string; headline: string }) => ({ id: p.id, headline: p.headline }))
+        try { localStorage.setItem(NOTICED_LAWS_KEY, JSON.stringify({ day: today, laws })) } catch { /* storage blocked */ }
+      })
+      .catch(() => {})
+  }, [])
 
   // Once per app open, after the screen has settled, never over another popup.
   useEffect(() => {
@@ -276,7 +315,23 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
       // Nudges have their own off switch: turning them off must not also
       // silence the era moment, the journal prompt and the quote.
       const n = isDismissed(NUDGE_OFF_ID) ? null : pickNudge(getLatestPulse(), key => isDismissed(key))
-      const chosen = pickMoment({ ...latest.current, lastKind: lastKind(), pulseNudge: !!n })
+      // Something new from their record — at most one a day, each said once.
+      const today = localDayKey()
+      const seen = readJson<string[]>(NOTICED_SEEN_KEY, [])
+      const found = readJson<string>(NOTICED_DAY_KEY, '') === today ? null : pickNoticed({
+        run: keptRun(latest.current.eraDays),
+        eraId: latest.current.eraId,
+        laws: readJson<{ laws?: { id: string; headline: string }[] }>(NOTICED_LAWS_KEY, {}).laws ?? [],
+        seen,
+      })
+      const chosen = pickMoment({ ...latest.current, lastKind: lastKind(), pulseNudge: !!n, noticed: !!found })
+      if (chosen === 'noticed' && found) {
+        try {
+          localStorage.setItem(NOTICED_SEEN_KEY, JSON.stringify(rememberNoticed(seen, found.key)))
+          localStorage.setItem(NOTICED_DAY_KEY, JSON.stringify(today))
+        } catch { /* worst case it says it again tomorrow */ }
+        setNoticed(found)
+      }
       if (chosen === 'pulse' && n) {
         // Spent once shown: this discipline won't interrupt the same way
         // again today, whatever the answer.
@@ -388,6 +443,25 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
   // this the app-shell container behind it still scrolls under the finger.
   useBodyScrollLock(visible)
 
+  // The conversation outlives the card it came from, so it renders even
+  // after the moment itself has closed.
+  if (talkOpener) {
+    return (
+      <TalkSheet
+        opener={talkOpener}
+        screen="noticed"
+        screenSummary={talkOpener}
+        onCommand={text => {
+          setTalkOpener(null)
+          const r = resolveIntent(text)
+          if (r.kind === 'go') router.push(navHref(r))
+          else if (r.kind === 'lighter_day' || r.kind === 'play_guide') router.push('/')
+        }}
+        onClose={() => setTalkOpener(null)}
+      />
+    )
+  }
+
   if (!visible) return null
   if (kind === 'pulse' && nudge) {
     const target = nudge.rightNow.action?.target
@@ -407,6 +481,23 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
       />
     )
   }
+  if (kind === 'noticed' && noticed) {
+    return (
+      <MomentCard
+        label="Voxu noticed something"
+        line={noticed.line}
+        detail={noticed.kind === 'law' ? noticed.detail : undefined}
+        action={noticed.kind === 'law' ? 'See it' : 'Talk about it'}
+        href={noticed.kind === 'law' ? noticed.href : undefined}
+        onAction={() => dismiss(noticed.kind === 'run' ? () => setTalkOpener(noticed.opener) : undefined)}
+        onClose={() => dismiss()}
+        onOff={turnOff}
+        dismissing={dismissing}
+        animating={animating}
+      />
+    )
+  }
+
   if (kind !== 'spark') {
     const era = loopStep ? eraMomentCopy(loopStep) : null
     // The era moment's button dismisses rather than navigates: this only
