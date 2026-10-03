@@ -59,7 +59,7 @@ const FEATURE_REGISTRY: Record<FeatureId, FeatureInfo> = {
     // everyone by design (isContentFree) — YouTube's terms don't allow
     // charging for its content, and claiming we do would be worse than
     // wrong.
-    description: 'Every AI-voiced session, not just Morning Prime and Breathing',
+    description: 'Every AI-voiced session, not just the starter set',
   },
   save_progress: {
     name: 'Save Progress',

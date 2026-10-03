@@ -68,7 +68,7 @@ export function PreviewPaywall({
 
   const handleUpgrade = () => {
     onClose()
-    openUpgradeModal()
+    openUpgradeModal('audio')
   }
 
   const handleDailyUnlock = () => {

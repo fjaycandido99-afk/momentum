@@ -327,7 +327,7 @@ export const OPEN_UPGRADE_EVENT = 'voxu:open-upgrade'
 export function openUpgrade(reason?: UpgradeReason) { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(OPEN_UPGRADE_EVENT, { detail: { reason } })) }
 
 /** What someone reached for when the upgrade screen opened (components/premium/UpgradeModal). */
-export type UpgradeReason = 'experiments' | 'charts' | 'lesson' | 'voice' | 'talk' | 'widget'
+export type UpgradeReason = 'experiments' | 'charts' | 'lesson' | 'voice' | 'talk' | 'widget' | 'audio'
 
 export function useSubscription() {
   const context = useContext(SubscriptionContext)

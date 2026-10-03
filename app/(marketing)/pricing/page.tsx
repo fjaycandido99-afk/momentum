@@ -99,7 +99,7 @@ const FEATURES = [
   },
   {
     name: 'Guided voice sessions',
-    free: 'Morning Prime & Breathing',
+    free: 'Morning Prime, Breathing, Focus, Gratitude & Sleep',
     premium: 'All of them',
     icon: Music,
   },

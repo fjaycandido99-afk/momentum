@@ -19,7 +19,10 @@ export type PremiumFeature =
 // Freemium content limits
 export const FREEMIUM_LIMITS = {
   voiceGuides: {
-    freeIds: ['breathing'], // Only breathing is free
+    // A starter set (Francis, 2026-10-03): one for the morning, focus, a
+    // breath, and the night — enough to build a day around. The rest of the
+    // library is Premium, each with a 30s preview (previewSeconds).
+    freeIds: ['breathing', 'focus_meditation', 'gratitude', 'sleep'],
   },
   // No soundscape / motivation / music entries: those are YouTube embeds,
   // free for all.

@@ -38,6 +38,7 @@ const PREMIUM_BENEFITS: { key: string; icon: typeof Book; text: string }[] = [
   { key: 'charts', icon: Clock, text: 'Your rhythm, and what gets in your way' },
   { key: 'lesson', icon: Book, text: 'All 15 psychology lessons (free: 4)' },
   { key: 'memory', icon: Book, text: 'A coach that remembers day one, and your last 30 days' },
+  { key: 'audio', icon: Music, text: 'Every guided session (free: a starter four)' },
   { key: 'widget', icon: Crown, text: 'Guided and Voxu-noticed home screen widgets' },
   { key: 'recap', icon: Crown, text: 'Your full journal, and the Era Recap at day 30' },
 ]
@@ -49,6 +50,7 @@ const REASON_HEADLINE: Record<UpgradeReason, { title: string; line: string }> = 
   lesson: { title: 'The whole library', line: 'Every lesson, its loop, something to try, and the study behind it.' },
   voice: { title: 'Hear Voxu', line: 'Your spoken replies are used up for now. Premium gives you 30 a day.' },
   talk: { title: 'Keep talking with Voxu', line: 'Premium gives you unlimited coaching conversations — and a Voxu that reads your last 30 days.' },
+  audio: { title: 'Unlock every guided session', line: 'The whole library of guided audio, in Voxu’s voice — not just the starter four.' },
   widget: { title: 'Voxu on your home screen', line: 'Play today’s guided session and see what your record shows, from a widget.' },
 }
 

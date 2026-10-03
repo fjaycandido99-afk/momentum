@@ -103,3 +103,15 @@ describe('constants', () => {
     expect(FREEMIUM_LIMITS.voiceGuides.freeIds.length).toBeGreaterThan(0)
   })
 })
+
+describe('guided audio starter set', () => {
+  it('frees four real guides and locks the rest of the library', async () => {
+    const { FREEMIUM_LIMITS, isContentFree } = await import('@/lib/subscription-constants')
+    const { VOICE_GUIDES } = await import('@/components/home/home-types')
+    const ids = new Set(VOICE_GUIDES.map(g => g.id))
+    expect(FREEMIUM_LIMITS.voiceGuides.freeIds).toHaveLength(4)
+    for (const id of FREEMIUM_LIMITS.voiceGuides.freeIds) expect(ids.has(id), id).toBe(true)
+    const locked = VOICE_GUIDES.filter(g => !isContentFree('voiceGuide', g.id, false))
+    expect(locked.length).toBe(VOICE_GUIDES.length - 4)
+  })
+})
