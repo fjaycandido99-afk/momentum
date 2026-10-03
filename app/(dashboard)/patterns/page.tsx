@@ -7,6 +7,18 @@ import type { Pattern, PatternReport } from '@/lib/patterns/rules'
 import { EXPERIMENTS, experimentFor } from '@/lib/patterns/experiments'
 import type { ExperimentWire } from '@/lib/patterns/experiments-server'
 import { haptic } from '@/lib/haptics'
+import { LESSON_BY_ID, LESSON_FOR_EXPERIMENT, LESSON_FOR_PATTERN } from '@/lib/psychology/lessons'
+
+/** "Related lesson" — never "why": a pattern in a record doesn't prove the mechanism. */
+function LessonLink({ id }: { id: string | undefined }) {
+  const lesson = id ? LESSON_BY_ID.get(id) : undefined
+  if (!lesson) return null
+  return (
+    <Link href={`/psychology/${lesson.id}`} className="tap-44 inline-block mt-2 text-px-12 text-white/70 underline underline-offset-4">
+      Related lesson: {lesson.title} →
+    </Link>
+  )
+}
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
@@ -101,6 +113,7 @@ export default function PatternsPage() {
                     </p>
                     <p className="text-px-18 text-white leading-snug mt-1.5" style={SERIF}>{p.headline}</p>
                     <p className="text-px-12 text-white/65 mt-1.5 leading-snug">{p.detail}</p>
+                    <div><LessonLink id={LESSON_FOR_PATTERN[p.kind]} /></div>
                     {test && !active && (
                       <button
                         onClick={() => act({ action: 'start', key: test.key })}
@@ -160,6 +173,7 @@ export default function PatternsPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-px-15 text-white">{e.title}</p>
                     <p className="text-px-12 text-white/65 mt-0.5">{e.ask}</p>
+                    <LessonLink id={LESSON_FOR_EXPERIMENT[e.key]} />
                   </div>
                   <button
                     onClick={() => act({ action: 'start', key: e.key })}
@@ -189,7 +203,11 @@ export default function PatternsPage() {
           )}
         </div>
 
-        <p className="text-px-11 text-white/55 mt-10 leading-relaxed">
+        <Link href="/psychology" className="tap-44 inline-block mt-10 text-px-13 text-white/80 underline underline-offset-4">
+          The ideas behind these, in the Psychology library →
+        </Link>
+
+        <p className="text-px-11 text-white/55 mt-6 leading-relaxed">
           {report?.disclaimer ?? 'Counts from what you logged — your own record, not advice or a diagnosis.'}
         </p>
       </div>

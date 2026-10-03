@@ -12,6 +12,9 @@ const VALID_FEATURES = new Set<FeatureName>([
   'dream_interpretation', 'smart_session',
   'morning_briefing', 'letter_to_self', 'wellness_score',
   'era', 'relics', 'notification',
+  // 'books' was sent by BookSheet but missing here, so every reading event
+  // was dropped at the door.
+  'books', 'psychology',
 ])
 
 // 'enable' and 'disable' were missing here while trackFeature offered them,

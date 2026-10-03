@@ -39,6 +39,9 @@ export type FeatureName =
   // assessment. One more collision in that space and nobody will be able to
   // read a funnel correctly.
   | 'books'
+  // The Psychology Library: 'open' the list, 'use' = a lesson read
+  // (metadata is its id).
+  | 'psychology'
 
 // enable/disable exist so opt-OUT is measurable, not just adoption. Two new
 // daily pushes shipped with no way to see who turned them off.

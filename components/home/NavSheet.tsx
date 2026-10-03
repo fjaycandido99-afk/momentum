@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect } from 'react'
 import {
   BarChart3, Bookmark, BookOpen, ChevronRight, Compass, Dumbbell, Headphones, HeartPulse, Home,
-  Mic2, PenLine, Settings, Trophy, Waves, FlaskConical, X, type LucideIcon,
+  Mic2, PenLine, Settings, Trophy, Waves, FlaskConical, Brain, X, type LucideIcon,
 } from 'lucide-react'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 
@@ -95,6 +95,7 @@ export function NavSheet({
       items: [
         { label: 'Saved', sub: 'Everything you hearted', icon: Bookmark, href: '/saved' },
         { label: 'Daily Read', sub: 'One tap a day', icon: BookOpen, href: '/daily-read' },
+        { label: 'Psychology', sub: 'Short lessons behind the app', icon: Brain, href: '/psychology' },
         { label: 'Guided', sub: 'Breathing, focus, sleep', icon: Headphones, onSelect: onGuided },
         { label: 'Soundscapes', sub: 'Ambient sound for any moment', icon: Waves, onSelect: onSoundscapes },
       ],
