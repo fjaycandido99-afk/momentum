@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { JoinCta } from '@/components/marketing/JoinCta'
 import { notFound } from 'next/navigation'
 import { ERA_PRESETS_BY_KEY, DEFAULT_ERA_LENGTH_DAYS, eraName } from '@/lib/era/presets'
 import { programFor } from '@/lib/era/programs'
@@ -30,6 +30,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title,
     description,
     openGraph: { title, description, url: `https://voxu.app/join/${eraSlug(preset.key)}` },
+    // Apple's Smart App Banner: in Safari on an iPhone — where a link tapped
+    // in Messages opens — iOS shows a native "Voxu · Get / Open" bar.
+    other: { 'apple-itunes-app': `app-id=6759702163, app-argument=https://voxu.app/join/${eraSlug(preset.key)}` },
     twitter: { card: 'summary_large_image', title, description },
   }
 }
@@ -102,12 +105,9 @@ export default function JoinEraPage({
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pt-10 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] bg-gradient-to-t from-black from-70% to-transparent pointer-events-none">
-        <Link
-          href={startHref}
-          className="pointer-events-auto block w-full max-w-md mx-auto text-center py-4 rounded-2xl bg-white text-black text-sm font-medium active:scale-[0.98] transition-all"
-        >
-          Start your {eraName(preset.title)}
-        </Link>
+        {/* On an iPhone in a browser the main button gets the app; the web
+            start stays underneath (and keeps the sharer's credit). */}
+        <JoinCta startHref={startHref} label={`Start your ${eraName(preset.title)}`} />
       </div>
     </div>
   )

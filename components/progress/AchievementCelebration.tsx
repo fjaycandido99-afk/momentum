@@ -1,13 +1,15 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { ChevronRight, Sparkle, X } from 'lucide-react'
+import { ChevronRight, Share2, Sparkle, X } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { chainFor } from '@/lib/relic-paths'
 import { getAchievementById, achievementMark } from '@/lib/achievements'
 import { AchievementBadge, METAL, METAL_RGB } from './AchievementBadge'
 import { achievementLine } from '@/lib/achievement-lines'
 import { RelicNote } from '@/components/relics/RelicNote'
+import { ShareRelicSheet } from '@/components/relics/ShareRelicSheet'
+import { createPortal } from 'react-dom'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 
 interface AchievementCelebrationProps {
@@ -58,6 +60,8 @@ export function AchievementCelebration({ achievement, onClose, viewOnly = false,
   const warm = metal === 'gold'
   const [visible, setVisible] = useState(false)
   const [fadeOut, setFadeOut] = useState(false)
+  /** The share card (components/relics/ShareRelicSheet) — never carries their memory note. */
+  const [sharing, setSharing] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   // Already on Progress (the grid opened this)? Then "view" just closes it.
@@ -250,6 +254,22 @@ export function AchievementCelebration({ achievement, onClose, viewOnly = false,
 
         {viewOnly && (
           <RelicNote id={achievement.id} initial={note} onSaved={n => onNoteSaved?.(achievement.id, n)} />
+        )}
+        {viewOnly && (
+          <button
+            onClick={() => setSharing(true)}
+            className="tap-44 -mt-2 mb-5 inline-flex items-center gap-1.5 text-px-13 text-white/80"
+          >
+            <Share2 className="w-4 h-4" /> Share this relic
+          </button>
+        )}
+        {/* Portalled: this card animates with a transform, which would pin a
+            fixed sheet to the card instead of the screen. Rendered inside the
+            card in the React tree, so its taps stop at the card's
+            stopPropagation and don't close the popup underneath. */}
+        {sharing && typeof document !== 'undefined' && createPortal(
+          <ShareRelicSheet id={achievement.id} onClose={() => setSharing(false)} />,
+          document.body,
         )}
 
         {/* XP and rarity with staged entry */}
