@@ -13,11 +13,17 @@
  * At most one a day, whatever is waiting.
  */
 
+import { SAMPLE_FROM_DAY } from './insights'
+
 export const RUN_MILESTONES = [5, 10, 15, 20, 30]
 
 export type Noticed =
   | { kind: 'law'; key: string; line: string; detail: string; href: string }
   | { kind: 'run'; key: string; line: string; opener: string }
+  /** Where past eras slipped, the day before (lib/home/insights). */
+  | { kind: 'gap'; key: string; line: string; opener: string }
+  /** A free account's one Premium insight, on us. */
+  | { kind: 'sample'; key: string; line: string; detail: string }
 
 export interface EraDayKept {
   day: number
@@ -46,10 +52,21 @@ export interface NoticedInput {
   laws: { id: string; headline: string }[]
   /** Keys already said ("law:timing", "run:<eraId>:10"). */
   seen: readonly string[]
+  /** Today's era day, when in an era. */
+  eraDay?: number | null
+  /** The day-before warning, already decided (lib/home/insights gapWarning). */
+  gap?: { line: string; opener: string } | null
+  /** Free only: one line from their charts (server sends it to free only). */
+  sample?: string | null
 }
 
 export function pickNoticed(input: NoticedInput): Noticed | null {
   const seen = new Set(input.seen)
+
+  // Time-sensitive first: tomorrow is the day it tends to slip.
+  if (input.gap && input.eraId && !seen.has(`gap:${input.eraId}`)) {
+    return { kind: 'gap', key: `gap:${input.eraId}`, line: input.gap.line, opener: input.gap.opener }
+  }
 
   const law = input.laws.find(l => !seen.has(`law:${l.id}`))
   if (law) {
@@ -59,6 +76,15 @@ export function pickNoticed(input: NoticedInput): Noticed | null {
       line: 'I found something in your record.',
       detail: law.headline,
       href: '/patterns?spot=laws-list',
+    }
+  }
+
+  if (input.sample && (input.eraDay ?? 0) >= SAMPLE_FROM_DAY && !seen.has('sample')) {
+    return {
+      kind: 'sample',
+      key: 'sample',
+      line: input.sample,
+      detail: 'Voxu Premium keeps finding things like this in your record.',
     }
   }
 

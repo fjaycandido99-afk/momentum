@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma'
+import { daysBetween } from '@/lib/era/logic'
+import { firstGapDay } from '@/lib/home/insights'
 import { reasonLabel } from '@/lib/era/reasons'
 import {
   findPatterns,
@@ -184,4 +186,33 @@ function weekdayOfDay(day: string): number {
   const [y, m, d] = day.split('-').map(Number)
   if (!y || !m || !d) return 0
   return new Date(Date.UTC(y, m - 1, d)).getUTCDay()
+}
+
+/**
+ * For each of their last few FINISHED eras, the first day that began two
+ * days in a row without a kept promise (lib/home/insights firstGapDay).
+ * Oldest first. Eras that never slipped are left out — nothing to warn of.
+ */
+export async function pastEraGapDays(userId: string): Promise<number[]> {
+  const eras = await prisma.era.findMany({
+    where: { user_id: userId, status: 'ended' },
+    orderBy: { start_day: 'desc' },
+    take: 3,
+    select: { id: true, start_day: true, length_days: true },
+  })
+  if (eras.length < 2) return []
+  const promises = await prisma.eraPromise.findMany({
+    where: { era_id: { in: eras.map(e => e.id) }, kept: true },
+    select: { era_id: true, local_day: true },
+  })
+  const out: number[] = []
+  for (const e of [...eras].reverse()) {
+    const days = promises
+      .filter(p => p.era_id === e.id)
+      .map(p => ({ day: daysBetween(e.start_day, p.local_day) + 1, kept: true }))
+      .filter(d => d.day >= 1 && d.day <= e.length_days)
+    const gap = firstGapDay(days, e.length_days)
+    if (gap !== null) out.push(gap)
+  }
+  return out
 }

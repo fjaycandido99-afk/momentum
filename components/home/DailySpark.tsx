@@ -21,6 +21,7 @@ import { getLatestPulse } from '@/lib/pulse/store'
 import { pickNudge, type PulseNudge } from '@/lib/pulse/nudge'
 import { OPEN_DISCIPLINE } from '@/lib/pulse/events'
 import { keptRun, pickNoticed, rememberNoticed, type EraDayKept, type Noticed } from '@/lib/home/noticed'
+import { gapWarning } from '@/lib/home/insights'
 import { TalkSheet } from '@/components/voice-guide/TalkSheet'
 import { resolveIntent } from '@/lib/voice-guide/intents'
 import { navHref } from '@/lib/voice-guide/navigate'
@@ -298,7 +299,11 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
         const laws = d.patterns
           .filter((p: { strength: string }) => p.strength === 'solid')
           .map((p: { id: string; headline: string }) => ({ id: p.id, headline: p.headline }))
-        try { localStorage.setItem(NOTICED_LAWS_KEY, JSON.stringify({ day: today, laws })) } catch { /* storage blocked */ }
+        // sample: free accounts only (the server decides). gapDays: where
+        // their past eras slipped.
+        const sample = typeof d.sample === 'string' ? d.sample : null
+        const gapDays = Array.isArray(d.gapDays) ? d.gapDays : []
+        try { localStorage.setItem(NOTICED_LAWS_KEY, JSON.stringify({ day: today, laws, sample, gapDays })) } catch { /* storage blocked */ }
       })
       .catch(() => {})
   }, [])
@@ -318,11 +323,18 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
       // Something new from their record — at most one a day, each said once.
       const today = localDayKey()
       const seen = readJson<string[]>(NOTICED_SEEN_KEY, [])
+      const record = readJson<{ laws?: { id: string; headline: string }[]; sample?: string | null; gapDays?: number[] }>(NOTICED_LAWS_KEY, {})
+      const days = latest.current.eraDays
+      const eraDay = days.length ? Math.max(...days.map(d => d.day)) : null
       const found = readJson<string>(NOTICED_DAY_KEY, '') === today ? null : pickNoticed({
-        run: keptRun(latest.current.eraDays),
+        run: keptRun(days),
         eraId: latest.current.eraId,
-        laws: readJson<{ laws?: { id: string; headline: string }[] }>(NOTICED_LAWS_KEY, {}).laws ?? [],
+        laws: record.laws ?? [],
         seen,
+        eraDay,
+        sample: record.sample ?? null,
+        // Today isn't over, so it's left out of the "already slipped" check.
+        gap: eraDay && latest.current.eraId ? gapWarning(record.gapDays ?? [], eraDay, days.filter(d => d.day < eraDay)) : null,
       })
       const chosen = pickMoment({ ...latest.current, lastKind: lastKind(), pulseNudge: !!n, noticed: !!found })
       if (chosen === 'noticed' && found) {
@@ -481,7 +493,40 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
       />
     )
   }
-  if (kind === 'noticed' && noticed) {
+  if (kind === 'noticed' && noticed?.kind === 'sample') {
+    // A taste, not a sale: one real line from their record, and a door to
+    // where Premium shows the rest. No price, no countdown.
+    return (
+      <MomentCard
+        label="A Premium insight — on us"
+        line={noticed.line}
+        detail={noticed.detail}
+        action="See what Premium learns"
+        href="/patterns?spot=laws-rhythm"
+        onAction={() => dismiss()}
+        onClose={() => dismiss()}
+        onOff={turnOff}
+        dismissing={dismissing}
+        animating={animating}
+      />
+    )
+  }
+  if (kind === 'noticed' && noticed?.kind === 'gap') {
+    return (
+      <MomentCard
+        label="Voxu noticed something"
+        line={noticed.line}
+        detail="Want to make tomorrow's promise one you'll keep?"
+        action="Plan it with Voxu"
+        onAction={() => dismiss(() => setTalkOpener(noticed.opener))}
+        onClose={() => dismiss()}
+        onOff={turnOff}
+        dismissing={dismissing}
+        animating={animating}
+      />
+    )
+  }
+  if (kind === 'noticed' && noticed && (noticed.kind === 'law' || noticed.kind === 'run')) {
     return (
       <MomentCard
         label="Voxu noticed something"
