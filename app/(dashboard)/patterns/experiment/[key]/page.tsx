@@ -35,11 +35,16 @@ export default function ExperimentSetupPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const sub = useSubscriptionOptional()
+  /** From the server: Premium, or a free account's first experiment. */
+  const [access, setAccess] = useState<{ canStart: boolean; starter: boolean } | null>(null)
 
   useEffect(() => {
     fetch('/api/patterns/experiments', { cache: 'no-store' })
       .then(r => (r.ok ? r.json() : null))
-      .then(d => setActive(d?.active ?? null))
+      .then(d => {
+        setActive(d?.active ?? null)
+        if (d && typeof d.canStart === 'boolean') setAccess({ canStart: d.canStart, starter: !!d.starter })
+      })
       .catch(() => setActive(null))
   }, [])
 
@@ -133,16 +138,16 @@ export default function ExperimentSetupPage() {
                 </p>
                 <Link href="/patterns?spot=laws-experiments" className="tap-44 inline-block mt-2 text-px-13 text-white/80 underline underline-offset-4">See it on Your laws →</Link>
               </div>
-            ) : sub && !sub.isLoading && !sub.isPremium ? (
+            ) : access && !access.canStart ? (
               // Experiments are Premium; everything above stays readable.
               <div className="mt-6">
                 <button
-                  onClick={() => sub.openUpgradeModal('experiments')}
+                  onClick={() => sub?.openUpgradeModal('experiments')}
                   className="tap-44 w-full py-3.5 rounded-2xl bg-white text-black text-px-15 font-medium press-scale inline-flex items-center justify-center gap-2"
                 >
                   <Lock className="w-4 h-4" /> Unlock experiments with Premium
                 </button>
-                <p className="text-px-12 text-white/60 text-center mt-2">Your laws stay free. Testing them is Premium.</p>
+                <p className="text-px-12 text-white/60 text-center mt-2">You&rsquo;ve had your free experiment. Your laws stay free; testing more of them is Premium.</p>
               </div>
             ) : (
               <button
@@ -153,6 +158,9 @@ export default function ExperimentSetupPage() {
                 {busy && <Loader2 className="w-4 h-4 animate-spin" />}
                 Start this experiment
               </button>
+            )}
+            {!active && access?.starter && (
+              <p className="text-px-12 text-white/60 text-center mt-2">Your first experiment is on us — a taste of what Premium does.</p>
             )}
           </>
         )}

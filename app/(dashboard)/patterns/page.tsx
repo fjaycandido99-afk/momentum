@@ -38,7 +38,7 @@ const KIND_LABEL: Partial<Record<Pattern['kind'], string>> = {
   discipline: 'Disciplines',
 }
 
-interface ExperimentsPayload { active: ExperimentWire | null; finished: ExperimentWire[] }
+interface ExperimentsPayload { active: ExperimentWire | null; finished: ExperimentWire[]; canStart?: boolean; starter?: boolean }
 
 /**
  * Your Pattern — the rules your own record shows, and small experiments to
@@ -55,8 +55,6 @@ interface ExperimentsPayload { active: ExperimentWire | null; finished: Experime
 export default function PatternsPage() {
   const [report, setReport] = useState<(PatternReport & { charts?: PatternCharts | null; chartsLocked?: boolean }) | null>(null)
   const sub = useSubscriptionOptional()
-  /** Experiments and the charts are Premium; laws are free (their own record). */
-  const premium = !!sub?.isPremium
   const [exp, setExp] = useState<ExperimentsPayload | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -273,7 +271,7 @@ export default function PatternsPage() {
                     href={experimentSetupHref(e.key)}
                     className="tap-44 shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-black text-px-12 font-medium"
                   >
-                    {!premium && <Lock className="w-3 h-3" aria-label="Premium" />} Start
+                    {exp && exp.canStart === false && <Lock className="w-3 h-3" aria-label="Premium" />} Start
                   </Link>
                 </li>
               ))}
