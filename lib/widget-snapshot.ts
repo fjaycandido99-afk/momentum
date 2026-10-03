@@ -52,6 +52,10 @@ export interface WidgetSnapshot {
   accent?: string
   /** Tomorrow's promise already written — the evening widget says so. */
   tomorrowReady?: boolean
+  /** Today's guided session (Pulse's 'guide' item) — the widget's ▶ opens and plays it. */
+  guide?: { id: string; name: string } | null
+  /** Their newest SOLID law's headline (lib/patterns), for "Voxu noticed". Counts, never a score. */
+  law?: string | null
 }
 
 export interface WidgetPulse {
@@ -99,10 +103,18 @@ export function clip(text: string, max: number): string {
   return `${(space > max * 0.6 ? cut.slice(0, space) : cut).trimEnd()}…`
 }
 
-export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Date(), pulse?: Pulse | null): WidgetSnapshot {
+/** Today's guided session from Pulse, if it has one. */
+export function widgetGuide(pulse: Pulse | null | undefined): { id: string; name: string } | null {
+  const t = pulse?.today.items.find(i => i.kind === 'guide')?.target
+  return t && t.type === 'guide' ? { id: t.id, name: clip(t.name, 28) } : null
+}
+
+export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Date(), pulse?: Pulse | null, law: string | null = null): WidgetSnapshot {
   const date = localDay(now)
   const p = widgetPulse(pulse)
-  if (!era) return { v: WIDGET_SNAPSHOT_VERSION, date, era: null, promise: null, mission: null, streak: 0, pulse: p, accent: eraAccentHex(null) }
+  const guide = widgetGuide(pulse)
+  const lawLine = law ? clip(law, 120) : null
+  if (!era) return { v: WIDGET_SNAPSHOT_VERSION, date, era: null, promise: null, mission: null, streak: 0, pulse: p, accent: eraAccentHex(null), guide, law: lawLine }
   return {
     v: WIDGET_SNAPSHOT_VERSION,
     date,
@@ -118,5 +130,7 @@ export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Da
     pulse: p,
     accent: eraAccentHex(era.key),
     tomorrowReady: !!era.tomorrow,
+    guide,
+    law: lawLine,
   }
 }

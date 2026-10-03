@@ -33,6 +33,9 @@ describe('buildWidgetSnapshot', () => {
       pulse: null,
       accent: '#ffffff',
       tomorrowReady: false,
+      // Today's guided session and newest law, for the guided and noticed widgets.
+      guide: null,
+      law: null,
     })
   })
 
@@ -109,5 +112,15 @@ describe('the Swift side reads the same shape', () => {
     const bridge = fs.readFileSync(path.join(process.cwd(), 'ios/App/App/WidgetBridgePlugin.swift'), 'utf8')
     expect(bridge).toContain('"widget_snapshot"')
     expect(bridge).toContain('"group.com.voxu.app"')
+  })
+})
+
+describe('widgetGuide', () => {
+  it('carries today\'s guided session for the widget\'s play button, or nothing', async () => {
+    const { widgetGuide } = await import('@/lib/widget-snapshot')
+    const pulse = { today: { items: [{ kind: 'guide', target: { type: 'guide', id: 'focus', name: 'Focus' } }] } } as never
+    expect(widgetGuide(pulse)).toEqual({ id: 'focus', name: 'Focus' })
+    expect(widgetGuide({ today: { items: [] } } as never)).toBeNull()
+    expect(widgetGuide(null)).toBeNull()
   })
 })

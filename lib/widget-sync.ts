@@ -118,9 +118,21 @@ function recordStatus(result: WidgetWriteResult) {
   try { window.dispatchEvent(new Event(WIDGET_STATUS_EVENT)) } catch { /* ignore */ }
 }
 
+/**
+ * Their newest solid law, from the copy Home keeps for "Voxu noticed" (read
+ * at most once a day — components/home/DailySpark). No fetch of its own.
+ */
+function newestLaw(): string | null {
+  try {
+    const raw = localStorage.getItem('voxu.noticed.laws')
+    const laws = raw ? (JSON.parse(raw)?.laws as { headline?: string }[] | undefined) : undefined
+    return laws?.[0]?.headline ?? null
+  } catch { return null }
+}
+
 async function writeSnapshot(force = false): Promise<void> {
   if (!Capacitor.isNativePlatform()) return
-  const json = JSON.stringify(buildWidgetSnapshot(lastEra, new Date(), lastPulse))
+  const json = JSON.stringify(buildWidgetSnapshot(lastEra, new Date(), lastPulse, newestLaw()))
   if (json === lastWritten && !force) return
   let res: { written: boolean } | null = null
   try {

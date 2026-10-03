@@ -26,6 +26,15 @@ export function useDeepLink() {
           // segment lost, and picked one from the clock instead.
           const target = url.pathname + url.search + url.hash
 
+          // The widget's ▶ (voxu://app/?play=guide:<id>). Home plays a
+          // ?play= link as it opens (ImmersiveHome); already open on Home,
+          // it won't reopen, so it's asked directly.
+          const play = url.searchParams.get('play')
+          if (play?.startsWith('guide:') && window.location.pathname === '/') {
+            window.dispatchEvent(new CustomEvent('voxu:play-guide', { detail: { id: play.slice('guide:'.length) } }))
+            return
+          }
+
           if (url.pathname) {
             router.push(target)
           }
