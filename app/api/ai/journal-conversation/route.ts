@@ -41,6 +41,12 @@ export async function POST(request: NextRequest) {
       message: string
       conversation: ConversationMessage[]
     }
+    // Voxu Guide's "Talk it through" (components/voice-guide/TalkSheet): the
+    // same chat, same quota, same crisis handling — spoken, short, and told
+    // which screen they came from (the screen's own walkthrough lines, with
+    // its real numbers). Capped: it's their text, but it goes in a prompt.
+    const guide = body?.mode === 'guide'
+    const screen = guide && typeof body?.screen === 'string' ? body.screen.slice(0, 1200) : ''
 
     // Validate BEFORE spending a quota unit — a malformed request must
     // not cost a free user one of their five messages for the day.
@@ -90,7 +96,21 @@ export async function POST(request: NextRequest) {
     const mindset = await getUserMindset(user.id)
     const exchangeCount = conversation.filter(m => m.role === 'user').length
 
-    const basePrompt = `You are a warm, empathetic journaling companion. Your role is to help the user explore their thoughts and feelings through conversation.
+    const guidePrompt = `You are Voxu, speaking out loud to the person inside the Voxu app. They tapped "Talk it through" on one of its screens.
+
+Rules:
+- Answer what they asked first, plainly. At most one short follow-up question.
+- Under 45 words: this reply is spoken aloud. No lists, no markdown, no emoji.
+- Numbers: only ones given to you below, quoted exactly. Never estimate or invent one.
+- A pattern in their record is what tends to happen together, not proof of why. Say "your record shows", never "this causes" or "you always".
+- "How does this apply to me": answer only from their laws below. If none fit, say there isn't enough of their record yet to say.
+- Never label them or their mind. If they're struggling, be kind and practical — a smaller promise for today is always allowed.
+- You can't open pages or start things from here. If they want to, tell them to say "take me to…" or "set this up for me".${screen ? `
+
+WHAT THEY'RE LOOKING AT (the screen, with its real numbers):
+${screen}` : ''}`
+
+    const basePrompt = guide ? guidePrompt : `You are a warm, empathetic journaling companion. Your role is to help the user explore their thoughts and feelings through conversation.
 
 Rules:
 - Ask ONE follow-up question per turn

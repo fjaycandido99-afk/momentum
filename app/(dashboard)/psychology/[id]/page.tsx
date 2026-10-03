@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { BackButton } from '@/components/ui/BackButton'
 import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
-import { lessonScript } from '@/lib/voice-guide/scripts'
+import { lessonScript, talkOpener } from '@/lib/voice-guide/scripts'
 import { SceneImage } from '@/components/home/SceneImage'
 import { LoopDiagram } from '@/components/psychology/LoopDiagram'
 import { LESSON_BY_ID, LESSON_FOR_EXPERIMENT, LESSON_GROUPS } from '@/lib/psychology/lessons'
@@ -29,6 +29,7 @@ export default function LessonPage() {
           {lesson && (
             <VoxuGuide
               screen="lesson"
+              opener={talkOpener({ screen: 'lesson', lessonTitle: lesson.title })}
               lines={lessonScript(lesson)}
               experiment={(Object.entries(LESSON_FOR_EXPERIMENT).find(([, id]) => id === lesson.id)?.[0] ?? null) as 'morning_promise' | 'small_promise' | 'guide_first' | null}
               next={lesson.tryThis.href ? { say: 'Here\'s where to try it.', href: lesson.tryThis.href } : null}

@@ -118,3 +118,29 @@ export function lessonScript(l: Lesson): GuideLine[] {
   lines.push({ spot: 'lesson-try', text: `Something to try: ${l.tryThis.text}` })
   return lines
 }
+
+export interface TalkFacts {
+  screen: GuideScreen | 'profile' | 'proof'
+  era?: { title: string; day: number; change: string; kept: number; answered: number } | null
+  lessonTitle?: string | null
+}
+
+/**
+ * Voxu's first line in "Talk it through" — written from the data, not by a
+ * model. From week three of an era it's the callback to their own day-one
+ * words: "Two weeks ago you told me…", with the real count.
+ */
+export function talkOpener(f: TalkFacts): string {
+  if (f.screen === 'era' && f.era) {
+    const weeks = Math.floor((f.era.day - 1) / 7)
+    const kept = f.era.answered > 0 ? ` You've kept ${f.era.kept} of the ${f.era.answered} ${plural(f.era.answered, 'promise')} you've checked in on.` : ''
+    if (weeks >= 2 && f.era.change.trim()) {
+      return `${weeks === 2 ? 'Two' : weeks === 3 ? 'Three' : String(weeks)} weeks ago you told me you wanted to change this: "${f.era.change.trim()}".${kept} Want to talk about how it's going?`
+    }
+    return `You're on day ${f.era.day} of ${f.era.title}.${kept} What's on your mind about it?`
+  }
+  if (f.screen === 'laws') return 'What would you like to know about your laws? Why there aren\'t any yet, what counts as evidence, which experiment to try?'
+  if (f.screen === 'psychology') return 'Want to talk about one of these lessons, or how one might apply to you?'
+  if (f.screen === 'lesson' && f.lessonTitle) return `Want to talk about how ${f.lessonTitle} might apply to you?`
+  return 'What\'s on your mind?'
+}

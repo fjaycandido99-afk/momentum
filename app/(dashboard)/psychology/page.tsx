@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { BackButton } from '@/components/ui/BackButton'
 import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
-import { psychologyScript } from '@/lib/voice-guide/scripts'
+import { psychologyScript, talkOpener } from '@/lib/voice-guide/scripts'
 import { SceneImage } from '@/components/home/SceneImage'
 import { SectionTabs } from '@/components/ui/SectionTabs'
 import { LESSON_GROUPS, LESSONS, lessonsForLaws, readMinutes, type Lesson, type LessonGroup } from '@/lib/psychology/lessons'
@@ -40,6 +40,7 @@ export default function PsychologyPage() {
           <BackButton />
           <VoxuGuide
             screen="psychology"
+            opener={talkOpener({ screen: 'psychology' })}
             lines={psychologyScript({ forYou: forYou.length })}
             next={(() => {
               const first = forYou[0] ?? LESSONS[0]

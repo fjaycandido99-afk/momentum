@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Check, ChevronLeft, Compass, Dumbbell, Flame, Grid3x3, Loader2 } from 'lucide-react'
 import { useEra, type EraToday } from '@/hooks/useEra'
 import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
-import { eraScript } from '@/lib/voice-guide/scripts'
+import { eraScript, talkOpener } from '@/lib/voice-guide/scripts'
 import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY, eraName } from '@/lib/era/presets'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
@@ -119,7 +119,11 @@ export default function EraPage() {
               <p className="text-px-11 text-white/50 leading-tight">30 days. One promise a day.</p>
             </div>
           </div>
-          <div className="ml-auto"><VoxuGuide screen="era" lines={guideLines} next={{ say: "Here's today. Your promise is there.", href: '/' }} /></div>
+          <div className="ml-auto"><VoxuGuide
+            screen="era"
+            lines={guideLines}
+            opener={talkOpener({ screen: 'era', era: era && !showPicker ? { title: era.title, day: Math.min(era.day, era.lengthDays), change: era.change, kept: era.stats.kept, answered: era.stats.answered } : null })}
+            next={{ say: "Here's today. Your promise is there.", href: '/' }} /></div>
         </div>
       </header>
 

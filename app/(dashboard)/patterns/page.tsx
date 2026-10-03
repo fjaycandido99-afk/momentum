@@ -11,7 +11,7 @@ import type { ExperimentWire } from '@/lib/patterns/experiments-server'
 import { haptic } from '@/lib/haptics'
 import { BackButton } from '@/components/ui/BackButton'
 import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
-import { lawsScript } from '@/lib/voice-guide/scripts'
+import { lawsScript, talkOpener } from '@/lib/voice-guide/scripts'
 import { experimentSetupHref } from '@/lib/voice-guide/intents'
 import { SceneImage } from '@/components/home/SceneImage'
 import { SectionTabs } from '@/components/ui/SectionTabs'
@@ -103,6 +103,7 @@ export default function PatternsPage() {
           <VoxuGuide
             screen="laws"
             lines={guideLines}
+            opener={talkOpener({ screen: 'laws' })}
             experiment={laws.map(p => experimentFor(p)).find(Boolean)?.key ?? null}
             next={active
               ? { say: 'Here\'s today. Your experiment runs through your promise.', href: '/' }

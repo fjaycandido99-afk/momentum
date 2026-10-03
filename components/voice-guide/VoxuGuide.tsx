@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, usePathname } from 'next/navigation'
-import { ArrowRight, AudioLines, Pause, Play, X } from 'lucide-react'
+import { ArrowRight, AudioLines, MessageCircle, Pause, Play, X } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
 import { navHref, type NavContext } from '@/lib/voice-guide/navigate'
 import { resolveIntent, type IntentContext } from '@/lib/voice-guide/intents'
@@ -13,6 +13,7 @@ import { fetchVoxuAudio, type VoxuAudioResult } from '@/lib/voice/voxu-audio'
 import { FIRST_VISIT_ASK, type GuideLine, type GuideScreen } from '@/lib/voice-guide/scripts'
 import { haptic } from '@/lib/haptics'
 import { spotlight, useArrivalSpot } from './spotlight'
+import { TalkSheet } from './TalkSheet'
 import { trackFeature } from '@/lib/analytics/track'
 
 /**
@@ -64,6 +65,7 @@ export function VoxuGuide({
   lines,
   next = null,
   experiment = null,
+  opener = 'What\'s on your mind?',
 }: {
   screen: GuideScreen | 'profile' | 'proof'
   /** What "explain this" says; null when the screen has nothing to explain. */
@@ -72,6 +74,8 @@ export function VoxuGuide({
   next?: NavContext['next']
   /** The experiment this screen is about — what "set this up for me" sets up. */
   experiment?: IntentContext['experiment']
+  /** Voxu's first line in Talk it through (lib/voice-guide/scripts talkOpener). */
+  opener?: string
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -80,6 +84,7 @@ export function VoxuGuide({
   const [typed, setTyped] = useState('')
   /** A lighter day, waiting for their yes. */
   const [confirm, setConfirm] = useState<RescuePlan | null>(null)
+  const [talking, setTalking] = useState(false)
   const [offer, setOffer] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [paused, setPaused] = useState(false)
@@ -287,6 +292,12 @@ export function VoxuGuide({
                   <Play className="w-4 h-4" /> Explain this page
                 </button>
               )}
+              <button
+                onClick={() => { setOpen(false); setReply(null); setConfirm(null); setTalking(true) }}
+                className={`tap-44 w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/20 text-px-13 text-white ${ready ? 'mt-2' : ''}`}
+              >
+                <MessageCircle className="w-4 h-4" /> Talk it through
+              </button>
 
               <p className="text-px-11 uppercase tracking-[0.18em] text-white/60 mt-3">Take me somewhere</p>
               <div className="flex items-center gap-2 mt-1.5">
@@ -341,6 +352,18 @@ export function VoxuGuide({
           </>
         )}
       </div>
+
+      {talking && (
+        <TalkSheet
+          opener={opener}
+          screen={screen}
+          screenSummary={lines?.map(l => l.text).join(' ') ?? `The ${screen} screen.`}
+          // A command said mid-conversation goes back to the panel, which
+          // shows where it's going or asks to confirm.
+          onCommand={text => { setTalking(false); setOpen(true); void go(text) }}
+          onClose={() => setTalking(false)}
+        />
+      )}
 
       {playing && lines && typeof document !== 'undefined' && createPortal(
         <div

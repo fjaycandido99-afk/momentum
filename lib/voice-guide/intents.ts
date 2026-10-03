@@ -74,3 +74,14 @@ export function resolveIntent(text: string, ctx: IntentContext = {}): Intent {
 
   return resolveNav(text, ctx)
 }
+
+/**
+ * In "Talk it through", is this a command (handled like the panel) or part
+ * of the conversation (sent to the coach)? Only something phrased as a
+ * command: "I missed yesterday and feel awful" mentions a lesson topic, and
+ * hijacking it into navigation would be the worst possible reply.
+ */
+export function isCommand(text: string): boolean {
+  const t = clean(text).trim()
+  return /^(please |can you |could you |voxu |hey voxu )?(take me|go to|go back to|open|show me|bring me|play|start|set (this|it|that) up|make today|let's try|lets try)\b/.test(t)
+}
