@@ -19,7 +19,7 @@ export function SceneImage({
 }: {
   src: string | null | undefined
   /** Which way the photo dissolves: toward the text. */
-  fade?: 'left' | 'down' | 'left-down' | 'left-up'
+  fade?: 'left' | 'right' | 'down' | 'left-down' | 'left-up'
   /** Size and placement of the photo inside its card. */
   className?: string
   position?: string
@@ -30,6 +30,7 @@ export function SceneImage({
 
   const mask =
     fade === 'down' ? 'linear-gradient(to bottom, black 35%, transparent)'
+      : fade === 'right' ? 'linear-gradient(to right, black 55%, transparent)'
       : fade === 'left-down' ? 'linear-gradient(to left, black 40%, transparent), linear-gradient(to bottom, black 50%, transparent)'
       : fade === 'left-up' ? 'linear-gradient(to left, black 40%, transparent), linear-gradient(to top, black 45%, transparent)'
       : 'linear-gradient(to left, black 42%, transparent)'

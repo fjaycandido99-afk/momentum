@@ -28,8 +28,9 @@ export default function LessonPage() {
           <p className="text-px-15 text-white/80 mt-6">That lesson isn&rsquo;t here. <Link href="/psychology" className="underline underline-offset-4">See all lessons</Link></p>
         ) : (
           <>
-            <div className="relative -mx-5 h-44 -mb-24 overflow-hidden" aria-hidden>
-              <SceneImage src={`/scenes/psychology/${lesson.id}.jpg`} fade="down" className="inset-0 w-full h-full" position="center" opacity={0.8} />
+            {/* A hero, as in the mockup: the title sits over its lower edge. */}
+            <div className="relative -mx-5 mt-2 h-60 -mb-20 overflow-hidden" aria-hidden>
+              <SceneImage src={`/scenes/psychology/${lesson.id}.jpg`} fade="down" className="inset-0 w-full h-full" position="center 60%" opacity={1} />
             </div>
             <p className="relative text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">
               {LESSON_GROUPS.find(g => g.key === lesson.group)?.title}

@@ -101,9 +101,11 @@ function LessonCard({ l }: { l: Lesson }) {
     <li>
       <Link
         href={`/psychology/${l.id}`}
-        className="card-surface relative overflow-hidden rounded-2xl p-4 flex items-center gap-3 press-scale"
+        className="card-surface relative overflow-hidden rounded-2xl p-4 pl-[38%] min-h-[112px] flex items-center gap-3 press-scale"
       >
-        <SceneImage src={`/scenes/psychology/${l.id}.jpg`} className="inset-y-0 right-0 w-[45%] h-full" opacity={0.55} />
+        {/* The photo as its own block on the left, as in the mockup: these are
+            night scenes, and faded under text they all but disappeared. */}
+        <SceneImage src={`/scenes/psychology/${l.id}.jpg`} fade="right" className="inset-y-0 left-0 w-[36%] h-full" position="center" opacity={1} />
         <div className="relative min-w-0 flex-1">
           <p className="text-px-17 text-white leading-snug" style={{ ...SERIF, fontWeight: 600 }}>{l.title}</p>
           <p className="text-px-13 text-white/70 mt-0.5 leading-snug">{l.line}</p>
