@@ -26,14 +26,17 @@ export function SearchSheet({
   onPlaySoundscape,
   onPlayGuide,
   initialKind = null,
+  initialQuery = '',
 }: {
+  /** Start with these words — what they typed or said to the Voxu orb. */
+  initialQuery?: string
   /** Open straight onto one Browse list (the menu's Guided / Soundscapes). */
   initialKind?: 'guide' | 'soundscape' | null
   onClose: () => void
   onPlaySoundscape: (id: string) => void
   onPlayGuide: (id: string, name: string) => void
 }) {
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [kind, setKind] = useState<'guide' | 'soundscape' | null>(initialKind)
   const inputRef = useRef<HTMLInputElement | null>(null)
 

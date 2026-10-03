@@ -24,7 +24,7 @@ export interface GuideLine {
   spot?: string
 }
 
-export type GuideScreen = 'era' | 'laws' | 'psychology' | 'lesson'
+export type GuideScreen = 'era' | 'laws' | 'psychology' | 'lesson' | 'today'
 
 /** The first-visit offer — asked, never spoken unprompted. */
 export const FIRST_VISIT_ASK: Record<GuideScreen, string> = {
@@ -32,6 +32,7 @@ export const FIRST_VISIT_ASK: Record<GuideScreen, string> = {
   laws: 'This page fills in as you go. Want me to explain how?',
   psychology: 'Want the short version of what these are?',
   lesson: 'Want me to read you the quick version?',
+  today: "I'm Voxu. Want a quick tour of Today?",
 }
 
 const plural = (n: number, one: string, many = `${one}s`) => (n === 1 ? one : many)
@@ -60,6 +61,32 @@ export function eraScript(e: EraFacts): GuideLine[] {
     { spot: 'era-day1', text: 'And this is what you told me on day one. It stays here so you can come back to why you started, whenever you need it.' },
     { text: 'Make one promise a day, check in at night, and I\'ll learn what helps you keep them.' },
   )
+  return lines
+}
+
+export interface TodayFacts {
+  era: { title: string; day: number; lengthDays: number } | null
+  /** Pulse has a "Right now" card showing. */
+  rightNow: boolean
+  /** The Today list's own counts. */
+  done: number
+  total: number
+}
+
+/** Today — built when tapped, from the live era and Pulse. */
+export function todayScript(f: TodayFacts): GuideLine[] {
+  const lines: GuideLine[] = [
+    f.era
+      ? { spot: 'today-era', text: `This is Today. You're on day ${f.era.day} of ${f.era.lengthDays} of ${f.era.title}.` }
+      : { text: 'This is Today, your day in one place.' },
+  ]
+  if (f.rightNow) {
+    lines.push({ spot: 'today-rightnow', text: "Right now is the one thing that matters most next. Tap it and you're straight there." })
+  }
+  if (f.total > 0) {
+    lines.push({ spot: 'today-list', text: `Below that is today's list: ${f.done} of ${f.total} done so far.` })
+  }
+  lines.push({ text: 'Tap me any time to ask something, find something, or say where you want to go.' })
   return lines
 }
 
@@ -131,7 +158,7 @@ export interface TalkFacts {
  * words: "Two weeks ago you told me…", with the real count.
  */
 export function talkOpener(f: TalkFacts): string {
-  if (f.screen === 'era' && f.era) {
+  if ((f.screen === 'era' || f.screen === 'today') && f.era) {
     const weeks = Math.floor((f.era.day - 1) / 7)
     const kept = f.era.answered > 0 ? ` You've kept ${f.era.kept} of the ${f.era.answered} ${plural(f.era.answered, 'promise')} you've checked in on.` : ''
     if (weeks >= 2 && f.era.change.trim()) {

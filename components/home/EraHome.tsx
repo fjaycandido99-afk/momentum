@@ -272,7 +272,7 @@ function EraHero({ era, onShare, justKeptDay }: { era: EraToday; onShare: () => 
   const pct = Math.round((era.day / era.lengthDays) * 100)
   const byDay = new Map(era.days.map(d => [d.day, d.kept]))
   return (
-    <div className="relative">
+    <div className="relative rounded-[22px]" data-voxu-spot="today-era">
     <Link href="/era" className="block group" aria-label={`${era.title}, day ${era.day} of ${era.lengthDays}. Open your era.`}>
       {heroShell(
         <>

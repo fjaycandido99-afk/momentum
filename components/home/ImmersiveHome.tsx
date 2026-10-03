@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, BarChart3, Wind, MessageCircle, X, Search } from 'lucide-react'
+import { Home, Save, ChevronDown, ChevronRight, Sun, Sunrise, Moon, BarChart3, Wind, MessageCircle, X } from 'lucide-react'
 import { useReset } from '@/contexts/ResetContext'
 import { SearchSheet } from './SearchSheet'
 import { HeaderRelic } from '@/components/relics/HeaderRelic'
@@ -11,6 +11,8 @@ import { PRACTICES_CHANGED } from '@/lib/pulse/events'
 import { SpiralLogo } from './SpiralLogo'
 import { NavSheet } from './NavSheet'
 import { getLatestPulse } from '@/lib/pulse/store'
+import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
+import { talkOpener, todayScript } from '@/lib/voice-guide/scripts'
 import { scrollShellTo } from '@/lib/ui/scroll-shell'
 import { eraSkinVars } from '@/lib/era/skins'
 import { SOUNDSCAPE_ITEMS } from '@/components/player/SoundscapePlayer'
@@ -269,6 +271,8 @@ export function ImmersiveHome() {
   const [showSearch, setShowSearch] = useState(false)
   /** Open search straight onto one Browse list (from the menu). */
   const [searchKind, setSearchKind] = useState<'guide' | 'soundscape' | null>(null)
+  /** Words handed over from the Voxu orb ("Search for …"). */
+  const [searchQuery, setSearchQuery] = useState('')
   const [showNav, setShowNav] = useState(false)
 
   // Overlays
@@ -1555,13 +1559,29 @@ export function ImmersiveHome() {
                   morning and 8pm pushes depend on. Once on, it steps out (its
                   settings live in the menu). */}
               <NotificationBell onlyWhenOff />
-              <button
-                onClick={() => { setSearchKind(null); setShowSearch(true) }}
-                aria-label="Search"
-                className="tap-44 flex items-center justify-center h-10 w-10 rounded-full bg-white/[0.06] border border-white/[0.12] press-scale"
-              >
-                <Search className="w-[18px] h-[18px] text-white/85" />
-              </button>
+              {/* Voxu (components/voice-guide): explain Today, talk, go
+                  somewhere — and search, which lives inside it now (anything
+                  that isn't a place is offered as a search). */}
+              <VoxuGuide
+                variant="home"
+                screen="today"
+                lines={null}
+                resolveLines={() => {
+                  const p = getLatestPulse()
+                  return todayScript({
+                    era: era.era ? { title: era.era.title, day: Math.min(era.era.day, era.era.lengthDays), lengthDays: era.era.lengthDays } : null,
+                    rightNow: !!p?.rightNow,
+                    done: p?.today.done ?? 0,
+                    total: p?.today.total ?? 0,
+                  })
+                }}
+                opener={talkOpener({
+                  screen: 'today',
+                  era: era.era ? { title: era.era.title, day: Math.min(era.era.day, era.era.lengthDays), change: era.era.change, kept: era.era.stats.kept, answered: era.era.stats.answered } : null,
+                })}
+                next={{ say: 'This is the next thing. Tap it to start.', href: '/', spot: 'today-rightnow' }}
+                onSearch={q => { setSearchKind(null); setSearchQuery(q); setShowSearch(true) }}
+              />
               {/* The relic they wear (components/relics/HeaderRelic): one coin,
                   still, flipping once per open through their equipped three. */}
               <HeaderRelic />
@@ -1621,7 +1641,8 @@ export function ImmersiveHome() {
       {showSearch && (
         <SearchSheet
           initialKind={searchKind}
-          onClose={() => setShowSearch(false)}
+          initialQuery={searchQuery}
+          onClose={() => { setShowSearch(false); setSearchQuery('') }}
           onPlaySoundscape={(id) => {
             const item = SOUNDSCAPE_ITEMS.find(s => s.id === id)
             if (item) handleSoundscapePlay(item, !isContentFree('soundscape', id))

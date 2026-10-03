@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, usePathname } from 'next/navigation'
-import { ArrowRight, AudioLines, MessageCircle, Pause, Play, X } from 'lucide-react'
+import { ArrowRight, AudioLines, MessageCircle, Pause, Play, Search, X } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
 import { navHref, type NavContext } from '@/lib/voice-guide/navigate'
 import { resolveIntent, type IntentContext } from '@/lib/voice-guide/intents'
@@ -62,10 +62,13 @@ const CHIPS: { label: string; text: string; href: string }[] = [
 
 export function VoxuGuide({
   screen,
-  lines,
+  lines: linesProp,
   next = null,
   experiment = null,
   opener = 'What\'s on your mind?',
+  variant = 'header',
+  resolveLines,
+  onSearch,
 }: {
   screen: GuideScreen | 'profile' | 'proof'
   /** What "explain this" says; null when the screen has nothing to explain. */
@@ -76,6 +79,16 @@ export function VoxuGuide({
   experiment?: IntentContext['experiment']
   /** Voxu's first line in Talk it through (lib/voice-guide/scripts talkOpener). */
   opener?: string
+  /**
+   * 'home': it sits in Today's header, which animates with a transform —
+   * anything absolutely placed inside would be positioned against the
+   * header, so the panel is portalled and fixed below it instead.
+   */
+  variant?: 'header' | 'home'
+  /** Build the script when tapped, from live data (Today reads Pulse then). */
+  resolveLines?: () => GuideLine[] | null
+  /** Search everything (Today's search lives in the orb now). */
+  onSearch?: (query: string) => void
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -85,6 +98,10 @@ export function VoxuGuide({
   /** A lighter day, waiting for their yes. */
   const [confirm, setConfirm] = useState<RescuePlan | null>(null)
   const [talking, setTalking] = useState(false)
+  /** The script being played — fixed at the tap, even if the page re-renders. */
+  const [script, setScript] = useState<GuideLine[] | null>(null)
+  /** What they asked that wasn't a place — offered as a search. */
+  const [unmatched, setUnmatched] = useState<string | null>(null)
   const [offer, setOffer] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [paused, setPaused] = useState(false)
@@ -98,8 +115,8 @@ export function VoxuGuide({
 
   // First visit: glow and ask, once the screen has something to explain.
   useEffect(() => {
-    if (screen in FIRST_VISIT_ASK && lines && lines.length && !readSeen(screen as GuideScreen)) setOffer(true)
-  }, [screen, lines])
+    if (screen in FIRST_VISIT_ASK && ((linesProp && linesProp.length) || resolveLines) && !readSeen(screen as GuideScreen)) setOffer(true)
+  }, [screen, linesProp, resolveLines])
 
   const stop = useCallback(() => {
     run.current++
@@ -150,6 +167,7 @@ export function VoxuGuide({
     }
 
     setReply(res.say)
+    setUnmatched(res.kind === 'unknown' && onSearch ? text.trim() : null)
     if (res.kind !== 'go') return
     go2(res)
   }, [next, experiment, pathname, router])
@@ -180,7 +198,9 @@ export function VoxuGuide({
   }
 
   const start = useCallback(async () => {
+    const lines = resolveLines?.() ?? linesProp
     if (!lines?.length) return
+    setScript(lines)
     haptic('light')
     if (screen in FIRST_VISIT_ASK) markSeen(screen as GuideScreen)
     setOffer(false)
@@ -226,7 +246,7 @@ export function VoxuGuide({
       })
     }
     if (run.current === id) stop()
-  }, [lines, screen, stop])
+  }, [linesProp, resolveLines, screen, stop])
 
   const togglePause = () => {
     if (paused) {
@@ -241,13 +261,41 @@ export function VoxuGuide({
     }
   }
 
-  const ready = !!lines?.length
+  /** Home: where the orb is on screen, so the panel opens right under it —
+   *  on an iPad the header sits in a centred column, not at the screen edge. */
+  const orbRef = useRef<HTMLButtonElement | null>(null)
+  const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(null)
+  useEffect(() => {
+    if (variant !== 'home' || !(open || offer)) return
+    const place = () => {
+      const r = orbRef.current?.getBoundingClientRect()
+      // Under the orb, but never off the left edge: on a phone the orb sits
+      // ~120px in from the right, and the 288px panel would hang off-screen.
+      const W = window.innerWidth
+      if (r) setAnchor({ top: r.bottom + 8, right: Math.max(16, Math.min(W - r.right, W - 16 - 288)) })
+    }
+    place()
+    // The header slides in after the launch screens, so the orb can still be
+    // moving when the first-visit question appears. Follow it while anything
+    // is showing (cheap: one rect read every half second, only while open).
+    const follow = window.setInterval(place, 500)
+    window.addEventListener('resize', place)
+    return () => { window.clearInterval(follow); window.removeEventListener('resize', place) }
+  }, [variant, open, offer])
+
+  const ready = !!linesProp?.length || !!resolveLines
+  const home = variant === 'home'
+  /** Home's panel lives outside the transformed header. */
+  const float = (node: React.ReactNode) => (home && typeof document !== 'undefined' ? createPortal(node, document.body) : node)
+  const floatClass = home ? 'fixed right-4 z-[75]' : 'absolute right-0 top-12 z-[55]'
+  const floatStyle = home && anchor ? { top: anchor.top, right: anchor.right } : home ? { top: 'calc(env(safe-area-inset-top, 0px) + 64px)' } : undefined
   const chips = CHIPS.filter(c => c.href !== pathname).slice(0, 3)
 
   return (
     <>
       <div className="relative">
         <button
+          ref={orbRef}
           onClick={() => { if (playing) stop(); else { setOffer(false); setReply(null); setOpen(o => !o) } }}
           aria-label={playing ? 'Stop Voxu' : 'Ask Voxu'}
           aria-expanded={open}
@@ -262,13 +310,14 @@ export function VoxuGuide({
           <AudioLines className="w-4 h-4 text-white" aria-hidden />
         </button>
 
-        {offer && !playing && (
+        {offer && !playing && float(
           // Not a dialog: an inline question that leaves the page usable, so
           // nothing behind it is frozen.
           <div
             role="group"
             aria-label="Voxu"
-            className="absolute right-0 top-12 z-[55] w-64 rounded-2xl border border-white/[0.16] bg-[#0d1018] p-3 shadow-2xl"
+            className={`${floatClass} w-64 rounded-2xl border border-white/[0.16] bg-[#0d1018] p-3 shadow-2xl`}
+            style={floatStyle}
           >
             <p className="text-px-13 text-white leading-snug">{FIRST_VISIT_ASK[screen as GuideScreen]}</p>
             <div className="flex gap-2 mt-2.5">
@@ -282,14 +331,14 @@ export function VoxuGuide({
           </div>
         )}
 
-        {open && !playing && (
+        {open && !playing && float(
           <>
             {/* Tap outside closes it. Not a dialog — nothing behind it freezes. */}
-            <button aria-label="Close" className="fixed inset-0 z-[54] cursor-default" onClick={() => { setOpen(false); setReply(null) }} />
-            <div role="group" aria-label="Voxu" className="absolute right-0 top-12 z-[55] w-72 rounded-2xl border border-white/[0.16] bg-[#0d1018] p-3 shadow-2xl">
+            <button aria-label="Close" className={`fixed inset-0 ${home ? 'z-[74]' : 'z-[54]'} cursor-default`} onClick={() => { setOpen(false); setReply(null); setUnmatched(null) }} />
+            <div role="group" aria-label="Voxu" className={`${floatClass} w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-white/[0.16] bg-[#0d1018] p-3 shadow-2xl`} style={floatStyle}>
               {ready && (
                 <button onClick={start} className="tap-44 w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white text-black text-px-13 font-medium">
-                  <Play className="w-4 h-4" /> Explain this page
+                  <Play className="w-4 h-4" /> {screen === 'today' ? 'Explain Today' : 'Explain this page'}
                 </button>
               )}
               <button
@@ -317,6 +366,14 @@ export function VoxuGuide({
               </div>
 
               {reply && <p className="text-px-13 text-white mt-2 leading-snug" aria-live="polite">{reply}</p>}
+              {unmatched && onSearch && (
+                <button
+                  onClick={() => { const q = unmatched; setOpen(false); setReply(null); setUnmatched(null); onSearch(q) }}
+                  className="tap-44 mt-2 w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/20 text-px-13 text-white"
+                >
+                  <Search className="w-4 h-4" /> Search for &ldquo;{unmatched}&rdquo;
+                </button>
+              )}
 
               {confirm && (
                 <div className="mt-2.5 rounded-xl border border-white/[0.16] bg-white/[0.04] p-3">
@@ -342,6 +399,11 @@ export function VoxuGuide({
                     Next step <ArrowRight className="w-3 h-3" />
                   </button>
                 )}
+                {onSearch && (
+                  <button onClick={() => { setOpen(false); setReply(null); onSearch('') }} className="tap-44 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full border border-white/20 text-px-12 text-white/85">
+                    <Search className="w-3 h-3" /> Search everything
+                  </button>
+                )}
                 {chips.map(c => (
                   <button key={c.href} onClick={() => go(c.text)} className="tap-44 px-2.5 py-1.5 rounded-full border border-white/20 text-px-12 text-white/85">
                     {c.label}
@@ -357,7 +419,7 @@ export function VoxuGuide({
         <TalkSheet
           opener={opener}
           screen={screen}
-          screenSummary={lines?.map(l => l.text).join(' ') ?? `The ${screen} screen.`}
+          screenSummary={(resolveLines?.() ?? linesProp)?.map(l => l.text).join(' ') ?? `The ${screen} screen.`}
           // A command said mid-conversation goes back to the panel, which
           // shows where it's going or asks to confirm.
           onCommand={text => { setTalking(false); setOpen(true); void go(text) }}
@@ -365,7 +427,7 @@ export function VoxuGuide({
         />
       )}
 
-      {playing && lines && typeof document !== 'undefined' && createPortal(
+      {playing && script && typeof document !== 'undefined' && createPortal(
         <div
           className="fixed inset-x-0 z-[65] px-4 flex justify-center pointer-events-none"
           style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 92px)' }}
@@ -375,9 +437,9 @@ export function VoxuGuide({
               <AudioLines className="w-4 h-4 text-white" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-px-14 text-white leading-snug" aria-live="polite">{lines[index]?.text}</p>
+              <p className="text-px-14 text-white leading-snug" aria-live="polite">{script[index]?.text}</p>
               <p className="text-px-10 text-white/50 mt-1 tabular-nums">
-                {index + 1} of {lines.length}{quiet ? ' · voice is resting, here it is in words' : ''}
+                {index + 1} of {script.length}{quiet ? ' · voice is resting, here it is in words' : ''}
               </p>
             </div>
             <button onClick={togglePause} aria-label={paused ? 'Resume' : 'Pause'} className="tap-44 p-1.5 rounded-full hover:bg-white/10">

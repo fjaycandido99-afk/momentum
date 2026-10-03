@@ -119,7 +119,7 @@ export function PulseSection({
 
       {r && !(showRescue && rescueOn) && (
         <div>
-          <section className="card-surface-lg era-glow p-5" aria-label="Right now">
+          <section className="card-surface-lg era-glow p-5" aria-label="Right now" data-voxu-spot="today-rightnow">
             <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">{r.eyebrow}</p>
             <h2 className="text-px-26 leading-[1.1] text-white mt-1.5" style={{ ...SERIF, fontWeight: 500 }}>
               {r.title}
@@ -156,7 +156,7 @@ export function PulseSection({
       )}
 
       {items.length >= 2 && (
-        <section className="card-surface-lg p-4" aria-label="Today">
+        <section className="card-surface-lg p-4" aria-label="Today" data-voxu-spot="today-list">
           <div className="flex items-center justify-between">
             <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Today</p>
             {pulse.today.total > 0 && (
