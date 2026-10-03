@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowRight, AudioLines, Loader2, Volume2, VolumeX } from 'lucide-react'
+import { ArrowRight, AudioLines, Clock, Headphones, Keyboard, Landmark, Loader2, MessageCircle, Mic, Volume2, VolumeX } from 'lucide-react'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
-import { MINDSET_CONFIGS, getCoachName } from '@/lib/mindset/configs'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import { VoiceInput } from '@/components/journal/VoiceInput'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
@@ -44,8 +43,16 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
  */
 const KEY = 'voxu_first_moment_done_v1'
 const VOICE_KEY = 'voxu.talk.voice'
+/** Said as the opener appears — the same words for everyone, so voiced once. */
+const INTRO = 'Let\'s begin with one thing. What do you want to change right now?'
 
-type Beat = 'hello' | 'ask' | 'thinking' | 'eras' | 'starting' | 'guide' | 'promise' | 'saving' | 'done'
+const PREVIEW = [
+  { icon: Landmark, title: 'Choose an Era', text: 'Thirty days. One promise a day.' },
+  { icon: Headphones, title: 'A guided moment', text: 'Short sessions to centre you.' },
+  { icon: MessageCircle, title: 'Guidance that adapts', text: 'A voice that learns how you work.' },
+]
+
+type Beat = 'hello' | 'thinking' | 'eras' | 'starting' | 'guide' | 'promise' | 'saving' | 'done'
 
 export function FirstLaunch({ hasEra, onEraChange }: {
   /** null while the era is loading; true means this person is past day one. */
@@ -67,6 +74,11 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   const [promise, setPromise] = useState('')
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** How they'll answer — chosen on the first screen. */
+  const [inputMode, setInputMode] = useState<'voice' | 'type' | null>(null)
+  /** Sound was blocked before a tap (Safari on the web): offer "Tap to hear". */
+  const [needsTap, setNeedsTap] = useState(false)
+  const introPlayed = useRef(false)
   const [voiceOn, setVoiceOn] = useState(() => {
     try { return localStorage.getItem(VOICE_KEY) !== 'off' } catch { return true }
   })
@@ -86,24 +98,32 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   }, [hidden, hasEra, finish])
 
   /** Say a line in Voxu's voice (after their first tap). Resolves when it ends, or at once when quiet. */
-  const say = useCallback(async (text: string): Promise<void> => {
+  const say = useCallback(async (text: string): Promise<'played' | 'blocked' | 'quiet'> => {
     audio.current?.pause()
-    if (!voiceOn) return
+    if (!voiceOn) return 'quiet'
     const res = await fetchVoxuAudio(text)
-    if (!res.ok) return
+    if (!res.ok) return 'quiet'
     audio.current = res.audio
-    await new Promise<void>(done => {
-      res.audio.onended = () => done()
-      res.audio.onerror = () => done()
-      res.audio.play().catch(() => done())
+    return new Promise(done => {
+      res.audio.onended = () => done('played')
+      res.audio.onerror = () => done('quiet')
+      res.audio.play().catch(() => done('blocked'))
     })
   }, [voiceOn])
 
+  // Voxu speaks as the opener appears. In the app the web view allows sound
+  // without a tap (Capacitor: mediaTypesRequiringUserActionForPlayback = []);
+  // a browser blocks it, and the orb then offers "Tap to hear Voxu".
+  const showing = !hidden && hasEra === false && !!mindsetCtx?.mindset
+  useEffect(() => {
+    if (!showing || introPlayed.current) return
+    introPlayed.current = true
+    trackFeature('first_launch', 'open')
+    void say(INTRO).then(r => { if (r === 'blocked') setNeedsTap(true) })
+  }, [showing, say])
+
   if (hidden || hasEra !== false || !mindsetCtx?.mindset) return null
 
-  const mindset = mindsetCtx.mindset
-  const coach = getCoachName(mindset)
-  const voiceName = MINDSET_CONFIGS[mindset]?.name ?? ''
 
   const toggleVoice = () => {
     const next = !voiceOn
@@ -112,11 +132,10 @@ export function FirstLaunch({ hasEra, onEraChange }: {
     try { localStorage.setItem(VOICE_KEY, next ? 'on' : 'off') } catch { /* ignore */ }
   }
 
-  const begin = () => {
+  const hearIt = () => {
     haptic('light')
-    trackFeature('first_launch', 'open')
-    setBeat('ask')
-    void say('Before I show you anything, tell me one thing you want to change.')
+    setNeedsTap(false)
+    void say(INTRO)
   }
 
   const send = async (raw: string) => {
@@ -132,7 +151,7 @@ export function FirstLaunch({ hasEra, onEraChange }: {
         body: JSON.stringify({ text }),
       })
       const data = await res.json().catch(() => null)
-      if (!res.ok || !data?.eras) { setError(data?.error ?? 'Couldn’t reach Voxu. Check your connection.'); setBeat('ask'); return }
+      if (!res.ok || !data?.eras) { setError(data?.error ?? 'Couldn’t reach Voxu. Check your connection.'); setBeat('hello'); setInputMode('type'); return }
       setMoment(data)
       if (data.crisis) setCrisis(data.crisis)
       setPromise(data.promise)
@@ -142,7 +161,8 @@ export function FirstLaunch({ hasEra, onEraChange }: {
       void say(`For the next ${DEFAULT_ERA_LENGTH_DAYS} days, we can turn that into an Era.`)
     } catch {
       setError('Couldn’t reach Voxu. Check your connection.')
-      setBeat('ask')
+      setBeat('hello')
+      setInputMode('type')
     }
   }
 
@@ -224,6 +244,14 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label="Welcome to Voxu" className="fixed inset-0 z-[90] bg-black text-white overflow-y-auto overflow-x-hidden">
       <ScrollLock />
+      {/* Night over still water, as in the mockup — tall on a phone, wide on
+          an iPad or computer. */}
+      <picture aria-hidden>
+        <source media="(min-aspect-ratio: 1/1)" srcSet="/scenes/home/night-wide.jpg" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/scenes/home/night-tall.jpg" alt="" className={`fixed inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ${beat === 'hello' ? 'opacity-50' : 'opacity-20'}`} />
+      </picture>
+      <div className="fixed inset-0 bg-gradient-to-b from-black via-black/60 to-black/80 pointer-events-none" aria-hidden />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-white/[0.05] blur-3xl pointer-events-none" aria-hidden />
 
       <div className="relative min-h-[100dvh] flex flex-col items-center justify-center px-6 py-16 max-w-md mx-auto">
@@ -235,9 +263,9 @@ export function FirstLaunch({ hasEra, onEraChange }: {
         )}
 
         {/* The orb — present the whole way through; their words drift behind it. */}
-        {beat !== 'eras' && beat !== 'promise' && beat !== 'done' && (
+        {beat !== 'hello' && beat !== 'eras' && beat !== 'promise' && beat !== 'done' && (
           <div className="relative flex items-center justify-center mb-8">
-            {said && beat !== 'hello' && (
+            {said && (
               <p className="absolute w-72 text-center text-px-15 text-white/[0.14] leading-snug pointer-events-none" style={SERIF} aria-hidden>{said}</p>
             )}
             <span className="voxu-orb-glow w-20 h-20 rounded-full flex items-center justify-center"
@@ -250,37 +278,87 @@ export function FirstLaunch({ hasEra, onEraChange }: {
         )}
 
         {beat === 'hello' && (
-          <div className="text-center animate-fade-in-up">
-            <p className="text-px-11 uppercase tracking-[0.24em] text-white/55">Voxu</p>
-            <h1 className="text-px-34 leading-tight mt-2" style={{ ...SERIF, fontWeight: 600 }}>I&rsquo;m {coach}.</h1>
-            <p className="text-px-14 text-white/70 mt-2">Your {voiceName} voice. Let me show you how this works.</p>
-            <button onClick={begin} className="tap-44 mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-black text-px-14 font-medium press-scale">
-              Begin <ArrowRight className="w-4 h-4" />
+          <div className="w-full text-center animate-fade-in-up">
+            <p className="text-px-11 uppercase tracking-[0.34em] text-white/55">Voxu</p>
+            <button
+              onClick={needsTap ? hearIt : undefined}
+              aria-label={needsTap ? 'Tap to hear Voxu' : 'Voxu'}
+              className="relative mx-auto mt-6 w-24 h-24 rounded-full flex items-center justify-center voxu-orb-glow"
+              style={{ background: 'radial-gradient(circle at 50% 40%, rgb(var(--era-accent, 160 170 255) / 0.35), rgb(10 12 20 / 0.95) 70%)', border: '1px solid rgb(var(--era-accent, 160 170 255) / 0.55)' }}
+            >
+              <AudioLines className="w-8 h-8 text-white" aria-hidden />
             </button>
-          </div>
-        )}
+            {needsTap && <p className="text-px-12 text-white/70 mt-2">Tap to hear Voxu</p>}
 
-        {beat === 'ask' && (
-          <div className="w-full animate-fade-in-up">
-            <h2 className="text-px-26 leading-snug text-center" style={{ ...SERIF, fontWeight: 600 }}>
-              Before I show you anything, tell me one thing you want to change.
-            </h2>
-            {error && <p className="text-px-13 text-white/80 text-center mt-3" role="alert">{error}</p>}
-            <form className="mt-6 flex items-end gap-2" onSubmit={e => { e.preventDefault(); void send(said) }}>
-              <VoiceInput onTranscript={t => { setSaid(t); void send(t) }} />
-              <textarea
-                value={said}
-                onChange={e => setSaid(e.target.value)}
-                rows={2}
-                maxLength={300}
-                placeholder="I want to stop…"
-                aria-label="One thing you want to change"
-                className="flex-1 min-w-0 bg-white/[0.05] border border-white/15 rounded-2xl p-3.5 text-px-16 text-white placeholder-white/40 resize-none focus:outline-none focus:border-white/30"
-              />
-            </form>
-            <button onClick={() => void send(said)} disabled={!said.trim()} className="tap-44 mt-3 w-full py-3.5 rounded-2xl bg-white text-black text-px-14 font-medium disabled:opacity-40 press-scale">
-              Tell Voxu
-            </button>
+            <h1 className="text-px-38 leading-tight mt-6" style={{ ...SERIF, fontWeight: 600 }}>Let&rsquo;s begin with one thing.</h1>
+            <p className="text-px-14 text-white/70 mt-2">Choose an era, start a short guided moment, and make your first promise.</p>
+
+            {/* Voxu's question, as something it said. */}
+            <div className="mt-6 flex items-center justify-center gap-2.5">
+              <span className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center border border-white/25 bg-[#0d1018]" aria-hidden>
+                <AudioLines className="w-4 h-4 text-white" />
+              </span>
+              <p className="px-4 py-2.5 rounded-2xl rounded-bl-md bg-white/[0.08] border border-white/[0.12] text-px-14 text-white text-left">
+                What do you want to change right now?
+              </p>
+            </div>
+
+            {error && <p className="text-px-13 text-white/85 mt-3" role="alert">{error}</p>}
+
+            {inputMode === null && (
+              <div className="mt-6 flex flex-col min-[380px]:flex-row gap-2.5 justify-center">
+                <button onClick={() => { haptic('light'); setInputMode('voice') }} className="tap-44 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white text-black text-px-14 font-medium press-scale">
+                  <Mic className="w-4 h-4" /> Start with voice <ArrowRight className="w-4 h-4" />
+                </button>
+                <button onClick={() => setInputMode('type')} className="tap-44 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-white/20 bg-white/[0.04] text-px-14 text-white">
+                  <Keyboard className="w-4 h-4" /> Type instead
+                </button>
+              </div>
+            )}
+
+            {inputMode === 'voice' && (
+              <div className="mt-6 flex flex-col items-center">
+                <div className="scale-125"><VoiceInput onTranscript={t => { setSaid(t); void send(t) }} /></div>
+                <p className="text-px-13 text-white/70 mt-3">Tap the mic and say it in your own words.</p>
+                <button onClick={() => setInputMode('type')} className="tap-44 mt-2 text-px-12 text-white/60 underline underline-offset-4">Type instead</button>
+              </div>
+            )}
+
+            {inputMode === 'type' && (
+              <form className="mt-6 text-left" onSubmit={e => { e.preventDefault(); void send(said) }}>
+                <textarea
+                  value={said}
+                  onChange={e => setSaid(e.target.value)}
+                  rows={2}
+                  maxLength={300}
+                  autoFocus
+                  placeholder="I want to stop…"
+                  aria-label="One thing you want to change"
+                  className="w-full bg-white/[0.05] border border-white/15 rounded-2xl p-3.5 text-px-16 text-white placeholder-white/40 resize-none focus:outline-none focus:border-white/30"
+                />
+                <button type="submit" disabled={!said.trim()} className="tap-44 mt-3 w-full py-3.5 rounded-2xl bg-white text-black text-px-14 font-medium disabled:opacity-40 press-scale">
+                  Tell Voxu
+                </button>
+              </form>
+            )}
+
+            <p className="mt-4 inline-flex items-center gap-1.5 text-px-12 text-white/50"><Clock className="w-3.5 h-3.5" aria-hidden /> Takes less than 2 minutes.</p>
+
+            {/* What's ahead — a preview, not a step counter. */}
+            <ul className="mt-8 grid grid-cols-3 gap-2 text-left">
+              {PREVIEW.map(p => {
+                const Icon = p.icon
+                return (
+                  <li key={p.title} className="rounded-2xl border border-white/[0.12] bg-white/[0.04] p-3">
+                    <span className="w-8 h-8 rounded-full flex items-center justify-center border border-white/20 bg-black/40" aria-hidden>
+                      <Icon className="w-4 h-4 text-white/85" />
+                    </span>
+                    <p className="text-px-12 text-white mt-2 leading-tight" style={{ ...SERIF, fontWeight: 600 }}>{p.title}</p>
+                    <p className="hidden min-[400px]:block text-px-10 text-white/55 mt-1 leading-snug">{p.text}</p>
+                  </li>
+                )
+              })}
+            </ul>
           </div>
         )}
 
