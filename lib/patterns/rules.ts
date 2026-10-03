@@ -560,7 +560,8 @@ function disciplinePattern(disciplines: { label: string; kept: number; due: numb
   }
 }
 
-export function findPatterns(input: PatternInput): PatternReport {
+/** `limit` caps what is returned (the screen shows the strongest few); the chance test always runs over all of them. */
+export function findPatterns(input: PatternInput, limit: number = MAX_PATTERNS): PatternReport {
   const answered = input.promises.filter(p => p.kept !== null)
   const moodDaysWithPromise = new Set(
     input.promises.filter(p => p.kept !== null).map(p => p.day),
@@ -632,7 +633,7 @@ export function findPatterns(input: PatternInput): PatternReport {
     b.gap - a.gap || rank[a.strength] - rank[b.strength] || a.id.localeCompare(b.id))
 
   return {
-    patterns: patterns.slice(0, MAX_PATTERNS),
+    patterns: patterns.slice(0, limit),
     scores: computeScores(input),
     needs: {
       answeredPromises: Math.max(0, MIN_ANSWERED_TOTAL - answered.length),

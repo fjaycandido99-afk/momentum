@@ -7,6 +7,9 @@ import { exerciseById } from '@/lib/exercises/library'
 import { parseConfidence, reasonLabel } from '@/lib/era/reasons'
 import { buildProofYear, type ProofYear } from './grid'
 import { buildEraRecord, type EraRecord } from '@/lib/era/record'
+import { lawsLearned, addDays as addDay, LOOKBACK_DAYS } from '@/lib/patterns/era-laws'
+import { loadPatternInput } from '@/lib/patterns/server'
+import { finishedExperimentsBetween } from '@/lib/patterns/experiments-server'
 import { audioLine, countsAsProof } from '@/lib/audio-sessions'
 
 /**
@@ -253,6 +256,17 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
     .map((e, i) => ({ e, span: spans[i] }))
     .filter(({ e, span }) => (e.status === 'ended' || span.to < today) && span.to >= `${year}-01-01` && span.to <= to)
   const overIds = over.map(o => o.e.id)
+  // What each era taught: laws that turned solid inside it, and the
+  // experiments run in it. One history read reaching back far enough to
+  // rewind the record to the start of the earliest of them.
+  const earliest = over.reduce((m, o) => (o.e.start_day < m ? o.e.start_day : m), today)
+  const latest = over.reduce((m, o) => (o.span.to > m ? o.span.to : m), earliest)
+  const [patternInput, experiments] = overIds.length
+    ? await Promise.all([
+        loadPatternInput(userId, new Date(`${addDay(earliest, -LOOKBACK_DAYS)}T00:00:00Z`)).catch(() => null),
+        finishedExperimentsBetween(userId, earliest, latest).catch(() => []),
+      ])
+    : [null, []]
   const [eraPromises, stayed] = overIds.length
     ? await Promise.all([
         prisma.eraPromise.findMany({
@@ -280,6 +294,10 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
         .map(p => ({ day: daysBetween(e.start_day, p.local_day) + 1, kept: p.kept })),
       stayed: stayed.filter(s => s.from_era_id === e.id).map(s => s.label),
       reflection: e.reflection,
+      laws: patternInput ? lawsLearned(patternInput, e.start_day, span.to) : [],
+      experiments: experiments
+        .filter(x => x.startDay >= e.start_day && x.startDay <= span.to)
+        .map(x => ({ title: x.title, verdict: x.result.verdict, line: x.result.line })),
     }))
     .sort((a, b) => (a.endDay < b.endDay ? 1 : -1))
 

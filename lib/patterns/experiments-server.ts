@@ -94,15 +94,50 @@ export async function loadExperiments(userId: string): Promise<{ active: Experim
       const f = facts.get(today)
       wires.push({ ...base, day: experimentDay(r.start_day, today), followedToday: f ? def.followed(f) : false, result: null })
     } else if (r.status === 'done') {
-      const facts = await dayFacts(userId, tz, addDays(r.start_day, -BASELINE_DAYS), r.end_day)
-      const during = [...facts.values()].filter(f => f.day >= r.start_day && f.day <= r.end_day)
-      const baseline = [...facts.values()].filter(f => f.day < r.start_day)
-      wires.push({ ...base, day: null, followedToday: null, result: evaluateExperiment(def, during, baseline) })
+      wires.push({ ...base, day: null, followedToday: null, result: await judge(userId, tz, def, r.start_day, r.end_day) })
     } else {
       wires.push({ ...base, day: null, followedToday: null, result: null })
     }
   }
   return { active: wires.find(w => w.status === 'active') ?? null, finished: wires.filter(w => w.status !== 'active') }
+}
+
+async function judge(
+  userId: string, tz: string | null,
+  def: NonNullable<ReturnType<typeof EXPERIMENT_BY_KEY.get>>, start: string, end: string,
+): Promise<ExperimentResult> {
+  const facts = await dayFacts(userId, tz, addDays(start, -BASELINE_DAYS), end)
+  const during = [...facts.values()].filter(f => f.day >= start && f.day <= end)
+  const baseline = [...facts.values()].filter(f => f.day < start)
+  return evaluateExperiment(def, during, baseline)
+}
+
+export interface FinishedExperiment {
+  startDay: string
+  endDay: string
+  title: string
+  result: ExperimentResult
+}
+
+/**
+ * Every experiment that ran its 7 days and began between two days, with its
+ * verdict — for the Era Records. Stopped ones carry no result and are left
+ * out; one past its last day counts as finished even before a read settled it.
+ */
+export async function finishedExperimentsBetween(userId: string, from: string, to: string): Promise<FinishedExperiment[]> {
+  const tz = await tzOf(userId)
+  const today = localDay(tz)
+  const rows = await prisma.patternExperiment.findMany({
+    where: { user_id: userId, status: { in: ['active', 'done'] }, start_day: { gte: from, lte: to }, end_day: { lt: today } },
+    orderBy: { start_day: 'asc' },
+  })
+  const out: FinishedExperiment[] = []
+  for (const r of rows) {
+    const def = EXPERIMENT_BY_KEY.get(r.kind as never)
+    if (!def) continue
+    out.push({ startDay: r.start_day, endDay: r.end_day, title: def.title, result: await judge(userId, tz, def, r.start_day, r.end_day) })
+  }
+  return out
 }
 
 /** Start one — only one runs at a time, so each result is about one change. */

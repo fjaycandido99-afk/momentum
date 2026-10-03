@@ -10,6 +10,16 @@
  * Pure.
  */
 
+import type { EraLaw } from '@/lib/patterns/era-laws'
+import type { ExperimentResult } from '@/lib/patterns/experiments'
+
+/** An experiment that ran inside the era, with its verdict. */
+export interface EraExperiment {
+  title: string
+  verdict: ExperimentResult['verdict']
+  line: string
+}
+
 /** Longest a reflection may be: one line. */
 export const REFLECTION_MAX = 140
 
@@ -35,6 +45,9 @@ export interface EraRecordInput {
   /** Disciplines carried forward from it ("What stays with you?"). */
   stayed: string[]
   reflection: string | null
+  /** Laws that became solid during it (lib/patterns/era-laws). */
+  laws?: EraLaw[]
+  experiments?: EraExperiment[]
 }
 
 export interface EraRecord {
@@ -54,6 +67,8 @@ export interface EraRecord {
   strongestWeek: { week: number; kept: number; answered: number } | null
   stayed: string[]
   reflection: string | null
+  laws: EraLaw[]
+  experiments: EraExperiment[]
 }
 
 /** Days 1–7 are week 1 … days 22+ fold into week 4. */
@@ -128,5 +143,7 @@ export function buildEraRecord(input: EraRecordInput): EraRecord {
     strongestWeek: strongestWeek(input.promises),
     stayed: input.stayed,
     reflection: cleanReflection(input.reflection),
+    laws: input.laws ?? [],
+    experiments: input.experiments ?? [],
   }
 }

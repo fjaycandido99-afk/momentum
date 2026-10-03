@@ -48,6 +48,32 @@ export function EraRecordCard({ record }: { record: EraRecord }) {
         </div>
       )}
 
+      {record.laws.length > 0 && (
+        <div className="mt-3">
+          <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">
+            {record.laws.length === 1 ? 'Law learned' : 'Laws learned'}
+          </p>
+          {record.laws.map(law => (
+            <div key={law.id} className="mt-1.5">
+              <p className="text-px-14 text-white/90 leading-snug">{law.headline}</p>
+              <p className="text-px-11 text-white/50 mt-0.5 leading-snug">{law.detail}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {record.experiments.length > 0 && (
+        <div className="mt-3">
+          <p className="text-px-10 tracking-[0.2em] uppercase text-white/45">Tested</p>
+          {record.experiments.map((x, i) => (
+            <div key={i} className="mt-1.5">
+              <p className="text-px-14 text-white/90">{x.title}</p>
+              <p className="text-px-12 text-white/60 mt-0.5 leading-snug">{x.line}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {record.reflection && (
         <p className="text-px-17 text-white/90 leading-snug mt-3" style={SERIF}>&ldquo;{record.reflection}&rdquo;</p>
       )}

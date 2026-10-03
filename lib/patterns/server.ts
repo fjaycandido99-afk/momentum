@@ -65,7 +65,15 @@ function localParts(at: Date, timezone: string | null): { hour: number; weekday:
 }
 
 export async function loadPatterns(userId: string): Promise<PatternReport> {
-  const since = new Date(Date.now() - WINDOW_DAYS * 86400000)
+  return findPatterns(await loadPatternInput(userId, new Date(Date.now() - WINDOW_DAYS * 86400000)))
+}
+
+/**
+ * Everything the engine reads, from `since` on. The live page asks for the
+ * last WINDOW_DAYS; an Era Record reaches further back so it can rewind the
+ * record to the day an era began (lib/patterns/era-laws).
+ */
+export async function loadPatternInput(userId: string, since: Date): Promise<PatternInput> {
 
   const [prefs, promiseRows, guideRows, wellnessRows, guidedRows, practices] = await Promise.all([
     prisma.userPreferences.findUnique({
@@ -151,7 +159,7 @@ export async function loadPatterns(userId: string): Promise<PatternReport> {
       : [],
   }
 
-  return findPatterns(input)
+  return input
 }
 
 /**
