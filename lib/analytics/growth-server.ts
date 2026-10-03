@@ -6,6 +6,7 @@ import {
   notificationOpens, promiseTiming, retention,
   type DisciplineRow, type EarlyUser, type EraRow, type PromiseFact, type UserDays,
 } from './growth'
+import { experimentUse, lessonUse, openerFunnel, voiceGuideUse } from './new-features'
 
 /**
  * Loads the founder's Growth & patterns view. EVERY select below names its
@@ -144,8 +145,28 @@ export async function loadGrowth() {
     .filter(l => l.local_day >= sinceDay)
     .map(l => ({ userId: l.user_id, domain: domainOf.get(l.practice_id) ?? 'custom', kept: l.done }))
 
+  // What shipped recently: the opener, Voxu Guide, lessons, experiments,
+  // relic notes. Categories and ids only — a relic note's WORDS are never
+  // selected, only that one exists.
+  const [recentEvents, experimentRows, noteRows] = await Promise.all([
+    prisma.featureEvent.findMany({
+      where: { feature: { in: ['first_launch', 'voice_guide', 'psychology'] } },
+      select: { user_id: true, feature: true, action: true, metadata: true },
+    }),
+    prisma.patternExperiment.findMany({ select: { user_id: true, kind: true, status: true } }),
+    prisma.userAchievement.findMany({ where: { note: { not: null } }, select: { user_id: true } }),
+  ])
+  const ev = recentEvents.map(e => ({ userId: e.user_id, feature: e.feature, action: e.action, metadata: e.metadata }))
+
   return {
     generatedFor: today,
+    newFeatures: {
+      opener: openerFunnel(ev),
+      voice: voiceGuideUse(ev),
+      lessons: lessonUse(ev),
+      experiments: experimentUse(experimentRows.map(x => ({ userId: x.user_id, kind: x.kind, status: x.status }))),
+      relicNotes: { people: new Set(noteRows.map(n => n.user_id)).size, notes: noteRows.length },
+    },
     people: users.length,
     retention: retention(userDays, today),
     eras: eraInsights(eraRows),

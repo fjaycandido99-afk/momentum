@@ -34,6 +34,20 @@ function Card({ title, moves, children }: { title: string; moves: string; childr
   )
 }
 
+/** A row: label, then a count. */
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex justify-between items-baseline py-2 text-xs gap-3">
+      <span className="text-white/75">{label}</span>
+      <span className="text-white tabular-nums text-right">{value}</span>
+    </div>
+  )
+}
+
+function StepRate({ r }: { r: Rate | null }) {
+  return r ? <span className="text-white/45"> · {r.rate}% of the step before</span> : <span className="text-white/35"> · rate after 5 people</span>
+}
+
 function Lines({ lines, empty }: { lines: PatternLine[]; empty: string }) {
   if (lines.length === 0) return <p className="text-white/40 text-sm">{empty}</p>
   return (
@@ -129,6 +143,56 @@ export function GrowthSection({ apiKey = null }: { apiKey?: string | null }) {
           {g.notifications.sentByHour.map(h => (
             <span key={h.label} className="px-2 py-1 rounded bg-white/[0.04] text-white/70">{h.label}: {h.sent} sent</span>
           ))}
+        </div>
+      </Card>
+
+      {/* What shipped recently — is anyone using it, and where do they stop? */}
+      <Card title="First launch (the talking opener)" moves="the first seconds: Voxu speaking and listening on open, how fast the reply lands, and whether the three eras feel like them. A big drop at 'answered' means the voice/listen step is failing or awkward; at 'era', the suggestions miss; at 'promise', the promise asks too much.">
+        <div className="divide-y divide-white/5">
+          <Row label="Began" value={`${g.newFeatures.opener.began} people`} />
+          <Row label="Answered the question" value={<>{g.newFeatures.opener.answered}<StepRate r={g.newFeatures.opener.rates.answered} /></>} />
+          <Row label="…of those, without the AI (fallback)" value={g.newFeatures.opener.answeredFallback} />
+          <Row label="Started an era" value={<>{g.newFeatures.opener.startedEra}<StepRate r={g.newFeatures.opener.rates.era} /></>} />
+          <Row label="Made the first promise" value={<>{g.newFeatures.opener.firstPromise}<StepRate r={g.newFeatures.opener.rates.promise} /></>} />
+        </div>
+        {g.newFeatures.opener.eraPicks.length > 0 && (
+          <div className="flex flex-wrap gap-2 text-xs">
+            {g.newFeatures.opener.eraPicks.map(p => (
+              <span key={p.key} className="px-2 py-1 rounded bg-white/[0.04] text-white/70">{p.key}: {p.people}</span>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card title="Voxu Guide (the orb)" moves="being found — the orb's first-visit question, and the orb now replacing search on Today. Many 'didn't know where to go' asks mean the place list needs more words people actually say.">
+        <div className="divide-y divide-white/5">
+          <Row label="Explain this page" value={`${g.newFeatures.voice.explain.people} people · ${g.newFeatures.voice.explain.plays} plays`} />
+          <Row label="Take me somewhere / do this" value={`${g.newFeatures.voice.navigate.people} people · ${g.newFeatures.voice.navigate.asks} asks · ${g.newFeatures.voice.navigate.unknown} not understood`} />
+          <Row label="Talk it through" value={`${g.newFeatures.voice.talk.people} people · ${g.newFeatures.voice.talk.opens} conversations`} />
+        </div>
+        {g.newFeatures.voice.byScreen.length > 0 && (
+          <div className="flex flex-wrap gap-2 text-xs">
+            {g.newFeatures.voice.byScreen.map(x => (
+              <span key={x.screen} className="px-2 py-1 rounded bg-white/[0.04] text-white/70">{x.screen}: {x.plays}</span>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card title="Psychology lessons" moves="the 'For you' row (lessons tied to someone's own laws) and the links from Your laws and experiments. Lessons nobody opens are candidates for a better title, not deletion.">
+        <div className="divide-y divide-white/5">
+          <Row label="Opened the library" value={`${g.newFeatures.lessons.libraryOpeners} people`} />
+          <Row label="Read a lesson" value={`${g.newFeatures.lessons.readers} people · ${g.newFeatures.lessons.reads} reads`} />
+          {g.newFeatures.lessons.top.map(l => <Row key={l.id} label={l.id} value={`${l.readers} readers`} />)}
+        </div>
+      </Card>
+
+      <Card title="Experiments, relic notes" moves="experiments: having a law to test (they start from Your laws) and the setup screen. Notes: the 'Add a memory' link in the relic popup — notes are private, so this counts that they exist, never what they say.">
+        <div className="divide-y divide-white/5">
+          <Row label="People who started an experiment" value={g.newFeatures.experiments.people} />
+          <Row label="Started · finished · stopped · running" value={`${g.newFeatures.experiments.started} · ${g.newFeatures.experiments.finished} · ${g.newFeatures.experiments.stopped} · ${g.newFeatures.experiments.running}`} />
+          {g.newFeatures.experiments.byKind.map(k => <Row key={k.kind} label={k.kind} value={`${k.started} started`} />)}
+          <Row label="Relic memories written" value={`${g.newFeatures.relicNotes.notes} by ${g.newFeatures.relicNotes.people} people`} />
         </div>
       </Card>
 
