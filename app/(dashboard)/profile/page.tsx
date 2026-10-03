@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Loader2 } from 'lucide-react'
 import { BackButton } from '@/components/ui/BackButton'
+import { SceneImage } from '@/components/home/SceneImage'
 import { SectionTabs } from '@/components/ui/SectionTabs'
 import { AchievementBadge } from '@/components/progress/AchievementBadge'
 import { AchievementCelebration } from '@/components/progress/AchievementCelebration'
@@ -74,21 +75,22 @@ export default function ProfilePage() {
         <SectionTabs section="you" className="mt-2" />
 
         {/* Who, and the coin they chose to lead with */}
-        <div className="flex flex-col items-center text-center mt-2">
+        <div className="relative -mx-5 px-5 pt-2 pb-1 overflow-hidden flex flex-col items-center text-center mt-2">
+          <SceneImage src="/scenes/profile/backdrop.jpg" fade="down" className="inset-0 w-full h-full" position="center" opacity={0.7} />
           {featured ? (
-            <button onClick={() => setDetailId(featured.id)} aria-label={`${featured.title} — your featured relic`} className="press-scale">
+            <button onClick={() => setDetailId(featured.id)} aria-label={`${featured.title} — your featured relic`} className="relative press-scale">
               <AchievementBadge id={featured.id} category={featured.category} icon={featured.icon} rarity={featured.rarity} unlocked plain size={132} />
             </button>
           ) : (
-            <div className="w-[132px] h-[132px] rounded-full border border-dashed border-white/20" aria-hidden />
+            <div className="relative w-[132px] h-[132px] rounded-full border border-dashed border-white/20" aria-hidden />
           )}
-          <h1 className="text-px-40 leading-tight mt-4" style={{ ...SERIF, fontWeight: 600 }}>
+          <h1 className="relative text-px-40 leading-tight mt-4" style={{ ...SERIF, fontWeight: 600 }}>
             {profile?.displayName ?? 'You'}
           </h1>
           {profile?.memberSince && (
-            <p className="text-px-13 text-white/65 mt-1">With Voxu since {monthYear(profile.memberSince)}</p>
+            <p className="relative text-px-13 text-white/65 mt-1">With Voxu since {monthYear(profile.memberSince)}</p>
           )}
-          {featured && <p className="text-px-12 text-white/60 mt-1">Wearing {featured.title}</p>}
+          {featured && <p className="relative text-px-12 text-white/60 mt-1">Wearing {featured.title}</p>}
         </div>
 
         {/* Recent relics */}

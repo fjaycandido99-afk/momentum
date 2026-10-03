@@ -8,6 +8,7 @@ import { EXPERIMENTS, experimentFor } from '@/lib/patterns/experiments'
 import type { ExperimentWire } from '@/lib/patterns/experiments-server'
 import { haptic } from '@/lib/haptics'
 import { BackButton } from '@/components/ui/BackButton'
+import { SceneImage } from '@/components/home/SceneImage'
 import { SectionTabs } from '@/components/ui/SectionTabs'
 import { LESSON_BY_ID, LESSON_FOR_EXPERIMENT, LESSON_FOR_PATTERN } from '@/lib/psychology/lessons'
 
@@ -85,11 +86,14 @@ export default function PatternsPage() {
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
         <BackButton />
         <SectionTabs section="record" className="mt-2" />
-        <p className="text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">Your pattern</p>
-        <h1 className="text-px-40 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>Your laws</h1>
-        <p className="text-px-14 text-white/75 mt-2 leading-relaxed">
+        <div className="relative -mx-5 px-5 pt-1 pb-2 overflow-hidden">
+        <SceneImage src="/scenes/laws/header.jpg" fade="left-down" className="inset-y-0 right-0 w-[70%] h-full" opacity={0.75} />
+        <p className="relative text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">Your pattern</p>
+        <h1 className="relative text-px-40 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>Your laws</h1>
+        <p className="relative text-px-14 text-white/75 mt-2 leading-relaxed">
           Rules your own record shows — each with its counts. A law has to pass a chance test first; until then it stays below as something Voxu is still watching.
         </p>
+        </div>
 
         {!report ? (
           <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-white/50" /></div>

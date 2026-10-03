@@ -7,6 +7,7 @@ import {
   PenLine, Settings, Trophy, UserRound, X, type LucideIcon,
 } from 'lucide-react'
 import { ScrollLock } from '@/components/ui/ScrollLock'
+import { SceneImage } from '@/components/home/SceneImage'
 
 /**
  * The menu — where Voxu's places live, opened from the spiral.
@@ -38,6 +39,8 @@ type Item = {
   progress?: number
   /** Something here is waiting on them. */
   live?: boolean
+  /** public/scenes/menu/<scene>.jpg — shows once the file exists. */
+  scene?: string
 }
 
 export function NavSheet({
@@ -63,16 +66,16 @@ export function NavSheet({
       title: 'Your day',
       items: [
         {
-          label: 'Today', sub: 'Your day, routine, promises', icon: Home, onSelect: onClose,
+          label: 'Today', sub: 'Your day, routine, promises', icon: Home, onSelect: onClose, scene: 'today',
           status: status.todayLeft === null ? null : status.todayLeft === 0 ? 'All done' : `${status.todayLeft} left`,
           live: (status.todayLeft ?? 0) > 0,
         },
         {
-          label: 'Training', sub: 'Workouts, disciplines, routines', icon: Dumbbell, href: '/training',
+          label: 'Training', sub: 'Workouts, disciplines, routines', icon: Dumbbell, href: '/training', scene: 'training',
           status: status.dueDiscipline ? `${status.dueDiscipline} due` : null, live: !!status.dueDiscipline,
         },
         {
-          label: 'Journal', sub: 'Write, or talk it through', icon: PenLine, href: '/journal',
+          label: 'Journal', sub: 'Write, or talk it through', icon: PenLine, href: '/journal', scene: 'journal',
           status: status.journaledToday ? 'Written today' : null,
         },
       ],
@@ -82,13 +85,13 @@ export function NavSheet({
       items: [
         // You + Progress, Proof + Laws: one entry each, tabs inside
         // (components/ui/SectionTabs). Same pages, half the menu.
-        { label: 'You', sub: 'Relics, collection and stats', icon: UserRound, href: '/profile' },
+        { label: 'You', sub: 'Relics, collection and stats', icon: UserRound, href: '/profile', scene: 'you' },
         {
-          label: 'Your era', icon: Compass, href: '/era',
+          label: 'Your era', icon: Compass, href: '/era', scene: 'era',
           sub: era ? `${era.title} · Day ${Math.min(era.day, era.length)} of ${era.length}` : 'Who are you becoming?',
           progress: era ? Math.min(1, era.day / era.length) : undefined,
         },
-        { label: 'Your record', sub: 'Proof and your laws', icon: Trophy, href: '/proof' },
+        { label: 'Your record', sub: 'Proof and your laws', icon: Trophy, href: '/proof', scene: 'record' },
       ],
     },
     {
@@ -96,15 +99,15 @@ export function NavSheet({
       items: [
         // Guided + Soundscapes sit together on Home; Daily Read + Psychology
         // are tabs of one section.
-        { label: 'Listen', sub: 'Guided sessions and soundscapes', icon: Headphones, onSelect: onGuided },
-        { label: 'Learn', sub: 'Daily Read and psychology lessons', icon: BookOpen, href: '/daily-read' },
-        { label: 'Saved', sub: 'Everything you hearted', icon: Bookmark, href: '/saved' },
+        { label: 'Listen', sub: 'Guided sessions and soundscapes', icon: Headphones, onSelect: onGuided, scene: 'listen' },
+        { label: 'Learn', sub: 'Daily Read and psychology lessons', icon: BookOpen, href: '/daily-read', scene: 'learn' },
+        { label: 'Saved', sub: 'Everything you hearted', icon: Bookmark, href: '/saved', scene: 'saved' },
       ],
     },
     {
       title: 'Support',
       items: [
-        { label: 'Not feeling it', sub: 'A way back in for a hard day', icon: HeartPulse, href: '/reset' },
+        { label: 'Not feeling it', sub: 'A way back in for a hard day', icon: HeartPulse, href: '/reset', scene: 'reset' },
         // Coach voice lives in Settings (it already had its row there).
         { label: 'Settings', sub: 'Coach voice, notifications, account', icon: Settings, href: '/settings' },
       ],
@@ -134,6 +137,8 @@ export function NavSheet({
                   const Icon = it.icon
                   const body = (
                     <>
+                      <SceneImage src={it.scene ? `/scenes/menu/${it.scene}.jpg` : null} className="inset-y-0 right-0 w-[48%] h-full" opacity={0.5} />
+                      <span className="relative flex items-center gap-3 w-full min-w-0">
                       <span className="w-9 h-9 shrink-0 rounded-full border border-white/[0.12] flex items-center justify-center">
                         <Icon className="w-4 h-4 text-white/80" />
                       </span>
@@ -152,9 +157,10 @@ export function NavSheet({
                         <span className={`text-px-11 shrink-0 ${it.live ? 'text-white/85' : 'text-white/45'}`}>{it.status}</span>
                       )}
                       <ChevronRight className="w-4 h-4 text-white/35 shrink-0" aria-hidden />
+                      </span>
                     </>
                   )
-                  const cls = 'w-full flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 text-left press-scale'
+                  const cls = 'relative overflow-hidden w-full flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 text-left press-scale'
                   return (
                     <li key={it.label}>
                       {it.href ? (

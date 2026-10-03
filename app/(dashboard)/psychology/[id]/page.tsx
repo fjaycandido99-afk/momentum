@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { BackButton } from '@/components/ui/BackButton'
+import { SceneImage } from '@/components/home/SceneImage'
 import { LESSON_BY_ID, LESSON_GROUPS } from '@/lib/psychology/lessons'
 import { trackFeature } from '@/lib/analytics/track'
 
@@ -32,11 +33,14 @@ export default function LessonPage() {
           <p className="text-px-15 text-white/80 mt-6">That lesson isn&rsquo;t here. <Link href="/psychology" className="underline underline-offset-4">See all lessons</Link></p>
         ) : (
           <>
-            <p className="text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">
+            <div className="relative -mx-5 h-44 -mb-24 overflow-hidden" aria-hidden>
+              <SceneImage src={`/scenes/psychology/${lesson.id}.jpg`} fade="down" className="inset-0 w-full h-full" position="center" opacity={0.8} />
+            </div>
+            <p className="relative text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">
               {LESSON_GROUPS.find(g => g.key === lesson.group)?.title}
             </p>
-            <h1 className="text-px-34 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>{lesson.title}</h1>
-            <p className="text-px-17 text-white/90 mt-3 leading-snug" style={SERIF}>{lesson.line}</p>
+            <h1 className="relative text-px-34 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>{lesson.title}</h1>
+            <p className="relative text-px-17 text-white/90 mt-3 leading-snug" style={SERIF}>{lesson.line}</p>
 
             <div className="mt-5 space-y-3">
               {lesson.body.map((para, i) => (
