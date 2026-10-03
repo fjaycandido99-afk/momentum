@@ -115,7 +115,12 @@ export default function PatternsPage() {
                 const test = experimentFor(p)
                 return (
                   <div key={p.id} className="card-surface relative overflow-hidden rounded-2xl p-4">
-                    <SceneImage src={`/scenes/laws/${p.kind}.jpg`} fade="left-down" className="inset-y-0 right-0 w-[45%] h-40" opacity={0.5} />
+                    {/* A photo band across the top, the number and kind on its lower
+                        edge: these are dark scenes, and at half strength behind the
+                        text they disappeared. */}
+                    <div className="relative -mx-4 -mt-4 h-28 mb-[-2.25rem]" aria-hidden>
+                      <SceneImage src={`/scenes/laws/${p.kind}.jpg`} fade="down" className="inset-0 w-full h-full" position="center 55%" opacity={1} />
+                    </div>
                     <div className="relative flex items-baseline gap-3">
                       <span className="text-px-22 text-white/85 tabular-nums" style={SERIF}>{String(i + 1).padStart(2, '0')}</span>
                       <p className="text-px-11 uppercase tracking-[0.2em]" style={{ color: 'rgb(var(--era-accent, 255 255 255))' }}>{KIND_LABEL[p.kind] ?? p.kind}</p>
