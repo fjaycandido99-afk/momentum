@@ -108,16 +108,32 @@ export function HeaderRelic() {
 
   useEffect(() => { load(true) }, [load])
 
-  // Play the pending flip once nothing covers the header.
+  // Any open popup puts `modal-open` on <html> (useBodyScrollLock). The
+  // once-a-day popup opens ~700ms after Home mounts, so a flip timed only
+  // from the splash played underneath it and was never seen — it looked
+  // like the coin only changed after leaving the page and coming back.
+  const [covered, setCovered] = useState(false)
   useEffect(() => {
-    if (!pending || showSplash) return
+    const html = document.documentElement
+    const read = () => setCovered(html.classList.contains('modal-open'))
+    read()
+    const mo = new MutationObserver(read)
+    mo.observe(html, { attributes: true, attributeFilter: ['class'] })
+    return () => mo.disconnect()
+  }, [])
+
+  // Play the pending flip once nothing covers the header — and has stayed
+  // uncovered long enough that a popup about to open would have opened.
+  useEffect(() => {
+    if (!pending || showSplash || covered) return
     const t = window.setTimeout(() => {
+      if (document.documentElement.classList.contains('modal-open')) return // re-armed when it closes
       setPending(null)
       if (pending !== shown) flipTo(pending)
       else writeLast(pending)
-    }, 600)
+    }, 1200)
     return () => window.clearTimeout(t)
-  }, [pending, showSplash, shown, flipTo])
+  }, [pending, showSplash, covered, shown, flipTo])
 
   // Coming back to the app is "opening" it: on iPhone, Home is rarely
   // remounted — the app resumes from the background — so without this the
