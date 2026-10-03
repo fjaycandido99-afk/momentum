@@ -40,3 +40,17 @@ describe('voice guide scripts', () => {
     for (const ask of Object.values(FIRST_VISIT_ASK)) expect(ask).toMatch(/\?$/)
   })
 })
+
+describe('proof and profile scripts', () => {
+  it('say the screen’s own numbers and claim nothing', async () => {
+    const { proofScript, profileScript } = await import('@/lib/voice-guide/scripts')
+    const proof = proofScript({ year: 2026, proofs: 6, promisesKept: 3, practicesKept: 2, sessions: 1, eraRecords: 0 })
+    expect(proof[0].text).toBe('This is your proof: 6 days in 2026 where you did what you said you would.')
+    expect(proof.some(l => l.text.includes('3 promises kept, 2 practices kept, and 1 session done'))).toBe(true)
+    expect(proof.some(l => l.spot === 'proof-eras')).toBe(false)
+    const profile = profileScript({ featured: 'XP Legend', recent: 3, earned: 12, total: 94 })
+    expect(profile[0].text).toMatch(/XP Legend/)
+    expect(profile.some(l => l.text === 'You\'ve earned 12 of 94 relics so far, by category.')).toBe(true)
+    for (const l of [...proof, ...profile]) expect(l.text).not.toMatch(/\b(causes?|proven|guarantee\w*|always|you are a)\b/i)
+  })
+})

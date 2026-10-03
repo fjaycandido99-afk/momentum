@@ -24,7 +24,7 @@ export interface GuideLine {
   spot?: string
 }
 
-export type GuideScreen = 'era' | 'laws' | 'psychology' | 'lesson' | 'today'
+export type GuideScreen = 'era' | 'laws' | 'psychology' | 'lesson' | 'today' | 'proof' | 'profile'
 
 /** The first-visit offer — asked, never spoken unprompted. */
 export const FIRST_VISIT_ASK: Record<GuideScreen, string> = {
@@ -33,6 +33,8 @@ export const FIRST_VISIT_ASK: Record<GuideScreen, string> = {
   psychology: 'Want the short version of what these are?',
   lesson: 'Want me to read you the quick version?',
   today: "I'm Voxu. Want a quick tour of Today?",
+  proof: 'Want me to walk you through your proof?',
+  profile: 'Want a quick tour of your profile?',
 }
 
 const plural = (n: number, one: string, many = `${one}s`) => (n === 1 ? one : many)
@@ -170,4 +172,55 @@ export function talkOpener(f: TalkFacts): string {
   if (f.screen === 'psychology') return 'Want to talk about one of these lessons, or how one might apply to you?'
   if (f.screen === 'lesson' && f.lessonTitle) return `Want to talk about how ${f.lessonTitle} might apply to you?`
   return 'What\'s on your mind?'
+}
+
+export interface ProofFacts {
+  year: number
+  /** Days with proof this year — the big number on the screen. */
+  proofs: number
+  promisesKept: number
+  practicesKept: number
+  sessions: number
+  /** Finished eras listed under the year. */
+  eraRecords: number
+}
+
+/** Proof — the year as the screen shows it. */
+export function proofScript(f: ProofFacts): GuideLine[] {
+  const lines: GuideLine[] = [
+    { spot: 'proof-count', text: `This is your proof: ${f.proofs} ${plural(f.proofs, 'day')} in ${f.year} where you did what you said you would.` },
+    { spot: 'proof-grid', text: 'Each square is a day. The lit ones are days with proof. Tap any day to see what it held.' },
+  ]
+  if (f.promisesKept + f.practicesKept + f.sessions > 0) {
+    lines.push({ spot: 'proof-stats', text: `Underneath: ${f.promisesKept} ${plural(f.promisesKept, 'promise')} kept, ${f.practicesKept} ${plural(f.practicesKept, 'practice')} kept, and ${f.sessions} ${plural(f.sessions, 'session')} done.` })
+  }
+  if (f.eraRecords > 0) {
+    lines.push({ spot: 'proof-eras', text: 'Below the year are your finished eras. Each one keeps its record, and what you learned in it.' })
+  }
+  lines.push({ text: 'A missed day stays on the page too. A record that only counts the good days isn\'t a record.' })
+  return lines
+}
+
+export interface ProfileFacts {
+  featured: string | null
+  recent: number
+  earned: number
+  total: number
+}
+
+/** You — the coin, recent relics, the collection. */
+export function profileScript(f: ProfileFacts): GuideLine[] {
+  const lines: GuideLine[] = [
+    f.featured
+      ? { spot: 'profile-top', text: `This is you. The coin at the top, ${f.featured}, is the one you've chosen to lead with.` }
+      : { spot: 'profile-top', text: 'This is you. The coin you choose to wear will sit at the top.' },
+  ]
+  if (f.recent > 0) {
+    lines.push({ spot: 'profile-recent', text: 'These are the relics you earned most recently. Tap one to see its chain, share it, or add a memory to it.' })
+  }
+  if (f.total > 0) {
+    lines.push({ spot: 'profile-collection', text: `You've earned ${f.earned} of ${f.total} relics so far, by category.` })
+  }
+  lines.push({ text: 'Progress, next to this, has your streaks and stats.' })
+  return lines
 }

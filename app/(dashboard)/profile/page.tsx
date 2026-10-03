@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ChevronRight, Loader2 } from 'lucide-react'
 import { BackButton } from '@/components/ui/BackButton'
 import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
+import { profileScript } from '@/lib/voice-guide/scripts'
 import { SceneImage } from '@/components/home/SceneImage'
 import { SectionTabs } from '@/components/ui/SectionTabs'
 import { AchievementBadge } from '@/components/progress/AchievementBadge'
@@ -74,12 +75,16 @@ export default function ProfilePage() {
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
         <div className="flex items-center justify-between">
           <BackButton />
-          <VoxuGuide screen="profile" lines={null} next={{ say: 'Here\'s your era.', href: '/era' }} />
+          <VoxuGuide
+            screen="profile"
+            lines={achievements ? profileScript({ featured: featured?.title ?? null, recent: recent.length, earned, total }) : null}
+            next={{ say: 'Here\'s your era.', href: '/era' }}
+          />
         </div>
         <SectionTabs section="you" className="mt-2" />
 
         {/* Who, and the coin they chose to lead with */}
-        <div className="relative -mx-5 px-5 pt-2 pb-1 overflow-hidden flex flex-col items-center text-center mt-2">
+        <div data-voxu-spot="profile-top" className="relative -mx-5 px-5 pt-2 pb-1 overflow-hidden flex flex-col items-center text-center mt-2">
           <SceneImage src="/scenes/profile/backdrop.jpg" fade="down" className="inset-0 w-full h-full" position="center" opacity={0.7} />
           {featured ? (
             <button onClick={() => setDetailId(featured.id)} aria-label={`${featured.title} — your featured relic`} className="relative press-scale">
@@ -98,7 +103,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Recent relics */}
-        <section className="mt-9">
+        <section className="mt-9" data-voxu-spot="profile-recent">
           <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Recent relics</p>
           {!achievements ? (
             <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-white/50" /></div>
@@ -147,7 +152,7 @@ export default function ProfilePage() {
 
         {/* Collection */}
         {achievements && total > 0 && (
-          <section className="mt-8">
+          <section className="mt-8" data-voxu-spot="profile-collection">
             <div className="flex items-baseline justify-between">
               <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Collection</p>
               <p className="text-px-12 text-white/70 tabular-nums">{earned} of {total}</p>

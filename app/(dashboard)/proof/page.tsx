@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { SectionTabs } from '@/components/ui/SectionTabs'
 import { BackButton } from '@/components/ui/BackButton'
 import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
+import { proofScript } from '@/lib/voice-guide/scripts'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { ProofGrid } from '@/components/proof/ProofGrid'
 import { ProofDaySheet } from '@/components/proof/ProofDaySheet'
@@ -75,7 +76,18 @@ export default function ProofPage() {
               ))}
             </div>
           )}
-          <VoxuGuide screen="proof" lines={null} next={{ say: 'Here\'s what your record shows.', href: '/patterns' }} />
+          <VoxuGuide
+            screen="proof"
+            lines={data ? proofScript({
+              year: data.year.year,
+              proofs: data.year.counts.proofs,
+              promisesKept: data.year.counts.promisesKept,
+              practicesKept: data.year.counts.practicesKept,
+              sessions: data.year.counts.exercisesDone,
+              eraRecords: data.eras.length,
+            }) : null}
+            next={{ say: 'Here\'s what your record shows.', href: '/patterns' }}
+          />
         </div>
 
         <SectionTabs section="record" className="mt-2" />
@@ -95,7 +107,7 @@ export default function ProofPage() {
             </div>
           ) : (
             <>
-              <h1 className="text-px-52 leading-none text-white mt-2 tabular-nums" style={{ ...SERIF, fontWeight: 600 }}>
+              <h1 data-voxu-spot="proof-count" className="text-px-52 leading-none text-white mt-2 tabular-nums" style={{ ...SERIF, fontWeight: 600 }}>
                 <CountUp value={data.year.counts.proofs} />
               </h1>
               <p className="text-px-15 text-white/70 mt-1">
@@ -109,7 +121,7 @@ export default function ProofPage() {
                 </p>
               )}
 
-              <div className="mt-7">
+              <div className="mt-7" data-voxu-spot="proof-grid">
                 <ProofGrid
                   year={data.year}
                   hasDetail={day => !!data.details[day]}
@@ -122,7 +134,7 @@ export default function ProofPage() {
               {(data.year.counts.promisesKept > 0
                 || data.year.counts.practicesKept > 0
                 || data.year.counts.exercisesDone > 0) && (
-                <div className="mt-7 grid grid-cols-3 gap-2 text-center">
+                <div className="mt-7 grid grid-cols-3 gap-2 text-center" data-voxu-spot="proof-stats">
                   <Stat label="Promises kept" value={data.year.counts.promisesKept} />
                   <Stat label="Practices kept" value={data.year.counts.practicesKept} />
                   <Stat label="Sessions done" value={data.year.counts.exercisesDone} />
@@ -141,7 +153,7 @@ export default function ProofPage() {
 
               {/* Finished eras, kept for good: an era ends, its record doesn't. */}
               {data.eras.length > 0 && (
-                <div className="mt-8">
+                <div className="mt-8" data-voxu-spot="proof-eras">
                   <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Eras</p>
                   <div className="mt-2 space-y-2">
                     {data.eras.map(r => <EraRecordCard key={r.id} record={r} />)}
