@@ -8,7 +8,7 @@ import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
 import { lessonScript } from '@/lib/voice-guide/scripts'
 import { SceneImage } from '@/components/home/SceneImage'
 import { LoopDiagram } from '@/components/psychology/LoopDiagram'
-import { LESSON_BY_ID, LESSON_GROUPS } from '@/lib/psychology/lessons'
+import { LESSON_BY_ID, LESSON_FOR_EXPERIMENT, LESSON_GROUPS } from '@/lib/psychology/lessons'
 import { trackFeature } from '@/lib/analytics/track'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -30,6 +30,7 @@ export default function LessonPage() {
             <VoxuGuide
               screen="lesson"
               lines={lessonScript(lesson)}
+              experiment={(Object.entries(LESSON_FOR_EXPERIMENT).find(([, id]) => id === lesson.id)?.[0] ?? null) as 'morning_promise' | 'small_promise' | 'guide_first' | null}
               next={lesson.tryThis.href ? { say: 'Here\'s where to try it.', href: lesson.tryThis.href } : null}
             />
           )}

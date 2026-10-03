@@ -44,6 +44,10 @@ export interface ExperimentDef {
   ask: string
   /** The pattern it tests, when they have one. */
   tests: PatternKind
+  /** The setup screen: what the seven days find out, in plain words. */
+  testing: string
+  /** The setup screen: exactly what makes a day count — the same rule as `followed`. */
+  counts: string
   /** Did this day follow the experiment? */
   followed: (d: DayFact) => boolean
 }
@@ -54,6 +58,8 @@ export const EXPERIMENTS: ExperimentDef[] = [
     title: 'Promise before 9 AM',
     ask: 'For 7 days, make your promise before 9 AM.',
     tests: 'timing',
+    testing: 'Whether making your promise earlier in the day helps you keep it.',
+    counts: "A day counts when that day's promise is made before 9 AM, your time.",
     followed: d => d.promiseHour !== null && d.promiseHour < 9,
   },
   {
@@ -61,6 +67,8 @@ export const EXPERIMENTS: ExperimentDef[] = [
     title: 'Keep it small',
     ask: 'For 7 days, make each promise one small thing — a short sentence.',
     tests: 'size',
+    testing: 'Whether smaller promises are easier for you to keep.',
+    counts: 'A day counts when the promise is 40 characters or fewer, about one short sentence.',
     followed: d => d.promiseLength !== null && d.promiseLength <= 40,
   },
   {
@@ -68,6 +76,8 @@ export const EXPERIMENTS: ExperimentDef[] = [
     title: 'Guide first',
     ask: 'For 7 days, finish a guided session before you make your promise.',
     tests: 'guided_day',
+    testing: 'Whether starting with a guided session helps you keep the promise that follows.',
+    counts: "A day counts when you finish a guided session before making that day's promise.",
     followed: d => d.guideAt !== null && d.promiseAt !== null && d.guideAt < d.promiseAt,
   },
 ]

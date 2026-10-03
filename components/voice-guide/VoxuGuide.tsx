@@ -5,10 +5,14 @@ import { createPortal } from 'react-dom'
 import { useRouter, usePathname } from 'next/navigation'
 import { ArrowRight, AudioLines, Pause, Play, X } from 'lucide-react'
 import { VoiceInput } from '@/components/journal/VoiceInput'
-import { navHref, resolveNav, type NavContext } from '@/lib/voice-guide/navigate'
+import { navHref, type NavContext } from '@/lib/voice-guide/navigate'
+import { resolveIntent, type IntentContext } from '@/lib/voice-guide/intents'
+import { acceptRescue } from '@/lib/pulse/rescue-state'
+import type { RescuePlan } from '@/lib/pulse/rescue'
 import { fetchVoxuAudio, type VoxuAudioResult } from '@/lib/voice/voxu-audio'
 import { FIRST_VISIT_ASK, type GuideLine, type GuideScreen } from '@/lib/voice-guide/scripts'
 import { haptic } from '@/lib/haptics'
+import { spotlight, useArrivalSpot } from './spotlight'
 import { trackFeature } from '@/lib/analytics/track'
 
 /**
@@ -33,7 +37,6 @@ import { trackFeature } from '@/lib/analytics/track'
  */
 
 const SEEN = (screen: GuideScreen) => `voxu.guide.${screen}.v1`
-const SPOT_CLASS = 'voxu-spot'
 
 function readSeen(screen: GuideScreen): boolean {
   try { return localStorage.getItem(SEEN(screen)) === '1' } catch { return true }
@@ -47,15 +50,6 @@ function readingMs(text: string) {
   return Math.max(2500, (text.split(/\s+/).length / 2.6) * 1000 + 600)
 }
 
-function spotlight(spot: string | undefined) {
-  document.querySelectorAll(`.${SPOT_CLASS}`).forEach(el => el.classList.remove(SPOT_CLASS))
-  if (!spot) return
-  const el = document.querySelector<HTMLElement>(`[data-voxu-spot="${spot}"]`)
-  if (!el) return
-  el.classList.add(SPOT_CLASS)
-  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' })
-}
 
 /** Common places offered as chips, besides this screen's next step. */
 const CHIPS: { label: string; text: string; href: string }[] = [
@@ -69,18 +63,23 @@ export function VoxuGuide({
   screen,
   lines,
   next = null,
+  experiment = null,
 }: {
   screen: GuideScreen | 'profile' | 'proof'
   /** What "explain this" says; null when the screen has nothing to explain. */
   lines: GuideLine[] | null
   /** Where "show me" / "what should I press" goes from here. */
   next?: NavContext['next']
+  /** The experiment this screen is about — what "set this up for me" sets up. */
+  experiment?: IntentContext['experiment']
 }) {
   const router = useRouter()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [reply, setReply] = useState<string | null>(null)
   const [typed, setTyped] = useState('')
+  /** A lighter day, waiting for their yes. */
+  const [confirm, setConfirm] = useState<RescuePlan | null>(null)
   const [offer, setOffer] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [paused, setPaused] = useState(false)
@@ -111,32 +110,47 @@ export function VoxuGuide({
 
   useEffect(() => stop, [stop])
 
-  // Arrived with ?spot=…: read in the effect (during render an in-app
-  // navigation still shows the PREVIOUS page's URL) and kept in a ref, so an
-  // effect that runs twice (React dev mode) still knows what to light after
-  // the first run has tidied the URL.
-  const arrivalSpot = useRef<string | null>(null)
-  useEffect(() => {
-    const url = new URL(window.location.href)
-    const fromUrl = url.searchParams.get('spot')
-    if (fromUrl) {
-      arrivalSpot.current = fromUrl
-      url.searchParams.delete('spot')
-      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
-    }
-    const spot = arrivalSpot.current
-    if (!spot) return
-    const on = window.setTimeout(() => spotlight(spot), 700)
-    const off = window.setTimeout(() => spotlight(undefined), 3700)
-    return () => { window.clearTimeout(on); window.clearTimeout(off) }
-  }, [])
+  useArrivalSpot()
 
   /** Said or tapped: one place from the list, or what it can do instead. */
-  const go = useCallback((text: string) => {
-    const res = resolveNav(text, { next })
-    trackFeature('voice_guide', 'use', res.kind === 'go' ? `nav:${res.href}` : 'nav:unknown')
+  /** Today's plan from Pulse — only fetched when an action needs it. */
+  const today = async () => {
+    try {
+      const r = await fetch('/api/pulse', { cache: 'no-store' })
+      return r.ok ? (await r.json())?.pulse ?? null : null
+    } catch { return null }
+  }
+
+  const go = useCallback(async (text: string) => {
+    const res = resolveIntent(text, { next, experiment })
+    trackFeature('voice_guide', 'use', res.kind === 'go' ? `nav:${res.href}` : res.kind)
+    setConfirm(null)
+
+    if (res.kind === 'lighter_day') {
+      // Ask first, showing exactly what the rest of today would shrink to.
+      setReply('Let me look at what’s left today…')
+      const p = await today()
+      if (p?.rescue?.steps?.length) { setReply(null); setConfirm(p.rescue) }
+      else setReply('There’s nothing left to shrink today. The lighter plan is for when two or more things are still due. Your promise can be as small as you like.')
+      return
+    }
+    if (res.kind === 'play_guide') {
+      setReply('Finding today’s session…')
+      const p = await today()
+      const has = p?.today?.items?.some((i: { kind: string }) => i.kind === 'guide')
+      if (!has) { setReply('There’s no guided session on today’s list. You’ll find them all on Today, under Guided.'); return }
+      // Lit up on Today, ready to tap: a tap is what starts audio on an
+      // iPhone, and starting it stays theirs.
+      return go2({ say: 'Here’s today’s guided session. Tap it to start.', href: '/', spot: 'today-guide' })
+    }
+
     setReply(res.say)
     if (res.kind !== 'go') return
+    go2(res)
+  }, [next, experiment, pathname, router])
+
+  const go2 = (res: { say: string; href: string; spot?: string }) => {
+    setReply(res.say)
     haptic('light')
     window.setTimeout(() => {
       setOpen(false)
@@ -148,7 +162,17 @@ export function VoxuGuide({
       }
       router.push(navHref(res))
     }, 650)
-  }, [next, pathname, router])
+  }
+
+  const takeLighter = () => {
+    haptic('light')
+    acceptRescue()
+    trackFeature('voice_guide', 'use', 'lighter_day:yes')
+    setConfirm(null)
+    setOpen(false)
+    setReply(null)
+    router.push('/')
+  }
 
   const start = useCallback(async () => {
     if (!lines?.length) return
@@ -282,6 +306,24 @@ export function VoxuGuide({
               </div>
 
               {reply && <p className="text-px-13 text-white mt-2 leading-snug" aria-live="polite">{reply}</p>}
+
+              {confirm && (
+                <div className="mt-2.5 rounded-xl border border-white/[0.16] bg-white/[0.04] p-3">
+                  <p className="text-px-14 text-white">Make the rest of today lighter?</p>
+                  <p className="text-px-12 text-white/65 mt-0.5">Each thing still due shrinks to the minimum you set:</p>
+                  <ul className="mt-1.5 space-y-0.5">
+                    {confirm.steps.map(st => (
+                      <li key={st.id} className="text-px-12 text-white/85">{st.title} <span className="text-white/55">— {st.ask}</span></li>
+                    ))}
+                  </ul>
+                  {confirm.minutes !== null && <p className="text-px-11 text-white/55 mt-1">About {confirm.minutes} minutes in all.</p>}
+                  <p className="text-px-11 text-white/55 mt-1">Just for today. Nothing is recorded until you do it.</p>
+                  <div className="flex gap-2 mt-2.5">
+                    <button onClick={takeLighter} className="tap-44 px-3 py-1.5 rounded-full bg-white text-black text-px-12 font-medium">Make today lighter</button>
+                    <button onClick={() => { setConfirm(null); setReply(null) }} className="tap-44 px-3 py-1.5 rounded-full border border-white/20 text-px-12 text-white/80">Not now</button>
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-1.5 mt-2.5">
                 {next && (

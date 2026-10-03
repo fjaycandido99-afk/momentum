@@ -11,6 +11,7 @@ import { syncWidgetPulse } from '@/lib/widget-sync'
 import { buildDebrief } from '@/lib/pulse/debrief'
 import { NightDebriefCard, isDebriefHour } from './NightDebriefCard'
 import { RescueCard } from './RescueCard'
+import { useArrivalSpot } from '@/components/voice-guide/spotlight'
 import { acceptRescue, declineRescue, isRescueDeclined, isRescueOn } from '@/lib/pulse/rescue-state'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
@@ -57,6 +58,8 @@ export function PulseSection({
   }, [])
 
   const router = useRouter()
+  // "Play today's guided session" (Voxu Guide) lands here with ?spot=today-guide.
+  useArrivalSpot()
 
   const load = useCallback(() => {
     // Rescue on: the plan stays until its last step is logged, not only
@@ -188,7 +191,7 @@ export function PulseSection({
                 </>
               )
               return (
-                <li key={it.key}>
+                <li key={it.key} data-voxu-spot={it.kind === 'guide' ? 'today-guide' : undefined} className={it.kind === 'guide' ? 'rounded-2xl' : undefined}>
                   {it.target ? (
                     <button onClick={() => act(it.target)} className="w-full text-left flex items-center gap-3 py-2.5 press-scale">
                       {body}

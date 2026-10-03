@@ -12,6 +12,7 @@ import { haptic } from '@/lib/haptics'
 import { BackButton } from '@/components/ui/BackButton'
 import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
 import { lawsScript } from '@/lib/voice-guide/scripts'
+import { experimentSetupHref } from '@/lib/voice-guide/intents'
 import { SceneImage } from '@/components/home/SceneImage'
 import { SectionTabs } from '@/components/ui/SectionTabs'
 import { LESSON_BY_ID, LESSON_FOR_EXPERIMENT, LESSON_FOR_PATTERN } from '@/lib/psychology/lessons'
@@ -102,6 +103,7 @@ export default function PatternsPage() {
           <VoxuGuide
             screen="laws"
             lines={guideLines}
+            experiment={laws.map(p => experimentFor(p)).find(Boolean)?.key ?? null}
             next={active
               ? { say: 'Here\'s today. Your experiment runs through your promise.', href: '/' }
               : { say: 'Here are the experiments. Pick one when you\'re ready.', href: '/patterns', spot: 'laws-experiments' }}
@@ -150,13 +152,12 @@ export default function PatternsPage() {
                     <div className="relative"><CountBars groups={p.groups} /></div>
                     <div className="relative"><LessonLink id={LESSON_FOR_PATTERN[p.kind]} /></div>
                     {test && !active && (
-                      <button
-                        onClick={() => act({ action: 'start', key: test.key })}
-                        disabled={busy}
-                        className="relative tap-44 mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-white/25 text-px-13 text-white press-scale disabled:opacity-50"
+                      <Link
+                        href={experimentSetupHref(test.key)}
+                        className="relative tap-44 mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-white/25 text-px-13 text-white press-scale"
                       >
                         <FlaskConical className="w-4 h-4" /> Test it for 7 days
-                      </button>
+                      </Link>
                     )}
                   </div>
                 )
@@ -250,13 +251,14 @@ export default function PatternsPage() {
                     <p className="text-px-12 text-white/65 mt-0.5">{e.ask}</p>
                     <LessonLink id={LESSON_FOR_EXPERIMENT[e.key]} />
                   </div>
-                  <button
-                    onClick={() => act({ action: 'start', key: e.key })}
-                    disabled={busy}
-                    className="tap-44 shrink-0 px-3 py-1.5 rounded-full bg-white text-black text-px-12 font-medium disabled:opacity-50"
+                  {/* Start opens the setup screen — what's tested, how a day
+                      counts — and the experiment starts from there. */}
+                  <Link
+                    href={experimentSetupHref(e.key)}
+                    className="tap-44 shrink-0 px-3 py-1.5 rounded-full bg-white text-black text-px-12 font-medium"
                   >
                     Start
-                  </button>
+                  </Link>
                 </li>
               ))}
             </ul>
