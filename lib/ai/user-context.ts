@@ -21,6 +21,9 @@ import { prisma } from '@/lib/prisma'
 import { AI_MEMORY_DEPTH, type AiMemoryDepth } from '@/lib/subscription-constants'
 import { behaviourSection } from './behaviour-context'
 import { loadBehaviourFacts } from './behaviour-context-server'
+import { lawsSection } from './laws-context'
+import { loadPatterns } from '@/lib/patterns/server'
+import { loadExperiments } from '@/lib/patterns/experiments-server'
 
 /** Per-entry character cap. Enough to carry the gist, not a whole essay. */
 const ENTRY_CHARS = 320
@@ -90,7 +93,7 @@ export async function buildUserContext(
   // What they DID, alongside what they wrote. The chat used to read only
   // the journal, so it could discuss someone's week without knowing whether
   // they had shown up for it.
-  const [entries, saved, goals, behaviour, books] = await Promise.all([
+  const [entries, saved, goals, behaviour, books, patterns, experiments] = await Promise.all([
     prisma.dailyGuide.findMany({
       where: {
         user_id: userId,
@@ -145,6 +148,10 @@ export async function buildUserContext(
         take: 3,
       })
       .catch(() => []),
+    // Their laws and experiments (/patterns) — the same report the page
+    // shows, so the coach can never quote a law the screen doesn't have.
+    loadPatterns(userId).catch(() => null),
+    loadExperiments(userId).catch(() => null),
   ])
 
   const sections: string[] = []
@@ -153,6 +160,9 @@ export async function buildUserContext(
   // block at the end of a long prompt gets skimmed.
   const behaviourBlock = behaviour ? behaviourSection(behaviour) : null
   if (behaviourBlock) sections.push(behaviourBlock)
+
+  const lawsBlock = lawsSection(patterns, experiments)
+  if (lawsBlock) sections.push(lawsBlock)
 
   if (entries.length) {
     const lines = entries.map(e => {
