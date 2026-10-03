@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { SectionTabs } from '@/components/ui/SectionTabs'
+import { BackButton } from '@/components/ui/BackButton'
 import { ChevronLeft, Compass, Loader2, Check } from 'lucide-react'
 
 interface BatchItem { id: string; kind: 'scale' | 'choice'; text: string; options?: { text: string }[] }
@@ -121,13 +123,7 @@ export default function DailyReadPage() {
           below the status bar. */}
       <header className="sticky top-0 z-40 bg-black safe-area-pt pb-3 px-5">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            aria-label="Back"
-            className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-          >
-            <ChevronLeft className="w-5 h-5 text-white" />
-          </button>
+          <BackButton />
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-lg bg-white/[0.06] border border-white/[0.12]">
               <Compass className="w-4 h-4 text-white" />
@@ -138,6 +134,7 @@ export default function DailyReadPage() {
             </div>
           </div>
         </div>
+        <SectionTabs section="learn" className="mt-3" />
       </header>
 
       <div className="px-5 pb-16">

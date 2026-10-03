@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { SectionTabs } from '@/components/ui/SectionTabs'
+import { BackButton } from '@/components/ui/BackButton'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { ProofGrid } from '@/components/proof/ProofGrid'
 import { ProofDaySheet } from '@/components/proof/ProofDaySheet'
@@ -56,9 +58,7 @@ export default function ProofPage() {
     <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
         <div className="flex items-center justify-between">
-          <Link href="/" aria-label="Back" className="tap-44 p-2 -ml-2 rounded-full hover:bg-white/10">
-            <ChevronLeft className="w-5 h-5 text-white/70" />
-          </Link>
+          <BackButton />
           {data && data.years.length > 1 && (
             <div className="flex gap-1.5">
               {data.years.map(y => (
@@ -76,7 +76,9 @@ export default function ProofPage() {
           )}
         </div>
 
-        <div className="mt-4">
+        <SectionTabs section="record" className="mt-2" />
+
+        <div className="mt-5">
           <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Your year in proof</p>
           {loading && !data ? (
             <div className="flex items-center gap-2 text-white/50 text-sm mt-6">

@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { useEffect } from 'react'
 import {
-  BarChart3, Bookmark, BookOpen, ChevronRight, Compass, Dumbbell, Headphones, HeartPulse, Home,
-  Mic2, PenLine, Settings, Trophy, Waves, FlaskConical, Brain, UserRound, X, type LucideIcon,
+  Bookmark, BookOpen, ChevronRight, Compass, Dumbbell, Headphones, HeartPulse, Home,
+  PenLine, Settings, Trophy, UserRound, X, type LucideIcon,
 } from 'lucide-react'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 
@@ -80,33 +80,33 @@ export function NavSheet({
     {
       title: 'Your journey',
       items: [
-        { label: 'You', sub: 'Recent relics and your collection', icon: UserRound, href: '/profile' },
+        // You + Progress, Proof + Laws: one entry each, tabs inside
+        // (components/ui/SectionTabs). Same pages, half the menu.
+        { label: 'You', sub: 'Relics, collection and stats', icon: UserRound, href: '/profile' },
         {
           label: 'Your era', icon: Compass, href: '/era',
           sub: era ? `${era.title} · Day ${Math.min(era.day, era.length)} of ${era.length}` : 'Who are you becoming?',
           progress: era ? Math.min(1, era.day / era.length) : undefined,
         },
-        { label: 'Progress', sub: 'Streaks, listening, journal stats', icon: BarChart3, href: '/progress' },
-        { label: 'Proof', sub: 'What you’ve actually done', icon: Trophy, href: '/proof' },
-        { label: 'Your laws', sub: 'What your record shows, and tests', icon: FlaskConical, href: '/patterns' },
+        { label: 'Your record', sub: 'Proof and your laws', icon: Trophy, href: '/proof' },
       ],
     },
     {
       title: 'Library',
       items: [
+        // Guided + Soundscapes sit together on Home; Daily Read + Psychology
+        // are tabs of one section.
+        { label: 'Listen', sub: 'Guided sessions and soundscapes', icon: Headphones, onSelect: onGuided },
+        { label: 'Learn', sub: 'Daily Read and psychology lessons', icon: BookOpen, href: '/daily-read' },
         { label: 'Saved', sub: 'Everything you hearted', icon: Bookmark, href: '/saved' },
-        { label: 'Daily Read', sub: 'One tap a day', icon: BookOpen, href: '/daily-read' },
-        { label: 'Psychology', sub: 'Short lessons behind the app', icon: Brain, href: '/psychology' },
-        { label: 'Guided', sub: 'Breathing, focus, sleep', icon: Headphones, onSelect: onGuided },
-        { label: 'Soundscapes', sub: 'Ambient sound for any moment', icon: Waves, onSelect: onSoundscapes },
       ],
     },
     {
       title: 'Support',
       items: [
         { label: 'Not feeling it', sub: 'A way back in for a hard day', icon: HeartPulse, href: '/reset' },
-        { label: 'Coach voice', sub: 'How your coach speaks to you', icon: Mic2, href: '/mindset-selection' },
-        { label: 'Settings', sub: 'Notifications, schedule, account', icon: Settings, href: '/settings' },
+        // Coach voice lives in Settings (it already had its row there).
+        { label: 'Settings', sub: 'Coach voice, notifications, account', icon: Settings, href: '/settings' },
       ],
     },
   ]

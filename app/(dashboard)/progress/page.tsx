@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { SectionTabs } from '@/components/ui/SectionTabs'
 import { Loader2, Flame, Mail, BarChart3, Grid3x3 } from 'lucide-react'
 import { StreakFlame } from '@/components/ui/StreakFlame'
 import { StreakHeatmap } from '@/components/progress/StreakHeatmap'
@@ -95,6 +96,7 @@ export default function ProgressPage() {
       so the header actually holds still. */}
       <div className="sticky top-0 z-50 px-6 safe-area-pt pb-4 mb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
+        <SectionTabs section="you" className="mb-3" />
         <h1 className="text-2xl font-semibold shimmer-text">Progress</h1>
         <FeatureHint id="progress-intro" text="Your streaks, listening time & journal stats at a glance" mode="once" />
       </div>
