@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Check, FlaskConical, Loader2 } from 'lucide-react'
 import type { Pattern, PatternReport } from '@/lib/patterns/rules'
+import type { PatternCharts } from '@/lib/patterns/charts'
+import { ColumnChart, CountBars, DayProgress, ResultBars } from '@/components/patterns/Charts'
 import { EXPERIMENTS, experimentFor } from '@/lib/patterns/experiments'
 import type { ExperimentWire } from '@/lib/patterns/experiments-server'
 import { haptic } from '@/lib/haptics'
@@ -47,7 +49,7 @@ interface ExperimentsPayload { active: ExperimentWire | null; finished: Experime
  * No labels about anyone's mind, no forecasts, never their words.
  */
 export default function PatternsPage() {
-  const [report, setReport] = useState<PatternReport | null>(null)
+  const [report, setReport] = useState<(PatternReport & { charts?: PatternCharts }) | null>(null)
   const [exp, setExp] = useState<ExperimentsPayload | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -112,18 +114,21 @@ export default function PatternsPage() {
               ) : laws.map((p, i) => {
                 const test = experimentFor(p)
                 return (
-                  <div key={p.id} className="card-surface rounded-2xl p-4">
-                    <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">
-                      Law {i + 1} · {KIND_LABEL[p.kind] ?? p.kind}
-                    </p>
-                    <p className="text-px-18 text-white leading-snug mt-1.5" style={SERIF}>{p.headline}</p>
-                    <p className="text-px-12 text-white/65 mt-1.5 leading-snug">{p.detail}</p>
-                    <div><LessonLink id={LESSON_FOR_PATTERN[p.kind]} /></div>
+                  <div key={p.id} className="card-surface relative overflow-hidden rounded-2xl p-4">
+                    <SceneImage src={`/scenes/laws/${p.kind}.jpg`} fade="left-down" className="inset-y-0 right-0 w-[45%] h-40" opacity={0.5} />
+                    <div className="relative flex items-baseline gap-3">
+                      <span className="text-px-22 text-white/85 tabular-nums" style={SERIF}>{String(i + 1).padStart(2, '0')}</span>
+                      <p className="text-px-11 uppercase tracking-[0.2em]" style={{ color: 'rgb(var(--era-accent, 255 255 255))' }}>{KIND_LABEL[p.kind] ?? p.kind}</p>
+                    </div>
+                    <p className="relative text-px-18 text-white leading-snug mt-1.5" style={SERIF}>{p.headline}</p>
+                    <p className="relative text-px-12 text-white/65 mt-1.5 leading-snug">{p.detail}</p>
+                    <div className="relative"><CountBars groups={p.groups} /></div>
+                    <div className="relative"><LessonLink id={LESSON_FOR_PATTERN[p.kind]} /></div>
                     {test && !active && (
                       <button
                         onClick={() => act({ action: 'start', key: test.key })}
                         disabled={busy}
-                        className="tap-44 mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-white/25 text-px-13 text-white press-scale disabled:opacity-50"
+                        className="relative tap-44 mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-white/25 text-px-13 text-white press-scale disabled:opacity-50"
                       >
                         <FlaskConical className="w-4 h-4" /> Test it for 7 days
                       </button>
@@ -148,6 +153,45 @@ export default function PatternsPage() {
                 </ul>
               </div>
             )}
+            {/* Your rhythm — counts by hour and weekday */}
+            {report.charts?.byHour && (
+              <div className="mt-8">
+                <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Your rhythm</p>
+                <div className="card-surface rounded-2xl p-4 mt-3">
+                  <p className="text-px-14 text-white">When you make your promise</p>
+                  <p className="text-px-11 text-white/60 mt-0.5">Each bar: promises answered, lit by how many you kept.</p>
+                  <ColumnChart bars={report.charts.byHour} label="Promises by time of day" />
+                </div>
+                {report.charts.byWeekday && (
+                  <div className="card-surface rounded-2xl p-4 mt-2">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="text-px-14 text-white">By day of the week</p>
+                      {report.charts.hardestDay && (
+                        <p className="text-px-11 text-white/70">Hardest: {report.charts.hardestDay}</p>
+                      )}
+                    </div>
+                    <ColumnChart bars={report.charts.byWeekday} label="Promises by day of the week" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* What gets in the way — their own taps on misses */}
+            {report.charts?.blockers && (
+              <div className="mt-8">
+                <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">What gets in the way</p>
+                <p className="text-px-12 text-white/60 mt-1">From what you tapped on the days you missed.</p>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {report.charts.blockers.map(b => (
+                    <li key={b.label} className="rounded-xl border border-white/[0.14] bg-white/[0.04] px-3 py-2">
+                      <span className="text-px-13 text-white">{b.label}</span>
+                      <span className="text-px-12 text-white/60 tabular-nums ml-2">{b.count}×</span>
+                    </li>
+                  ))}
+                </ul>
+                <LessonLink id="mental-contrasting" />
+              </div>
+            )}
           </>
         )}
 
@@ -162,6 +206,7 @@ export default function PatternsPage() {
               <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Running · day {active.day} of 7</p>
               <p className="text-px-20 text-white leading-snug mt-1" style={{ ...SERIF, fontWeight: 600 }}>{active.title}</p>
               <p className="text-px-13 text-white/75 mt-1">{active.ask}</p>
+              {active.day && <DayProgress day={active.day} />}
               <p className="text-px-13 mt-2 flex items-center gap-1.5 text-white/85">
                 {active.followedToday ? <><Check className="w-4 h-4" /> Done today</> : 'Not done yet today'}
               </p>
@@ -200,6 +245,7 @@ export default function PatternsPage() {
                   <li key={f.id} className="rounded-xl border border-white/[0.14] p-3">
                     <p className="text-px-14 text-white">{f.title} <span className="text-white/55 text-px-12">· {f.startDay} → {f.endDay}</span></p>
                     <p className="text-px-13 text-white/80 mt-1 leading-snug">{f.result!.line}</p>
+                    <ResultBars before={f.result!.before} during={f.result!.during} />
                     <p className="text-px-11 text-white/55 mt-1">Followed on {f.result!.daysFollowed} of 7 days.</p>
                   </li>
                 ))}

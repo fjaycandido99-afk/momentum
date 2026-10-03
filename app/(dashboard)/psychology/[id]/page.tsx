@@ -5,17 +5,12 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { BackButton } from '@/components/ui/BackButton'
 import { SceneImage } from '@/components/home/SceneImage'
+import { LoopDiagram } from '@/components/psychology/LoopDiagram'
 import { LESSON_BY_ID, LESSON_GROUPS } from '@/lib/psychology/lessons'
 import { trackFeature } from '@/lib/analytics/track'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 
-const LOOP_STEPS = [
-  ['trigger', 'Trigger'],
-  ['thought', 'Thought'],
-  ['behavior', 'What you do'],
-  ['outcome', 'What happens'],
-] as const
 
 /** One lesson: the idea, the loop if it has one, something to try, and its sources. */
 export default function LessonPage() {
@@ -48,23 +43,7 @@ export default function LessonPage() {
               ))}
             </div>
 
-            {lesson.loop && (
-              <div className="mt-6 card-surface rounded-2xl p-4">
-                <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">The loop</p>
-                <ol className="mt-2 space-y-2">
-                  {LOOP_STEPS.map(([key, label]) => (
-                    <li key={key} className="flex gap-3">
-                      <span className="w-24 shrink-0 text-px-11 uppercase tracking-[0.14em] text-white/55 pt-0.5">{label}</span>
-                      <span className="text-px-14 text-white/90 leading-snug">{lesson.loop![key]}</span>
-                    </li>
-                  ))}
-                  <li className="flex gap-3 pt-2 border-t border-white/[0.12]">
-                    <span className="w-24 shrink-0 text-px-11 uppercase tracking-[0.14em] text-white/80 pt-0.5">New loop</span>
-                    <span className="text-px-14 text-white leading-snug">{lesson.loop.newLoop}</span>
-                  </li>
-                </ol>
-              </div>
-            )}
+            {lesson.loop && <LoopDiagram loop={lesson.loop} />}
 
             <div className="mt-6 card-surface rounded-2xl p-4">
               <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Try this</p>

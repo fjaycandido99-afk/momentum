@@ -431,3 +431,15 @@ export const LESSON_FOR_EXPERIMENT: Partial<Record<ExperimentDef['key'], string>
   morning_promise: 'if-then-plans',
   small_promise: 'planning-fallacy',
 }
+
+/** Minutes to read it, from its own words at 200 a minute — at least 1. */
+export function readMinutes(l: Lesson): number {
+  const text = [l.line, ...l.body, l.tryThis.text, ...(l.loop ? Object.values(l.loop) : []), ...l.sources.map(s => s.finding)].join(' ')
+  return Math.max(1, Math.ceil(text.split(/\s+/).filter(Boolean).length / 200))
+}
+
+/** Lessons related to their solid laws, in law order, no repeats. */
+export function lessonsForLaws(kinds: readonly PatternKind[]): Lesson[] {
+  const ids = [...new Set(kinds.map(k => LESSON_FOR_PATTERN[k]).filter((x): x is string => !!x))]
+  return ids.map(id => LESSON_BY_ID.get(id)).filter((l): l is Lesson => !!l)
+}

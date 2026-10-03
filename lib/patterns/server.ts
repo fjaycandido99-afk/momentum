@@ -9,6 +9,7 @@ import {
   type PromiseRecord,
 } from './rules'
 import { loadPractices } from '@/lib/practices/server'
+import { patternCharts, type PatternCharts } from './charts'
 
 /**
  * Loads one person's history for the pattern engine.
@@ -66,6 +67,13 @@ function localParts(at: Date, timezone: string | null): { hour: number; weekday:
 
 export async function loadPatterns(userId: string): Promise<PatternReport> {
   return findPatterns(await loadPatternInput(userId, new Date(Date.now() - WINDOW_DAYS * 86400000)))
+}
+
+/** The report plus its charts (lib/patterns/charts), from one read — for the Your laws screen. */
+export async function loadPatternsWithCharts(userId: string): Promise<PatternReport & { charts: PatternCharts }> {
+  const input = await loadPatternInput(userId, new Date(Date.now() - WINDOW_DAYS * 86400000))
+  const report = findPatterns(input)
+  return { ...report, charts: patternCharts(input, report.patterns) }
 }
 
 /**
