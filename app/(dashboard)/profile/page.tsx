@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { AchievementBadge } from '@/components/progress/AchievementBadge'
-import { RelicDetailSheet, type RelicStatus } from '@/components/relics/RelicDetailSheet'
+import { AchievementCelebration } from '@/components/progress/AchievementCelebration'
+import type { RelicStatus } from '@/components/relics/RelicDetailSheet'
 import { getAchievementById, type AchievementCategory, type AchievementRarity } from '@/lib/achievements'
 import { achievementLine } from '@/lib/achievement-lines'
 import { collectionByCategory, recentRelics } from '@/lib/profile/relics'
@@ -55,6 +56,9 @@ export default function ProfilePage() {
   const earned = collection.reduce((n, c) => n + c.earned, 0)
   const total = collection.reduce((n, c) => n + c.total, 0)
   const statusOf = (id: string) => achievements?.find(a => a.id === id)
+  // Every coin here is earned, so it opens the same "Your relic" popup an
+  // earned coin opens on Progress.
+  const viewing = detailId ? getAchievementById(detailId) : null
 
   const featured = relics?.featured ? getAchievementById(relics.featured) : null
   const wearing = (relics?.equipped ?? []).map(id => getAchievementById(id)).filter(a => !!a)
@@ -179,7 +183,7 @@ export default function ProfilePage() {
         </section>
       </div>
 
-      {detailId && <RelicDetailSheet id={detailId} statusOf={statusOf} onClose={() => setDetailId(null)} />}
+      {viewing && <AchievementCelebration achievement={viewing} viewOnly statusOf={statusOf} onClose={() => setDetailId(null)} />}
     </div>
   )
 }
