@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ArrowRight, AudioLines, Loader2, Volume2, VolumeX } from 'lucide-react'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_CONFIGS, getCoachName } from '@/lib/mindset/configs'
@@ -217,7 +218,10 @@ export function FirstLaunch({ hasEra, onEraChange }: {
 
   const preset = eraKey ? ERA_PRESETS_BY_KEY.get(eraKey) : null
 
-  return (
+  // Portalled to <body>: inside Home its z-index only competed within Home,
+  // so the bottom nav and the Today orb's own question showed through it.
+  if (typeof document === 'undefined') return null
+  return createPortal(
     <div role="dialog" aria-modal="true" aria-label="Welcome to Voxu" className="fixed inset-0 z-[90] bg-black text-white overflow-y-auto overflow-x-hidden">
       <ScrollLock />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-white/[0.05] blur-3xl pointer-events-none" aria-hidden />
@@ -375,6 +379,7 @@ export function FirstLaunch({ hasEra, onEraChange }: {
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
