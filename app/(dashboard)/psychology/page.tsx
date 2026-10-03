@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { BackButton } from '@/components/ui/BackButton'
+import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
+import { psychologyScript } from '@/lib/voice-guide/scripts'
 import { SceneImage } from '@/components/home/SceneImage'
 import { SectionTabs } from '@/components/ui/SectionTabs'
 import { LESSON_GROUPS, LESSONS, lessonsForLaws, readMinutes, type Lesson, type LessonGroup } from '@/lib/psychology/lessons'
@@ -34,9 +36,12 @@ export default function PsychologyPage() {
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-        <BackButton />
+        <div className="flex items-center justify-between">
+          <BackButton />
+          <VoxuGuide screen="psychology" lines={psychologyScript({ forYou: forYou.length })} />
+        </div>
         <SectionTabs section="learn" className="mt-2" />
-        <div className="relative -mx-5 px-5 pt-1 pb-2 overflow-hidden">
+        <div className="relative -mx-5 px-5 pt-1 pb-2 overflow-hidden" data-voxu-spot="psych-title">
         <SceneImage src="/scenes/psychology/library.jpg" fade="left-down" className="inset-y-0 right-0 w-[72%] h-full" opacity={1} />
         <p className="relative text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">Library</p>
         <h1 className="relative text-px-40 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>Psychology</h1>
@@ -46,7 +51,7 @@ export default function PsychologyPage() {
         </div>
 
         {/* Groups as chips */}
-        <div className="mt-5 -mx-5 px-5 flex gap-2 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Lesson groups">
+        <div className="mt-5 -mx-5 px-5 flex gap-2 overflow-x-auto scrollbar-hide" data-voxu-spot="psych-chips" role="tablist" aria-label="Lesson groups">
           {[{ key: 'all' as const, title: 'All' }, ...LESSON_GROUPS].map(g => (
             <button
               key={g.key}
@@ -64,7 +69,7 @@ export default function PsychologyPage() {
 
         {/* For you — from their own laws */}
         {filter === 'all' && forYou.length > 0 && (
-          <section className="mt-7">
+          <section className="mt-7" data-voxu-spot="psych-foryou">
             <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">For you</p>
             <p className="text-px-12 text-white/60 mt-0.5">Related to the laws your record shows.</p>
             <ul className="mt-3 space-y-2">

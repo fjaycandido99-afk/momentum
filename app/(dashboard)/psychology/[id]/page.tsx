@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { BackButton } from '@/components/ui/BackButton'
+import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
+import { lessonScript } from '@/lib/voice-guide/scripts'
 import { SceneImage } from '@/components/home/SceneImage'
 import { LoopDiagram } from '@/components/psychology/LoopDiagram'
 import { LESSON_BY_ID, LESSON_GROUPS } from '@/lib/psychology/lessons'
@@ -22,7 +24,10 @@ export default function LessonPage() {
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-        <BackButton fallback="/psychology" />
+        <div className="flex items-center justify-between">
+          <BackButton fallback="/psychology" />
+          {lesson && <VoxuGuide screen="lesson" lines={lessonScript(lesson)} />}
+        </div>
 
         {!lesson ? (
           <p className="text-px-15 text-white/80 mt-6">That lesson isn&rsquo;t here. <Link href="/psychology" className="underline underline-offset-4">See all lessons</Link></p>
@@ -35,10 +40,10 @@ export default function LessonPage() {
             <p className="relative text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">
               {LESSON_GROUPS.find(g => g.key === lesson.group)?.title}
             </p>
-            <h1 className="relative text-px-34 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>{lesson.title}</h1>
+            <h1 data-voxu-spot="lesson-title" className="relative text-px-34 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>{lesson.title}</h1>
             <p className="relative text-px-17 text-white/90 mt-3 leading-snug" style={SERIF}>{lesson.line}</p>
 
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 space-y-3" data-voxu-spot="lesson-body">
               {lesson.body.map((para, i) => (
                 <p key={i} className="text-px-15 text-white/80 leading-relaxed">{para}</p>
               ))}
@@ -46,7 +51,7 @@ export default function LessonPage() {
 
             {lesson.loop && <LoopDiagram loop={lesson.loop} />}
 
-            <div className="mt-6 card-surface rounded-2xl p-4">
+            <div className="mt-6 card-surface rounded-2xl p-4" data-voxu-spot="lesson-try">
               <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Try this</p>
               <p className="text-px-15 text-white mt-1.5 leading-snug">{lesson.tryThis.text}</p>
               {lesson.tryThis.href && (

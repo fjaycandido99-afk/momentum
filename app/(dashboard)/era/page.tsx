@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Check, ChevronLeft, Compass, Dumbbell, Flame, Grid3x3, Loader2 } from 'lucide-react'
 import { useEra, type EraToday } from '@/hooks/useEra'
+import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
+import { eraScript } from '@/lib/voice-guide/scripts'
 import { CUSTOM_ERA_KEY, ERA_LIMITS, ERA_PRESETS, ERA_PRESETS_BY_KEY, eraName } from '@/lib/era/presets'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { useAchievementOptional } from '@/contexts/AchievementContext'
@@ -87,6 +89,13 @@ export default function EraPage() {
   }, [])
 
   const showPicker = loaded && (!era || era.step === 'complete' || choosing)
+  // What Voxu says on "explain this" — only the numbers this screen shows.
+  const guideLines = era && !showPicker
+    ? eraScript({
+        title: era.title, day: Math.min(era.day, era.lengthDays), lengthDays: era.lengthDays,
+        kept: era.stats.kept, answered: era.stats.answered, hasMission: !!era.mission,
+      })
+    : null
 
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
@@ -110,6 +119,7 @@ export default function EraPage() {
               <p className="text-px-11 text-white/50 leading-tight">30 days. One promise a day.</p>
             </div>
           </div>
+          <div className="ml-auto"><VoxuGuide screen="era" lines={guideLines} /></div>
         </div>
       </header>
 
@@ -399,7 +409,7 @@ function ActiveEra({
 
   return (
     <div className="pt-4 space-y-7">
-      <div>
+      <div data-voxu-spot="era-day">
         <p className="text-px-11 tracking-[0.18em] text-white/50 uppercase">{era.title}</p>
         <p className="text-4xl font-medium text-white mt-1">
           Day {era.day}<span className="text-white/35 text-xl font-normal"> / {era.lengthDays}</span>
@@ -407,7 +417,7 @@ function ActiveEra({
         <p className="text-sm text-white mt-2">
           <span className="text-white/50">{era.stage.label} · </span>{era.stage.line}
         </p>
-        <p className="text-sm text-white/70 mt-2">
+        <p className="text-sm text-white/70 mt-2" data-voxu-spot="era-stats">
           {era.stats.keptPercent === null
             ? 'No check-ins yet.'
             : `Promises kept: ${era.stats.keptPercent}% (${era.stats.kept} of ${era.stats.answered})`}
@@ -417,7 +427,7 @@ function ActiveEra({
 
       {/* The 30 days. Filled = kept, crossed = not kept, ring = promised but
           never checked, faint = no promise. Today is outlined. */}
-      <div>
+      <div data-voxu-spot="era-grid">
         <div className="grid grid-cols-10 gap-1.5" role="list" aria-label="Your days">
           {Array.from({ length: era.lengthDays }, (_, i) => {
             const n = i + 1
@@ -457,13 +467,13 @@ function ActiveEra({
           not merged. */}
 
       {era.mission && (
-        <div className="rounded-2xl border border-white/[0.12] p-4">
+        <div className="rounded-2xl border border-white/[0.12] p-4" data-voxu-spot="era-mission">
           <p className="text-xs text-white/50">Today&rsquo;s mission</p>
           <p className="text-px-15 text-white mt-1 leading-snug">{era.mission}</p>
         </div>
       )}
 
-      <div className="rounded-2xl bg-white/[0.04] border border-white/[0.12] p-4">
+      <div className="rounded-2xl bg-white/[0.04] border border-white/[0.12] p-4" data-voxu-spot="era-day1">
         <p className="text-xs text-white/50">On day 1 you said</p>
         <p className="text-px-15 text-white mt-1 leading-snug">&ldquo;{era.change}&rdquo;</p>
         {era.why && <p className="text-sm text-white/65 mt-2 leading-snug">Because &ldquo;{era.why}&rdquo;</p>}

@@ -3142,3 +3142,20 @@ h3 {
   height: max(100%, 44px);
   transform: translate(-50%, -50%);
 }
+
+
+/* Voxu Guide (components/voice-guide/VoxuGuide): the part of the screen
+   being explained, and the orb while it offers or speaks. A glow, not
+   movement — it stays under Reduce Motion. */
+.voxu-spot {
+  box-shadow: 0 0 0 2px rgb(var(--era-accent, 255 255 255) / 0.75), 0 0 28px rgb(var(--era-accent, 255 255 255) / 0.28);
+  border-radius: 16px;
+  transition: box-shadow 300ms ease;
+}
+.voxu-orb-glow {
+  animation: voxu-orb-glow 2.4s ease-in-out infinite;
+}
+@keyframes voxu-orb-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--era-accent, 255 255 255) / 0.0), 0 0 12px rgb(var(--era-accent, 255 255 255) / 0.25); }
+  50% { box-shadow: 0 0 0 4px rgb(var(--era-accent, 255 255 255) / 0.18), 0 0 26px rgb(var(--era-accent, 255 255 255) / 0.45); }
+}

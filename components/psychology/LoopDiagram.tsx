@@ -33,7 +33,7 @@ function Step({ loop, i }: { loop: Loop; i: number }) {
 export function LoopDiagram({ loop }: { loop: Loop }) {
   const arrow = 'w-4 h-4 text-white/45'
   return (
-    <div className="mt-6 card-surface rounded-2xl p-4">
+    <div className="mt-6 card-surface rounded-2xl p-4" data-voxu-spot="lesson-loop">
       <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">The loop</p>
 
       {/* Read in order by screen readers; the grid is the picture of it. */}

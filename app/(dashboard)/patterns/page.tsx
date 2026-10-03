@@ -10,6 +10,8 @@ import { EXPERIMENTS, experimentFor } from '@/lib/patterns/experiments'
 import type { ExperimentWire } from '@/lib/patterns/experiments-server'
 import { haptic } from '@/lib/haptics'
 import { BackButton } from '@/components/ui/BackButton'
+import { VoxuGuide } from '@/components/voice-guide/VoxuGuide'
+import { lawsScript } from '@/lib/voice-guide/scripts'
 import { SceneImage } from '@/components/home/SceneImage'
 import { SectionTabs } from '@/components/ui/SectionTabs'
 import { LESSON_BY_ID, LESSON_FOR_EXPERIMENT, LESSON_FOR_PATTERN } from '@/lib/psychology/lessons'
@@ -82,13 +84,25 @@ export default function PatternsPage() {
   const laws = report?.patterns.filter(p => p.strength === 'solid') ?? []
   const watching = report?.patterns.filter(p => p.strength === 'early') ?? []
   const active = exp?.active ?? null
+  // What Voxu says on "explain this" — once both reads are in.
+  const guideLines = report && exp
+    ? lawsScript({
+        laws: laws.length,
+        needed: report.needs.answeredPromises,
+        hasCharts: !!report.charts?.byHour,
+        active: active?.day ? { title: active.title, day: active.day } : null,
+      })
+    : null
 
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
       <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-        <BackButton />
+        <div className="flex items-center justify-between">
+          <BackButton />
+          <VoxuGuide screen="laws" lines={guideLines} />
+        </div>
         <SectionTabs section="record" className="mt-2" />
-        <div className="relative -mx-5 px-5 pt-1 pb-2 overflow-hidden">
+        <div className="relative -mx-5 px-5 pt-1 pb-2 overflow-hidden" data-voxu-spot="laws-title">
         <SceneImage src="/scenes/laws/header.jpg" fade="left-down" className="inset-y-0 right-0 w-[72%] h-full" opacity={1} />
         <p className="relative text-px-11 uppercase tracking-[0.24em] text-white/70 mt-3">Your pattern</p>
         <h1 className="relative text-px-40 leading-tight mt-1" style={{ ...SERIF, fontWeight: 600 }}>Your laws</h1>
@@ -102,9 +116,9 @@ export default function PatternsPage() {
         ) : (
           <>
             {/* Laws */}
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 space-y-3" data-voxu-spot="laws-list">
               {laws.length === 0 ? (
-                <div className="card-surface rounded-2xl p-4">
+                <div className="card-surface rounded-2xl p-4" data-voxu-spot="laws-empty">
                   <p className="text-px-15 text-white">No laws yet.</p>
                   <p className="text-px-13 text-white/70 mt-1 leading-snug">
                     A law needs enough days on both sides and has to pass a chance test.
@@ -160,7 +174,7 @@ export default function PatternsPage() {
             )}
             {/* Your rhythm — counts by hour and weekday */}
             {report.charts?.byHour && (
-              <div className="mt-8">
+              <div className="mt-8" data-voxu-spot="laws-rhythm">
                 <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Your rhythm</p>
                 <div className="card-surface rounded-2xl p-4 mt-3">
                   <p className="text-px-14 text-white">When you make your promise</p>
@@ -201,7 +215,7 @@ export default function PatternsPage() {
         )}
 
         {/* Experiments */}
-        <div className="mt-10">
+        <div className="mt-10" data-voxu-spot="laws-experiments">
           <p className="text-px-11 uppercase tracking-[0.2em] text-white/70">Experiments</p>
           <p className="text-px-12 text-white/60 mt-1">One change for 7 days, compared with your own last four weeks.</p>
           {error && <p className="text-px-12 text-white/80 mt-2" role="alert">{error}</p>}

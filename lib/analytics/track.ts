@@ -42,6 +42,8 @@ export type FeatureName =
   // The Psychology Library: 'open' the list, 'use' = a lesson read
   // (metadata is its id).
   | 'psychology'
+  // Voxu Guide — 'use' = a walkthrough played; metadata is the screen.
+  | 'voice_guide'
 
 // enable/disable exist so opt-OUT is measurable, not just adoption. Two new
 // daily pushes shipped with no way to see who turned them off.

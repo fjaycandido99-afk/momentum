@@ -14,7 +14,7 @@ const VALID_FEATURES = new Set<FeatureName>([
   'era', 'relics', 'notification',
   // 'books' was sent by BookSheet but missing here, so every reading event
   // was dropped at the door.
-  'books', 'psychology',
+  'books', 'psychology', 'voice_guide',
 ])
 
 // 'enable' and 'disable' were missing here while trackFeature offered them,
