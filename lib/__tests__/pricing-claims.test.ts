@@ -129,13 +129,14 @@ describe('the free tier is described as it actually is', () => {
     expect(settings.includes('Genre selection locked')).toBe(false)
   })
 
-  it('does not show journal history as a flat no for free', () => {
-    // Free gets seven days, server-enforced. A ✗ contradicts the code and
-    // the app's own journal screen.
+  it('gives free the whole journal, and says so', () => {
+    // Their own words are their record (Francis, 2026-10-03). Premium sells
+    // what Voxu does with them, never the access.
     expect(FREE_TIER_LIMITS.journal_history_enabled).toBe(true)
-    expect(FREE_TIER_LIMITS.journal_history_days).toBe(7)
+    expect(FREE_TIER_LIMITS.journal_history_days).toBeNull()
     const pricing = read('app/(marketing)/pricing/page.tsx')
-    expect(pricing).toMatch(/Journal history[\s\S]{0,120}Last 7 days/)
+    expect(pricing).toMatch(/Journal history',\s*free: 'Everything you’ve written'/)
+    expect(pricing).not.toMatch(/full journal history/i)
   })
 
   it('quotes the real weekly allowances', () => {

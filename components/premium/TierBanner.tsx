@@ -20,7 +20,7 @@ const MESSAGES: Record<TierPage, { guest: string; free: string }> = {
   },
   journal: {
     guest: 'Sign in to save your journal entries and build streaks',
-    free: 'Upgrade for AI reflections and full journal history',
+    free: 'Upgrade for unlimited AI reflections and a Voxu that remembers',
   },
   focus: {
     guest: 'Sign in to track your focus sessions and earn XP',

@@ -170,9 +170,9 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       case 'unlimited_sessions':
       case 'extended_duration':
       case 'checkpoints':
+      case 'journal_history': // their own words — every entry, free
         return true // Free users now get these
       case 'all_genres':
-      case 'journal_history':
       case 'weekly_review_full':
       case 'all_backgrounds':
       case 'offline':
@@ -327,7 +327,7 @@ export const OPEN_UPGRADE_EVENT = 'voxu:open-upgrade'
 export function openUpgrade(reason?: UpgradeReason) { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(OPEN_UPGRADE_EVENT, { detail: { reason } })) }
 
 /** What someone reached for when the upgrade screen opened (components/premium/UpgradeModal). */
-export type UpgradeReason = 'experiments' | 'charts' | 'lesson' | 'voice' | 'talk' | 'widget' | 'audio'
+export type UpgradeReason = 'experiments' | 'charts' | 'lesson' | 'voice' | 'talk' | 'widget' | 'audio' | 'memory'
 
 export function useSubscription() {
   const context = useContext(SubscriptionContext)

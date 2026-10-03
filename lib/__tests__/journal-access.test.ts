@@ -3,21 +3,16 @@ import { FREE_TIER_LIMITS, journalHistoryDays } from '@/lib/subscription-constan
 import { readFileSync } from 'fs'
 
 describe('journal history window', () => {
-  it('lets free users read their own recent writing', () => {
-    // The regression this guards: history used to be a hard false — a
-    // padlock over your own diary, which makes the free tier write-only
-    // and hides the one thing that makes journalling worth repeating.
+  it('lets free users read ALL their own writing', () => {
+    // History was once a hard false (a padlock over your own diary), then
+    // seven days. Now every entry, at every tier (Francis, 2026-10-03):
+    // their words are their record. Premium sells what Voxu does with them
+    // — AI_MEMORY_DEPTH and unlimited reflections — never the access.
     expect(FREE_TIER_LIMITS.journal_history_enabled).toBe(true)
-    expect(journalHistoryDays(false)).toBeGreaterThan(0)
+    expect(journalHistoryDays(false)).toBeNull()
   })
 
   it('gives premium the full archive', () => {
-    expect(journalHistoryDays(true)).toBeNull()
-  })
-
-  it('keeps the free window smaller than premium, or there is nothing to sell', () => {
-    const free = journalHistoryDays(false)
-    expect(free).not.toBeNull()
     expect(journalHistoryDays(true)).toBeNull()
   })
 })

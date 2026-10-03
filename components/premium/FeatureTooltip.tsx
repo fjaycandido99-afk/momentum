@@ -51,7 +51,7 @@ const FEATURE_REGISTRY: Record<FeatureId, FeatureInfo> = {
   },
   journal_history: {
     name: 'Journal History',
-    description: 'Your whole archive, not just the last seven days',
+    description: 'Your whole archive — free for everyone',
   },
   all_content: {
     name: 'Every Guided Session',

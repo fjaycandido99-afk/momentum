@@ -81,8 +81,12 @@ export const FREE_TIER_LIMITS = {
   // never forms the habit, so they never convert for the right reason,
   // and meanwhile the thing being withheld is their own words. Sell the
   // depth (search, insights, the full archive), not the access.
+  //
+  // And then the last step (Francis, 2026-10-03): ALL of it. Their words
+  // are their record; a free user reads every entry. Premium sells what
+  // Voxu does WITH them — a month of memory, unlimited reflections.
   journal_history_enabled: true,
-  journal_history_days: 7,
+  journal_history_days: null as number | null,
   offline_enabled: false,
   // AI feature gates (free = false)
   ai_voice_enabled: false,
@@ -338,5 +342,5 @@ export const AI_MEMORY_DEPTH: Record<'free' | 'premium', AiMemoryDepth> = {
  * own writing, so it should be honest in both directions.
  */
 export function journalHistoryDays(isPremium: boolean): number | null {
-  return isPremium ? null : FREE_TIER_LIMITS.journal_history_days
+  return isPremium ? PREMIUM_FEATURES.journal_history_days : FREE_TIER_LIMITS.journal_history_days
 }

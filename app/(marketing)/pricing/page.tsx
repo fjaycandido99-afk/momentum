@@ -105,7 +105,7 @@ const FEATURES = [
   },
   {
     name: 'Journal history',
-    free: 'Last 7 days',
+    free: 'Everything you’ve written',
     premium: 'Everything you’ve written',
     icon: Book,
   },
@@ -380,7 +380,7 @@ export default function PricingPage() {
                   <div className="p-0.5 rounded bg-amber-500/20">
                     <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   </div>
-                  <span>Your full journal history and a year of progress</span>
+                  <span>A year of progress, and a Voxu that reads your last 30 days</span>
                 </li>
                 <li className="flex items-center gap-3 text-white/70 text-sm">
                   <div className="p-0.5 rounded bg-amber-500/20">

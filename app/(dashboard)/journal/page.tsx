@@ -74,7 +74,7 @@ export default function JournalPage() {
 
 function JournalContent() {
   const searchParams = useSearchParams()
-  const { checkAccess, openUpgradeModal } = useSubscription()
+  const { checkAccess, openUpgradeModal, isPremium } = useSubscription()
   const mindsetCtx = useMindsetOptional()
   const era = useEra()
   const hasJournalHistory = checkAccess('journal_history')
@@ -1985,15 +1985,15 @@ function JournalContent() {
         {/* The upsell, once there is something to look back on. Asking
             after the value has landed converts better than a padlock, and
             it stops the free tier being a write-only box. */}
-        {!hasJournalHistory && recentEntries.length > 0 && (
+        {!isPremium && recentEntries.length > 0 && (
           <button
-            onClick={openUpgradeModal}
+            onClick={() => openUpgradeModal('memory')}
             className="mt-4 w-full flex items-center justify-between gap-3 p-4 rounded-2xl bg-white/[0.04] border border-white/[0.10] text-left hover:bg-white/[0.07] transition-colors press-scale"
           >
             <div className="min-w-0">
-              <p className="text-sm text-white">You&apos;re seeing the last 7 days</p>
+              <p className="text-sm text-white">Let Voxu read back with you</p>
               <p className="text-px-11 text-white/55 mt-0.5">
-                Premium keeps every entry, and lets the AI read a month of them.
+                Every entry is yours to read. Premium lets Voxu read a month of them and notice what keeps coming up.
               </p>
             </div>
             <Crown className="w-4 h-4 shrink-0 text-white/70" />
