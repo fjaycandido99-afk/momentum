@@ -55,18 +55,24 @@ function CircularVisualizerInner({
       return
     }
 
-    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-      canvas.width = w * dpr
-      canvas.height = h * dpr
-      ctx.scale(dpr, dpr)
-    }
-
-    // Breathing at rest: ~24fps is plenty for a slow ripple.
+    // Breathing at rest: ~24fps is plenty for a slow ripple. Checked BEFORE
+    // touching the canvas: a skipped frame must leave the last one showing.
     if (!isPlaying && breathe) {
       const now = performance.now()
       if (now - lastIdleRef.current < 40) { animFrameRef.current = requestAnimationFrame(draw); return }
       lastIdleRef.current = now
     }
+
+    // Whole pixels. At a fractional devicePixelRatio (Windows at 125%) w*dpr
+    // is never an integer, so comparing against it resized — and so ERASED —
+    // the canvas every frame, and with frames skipped above it flickered.
+    const pw = Math.round(w * dpr)
+    const ph = Math.round(h * dpr)
+    if (canvas.width !== pw || canvas.height !== ph) {
+      canvas.width = pw
+      canvas.height = ph
+    }
+    ctx.setTransform(pw / w, 0, 0, ph / h, 0, 0)
 
     ctx.clearRect(0, 0, w, h)
 
