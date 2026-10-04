@@ -66,8 +66,9 @@ export function SpeakingRing({ size, className = '', always = false }: { size: n
   }, [audio])
 
   if (!audio && !always) return null
-  // At rest the orb breathes — unless the phone asks for less motion.
-  const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  // At rest the orb breathes. Like the header coin's flip, it's ambient — in
+  // place, nothing crossing the screen — so it breathes under Reduce Motion
+  // too: Francis's phone has it on, and a still ring read as broken there.
   return (
     <span
       aria-hidden
@@ -78,7 +79,7 @@ export function SpeakingRing({ size, className = '', always = false }: { size: n
         analyser={analyser}
         simulated={!analyser}
         isPlaying={!!audio}
-        breathe={always && !still}
+        breathe={always}
         dial
         glow="150 165 255"
         barCount={size < 120 ? 36 : 56}

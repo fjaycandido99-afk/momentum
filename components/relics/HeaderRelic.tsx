@@ -14,6 +14,8 @@ import { haptic } from '@/lib/haptics'
 import { useApp } from '@/components/AppWrapper'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
+/** How long each coin shows before the next turns in. */
+const ROTATE_MS = 8000
 /** Which coin the header showed last, so the next open turns to the next one. */
 const LAST_SHOWN_KEY = 'voxu.relic.lastShown'
 /** Shuffle mode: the header turns to a random earned coin each open. */
@@ -49,10 +51,11 @@ function Coin({ id, size, plain = true }: { id: string; size: number; plain?: bo
 
 /**
  * The relic in the Home header: the coin they chose to wear (or their rarest
- * until they choose). It holds still — the header is the one thing on screen
- * that should — except for ONE coin-flip when the app opens, turning to the
- * next of their equipped coins (or, in shuffle mode, to a random coin from
- * everything earned). Nothing earned,
+ * until they choose). It turns: one coin-flip when the app opens, then one
+ * every ROTATE_MS while Home is in view and nothing covers the header — to
+ * the next of their equipped coins (or, in shuffle mode, a random coin from
+ * everything earned). Francis, twice: a coin that only changed after leaving
+ * and coming back read as stuck. Nothing earned,
  * nothing shown: no empty slot asking for something.
  *
  * One GET per Home mount, and one per return after 20s+ away; not polled.
@@ -134,6 +137,20 @@ export function HeaderRelic() {
     }, 1200)
     return () => window.clearTimeout(t)
   }, [pending, showSplash, covered, shown, flipTo])
+
+  // Keep turning while they're on Home — never under a popup, the splash, the
+  // relic sheet, or with the app in the background. One coin? Nothing to turn to.
+  useEffect(() => {
+    if (!data || !shown || pending || showSplash || covered || open) return
+    const pool = shuffle ? data.earned.map(e => e.id) : data.equipped
+    if (pool.length < 2) return
+    const t = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return
+      if (document.documentElement.classList.contains('modal-open')) return
+      flipTo(shuffle ? randomOther(pool, shown) : nextShown(data.equipped, shown, data.featured))
+    }, ROTATE_MS)
+    return () => window.clearInterval(t)
+  }, [data, shown, pending, showSplash, covered, open, shuffle, flipTo])
 
   // Coming back to the app is "opening" it: on iPhone, Home is rarely
   // remounted — the app resumes from the background — so without this the
