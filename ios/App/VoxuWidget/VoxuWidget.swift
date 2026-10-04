@@ -65,6 +65,9 @@ struct Snapshot: Decodable {
     let law: String?
     /// Premium unlocks the Guided and Noticed widgets. Absent (an older app) = shown.
     let premium: Bool?
+    /// Kept of answered by weekday, Monday first (Premium's charts).
+    struct WeekBar: Decodable { let label: String; let kept: Int; let answered: Int }
+    let week: [WeekBar]?
 }
 
 extension Color {
@@ -120,6 +123,8 @@ struct Today {
     var law: String? = nil
     /// false only when the app said so — Guided and Noticed then show the unlock card.
     var premium: Bool? = nil
+    /// (label, kept, answered) × 7, or empty.
+    var week: [(String, Int, Int)] = []
     // Fallback
     var quote = "Small steps, repeated, become a life."
     var author = "Voxu"
@@ -204,6 +209,7 @@ func loadToday(at now: Date = Date()) -> Today {
     t.accent = Color(hex: snap.accent)
     t.law = snap.law
     t.premium = snap.premium
+    if let w = snap.week, w.count == 7 { t.week = w.map { ($0.label, $0.kept, $0.answered) } }
     // Today's words, guide and list only on the day they were written.
     guard daysSince == 0 else { return t }
 
@@ -882,6 +888,17 @@ struct NoticedWidgetView: View {
     }
 
     private var content: some View {
+        HStack(alignment: .top, spacing: 12) {
+            words
+            if t.week.count == 7 && t.week.contains(where: { $0.2 > 0 }) {
+                WeekBars(week: t.week).frame(width: 118)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .widgetURL(appLink("/patterns"))
+    }
+
+    private var words: some View {
         VStack(alignment: .leading, spacing: 6) {
             Eyebrow(text: "Voxu noticed")
             if let law = t.law {
@@ -903,7 +920,32 @@ struct NoticedWidgetView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .widgetURL(appLink("/patterns"))
+    }
+}
+
+/// Seven bars: the share of answered promises kept on each weekday. A day with
+/// nothing answered is a faint stub, never a zero that reads like a failure.
+struct WeekBars: View {
+    let week: [(String, Int, Int)]
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack(alignment: .bottom, spacing: 6) {
+                ForEach(0..<week.count, id: \.self) { i in
+                    let b = week[i]
+                    let share = b.2 > 0 ? CGFloat(b.1) / CGFloat(b.2) : 0
+                    Capsule()
+                        .fill(b.2 > 0 ? Color.white.opacity(0.35 + 0.55 * Double(share)) : Color.white.opacity(0.12))
+                        .frame(width: 10, height: b.2 > 0 ? max(6, 58 * share) : 4)
+                        .frame(height: 58, alignment: .bottom)
+                }
+            }
+            HStack(spacing: 6) {
+                ForEach(0..<week.count, id: \.self) { i in
+                    Text(week[i].0).font(.system(size: 9)).foregroundColor(dim).frame(width: 10)
+                }
+            }
+        }
+        .padding(.top, 14)
     }
 }
 

@@ -303,7 +303,10 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
         // their past eras slipped.
         const sample = typeof d.sample === 'string' ? d.sample : null
         const gapDays = Array.isArray(d.gapDays) ? d.gapDays : []
-        try { localStorage.setItem(NOTICED_LAWS_KEY, JSON.stringify({ day: today, laws, sample, gapDays })) } catch { /* storage blocked */ }
+        // The Noticed widget's weekday bars (lib/widget-sync) — Premium's
+        // charts only; free has none to keep.
+        const week = Array.isArray(d.charts?.byWeekday) ? d.charts.byWeekday : null
+        try { localStorage.setItem(NOTICED_LAWS_KEY, JSON.stringify({ day: today, laws, sample, gapDays, week })) } catch { /* storage blocked */ }
       })
       .catch(() => {})
   }, [])

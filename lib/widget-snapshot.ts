@@ -56,6 +56,8 @@ export interface WidgetSnapshot {
   guide?: { id: string; name: string } | null
   /** Their newest SOLID law's headline (lib/patterns), for "Voxu noticed". Counts, never a score. */
   law?: string | null
+  /** Kept of answered, Monday first — the Noticed widget's bars. Premium only. */
+  week?: { label: string; kept: number; answered: number }[] | null
   /** Premium unlocks the Guided and Noticed widgets; absent = unknown (an older app). */
   premium?: boolean
 }
@@ -111,12 +113,13 @@ export function widgetGuide(pulse: Pulse | null | undefined): { id: string; name
   return t && t.type === 'guide' ? { id: t.id, name: clip(t.name, 28) } : null
 }
 
-export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Date(), pulse?: Pulse | null, law: string | null = null, premium?: boolean): WidgetSnapshot {
+export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Date(), pulse?: Pulse | null, law: string | null = null, premium?: boolean, week: WidgetSnapshot['week'] = null): WidgetSnapshot {
+  const bars = cleanWeek(week)
   const date = localDay(now)
   const p = widgetPulse(pulse)
   const guide = widgetGuide(pulse)
   const lawLine = law ? clip(law, 120) : null
-  if (!era) return { v: WIDGET_SNAPSHOT_VERSION, date, era: null, promise: null, mission: null, streak: 0, pulse: p, accent: eraAccentHex(null), guide, law: lawLine, ...(premium === undefined ? {} : { premium }) }
+  if (!era) return { v: WIDGET_SNAPSHOT_VERSION, date, era: null, promise: null, mission: null, streak: 0, pulse: p, accent: eraAccentHex(null), guide, law: lawLine, ...(premium === undefined ? {} : { premium }), ...(bars ? { week: bars } : {}) }
   return {
     v: WIDGET_SNAPSHOT_VERSION,
     date,
@@ -135,5 +138,13 @@ export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Da
     guide,
     law: lawLine,
     ...(premium === undefined ? {} : { premium }),
+    ...(bars ? { week: bars } : {}),
   }
+}
+
+/** Seven well-formed bars, or nothing — never a half chart. */
+function cleanWeek(week: WidgetSnapshot['week']): WidgetSnapshot['week'] {
+  if (!Array.isArray(week) || week.length !== 7) return null
+  const ok = week.every(b => b && typeof b.label === 'string' && Number.isInteger(b.kept) && Number.isInteger(b.answered) && b.kept >= 0 && b.kept <= b.answered)
+  return ok ? week.map(b => ({ label: b.label.slice(0, 2), kept: b.kept, answered: b.answered })) : null
 }
