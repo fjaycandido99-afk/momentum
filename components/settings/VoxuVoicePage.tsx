@@ -9,6 +9,10 @@ import { haptic } from '@/lib/haptics'
 
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 const TALK_VOICE_KEY = 'voxu.talk.voice'
+const GUEST_KEY = 'voxu_guest_prefs'
+function guestPrefs(): Record<string, unknown> {
+  try { return JSON.parse(localStorage.getItem(GUEST_KEY) || '{}') } catch { return {} }
+}
 /** A fixed line, so it's voiced once and replayed from the cache for everyone. */
 const TEST_LINE = 'This is how I sound. Change the speed, and I’ll match it.'
 const TONES = [
@@ -57,21 +61,34 @@ export function VoxuVoicePage() {
   const [prefs, setPrefs] = useState<CoachPrefKey[]>([])
   const [testing, setTesting] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  // Guests have no account to save to: their tone lives in voxu_guest_prefs,
+  // where Home's guest audio already reads it. Conversation needs an account.
+  const [guest, setGuest] = useState(false)
 
   useEffect(() => {
     installVoxuUnlock()
     setRate(voiceRate())
     try { setSpeakReplies(localStorage.getItem(TALK_VOICE_KEY) !== 'off') } catch { /* default on */ }
     fetch('/api/voice/prefs', { cache: 'no-store' })
-      .then(r => (r.ok ? r.json() : null))
+      .then(r => {
+        if (r.status === 401) { setGuest(true); const t = guestPrefs().guide_tone; if (typeof t === 'string') setTone(t); return null }
+        return r.ok ? r.json() : null
+      })
       .then(d => { if (d) { setPrefs(d.coachPrefs ?? []); setTone(d.tone ?? 'calm') } })
       .catch(() => {})
   }, [])
 
-  const save = (body: Record<string, unknown>) =>
-    fetch('/api/voice/prefs', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  const save = (body: Record<string, unknown>) => {
+    if (guest) {
+      if (typeof body.tone === 'string') {
+        try { localStorage.setItem(GUEST_KEY, JSON.stringify({ ...guestPrefs(), guide_tone: body.tone })) } catch { /* ignore */ }
+      }
+      return Promise.resolve()
+    }
+    return fetch('/api/voice/prefs', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(r => { if (!r.ok) setNote('Couldn’t save that. Try again.') })
       .catch(() => setNote('Couldn’t reach Voxu. Check your connection.'))
+  }
 
   const test = async () => {
     setTesting(true)
@@ -160,6 +177,9 @@ export function VoxuVoicePage() {
         ))}
       </List>
 
+      {guest ? (
+        <p className="mt-6 px-1 text-px-13 text-white/60 leading-relaxed">Save your account to choose how Voxu talks to you in conversation &mdash; concise, challenging, encouraging or focused.</p>
+      ) : (<>
       <List label="Conversation">
         {COACH_PREFS.map(p => (
           <div key={p.key} className="px-4 py-3.5 flex items-center gap-3">
@@ -169,6 +189,7 @@ export function VoxuVoicePage() {
         ))}
       </List>
       <p className="mt-2 px-1 text-px-12 text-white/50 leading-relaxed">These change how Voxu answers you in Talk and in your journal. If you&rsquo;re ever in a really hard place, Voxu sets them aside and just looks after you.</p>
+      </>)}
     </div>
   )
 }

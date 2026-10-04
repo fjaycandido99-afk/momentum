@@ -9,14 +9,9 @@ import {
   LogOut,
   ChevronLeft,
   Briefcase,
-  GraduationCap,
-  BookOpen,
   Layers,
-  Sun,
   Sparkles,
   Lightbulb,
-  Wind,
-  Moon,
   Check,
   Loader2,
   Crown,
@@ -53,40 +48,6 @@ import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { trackFeature } from '@/lib/analytics/track'
 import { PreferredNameField } from '@/components/settings/PreferredNameField'
 
-type UserType = 'professional' | 'student' | 'hybrid'
-type GuideTone = 'calm' | 'direct' | 'neutral'
-
-const DAYS = [
-  { value: 0, label: 'Sun' },
-  { value: 1, label: 'Mon' },
-  { value: 2, label: 'Tue' },
-  { value: 3, label: 'Wed' },
-  { value: 4, label: 'Thu' },
-  { value: 5, label: 'Fri' },
-  { value: 6, label: 'Sat' },
-]
-
-const USER_TYPES = [
-  { value: 'professional' as UserType, label: 'Professional', icon: Briefcase },
-  { value: 'student' as UserType, label: 'Student', icon: GraduationCap },
-  { value: 'hybrid' as UserType, label: 'Both', icon: BookOpen },
-]
-
-const TONES = [
-  { value: 'calm' as GuideTone, label: 'Calm', description: 'Soft and gentle' },
-  { value: 'direct' as GuideTone, label: 'Direct', description: 'Clear and concise' },
-  { value: 'neutral' as GuideTone, label: 'Neutral', description: 'Balanced tone' },
-]
-
-const SEGMENT_OPTIONS = [
-  { id: 'morning_prime', label: 'Morning Prime', icon: Sun, required: true },
-  { id: 'midday_reset', label: 'Midday Reset', icon: Sparkles },
-  { id: 'wind_down', label: 'Wind Down', icon: Wind },
-  { id: 'bedtime_story', label: 'Bedtime Story', icon: Moon, required: true },
-]
-
-import { LanguageSelector } from '@/components/settings/LanguageSelector'
-import { Globe } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { restorePurchases } from '@/lib/revenuecat'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
@@ -129,18 +90,9 @@ function SettingsContent() {
   }, [searchParams, subscription, router])
 
   // Preferences state
-  const [userType, setUserType] = useState<UserType>('professional')
-  const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5])
-  const [classDays, setClassDays] = useState<number[]>([1, 2, 3, 4, 5])
   const [wakeTime, setWakeTime] = useState('07:00')
   const [workStartTime, setWorkStartTime] = useState('09:00')
   const [workEndTime, setWorkEndTime] = useState('17:00')
-  const [classStartTime, setClassStartTime] = useState('08:00')
-  const [classEndTime, setClassEndTime] = useState('15:00')
-  const [studyStartTime, setStudyStartTime] = useState('18:00')
-  const [studyEndTime, setStudyEndTime] = useState('21:00')
-  const [guideTone, setGuideTone] = useState<GuideTone>('calm')
-  const [enabledSegments, setEnabledSegments] = useState<string[]>(['morning_prime', 'midday_reset', 'wind_down', 'bedtime_story'])
   const [dailyReminder, setDailyReminder] = useState(true)
   const [reminderTime, setReminderTime] = useState('07:00')
   const [bedtimeReminderEnabled, setBedtimeReminderEnabled] = useState(false)
@@ -150,7 +102,6 @@ function SettingsContent() {
   const [winddownEnabled, setWinddownEnabled] = useState(true)
   const [winddownTime, setWinddownTime] = useState('19:00')
   const [aiMemoryEnabled, setAiMemoryEnabled] = useState(false)
-  const [locale, setLocale] = useState('en')
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isRestoring, setIsRestoring] = useState(false)
@@ -185,18 +136,9 @@ function SettingsContent() {
             } catch {}
           }
 
-          if (data.user_type) setUserType(data.user_type)
-          if (data.work_days) setWorkDays(data.work_days)
-          if (data.class_days) setClassDays(data.class_days)
           if (data.wake_time) setWakeTime(data.wake_time)
           if (data.work_start_time) setWorkStartTime(data.work_start_time)
           if (data.work_end_time) setWorkEndTime(data.work_end_time)
-          if (data.class_start_time) setClassStartTime(data.class_start_time)
-          if (data.class_end_time) setClassEndTime(data.class_end_time)
-          if (data.study_start_time) setStudyStartTime(data.study_start_time)
-          if (data.study_end_time) setStudyEndTime(data.study_end_time)
-          if (data.guide_tone) setGuideTone(data.guide_tone)
-          if (data.enabled_segments) setEnabledSegments(data.enabled_segments)
           if (data.daily_reminder !== undefined) setDailyReminder(data.daily_reminder)
           if (data.reminder_time) setReminderTime(data.reminder_time)
           if (data.bedtime_reminder_enabled !== undefined) setBedtimeReminderEnabled(data.bedtime_reminder_enabled)
@@ -219,14 +161,6 @@ function SettingsContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load persisted locale on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('voxu_locale')
-      if (saved) setLocale(saved)
-    } catch {}
-  }, [])
-
   // Auto-save preferences
   const savePreferences = useCallback(async () => {
     if (!hasLoaded.current) return
@@ -237,18 +171,9 @@ function SettingsContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_type: userType,
-          work_days: workDays,
-          class_days: classDays,
           wake_time: wakeTime,
           work_start_time: workStartTime,
           work_end_time: workEndTime,
-          class_start_time: classStartTime,
-          class_end_time: classEndTime,
-          study_start_time: studyStartTime,
-          study_end_time: studyEndTime,
-          guide_tone: guideTone,
-          enabled_segments: enabledSegments,
           daily_reminder: dailyReminder,
           reminder_time: reminderTime,
           bedtime_reminder_enabled: bedtimeReminderEnabled,
@@ -258,9 +183,6 @@ function SettingsContent() {
           winddown_reminder_enabled: winddownEnabled,
           winddown_reminder_time: winddownTime || null,
           ai_memory_enabled: aiMemoryEnabled,
-          workout_enabled: true, // legacy
-          micro_lesson_enabled: true, // legacy
-          breath_cues_enabled: true, // legacy
           // Always include timezone so notification scheduling uses correct local time
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || undefined,
         }),
@@ -269,12 +191,12 @@ function SettingsContent() {
       if (response.ok && data.isGuest) {
         // Guest: persist to localStorage
         try {
+          // Merge: the Voxu Voice page keeps the guest's tone in here too.
+          let prev: Record<string, unknown> = {}
+          try { prev = JSON.parse(localStorage.getItem('voxu_guest_prefs') || '{}') } catch {}
           localStorage.setItem('voxu_guest_prefs', JSON.stringify({
-            user_type: userType, work_days: workDays, class_days: classDays,
+            ...prev,
             wake_time: wakeTime, work_start_time: workStartTime, work_end_time: workEndTime,
-            class_start_time: classStartTime, class_end_time: classEndTime,
-            study_start_time: studyStartTime, study_end_time: studyEndTime,
-            guide_tone: guideTone, enabled_segments: enabledSegments,
             daily_reminder: dailyReminder, reminder_time: reminderTime,
             bedtime_reminder_enabled: bedtimeReminderEnabled,
           }))
@@ -295,7 +217,7 @@ function SettingsContent() {
     } finally {
       setIsSaving(false)
     }
-  }, [userType, workDays, classDays, wakeTime, workStartTime, workEndTime, classStartTime, classEndTime, studyStartTime, studyEndTime, guideTone, enabledSegments, dailyReminder, reminderTime, bedtimeReminderEnabled, bedtimeTime, middayEnabled, middayTime, winddownEnabled, winddownTime, aiMemoryEnabled])
+  }, [wakeTime, workStartTime, workEndTime, dailyReminder, reminderTime, bedtimeReminderEnabled, bedtimeTime, middayEnabled, middayTime, winddownEnabled, winddownTime, aiMemoryEnabled])
 
   // Debounced auto-save when any preference changes
   useEffect(() => {
@@ -308,26 +230,6 @@ function SettingsContent() {
       if (saveTimeout.current) clearTimeout(saveTimeout.current)
     }
   }, [savePreferences])
-
-  const toggleDay = (day: number, type: 'work' | 'class') => {
-    if (type === 'work') {
-      setWorkDays(prev =>
-        prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort()
-      )
-    } else {
-      setClassDays(prev =>
-        prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort()
-      )
-    }
-  }
-
-  const toggleSegment = (segmentId: string) => {
-    const segment = SEGMENT_OPTIONS.find(s => s.id === segmentId)
-    if (segment?.required) return
-    setEnabledSegments(prev =>
-      prev.includes(segmentId) ? prev.filter(s => s !== segmentId) : [...prev, segmentId]
-    )
-  }
 
   const handleSignOut = async () => {
     // Clear all voxu_* and sb-* keys to prevent stale data leaking between accounts
@@ -430,7 +332,7 @@ function SettingsContent() {
             isPremium={!!subscription?.isPremium}
             isTrialing={!!subscription?.isTrialing}
             onUpgrade={() => subscription?.openUpgradeModal()}
-            rhythm={rhythmSummary(userType, workDays, classDays, workStartTime, workEndTime, classStartTime, classEndTime)}
+            rhythm={rhythmSummary(wakeTime, workStartTime, workEndTime)}
             name={null}
           />
         )}
@@ -443,88 +345,27 @@ function SettingsContent() {
           description="User type, work/class days, schedule times"
           defaultOpen
         >
-          {/* User Type */}
+          {/* Only what Voxu reads: wake time (morning + bedtime reminders) and
+              the workday (evening reminder on the phone, goal planning). The
+              old user type / days / class + study times were never read. */}
           <div>
-            <p className="text-sm text-white/85 mb-1">I am a</p>
-            <p className="text-px-11 text-white/40 mb-3">Personalizes your daily guide content</p>
-            <div className="grid grid-cols-3 gap-2">
-              {USER_TYPES.map((type) => {
-                const Icon = type.icon
-                return (
-                  <button
-                    key={type.value}
-                    onClick={() => setUserType(type.value)}
-                    aria-pressed={userType === type.value}
-                    className={`p-3 rounded-xl text-sm font-medium transition-all flex flex-col items-center gap-2 press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                      userType === type.value
-                        ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                        : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {type.label}
-                  </button>
-                )
-              })}
+            <div className="min-w-0">
+              <label htmlFor="wake-time" className="block text-sm text-white/70 mb-1.5">Wake time</label>
+              <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
+                <input
+                  id="wake-time"
+                  type="time"
+                  value={wakeTime}
+                  onChange={(e) => setWakeTime(e.target.value)}
+                  className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
+                  style={{ colorScheme: 'dark' }}
+                />
+              </div>
             </div>
           </div>
-
-          {/* Work Days (for professional/hybrid) */}
-          {(userType === 'professional' || userType === 'hybrid') && (
-            <div>
-              <p className="text-sm text-white/85 mb-1">Work Days</p>
-              <p className="text-px-11 text-white/40 mb-3">Off days get a lighter, rest-focused guide</p>
-              <div className="grid grid-cols-7 gap-1.5">
-                {DAYS.map((day) => (
-                  <button
-                    key={day.value}
-                    onClick={() => toggleDay(day.value, 'work')}
-                    aria-pressed={workDays.includes(day.value)}
-                    aria-label={`${day.label} work day`}
-                    className={`h-10 rounded-lg text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                      workDays.includes(day.value)
-                        ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                        : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
-                    }`}
-                  >
-                    {day.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Class Days (for student/hybrid) */}
-          {(userType === 'student' || userType === 'hybrid') && (
-            <div>
-              <p className="text-sm text-white/85 mb-1">Class Days</p>
-              <p className="text-px-11 text-white/40 mb-3">Study-focused modules on class days</p>
-              <div className="grid grid-cols-7 gap-1.5">
-                {DAYS.map((day) => (
-                  <button
-                    key={day.value}
-                    onClick={() => toggleDay(day.value, 'class')}
-                    aria-pressed={classDays.includes(day.value)}
-                    aria-label={`${day.label} class day`}
-                    className={`h-10 rounded-lg text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                      classDays.includes(day.value)
-                        ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                        : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
-                    }`}
-                  >
-                    {day.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Schedule Times */}
-          <div className="space-y-3">
-            {(userType === 'professional' || userType === 'hybrid') && (
-              <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
                 <div className="min-w-0">
-                  <label htmlFor="work-start-time" className="block text-sm text-white/70 mb-1.5">Work starts</label>
+                  <label htmlFor="work-start-time" className="block text-sm text-white/70 mb-1.5">Workday starts</label>
                   <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                     <input
                       id="work-start-time"
@@ -537,7 +378,7 @@ function SettingsContent() {
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <label htmlFor="work-end-time" className="block text-sm text-white/70 mb-1.5">Work ends</label>
+                  <label htmlFor="work-end-time" className="block text-sm text-white/70 mb-1.5">Workday ends</label>
                   <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
                     <input
                       id="work-end-time"
@@ -549,73 +390,8 @@ function SettingsContent() {
                     />
                   </div>
                 </div>
-              </div>
-            )}
-            {(userType === 'student' || userType === 'hybrid') && (
-              <>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="min-w-0">
-                    <label htmlFor="class-start-time" className="block text-sm text-white/70 mb-1.5">Classes start</label>
-                    <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-                      <input
-                        id="class-start-time"
-                        type="time"
-                        value={classStartTime}
-                        onChange={(e) => setClassStartTime(e.target.value)}
-                        className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                        style={{ colorScheme: 'dark' }}
-                      />
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <label htmlFor="class-end-time" className="block text-sm text-white/70 mb-1.5">Classes end</label>
-                    <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-                      <input
-                        id="class-end-time"
-                        type="time"
-                        value={classEndTime}
-                        onChange={(e) => setClassEndTime(e.target.value)}
-                        className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                        style={{ colorScheme: 'dark' }}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="min-w-0">
-                    <label htmlFor="study-start-time" className="block text-sm text-white/70 mb-1.5">Study starts</label>
-                    <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-                      <input
-                        id="study-start-time"
-                        type="time"
-                        value={studyStartTime}
-                        onChange={(e) => setStudyStartTime(e.target.value)}
-                        className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                        style={{ colorScheme: 'dark' }}
-                      />
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <label htmlFor="study-end-time" className="block text-sm text-white/70 mb-1.5">Study ends</label>
-                    <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-                      <input
-                        id="study-end-time"
-                        type="time"
-                        value={studyEndTime}
-                        onChange={(e) => setStudyEndTime(e.target.value)}
-                        className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                        style={{ colorScheme: 'dark' }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
-          {/* "modules unlock" was Daily-Guide vocabulary, and that screen is
-              retired. The sessions are still real — they are Today's Audio on
-              home — so the hint says what the schedule actually does. */}
-          <FeatureHint id="schedule" text="Your schedule sets when each audio session is ready" mode="once" />
+          <p className="text-px-12 text-white/50 leading-relaxed">Your wake time sets when morning and bedtime reminders come by default. Your workday is when Voxu plans goals around you and nudges you once it ends.</p>
         </SettingsCategory>
 
         {/* Only on a build that has the widget (components/widget/WidgetSetup). */}
@@ -627,68 +403,6 @@ function SettingsContent() {
           title="Daily Experience"
           description="Segments, voice tone, what home shows"
         >
-          {/* Segments */}
-          <div>
-            <p className="text-sm text-white/85 mb-3">Daily Flow</p>
-            <div className="space-y-2">
-              {SEGMENT_OPTIONS.map((segment) => {
-                const Icon = segment.icon
-                const isEnabled = enabledSegments.includes(segment.id)
-                return (
-                  <button
-                    key={segment.id}
-                    onClick={() => toggleSegment(segment.id)}
-                    disabled={segment.required}
-                    role="switch"
-                    aria-checked={isEnabled}
-                    aria-label={`${segment.label}${segment.required ? ' (required)' : ''}`}
-                    className={`w-full p-3 rounded-xl flex items-center justify-between transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                      isEnabled
-                        ? 'bg-white/10 border border-white/25'
-                        : 'bg-white/5 border border-transparent'
-                    } ${segment.required ? 'cursor-default' : 'cursor-pointer hover:bg-white/10 press-scale'}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon className={`w-4 h-4 ${isEnabled ? 'text-white' : 'text-white/50'}`} />
-                      <span className={isEnabled ? 'text-white' : 'text-white/70'}>{segment.label}</span>
-                      {segment.required && (
-                        <span className="text-px-10 px-1.5 py-0.5 rounded bg-white/10 text-white/50">Required</span>
-                      )}
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      isEnabled ? 'bg-white border-white' : 'border-white/30'
-                    }`}>
-                      {isEnabled && <Check className="w-3 h-3 text-black" />}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Voice Tone */}
-          <div>
-            <p className="text-sm text-white/85 mb-3">Voice Tone</p>
-            <div className="grid grid-cols-3 gap-2">
-              {TONES.map((tone) => (
-                <button
-                  key={tone.value}
-                  onClick={() => setGuideTone(tone.value)}
-                  aria-pressed={guideTone === tone.value}
-                  className={`p-3 rounded-xl text-center transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none ${
-                    guideTone === tone.value
-                      ? 'bg-white/20 text-white border border-white/30 shadow-[inset_0_0_12px_rgba(255,255,255,0.08)]'
-                      : 'bg-white/5 text-white/70 border border-transparent hover:bg-white/10'
-                  }`}
-                >
-                  <p className="font-medium text-sm">{tone.label}</p>
-                  <p className="text-xs text-white/50 mt-0.5">{tone.description}</p>
-                </button>
-              ))}
-            </div>
-            <FeatureHint id="voice-tone" text="Your tone affects how the AI speaks throughout your entire journey" mode="once" />
-          </div>
-
           {/* Which shelves home carries. A preference, so it belongs here and
               not in the header menu among the page links. */}
           <HomeShelvesSetting />
@@ -730,25 +444,7 @@ function SettingsContent() {
           description="Push notifications & reminders"
         >
           <div className="mb-4"><NotificationModePicker /></div>
-          {/* Wake time drives the Daily Guide schedule. It used to also
-              silently set the morning reminder time; those are separate
-              now, so a reminder can sit where the user wants it. */}
-          <div className="mb-4">
-            <label htmlFor="wake-time-notif" className="block text-px-11 text-white/40 mb-1.5">Wake time</label>
-            <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-              <input
-                id="wake-time-notif"
-                type="time"
-                value={wakeTime}
-                onChange={(e) => setWakeTime(e.target.value)}
-                aria-label="Wake time"
-                className="w-full h-full px-4 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                style={{ colorScheme: 'dark' }}
-              />
-            </div>
-          </div>
-
-          <p className="card-eyebrow px-1 mb-2">Daily Guide reminders</p>
+          <p className="card-eyebrow px-1 mb-2">Today&rsquo;s audio reminders</p>
           <GuideReminderSettings
             values={{
               dailyReminder,
@@ -837,19 +533,6 @@ function SettingsContent() {
           </div>
         </SettingsCategory>
 
-
-        {/* ═══════════════ 7. Language ═══════════════ */}
-        <SettingsCategory
-          id="language"
-          icon={Globe}
-          title="Language"
-          description="App display language"
-        >
-          <div>
-            <p className="text-sm text-white/85 mb-3">Display Language</p>
-            <LanguageSelector currentLocale={locale as any} onLocaleChange={(l) => { setLocale(l); localStorage.setItem('voxu_locale', l) }} />
-          </div>
-        </SettingsCategory>
 
         {/* ═══════════════ 8. Account ═══════════════ */}
         <SettingsCategory
@@ -1133,43 +816,30 @@ function SettingsContent() {
 /** Each existing section's page title (SettingsCategory ids). */
 const SECTION_TITLES: Record<string, string> = {
   'profile-schedule': 'Daily Rhythm',
-  'daily-experience': 'Daily Experience',
+  'daily-experience': 'Home',
   mindset: 'Mindset & Coaching',
   notifications: 'Notifications',
   'ai-memory': 'Voxu Memory',
-  language: 'Language',
   account: 'Profile & Account',
   ...Object.fromEntries(Object.entries(EXTRA_PAGES).map(([k, v]) => [k, v.title])),
 }
 const SECTION_SUBS: Record<string, string> = {
-  'profile-schedule': 'When your days start, and when you work or study.',
-  'daily-experience': 'What your day in Voxu includes, and how it sounds.',
+  'profile-schedule': 'When you wake, and when your workday runs.',
+  'daily-experience': 'Choose what your Home shows.',
   mindset: 'The philosophy Voxu coaches you with.',
   notifications: 'What Voxu sends, when, and how often.',
   'ai-memory': 'What Voxu may remember about you.',
-  language: 'The language Voxu speaks.',
   account: 'Your name, your plan, signing in and out.',
 }
 
-const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 function fmtTime(t: string): string {
   const [h, m] = t.split(':').map(Number)
   if (!Number.isFinite(h)) return t
   return `${((h + 11) % 12) + 1}:${String(m || 0).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`
 }
-function fmtDays(days: number[]): string {
-  const d = [...days].sort((a, b) => a - b)
-  if (d.join() === '1,2,3,4,5') return 'Mon–Fri'
-  if (d.length === 7) return 'Every day'
-  if (!d.length) return 'No set days'
-  return d.map(x => DAY_ABBR[x]).join(', ')
-}
-/** "Professional · Mon–Fri · 9:00 AM–5:00 PM" for the Daily Rhythm row. */
-function rhythmSummary(type: string, work: number[], cls: number[], ws: string, we: string, cs: string, ce: string): string {
-  if (type === 'student') return `Student · ${fmtDays(cls)} · ${fmtTime(cs)}–${fmtTime(ce)}`
-  if (type === 'both') return `Work & study · ${fmtDays(work)} · ${fmtTime(ws)}–${fmtTime(we)}`
-  if (type === 'professional') return `Professional · ${fmtDays(work)} · ${fmtTime(ws)}–${fmtTime(we)}`
-  return 'Your days, your times'
+/** "Up at 5:30 AM · Workday 9:00 AM–5:00 PM" for the Daily Rhythm row. */
+function rhythmSummary(wake: string, ws: string, we: string): string {
+  return `Up at ${fmtTime(wake)} · Workday ${fmtTime(ws)}–${fmtTime(we)}`
 }
 
 export default function SettingsPage() {

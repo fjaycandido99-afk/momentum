@@ -100,6 +100,15 @@ export async function GET() {
         daily_reminder: true,
         reminder_time: true,
         bedtime_reminder_enabled: true,
+        bedtime_reminder_time: true,
+        midday_reminder_enabled: true,
+        midday_reminder_time: true,
+        winddown_reminder_enabled: true,
+        winddown_reminder_time: true,
+
+        // AI memory consent — Settings saves this field, so it must load it
+        // (it once didn't, and every Settings change revoked consent).
+        ai_memory_enabled: true,
 
         // Streak tracking
         current_streak: true,

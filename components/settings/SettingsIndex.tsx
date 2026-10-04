@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
-  Accessibility, AudioLines, Bell, BookOpen, Brain, CalendarDays, ChevronRight, CreditCard, Globe, HelpCircle,
+  Accessibility, AudioLines, Bell, BookOpen, Brain, CalendarDays, ChevronRight, CreditCard, HelpCircle,
   Info, LayoutGrid, Lock, Mountain, Sparkles, SunMedium, User,
   type LucideIcon,
 } from 'lucide-react'
@@ -119,7 +119,7 @@ export function SettingsIndex({ isPremium, isTrialing, onUpgrade, rhythm, name, 
 
       <Group label="Your experience">
         <Row icon={CalendarDays} title="Daily Rhythm" sub={rhythm} href={s('profile-schedule')} />
-        <Row icon={SunMedium} title="Daily Experience" sub="Segments, voice tone, what Home shows" href={s('daily-experience')} />
+        <Row icon={SunMedium} title="Home" sub="What your Home shows" href={s('daily-experience')} />
         <Row icon={Sparkles} title="Mindset & Coaching" sub="The philosophy Voxu coaches you with" href={s('mindset')} />
         <Row icon={Mountain} title="Era & Growth" sub="Your era, your proof, your eras in order" href={s('growth')} />
       </Group>
@@ -129,7 +129,6 @@ export function SettingsIndex({ isPremium, isTrialing, onUpgrade, rhythm, name, 
         <Row icon={Bell} title="Notifications" sub={notificationsSummary ?? 'Reminders, check-ins and how often Voxu nudges'} href={s('notifications')} />
         {inApp && <Row icon={LayoutGrid} title="Home Screen Widgets" sub="Today's promise on your home screen" onClick={() => setWidgetGuide(true)} />}
         <Row icon={Accessibility} title="Accessibility" sub="Follows your iPhone's settings" href={s('accessibility')} />
-        <Row icon={Globe} title="Language" href={s('language')} />
       </Group>
 
       <Group label="Account">
