@@ -111,8 +111,10 @@ function CircularVisualizerInner({
         }
       }
     } else if (breathe) {
-      // Quiet, but alive: the same layered waves, slower and a third as tall.
-      timeRef.current += 0.012
+      // Quiet, but alive: the same layered waves, lower. At ~20fps this is a
+      // ripple every ~5s and the light round the dial every ~8s — at 0.012 a
+      // frame it took ~16s and read as frozen (Francis, twice).
+      timeRef.current += 0.04
       const t = timeRef.current
       for (let i = 0; i < barCount; i++) {
         const a = (i / barCount) * Math.PI * 2
@@ -182,7 +184,7 @@ function CircularVisualizerInner({
       // The dial is lit from the upper right, as in the mockup.
       // Breathing, the light slowly travels round the dial — the motion that
       // reads at any size.
-      const spin = breathe && !isPlaying ? timeRef.current * 1.6 : 0
+      const spin = breathe && !isPlaying ? timeRef.current : 0
       const lit = dial ? 0.35 + 0.65 * Math.max(0, Math.cos(angle + Math.PI / 4 - spin)) : 1
       const opacity = (0.6 + value * 0.4) * lit
       const x1 = cx + Math.cos(angle) * radius
