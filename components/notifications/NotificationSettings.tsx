@@ -47,9 +47,9 @@ const NOTIFICATION_GROUPS: {
   {
     id: 'daily_reminders',
     icon: Sunrise,
-    // Not the four audio reminders above — each has its own switch now.
+    // Not your era's day above (incl. the evening check-in) — each has its own switch.
     label: 'Check-ins',
-    description: 'Your evening check-in and practice heads-ups',
+    description: 'Practice check-ins and heads-ups',
     keys: ['morning_reminder', 'evening_reminder', 'checkpoint_alerts'],
   },
   {

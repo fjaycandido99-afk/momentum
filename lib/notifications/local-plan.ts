@@ -52,20 +52,20 @@ function hm(t: string | null | undefined, fallback: string): { hour: number; min
 export function planLocalReminders(p: LocalReminderPrefs): PlannedReminder[] {
   const out: PlannedReminder[] = []
   if (p.daily_reminder !== false) {
-    out.push({ id: LOCAL_REMINDER_IDS.morning, ...hm(p.reminder_time, '07:00'), title: 'Morning Prime', body: 'Your morning session is ready.', route: '/?session=morning_prime' })
+    out.push({ id: LOCAL_REMINDER_IDS.morning, ...hm(p.reminder_time, '07:00'), title: 'Today’s promise', body: 'What are you promising yourself today?', route: '/?session=morning_prime' })
   }
   if (p.midday_reminder_enabled !== false) {
-    out.push({ id: LOCAL_REMINDER_IDS.midday, ...hm(p.midday_reminder_time, '13:00'), title: 'Midday Reset', body: 'A few minutes to recharge and refocus.', route: '/?session=midday_reset' })
+    out.push({ id: LOCAL_REMINDER_IDS.midday, ...hm(p.midday_reminder_time, '13:00'), title: 'Promise check', body: 'Halfway through the day — how’s your promise going?', route: '/?session=midday_reset' })
   }
   if (p.winddown_reminder_enabled !== false) {
-    out.push({ id: LOCAL_REMINDER_IDS.winddown, ...hm(p.winddown_reminder_time, '19:00'), title: 'Wind Down', body: 'Close the day out.', route: '/?session=wind_down' })
+    out.push({ id: LOCAL_REMINDER_IDS.winddown, ...hm(p.winddown_reminder_time, '19:00'), title: 'Did you keep it?', body: 'Check in on today’s promise.', route: '/?session=wind_down' })
   }
   if (p.bedtime_reminder_enabled) {
     // Same rule as the server: their reminder time, else 30 min before their
     // bedtime, else 8 hours before waking (lib/rhythm/plan).
     const m = bedtimeReminderMin(p)
     const at = { hour: Math.floor(m / 60), minute: m % 60 }
-    out.push({ id: LOCAL_REMINDER_IDS.bedtime, ...at, title: 'Bedtime Story', body: 'Wind down for bed.', route: '/?session=bedtime_story' })
+    out.push({ id: LOCAL_REMINDER_IDS.bedtime, ...at, title: 'Set tomorrow', body: 'Decide tomorrow’s promise before you sleep.', route: '/?session=bedtime_story' })
   }
   return out
 }

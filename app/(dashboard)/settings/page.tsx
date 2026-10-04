@@ -383,7 +383,7 @@ function SettingsContent() {
           description="Push notifications & reminders"
         >
           <div className="mb-4"><NotificationModePicker /></div>
-          <p className="card-eyebrow px-1 mb-2">Today&rsquo;s audio reminders</p>
+          <p className="card-eyebrow px-1 mb-2">Your era&rsquo;s day</p>
           <GuideReminderSettings
             values={{
               dailyReminder,

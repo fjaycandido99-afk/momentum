@@ -44,8 +44,8 @@ const ROWS: Row[] = [
     key: 'morning',
     enabledKey: 'dailyReminder',
     timeKey: 'reminderTime',
-    label: 'Morning Prime',
-    hint: 'Wake up, set intention, energy',
+    label: 'Morning · today’s promise',
+    hint: 'Make your promise — or, if you set it last night, go keep it',
     icon: Sunrise,
     placeholder: '07:00',
   },
@@ -53,8 +53,8 @@ const ROWS: Row[] = [
     key: 'midday',
     enabledKey: 'middayEnabled',
     timeKey: 'middayTime',
-    label: 'Midday Reset',
-    hint: 'Recharge, affirm, refocus',
+    label: 'Midday · promise check',
+    hint: 'How it’s going, halfway through the day',
     icon: Sun,
     placeholder: '13:00',
   },
@@ -62,8 +62,8 @@ const ROWS: Row[] = [
     key: 'winddown',
     enabledKey: 'winddownEnabled',
     timeKey: 'winddownTime',
-    label: 'Wind Down',
-    hint: 'Close the day out',
+    label: 'Evening · did you keep it?',
+    hint: 'Your check-in on today’s promise',
     icon: Wind,
     placeholder: '19:00',
   },
@@ -71,8 +71,8 @@ const ROWS: Row[] = [
     key: 'bedtime',
     enabledKey: 'bedtimeEnabled',
     timeKey: 'bedtimeTime',
-    label: 'Bedtime Story',
-    hint: 'Leave empty to follow your wake time',
+    label: 'Night · set tomorrow',
+    hint: 'Decide tomorrow’s promise tonight. Empty = 30 min before your bedtime',
     icon: Moon,
     placeholder: '22:00',
   },
@@ -87,7 +87,7 @@ export function GuideReminderSettings({ values, onChange }: Props) {
   return (
     <div className="space-y-2">
       <p className="text-xs text-white/55 leading-relaxed mb-3">
-        Each segment nudges you at the time you pick, in your own timezone.
+        Your promise, through the day — at the times you pick. Not in an era? These open your guided audio instead.
       </p>
 
       {ROWS.map(row => {

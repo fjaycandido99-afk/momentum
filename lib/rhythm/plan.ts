@@ -127,7 +127,7 @@ export function adaptPlan(p: RhythmPrefs): AdaptRow[] {
   const q = quietWindow(p)
   if (p.daily_reminder !== false) {
     const m = toMin(p.reminder_time) ?? 420
-    rows.push({ key: 'morning', at: m, time: label(m), title: 'Morning Prime', body: 'Your morning session reminder — set your promise for the day.' })
+    rows.push({ key: 'morning', at: m, time: label(m), title: 'Today’s promise', body: 'Make your promise for the day — or go keep the one you set last night.' })
   }
   const f = focusRange(p)
   if (f) rows.push({ key: 'focus', at: f.start, time: `${label(f.start)} – ${label(f.end)}`, title: 'Focus time', body: 'When Voxu suggests the hard thing — your promise, your deepest work.' })
@@ -135,15 +135,15 @@ export function adaptPlan(p: RhythmPrefs): AdaptRow[] {
   if (p.work_mode && ws !== null && we !== null) rows.push({ key: 'work', at: ws, time: `${label(ws)} – ${label(we)}`, title: 'Work mode', body: 'Fewer interruptions: Voxu holds its own nudges. Reminders you set still come.' })
   if (p.midday_reminder_enabled !== false) {
     const m = toMin(p.midday_reminder_time) ?? 780
-    rows.push({ key: 'midday', at: m, time: label(m), title: 'Midday Reset', body: 'A few minutes to recharge and refocus.' })
+    rows.push({ key: 'midday', at: m, time: label(m), title: 'Promise check', body: 'How it’s going, halfway through the day.' })
   }
   if (p.winddown_reminder_enabled !== false) {
     const m = toMin(p.winddown_reminder_time) ?? 1140
-    rows.push({ key: 'winddown', at: m, time: label(m), title: 'Wind Down', body: 'A guided reset to close the day out.' })
+    rows.push({ key: 'winddown', at: m, time: label(m), title: 'Did you keep it?', body: 'Your check-in on today’s promise.' })
   }
   if (p.bedtime_reminder_enabled) {
     const m = bedtimeReminderMin(p)
-    rows.push({ key: 'bedtime', at: m, time: label(m), title: 'Bedtime Story', body: 'Your reminder to wind down for sleep.' })
+    rows.push({ key: 'bedtime', at: m, time: label(m), title: 'Set tomorrow', body: 'Decide tomorrow’s promise before you sleep.' })
   }
   rows.push({ key: 'quiet', at: q.start, time: `${label(q.start)} – ${label(q.end)}`, title: 'Quiet hours', body: 'Only reminders you set yourself. Nothing else from Voxu.' })
   // Ordered through the day, starting from waking.

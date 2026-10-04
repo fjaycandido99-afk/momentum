@@ -437,7 +437,7 @@ export const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
 }
 
 /** Pushes whose own UserPreferences switch is the only one that decides. */
-export const OWN_SWITCH_TYPES: ReadonlySet<NotificationType> = new Set<NotificationType>(['morning_reminder', 'midday_reset', 'wind_down', 'bedtime_reminder'])
+export const OWN_SWITCH_TYPES: ReadonlySet<NotificationType> = new Set<NotificationType>(['morning_reminder', 'midday_reset', 'wind_down', 'bedtime_reminder', 'era_checkin'])
 
 export async function sendPushToUser(
   userId: string,
@@ -877,9 +877,18 @@ export async function sendBedtimeReminders(): Promise<void> {
     // Format wake time for display
     const wakeHourDisplay = wakeHour % 12 || 12
     const wakePeriod = wakeHour >= 12 ? 'PM' : 'AM'
-    const body = `Wind down for bed. 8 hours of sleep means waking refreshed at ${wakeHourDisplay}:00 ${wakePeriod}.`
+    let body = `Wind down for bed. 8 hours of sleep means waking refreshed at ${wakeHourDisplay}:00 ${wakePeriod}.`
+    let title: string | undefined
+    // In an era, the night step is tomorrow's promise.
+    const era = await loadEraToday(user_id).catch(() => null)
+    if (era && era.step !== 'complete' && era.day < era.lengthDays) {
+      title = `${era.title} · Day ${era.day + 1} tomorrow`
+      body = era.tomorrow
+        ? `Tomorrow: "${era.tomorrow.text.length > 80 ? era.tomorrow.text.slice(0, 77) + '…' : era.tomorrow.text}". Sleep well.`
+        : "Set tomorrow's promise before you sleep — decide it tonight, keep it tomorrow."
+    }
 
-    const result = await sendPushToUser(user_id, 'bedtime_reminder', { body })
+    const result = await sendPushToUser(user_id, 'bedtime_reminder', title ? { title, body, data: { type: 'bedtime_reminder', url: '/' } } : { body })
     totalSent += result.sent
     totalFailed += result.failed
   }
@@ -1834,8 +1843,9 @@ async function sendSegmentReminder(
   type: 'midday_reset' | 'wind_down',
   defaultHour: number
 ): Promise<void> {
+  // Any device: their own Settings switch decides (OWN_SWITCH_TYPES), not the
+  // old 'checkpoint' device group.
   const subscriptions = await prisma.pushSubscription.findMany({
-    where: { checkpoint_alerts: true },
     select: { user_id: true },
     distinct: ['user_id'],
   })
@@ -1894,6 +1904,25 @@ async function sendSegmentReminder(
   let totalFailed = 0
 
   for (const user_id of eligibleUserIds) {
+    // Settings › Notifications › Your era's day: in an era, these are about
+    // the promise, not the old Daily Guide audio.
+    const era = await loadEraToday(user_id).catch(() => null)
+    if (era && era.step !== 'complete') {
+      const title = `${era.title} · Day ${era.day}`
+      const promise = era.today ? (era.today.text.length > 90 ? `${era.today.text.slice(0, 87)}…` : era.today.text) : null
+      if (type === 'wind_down') {
+        // The evening check-in itself is sendEraCheckins, at this same time.
+        if (era.today && era.today.kept === null) continue
+      } else if (promise && era.today!.kept === null) {
+        const result = await sendPushToUser(user_id, type, { title, body: `How's "${promise}" going?`, data: { type, url: '/' } })
+        totalSent += result.sent; totalFailed += result.failed
+        continue
+      } else if (!era.today) {
+        const result = await sendPushToUser(user_id, type, { title, body: "You haven't made today's promise yet — there's still time.", data: { type, url: '/' } })
+        totalSent += result.sent; totalFailed += result.failed
+        continue
+      }
+    }
     if (skip.has(user_id)) continue
     const result = await sendPushToUser(user_id, type)
     totalSent += result.sent
@@ -1976,7 +2005,8 @@ export async function sendDailyReadNudges(): Promise<void> {
 }
 
 /**
- * The era check-in: "Did you keep your promise?" at 8pm local.
+ * The era check-in: "Did you keep your promise?" at their Evening time
+ * (Settings › Notifications; 19:00 unless they changed it — it was a fixed 8pm).
  *
  * Sent ONLY to someone who made a promise today and hasn't answered it yet,
  * never as a generic "come back" push. That is what earns it the scheduled
@@ -2001,7 +2031,16 @@ export async function sendEraCheckins(): Promise<void> {
   })
   if (open.length === 0) return
 
-  const eligible = new Set(await filterUsersByLocalHour([...new Set(open.map(p => p.user_id))], 20))
+  // At their own evening time (Settings › Notifications › Evening, the old
+  // Wind Down row), behind its switch. Unset = 19:00, Wind Down's default.
+  const evening = await prisma.userPreferences.findMany({
+    where: { user_id: { in: [...new Set(open.map(p => p.user_id))] }, winddown_reminder_enabled: true },
+    select: { user_id: true, timezone: true, winddown_reminder_time: true },
+  })
+  const eligible = new Set(evening.filter(e => {
+    const [h] = (e.winddown_reminder_time || '19:00').split(':').map(Number)
+    return isLocalHour(e.timezone, Number.isFinite(h) ? h : 19)
+  }).map(e => e.user_id))
   if (eligible.size === 0) return
   const tzs = await prisma.userPreferences.findMany({
     where: { user_id: { in: [...eligible] } },
