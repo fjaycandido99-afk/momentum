@@ -176,6 +176,8 @@ export function formatEraChatBlock(input: {
   fullMemory?: boolean
   /** One line on whether their Daily Read is moving with the era, if it can say. */
   alignment?: string | null
+  /** The next real milestone, when close (lib/era/milestone). */
+  milestone?: string | null
 }): string {
   const dayOne = input.fullMemory !== false
   const lines = [
@@ -193,6 +195,7 @@ export function formatEraChatBlock(input: {
         }.`
       : 'They have not made a promise yet today.',
     input.alignment ? `Their Daily Read (self-reported, one question a day): ${input.alignment}` : null,
+    input.milestone ? `Coming up: ${input.milestone} You may mention it once if it helps; never as pressure.` : null,
     'Bring this up only when it is relevant to what they are saying — not in every reply. Use only these facts; never invent a number.',
   ]
   return lines.filter(Boolean).join('\n')

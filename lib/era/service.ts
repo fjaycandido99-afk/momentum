@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma'
+import { nextMilestone } from './milestone'
+import { keptRun } from '@/lib/home/noticed'
 import { localDay } from '@/lib/assessment/service'
 import { getUserMindset } from '@/lib/mindset/get-user-mindset'
 import { detectCrisisLevel, detectRegion, crisisResourceForLevel } from '@/lib/ai/crisis-detect'
@@ -514,6 +516,15 @@ export async function buildEraChatContext(userId: string): Promise<string> {
       coachFocus: programFor(era.key).coachFocus,
       fullMemory: era.isPremium,
       alignment: era.alignment && era.alignment.status !== 'early' ? alignmentLine(era.alignment) : null,
+      milestone: nextMilestone({
+        day: era.day,
+        lengthDays: era.lengthDays,
+        phaseIndex: era.phase.index,
+        phaseLabel: era.phase.label,
+        dayInPhase: era.phase.dayInPhase,
+        phaseDays: era.phase.phaseDays,
+        keptRun: keptRun(era.days),
+      }),
     })
   } catch (err) {
     console.warn('[era] chat context failed:', err)
