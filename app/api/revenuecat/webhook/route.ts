@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { authorizedByHeader, safeEqual } from '@/lib/revenuecat-webhook-auth'
 import { prisma } from '@/lib/prisma'
 import { attributeReferral } from '@/lib/referral/attribute'
 import crypto from 'crypto'
@@ -60,10 +61,7 @@ function verifyWebhookSignature(
     .update(body)
     .digest('hex')
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  )
+  return safeEqual(signature, expectedSignature)
 }
 
 export async function POST(request: NextRequest) {
@@ -80,7 +78,7 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-    if (!verifyWebhookSignature(body, signature, webhookSecret)) {
+    if (!authorizedByHeader(request.headers.get('authorization'), webhookSecret) && !verifyWebhookSignature(body, signature, webhookSecret)) {
       console.error('Invalid RevenueCat webhook signature')
       return NextResponse.json(
         { error: 'Invalid signature' },
