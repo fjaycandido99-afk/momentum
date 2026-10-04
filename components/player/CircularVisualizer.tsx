@@ -18,6 +18,9 @@ interface CircularVisualizerProps {
   /** The Guided mockup's dial: a wider ring of short, thick ticks round a
    *  dark centre, lit from the upper right. Ticks still follow the sound. */
   dial?: boolean
+  /** Quiet but alive: a slow, low ripple when not playing (Voxu's orb at
+   *  rest), at ~24fps to spare the battery. Off = fade out and sleep. */
+  breathe?: boolean
 }
 
 function CircularVisualizerInner({
@@ -29,11 +32,13 @@ function CircularVisualizerInner({
   className = '',
   glow,
   dial = false,
+  breathe = false,
 }: CircularVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animFrameRef = useRef<number>(0)
   const smoothedRef = useRef<Float32Array | null>(null)
   const timeRef = useRef(0)
+  const lastIdleRef = useRef(0)
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current
@@ -54,6 +59,13 @@ function CircularVisualizerInner({
       canvas.width = w * dpr
       canvas.height = h * dpr
       ctx.scale(dpr, dpr)
+    }
+
+    // Breathing at rest: ~24fps is plenty for a slow ripple.
+    if (!isPlaying && breathe) {
+      const now = performance.now()
+      if (now - lastIdleRef.current < 40) { animFrameRef.current = requestAnimationFrame(draw); return }
+      lastIdleRef.current = now
     }
 
     ctx.clearRect(0, 0, w, h)
@@ -97,6 +109,17 @@ function CircularVisualizerInner({
           const target = Math.max(0.02, breath + v1 + v2 + v3 + v4 + v5 + burst)
           smoothed[i] += (target - smoothed[i]) * 0.18
         }
+      }
+    } else if (breathe) {
+      // Quiet, but alive: the same layered waves, slower and a third as tall.
+      timeRef.current += 0.012
+      const t = timeRef.current
+      for (let i = 0; i < barCount; i++) {
+        const a = (i / barCount) * Math.PI * 2
+        const ripple = Math.sin(a * 3 + t * 1.6) * 0.07 + Math.sin(a * 5 - t * 1.1) * 0.05 + Math.sin(a * 2 - t * 0.6) * 0.04
+        const breath = 0.1 + Math.sin(t * 0.8) * 0.04
+        const target = Math.max(0.02, breath + ripple)
+        smoothed[i] += (target - smoothed[i]) * 0.12
       }
     } else {
       // Fade out when paused
@@ -192,10 +215,10 @@ function CircularVisualizerInner({
     // until playback starts again (this effect re-runs when isPlaying
     // changes). An idle dial — Voxu's orb is on every page — must not
     // redraw 60 times a second for nothing.
-    if (!isPlaying && smoothed.every(v => v === 0)) { animFrameRef.current = 0; return }
+    if (!isPlaying && !breathe && smoothed.every(v => v === 0)) { animFrameRef.current = 0; return }
 
     animFrameRef.current = requestAnimationFrame(draw)
-  }, [isPlaying, barCount, size, analyser, simulated, glow, dial])
+  }, [isPlaying, barCount, size, analyser, simulated, glow, dial, breathe])
 
   useEffect(() => {
     animFrameRef.current = requestAnimationFrame(draw)

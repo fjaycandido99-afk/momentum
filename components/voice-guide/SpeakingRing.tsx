@@ -66,6 +66,8 @@ export function SpeakingRing({ size, className = '', always = false }: { size: n
   }, [audio])
 
   if (!audio && !always) return null
+  // At rest the orb breathes — unless the phone asks for less motion.
+  const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   return (
     <span
       aria-hidden
@@ -76,6 +78,7 @@ export function SpeakingRing({ size, className = '', always = false }: { size: n
         analyser={analyser}
         simulated={!analyser}
         isPlaying={!!audio}
+        breathe={always && !still}
         dial
         glow="150 165 255"
         barCount={size < 120 ? 36 : 56}
