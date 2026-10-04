@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { parseMeasure } from './measure'
 import { nextMilestone } from './milestone'
 import { keptRun } from '@/lib/home/noticed'
 import { localDay } from '@/lib/assessment/service'
@@ -239,6 +240,8 @@ export interface EraTodayWire {
   wakeCall: { enabled: boolean; time: string | null }
   /** Wellness check-ins: switched on, and answered today (the widget's check-in). */
   wellness: { on: boolean; checkedToday: boolean }
+  /** What they've counted promises toward lately, newest first, with its last unit — quick chips. */
+  measureTags: { tag: string; unit: string | null }[]
   /** Every day with a promise, oldest first — the page draws the 30-day grid from it. */
   days: EraDayWire[]
 }
@@ -488,6 +491,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     alignment,
     wakeCall: { enabled: prefs?.wake_call_enabled ?? false, time: prefs?.wake_call_time ?? null },
     wellness: { on: wellnessOn, checkedToday: !!stateToday },
+    measureTags: await recentMeasureTags(userId),
     days: promises
       .filter(p => daysBetween(era.start_day, p.local_day) >= 0)
       .map(p => ({ day: eraDayNumber(era.start_day, p.local_day), localDay: p.local_day, kept: p.kept })),
@@ -611,7 +615,7 @@ export type PromiseResult =
 
 export async function makePromise(
   userId: string,
-  input: { text: unknown; source?: unknown; confidence?: unknown; forDay?: unknown },
+  input: { text: unknown; source?: unknown; confidence?: unknown; forDay?: unknown; measure?: unknown },
 ): Promise<PromiseResult> {
   const text = clean(input.text, ERA_LIMITS.promise)
   if (!text) return { ok: false, error: 'Say what you promise yourself today', status: 400 }
@@ -619,6 +623,11 @@ export async function makePromise(
   // Optional by design: a promise is never held up by it, and a missing
   // answer stays missing rather than becoming a middling 3.
   const confidence = parseConfidence(input.confidence)
+  // What it counts toward, if they chose to count it (lib/era/measure).
+  const measure = parseMeasure(input.measure)
+  const measureFields = measure
+    ? { measure_tag: measure.tag, measure_amount: measure.amount, measure_unit: measure.unit }
+    : {}
   // Written the night before. A busy morning shouldn't be the reason a day
   // has no promise, and deciding tonight is arguably the better decision.
   const ahead = input.forDay === 'tomorrow'
@@ -689,9 +698,9 @@ export async function makePromise(
   // check-in that has already been answered.
   const row = await prisma.eraPromise.upsert({
     where: { era_id_local_day: { era_id: era.id, local_day: today } },
-    create: { era_id: era.id, user_id: userId, local_day: today, text, source, coach_reply: coachReply, confidence },
+    create: { era_id: era.id, user_id: userId, local_day: today, text, source, coach_reply: coachReply, confidence, ...measureFields },
     // Re-promising with no answer keeps the one already given.
-    update: { text, source, coach_reply: coachReply, ...(confidence !== null && { confidence }) },
+    update: { text, source, coach_reply: coachReply, ...(confidence !== null && { confidence }), ...measureFields },
     select: { id: true },
   })
 
@@ -892,5 +901,29 @@ export async function recordReferral(userId: string, inviteeEraId: string, eraKe
   } catch (err) {
     console.warn('[era] referral not recorded:', err)
     return null
+  }
+}
+
+/** Their last few distinct measure tags (case-insensitive), newest first, each with its last unit. */
+async function recentMeasureTags(userId: string): Promise<{ tag: string; unit: string | null }[]> {
+  try {
+    const rows = await prisma.eraPromise.findMany({
+      where: { user_id: userId, measure_tag: { not: null } },
+      orderBy: { local_day: 'desc' },
+      take: 40,
+      select: { measure_tag: true, measure_unit: true },
+    })
+    const seen = new Set<string>()
+    const out: { tag: string; unit: string | null }[] = []
+    for (const r of rows) {
+      const key = r.measure_tag!.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push({ tag: r.measure_tag!, unit: r.measure_unit })
+      if (out.length === 5) break
+    }
+    return out
+  } catch {
+    return []
   }
 }

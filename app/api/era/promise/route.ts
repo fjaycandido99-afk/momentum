@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
       // 'tomorrow' writes the promise for the day ahead — for anyone whose
       // morning is too busy to decide anything.
       forDay: body?.forDay,
+      // Optional: what it counts toward and how much (lib/era/measure).
+      measure: body?.measure,
     })
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 

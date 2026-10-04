@@ -12,6 +12,7 @@ import { ProofDaySheet } from '@/components/proof/ProofDaySheet'
 import { EraRecordCard } from '@/components/proof/EraRecordCard'
 import { WeekCard } from '@/components/proof/WeekCard'
 import { weekRecap } from '@/lib/proof/week'
+import { receiptLine } from '@/lib/era/measure'
 import { CountUp } from '@/components/ui/CountUp'
 import { proofSummary } from '@/lib/proof/grid'
 import type { ProofPayload } from '@/lib/proof/server'
@@ -165,6 +166,19 @@ export default function ProofPage() {
                   <WeekCard recap={weekRecap(data.details, data.today)} />
                   <Link href="/eras" className="inline-block mt-3 text-px-13 text-white/75 underline underline-offset-4">Your eras, in order →</Link>
                 </>
+              )}
+
+              {/* Receipts: what their kept, countable promises add up to this year. */}
+              {(data.receipts?.length ?? 0) > 0 && (
+                <div className="mt-8" data-voxu-spot="proof-receipts">
+                  <p className="text-px-10 tracking-[0.24em] uppercase text-white/45">Receipts · {data.year.year}</p>
+                  <ul className="mt-2 space-y-1.5">
+                    {data.receipts.map(r => (
+                      <li key={r.tag} className="text-px-15 text-white tabular-nums" style={SERIF}>{receiptLine(r)}</li>
+                    ))}
+                  </ul>
+                  <p className="text-px-11 text-white/40 mt-1.5">Only promises you kept, from what you chose to count.</p>
+                </div>
               )}
 
               {/* Finished eras, kept for good: an era ends, its record doesn't. */}

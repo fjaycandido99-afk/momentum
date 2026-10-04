@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { receipts, type Receipt } from '@/lib/era/measure'
 import { localDay } from '@/lib/assessment/service'
 import { daysBetween, missionForDay, nextDay } from '@/lib/era/logic'
 import { ERA_MISSIONS } from '@/lib/era/missions'
@@ -62,6 +63,8 @@ export interface ProofPayload {
   today: string
   /** Eras that are over and ended in this year, newest first — kept for good. */
   eras: EraRecord[]
+  /** What their kept, countable promises add up to this year (lib/era/measure). */
+  receipts: Receipt[]
 }
 
 /** December of the previous year, so January can tell a comeback from a run. */
@@ -88,6 +91,7 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
       select: {
         local_day: true, text: true, kept: true, coach_reply: true,
         confidence: true, blocker: true, helper: true, era_id: true,
+        measure_tag: true, measure_amount: true, measure_unit: true,
       },
       orderBy: { local_day: 'asc' },
     }),
@@ -301,7 +305,11 @@ export async function loadProofYear(userId: string, requestedYear?: number): Pro
     }))
     .sort((a, b) => (a.endDay < b.endDay ? 1 : -1))
 
-  return { year: grid, years, details, today, eras: eraRecords }
+  const yearReceipts = receipts(promises
+    .filter(p => p.local_day >= `${year}-01-01`)
+    .map(p => ({ tag: p.measure_tag, amount: p.measure_amount, unit: p.measure_unit, kept: p.kept })))
+
+  return { year: grid, years, details, today, eras: eraRecords, receipts: yearReceipts }
 }
 
 /**

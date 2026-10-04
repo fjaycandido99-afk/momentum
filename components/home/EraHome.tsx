@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { MeasureRow, EMPTY_MEASURE, measurePayload, type MeasureDraft } from '@/components/era/MeasureRow'
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
 import Link from 'next/link'
 import {
@@ -493,6 +494,8 @@ function ActiveEra({
   const promiseExpanded = writing || draft.trim().length > 0
   /** How sure they are before promising, 1–5. Skipping it is fine. */
   const [confidence, setConfidence] = useState<number | null>(null)
+  /** Optional: what today's promise counts toward (receipts on Proof). */
+  const [measure, setMeasure] = useState<MeasureDraft>(EMPTY_MEASURE)
   /** A just-answered yesterday, still owed its one-tap "why". */
   const [pendingWhy, setPendingWhy] = useState<{ kept: boolean } | null>(null)
   /** Writing tomorrow's promise tonight, rather than in a rushed morning. */
@@ -564,10 +567,11 @@ function ActiveEra({
   const promise = async (forDay: 'today' | 'tomorrow' = 'today') => {
     const text = draft.trim()
     if (!text || busy) return
-    const ok = await post('/api/era/promise', { text, source, confidence, forDay })
+    const ok = await post('/api/era/promise', { text, source, confidence, forDay, measure: forDay === 'today' ? measurePayload(measure) : undefined })
     if (ok) {
       setDraft('')
       setConfidence(null)
+      if (forDay === 'today') setMeasure(EMPTY_MEASURE)
       setWritingAhead(false)
     }
   }
@@ -918,6 +922,7 @@ function ActiveEra({
               </div>
               {/* Asked before they commit, while the answer is still honest. */}
               {draft.trim().length > 0 && confidenceRow}
+              {draft.trim().length > 0 && <MeasureRow value={measure} onChange={setMeasure} recent={era.measureTags ?? []} />}
               </div>
             </div>
           </div>

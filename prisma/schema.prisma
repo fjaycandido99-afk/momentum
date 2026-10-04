@@ -1156,6 +1156,13 @@ model EraPromise {
   kept        Boolean?
   checked_at  DateTime?
 
+  // Optional: what this promise counts toward ("Gym", "Reading") and how
+  // much ("20 pages") — chosen by them, never parsed from the text. Kept
+  // ones add up to receipts (lib/era/measure).
+  measure_tag    String?
+  measure_amount Int?
+  measure_unit   String?
+
   // One tap each, all optional (lib/era/reasons.ts). They turn a record of
   // WHAT happened into one of what was going on: how sure they were before
   // promising, and — asked only at the check-in — what got in the way or
