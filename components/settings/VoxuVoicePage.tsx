@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { Loader2, Play } from 'lucide-react'
+import { Loader2, Play, Square } from 'lucide-react'
 import { SpeakingRing } from '@/components/voice-guide/SpeakingRing'
 import { COACH_PREFS, type CoachPrefKey } from '@/lib/voice/coach-prefs'
 import { VOICE_RATES, voiceRate, setVoiceRate, fetchVoxuAudio, sharedVoxuPlayer, installVoxuUnlock } from '@/lib/voice/voxu-audio'
@@ -60,6 +60,8 @@ export function VoxuVoicePage() {
   const [tone, setTone] = useState<string>('calm')
   const [prefs, setPrefs] = useState<CoachPrefKey[]>([])
   const [testing, setTesting] = useState(false)
+  /** Which tone's sample is loading or playing. */
+  const [previewing, setPreviewing] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
   // Guests have no account to save to: their tone lives in voxu_guest_prefs,
   // where Home's guest audio already reads it. Conversation needs an account.
@@ -100,6 +102,27 @@ export function VoxuVoicePage() {
     } finally {
       setTesting(false)
     }
+  }
+
+  // Each tone's narrator saying the same moment in that tone's words — a
+  // fixed, cached sample (lib/voice/tone-preview). Doesn't change the setting.
+  const preview = async (key: string) => {
+    if (previewing === key) {
+      // Stop: pause, and end the pending play() so nothing waits on it.
+      const p = sharedVoxuPlayer(); p.el.pause(); p.el.onended?.(new Event('ended'))
+      setPreviewing(null); return
+    }
+    setPreviewing(key)
+    setNote(null)
+    try {
+      const res = await fetch(`/api/voice/tone-preview?tone=${key}`)
+      const d = await res.json().catch(() => null)
+      if (!res.ok || !d?.audio) { setNote('Couldn’t play that sample just now.'); setPreviewing(null); return }
+      await sharedVoxuPlayer().play(`data:audio/mpeg;base64,${d.audio}`)
+    } catch {
+      setNote('Couldn’t play that sample just now.')
+    }
+    setPreviewing(p => (p === key ? null : p))
   }
 
   const togglePref = (k: CoachPrefKey, on: boolean) => {
@@ -159,27 +182,37 @@ export function VoxuVoicePage() {
 
       <List label="Tone">
         {TONES.map(t => (
-          <button
-            key={t.key}
-            role="radio"
-            aria-checked={tone === t.key}
-            onClick={() => { setTone(t.key); haptic('light'); void save({ tone: t.key }) }}
-            className="w-full px-4 py-3.5 flex items-center gap-3 text-left"
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block text-px-15 text-white">{t.title}</span>
-              <span className="block text-px-12 text-white/55">{t.line}</span>
-            </span>
-            <span className={`w-5 h-5 rounded-full border flex items-center justify-center ${tone === t.key ? 'border-white' : 'border-white/35'}`} aria-hidden>
-              {tone === t.key && <span className="w-2.5 h-2.5 rounded-full bg-white" />}
-            </span>
-          </button>
+          <div key={t.key} className="flex items-center">
+            <button
+              type="button"
+              onClick={() => preview(t.key)}
+              aria-label={previewing === t.key ? `Stop the ${t.title} sample` : `Hear ${t.title}`}
+              className="tap-44 ml-3 shrink-0 w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/85 active:bg-white/10"
+            >
+              {previewing === t.key ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3.5 h-3.5 translate-x-px" />}
+            </button>
+            <button
+              role="radio"
+              aria-checked={tone === t.key}
+              onClick={() => { setTone(t.key); haptic('light'); void save({ tone: t.key }) }}
+              className="flex-1 min-w-0 pl-3 pr-4 py-3.5 flex items-center gap-3 text-left"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-px-15 text-white">{t.title}</span>
+                <span className="block text-px-12 text-white/55">{t.line}</span>
+              </span>
+              <span className={`w-5 h-5 rounded-full border flex items-center justify-center ${tone === t.key ? 'border-white' : 'border-white/35'}`} aria-hidden>
+                {tone === t.key && <span className="w-2.5 h-2.5 rounded-full bg-white" />}
+              </span>
+            </button>
+          </div>
         ))}
       </List>
 
       {guest ? (
         <p className="mt-6 px-1 text-px-13 text-white/60 leading-relaxed">Save your account to choose how Voxu talks to you in conversation &mdash; concise, challenging, encouraging or focused.</p>
       ) : (<>
+      <p className="mt-2 px-1 text-px-12 text-white/50 leading-relaxed">Tone sets how Voxu words its replies, and which narrator reads your guided sessions. Tap play to hear one.</p>
       <List label="Conversation">
         {COACH_PREFS.map(p => (
           <div key={p.key} className="px-4 py-3.5 flex items-center gap-3">
