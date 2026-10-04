@@ -112,7 +112,7 @@ export function ShareEraSheet({ era, onClose }: { era: EraToday; onClose: () => 
         )}
       </div>
 
-      <div className="px-5 space-y-2.5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}>
+      <div className="px-5 space-y-2.5 w-full md:max-w-md md:mx-auto" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}>
         <div className="flex items-center justify-between gap-3 px-1 pb-1">
           <p className="text-sm text-white/80">Show my numbers</p>
           <button

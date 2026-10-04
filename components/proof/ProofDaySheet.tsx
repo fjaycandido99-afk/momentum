@@ -73,15 +73,15 @@ export function ProofDaySheet({
 
   return (
     <div
-      className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex flex-col justify-end"
+      className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex flex-col justify-end md:justify-center md:items-center md:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={longDayLabel(day)}
     >
       <ScrollLock />
-      <button className="flex-1" aria-label="Close" onClick={onClose} />
+      <button className="flex-1 md:absolute md:inset-0 md:flex-none" aria-label="Close" onClick={onClose} />
       <div
-        className="rounded-t-3xl border-t border-white/15 bg-[#0b0b0b] px-5 pt-5 max-h-[85dvh] overflow-y-auto overflow-x-hidden"
+        className="relative w-full rounded-t-3xl border-t border-white/15 md:max-w-lg md:rounded-3xl md:border md:max-h-[85dvh] bg-[#0b0b0b] px-5 pt-5 max-h-[85dvh] overflow-y-auto overflow-x-hidden"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
       >
         <div className="flex items-start justify-between gap-3">

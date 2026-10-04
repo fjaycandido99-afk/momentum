@@ -102,7 +102,8 @@ export default function EraPage() {
       {/* Same app-shell pattern as /daily-read: this container scrolls, the
           document doesn't, so iOS can't rubber-band the header away. */}
       <header className="sticky top-0 z-40 bg-black safe-area-pt pb-3 px-5">
-        <div className="flex items-center gap-3">
+        {/* iPad: one centred column, header included (md = 768, portrait iPad is 834). */}
+        <div className="flex items-center gap-3 md:max-w-[680px] md:mx-auto">
           <button
             onClick={() => (choosing ? setChoosing(false) : router.back())}
             aria-label="Back"
@@ -127,7 +128,7 @@ export default function EraPage() {
         </div>
       </header>
 
-      <div className="px-5 pb-16">
+      <div className="px-5 pb-16 md:px-0 md:max-w-[680px] md:mx-auto">
         {!loaded ? (
           <div className="py-24 flex justify-center">
             <Loader2 className="w-5 h-5 animate-spin text-white/40" />

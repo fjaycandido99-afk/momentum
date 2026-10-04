@@ -12,7 +12,7 @@ export function WeekCard({ recap }: { recap: WeekRecap }) {
   const t = recap.thisWeek
   const l = recap.lastWeek
   const rows: { label: string; now: string; before: string; show: boolean }[] = [
-    { label: 'Promises kept', now: `${t.kept} of ${t.promised}`, before: `${l.kept} of ${l.promised}`, show: t.promised + l.promised > 0 },
+    { label: 'Promises kept', now: ofOrNone(t.kept, t.promised), before: ofOrNone(l.kept, l.promised), show: t.promised + l.promised > 0 },
     { label: 'Practices kept', now: `${t.practicesKept}`, before: `${l.practicesKept}`, show: t.practicesKept + l.practicesKept > 0 },
     { label: 'Sessions done', now: `${t.sessions}`, before: `${l.sessions}`, show: t.sessions + l.sessions > 0 },
     { label: 'Missions done', now: `${t.missions}`, before: `${l.missions}`, show: t.missions + l.missions > 0 },
@@ -46,4 +46,9 @@ export function WeekCard({ recap }: { recap: WeekRecap }) {
 
 function harder(c: WeekCounts): string {
   return c.harderDays === null ? '—' : `${c.harderDays} of ${c.checkIns}`
+}
+
+/** "3 of 4" — or "none" in a week with no promise made, never "0 of 0". */
+function ofOrNone(kept: number, made: number): string {
+  return made === 0 ? 'none' : `${kept} of ${made}`
 }

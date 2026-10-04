@@ -60,7 +60,7 @@ export default function ProofPage() {
 
   return (
     <div className="h-[100dvh] overflow-y-auto overscroll-contain text-white" data-app-shell>
-      <div className="max-w-md md:max-w-lg mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
+      <div className="max-w-md md:max-w-lg lg:max-w-5xl mx-auto px-5 pb-16" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
         <div className="flex items-center justify-between">
           <BackButton />
           {data && data.years.length > 1 && (
@@ -109,6 +109,10 @@ export default function ProofPage() {
             </div>
           ) : (
             <>
+              {/* Landscape iPad and wider: the year on the left, this week and
+                  the eras on the right. One column below lg. */}
+              <div className="lg:grid lg:grid-cols-2 lg:gap-12">
+              <div>
               <h1 data-voxu-spot="proof-count" className="text-px-52 leading-none text-white mt-2 tabular-nums" style={{ ...SERIF, fontWeight: 600 }}>
                 <CountUp value={data.year.counts.proofs} />
               </h1>
@@ -153,6 +157,8 @@ export default function ProofPage() {
                 </p>
               )}
 
+              </div>
+              <div className="lg:pt-2">
               {/* This week against last — only on the year that has this week. */}
               {data.year.year === Number(data.today.slice(0, 4)) && (
                 <>
@@ -176,6 +182,8 @@ export default function ProofPage() {
                 you&rsquo;d do — a promise, a practice, a session. A missed day leaves a gap and takes
                 nothing away.
               </p>
+              </div>
+              </div>
 
               {data.year.counts.proofs === 0 && data.year.counts.inEra === 0 && (
                 <Link
