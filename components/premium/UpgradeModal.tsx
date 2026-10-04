@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { APP_STORE_URL } from '@/components/marketing/JoinCta'
 import type { UpgradeReason } from '@/contexts/SubscriptionContext'
 import Link from 'next/link'
 import { X, Check, Crown, Sparkles, Zap, Clock, Music, Book, Download, Loader2 } from 'lucide-react'
@@ -75,6 +76,11 @@ export function UpgradeModal({ isOpen, onClose, reason = null }: UpgradeModalPro
   if (!isOpen) return null
 
   const isNative = typeof window !== 'undefined' && !!(window as any).Capacitor
+  // Web checkout needs Stripe in production. Until its keys are added, the
+  // web says where Premium is sold (the iPhone app) instead of a checkout that
+  // fails. Adding NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY (and the server keys)
+  // brings card checkout back with the next deploy.
+  const webCheckout = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
   const handleUpgrade = async () => {
     setIsLoading(true)
@@ -217,6 +223,14 @@ export function UpgradeModal({ isOpen, onClose, reason = null }: UpgradeModalPro
 
         {/* CTA Button */}
         <div className="px-6 pb-6">
+          {!isNative && !webCheckout ? (
+            <a
+              href={APP_STORE_URL}
+              className="w-full py-4 px-6 rounded-xl bg-white text-black font-semibold text-lg flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
+            >
+              Get Premium in the iPhone app
+            </a>
+          ) : (
           <button
             onClick={handleUpgrade}
             disabled={isLoading}
@@ -235,6 +249,7 @@ export function UpgradeModal({ isOpen, onClose, reason = null }: UpgradeModalPro
               </>
             )}
           </button>
+          )}
           {error && (
             <p className="text-center text-red-400 text-xs mt-3">
               {error}
