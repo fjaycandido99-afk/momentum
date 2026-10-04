@@ -11,7 +11,7 @@ import { installAuthInterceptor } from '@/lib/auth-interceptor'
 import { createClient } from '@/lib/supabase/client'
 import { sweepDismissals } from '@/lib/ui/dismiss'
 import { initRevenueCat } from '@/lib/revenuecat'
-import { isNative as isNativePlatform, updateRemindersFromPreferences, getPendingReminders } from '@/lib/notifications'
+import { isNative as isNativePlatform, syncLocalReminders } from '@/lib/notifications'
 
 interface AppContextType {
   isGuest: boolean
@@ -89,28 +89,12 @@ export function AppWrapper({ children }: AppWrapperProps) {
     })()
   }, [])
 
-  // On native: re-schedule local notifications from user preferences on app start
-  // This ensures notifications stay accurate after app updates or timezone changes
+  // On native: line this phone's own reminders up with Settings on launch
+  // (after app updates, timezone changes, or push registration changing).
   useEffect(() => {
     if (!isNativePlatform) return
-    const supabase = createClient()
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session?.user) return
-      // Only reschedule if notifications were previously enabled
-      const pending = await getPendingReminders()
-      if (pending.length === 0) return
-      try {
-        const res = await fetch('/api/daily-guide/preferences')
-        if (!res.ok) return
-        const prefs = await res.json()
-        await updateRemindersFromPreferences({
-          daily_reminder: prefs.daily_reminder ?? true,
-          reminder_time: prefs.reminder_time || '07:00',
-          work_end_time: prefs.work_end_time,
-          wake_time: prefs.wake_time,
-          bedtime_reminder_enabled: prefs.bedtime_reminder_enabled ?? true,
-        })
-      } catch {}
+    createClient().auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) void syncLocalReminders()
     })
   }, [])
 

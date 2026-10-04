@@ -14,17 +14,11 @@ import {
 import {
   isNative as isNativePlatform,
   initNotifications,
-  scheduleMorningReminder,
-  scheduleEveningReminder,
-  scheduleStreakReminder,
-  scheduleWeeklyReviewReminder,
-  cancelReminder,
-  cancelAllReminders,
+  clearLocalReminders,
+  syncLocalReminders,
   getPendingReminders,
-  updateRemindersFromPreferences,
   initPushNotifications,
   getNativePlatform,
-  NOTIFICATION_IDS,
 } from '@/lib/notifications'
 
 interface NotificationPreferences {
@@ -53,8 +47,9 @@ const NOTIFICATION_GROUPS: {
   {
     id: 'daily_reminders',
     icon: Sunrise,
-    label: 'Daily Reminders',
-    description: 'Morning flow & evening wind down',
+    // Not the four audio reminders above — each has its own switch now.
+    label: 'Check-ins',
+    description: 'Your evening check-in and practice heads-ups',
     keys: ['morning_reminder', 'evening_reminder', 'checkpoint_alerts'],
   },
   {
@@ -194,39 +189,12 @@ export function NotificationSettings() {
     try {
       if (isNativePlatform) {
         if (isSubscribed) {
-          await cancelAllReminders()
+          await clearLocalReminders()
           setIsSubscribed(false)
         } else {
           const granted = await initNotifications()
           if (granted) {
-            try {
-              const prefsRes = await fetch('/api/daily-guide/preferences')
-              if (prefsRes.ok) {
-                const prefsData = await prefsRes.json()
-                await updateRemindersFromPreferences({
-                  daily_reminder: true,
-                  reminder_time: prefsData.reminder_time || '07:00',
-                  work_end_time: prefsData.work_end_time,
-                  wake_time: prefsData.wake_time,
-                  bedtime_reminder_enabled: prefsData.bedtime_reminder_enabled ?? true,
-                })
-              } else {
-                // Fallback defaults
-                await updateRemindersFromPreferences({
-                  daily_reminder: true,
-                  reminder_time: '07:00',
-                  wake_time: '07:00',
-                  bedtime_reminder_enabled: true,
-                })
-              }
-            } catch {
-              await updateRemindersFromPreferences({
-                daily_reminder: true,
-                reminder_time: '07:00',
-                wake_time: '07:00',
-                bedtime_reminder_enabled: true,
-              })
-            }
+            await syncLocalReminders()
             setIsSubscribed(true)
             setPermission('granted')
 
@@ -285,47 +253,7 @@ export function NotificationSettings() {
         body: JSON.stringify(patch),
       })
 
-      // Native local notification scheduling
-      if (isNativePlatform) {
-        if (group.id === 'daily_reminders') {
-          if (newValue) {
-            let morningHour = 7, morningMin = 0, eveningHour = 18, eveningMin = 0
-            try {
-              const prefsRes = await fetch('/api/daily-guide/preferences')
-              if (prefsRes.ok) {
-                const prefsData = await prefsRes.json()
-                if (prefsData.wake_time) {
-                  const [h, m] = prefsData.wake_time.split(':').map(Number)
-                  const totalMin = h * 60 + (m || 0) + 15
-                  morningHour = Math.floor(totalMin / 60)
-                  morningMin = totalMin % 60
-                }
-                if (prefsData.work_end_time) {
-                  const [h, m] = prefsData.work_end_time.split(':').map(Number)
-                  eveningHour = h
-                  eveningMin = m || 0
-                }
-              }
-            } catch {}
-            await scheduleMorningReminder(morningHour, morningMin)
-            await scheduleEveningReminder(eveningHour, eveningMin)
-          } else {
-            await cancelReminder(NOTIFICATION_IDS.MORNING_REMINDER)
-            await cancelReminder(NOTIFICATION_IDS.EVENING_REMINDER)
-            await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_1)
-            await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_2)
-            await cancelReminder(NOTIFICATION_IDS.CHECKPOINT_3)
-          }
-        } else if (group.id === 'streak_progress') {
-          if (newValue) {
-            await scheduleStreakReminder(20, 0)
-            await scheduleWeeklyReviewReminder(10, 0)
-          } else {
-            await cancelReminder(NOTIFICATION_IDS.STREAK_REMINDER)
-            await cancelReminder(NOTIFICATION_IDS.WEEKLY_REVIEW)
-          }
-        }
-      }
+      // The phone's own reminders follow Settings, not these groups.
     } catch (error) {
       console.error('Error updating group preference:', error)
       // Revert

@@ -435,6 +435,9 @@ export const DEFAULT_URL_BY_TYPE: Record<NotificationType, string> = {
   custom: '/',
 }
 
+/** Pushes whose own UserPreferences switch is the only one that decides. */
+export const OWN_SWITCH_TYPES: ReadonlySet<NotificationType> = new Set<NotificationType>(['morning_reminder', 'midday_reset', 'wind_down', 'bedtime_reminder'])
+
 export async function sendPushToUser(
   userId: string,
   type: NotificationType,
@@ -497,7 +500,11 @@ coach_checkin: 'coach_checkin_alerts',
   // Filter subscriptions that have this notification type enabled
   // The wake-up call is something the user switched on and gave a time to,
   // on its own control; a morning-reminder toggle mustn't silently veto it.
-  const enabledSubscriptions = type === 'custom' || type === 'era_wake'
+  // The four audio reminders (Settings › Notifications › Today's audio
+  // reminders) each have their own switch + time on UserPreferences, checked
+  // by their senders. A broader device toggle silently overriding them made
+  // their switches lie, so they skip this filter too.
+  const enabledSubscriptions = type === 'custom' || type === 'era_wake' || OWN_SWITCH_TYPES.has(type)
     ? subscriptions
     : subscriptions.filter(sub => sub[prefKey] === true)
 

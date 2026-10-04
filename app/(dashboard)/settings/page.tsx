@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
+import { syncLocalReminders } from '@/lib/notifications'
 import { isNativeApp } from '@/lib/native'
 import { listPrices, usd } from '@/lib/pricing'
 import { signOutWidget } from '@/lib/widget-sync'
@@ -204,6 +205,8 @@ function SettingsContent() {
         setSaveStatus('saved')
         setTimeout(() => setSaveStatus('idle'), 2000)
       } else if (response.ok) {
+        // Reminder times changed → the phone's own reminders follow (native).
+        void syncLocalReminders()
         setSaveStatus('saved')
         setTimeout(() => setSaveStatus('idle'), 2000)
       } else {
@@ -391,7 +394,7 @@ function SettingsContent() {
                   </div>
                 </div>
           </div>
-          <p className="text-px-12 text-white/50 leading-relaxed">Your wake time sets when morning and bedtime reminders come by default. Your workday is when Voxu plans goals around you and nudges you once it ends.</p>
+          <p className="text-px-12 text-white/50 leading-relaxed">Your wake time sets your bedtime reminder when you haven&rsquo;t picked a time for it. Voxu plans your goals around your workday.</p>
         </SettingsCategory>
 
         {/* Only on a build that has the widget (components/widget/WidgetSetup). */}
@@ -431,7 +434,7 @@ function SettingsContent() {
               href="/mindset-selection"
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/15 text-white/90 text-sm hover:bg-white/10 transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
             >
-              Reset My Path
+              Change mindset
             </Link>
           </div>
         </SettingsCategory>

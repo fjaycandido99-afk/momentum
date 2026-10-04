@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core'
+import { planLocalReminders, LOCAL_REMINDER_IDS, RETIRED_LOCAL_IDS } from './notifications/local-plan'
 import { LocalNotifications, ScheduleOptions } from '@capacitor/local-notifications'
 import { PushNotifications } from '@capacitor/push-notifications'
 
@@ -361,67 +362,38 @@ export async function updateSmartReminders(nudgeType?: string): Promise<void> {
   }
 }
 
-// Update reminders based on user preferences
-export async function updateRemindersFromPreferences(preferences: {
-  daily_reminder: boolean
-  reminder_time: string // "HH:MM" format
-  work_end_time?: string
-  wake_time?: string
-  bedtime_reminder_enabled?: boolean
-}): Promise<void> {
+/**
+ * Bring this phone's own reminders in line with Settings (lib/notifications/
+ * local-plan). Registered for server push → clear the local copies (the
+ * server sends them, within the Quiet/Coach/Strict cap). Not registered →
+ * schedule the four audio reminders at their Settings times. Touches only
+ * the IDs it owns, never other local notifications (routine steps etc.).
+ * Call on launch and whenever Settings saves.
+ */
+/** Cancel only the reminders syncLocalReminders owns (not routine steps). */
+export async function clearLocalReminders(): Promise<void> {
   if (!isNative) return
+  const own = [...Object.values(LOCAL_REMINDER_IDS), ...RETIRED_LOCAL_IDS]
+  await LocalNotifications.cancel({ notifications: own.map(id => ({ id })) }).catch(() => {})
+}
 
-  // Cancel existing reminders first
-  await cancelAllReminders()
-
-  if (!preferences.daily_reminder) {
-    console.log('[Notifications] Reminders disabled by user')
-    return
-  }
-
-  // Parse reminder time
-  let [hour, minute] = preferences.reminder_time.split(':').map(Number)
-  const reminderMinutes = hour * 60 + minute
-
-  // Use wake_time + 15 minutes as a floor for the morning reminder
-  // Don't schedule a morning reminder before the user is awake
-  if (preferences.wake_time) {
-    const [wakeHour, wakeMin] = preferences.wake_time.split(':').map(Number)
-    const wakeFloorMinutes = (wakeHour * 60 + (wakeMin || 0)) + 15
-    if (reminderMinutes < wakeFloorMinutes) {
-      hour = Math.floor(wakeFloorMinutes / 60)
-      minute = wakeFloorMinutes % 60
+export async function syncLocalReminders(): Promise<void> {
+  if (!isNative) return
+  try {
+    const perm = await LocalNotifications.checkPermissions()
+    if (perm.display !== 'granted') return
+    await clearLocalReminders()
+    if (await getPushTokenIfGranted()) return
+    const res = await fetch('/api/daily-guide/preferences', { cache: 'no-store' })
+    if (!res.ok) return
+    const prefs = await res.json()
+    if (prefs.isGuest) return
+    for (const r of planLocalReminders(prefs)) {
+      await scheduleReminder({ id: r.id, title: r.title, body: r.body, hour: r.hour, minute: r.minute, actionTypeId: 'DAILY_REMINDER', extra: { route: r.route } })
     }
+  } catch (error) {
+    console.error('[Notifications] sync error:', error)
   }
-
-  // Schedule morning reminder
-  await scheduleMorningReminder(hour, minute)
-
-  // Schedule evening reminder (based on work end time or default to 6pm)
-  if (preferences.work_end_time) {
-    const [endHour, endMinute] = preferences.work_end_time.split(':').map(Number)
-    // Schedule 30 minutes after work ends
-    const eveningHour = endMinute >= 30 ? endHour + 1 : endHour
-    const eveningMinute = (endMinute + 30) % 60
-    await scheduleEveningReminder(eveningHour, eveningMinute)
-  } else {
-    await scheduleEveningReminder(18, 0) // Default 6pm
-  }
-
-  // Schedule weekly review for Sundays at 10am
-  await scheduleWeeklyReviewReminder(10, 0)
-
-  // Schedule bedtime reminder if enabled
-  if (preferences.bedtime_reminder_enabled && preferences.wake_time) {
-    const [wakeH, wakeM] = preferences.wake_time.split(':').map(Number)
-    // Bedtime = wake_time - 8 hours
-    let bedHour = wakeH - 8
-    let bedMinute = wakeM || 0
-    if (bedHour < 0) bedHour += 24
-    await scheduleBedtimeReminder(bedHour, bedMinute)
-  }
-
-  console.log('[Notifications] Reminders updated from preferences')
 }
 
 // Initialize push notifications (for server-sent notifications)

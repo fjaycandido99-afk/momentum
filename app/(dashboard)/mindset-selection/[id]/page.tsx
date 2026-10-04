@@ -43,7 +43,13 @@ export default function MindsetDetailPage() {
     setIsSubmitting(true)
     try {
       await setMindset(mindsetId)
-      router.push('/daily-guide/onboarding')
+      // Changing mindset later (Settings › Mindset) is just that — it used to
+      // re-run the whole first-time setup. Only a first choice continues on.
+      const onboarded = await fetch('/api/daily-guide/preferences', { cache: 'no-store' })
+        .then(r => (r.ok ? r.json() : null))
+        .then(p => !!p?.guide_onboarding_done)
+        .catch(() => false)
+      router.push(onboarded ? '/settings?s=mindset' : '/daily-guide/onboarding')
     } catch (error) {
       console.error('Failed to save mindset:', error)
       setIsSubmitting(false)
