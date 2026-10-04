@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
+import { isNativeApp } from '@/lib/native'
+import { listPrices, usd } from '@/lib/pricing'
 import { signOutWidget } from '@/lib/widget-sync'
 import {
   Bell,
@@ -909,6 +911,7 @@ function SettingsContent() {
                   </button>
                   <Link
                     href="/pricing"
+                    onClick={e => { if (isNativeApp()) { e.preventDefault(); subscription?.openUpgradeModal() } }}
                     className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/70 text-sm hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                   >
                     <ExternalLink className="w-4 h-4" />
@@ -967,13 +970,14 @@ function SettingsContent() {
                   className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-white text-black font-medium hover:bg-white/90 transition-all focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none shimmer-cta"
                 >
                   <Sparkles className="w-5 h-5" />
-                  Upgrade to Premium - $6.99/mo
+                  Upgrade to Premium · {usd(listPrices().monthly)}/mo
                 </button>
                 <p className="text-center text-white/50 text-xs">
                   {TRIAL_DAYS}-day free trial · Cancel anytime
                 </p>
                 <Link
                   href="/pricing"
+                  onClick={e => { if (isNativeApp()) { e.preventDefault(); subscription?.openUpgradeModal() } }}
                   className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-white/5 text-white/70 text-sm hover:bg-white/10 hover:text-white transition-colors mt-2 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
                 >
                   <ExternalLink className="w-4 h-4" />

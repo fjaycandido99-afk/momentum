@@ -141,6 +141,7 @@ export async function getProducts(): Promise<Array<{
   description: string
   priceString: string
   price: number
+  currencyCode: string | null
 }>> {
   try {
     const { Purchases } = await import('@revenuecat/purchases-capacitor')
@@ -154,6 +155,7 @@ export async function getProducts(): Promise<Array<{
       description: p.description,
       priceString: p.priceString,
       price: p.price,
+      currencyCode: p.currencyCode ?? null,
     }))
   } catch (error) {
     console.error('Failed to get products:', error)

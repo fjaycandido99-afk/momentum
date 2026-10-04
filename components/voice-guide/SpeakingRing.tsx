@@ -61,7 +61,7 @@ function useVoxuSpeakingLine(): { audio: HTMLAudioElement | null; src: string | 
  * Sits BEHIND the orb (absolute, centred, no pointer events); `size` is the
  * whole canvas — about twice the orb. Nothing is drawn when Voxu is quiet.
  */
-export function SpeakingRing({ size, className = '', always = false }: { size: number; className?: string; /** Be the orb: the dial at rest when Voxu is quiet. */ always?: boolean }) {
+export function SpeakingRing({ size, className = '', always = false, glow = '150 165 255' }: { size: number; className?: string; /** Be the orb: the dial at rest when Voxu is quiet. */ always?: boolean; /** Halo colour, an rgb triplet ('233 201 160' = the paywall's gold). */ glow?: string }) {
   const { audio, src } = useVoxuSpeakingLine()
   const [analyser, setAnalyser] = useState<AudioAnalyserLike | null>(null)
 
@@ -89,7 +89,7 @@ export function SpeakingRing({ size, className = '', always = false }: { size: n
         isPlaying={!!audio}
         breathe={always}
         dial
-        glow="150 165 255"
+        glow={glow}
         barCount={size < 120 ? 36 : 56}
         size={size}
         className="w-full h-full"

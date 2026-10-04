@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { isNativeApp } from '@/lib/native'
+import { listPrices } from '@/lib/pricing'
 import { useRouter } from 'next/navigation'
 import {
   Crown,
@@ -19,10 +21,12 @@ import {
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
 
 // Pricing constants
-const MONTHLY_PRICE = 6.99
-const YEARLY_PRICE = 49.99
-const YEARLY_MONTHLY = (YEARLY_PRICE / 12).toFixed(2)
-const SAVINGS_PERCENT = Math.round((1 - YEARLY_PRICE / (MONTHLY_PRICE * 12)) * 100)
+// One price list (lib/pricing) — switches with Apple's change on PRICE_CHANGE_DAY.
+const LIST = listPrices()
+const MONTHLY_PRICE = LIST.monthly
+const YEARLY_PRICE = LIST.yearly
+const YEARLY_MONTHLY = LIST.yearlyPerMonth
+const SAVINGS_PERCENT = LIST.yearlySave
 
 /**
  * The comparison table.
@@ -160,6 +164,12 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   const handleStartTrial = async () => {
+    // Inside the iPhone app Premium is bought through Apple only — open the
+    // app's own upgrade screen (SubscriptionContext reads ?upgrade=1).
+    if (isNativeApp()) {
+      window.location.href = '/?upgrade=1'
+      return
+    }
     setIsLoading(true)
     try {
       const response = await fetch('/api/stripe/create-checkout', {

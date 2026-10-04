@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { isNativeApp } from '@/lib/native'
 import { createPortal } from 'react-dom'
 import { ArrowRight, AudioLines, Clock, Headphones, Keyboard, Landmark, Loader2, MessageCircle, Mic, Volume2, VolumeX } from 'lucide-react'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
@@ -86,7 +87,7 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   /** No account yet: the opener runs in full, and Day 1 is kept on the device until they sign up. */
-  const isNativeApp = typeof window !== 'undefined' && !!(window as unknown as { Capacitor?: unknown }).Capacitor
+  const inApp = isNativeApp()
   const [guest, setGuest] = useState(false)
   const replySig = useRef<string | null>(null)
   /** How they'll answer — chosen on the first screen. */
@@ -578,7 +579,7 @@ export function FirstLaunch({ hasEra, onEraChange }: {
             </a>
             <p className="mt-3 text-px-12 text-white/55">Already have one? <a href="/login" className="underline underline-offset-4">Sign in</a></p>
             {/* In a browser: the app is the real home for this. */}
-            {!isNativeApp && (
+            {!inApp && (
               <a href={APP_STORE_URL} className="tap-44 mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/25 text-px-13 text-white/90">
                 Get Voxu on the App Store
               </a>

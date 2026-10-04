@@ -243,6 +243,18 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     setShowUpgradeModal(false)
   }, [])
 
+  // A link with ?upgrade=1 (the pricing page inside the app) opens it too.
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href)
+      if (url.searchParams.get('upgrade') !== '1') return
+      url.searchParams.delete('upgrade')
+      window.history.replaceState(null, '', url.pathname + (url.search || '') + url.hash)
+      setUpgradeReason(null)
+      setShowUpgradeModal(true)
+    } catch { /* no URL to read */ }
+  }, [])
+
   // Anything can ask for the upgrade screen without the context: a lock
   // card, or the widget's "Unlock with Premium" (voxu://app/?upgrade=1 →
   // hooks/useDeepLink).

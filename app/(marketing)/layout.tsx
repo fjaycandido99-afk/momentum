@@ -67,7 +67,7 @@ export default function MarketingLayout({
     // edge and made the whole page scroll sideways on a phone.
     <div className="min-h-screen bg-black overflow-x-hidden">
       {!ownHeader && (
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-white/5">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={goBack}
@@ -87,7 +87,9 @@ export default function MarketingLayout({
       </header>
       )}
 
-      <main className={ownHeader ? '' : 'pt-16'}>
+      {/* Below the header AND the status bar — in the iPhone app the header
+          sat under the clock. */}
+      <main style={ownHeader ? undefined : { paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))' }}>
         {isInstallPage ? null : children}
       </main>
     </div>

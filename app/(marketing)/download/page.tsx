@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { listPrices, usd } from '@/lib/pricing'
 import {
   Wind,
   Brain,
@@ -431,7 +432,7 @@ export default function DownloadPage() {
             </div>
             <div className="px-6 py-4 rounded-2xl bg-white/[0.03] border border-white/10">
               <div className="text-sm text-white/50 mb-1">Monthly</div>
-              <div className="text-2xl font-bold">$6.99<span className="text-sm font-normal text-white/40">/mo</span></div>
+              <div className="text-2xl font-bold">{usd(listPrices().monthly)}<span className="text-sm font-normal text-white/40">/mo</span></div>
               <div className="text-xs text-white/40 mt-1">Cancel anytime</div>
             </div>
             <div className="px-6 py-4 rounded-2xl bg-white/[0.05] border border-white/20 relative">
@@ -439,7 +440,7 @@ export default function DownloadPage() {
                 BEST VALUE
               </div>
               <div className="text-sm text-white/50 mb-1">Yearly</div>
-              <div className="text-2xl font-bold">$49.99<span className="text-sm font-normal text-white/40">/yr</span></div>
+              <div className="text-2xl font-bold">{usd(listPrices().yearly)}<span className="text-sm font-normal text-white/40">/yr</span></div>
               <div className="text-xs text-white/40 mt-1">$4.17/mo — save 40%</div>
             </div>
           </div>

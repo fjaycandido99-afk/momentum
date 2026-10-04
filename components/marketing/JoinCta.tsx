@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { isNativeApp } from '@/lib/native'
 import Link from 'next/link'
 
 export const APP_STORE_URL = 'https://apps.apple.com/app/id6759702163'
@@ -20,7 +21,7 @@ export function JoinCta({ startHref, label }: { startHref: string; label: string
   useEffect(() => {
     const ua = navigator.userAgent
     const iDevice = /iPhone|iPad|iPod/.test(ua) || (ua.includes('Macintosh') && navigator.maxTouchPoints > 1)
-    const inApp = !!(window as unknown as { Capacitor?: unknown }).Capacitor
+    const inApp = isNativeApp()
     setIos(iDevice && !inApp)
   }, [])
 
