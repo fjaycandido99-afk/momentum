@@ -28,6 +28,8 @@ import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
 import { aiGate } from '@/lib/ai/gate'
 import { isGuideTone } from '@/lib/ai/voice-tone'
+import { OPENER_FIXED_LINES } from '@/lib/onboarding/first-launch'
+import { verifyVoiceLine } from '@/lib/onboarding/voice-sign'
 import {
   generateAudio,
   getChatVoiceRemaining,
@@ -61,17 +63,28 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    const body = await request.json().catch(() => ({}))
+    const text = typeof body?.text === 'string' ? body.text.trim() : ''
+
+    // The opener speaks to EVERYONE, signed up or not, free, unmetered
+    // (Francis, 2026-10-03: it's the taste of Voxu). Only its own words: a
+    // fixed line from OPENER_FIXED_LINES, a reply first-moment wrote and
+    // signed, or — for a signed-in account with no era yet — any opener line.
+    const onboarding = body?.purpose === 'onboarding' && !!text && text.length <= EXPLAIN_MAX_CHARS && (
+      OPENER_FIXED_LINES.has(text)
+      || verifyVoiceLine(text, body?.sig)
+      || (!!user && (await prisma.era.count({ where: { user_id: user.id } })) === 0)
+    )
+
+    if (!user && !onboarding) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { allowed } = rateLimit(`ai-chat-voice:${user.id}`, { limit: 20, windowSeconds: 60 })
+    const ip = (request.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown'
+    const { allowed } = rateLimit(user ? `ai-chat-voice:${user.id}` : `ai-chat-voice-ip:${ip}`, { limit: 20, windowSeconds: 60 })
     if (!allowed) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
-
-    const body = await request.json().catch(() => ({}))
-    const text = typeof body?.text === 'string' ? body.text.trim() : ''
 
     if (!text) {
       return NextResponse.json({ error: 'text is required' }, { status: 400 })
@@ -83,10 +96,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'text too long' }, { status: 413 })
     }
 
-    const prefs = await prisma.userPreferences.findUnique({
+    const prefs = user ? await prisma.userPreferences.findUnique({
       where: { user_id: user.id },
       select: { guide_tone: true },
-    })
+    }) : null
     const tone = isGuideTone(prefs?.guide_tone) ? prefs!.guide_tone! : 'calm'
 
     // Serve a cache hit before spending a quota unit — replaying a line
@@ -105,7 +118,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ audio: cached.audioBase64, duration: cached.duration, tone, cached: true })
     }
 
-    const gate = await aiGate(user.id, explain ? 'explain_voice' : 'chat_voice')
+    // The opener: no meter, and not held behind premium's reserve — only the
+    // month's hard budget (generateAudio) can stop it.
+    if (onboarding) {
+      const { audioBase64, duration, fellBack } = await generateAudio(text, tone, TTS_CHAT_BUDGET_KEY, VOXU_VOICE_ID)
+      if (!audioBase64) return NextResponse.json({ error: 'Voice unavailable right now', unavailable: true }, { status: 503 })
+      if (!fellBack) await setSharedCache(cacheKey, audioBase64, duration)
+      return NextResponse.json({ audio: audioBase64, duration, tone, cached: false })
+    }
+
+    const gate = await aiGate(user!.id, explain ? 'explain_voice' : 'chat_voice')
     if (!gate.ok) return gate.response
 
     // Free users get a taste of spoken replies, but never out of a paying

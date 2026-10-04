@@ -10,6 +10,7 @@ import { resolveIntent, type IntentContext } from '@/lib/voice-guide/intents'
 import { acceptRescue } from '@/lib/pulse/rescue-state'
 import type { RescuePlan } from '@/lib/pulse/rescue'
 import { fetchVoxuAudio, type VoxuAudioResult } from '@/lib/voice/voxu-audio'
+import { SpeakingRing } from './SpeakingRing'
 import { FIRST_VISIT_ASK, type GuideLine, type GuideScreen } from '@/lib/voice-guide/scripts'
 import { haptic } from '@/lib/haptics'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
@@ -300,21 +301,16 @@ export function VoxuGuide({
   return (
     <>
       <div className="relative">
+        <SpeakingRing always size={52} />
         <button
           ref={orbRef}
           onClick={() => { if (playing) stop(); else { setOffer(false); setReply(null); setOpen(o => !o) } }}
           aria-label={playing ? 'Stop Voxu' : 'Ask Voxu'}
           aria-expanded={open}
-          className={`tap-44 w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${
-            offer || playing ? 'voxu-orb-glow' : ''
-          }`}
-          style={{
-            borderColor: 'rgb(var(--era-accent, 255 255 255) / 0.55)',
-            background: 'radial-gradient(circle at 50% 40%, rgb(var(--era-accent, 255 255 255) / 0.28), rgb(10 12 20 / 0.9) 70%)',
-          }}
-        >
-          <AudioLines className="w-4 h-4 text-white" aria-hidden />
-        </button>
+          // The orb IS the guided dial (SpeakingRing behind): still when
+          // quiet, moving with Voxu's voice. The button is the tap target.
+          className="relative tap-44 w-10 h-10 rounded-full"
+        />
 
         {offer && !playing && float(
           // Not a dialog: an inline question that leaves the page usable, so
@@ -439,8 +435,8 @@ export function VoxuGuide({
           style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 92px)' }}
         >
           <div className="pointer-events-auto w-full max-w-lg rounded-2xl border border-white/[0.16] bg-[#0b0d14]/95 backdrop-blur p-3 flex items-start gap-3 shadow-2xl">
-            <span className="voxu-orb-glow mt-0.5 w-8 h-8 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'rgb(var(--era-accent, 255 255 255) / 0.2)' }} aria-hidden>
-              <AudioLines className="w-4 h-4 text-white" />
+            <span className="relative mt-0.5 w-8 h-8 shrink-0" aria-hidden>
+              <SpeakingRing always size={42} />
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-px-14 text-white leading-snug" aria-live="polite">{script[index]?.text}</p>

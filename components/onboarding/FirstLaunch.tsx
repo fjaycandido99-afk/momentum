@@ -7,9 +7,10 @@ import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { fetchVoxuAudio } from '@/lib/voice/voxu-audio'
+import { SpeakingRing } from '@/components/voice-guide/SpeakingRing'
 import { ERA_PRESETS_BY_KEY, eraName, DEFAULT_ERA_LENGTH_DAYS } from '@/lib/era/presets'
 import { programFor } from '@/lib/era/programs'
-import { GUIDED_TASTE, type FirstMoment } from '@/lib/onboarding/first-launch'
+import { GUIDED_TASTE, OPENER_INTRO, OPENER_ERA_LINE, OPENER_PROMISE_LINE, OPENER_DAY_ONE, OPENER_SAVE_LINE, PENDING_OPENER_KEY, type FirstMoment, type PendingOpener } from '@/lib/onboarding/first-launch'
 import { useListen } from './useListen'
 import { trackFeature } from '@/lib/analytics/track'
 import { haptic } from '@/lib/haptics'
@@ -44,7 +45,14 @@ const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
 const KEY = 'voxu_first_moment_done_v1'
 const VOICE_KEY = 'voxu.talk.voice'
 /** Said as the opener appears — the same words for everyone, so voiced once. */
-const INTRO = 'Hey, I\'m Voxu. Before I show you anything, what\'s one thing you want to change right now?'
+const INTRO = OPENER_INTRO
+
+function readPending(): PendingOpener | null {
+  try { const v = localStorage.getItem(PENDING_OPENER_KEY); return v ? JSON.parse(v) as PendingOpener : null } catch { return null }
+}
+function writePending(p: PendingOpener | null) {
+  try { if (p) localStorage.setItem(PENDING_OPENER_KEY, JSON.stringify(p)); else localStorage.removeItem(PENDING_OPENER_KEY) } catch { /* storage off: they'll start again after signing up */ }
+}
 
 const PREVIEW = [
   { icon: Landmark, title: 'Choose an Era', text: 'Thirty days. One promise a day.' },
@@ -52,7 +60,8 @@ const PREVIEW = [
   { icon: MessageCircle, title: 'Guidance that adapts', text: 'A voice that learns how you work.' },
 ]
 
-type Beat = 'hello' | 'thinking' | 'eras' | 'starting' | 'guide' | 'promise' | 'saving' | 'done'
+// 'save': a guest reached Day 1 — the account is what keeps it.
+type Beat = 'hello' | 'thinking' | 'eras' | 'starting' | 'guide' | 'promise' | 'saving' | 'done' | 'save'
 
 export function FirstLaunch({ hasEra, onEraChange }: {
   /** null while the era is loading; true means this person is past day one. */
@@ -74,6 +83,9 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   const [promise, setPromise] = useState('')
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** No account yet: the opener runs in full, and Day 1 is kept on the device until they sign up. */
+  const [guest, setGuest] = useState(false)
+  const replySig = useRef<string | null>(null)
   /** How they'll answer — chosen on the first screen. */
   /** Typing instead of talking — a small link, never a choice up front. */
   const [inputMode, setInputMode] = useState<'voice' | 'type' | null>(null)
@@ -102,10 +114,11 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   }, [hidden, hasEra, finish])
 
   /** Say a line in Voxu's voice (after their first tap). Resolves when it ends, or at once when quiet. */
-  const say = useCallback(async (text: string): Promise<'played' | 'blocked' | 'quiet'> => {
+  const say = useCallback(async (text: string, sig?: string | null): Promise<'played' | 'blocked' | 'quiet'> => {
     audio.current?.pause()
     if (!voiceOn) return 'quiet'
-    const res = await fetchVoxuAudio(text, 'explain')
+    // 'onboarding': free for everyone, account or not — the opener is the taste.
+    const res = await fetchVoxuAudio(text, 'onboarding', sig)
     if (!res.ok) return 'quiet'
     audio.current = res.audio
     return new Promise(done => {
@@ -115,6 +128,41 @@ export function FirstLaunch({ hasEra, onEraChange }: {
     })
   }, [voiceOn])
 
+  /**
+   * A guest's Day 1, kept on the device: if they've signed up since, create
+   * the era and the promise now and land on "That's Day 1". Still a guest,
+   * show the save step again. Never throws; a failure falls back to the start.
+   */
+  const resumePending = useCallback(async (p: PendingOpener) => {
+    setEraKey(p.key)
+    setSaid(p.change)
+    if (p.promise) setPromise(p.promise)
+    setBeat('saving')
+    try {
+      const era = await fetch('/api/era', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: p.key, change: p.change }),
+      })
+      if (era.status === 401) { setGuest(true); setBeat(p.promise ? 'save' : 'hello'); return }
+      if (!era.ok) { writePending(null); setBeat('hello'); return }
+      if (p.promise) {
+        await fetch('/api/era/promise', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: p.promise, source: 'typed' }),
+        }).catch(() => null)
+      }
+      writePending(null)
+      onEraChange()
+      trackFeature('first_launch', 'complete', `${p.key}:after_signup`)
+      setBeat('done')
+      void say(OPENER_DAY_ONE)
+    } catch {
+      setBeat('hello')
+    }
+  }, [onEraChange, say])
+
   // Voxu speaks as the opener appears. In the app the web view allows sound
   // without a tap (Capacitor: mediaTypesRequiringUserActionForPlayback = []);
   // a browser blocks it, and the orb then offers "Tap to hear Voxu".
@@ -122,6 +170,10 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   useEffect(() => {
     if (!showing || introPlayed.current) return
     introPlayed.current = true
+    // A guest who reached Day 1 and came back: signed up now? Keep it for
+    // them. Still a guest? Back to the save step, nothing lost.
+    const pending = readPending()
+    if (pending) { void resumePending(pending); return }
     trackFeature('first_launch', 'open')
     // Then it listens, by itself. Where sound was blocked (a browser before
     // any tap), one tap on the orb does both.
@@ -181,10 +233,11 @@ export function FirstLaunch({ hasEra, onEraChange }: {
       setMoment(data)
       if (data.crisis) setCrisis(data.crisis)
       setPromise(data.promise)
+      replySig.current = typeof data.replySig === 'string' ? data.replySig : null
       setBeat('eras')
       trackFeature('first_launch', 'use', data.ai ? 'replied' : 'replied_fallback')
-      await say(data.reply)
-      void say(`For the next ${DEFAULT_ERA_LENGTH_DAYS} days, we can turn that into an Era.`)
+      await say(data.reply, replySig.current)
+      void say(OPENER_ERA_LINE)
     } catch {
       setError('Couldn’t reach Voxu. Check your connection.')
       setBeat('hello')
@@ -205,6 +258,15 @@ export function FirstLaunch({ hasEra, onEraChange }: {
         body: JSON.stringify({ key, change: said }),
       })
       const data = await res.json().catch(() => null)
+      if (res.status === 401) {
+        // No account yet: the full experience anyway. Their choice is kept on
+        // the device and saved the moment they sign up.
+        setGuest(true)
+        writePending({ key, change: said })
+        trackFeature('first_launch', 'use', `era:${key}`)
+        void runGuide()
+        return
+      }
       if (!res.ok) { setError(data?.error ?? 'Couldn’t start it.'); setBeat('eras'); return }
       onEraChange()
       trackFeature('first_launch', 'use', `era:${key}`)
@@ -235,15 +297,23 @@ export function FirstLaunch({ hasEra, onEraChange }: {
     guideRun.current++
     audio.current?.pause()
     setBeat('promise')
-    void say('Based on what you told me, here’s your first promise.')
+    void say(OPENER_PROMISE_LINE)
   }
 
   const keep = async (text: string) => {
     const t = text.trim()
     if (!t) return
     haptic('light')
-    setBeat('saving')
     setError(null)
+    if (guest) {
+      const pending = readPending()
+      writePending({ key: pending?.key ?? eraKey ?? '', change: pending?.change ?? said, promise: t })
+      trackFeature('first_launch', 'use', 'guest_day1')
+      setBeat('save')
+      void say(OPENER_SAVE_LINE)
+      return
+    }
+    setBeat('saving')
     try {
       const res = await fetch('/api/era/promise', {
         method: 'POST',
@@ -255,7 +325,7 @@ export function FirstLaunch({ hasEra, onEraChange }: {
       onEraChange()
       trackFeature('first_launch', 'complete', eraKey ?? undefined)
       setBeat('done')
-      void say('That’s Day 1.')
+      void say(OPENER_DAY_ONE)
     } catch {
       setError('Couldn’t reach Voxu. Check your connection.')
       setBeat('promise')
@@ -294,11 +364,10 @@ export function FirstLaunch({ hasEra, onEraChange }: {
             {said && (
               <p className="absolute w-72 text-center text-px-15 text-white/[0.14] leading-snug pointer-events-none" style={SERIF} aria-hidden>{said}</p>
             )}
-            <span className="voxu-orb-glow w-20 h-20 rounded-full flex items-center justify-center"
-              style={{ background: 'radial-gradient(circle at 50% 40%, rgb(var(--era-accent, 255 255 255) / 0.32), rgb(10 12 20 / 0.95) 70%)', border: '1px solid rgb(var(--era-accent, 255 255 255) / 0.5)' }}>
-              {beat === 'thinking' || beat === 'starting' || beat === 'saving'
-                ? <Loader2 className="w-6 h-6 animate-spin text-white" />
-                : <AudioLines className="w-6 h-6 text-white" />}
+            {/* The orb IS the guided dial: still when Voxu is quiet, moving with its voice. */}
+            <SpeakingRing always size={136} />
+            <span className="relative w-20 h-20 rounded-full flex items-center justify-center">
+              {(beat === 'thinking' || beat === 'starting' || beat === 'saving') && <Loader2 className="w-6 h-6 animate-spin text-white/80" />}
             </span>
           </div>
         )}
@@ -306,24 +375,25 @@ export function FirstLaunch({ hasEra, onEraChange }: {
         {beat === 'hello' && (
           <div className="w-full text-center animate-fade-in-up">
             <p className="text-px-11 uppercase tracking-[0.34em] text-white/55">Voxu</p>
+            <div className="relative mx-auto mt-11 w-24 h-24">
+            <SpeakingRing always size={164} />
             <button
               onClick={tapOrb}
               aria-label={needsTap ? 'Tap to talk with Voxu' : listener.phase === 'listening' ? 'Stop — I’m done' : 'Talk to Voxu'}
-              className="keep-motion relative mx-auto mt-6 w-24 h-24 rounded-full flex items-center justify-center voxu-orb-glow transition-transform duration-100"
+              className="keep-motion relative w-24 h-24 rounded-full flex items-center justify-center transition-transform duration-100"
               style={{
-                background: 'radial-gradient(circle at 50% 40%, rgb(var(--era-accent, 160 170 255) / 0.35), rgb(10 12 20 / 0.95) 70%)',
-                border: '1px solid rgb(var(--era-accent, 160 170 255) / 0.55)',
                 // Breathes with their voice while listening.
                 transform: `scale(${1 + listener.level * 0.18})`,
               }}
             >
               {listener.phase === 'transcribing'
-                ? <Loader2 className="w-8 h-8 animate-spin text-white" aria-hidden />
+                ? <Loader2 className="w-8 h-8 animate-spin text-white/80" aria-hidden />
                 : listener.phase === 'listening'
-                  ? <Mic className="w-8 h-8 text-white" aria-hidden />
-                  : <AudioLines className="w-8 h-8 text-white" aria-hidden />}
+                  ? <Mic className="w-7 h-7 text-white/90" aria-hidden />
+                  : null}
             </button>
-            <p className="text-px-12 text-white/70 mt-3 min-h-[1.25rem]" aria-live="polite">
+            </div>
+            <p className="text-px-12 text-white/70 mt-9 min-h-[1.25rem]" aria-live="polite">
               {needsTap ? 'Tap to talk with Voxu'
                 : listener.phase === 'listening' ? 'Listening… tap when you’re done'
                 : listener.phase === 'transcribing' ? 'One moment…'
@@ -334,8 +404,8 @@ export function FirstLaunch({ hasEra, onEraChange }: {
 
             {/* What Voxu asked, as something it said. */}
             <div className="mt-5 flex items-start justify-center gap-2.5">
-              <span className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center border border-white/25 bg-[#0d1018]" aria-hidden>
-                <AudioLines className="w-4 h-4 text-white" />
+              <span className="relative w-9 h-9 shrink-0" aria-hidden>
+                <SpeakingRing always size={46} />
               </span>
               <p className="px-4 py-2.5 rounded-2xl rounded-tl-md bg-white/[0.08] border border-white/[0.12] text-px-14 text-white text-left">
                 Hey, I&rsquo;m Voxu. Before I show you anything, what&rsquo;s one thing you want to change right now?
@@ -483,7 +553,20 @@ export function FirstLaunch({ hasEra, onEraChange }: {
           </div>
         )}
 
-        {beat !== 'done' && (
+        {beat === 'save' && (
+          <div className="text-center animate-fade-in-up max-w-sm">
+            <p className="text-px-11 uppercase tracking-[0.24em] text-white/55">{preset ? preset.title : 'Your era'} · Day 1</p>
+            <h2 className="text-px-38 leading-tight mt-3" style={{ ...SERIF, fontWeight: 600 }}>Keep your Day 1.</h2>
+            {promise && <p className="text-px-15 text-white/80 mt-3 leading-snug" style={SERIF}>&ldquo;{promise}&rdquo;</p>}
+            <p className="text-px-13 text-white/60 mt-3">A free account keeps your era, your promise and everything after it.</p>
+            <a href="/signup" className="tap-44 mt-7 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-black text-px-14 font-medium press-scale">
+              Create my free account <ArrowRight className="w-4 h-4" />
+            </a>
+            <p className="mt-3 text-px-12 text-white/55">Already have one? <a href="/login" className="underline underline-offset-4">Sign in</a></p>
+          </div>
+        )}
+
+        {beat !== 'done' && beat !== 'save' && (
           <button onClick={finish} className="tap-44 absolute text-px-12 text-white/40 hover:text-white/70" style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
             I&rsquo;ll look around first
           </button>

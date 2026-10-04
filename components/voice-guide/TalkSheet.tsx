@@ -7,6 +7,7 @@ import { ScrollLock } from '@/components/ui/ScrollLock'
 import { VoiceInput } from '@/components/journal/VoiceInput'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { fetchVoxuAudio } from '@/lib/voice/voxu-audio'
+import { SpeakingRing } from './SpeakingRing'
 import { isCommand } from '@/lib/voice-guide/intents'
 import { trackFeature } from '@/lib/analytics/track'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
@@ -154,8 +155,8 @@ export function TalkSheet({
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
       >
         <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-white/[0.08]">
-          <span className="voxu-orb-glow w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgb(var(--era-accent, 255 255 255) / 0.2)' }} aria-hidden>
-            <AudioLines className="w-4 h-4 text-white" />
+          <span className="relative w-8 h-8 shrink-0" aria-hidden>
+            <SpeakingRing always size={42} />
           </span>
           <p className="flex-1 text-px-15 text-white">Talk with Voxu</p>
           <button onClick={toggleVoice} aria-label={voiceOn ? 'Turn spoken replies off' : 'Turn spoken replies on'} aria-pressed={voiceOn} className="tap-44 p-2 rounded-full hover:bg-white/10">

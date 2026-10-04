@@ -188,6 +188,12 @@ function CircularVisualizerInner({
       ctx.stroke()
     }
 
+    // Quiet and faded to rest: the last frame stays, and the loop sleeps
+    // until playback starts again (this effect re-runs when isPlaying
+    // changes). An idle dial — Voxu's orb is on every page — must not
+    // redraw 60 times a second for nothing.
+    if (!isPlaying && smoothed.every(v => v === 0)) { animFrameRef.current = 0; return }
+
     animFrameRef.current = requestAnimationFrame(draw)
   }, [isPlaying, barCount, size, analyser, simulated, glow, dial])
 

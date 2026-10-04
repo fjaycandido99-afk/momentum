@@ -10,6 +10,28 @@
 
 /** chat-voice's cap. */
 export const VOXU_MAX_CHARS = 600
+/** chat-voice's tighter cap for 'explain' lines — longer ones would be refused. */
+export const VOXU_EXPLAIN_MAX_CHARS = 280
+
+// ── Who's speaking. Every line fetched here announces itself when it plays
+// and when it stops, so the orb's ring (components/voice-guide/SpeakingRing)
+// can come alive wherever Voxu is talking, without each player wiring it.
+export const VOXU_SPEAKING_EVENT = 'voxu:speaking'
+let speaking: HTMLAudioElement | null = null
+export function currentVoxuAudio(): HTMLAudioElement | null { return speaking }
+function announce(next: HTMLAudioElement | null) {
+  if (speaking === next) return
+  speaking = next
+  try { window.dispatchEvent(new Event(VOXU_SPEAKING_EVENT)) } catch { /* no window */ }
+}
+function track(a: HTMLAudioElement): HTMLAudioElement {
+  a.addEventListener('playing', () => announce(a))
+  const quiet = () => { if (speaking === a) announce(null) }
+  a.addEventListener('pause', quiet)
+  a.addEventListener('ended', quiet)
+  a.addEventListener('error', quiet)
+  return a
+}
 
 /** Cut to the cap at a sentence end where one is close, else a word. */
 export function clipForVoice(text: string, max = VOXU_MAX_CHARS - 10): string {
@@ -25,25 +47,34 @@ export type VoxuAudioResult =
   | { ok: true; audio: HTMLAudioElement }
   | { ok: false; reason: 'locked' | 'signin' | 'unavailable' }
 
-/** Fetch a line in Voxu's voice, ready to play. Never throws. */
 /**
- * `purpose: 'explain'` — Voxu explaining the app (the orb's walkthroughs,
- * the first-launch opener). Free, on its own meter; never spends a
- * conversation's spoken reply.
+ * Fetch a line in Voxu's voice, ready to play. Never throws.
+ *
+ * `purpose: 'explain'` — Voxu explaining the app (the orb's walkthroughs).
+ * Free, on its own meter; never spends a conversation's spoken reply.
+ *
+ * `purpose: 'onboarding'` — the first-launch opener: free for everyone,
+ * signed up or not (the server checks the line is the opener's own; `sig`
+ * carries first-moment's signature on its reply).
  */
-export async function fetchVoxuAudio(text: string, purpose: 'explain' | 'talk' = 'talk'): Promise<VoxuAudioResult> {
+export async function fetchVoxuAudio(text: string, purpose: 'explain' | 'talk' | 'onboarding' = 'talk', sig?: string | null): Promise<VoxuAudioResult> {
   try {
     const res = await fetch('/api/ai/chat-voice', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: clipForVoice(text), purpose }),
+      body: JSON.stringify({
+        // Opener lines go as written — the server matches them exactly.
+        text: purpose === 'onboarding' ? text : purpose === 'explain' ? clipForVoice(text, VOXU_EXPLAIN_MAX_CHARS - 10) : clipForVoice(text),
+        purpose,
+        ...(sig ? { sig } : {}),
+      }),
     })
     if (res.status === 403) return { ok: false, reason: 'locked' }
     if (res.status === 401) return { ok: false, reason: 'signin' }
     if (!res.ok) return { ok: false, reason: 'unavailable' }
     const data = await res.json()
     if (!data?.audio) return { ok: false, reason: 'unavailable' }
-    return { ok: true, audio: new Audio(`data:audio/mpeg;base64,${data.audio}`) }
+    return { ok: true, audio: track(new Audio(`data:audio/mpeg;base64,${data.audio}`)) }
   } catch {
     return { ok: false, reason: 'unavailable' }
   }

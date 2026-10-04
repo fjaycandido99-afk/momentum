@@ -1,4 +1,4 @@
-import { ERA_PRESETS, ERA_PRESETS_BY_KEY } from '@/lib/era/presets'
+import { ERA_PRESETS, ERA_PRESETS_BY_KEY, DEFAULT_ERA_LENGTH_DAYS } from '@/lib/era/presets'
 
 /**
  * The first launch — Voxu shown, not explained (components/onboarding/
@@ -94,3 +94,30 @@ export const GUIDED_TASTE: { text: string; pause: number }[] = [
   { text: 'Hold it for one more breath.', pause: 4000 },
   { text: 'Good. That\'s what we\'ll work with.', pause: 1200 },
 ]
+
+// ── What the opener says out loud. One list, so the voice route can speak
+// exactly these to someone who hasn't signed up yet (a taste of the full
+// experience — Francis, 2026-10-03) and nothing else. Same words for
+// everyone, so each is voiced once and replayed from the shared cache.
+export const OPENER_INTRO = 'Hey, I\'m Voxu. Before I show you anything, what\'s one thing you want to change right now?'
+export const OPENER_ERA_LINE = `For the next ${DEFAULT_ERA_LENGTH_DAYS} days, we can turn that into an Era.`
+export const OPENER_PROMISE_LINE = 'Based on what you told me, here’s your first promise.'
+export const OPENER_DAY_ONE = 'That’s Day 1.'
+export const OPENER_SAVE_LINE = 'That’s your Day 1. Make a free account and I’ll keep it for you.'
+
+export const OPENER_FIXED_LINES: ReadonlySet<string> = new Set([
+  OPENER_INTRO,
+  OPENER_ERA_LINE,
+  OPENER_PROMISE_LINE,
+  OPENER_DAY_ONE,
+  OPENER_SAVE_LINE,
+  ...GUIDED_TASTE.map(l => l.text),
+])
+
+/** A guest's opener, kept on the device until they have an account to keep it in. */
+export interface PendingOpener {
+  key: string
+  change: string
+  promise?: string
+}
+export const PENDING_OPENER_KEY = 'voxu.opener.pending'
