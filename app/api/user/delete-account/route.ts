@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
+import { removeAllPhotosFor } from '@/lib/photos/storage'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,6 +32,10 @@ export async function POST() {
       await adminClient.auth.admin.deleteUser(userId)
       return NextResponse.json({ success: true })
     }
+
+    // Progress photos are FILES in a private bucket — the rows go with the
+    // user (cascade), the files must be removed here.
+    await removeAllPhotosFor(userId)
 
     // Delete all user data in FK-safe order using a transaction
     await prisma.$transaction(async (tx) => {

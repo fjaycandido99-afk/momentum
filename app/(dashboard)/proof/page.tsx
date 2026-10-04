@@ -164,7 +164,10 @@ export default function ProofPage() {
               {data.year.year === Number(data.today.slice(0, 4)) && (
                 <>
                   <WeekCard recap={weekRecap(data.details, data.today)} />
-                  <Link href="/eras" className="inline-block mt-3 text-px-13 text-white/75 underline underline-offset-4">Your eras, in order →</Link>
+                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
+                    <Link href="/eras" className="text-px-13 text-white/75 underline underline-offset-4">Your eras, in order →</Link>
+                    <Link href="/photos" className="text-px-13 text-white/75 underline underline-offset-4">Progress photos →</Link>
+                  </div>
                 </>
               )}
 

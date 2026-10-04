@@ -35,7 +35,7 @@ export async function GET() {
     // this is, so there is no way to ask for somebody else's.
     const [
       account, preferences, guides, favorites, goals, playlists, assessment, eras,
-      wellness, missions, books, practices, practiceLogs, exerciseRuns, resetSessions, routine, audioSessions, experiments, relics,
+      wellness, missions, books, practices, practiceLogs, exerciseRuns, resetSessions, routine, audioSessions, experiments, relics, photos,
     ] = await Promise.all([
       prisma.user.findUnique({
         where: { id: user.id },
@@ -98,6 +98,8 @@ export async function GET() {
               local_day: true, text: true, source: true, coach_reply: true, kept: true, checked_at: true,
               // The check-in's one-tap answers (lib/era/reasons.ts).
               confidence: true, blocker: true, helper: true,
+              // What it counted toward, if they chose to (lib/era/measure).
+              measure_tag: true, measure_amount: true, measure_unit: true,
             },
           },
         },
@@ -143,6 +145,13 @@ export async function GET() {
         select: { achievement_id: true, unlocked_at: true, note: true, note_at: true },
         orderBy: { unlocked_at: 'asc' },
       }),
+      // Their progress photos: when, and which era. The images themselves are
+      // in the vault (/photos), where each can be saved at full size.
+      prisma.progressPhoto.findMany({
+        where: { user_id: user.id },
+        orderBy: { local_day: 'asc' },
+        select: { local_day: true, era_id: true, created_at: true },
+      }),
     ])
 
     const payload = {
@@ -175,6 +184,7 @@ export async function GET() {
       pattern_experiments: experiments,
       // Coins earned, with their own one-line memory on each (lib/relic-notes).
       relics,
+      progress_photos: photos,
     }
 
     const filename = `voxu-export-${new Date().toISOString().slice(0, 10)}.json`

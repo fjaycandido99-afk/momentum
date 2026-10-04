@@ -67,6 +67,7 @@ model User {
   // Self-reported wellness check-ins (consented, see UserPreferences)
   wellnessCheckIns WellnessCheckIn[]
   widgetTokens     WidgetToken[]
+  progressPhotos   ProgressPhoto[]
   assessmentSignature AssessmentSignature?
 
   // Era
@@ -1697,4 +1698,22 @@ model WidgetToken {
   last_used_at DateTime?
 
   @@index([user_id])
+}
+
+/// A progress photo in their private vault (lib/photos). The image lives in
+/// the PRIVATE Supabase bucket "progress-photos" at `path`; it is only ever
+/// shown through a short-lived signed link, never read by any AI, never
+/// shared. Deleting the row deletes the file; deleting the account deletes
+/// both.
+model ProgressPhoto {
+  id         String   @id @default(cuid())
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  /// The era running when it was taken, if any.
+  era_id     String?
+  local_day  String // YYYY-MM-DD, user timezone
+  path       String   @unique
+  created_at DateTime @default(now())
+
+  @@index([user_id, local_day])
 }

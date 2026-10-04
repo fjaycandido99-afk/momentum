@@ -182,6 +182,8 @@ export default function ProfilePage() {
               { href: '/era', label: 'Your era', sub: 'Who you’re becoming' },
               { href: '/proof', label: 'Proof', sub: 'What you’ve actually done' },
               { href: '/patterns', label: 'Your laws', sub: 'What your record shows' },
+              { href: '/eras', label: 'Your eras', sub: 'Every era, in order' },
+              { href: '/photos', label: 'Progress photos', sub: 'Private to you' },
               { href: '/settings', label: 'Settings', sub: 'Name, notifications, account' },
             ].map(r => (
               <li key={r.href}>

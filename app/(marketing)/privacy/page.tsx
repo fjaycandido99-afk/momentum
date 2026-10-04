@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="text-sm text-white/50">
-            Last updated: May 28, 2026
+            Last updated: October 3, 2026
           </p>
         </div>
       </section>
@@ -97,6 +97,13 @@ export default function PrivacyPolicyPage() {
           </h3>
           <p className="text-sm text-white/70 leading-relaxed">
             Payment details (credit card numbers, billing addresses) are collected and processed directly by our payment processors (Stripe and RevenueCat). We do not store your full payment information on our servers.
+          </p>
+        </section>
+
+        <section className="py-6 border-t border-white/5">
+          <h3 className="text-base font-medium text-white mb-2">Progress Photos</h3>
+          <p className="text-sm text-white/70">
+            If you add progress photos, they are resized on your device (which removes location data), stored in private storage that has no public address, and shown only to you through links that expire. They are never shared, never used to train or prompt any AI, and never analysed. You can delete any photo at any time, and deleting your account deletes all of them.
           </p>
         </section>
 
