@@ -26,6 +26,13 @@ export function useDeepLink() {
           // segment lost, and picked one from the clock instead.
           const target = url.pathname + url.search + url.hash
 
+          // An invite link (voxu.app/i/<code>) that opened the app: a full
+          // load, so the server can count it and set the claim cookie here.
+          if (url.pathname.startsWith('/i/')) {
+            window.location.assign(`${url.pathname}?app=1`)
+            return
+          }
+
           // The widget's "Unlock with Premium".
           if (url.searchParams.get('upgrade') === '1') {
             router.push(url.pathname || '/')

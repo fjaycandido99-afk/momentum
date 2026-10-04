@@ -8,6 +8,7 @@ import { ScrollLock } from '@/components/ui/ScrollLock'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
 import { fetchVoxuAudio } from '@/lib/voice/voxu-audio'
 import { SpeakingRing } from '@/components/voice-guide/SpeakingRing'
+import { InviteAsk } from '@/components/referral/InviteAsk'
 import { ERA_PRESETS_BY_KEY, eraName, DEFAULT_ERA_LENGTH_DAYS } from '@/lib/era/presets'
 import { programFor } from '@/lib/era/programs'
 import { GUIDED_TASTE, OPENER_INTRO, OPENER_ERA_LINE, OPENER_PROMISE_LINE, OPENER_DAY_ONE, OPENER_SAVE_LINE, PENDING_OPENER_KEY, type FirstMoment, type PendingOpener } from '@/lib/onboarding/first-launch'
@@ -257,8 +258,9 @@ export function FirstLaunch({ hasEra, onEraChange }: {
       const res = await fetch('/api/era', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Their own sentence becomes their day-one words on the era page.
-        body: JSON.stringify({ key, change: said }),
+        // Their own sentence becomes their day-one words on the era page;
+        // `ref` credits a friend's "Join this era" link that opened the app.
+        body: JSON.stringify({ key, change: said, ref: (() => { try { return localStorage.getItem('voxu-era-ref') } catch { return null } })() }),
       })
       const data = await res.json().catch(() => null)
       if (res.status === 401) {
@@ -553,6 +555,8 @@ export function FirstLaunch({ hasEra, onEraChange }: {
             <button onClick={finish} className="tap-44 mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-black text-px-14 font-medium press-scale">
               Enter Voxu <ArrowRight className="w-4 h-4" />
             </button>
+            {/* Their era exists now, so a friend's link can be credited to it. */}
+            <div className="mt-6"><InviteAsk /></div>
           </div>
         )}
 

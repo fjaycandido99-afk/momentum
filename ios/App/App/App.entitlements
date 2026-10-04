@@ -6,6 +6,13 @@
 	<string>production</string>
 	<!-- Shared with the home-screen widget: the app writes today's snapshot
 	     here (WidgetBridgePlugin.write) and the widget reads it. -->
+	<!-- Links that open the app: voxu.app/join/… and /i/… (served by
+	     app/.well-known/apple-app-site-association). Codemagic removes this
+	     when the profile doesn't carry Associated Domains yet. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:voxu.app</string>
+	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.com.voxu.app</string>

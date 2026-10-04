@@ -15,7 +15,9 @@ import { normalizeCode, REFERRAL_COOKIE, REFERRAL_COOKIE_DAYS } from '@/lib/refe
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest, { params }: { params: { code: string } }) {
-  const destination = new URL('/download', request.url)
+  // Opened inside the app (a link that opened Voxu): Home, where the claim
+  // runs after sign-in — not the download page.
+  const destination = new URL(request.nextUrl.searchParams.get('app') === '1' ? '/' : '/download', request.url)
   const response = NextResponse.redirect(destination)
 
   try {

@@ -857,7 +857,7 @@ export async function eraReadFocus(userId: string): Promise<AxisId | null> {
  * Returns the inviter's user id the FIRST time a link is credited, so they
  * can be told someone joined — and null on a repeat, so they're told once.
  */
-async function recordReferral(userId: string, inviteeEraId: string, eraKey: string, ref: unknown): Promise<string | null> {
+export async function recordReferral(userId: string, inviteeEraId: string, eraKey: string, ref: unknown): Promise<string | null> {
   if (typeof ref !== 'string' || !ref || ref.length > 64) return null
   try {
     const inviter = await prisma.era.findUnique({ where: { id: ref }, select: { id: true, user_id: true } })

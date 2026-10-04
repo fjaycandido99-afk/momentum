@@ -126,6 +126,15 @@ workflows:
             exit 1
           fi
 
+          # Links that open the app need Associated Domains on the profile.
+          # Until it's regenerated with it, build WITHOUT the entitlement
+          # (links then open Safari, as before) rather than fail signing.
+          if ! /usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.developer.associated-domains" $PP_PLIST >/dev/null 2>&1; then
+            echo "WARNING: the app profile has no Associated Domains. Building without links-that-open-the-app."
+            echo "Enable Associated Domains on com.voxu.app, regenerate 'Voxu App Store Distribution', and commit it."
+            /usr/libexec/PlistBuddy -c "Delete :com.apple.developer.associated-domains" ios/App/App/App.entitlements || true
+          fi
+
       - name: Install widget provisioning profile
         script: |
           # The home-screen widget is its own bundle (com.voxu.app.VoxuWidget)

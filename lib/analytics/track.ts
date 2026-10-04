@@ -48,6 +48,7 @@ export type FeatureName =
   // 'use' = replied / era:<key>, 'complete' = first promise made. The old
   // wizard's events had zero call sites, so drop-off was invisible.
   | 'first_launch'
+  | 'invite'
 
 // enable/disable exist so opt-OUT is measurable, not just adoption. Two new
 // daily pushes shipped with no way to see who turned them off.
