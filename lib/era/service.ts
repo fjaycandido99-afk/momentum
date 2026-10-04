@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { normalizeStyle, promiseStyleNote } from '@/lib/coach/style'
 import { parseMeasure } from './measure'
 import { nextMilestone } from './milestone'
 import { keptRun } from '@/lib/home/noticed'
@@ -666,7 +667,7 @@ export async function makePromise(
   // is the wrong answer to it, and the resources carry the reply.
   const [mindset, prefs] = await Promise.all([
     getUserMindset(userId),
-    prisma.userPreferences.findUnique({ where: { user_id: userId }, select: { guide_tone: true } }),
+    prisma.userPreferences.findUnique({ where: { user_id: userId }, select: { guide_tone: true, coach_style: true, coach_prefs: true } }),
   ])
   const coachReply = crisis
     ? "Thank you for telling me. Today, the only promise that matters is looking after yourself — and you don't have to do that alone."
@@ -685,6 +686,7 @@ export async function makePromise(
           mission: missionFor(era.era_key, day),
           fullMemory: await isPremiumUser(userId).catch(() => false),
           forTomorrow: ahead,
+          styleNote: promiseStyleNote(normalizeStyle(prefs?.coach_style, prefs?.coach_prefs), yesterday),
           patternLine: await patternLineFor(userId, weekdayOf(today)),
           // Never worth failing a promise over: no practices is the normal case.
           practiceLines: await practiceLinesForCoach(userId).catch(() => []),

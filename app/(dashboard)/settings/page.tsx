@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
+import { DailyRhythmPage } from '@/components/settings/DailyRhythmPage'
+import { MindsetCoachingPage } from '@/components/settings/MindsetCoachingPage'
 import { syncLocalReminders } from '@/lib/notifications'
 import { isNativeApp } from '@/lib/native'
 import { listPrices, usd } from '@/lib/pricing'
@@ -45,7 +47,6 @@ import { HomeShelvesSetting } from '@/components/settings/HomeShelvesSetting'
 import { GuideReminderSettings } from '@/components/settings/GuideReminderSettings'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { MINDSET_CONFIGS } from '@/lib/mindset/configs'
-import { MindsetIcon } from '@/components/mindset/MindsetIcon'
 import { trackFeature } from '@/lib/analytics/track'
 import { PreferredNameField } from '@/components/settings/PreferredNameField'
 
@@ -172,9 +173,6 @@ function SettingsContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          wake_time: wakeTime,
-          work_start_time: workStartTime,
-          work_end_time: workEndTime,
           daily_reminder: dailyReminder,
           reminder_time: reminderTime,
           bedtime_reminder_enabled: bedtimeReminderEnabled,
@@ -197,7 +195,6 @@ function SettingsContent() {
           try { prev = JSON.parse(localStorage.getItem('voxu_guest_prefs') || '{}') } catch {}
           localStorage.setItem('voxu_guest_prefs', JSON.stringify({
             ...prev,
-            wake_time: wakeTime, work_start_time: workStartTime, work_end_time: workEndTime,
             daily_reminder: dailyReminder, reminder_time: reminderTime,
             bedtime_reminder_enabled: bedtimeReminderEnabled,
           }))
@@ -220,7 +217,7 @@ function SettingsContent() {
     } finally {
       setIsSaving(false)
     }
-  }, [wakeTime, workStartTime, workEndTime, dailyReminder, reminderTime, bedtimeReminderEnabled, bedtimeTime, middayEnabled, middayTime, winddownEnabled, winddownTime, aiMemoryEnabled])
+  }, [dailyReminder, reminderTime, bedtimeReminderEnabled, bedtimeTime, middayEnabled, middayTime, winddownEnabled, winddownTime, aiMemoryEnabled])
 
   // Debounced auto-save when any preference changes
   useEffect(() => {
@@ -348,53 +345,8 @@ function SettingsContent() {
           description="User type, work/class days, schedule times"
           defaultOpen
         >
-          {/* Only what Voxu reads: wake time (morning + bedtime reminders) and
-              the workday (evening reminder on the phone, goal planning). The
-              old user type / days / class + study times were never read. */}
-          <div>
-            <div className="min-w-0">
-              <label htmlFor="wake-time" className="block text-sm text-white/70 mb-1.5">Wake time</label>
-              <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-                <input
-                  id="wake-time"
-                  type="time"
-                  value={wakeTime}
-                  onChange={(e) => setWakeTime(e.target.value)}
-                  className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                  style={{ colorScheme: 'dark' }}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-                <div className="min-w-0">
-                  <label htmlFor="work-start-time" className="block text-sm text-white/70 mb-1.5">Workday starts</label>
-                  <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-                    <input
-                      id="work-start-time"
-                      type="time"
-                      value={workStartTime}
-                      onChange={(e) => setWorkStartTime(e.target.value)}
-                      className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                      style={{ colorScheme: 'dark' }}
-                    />
-                  </div>
-                </div>
-                <div className="min-w-0">
-                  <label htmlFor="work-end-time" className="block text-sm text-white/70 mb-1.5">Workday ends</label>
-                  <div className="h-11 rounded-xl bg-white/5 border border-white/15 overflow-hidden">
-                    <input
-                      id="work-end-time"
-                      type="time"
-                      value={workEndTime}
-                      onChange={(e) => setWorkEndTime(e.target.value)}
-                      className="w-full h-full px-2 bg-transparent text-white text-center text-sm font-medium cursor-pointer border-none outline-none"
-                      style={{ colorScheme: 'dark' }}
-                    />
-                  </div>
-                </div>
-          </div>
-          <p className="text-px-12 text-white/50 leading-relaxed">Your wake time sets your bedtime reminder when you haven&rsquo;t picked a time for it. Voxu plans your goals around your workday.</p>
+          {/* Owns wake/workday/rhythm and saves them itself (/api/rhythm). */}
+          <DailyRhythmPage />
         </SettingsCategory>
 
         {/* Only on a build that has the widget (components/widget/WidgetSetup). */}
@@ -420,23 +372,7 @@ function SettingsContent() {
           title="Your Mindset"
           description={mindsetCtx ? MINDSET_CONFIGS[mindsetCtx.mindset].subtitle : 'Philosophy & path'}
         >
-          <div>
-            {mindsetCtx && (
-              <div className="flex items-center gap-3 mb-4">
-                <MindsetIcon mindsetId={mindsetCtx.mindset} className="w-7 h-7 text-white" />
-                <div>
-                  <p className="font-medium text-white text-sm">{MINDSET_CONFIGS[mindsetCtx.mindset].name}</p>
-                  <p className="text-white/75 text-xs">{MINDSET_CONFIGS[mindsetCtx.mindset].subtitle}</p>
-                </div>
-              </div>
-            )}
-            <Link
-              href="/mindset-selection"
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/15 text-white/90 text-sm hover:bg-white/10 transition-all press-scale focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none"
-            >
-              Change mindset
-            </Link>
-          </div>
+          <MindsetCoachingPage />
         </SettingsCategory>
 
         {/* ═══════════════ 5. Notifications ═══════════════ */}
@@ -827,9 +763,9 @@ const SECTION_TITLES: Record<string, string> = {
   ...Object.fromEntries(Object.entries(EXTRA_PAGES).map(([k, v]) => [k, v.title])),
 }
 const SECTION_SUBS: Record<string, string> = {
-  'profile-schedule': 'When you wake, and when your workday runs.',
+  'profile-schedule': 'Teach Voxu when you’re awake, working, and winding down.',
   'daily-experience': 'Choose what your Home shows.',
-  mindset: 'The philosophy Voxu coaches you with.',
+  mindset: 'Choose how Voxu challenges, supports, and speaks to you.',
   notifications: 'What Voxu sends, when, and how often.',
   'ai-memory': 'What Voxu may remember about you.',
   account: 'Your name, your plan, signing in and out.',

@@ -4,6 +4,7 @@
  */
 
 import webPush from 'web-push'
+import { bedtimeReminderMin } from '@/lib/rhythm/plan'
 import { prisma } from './prisma'
 import { sendAPNsNotification, isAPNsConfigured } from './apns'
 import { sendFCMNotification, isFCMConfigured } from './fcm'
@@ -829,6 +830,7 @@ export async function sendBedtimeReminders(): Promise<void> {
       user_id: true,
       wake_time: true,
       bedtime_reminder_time: true,
+      bedtime: true,
       timezone: true,
     },
   })
@@ -837,7 +839,7 @@ export async function sendBedtimeReminders(): Promise<void> {
   let totalFailed = 0
   let totalSkipped = 0
 
-  for (const { user_id, wake_time, bedtime_reminder_time, timezone } of usersToNotify) {
+  for (const { user_id, wake_time, bedtime_reminder_time, bedtime, timezone } of usersToNotify) {
     const [wakeHour] = (wake_time || '07:00').split(':').map(Number)
 
     // An explicit bedtime the user set wins. Otherwise keep the original
@@ -847,6 +849,9 @@ export async function sendBedtimeReminders(): Promise<void> {
     if (bedtime_reminder_time) {
       const [h] = bedtime_reminder_time.split(':').map(Number)
       bedtimeHour = Number.isFinite(h) ? h : 23
+    } else if (bedtime) {
+      // Their typical bedtime (Settings › Daily Rhythm): remind 30 min before.
+      bedtimeHour = Math.floor(bedtimeReminderMin({ bedtime, wake_time }) / 60)
     } else {
       bedtimeHour = wakeHour - 8
       if (bedtimeHour < 0) bedtimeHour += 24

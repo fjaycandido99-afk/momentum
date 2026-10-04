@@ -8,6 +8,8 @@
  * their own switches and times — nothing else.
  */
 
+import { bedtimeReminderMin } from '@/lib/rhythm/plan'
+
 /** IDs this plan owns. Sync cancels ONLY these — never other local
  *  notifications (routine steps, practice alerts) on the phone. */
 export const LOCAL_REMINDER_IDS = {
@@ -29,6 +31,7 @@ export interface LocalReminderPrefs {
   bedtime_reminder_enabled?: boolean | null
   bedtime_reminder_time?: string | null
   wake_time?: string | null
+  bedtime?: string | null
 }
 
 export interface PlannedReminder {
@@ -58,10 +61,10 @@ export function planLocalReminders(p: LocalReminderPrefs): PlannedReminder[] {
     out.push({ id: LOCAL_REMINDER_IDS.winddown, ...hm(p.winddown_reminder_time, '19:00'), title: 'Wind Down', body: 'Close the day out.', route: '/?session=wind_down' })
   }
   if (p.bedtime_reminder_enabled) {
-    // Same rule as the server: their bedtime time, else 8 hours before waking.
-    const at = p.bedtime_reminder_time
-      ? hm(p.bedtime_reminder_time, '22:00')
-      : { hour: (hm(p.wake_time, '07:00').hour + 16) % 24, minute: 0 }
+    // Same rule as the server: their reminder time, else 30 min before their
+    // bedtime, else 8 hours before waking (lib/rhythm/plan).
+    const m = bedtimeReminderMin(p)
+    const at = { hour: Math.floor(m / 60), minute: m % 60 }
     out.push({ id: LOCAL_REMINDER_IDS.bedtime, ...at, title: 'Bedtime Story', body: 'Wind down for bed.', route: '/?session=bedtime_story' })
   }
   return out

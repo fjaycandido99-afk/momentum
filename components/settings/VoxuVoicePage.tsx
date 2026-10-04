@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { Loader2, Play, Square } from 'lucide-react'
+import { ChevronRight, Loader2, Play, Square } from 'lucide-react'
 import { SpeakingRing } from '@/components/voice-guide/SpeakingRing'
-import { COACH_PREFS, type CoachPrefKey } from '@/lib/voice/coach-prefs'
+import Link from 'next/link'
 import { VOICE_RATES, voiceRate, setVoiceRate, fetchVoxuAudio, sharedVoxuPlayer, installVoxuUnlock } from '@/lib/voice/voxu-audio'
 import { haptic } from '@/lib/haptics'
 
@@ -52,13 +52,12 @@ function List({ label, children }: { label: string; children: ReactNode }) {
  *   speed          on this phone (playbackRate) — free, cache-friendly
  *   speak replies  Talk's own on/off, same key
  *   tone           calm / direct / neutral (guide_tone — already shapes replies)
- *   conversation   preferences fed into the coach's prompt (coach_prefs)
+ *   conversation   → Mindset & Coaching (lib/coach/style)
  */
 export function VoxuVoicePage() {
   const [rate, setRate] = useState(1)
   const [speakReplies, setSpeakReplies] = useState(true)
   const [tone, setTone] = useState<string>('calm')
-  const [prefs, setPrefs] = useState<CoachPrefKey[]>([])
   const [testing, setTesting] = useState(false)
   /** Which tone's sample is loading or playing. */
   const [previewing, setPreviewing] = useState<string | null>(null)
@@ -76,7 +75,7 @@ export function VoxuVoicePage() {
         if (r.status === 401) { setGuest(true); const t = guestPrefs().guide_tone; if (typeof t === 'string') setTone(t); return null }
         return r.ok ? r.json() : null
       })
-      .then(d => { if (d) { setPrefs(d.coachPrefs ?? []); setTone(d.tone ?? 'calm') } })
+      .then(d => { if (d) setTone(d.tone ?? 'calm') })
       .catch(() => {})
   }, [])
 
@@ -123,12 +122,6 @@ export function VoxuVoicePage() {
       setNote('Couldn’t play that sample just now.')
     }
     setPreviewing(p => (p === key ? null : p))
-  }
-
-  const togglePref = (k: CoachPrefKey, on: boolean) => {
-    const next = on ? [...prefs, k] : prefs.filter(p => p !== k)
-    setPrefs(next)
-    void save({ coachPrefs: next })
   }
 
   return (
@@ -209,20 +202,17 @@ export function VoxuVoicePage() {
         ))}
       </List>
 
-      {guest ? (
-        <p className="mt-6 px-1 text-px-13 text-white/60 leading-relaxed">Save your account to choose how Voxu talks to you in conversation &mdash; concise, challenging, encouraging or focused.</p>
-      ) : (<>
-      <p className="mt-2 px-1 text-px-12 text-white/50 leading-relaxed">Tone sets how Voxu words its replies, and which narrator reads your guided sessions. Tap play to hear one.</p>
+      {/* How Voxu coaches (concise, challenge…) moved to Mindset & Coaching,
+          where it grew into per-situation choices (lib/coach/style). */}
       <List label="Conversation">
-        {COACH_PREFS.map(p => (
-          <div key={p.key} className="px-4 py-3.5 flex items-center gap-3">
-            <span className="min-w-0 flex-1 text-px-15 text-white leading-snug">{p.title}</span>
-            <Switch on={prefs.includes(p.key)} label={p.title} onChange={v => togglePref(p.key, v)} />
-          </div>
-        ))}
+        <Link href="/settings?s=mindset" className="flex items-center gap-3 px-4 py-3.5 active:bg-white/[0.04]">
+          <span className="min-w-0 flex-1">
+            <span className="block text-px-15 text-white">Coaching style</span>
+            <span className="block text-px-12 text-white/55">How hard Voxu pushes, how it answers when you&rsquo;re stuck, reply length</span>
+          </span>
+          <ChevronRight className="w-4 h-4 text-white/35" aria-hidden />
+        </Link>
       </List>
-      <p className="mt-2 px-1 text-px-12 text-white/50 leading-relaxed">These change how Voxu answers you in Talk and in your journal. If you&rsquo;re ever in a really hard place, Voxu sets them aside and just looks after you.</p>
-      </>)}
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { inWindow, isWorkTime, quietWindow, type RhythmPrefs } from '@/lib/rhythm/plan'
 import type { NotificationType } from './push-service'
 import { capFor } from '@/lib/notifications/modes'
 
@@ -126,9 +127,23 @@ function localDay(date: Date, timezone: string | null | undefined): string {
 
 const isQuietHour = (h: number) => h >= QUIET_START || h < QUIET_END
 
+// Weekday (0 = Sunday) and minute of the day in the user's timezone.
+function localClock(timezone: string | null | undefined): { weekday: number; minute: number } {
+  const now = new Date()
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone || undefined, weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(now)
+    const get = (t: string) => parts.find(p => p.type === t)?.value ?? ''
+    const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday'))
+    const h = parseInt(get('hour'), 10) % 24
+    const m = parseInt(get('minute'), 10)
+    if (weekday >= 0 && Number.isFinite(h) && Number.isFinite(m)) return { weekday, minute: h * 60 + m }
+  } catch { /* fall through */ }
+  return { weekday: now.getDay(), minute: now.getHours() * 60 + now.getMinutes() }
+}
+
 export interface GateResult {
   allow: boolean
-  reason?: 'quiet_hours' | 'duplicate' | 'daily_cap'
+  reason?: 'quiet_hours' | 'work_hours' | 'duplicate' | 'daily_cap'
 }
 
 export async function shouldSendNotification(userId: string, type: NotificationType): Promise<GateResult> {
@@ -139,13 +154,15 @@ export async function shouldSendNotification(userId: string, type: NotificationT
 
   let timezone: string | null = null
   let dailyCap = capFor(null)
+  let rhythm: RhythmPrefs | null = null
   try {
     const prefs = await prisma.userPreferences.findUnique({
       where: { user_id: userId },
-      select: { timezone: true, notification_mode: true },
+      select: { timezone: true, notification_mode: true, quiet_start: true, quiet_end: true, work_days: true, work_start_time: true, work_end_time: true, work_mode: true },
     })
     timezone = prefs?.timezone ?? null
     dailyCap = capFor(prefs?.notification_mode)
+    rhythm = prefs
   } catch {
     // Couldn't resolve timezone — don't block on it.
   }
@@ -155,8 +172,19 @@ export async function shouldSendNotification(userId: string, type: NotificationT
   //    so a default do-not-disturb window has no business overriding it: a
   //    06:30 morning reminder would otherwise be silently dropped forever.
   //    Everything else, time-critical included, still stays out of the night.
-  if (lane !== 'scheduled' && isQuietHour(hourInZone(timezone))) {
-    return { allow: false, reason: 'quiet_hours' }
+  //    Their own quiet hours (Settings › Daily Rhythm) when set; else 22–07.
+  if (lane !== 'scheduled') {
+    const quiet = rhythm && (rhythm.quiet_start || rhythm.quiet_end)
+      ? (() => { const q = quietWindow(rhythm!); return inWindow(localClock(timezone).minute, q.start, q.end) })()
+      : isQuietHour(hourInZone(timezone))
+    if (quiet) return { allow: false, reason: 'quiet_hours' }
+  }
+
+  // 1b. Work mode (Settings › Daily Rhythm): on their work days, during their
+  //     workday, Voxu holds the pushes IT chose. Reminders they set still come.
+  if (lane === 'opportunistic' && rhythm?.work_mode) {
+    const { weekday, minute } = localClock(timezone)
+    if (isWorkTime(rhythm, weekday, minute)) return { allow: false, reason: 'work_hours' }
   }
 
   // 2. Dedupe + budget, from the send log. FAILS OPEN on any error, so this

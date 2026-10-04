@@ -60,6 +60,8 @@ export interface PromiseReplyInput {
    * tomorrow, or it congratulates them for a day that hasn't happened.
    */
   forTomorrow?: boolean
+  /** Settings › Mindset & Coaching, for this reply (lib/coach/style promiseStyleNote). */
+  styleNote?: string
 }
 
 /** The days the coach should quote their day-1 words back to them. */
@@ -121,7 +123,7 @@ ${input.forTomorrow
 - Output ONLY the reply text.
 
 ${input.coachFocus}
-${input.stageNote}`
+${input.stageNote}${input.styleNote ? `\n${input.styleNote}` : ''}`
 
   const facts = [
     `Day ${input.day} of ${input.lengthDays}.`,

@@ -172,6 +172,17 @@ model UserPreferences {
   notification_mode String @default("coach")
   /// How they asked Voxu to talk (lib/voice/coach-prefs): "concise" | "challenge" | "encourage" | "simplify".
   coach_prefs String[] @default([])
+  /// Settings › Mindset & Coaching (lib/coach/style): intensity, per-situation responses, length, callout.
+  coach_style Json?
+  /// Settings › Daily Rhythm (lib/rhythm/plan): best focus window "morning" | "afternoon" | "evening"; null = not sure.
+  focus_window String?
+  /// Typical bedtime HH:MM — the bedtime reminder falls back to 30 min before it.
+  bedtime String?
+  /// Their own quiet hours HH:MM; null = the default 22:00–07:00.
+  quiet_start String?
+  quiet_end String?
+  /// Opt-in: on work days, during the workday, Voxu holds its OWN nudges (lib/notification-gate).
+  work_mode Boolean @default(false)
   wellness_consented_at DateTime?
 
   // Appear in the circles of people whose era link you used, or who used

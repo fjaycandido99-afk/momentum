@@ -101,6 +101,8 @@ export async function GET() {
         reminder_time: true,
         bedtime_reminder_enabled: true,
         bedtime_reminder_time: true,
+        // Typical bedtime: the phone's bedtime reminder falls back to it.
+        bedtime: true,
         midday_reminder_enabled: true,
         midday_reminder_time: true,
         winddown_reminder_enabled: true,

@@ -76,25 +76,24 @@ function HedonistIcon() {
   )
 }
 
+// A kabuto — the samurai helmet, with its V crest (kuwagata). The old icon
+// was two crossed blades that read as an "X" at small sizes.
 function SamuraiIcon() {
   return (
     <>
-      {/* First katana (top-left to bottom-right) */}
-      <line x1="4" y1="4" x2="20" y2="20" />
-      {/* Handle wrap */}
-      <line x1="5.5" y1="4.5" x2="4.5" y2="5.5" />
-      <line x1="7" y1="6" x2="6" y2="7" />
-      {/* Guard */}
-      <line x1="8.5" y1="7" x2="7" y2="8.5" />
-      {/* Second katana (top-right to bottom-left) */}
-      <line x1="20" y1="4" x2="4" y2="20" />
-      {/* Handle wrap */}
-      <line x1="18.5" y1="4.5" x2="19.5" y2="5.5" />
-      <line x1="17" y1="6" x2="18" y2="7" />
-      {/* Guard */}
-      <line x1="15.5" y1="7" x2="17" y2="8.5" />
-      {/* Center circle */}
-      <circle cx="12" cy="12" r="2" />
+      {/* Bowl */}
+      <path d="M6.2 13.5 C6.2 8.9 8.8 6.6 12 6.6 C15.2 6.6 17.8 8.9 17.8 13.5" />
+      {/* Kuwagata crest */}
+      <path d="M11 7.4 C9.6 5.9 8.4 4.2 7.6 2.2" />
+      <path d="M13 7.4 C14.4 5.9 15.6 4.2 16.4 2.2" />
+      <circle cx="12" cy="10" r="1.3" />
+      {/* Brim, with the turned-back side flaps (fukigaeshi) */}
+      <path d="M3.6 13.5 H20.4" />
+      <path d="M5.4 13.5 C4.6 12.8 4.1 11.9 4 10.9" />
+      <path d="M18.6 13.5 C19.4 12.8 19.9 11.9 20 10.9" />
+      {/* Neck guard (shikoro), in two lames */}
+      <path d="M5.2 13.5 L3.4 18.8 H20.6 L18.8 13.5" />
+      <path d="M4.4 16.2 H19.6" />
     </>
   )
 }
