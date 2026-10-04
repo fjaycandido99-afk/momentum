@@ -16,6 +16,23 @@ export const VOXU_EXPLAIN_MAX_CHARS = 280
 // ── Who's speaking. Every line fetched here announces itself when it plays
 // and when it stops, so the orb's ring (components/voice-guide/SpeakingRing)
 // can come alive wherever Voxu is talking, without each player wiring it.
+/**
+ * Speaking speed, per device (Settings › Voxu Voice). Applied on the phone
+ * with playbackRate, pitch kept — so a faster or slower Voxu costs nothing
+ * and every cached line still serves everyone.
+ */
+export const VOICE_RATE_KEY = 'voxu.voice.rate'
+export const VOICE_RATES = [0.85, 1, 1.15, 1.3] as const
+export function voiceRate(): number {
+  try {
+    const v = Number(localStorage.getItem(VOICE_RATE_KEY))
+    return (VOICE_RATES as readonly number[]).includes(v) ? v : 1
+  } catch { return 1 }
+}
+export function setVoiceRate(r: number): void {
+  try { localStorage.setItem(VOICE_RATE_KEY, String(r)) } catch { /* this session only */ }
+}
+
 export const VOXU_SPEAKING_EVENT = 'voxu:speaking'
 let speaking: HTMLAudioElement | null = null
 export function currentVoxuAudio(): HTMLAudioElement | null { return speaking }
@@ -29,6 +46,11 @@ function announce(next: HTMLAudioElement | null) {
 /** Announce plays/stops of an element the caller owns (a reused player). */
 export function trackVoxuAudio(a: HTMLAudioElement): HTMLAudioElement { return track(a) }
 function track(a: HTMLAudioElement): HTMLAudioElement {
+  // Their speaking speed (Settings › Voxu Voice), applied as each line starts.
+  a.addEventListener('play', () => {
+    const r = voiceRate()
+    try { a.defaultPlaybackRate = r; a.playbackRate = r; (a as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true } catch { /* older engine: normal speed */ }
+  })
   a.addEventListener('playing', () => announce(a))
   const quiet = () => { if (speaking === a) announce(null) }
   a.addEventListener('pause', quiet)

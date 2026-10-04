@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { ChevronRight, Download } from 'lucide-react'
+import { VoxuVoicePage } from './VoxuVoicePage'
 
 /**
  * The Settings pages that gather what already lives elsewhere — links and
@@ -11,6 +12,7 @@ import { ChevronRight, Download } from 'lucide-react'
  * SettingsCategory reads the open page.)
  */
 export const EXTRA_PAGES: Record<string, { title: string; sub: string }> = {
+  voice: { title: 'Voxu Voice', sub: 'How Voxu sounds, and how it talks to you.' },
   growth: { title: 'Era & Growth', sub: 'Your era, your proof, and everything you’ve finished.' },
   patterns: { title: 'Patterns & Psychology', sub: 'What your record shows, what you test, and the lessons behind it.' },
   accessibility: { title: 'Accessibility', sub: 'Voxu follows your iPhone’s own settings.' },
@@ -47,6 +49,8 @@ function Note({ children }: { children: ReactNode }) {
 
 export function SettingsExtraPage({ section }: { section: string }) {
   switch (section) {
+    case 'voice':
+      return <VoxuVoicePage />
     case 'growth':
       return (
         <>

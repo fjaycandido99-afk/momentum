@@ -14,6 +14,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { trackVoxuAudio } from '@/lib/voice/voxu-audio'
 import Link from 'next/link'
 import { Volume2, Loader2, VolumeX } from 'lucide-react'
 
@@ -100,7 +101,7 @@ export function SpeakReplyButton({
         return
       }
 
-      const audio = new Audio(`data:audio/mpeg;base64,${data.audio}`)
+      const audio = trackVoxuAudio(new Audio(`data:audio/mpeg;base64,${data.audio}`))
       audioRef.current = audio
       audio.onended = () => setState('idle')
       audio.onerror = () => setState('unavailable')

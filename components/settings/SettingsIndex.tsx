@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
-  Accessibility, Bell, BookOpen, Brain, CalendarDays, ChevronRight, CreditCard, Globe, HelpCircle,
+  Accessibility, AudioLines, Bell, BookOpen, Brain, CalendarDays, ChevronRight, CreditCard, Globe, HelpCircle,
   Info, LayoutGrid, Lock, Mountain, Sparkles, SunMedium, User,
   type LucideIcon,
 } from 'lucide-react'
@@ -113,6 +113,7 @@ export function SettingsIndex({ isPremium, isTrialing, onUpgrade, rhythm, name, 
 
       <Group label="You">
         <Row icon={User} title="Profile & Account" sub={name ? `${name} · name, plan, sign in` : 'Your name, plan, sign in'} href={s('account')} />
+        <Row icon={AudioLines} title="Voxu Voice" sub="Speed, tone, and how Voxu talks to you" href={s('voice')} />
         <Row icon={Brain} title="Voxu Memory" sub="What Voxu can remember about you" href={s('ai-memory')} />
       </Group>
 

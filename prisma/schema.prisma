@@ -170,6 +170,8 @@ model UserPreferences {
   wellness_enabled     Boolean   @default(false)
   /// How much Voxu nudges: "quiet" | "coach" | "strict" (lib/notifications/modes).
   notification_mode String @default("coach")
+  /// How they asked Voxu to talk (lib/voice/coach-prefs): "concise" | "challenge" | "encourage" | "simplify".
+  coach_prefs String[] @default([])
   wellness_consented_at DateTime?
 
   // Appear in the circles of people whose era link you used, or who used

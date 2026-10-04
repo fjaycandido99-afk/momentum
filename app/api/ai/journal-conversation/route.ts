@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { coachPrefsPrompt } from '@/lib/voice/coach-prefs'
 import { createClient } from '@/lib/supabase/server'
 import { isPremiumUser } from '@/lib/subscription-check'
 import { getGroq, GROQ_MODEL } from '@/lib/groq'
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
     const isPremium = await isPremiumUser(user.id)
     const prefs = await prisma.userPreferences.findUnique({
       where: { user_id: user.id },
-      select: { timezone: true, guide_tone: true },
+      select: { timezone: true, guide_tone: true, coach_prefs: true },
     })
 
     const quota = await consumeAiQuota(user.id, 'chat', isPremium, prefs?.timezone)
@@ -149,6 +150,9 @@ IMPORTANT — this person has just said something that may indicate ${
       ) +
       (memory.block ? `\n\n${memory.block}` : '') +
       (eraBlock ? `\n\n${eraBlock}` : '') +
+      // Their own Settings › Voxu Voice choices; crisis handling comes after
+      // and always wins.
+      (coachPrefsPrompt(prefs?.coach_prefs) ? `\n\n${coachPrefsPrompt(prefs?.coach_prefs)}` : '') +
       crisisPrompt
 
     // Build message history for context

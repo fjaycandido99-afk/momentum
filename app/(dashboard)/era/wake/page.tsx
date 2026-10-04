@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { trackVoxuAudio } from '@/lib/voice/voxu-audio'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AlarmClock, Loader2, Play, Square, X } from 'lucide-react'
@@ -85,7 +86,7 @@ export default function WakeCallPage() {
         if (res.status === 403) return setVoice('locked')
         const body = await res.json().catch(() => null)
         if (!res.ok || !body?.audio) return setVoice('unavailable')
-        const audio = new Audio(`data:audio/mpeg;base64,${body.audio}`)
+        const audio = trackVoxuAudio(new Audio(`data:audio/mpeg;base64,${body.audio}`))
         audio.onended = () => setVoice('ready')
         audio.onerror = () => setVoice('unavailable')
         audioRef.current = audio
