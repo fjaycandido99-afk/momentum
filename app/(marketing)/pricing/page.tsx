@@ -1,33 +1,25 @@
 'use client'
 
-import { useState } from 'react'
-import { isNativeApp } from '@/lib/native'
-import { listPrices } from '@/lib/pricing'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  Crown,
-  Check,
-  X,
-  Zap,
-  Clock,
-  Music,
-  Sparkles,
-  Book,
-  ChevronDown,
-  Loader2,
-  Shield,
-  CreditCard,
-} from 'lucide-react'
+import { AudioLines, Book, Brain, Check, ChevronDown, Clock, Crown, Loader2, Lock, Music, Sparkles, X, Zap } from 'lucide-react'
+import { isNativeApp } from '@/lib/native'
+import { listPrices, usd } from '@/lib/pricing'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
+import { APP_STORE_URL } from '@/components/marketing/JoinCta'
+import { SpeakingRing } from '@/components/voice-guide/SpeakingRing'
+import { GOLD, GOLD_GRADIENT, PREMIUM_BENEFITS, SERIF } from '@/components/premium/offer'
 
-// Pricing constants
-// One price list (lib/pricing) — switches with Apple's change on PRICE_CHANGE_DAY.
-const LIST = listPrices()
-const MONTHLY_PRICE = LIST.monthly
-const YEARLY_PRICE = LIST.yearly
-const YEARLY_MONTHLY = LIST.yearlyPerMonth
-const SAVINGS_PERCENT = LIST.yearlySave
-
+/**
+ * /pricing — Francis's "Golden Mountain Night" design, the same as the
+ * in-app upgrade screen (components/premium/UpgradeModal): the night scene,
+ * Voxu's dial in gold, the benefit cards, side-by-side plans, the gold
+ * button. Below it, the full comparison and the questions.
+ *
+ * Buying: in the app → the app's own Apple purchase screen; on the web →
+ * Stripe checkout when its keys exist, otherwise the App Store.
+ */
 /**
  * The comparison table.
  *
@@ -131,29 +123,53 @@ const FEATURES = [
     premium: true,
     icon: Sparkles,
   },
+  {
+    name: 'Psychology lessons',
+    free: '4 (one per group)',
+    premium: 'All 15',
+    icon: Book,
+  },
+  {
+    name: '7-day experiments',
+    free: 'Your first one',
+    premium: 'Unlimited',
+    icon: Zap,
+  },
+  {
+    name: 'Your rhythm & what gets in the way',
+    free: false,
+    premium: true,
+    icon: Clock,
+  },
+  {
+    name: 'Home-screen widgets',
+    free: 'Today & Quote',
+    premium: '+ Guided & Noticed',
+    icon: Sparkles,
+  },
 ]
 
-// FAQ data
+
 const FAQ_ITEMS = [
   {
     question: 'What happens after my free trial?',
-    answer: `After your ${TRIAL_DAYS}-day free trial ends, you'll be automatically charged based on your selected plan (monthly or yearly). You can cancel anytime before the trial ends to avoid being charged.`,
+    answer: `After your ${TRIAL_DAYS}-day free trial, your plan starts automatically — monthly or yearly, whichever you chose. Cancel before the trial ends and you won't be charged.`,
   },
   {
     question: 'Can I cancel anytime?',
-    answer: 'Yes! You can cancel your subscription at any time. If you cancel, you\'ll retain access to premium features until the end of your current billing period.',
+    answer: 'Yes. Cancel whenever you like; Premium stays until the end of the period you paid for, and everything you made in Voxu stays yours.',
   },
   {
-    question: 'What payment methods do you accept?',
-    answer: 'We accept all major credit cards, debit cards, and Apple Pay through our secure payment processor Stripe.',
+    question: 'How do I pay?',
+    answer: 'Through the App Store, in the Voxu app on your iPhone — it uses the payment method on your Apple ID. You can manage or cancel it in Settings › Apple ID › Subscriptions.',
   },
   {
-    question: 'Is there a family plan?',
-    answer: 'Not currently, but we\'re working on it! Each subscription is for individual use.',
+    question: 'What stays free?',
+    answer: 'Your era, your daily promises, missions, your whole journal, your laws, your year of proof and every era you finish — free, forever. Premium adds the coach, the voice and the depth.',
   },
   {
     question: 'Can I switch between monthly and yearly?',
-    answer: 'Yes, you can switch your billing period at any time from your account settings. Changes will take effect at your next billing date.',
+    answer: 'Yes — in Settings › Apple ID › Subscriptions. The change takes effect at your next renewal.',
   },
 ]
 
@@ -162,14 +178,16 @@ export default function PricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly')
   const [isLoading, setIsLoading] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [showAll, setShowAll] = useState(false)
+  const [inApp, setInApp] = useState(false)
+  useEffect(() => { setInApp(isNativeApp()) }, [])
+  const list = listPrices()
+  const webCheckout = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
-  const handleStartTrial = async () => {
-    // Inside the iPhone app Premium is bought through Apple only — open the
-    // app's own upgrade screen (SubscriptionContext reads ?upgrade=1).
-    if (isNativeApp()) {
-      window.location.href = '/?upgrade=1'
-      return
-    }
+  const start = async () => {
+    // In the app, Premium is bought through Apple only — its own screen.
+    if (inApp) { window.location.href = '/?upgrade=1'; return }
+    if (!webCheckout) { window.location.href = APP_STORE_URL; return }
     setIsLoading(true)
     try {
       const response = await fetch('/api/stripe/create-checkout', {
@@ -177,17 +195,9 @@ export default function PricingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priceType: billingPeriod }),
       })
-
       const data = await response.json()
-
-      if (data.url) {
-        window.location.href = data.url
-      } else if (data.error === 'Not authenticated') {
-        // Redirect to signup if not logged in
-        router.push('/signup?redirect=/pricing')
-      } else {
-        console.error('Checkout error:', data.error)
-      }
+      if (data.url) window.location.href = data.url
+      else if (data.error === 'Not authenticated') router.push('/signup?redirect=/pricing')
     } catch (error) {
       console.error('Failed to create checkout:', error)
     } finally {
@@ -195,403 +205,188 @@ export default function PricingPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-16 px-4 overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 via-transparent to-transparent" />
+  const benefits = showAll ? PREMIUM_BENEFITS : PREMIUM_BENEFITS.slice(0, 6)
 
-        <div className="relative max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 mb-6">
-            <Crown className="w-4 h-4 text-amber-400" />
-            <span className="text-sm text-amber-400 font-medium">{TRIAL_DAYS}-day free trial</span>
+  const plan = (key: 'yearly' | 'monthly') => {
+    const on = billingPeriod === key
+    return (
+      <button
+        type="button"
+        role="radio"
+        aria-checked={on}
+        onClick={() => setBillingPeriod(key)}
+        className="relative flex-1 min-w-0 text-left rounded-2xl px-3.5 pt-3.5 pb-3 transition-all"
+        style={{
+          border: `1px solid ${on ? GOLD : 'rgba(255,255,255,0.14)'}`,
+          background: on ? 'rgba(233,201,160,0.08)' : 'rgba(255,255,255,0.03)',
+          boxShadow: on ? '0 0 24px rgba(233,201,160,0.18)' : 'none',
+        }}
+      >
+        <span className="flex items-start justify-between gap-2">
+          <span className="w-5 h-5 rounded-full border flex items-center justify-center" style={{ borderColor: on ? GOLD : 'rgba(255,255,255,0.4)' }} aria-hidden>
+            {on && <span className="w-2.5 h-2.5 rounded-full" style={{ background: GOLD }} />}
+          </span>
+          {key === 'yearly' && <span className="px-2 py-0.5 rounded-full text-px-10 font-semibold text-black" style={{ background: GOLD }}>Best value</span>}
+        </span>
+        <span className="block mt-2 text-px-15 text-white" style={SERIF}>{key === 'yearly' ? 'Yearly' : 'Monthly'}</span>
+        <span className="block text-px-22 text-white leading-tight tabular-nums" style={SERIF}>
+          {usd(key === 'yearly' ? list.yearly : list.monthly)}<span className="text-px-12 text-white/60"> / {key === 'yearly' ? 'year' : 'month'}</span>
+        </span>
+        <span className="block mt-1 text-px-11 leading-snug" style={{ color: key === 'yearly' ? GOLD : 'rgba(255,255,255,0.6)' }}>
+          {key === 'yearly' ? `Save ${list.yearlySave}% · $${list.yearlyPerMonth}/month` : 'Flexible, cancel anytime'}
+        </span>
+      </button>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      {/* The offer — the mockup, top to bottom. */}
+      <section className="relative overflow-hidden">
+        <PremiumScene />
+        <div className="relative max-w-md mx-auto px-5 pt-6 pb-10">
+          {/* The site header already says Voxu — no second wordmark here. */}
+          <div className="relative mx-auto mt-4 w-28 h-28">
+            <SpeakingRing always size={150} glow="233 201 160" />
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            The era is free. Premium is the coach.
-          </h1>
-          <p className="text-lg text-white/70 max-w-2xl mx-auto mb-8">
-            Your era, your promises, your disciplines and your record are free, forever. Premium is
-            depth: a coach that remembers what you said on day one, as many words as you need, and
-            the letter it writes you at day 30.
+          <h1 className="mt-3 text-center text-px-38 leading-[1.05]" style={{ ...SERIF, fontWeight: 600, color: '#F3E2C7' }}>Unlock Voxu Premium</h1>
+          <p className="mt-1.5 text-center text-px-19 text-white/90" style={SERIF}>Let Voxu learn how you work.</p>
+          <p className="mt-2 text-center text-px-14 text-white/70 leading-snug">
+            Free helps you show up — your era, your promises and your record are free, forever. Premium is the coach, the voice, and everything your record can teach you.
+          </p>
+          <p className="mt-3 flex items-center justify-center gap-3 text-px-12 text-white/75">
+            <span className="inline-flex items-center gap-1"><Brain className="w-3.5 h-3.5" style={{ color: GOLD }} aria-hidden /> Personal</span>
+            <span className="text-white/30">•</span>
+            <span className="inline-flex items-center gap-1"><AudioLines className="w-3.5 h-3.5" style={{ color: GOLD }} aria-hidden /> Adaptive</span>
+            <span className="text-white/30">•</span>
+            <span className="inline-flex items-center gap-1"><Lock className="w-3.5 h-3.5" style={{ color: GOLD }} aria-hidden /> Private</span>
           </p>
 
-          {/* Quick pricing preview */}
-          <div className="flex items-center justify-center gap-2 text-white/50">
-            <span>Starting at</span>
-            <span className="text-2xl font-bold text-white">${YEARLY_MONTHLY}</span>
-            <span>/month</span>
+          <ul className="mt-5 space-y-2">
+            {benefits.map(b => (
+              <li key={b.key} className="flex items-center gap-3.5 rounded-2xl px-4 py-3 border border-white/[0.1] bg-black/40">
+                <b.icon className="w-5 h-5 shrink-0 text-white/85" aria-hidden />
+                <span className="min-w-0">
+                  <span className="block text-px-15 text-white leading-snug" style={SERIF}>{b.title}</span>
+                  <span className="block text-px-12 text-white/60 leading-snug">{b.line}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          {!showAll && PREMIUM_BENEFITS.length > benefits.length && (
+            <button onClick={() => setShowAll(true)} className="tap-44 mt-1 w-full text-center text-px-13 text-white/60 underline underline-offset-4">
+              And {PREMIUM_BENEFITS.length - benefits.length} more
+            </button>
+          )}
+
+          <div className="mt-5 flex gap-2.5" role="radiogroup" aria-label="Plan">
+            {plan('monthly')}
+            {plan('yearly')}
+          </div>
+
+          <button
+            onClick={start}
+            disabled={isLoading}
+            className="tap-44 mt-5 w-full py-4 rounded-full text-black text-px-19 font-semibold flex items-center justify-center gap-2 disabled:opacity-50 press-scale"
+            style={{ ...SERIF, background: GOLD_GRADIENT, boxShadow: '0 8px 28px rgba(233,201,160,0.25)' }}
+          >
+            {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+            {!inApp && !webCheckout ? 'Get Voxu on the App Store' : 'Start Free Trial'}
+          </button>
+          <p className="mt-2 text-center text-px-12 text-white/65">
+            {TRIAL_DAYS}-day free trial, then {billingPeriod === 'yearly' ? `${usd(list.yearly)} a year` : `${usd(list.monthly)} a month`}. Cancel anytime.
+          </p>
+          <div className="mt-4 text-center">
+            <Link href={inApp ? '/' : '/signup'} className="tap-44 inline-block text-px-16 text-white/80 underline underline-offset-4" style={SERIF}>Continue with Free</Link>
           </div>
         </div>
       </section>
 
-      {/* Pricing Cards Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Billing toggle */}
-          <div className="flex justify-center mb-10">
-            <div className="flex gap-2 p-1.5 bg-white/5 rounded-xl border border-white/15">
-              <button
-                onClick={() => setBillingPeriod('monthly')}
-                className={`py-2.5 px-6 rounded-lg text-sm font-medium transition-all ${
-                  billingPeriod === 'monthly'
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/70 hover:text-white'
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingPeriod('yearly')}
-                className={`py-2.5 px-6 rounded-lg text-sm font-medium transition-all ${
-                  billingPeriod === 'yearly'
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/70 hover:text-white'
-                }`}
-              >
-                Yearly
-                <span className="ml-2 text-xs text-amber-400">Save {SAVINGS_PERCENT}%</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Cards */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Free Plan */}
-            <div className="relative p-6 rounded-2xl bg-white/[0.02] border border-white/15">
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-white mb-2">Free</h3>
-                <p className="text-white/70 text-sm">The whole loop, forever</p>
-              </div>
-
-              <div className="mb-6">
-                <span className="text-3xl font-bold text-white">$0</span>
-                <span className="text-white/50">/forever</span>
-              </div>
-
-              {/* These MUST track FREE_TIER_LIMITS and AI_FEATURE_LIMITS in
-                  lib/subscription-constants.ts.
-
-                  They had drifted badly: the page advertised "1 session per
-                  day" and a "10-minute session limit" long after both caps
-                  were lifted (sessions_per_day is 99, duration 999), and
-                  listed Checkpoints as NOT included when checkpoints_enabled
-                  is true for free. We were talking prospects out of a free
-                  tier that is considerably better than advertised. */}
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>Your era: 30 days, one promise a day</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>Disciplines, daily practice &amp; your year in proof</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>Unlimited sessions, no time limit</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>All music, motivation &amp; soundscapes</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>5 coach messages and a spoken reply, every day</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <Check className="w-4 h-4 text-white/50 flex-shrink-0" />
-                  <span>The last 7 days of your journal</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/40 text-sm">
-                  <X className="w-4 h-4 flex-shrink-0" />
-                  <span>A coach that remembers more than today</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/40 text-sm">
-                  <X className="w-4 h-4 flex-shrink-0" />
-                  <span>The Era Recap at day 30</span>
-                </li>
-              </ul>
-
-              <button
-                onClick={() => router.push('/signup')}
-                className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/15 text-white font-medium hover:bg-white/10 transition-colors"
-              >
-                Get Started
-              </button>
-            </div>
-
-            {/* Premium Plan */}
-            <div className="relative p-6 rounded-2xl bg-gradient-to-b from-amber-500/10 to-transparent border border-amber-500/20">
-              {/* Popular badge */}
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <div className="px-4 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold">
-                  Most Popular
-                </div>
-              </div>
-
-              <div className="mb-6 pt-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <Crown className="w-5 h-5 text-amber-400" />
-                  <h3 className="text-xl font-semibold text-white">Premium</h3>
-                </div>
-                <p className="text-white/70 text-sm">The coach with a memory</p>
-              </div>
-
-              <div className="mb-6">
-                {billingPeriod === 'monthly' ? (
-                  <>
-                    <span className="text-3xl font-bold text-white">${MONTHLY_PRICE}</span>
-                    <span className="text-white/50">/month</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-3xl font-bold text-white">${YEARLY_PRICE}</span>
-                    <span className="text-white/50">/year</span>
-                    <p className="text-amber-400/80 text-sm mt-1">
-                      Just ${YEARLY_MONTHLY}/month
-                    </p>
-                  </>
-                )}
-              </div>
-
-              {/* Only what the gate ACTUALLY lifts. Three of the six that
-                  used to be here were wrong: "Unlimited daily sessions" and
-                  "No time limits" are free already, and "voice tones" and
-                  "Offline downloads" are not features that exist. */}
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <div className="p-0.5 rounded bg-amber-500/20">
-                    <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                  </div>
-                  <span>A coach that remembers day one, every callback day</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <div className="p-0.5 rounded bg-amber-500/20">
-                    <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                  </div>
-                  <span>Unlimited coach messages, and 30 spoken replies a day</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <div className="p-0.5 rounded bg-amber-500/20">
-                    <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                  </div>
-                  <span>AI that reads your last 30 days, not just today</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <div className="p-0.5 rounded bg-amber-500/20">
-                    <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                  </div>
-                  <span>Every guided voice session</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <div className="p-0.5 rounded bg-amber-500/20">
-                    <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                  </div>
-                  <span>A year of progress, and a Voxu that reads your last 30 days</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <div className="p-0.5 rounded bg-amber-500/20">
-                    <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                  </div>
-                  <span>The Era Recap &mdash; the letter at day 30</span>
-                </li>
-                <li className="flex items-center gap-3 text-white/70 text-sm">
-                  <div className="p-0.5 rounded bg-amber-500/20">
-                    <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                  </div>
-                  {/* "unlimited routines" was here. Routines had no screen
-                      anyone could reach and the feature is now deleted, so
-                      selling it was selling something that did not exist. */}
-                  <span>Goals and the weekly AI summary</span>
-                </li>
-              </ul>
-
-              <button
-                onClick={handleStartTrial}
-                disabled={isLoading}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:from-amber-400 hover:to-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Loading...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    <span>Start {TRIAL_DAYS}-Day Free Trial</span>
-                  </>
-                )}
-              </button>
-
-              <p className="text-center text-white/50 text-xs mt-3">
-                Cancel anytime. No commitment required.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Comparison Table */}
-      <section className="py-16 px-4 border-t border-white/5">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-10">
-            Compare Plans
-          </h2>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/15">
-                  <th className="text-left py-4 px-4 text-white/70 font-medium">Feature</th>
-                  <th className="text-center py-4 px-4 text-white/70 font-medium w-32">Free</th>
-                  <th className="text-center py-4 px-4 text-amber-400 font-medium w-32">
-                    <div className="flex items-center justify-center gap-1">
-                      <Crown className="w-4 h-4" />
-                      Premium
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {FEATURES.map((feature, index) => (
-                  <tr key={index} className="border-b border-white/5 hover:bg-white/[0.02]">
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <feature.icon className="w-4 h-4 text-white/70" />
-                        <span className="text-white/70 text-sm">{feature.name}</span>
-                      </div>
-                    </td>
-                    <td className="text-center py-4 px-4">
-                      {typeof feature.free === 'boolean' ? (
-                        feature.free ? (
-                          <Check className="w-4 h-4 text-green-400 mx-auto" />
-                        ) : (
-                          <X className="w-4 h-4 text-white/40 mx-auto" />
-                        )
-                      ) : (
-                        <span className="text-white/50 text-sm">{feature.free}</span>
-                      )}
-                    </td>
-                    <td className="text-center py-4 px-4">
-                      {typeof feature.premium === 'boolean' ? (
-                        feature.premium ? (
-                          <Check className="w-4 h-4 text-amber-400 mx-auto" />
-                        ) : (
-                          <X className="w-4 h-4 text-white/40 mx-auto" />
-                        )
-                      ) : (
-                        <span className="text-amber-400/80 text-sm font-medium">{feature.premium}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-16 px-4 border-t border-white/5">
+      {/* Free and Premium, side by side — every row is enforced in the code. */}
+      <section className="px-5 py-12 border-t border-white/[0.06]">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-10">
-            Frequently Asked Questions
-          </h2>
-
-          <div className="space-y-3">
-            {FAQ_ITEMS.map((item, index) => (
-              <div
-                key={index}
-                className="rounded-xl bg-white/[0.02] border border-white/15 overflow-hidden"
-              >
-                <button
-                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full flex items-center justify-between p-4 text-left"
-                >
-                  <span className="text-white font-medium">{item.question}</span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-white/50 transition-transform ${
-                      openFaq === index ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-                {openFaq === index && (
-                  <div className="px-4 pb-4">
-                    <p className="text-white/70 text-sm leading-relaxed">
-                      {item.answer}
-                    </p>
-                  </div>
-                )}
+          <h2 className="text-center text-px-28" style={{ ...SERIF, fontWeight: 600 }}>Free and Premium</h2>
+          <div className="mt-6 rounded-2xl border border-white/[0.1] bg-white/[0.02] overflow-hidden">
+            <div className="grid grid-cols-[1fr_6.5rem_6.5rem] px-4 py-3 text-px-12 border-b border-white/[0.08]">
+              <span className="text-white/60">What you get</span>
+              <span className="text-center text-white/60">Free</span>
+              <span className="text-center font-medium inline-flex items-center justify-center gap-1" style={{ color: GOLD }}><Crown className="w-3.5 h-3.5" aria-hidden /> Premium</span>
+            </div>
+            {FEATURES.map(feature => (
+              <div key={feature.name} className="grid grid-cols-[1fr_6.5rem_6.5rem] items-center px-4 py-3 border-b border-white/[0.05] last:border-b-0">
+                <span className="flex items-center gap-2.5 min-w-0">
+                  <feature.icon className="w-4 h-4 shrink-0 text-white/55" aria-hidden />
+                  <span className="text-px-13 text-white/85 leading-snug">{feature.name}</span>
+                </span>
+                <span className="text-center text-px-12 text-white/60 leading-snug px-1">
+                  {typeof feature.free === 'boolean'
+                    ? (feature.free ? <Check className="w-4 h-4 mx-auto text-white/70" aria-label="Included" /> : <X className="w-4 h-4 mx-auto text-white/30" aria-label="Not included" />)
+                    : feature.free}
+                </span>
+                <span className="text-center text-px-12 leading-snug px-1" style={{ color: GOLD }}>
+                  {typeof feature.premium === 'boolean'
+                    ? (feature.premium ? <Check className="w-4 h-4 mx-auto" aria-label="Included" /> : <X className="w-4 h-4 mx-auto text-white/30" aria-label="Not included" />)
+                    : feature.premium}
+                </span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Trust Indicators & CTA */}
-      <section className="py-16 px-4 border-t border-white/5">
-        <div className="max-w-xl mx-auto text-center">
-          {/* Trust badges */}
-          <div className="flex items-center justify-center gap-6 mb-8">
-            <div className="flex items-center gap-2 text-white/50 text-sm">
-              <Shield className="w-4 h-4" />
-              <span>Secure checkout</span>
-            </div>
-            <div className="flex items-center gap-2 text-white/50 text-sm">
-              <CreditCard className="w-4 h-4" />
-              <span>Powered by Stripe</span>
-            </div>
+      <section className="px-5 py-12 border-t border-white/[0.06]">
+        <div className="max-w-xl mx-auto">
+          <h2 className="text-center text-px-28" style={{ ...SERIF, fontWeight: 600 }}>Questions</h2>
+          <div className="mt-6 space-y-2.5">
+            {FAQ_ITEMS.map((item, index) => (
+              <div key={item.question} className="rounded-2xl border border-white/[0.1] bg-white/[0.02] overflow-hidden">
+                <button onClick={() => setOpenFaq(openFaq === index ? null : index)} aria-expanded={openFaq === index} className="w-full flex items-center justify-between gap-3 p-4 text-left">
+                  <span className="text-px-16 text-white" style={SERIF}>{item.question}</span>
+                  <ChevronDown className={`w-5 h-5 shrink-0 text-white/50 transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
+                </button>
+                {openFaq === index && <p className="px-4 pb-4 text-px-14 text-white/70 leading-relaxed">{item.answer}</p>}
+              </div>
+            ))}
           </div>
-
-          <h3 className="text-2xl font-bold text-white mb-4">
-            Ready to upgrade your focus?
-          </h3>
-          <p className="text-white/70 mb-8">
-            {/* "Join thousands of users who have transformed their
-                productivity" was a number we don't have and a claim nobody
-                made. Same rule as the testimonials that came off the
-                landing page. */}
-            Start an era today. Upgrade when you want the coach to remember more than today.
-          </p>
-
-          <button
-            onClick={handleStartTrial}
-            disabled={isLoading}
-            className="inline-flex items-center justify-center gap-2 py-4 px-8 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-lg hover:from-amber-400 hover:to-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Loading...</span>
-              </>
-            ) : (
-              <>
-                <Crown className="w-5 h-5" />
-                <span>Start Your Free Trial</span>
-              </>
-            )}
-          </button>
-          <p className="text-white/50 text-sm mt-3">
-            {TRIAL_DAYS}-day free trial. Cancel anytime.
-          </p>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 px-4 border-t border-white/5">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-white/50 text-sm">
+      <footer className="py-8 px-5 border-t border-white/[0.06]">
+        <div className="max-w-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-px-13 text-white/50">
           <span>Voxu {new Date().getFullYear()}</span>
           <div className="flex items-center gap-6">
-            <a href="/terms" className="hover:text-white/70 transition-colors">Terms</a>
-            <a href="/privacy" className="hover:text-white/70 transition-colors">Privacy</a>
-            <a href="mailto:support@voxu.app" className="hover:text-white/70 transition-colors">Support</a>
+            <a href="/terms" className="hover:text-white/70">Terms</a>
+            <a href="/privacy" className="hover:text-white/70">Privacy</a>
+            <a href="mailto:support@voxu.app" className="hover:text-white/70">Support</a>
           </div>
         </div>
       </footer>
     </div>
+  )
+}
+
+/** The paywall's night (its own scene when it exists, else the opener's), fading into black. */
+function PremiumScene() {
+  // Start on the night that exists; swap in the paywall's own scene only
+  // once it has actually loaded (a server-rendered <img> can 404 before
+  // React is listening, and showed a broken-image box).
+  const [src, setSrc] = useState('/scenes/home/night-tall.jpg')
+  useEffect(() => {
+    const probe = new Image()
+    probe.onload = () => setSrc('/scenes/premium/backdrop.jpg')
+    probe.src = '/scenes/premium/backdrop.jpg'
+  }, [])
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-[70%] w-full object-cover opacity-90 pointer-events-none"
+      />
+      <div className="absolute inset-x-0 top-0 h-[70%] bg-gradient-to-b from-black/0 via-black/25 to-black pointer-events-none" aria-hidden />
+    </>
   )
 }

@@ -25,7 +25,7 @@ const FILES = [
   'app/(marketing)/pricing/page.tsx',
   'app/(marketing)/download/page.tsx',
   'app/(marketing)/terms/page.tsx',
-  'components/premium/UpgradeModal.tsx',
+  'components/premium/offer.ts',
   'components/premium/TierBanner.tsx',
   'components/premium/SoftLock.tsx',
   'components/premium/FeatureTooltip.tsx',
@@ -90,7 +90,7 @@ describe('no feature is advertised that does not exist', () => {
     expect(FREE_TIER_LIMITS.checkpoints_enabled).toBe(true)
 
     const premiumLists = [
-      read('components/premium/UpgradeModal.tsx'),
+      read('components/premium/offer.ts'),
       read('app/(marketing)/pricing/page.tsx'),
     ].map(copyOnly)
 
@@ -142,7 +142,7 @@ describe('the free tier is described as it actually is', () => {
   it('quotes the real weekly allowances', () => {
     expect(AI_FEATURE_LIMITS.chat).toMatchObject({ free: 20, freePer: 'week' })
     expect(AI_FEATURE_LIMITS.chat_voice).toMatchObject({ free: 7, freePer: 'week', premium: 30 })
-    for (const f of ['app/(marketing)/pricing/page.tsx', 'components/premium/UpgradeModal.tsx', 'app/(dashboard)/settings/page.tsx']) {
+    for (const f of ['app/(marketing)/pricing/page.tsx', 'components/premium/offer.ts', 'app/(dashboard)/settings/page.tsx']) {
       const copy = copyOnly(read(f))
       expect(copy, f).toMatch(/20 (coaching conversations )?a week/)
       expect(copy, f).toMatch(/7 (spoken replies )?a week/)

@@ -11,9 +11,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext'
 import { getProducts, purchaseProduct, restorePurchases, REVENUECAT_PRODUCTS } from '@/lib/revenuecat'
 import { listPrices, usd } from '@/lib/pricing'
 
-const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
-/** The paywall's warm gold (Francis's 'Golden Mountain Night' design). */
-const GOLD = '#E9C9A0'
+import { GOLD, GOLD_GRADIENT, PREMIUM_BENEFITS, SERIF } from './offer'
 import { TRIAL_DAYS } from '@/lib/subscription-constants'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 
@@ -39,17 +37,6 @@ interface UpgradeModalProps {
  * (chat, chat_voice), AI_MEMORY_DEPTH, the voiceGuides free ids, the journal
  * and progress windows, and the Era Recap check in lib/era/service.ts.
  */
-const PREMIUM_BENEFITS: { key: string; icon: typeof Book; title: string; line: string }[] = [
-  { key: 'talk', icon: MessageCircle, title: 'Unlimited conversations', line: 'Talk with Voxu as much as you like — free has 20 a week.' },
-  { key: 'voice', icon: Mic, title: 'Voxu’s voice', line: '30 spoken replies a day — free has 7 a week.' },
-  { key: 'experiments', icon: BarChart3, title: 'Your laws, tested', line: '7-day experiments, and the charts behind your patterns.' },
-  { key: 'lesson', icon: Book, title: 'The full psychology library', line: 'All 15 lessons — free has 4.' },
-  { key: 'audio', icon: Headphones, title: 'Every guided session', line: 'The whole library — free has a starter four.' },
-  { key: 'memory', icon: Sparkles, title: 'A coach that remembers', line: 'Voxu reads your last 30 days — and day one.' },
-  { key: 'recap', icon: Crown, title: 'The Era Recap', line: 'A letter at day 30, and a year of progress.' },
-  { key: 'widget', icon: Zap, title: 'Premium widgets', line: 'Guided and Voxu-noticed, on your home screen.' },
-]
-
 /** What they reached for, said back to them first. Every line is a real gate. */
 const REASON_HEADLINE: Record<UpgradeReason, { title: string; line: string }> = {
   experiments: { title: 'Test what actually works for you', line: 'Change one thing for 7 days, compared with your own last four weeks.' },
