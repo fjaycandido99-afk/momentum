@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
+import { signOutWidget } from '@/lib/widget-sync'
 import {
   Bell,
   LogOut,
@@ -331,6 +332,7 @@ function SettingsContent() {
         keysToRemove.forEach(key => storage.removeItem(key))
       }
     }
+    await signOutWidget()
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()

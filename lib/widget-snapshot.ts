@@ -22,6 +22,7 @@
 import type { EraTodayWire } from '@/lib/era/service'
 import type { Pulse, TodayStatus } from '@/lib/pulse/engine'
 import { eraAccentHex } from '@/lib/era/skins'
+import { checkinState, tomorrowSuggestion } from '@/lib/widget/actions'
 
 export const WIDGET_SNAPSHOT_VERSION = 1
 
@@ -60,6 +61,10 @@ export interface WidgetSnapshot {
   week?: { label: string; kept: number; answered: number }[] | null
   /** Premium unlocks the Guided and Noticed widgets; absent = unknown (an older app). */
   premium?: boolean
+  /** The Check-in widget: ask, answered today, or check-ins are off (their consent). */
+  checkin?: 'ask' | 'done' | 'off'
+  /** The Tomorrow widget: today's promise again, or a smaller one — with why. */
+  suggestion?: { text: string; why: string } | null
 }
 
 export interface WidgetPulse {
@@ -135,6 +140,11 @@ export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Da
     pulse: p,
     accent: eraAccentHex(era.key),
     tomorrowReady: !!era.tomorrow,
+    checkin: checkinState(era.wellness),
+    suggestion: (() => {
+      const s = tomorrowSuggestion(era.today ? { text: era.today.text, kept: era.today.kept ?? null } : null, !!era.tomorrow)
+      return s ? { text: clip(s.text, 120), why: s.why } : null
+    })(),
     guide,
     law: lawLine,
     ...(premium === undefined ? {} : { premium }),

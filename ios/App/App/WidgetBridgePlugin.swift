@@ -16,10 +16,13 @@ public class WidgetBridgePlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "reload", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "write", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setToken", returnType: CAPPluginReturnPromise),
     ]
 
     static let appGroup = "group.com.voxu.app"
     static let snapshotKey = "widget_snapshot"
+    /// The widget buttons' key (app/api/widget/token). Read only by VoxuWidget.
+    static let tokenKey = "widget_token"
 
     @objc func reload(_ call: CAPPluginCall) {
         if #available(iOS 14.0, *) {
@@ -44,5 +47,17 @@ public class WidgetBridgePlugin: CAPPlugin, CAPBridgedPlugin {
         }
         store.set(json, forKey: WidgetBridgePlugin.snapshotKey)
         call.resolve(["written": true])
+    }
+
+    /// '' removes it (sign-out). The App Group is shared with our widget only.
+    @objc func setToken(_ call: CAPPluginCall) {
+        let token = call.getString("token") ?? ""
+        guard let store = UserDefaults(suiteName: WidgetBridgePlugin.appGroup) else {
+            call.resolve()
+            return
+        }
+        if token.isEmpty { store.removeObject(forKey: WidgetBridgePlugin.tokenKey) }
+        else { store.set(token, forKey: WidgetBridgePlugin.tokenKey) }
+        call.resolve()
     }
 }

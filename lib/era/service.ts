@@ -235,6 +235,8 @@ export interface EraTodayWire {
   alignment: EraAlignment | null
   /** The wake-up call's settings (lib/era/wake.ts), for the home chip. */
   wakeCall: { enabled: boolean; time: string | null }
+  /** Wellness check-ins: switched on, and answered today (the widget's check-in). */
+  wellness: { on: boolean; checkedToday: boolean }
   /** Every day with a promise, oldest first — the page draws the 30-day grid from it. */
   days: EraDayWire[]
 }
@@ -483,6 +485,7 @@ export async function loadEraToday(userId: string): Promise<EraTodayWire | null>
     recap: era.recap ?? null,
     alignment,
     wakeCall: { enabled: prefs?.wake_call_enabled ?? false, time: prefs?.wake_call_time ?? null },
+    wellness: { on: wellnessOn, checkedToday: !!stateToday },
     days: promises
       .filter(p => daysBetween(era.start_day, p.local_day) >= 0)
       .map(p => ({ day: eraDayNumber(era.start_day, p.local_day), localDay: p.local_day, kept: p.kept })),

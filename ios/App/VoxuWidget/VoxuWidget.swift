@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import AppIntents
 
 // MARK: - What the widgets show
 //
@@ -26,6 +27,14 @@ import SwiftUI
 private let APP_GROUP = "group.com.voxu.app"
 private let SNAPSHOT_KEY = "widget_snapshot"
 private let QUOTE_URL = "https://voxu.app/api/widget?type=quote"
+private let ACTION_URL = "https://voxu.app/api/widget/action"
+/// The buttons' key, from the app (WidgetBridgePlugin.setToken). No key → buttons open the app.
+private let TOKEN_KEY = "widget_token"
+/// Set to today's date after a button worked, so the widget shows it at once —
+/// before the app has written a new snapshot.
+private let DONE_PROMISE_KEY = "widget_done_promise"
+private let DONE_CHECKIN_KEY = "widget_done_checkin"
+private let DONE_TOMORROW_KEY = "widget_done_tomorrow"
 private let DUE_BEFORE = 15   // minutes before a time it becomes "due now"
 private let SLIP_AFTER = 60   // minutes after a time it is "before it slips"
 
@@ -68,6 +77,10 @@ struct Snapshot: Decodable {
     /// Kept of answered by weekday, Monday first (Premium's charts).
     struct WeekBar: Decodable { let label: String; let kept: Int; let answered: Int }
     let week: [WeekBar]?
+    /// "ask" | "done" | "off" — wellness check-ins, by their own consent.
+    let checkin: String?
+    struct Suggestion: Decodable { let text: String; let why: String }
+    let suggestion: Suggestion?
 }
 
 extension Color {
@@ -125,6 +138,12 @@ struct Today {
     var premium: Bool? = nil
     /// (label, kept, answered) × 7, or empty.
     var week: [(String, Int, Int)] = []
+    // Buttons
+    var checkin = "off"
+    var suggestion: String? = nil
+    var suggestionWhy: String? = nil
+    /// The app gave this widget its key: buttons act here; otherwise they open Voxu.
+    var canAct = false
     // Fallback
     var quote = "Small steps, repeated, become a life."
     var author = "Voxu"
@@ -219,6 +238,17 @@ func loadToday(at now: Date = Date()) -> Today {
     t.missionDone = snap.mission?.done ?? false
     t.guideId = snap.guide?.id
     t.guideName = snap.guide?.name
+    t.tomorrowReady = snap.tomorrowReady ?? false
+    t.checkin = snap.checkin ?? "off"
+    t.suggestion = snap.suggestion?.text
+    t.suggestionWhy = snap.suggestion?.why
+    if let store = UserDefaults(suiteName: APP_GROUP) {
+        t.canAct = !(store.string(forKey: TOKEN_KEY) ?? "").isEmpty
+        // A button that worked shows at once, before the app writes again.
+        if store.string(forKey: DONE_PROMISE_KEY) == snap.date, t.promise != nil { t.kept = true }
+        if store.string(forKey: DONE_CHECKIN_KEY) == snap.date, t.checkin == "ask" { t.checkin = "done" }
+        if store.string(forKey: DONE_TOMORROW_KEY) == snap.date { t.tomorrowReady = true; t.suggestion = nil }
+    }
 
     guard let p = snap.pulse else { return t }
     let mins = minutesNow(now)
@@ -280,6 +310,107 @@ func loadToday(at now: Date = Date()) -> Today {
         t.nowQuote = nil
     }
     return t
+}
+
+// MARK: - Buttons (iOS 17 interactive widgets)
+
+/// Today in the widget's own calendar, the way the app writes `date`.
+private func todayString() -> String {
+    let f = DateFormatter()
+    f.calendar = Calendar.current
+    f.timeZone = TimeZone.current
+    f.dateFormat = "yyyy-MM-dd"
+    return f.string(from: Date())
+}
+
+enum WidgetAPI {
+    /// POSTs one action with the widget's key. A 401 drops the key, so the
+    /// buttons go back to opening the app until it hands over a new one.
+    static func send(_ body: [String: String]) async -> Bool {
+        guard let store = UserDefaults(suiteName: APP_GROUP),
+              let token = store.string(forKey: TOKEN_KEY), !token.isEmpty,
+              let url = URL(string: ACTION_URL) else { return false }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.timeoutInterval = 15
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        do {
+            let (_, resp) = try await URLSession.shared.data(for: req)
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            if code == 401 { store.removeObject(forKey: TOKEN_KEY) }
+            return (200..<300).contains(code)
+        } catch {
+            return false
+        }
+    }
+
+    static func remember(_ key: String) {
+        UserDefaults(suiteName: APP_GROUP)?.set(todayString(), forKey: key)
+    }
+}
+
+@available(iOS 17.0, *)
+struct MarkPromiseDoneIntent: AppIntent {
+    static var title: LocalizedStringResource = "Mark today’s promise kept"
+    static var isDiscoverable: Bool = false
+    func perform() async throws -> some IntentResult {
+        if await WidgetAPI.send(["action": "promise_done"]) { WidgetAPI.remember(DONE_PROMISE_KEY) }
+        return .result()
+    }
+}
+
+@available(iOS 17.0, *)
+struct CheckInIntent: AppIntent {
+    static var title: LocalizedStringResource = "Check in"
+    static var isDiscoverable: Bool = false
+    @Parameter(title: "Level") var level: String
+    init() {}
+    init(level: String) { self.level = level }
+    func perform() async throws -> some IntentResult {
+        if await WidgetAPI.send(["action": "checkin", "level": level]) { WidgetAPI.remember(DONE_CHECKIN_KEY) }
+        return .result()
+    }
+}
+
+@available(iOS 17.0, *)
+struct KeepTomorrowIntent: AppIntent {
+    static var title: LocalizedStringResource = "Keep tomorrow’s promise"
+    static var isDiscoverable: Bool = false
+    @Parameter(title: "Promise") var text: String
+    init() {}
+    init(text: String) { self.text = text }
+    func perform() async throws -> some IntentResult {
+        if await WidgetAPI.send(["action": "tomorrow_keep", "text": text]) { WidgetAPI.remember(DONE_TOMORROW_KEY) }
+        return .result()
+    }
+}
+
+/// A pill that acts in place on iOS 17 with a key, and opens the app otherwise.
+struct PillLabel: View {
+    let title: String
+    let symbol: String?
+    var filled = false
+    var body: some View {
+        HStack(spacing: 6) {
+            if let symbol = symbol { Image(systemName: symbol).font(.system(size: 11, weight: .semibold)) }
+            Text(title).font(.system(size: 12, weight: .semibold)).lineLimit(1)
+        }
+        .foregroundColor(filled ? .black : .white)
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
+        .background(Capsule().fill(filled ? Color.white : Color.white.opacity(0.12)))
+    }
+}
+
+@ViewBuilder
+func markDoneButton(_ t: Today, title: String = "Mark Done") -> some View {
+    if #available(iOS 17.0, *), t.canAct {
+        Button(intent: MarkPromiseDoneIntent()) { PillLabel(title: title, symbol: "checkmark") }.buttonStyle(.plain)
+    } else {
+        Link(destination: appLink("/era")) { PillLabel(title: title, symbol: "checkmark") }
+    }
 }
 
 // MARK: - Timeline
@@ -641,7 +772,11 @@ struct TodayWidgetView: View {
                         .minimumScaleFactor(0.85)
                 }
                 Spacer(minLength: 0)
-                Text(promiseStatus).font(.system(size: 11)).foregroundColor(dim).lineLimit(1)
+                if t.promise != nil && t.kept == nil {
+                    markDoneButton(t).frame(maxWidth: 200)
+                } else {
+                    Text(promiseStatus).font(.system(size: 11)).foregroundColor(dim).lineLimit(1)
+                }
             }
             Spacer(minLength: 0)
         }
@@ -721,14 +856,19 @@ struct TodayWidgetView: View {
                 }
             }
             Spacer(minLength: 0)
-            Link(destination: appLink("/")) {
-                HStack {
-                    Text("Open Voxu").font(.system(size: 12, weight: .semibold)).foregroundColor(.white)
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundColor(dim)
+            HStack(spacing: 8) {
+                if t.promise != nil && t.kept == nil {
+                    markDoneButton(t, title: "Mark Today Done")
                 }
-                .padding(.horizontal, 12).padding(.vertical, 8)
-                .background(Capsule().fill(Color.white.opacity(0.09)))
+                Link(destination: appLink("/")) {
+                    HStack {
+                        Text("Open Voxu").font(.system(size: 12, weight: .semibold)).foregroundColor(.white)
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundColor(dim)
+                    }
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(Capsule().fill(Color.white.opacity(0.09)))
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -962,6 +1102,136 @@ struct VoxuNoticedWidget: Widget {
     }
 }
 
+// MARK: - Check-in
+
+/// Small — "How are you right now?" Low / Okay / Good, answered in place.
+/// Only when wellness check-ins are on (their consent, in the app); off, it
+/// says where to turn them on and never records anything.
+struct CheckInWidgetView: View {
+    let entry: VoxuEntry
+    private var t: Today { entry.today }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Eyebrow(text: "Voxu")
+            if t.checkin == "done" {
+                Text("Checked in today.")
+                    .font(.system(size: 16, weight: .semibold, design: .serif)).foregroundColor(.white)
+                Spacer(minLength: 0)
+                Text("See how your days compare in Voxu.").font(.system(size: 10)).foregroundColor(dim).lineLimit(2)
+            } else {
+                Text("How are you right now?")
+                    .font(.system(size: 16, weight: .semibold, design: .serif)).foregroundColor(.white)
+                    .lineLimit(2).minimumScaleFactor(0.85)
+                Spacer(minLength: 0)
+                if t.checkin == "ask" {
+                    HStack(spacing: 0) {
+                        mood("low", "🙁", "Low", .red)
+                        Spacer(minLength: 0)
+                        mood("okay", "😐", "Okay", .gray)
+                        Spacer(minLength: 0)
+                        mood("good", "🙂", "Good", .green)
+                    }
+                } else {
+                    Text("Turn on check-ins in Voxu to answer here.").font(.system(size: 10)).foregroundColor(dim).lineLimit(3)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .widgetURL(appLink("/progress"))
+    }
+
+    @ViewBuilder
+    private func mood(_ level: String, _ face: String, _ label: String, _ tint: Color) -> some View {
+        let content = VStack(spacing: 3) {
+            Text(face).font(.system(size: 18))
+                .frame(width: 34, height: 34)
+                .background(Circle().fill(tint.opacity(0.28)))
+            Text(label).font(.system(size: 9)).foregroundColor(dim)
+        }
+        if #available(iOS 17.0, *), t.canAct {
+            Button(intent: CheckInIntent(level: level)) { content }.buttonStyle(.plain)
+        } else {
+            content
+        }
+    }
+}
+
+struct VoxuCheckInWidget: Widget {
+    let kind = "VoxuCheckInWidget"
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+            CheckInWidgetView(entry: entry)
+                .voxuBackground {
+                    LinearGradient(colors: [Color.white.opacity(0.08), Color.black], startPoint: .top, endPoint: .center)
+                }
+        }
+        .configurationDisplayName("Voxu · Check-in")
+        .description("How are you right now? One tap.")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
+// MARK: - Tomorrow
+
+/// Medium — tomorrow's promise, offered in the evening from today's own:
+/// the same again if kept, a smaller one if not, and it says which. Keep
+/// writes it in place; Change opens the era to write your own.
+struct TomorrowWidgetView: View {
+    let entry: VoxuEntry
+    private var t: Today { entry.today }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Eyebrow(text: "Voxu")
+            if t.tomorrowReady {
+                Text("Tomorrow’s promise is set.")
+                    .font(.system(size: 18, weight: .semibold, design: .serif)).foregroundColor(.white)
+                Spacer(minLength: 0)
+                Text("You’re done for tonight.").font(.system(size: 11)).foregroundColor(dim)
+            } else if let s = t.suggestion, t.closing {
+                Text("Tomorrow’s Suggestion")
+                    .font(.system(size: 17, weight: .semibold, design: .serif)).foregroundColor(.white)
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "clock").font(.system(size: 13)).foregroundColor(dim)
+                    Text(s).font(.system(size: 13, weight: .medium)).foregroundColor(.white).lineLimit(2).minimumScaleFactor(0.85)
+                }
+                if let why = t.suggestionWhy {
+                    Text(why).font(.system(size: 10)).foregroundColor(dim).lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                HStack(spacing: 8) {
+                    if #available(iOS 17.0, *), t.canAct {
+                        Button(intent: KeepTomorrowIntent(text: s)) { PillLabel(title: "Keep", symbol: nil, filled: true) }.buttonStyle(.plain)
+                    } else {
+                        Link(destination: appLink("/era")) { PillLabel(title: "Keep", symbol: nil, filled: true) }
+                    }
+                    Link(destination: appLink("/era")) { PillLabel(title: "Change", symbol: nil) }
+                }
+            } else {
+                Text("Tomorrow’s promise")
+                    .font(.system(size: 17, weight: .semibold, design: .serif)).foregroundColor(.white)
+                Spacer(minLength: 0)
+                Text(t.promise == nil ? "Make today’s promise first." : "Tonight, plan tomorrow’s here.")
+                    .font(.system(size: 11)).foregroundColor(dim).lineLimit(2)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .widgetURL(appLink("/era"))
+    }
+}
+
+struct VoxuTomorrowWidget: Widget {
+    let kind = "VoxuTomorrowWidget"
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+            TomorrowWidgetView(entry: entry)
+                .voxuBackground { Photo(name: "WidgetPromise", fade: 0.85) }
+        }
+        .configurationDisplayName("Voxu · Tomorrow")
+        .description("Plan tomorrow’s promise tonight, in one tap.")
+        .supportedFamilies([.systemMedium])
+    }
+}
+
 // MARK: - Quote
 
 struct VoxuQuoteWidget: Widget {
@@ -988,6 +1258,8 @@ struct VoxuWidgets: WidgetBundle {
         VoxuWidget()
         VoxuGuidedWidget()
         VoxuNoticedWidget()
+        VoxuCheckInWidget()
+        VoxuTomorrowWidget()
         VoxuQuoteWidget()
     }
 }

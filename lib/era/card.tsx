@@ -135,6 +135,6 @@ export function sampleEra(key: string): EraTodayWire | null {
     mission: null, missionDone: false,
     links: { soundscapeId: 'focus', guideId: 'breathing' }, image: programFor(key).image ?? null,
     isPremium: false, memoryLockedToday: false, recap: null, alignment: null,
-    wakeCall: { enabled: false, time: null }, days,
+    wakeCall: { enabled: false, time: null }, wellness: { on: false, checkedToday: false }, days,
   }
 }

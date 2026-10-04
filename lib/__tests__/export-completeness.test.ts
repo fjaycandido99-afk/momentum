@@ -45,6 +45,7 @@ const DELIBERATELY_EXCLUDED: Record<string, string> = {
   NotificationSendLog: 'our send log, for capping and dedupe. What we did, not what they did',
   AiCallLog: 'our own operational log of model calls',
   AiUsageDaily: 'the quota meter — our counter, not their data',
+  WidgetToken: 'a hashed key for the widget buttons — a credential, not their data',
   XPEvent: 'derived from actions that are themselves exported',
   FeatureEvent: 'product analytics on taps; route patterns only, no content',
   UserAlertPreference: 'covered by preferences',

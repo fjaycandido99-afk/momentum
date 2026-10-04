@@ -66,6 +66,7 @@ model User {
 
   // Self-reported wellness check-ins (consented, see UserPreferences)
   wellnessCheckIns WellnessCheckIn[]
+  widgetTokens     WidgetToken[]
   assessmentSignature AssessmentSignature?
 
   // Era
@@ -1672,4 +1673,19 @@ model PatternExperiment {
   updated_at DateTime @updatedAt
 
   @@index([user_id, status])
+}
+
+/// The home-screen widget's key for its buttons (Mark done, check-in, keep
+/// tomorrow). One per person: issuing a new one deletes the old. Only the
+/// SHA-256 is stored. It can do the three widget actions and nothing else
+/// (app/api/widget/action). Removed on sign-out.
+model WidgetToken {
+  id           String    @id @default(cuid())
+  user_id      String
+  user         User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  token_hash   String    @unique
+  created_at   DateTime  @default(now())
+  last_used_at DateTime?
+
+  @@index([user_id])
 }

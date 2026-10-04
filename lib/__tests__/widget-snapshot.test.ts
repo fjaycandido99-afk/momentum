@@ -36,6 +36,10 @@ describe('buildWidgetSnapshot', () => {
       // Today's guided session and newest law, for the guided and noticed widgets.
       guide: null,
       law: null,
+      // The Check-in and Tomorrow widgets: check-ins off (no consent here), and
+      // tomorrow suggested from today’s own promise.
+      checkin: 'off',
+      suggestion: { text: 'Finish the report before lunch.', why: 'Today’s promise, again' },
     })
   })
 

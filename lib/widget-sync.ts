@@ -19,6 +19,8 @@ interface WidgetBridgePlugin {
    * prefix inside the app's OWN defaults, which a widget cannot read.
    */
   write(options: { json: string }): Promise<{ written: boolean }>
+  /** The widget buttons' key, into the App Group ('' removes it). Builds before it reject. */
+  setToken(options: { token: string }): Promise<void>
 }
 const WidgetBridge = registerPlugin<WidgetBridgePlugin>('WidgetBridge')
 
@@ -162,7 +164,40 @@ async function writeSnapshot(force = false): Promise<void> {
   lastWritten = json
   markWidgetReady()
   recordStatus('written')
+  void ensureWidgetToken()
   try { await WidgetBridge.reload() } catch { /* the write still landed */ }
+}
+
+/**
+ * Give the widget its key for the buttons (Mark done, check-in, keep
+ * tomorrow) — once per device, after a write proved the widget is there.
+ * A build without setToken rejects the first, empty call, and nothing is
+ * requested from the server. Never throws.
+ */
+const TOKEN_SET_KEY = 'voxu.widget.token.v1'
+let tokenTried = false
+async function ensureWidgetToken(): Promise<void> {
+  if (tokenTried) return
+  tokenTried = true
+  try { if (localStorage.getItem(TOKEN_SET_KEY) === '1') return } catch { return }
+  try { await WidgetBridge.setToken({ token: '' }) } catch { return }
+  try {
+    const res = await fetch('/api/widget/token', { method: 'POST' })
+    const data = res.ok ? await res.json() : null
+    if (typeof data?.token !== 'string') return
+    await WidgetBridge.setToken({ token: data.token })
+    localStorage.setItem(TOKEN_SET_KEY, '1')
+    try { await WidgetBridge.reload() } catch { /* drawn at the next tick */ }
+  } catch { /* try again next launch */ }
+}
+
+/** Sign-out: the widget's buttons stop acting for this account, on the phone and the server. */
+export async function signOutWidget(): Promise<void> {
+  try { localStorage.removeItem(TOKEN_SET_KEY) } catch { /* ignore */ }
+  try { await fetch('/api/widget/token', { method: 'DELETE' }) } catch { /* the server key is replaced next sign-in anyway */ }
+  if (!Capacitor.isNativePlatform()) return
+  try { await WidgetBridge.setToken({ token: '' }) } catch { /* older build: it never had one */ }
+  try { await WidgetBridge.reload() } catch { /* ignore */ }
 }
 
 /** Settings' "Refresh widget": write the current day again and redraw now. */
