@@ -128,3 +128,22 @@ export function weakDayEve(weak: WeakDay | null | undefined, now: Date): { day: 
 export function tomorrowIsWeak(weak: WeakDay | null | undefined, now: Date): boolean {
   return !!weak && WEEKDAY_NAMES[(now.getDay() + 1) % 7] === weak.label
 }
+
+// ── Your week, on Home (Sunday evening / Monday) ─────────────────────────
+
+/** When the week moment may show: Sunday from 5pm, or any time Monday. */
+export function isWeekMomentTime(now: Date): boolean {
+  return (now.getDay() === 0 && now.getHours() >= 17) || now.getDay() === 1
+}
+
+/**
+ * "This week: 5 of 6 promises kept." from the running era's own days — the
+ * last seven era days up to today. Counts only; null with nothing answered.
+ */
+export function eraWeekLine(days: readonly EraDay[], today: number): string | null {
+  const recent = days.filter(d => d.day <= today && d.day > today - 7)
+  const answered = recent.filter(d => d.kept !== null)
+  if (!answered.length) return null
+  const kept = answered.filter(d => d.kept === true).length
+  return `This week: ${kept} of ${answered.length} promises kept.`
+}

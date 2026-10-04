@@ -21,7 +21,7 @@ import { getLatestPulse } from '@/lib/pulse/store'
 import { pickNudge, type PulseNudge } from '@/lib/pulse/nudge'
 import { OPEN_DISCIPLINE } from '@/lib/pulse/events'
 import { keptRun, pickNoticed, rememberNoticed, type EraDayKept, type Noticed } from '@/lib/home/noticed'
-import { gapWarning, weakDayEve, type WeakDay } from '@/lib/home/insights'
+import { eraWeekLine, gapWarning, isWeekMomentTime, weakDayEve, type WeakDay } from '@/lib/home/insights'
 import { TalkSheet } from '@/components/voice-guide/TalkSheet'
 import { resolveIntent } from '@/lib/voice-guide/intents'
 import { navHref } from '@/lib/voice-guide/navigate'
@@ -345,6 +345,12 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
         gap: eraDay && latest.current.eraId ? gapWarning(record.gapDays ?? [], eraDay, days.filter(d => d.day < eraDay)) : null,
         // Once per evening it applies — next week's is a new key.
         weakEve: eve && latest.current.eraId ? { key: `weekday:${today}`, line: eve.line, opener: eve.opener } : null,
+        // Keyed to the era day a week started, so it's said once a week.
+        week: (() => {
+          if (!eraDay || !isWeekMomentTime(new Date())) return null
+          const line = eraWeekLine(days, eraDay)
+          return line ? { key: `week:${latest.current.eraId}:${Math.floor((eraDay - 1) / 7)}`, line } : null
+        })(),
       })
       const chosen = pickMoment({ ...latest.current, lastKind: lastKind(), pulseNudge: !!n, noticed: !!found })
       if (chosen === 'noticed' && found) {
@@ -513,6 +519,21 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
         detail={noticed.detail}
         action="See what Premium learns"
         href="/patterns?spot=laws-rhythm"
+        onAction={() => dismiss()}
+        onClose={() => dismiss()}
+        onOff={turnOff}
+        dismissing={dismissing}
+        animating={animating}
+      />
+    )
+  }
+  if (kind === 'noticed' && noticed?.kind === 'week') {
+    return (
+      <MomentCard
+        label="Your week"
+        line={noticed.line}
+        action="See your week"
+        href="/proof#week"
         onAction={() => dismiss()}
         onClose={() => dismiss()}
         onOff={turnOff}

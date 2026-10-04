@@ -76,3 +76,15 @@ describe('weakDayEve', () => {
     expect(weakDayEve(weak, mondayEve)?.line).not.toMatch(/always|because|lazy|significant/i)
   })
 })
+
+describe('week moment', () => {
+  it('counts the last seven era days and only shows Sunday evening or Monday', async () => {
+    const { eraWeekLine, isWeekMomentTime } = await import('@/lib/home/insights')
+    const days = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(day => ({ day, kept: day === 4 ? false : day === 9 ? null : true }))
+    expect(eraWeekLine(days, 9)).toBe('This week: 5 of 6 promises kept.') // days 3–9: 3,5,6,7,8 kept, 4 missed, 9 open
+    expect(eraWeekLine([], 9)).toBeNull()
+    expect(isWeekMomentTime(new Date(2026, 9, 4, 18))).toBe(true) // Sunday 6pm
+    expect(isWeekMomentTime(new Date(2026, 9, 4, 10))).toBe(false) // Sunday morning
+    expect(isWeekMomentTime(new Date(2026, 9, 5, 9))).toBe(true) // Monday
+  })
+})

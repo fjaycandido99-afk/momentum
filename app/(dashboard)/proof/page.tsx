@@ -10,6 +10,8 @@ import { ChevronLeft, Loader2 } from 'lucide-react'
 import { ProofGrid } from '@/components/proof/ProofGrid'
 import { ProofDaySheet } from '@/components/proof/ProofDaySheet'
 import { EraRecordCard } from '@/components/proof/EraRecordCard'
+import { WeekCard } from '@/components/proof/WeekCard'
+import { weekRecap } from '@/lib/proof/week'
 import { CountUp } from '@/components/ui/CountUp'
 import { proofSummary } from '@/lib/proof/grid'
 import type { ProofPayload } from '@/lib/proof/server'
@@ -149,6 +151,14 @@ export default function ProofPage() {
                   {data.year.counts.open > 0 && ` · ${data.year.counts.open} never answered`}
                   {data.year.counts.missions > 0 && ` · ${data.year.counts.missions} missions done`}
                 </p>
+              )}
+
+              {/* This week against last — only on the year that has this week. */}
+              {data.year.year === Number(data.today.slice(0, 4)) && (
+                <>
+                  <WeekCard recap={weekRecap(data.details, data.today)} />
+                  <Link href="/eras" className="inline-block mt-3 text-px-13 text-white/75 underline underline-offset-4">Your eras, in order →</Link>
+                </>
               )}
 
               {/* Finished eras, kept for good: an era ends, its record doesn't. */}

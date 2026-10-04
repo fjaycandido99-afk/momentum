@@ -26,6 +26,8 @@ export type Noticed =
   | { kind: 'sample'; key: string; line: string; detail: string }
   /** The evening before their hard weekday (a SOLID weekday law). */
   | { kind: 'weekday'; key: string; line: string; opener: string }
+  /** Sunday evening / Monday: the week in counts, linking to Proof. */
+  | { kind: 'week'; key: string; line: string }
 
 export interface EraDayKept {
   day: number
@@ -62,6 +64,8 @@ export interface NoticedInput {
   sample?: string | null
   /** The evening-before heads-up, already decided (lib/home/insights weakDayEve), keyed per date. */
   weakEve?: { key: string; line: string; opener: string } | null
+  /** The week line when it's time for it, keyed per week. */
+  week?: { key: string; line: string } | null
 }
 
 export function pickNoticed(input: NoticedInput): Noticed | null {
@@ -107,6 +111,8 @@ export function pickNoticed(input: NoticedInput): Noticed | null {
       }
     }
   }
+  // Last: the week, once a week.
+  if (input.week && !seen.has(input.week.key)) return { kind: 'week', key: input.week.key, line: input.week.line }
   return null
 }
 
