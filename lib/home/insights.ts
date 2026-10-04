@@ -94,3 +94,37 @@ export function gapWarning(pastGapDays: readonly number[], today: number, days: 
     opener: `In my last ${n} eras, things slipped around day ${lo}, and tomorrow is day ${lo}. Help me make tomorrow's promise one I'll keep.`,
   }
 }
+
+// ── The evening before a hard weekday ─────────────────────────────────────
+
+/** The worst weekday of their SOLID weekday law (lib/patterns), as counts. */
+export interface WeakDay {
+  label: string
+  hits: number
+  of: number
+}
+
+/** From this local hour, "tomorrow" is close enough to plan for tonight. */
+export const WEAK_EVE_FROM_HOUR = 15
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+/**
+ * The heads-up, the evening before their hard weekday: their own counts,
+ * no verdict about them, and an offer to make tomorrow's promise one they'll
+ * keep. Only a SOLID law (it passed the chance test) is ever acted on.
+ */
+export function weakDayEve(weak: WeakDay | null | undefined, now: Date): { day: string; line: string; opener: string } | null {
+  if (!weak || weak.of <= 0 || now.getHours() < WEAK_EVE_FROM_HOUR) return null
+  const tomorrow = WEEKDAY_NAMES[(now.getDay() + 1) % 7]
+  if (tomorrow !== weak.label) return null
+  return {
+    day: tomorrow,
+    line: `Tomorrow is ${tomorrow}. Your record shows ${tomorrow}s are harder for you: ${weak.hits} of ${weak.of} kept.`,
+    opener: `Tomorrow is ${tomorrow}, and my ${tomorrow}s have been harder — ${weak.hits} of ${weak.of} kept. Help me plan a promise for tomorrow I'll actually keep.`,
+  }
+}
+
+/** True when tomorrow is their hard weekday — the Tomorrow widget suggests the smaller promise. */
+export function tomorrowIsWeak(weak: WeakDay | null | undefined, now: Date): boolean {
+  return !!weak && WEEKDAY_NAMES[(now.getDay() + 1) % 7] === weak.label
+}

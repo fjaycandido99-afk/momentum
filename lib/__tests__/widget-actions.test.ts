@@ -46,3 +46,12 @@ describe('admin widget totals', () => {
     ])
   })
 })
+
+describe('tomorrow on a hard weekday', () => {
+  it('suggests the smaller promise and says why', async () => {
+    const { tomorrowSuggestion } = await import('@/lib/widget/actions')
+    const s = tomorrowSuggestion({ text: "I'll work on my business for 20 minutes", kept: true }, false, 'Tuesday')
+    expect(s?.text).toMatch(/10 minutes/)
+    expect(s?.why).toBe('Smaller — Tuesdays have been harder for you')
+  })
+})

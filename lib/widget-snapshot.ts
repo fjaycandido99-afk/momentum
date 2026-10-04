@@ -23,6 +23,7 @@ import type { EraTodayWire } from '@/lib/era/service'
 import type { Pulse, TodayStatus } from '@/lib/pulse/engine'
 import { eraAccentHex } from '@/lib/era/skins'
 import { checkinState, tomorrowSuggestion } from '@/lib/widget/actions'
+import { tomorrowIsWeak, type WeakDay } from '@/lib/home/insights'
 
 export const WIDGET_SNAPSHOT_VERSION = 1
 
@@ -118,7 +119,7 @@ export function widgetGuide(pulse: Pulse | null | undefined): { id: string; name
   return t && t.type === 'guide' ? { id: t.id, name: clip(t.name, 28) } : null
 }
 
-export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Date(), pulse?: Pulse | null, law: string | null = null, premium?: boolean, week: WidgetSnapshot['week'] = null): WidgetSnapshot {
+export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Date(), pulse?: Pulse | null, law: string | null = null, premium?: boolean, week: WidgetSnapshot['week'] = null, weak: WeakDay | null = null): WidgetSnapshot {
   const bars = cleanWeek(week)
   const date = localDay(now)
   const p = widgetPulse(pulse)
@@ -142,7 +143,7 @@ export function buildWidgetSnapshot(era: EraTodayWire | null, now: Date = new Da
     tomorrowReady: !!era.tomorrow,
     checkin: checkinState(era.wellness),
     suggestion: (() => {
-      const s = tomorrowSuggestion(era.today ? { text: era.today.text, kept: era.today.kept ?? null } : null, !!era.tomorrow)
+      const s = tomorrowSuggestion(era.today ? { text: era.today.text, kept: era.today.kept ?? null } : null, !!era.tomorrow, tomorrowIsWeak(weak, now) ? weak!.label : null)
       return s ? { text: clip(s.text, 120), why: s.why } : null
     })(),
     guide,

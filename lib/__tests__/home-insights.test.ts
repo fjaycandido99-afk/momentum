@@ -62,3 +62,17 @@ describe('pickNoticed — sample and gap', () => {
     expect(pickNoticed({ ...base, laws: [{ id: 'timing', headline: 'H' }], sample: 'S', eraDay: 9 })?.kind).toBe('law')
   })
 })
+
+describe('weakDayEve', () => {
+  it('speaks the evening before their hard weekday, in counts', async () => {
+    const { weakDayEve } = await import('@/lib/home/insights')
+    const weak = { label: 'Tuesday', hits: 3, of: 9 }
+    // Monday 2026-09-28, 18:00 local.
+    const mondayEve = new Date(2026, 8, 28, 18, 0)
+    expect(weakDayEve(weak, mondayEve)?.line).toBe('Tomorrow is Tuesday. Your record shows Tuesdays are harder for you: 3 of 9 kept.')
+    expect(weakDayEve(weak, new Date(2026, 8, 28, 10, 0))).toBeNull() // morning: not yet
+    expect(weakDayEve(weak, new Date(2026, 8, 29, 18, 0))).toBeNull() // Tuesday eve: tomorrow is Wednesday
+    expect(weakDayEve(null, mondayEve)).toBeNull()
+    expect(weakDayEve(weak, mondayEve)?.line).not.toMatch(/always|because|lazy|significant/i)
+  })
+})

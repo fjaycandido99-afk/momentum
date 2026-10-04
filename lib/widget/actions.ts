@@ -31,10 +31,16 @@ export interface TomorrowSuggestion {
   why: string
 }
 
-export function tomorrowSuggestion(today: { text: string; kept: boolean | null } | null, tomorrowWritten: boolean): TomorrowSuggestion | null {
+export function tomorrowSuggestion(
+  today: { text: string; kept: boolean | null } | null,
+  tomorrowWritten: boolean,
+  /** Tomorrow is their hard weekday (a SOLID law): suggest the smaller one, and say so. */
+  weakTomorrow: string | null = null,
+): TomorrowSuggestion | null {
   if (!today || tomorrowWritten) return null
   const text = today.text.trim()
   if (!text) return null
+  if (weakTomorrow) return { text: easierPromise(text), why: `Smaller — ${weakTomorrow}s have been harder for you` }
   if (today.kept === false) {
     const easier = easierPromise(text)
     return { text: easier, why: 'A smaller version of today’s' }

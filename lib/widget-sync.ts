@@ -131,6 +131,15 @@ function recordStatus(result: WidgetWriteResult) {
  * Their newest solid law, from the copy Home keeps for "Voxu noticed" (read
  * at most once a day — components/home/DailySpark). No fetch of its own.
  */
+/** Their hard weekday (a SOLID law), from the same daily copy. */
+function weakDay(): { label: string; hits: number; of: number } | null {
+  try {
+    const raw = localStorage.getItem('voxu.noticed.laws')
+    const w = raw ? JSON.parse(raw)?.weak : null
+    return w && typeof w.label === 'string' ? w : null
+  } catch { return null }
+}
+
 /** Premium's weekday counts, from the same daily copy. */
 function weekBars(): { label: string; kept: number; answered: number }[] | null {
   try {
@@ -150,7 +159,7 @@ function newestLaw(): string | null {
 
 async function writeSnapshot(force = false): Promise<void> {
   if (!Capacitor.isNativePlatform()) return
-  const json = JSON.stringify(buildWidgetSnapshot(lastEra, new Date(), lastPulse, newestLaw(), lastPremium, weekBars()))
+  const json = JSON.stringify(buildWidgetSnapshot(lastEra, new Date(), lastPulse, newestLaw(), lastPremium, weekBars(), weakDay()))
   if (json === lastWritten && !force) return
   let res: { written: boolean } | null = null
   try {

@@ -21,7 +21,7 @@ import { getLatestPulse } from '@/lib/pulse/store'
 import { pickNudge, type PulseNudge } from '@/lib/pulse/nudge'
 import { OPEN_DISCIPLINE } from '@/lib/pulse/events'
 import { keptRun, pickNoticed, rememberNoticed, type EraDayKept, type Noticed } from '@/lib/home/noticed'
-import { gapWarning } from '@/lib/home/insights'
+import { gapWarning, weakDayEve, type WeakDay } from '@/lib/home/insights'
 import { TalkSheet } from '@/components/voice-guide/TalkSheet'
 import { resolveIntent } from '@/lib/voice-guide/intents'
 import { navHref } from '@/lib/voice-guide/navigate'
@@ -306,7 +306,11 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
         // The Noticed widget's weekday bars (lib/widget-sync) — Premium's
         // charts only; free has none to keep.
         const week = Array.isArray(d.charts?.byWeekday) ? d.charts.byWeekday : null
-        try { localStorage.setItem(NOTICED_LAWS_KEY, JSON.stringify({ day: today, laws, sample, gapDays, week })) } catch { /* storage blocked */ }
+        // Their hard weekday — only from a SOLID weekday law (passed the chance test).
+        const wl = d.patterns.find((p: { kind: string; strength: string }) => p.kind === 'weekday' && p.strength === 'solid')
+        const g0 = wl?.groups?.[0]
+        const weak: WeakDay | null = g0 && typeof g0.label === 'string' ? { label: g0.label, hits: g0.hits, of: g0.of } : null
+        try { localStorage.setItem(NOTICED_LAWS_KEY, JSON.stringify({ day: today, laws, sample, gapDays, week, weak })) } catch { /* storage blocked */ }
       })
       .catch(() => {})
   }, [])
@@ -326,7 +330,8 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
       // Something new from their record — at most one a day, each said once.
       const today = localDayKey()
       const seen = readJson<string[]>(NOTICED_SEEN_KEY, [])
-      const record = readJson<{ laws?: { id: string; headline: string }[]; sample?: string | null; gapDays?: number[] }>(NOTICED_LAWS_KEY, {})
+      const record = readJson<{ laws?: { id: string; headline: string }[]; sample?: string | null; gapDays?: number[]; weak?: WeakDay | null }>(NOTICED_LAWS_KEY, {})
+      const eve = weakDayEve(record.weak ?? null, new Date())
       const days = latest.current.eraDays
       const eraDay = days.length ? Math.max(...days.map(d => d.day)) : null
       const found = readJson<string>(NOTICED_DAY_KEY, '') === today ? null : pickNoticed({
@@ -338,6 +343,8 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
         sample: record.sample ?? null,
         // Today isn't over, so it's left out of the "already slipped" check.
         gap: eraDay && latest.current.eraId ? gapWarning(record.gapDays ?? [], eraDay, days.filter(d => d.day < eraDay)) : null,
+        // Once per evening it applies — next week's is a new key.
+        weakEve: eve && latest.current.eraId ? { key: `weekday:${today}`, line: eve.line, opener: eve.opener } : null,
       })
       const chosen = pickMoment({ ...latest.current, lastKind: lastKind(), pulseNudge: !!n, noticed: !!found })
       if (chosen === 'noticed' && found) {
@@ -507,6 +514,21 @@ export function DailySpark({ loopStep = null, eraLabel = null, hasJournalToday =
         action="See what Premium learns"
         href="/patterns?spot=laws-rhythm"
         onAction={() => dismiss()}
+        onClose={() => dismiss()}
+        onOff={turnOff}
+        dismissing={dismissing}
+        animating={animating}
+      />
+    )
+  }
+  if (kind === 'noticed' && noticed?.kind === 'weekday') {
+    return (
+      <MomentCard
+        label="Voxu noticed something"
+        line={noticed.line}
+        detail="Want to make tomorrow's promise one you'll keep?"
+        action="Plan it with Voxu"
+        onAction={() => dismiss(() => setTalkOpener(noticed.opener))}
         onClose={() => dismiss()}
         onOff={turnOff}
         dismissing={dismissing}

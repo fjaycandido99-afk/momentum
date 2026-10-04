@@ -24,6 +24,8 @@ export type Noticed =
   | { kind: 'gap'; key: string; line: string; opener: string }
   /** A free account's one Premium insight, on us. */
   | { kind: 'sample'; key: string; line: string; detail: string }
+  /** The evening before their hard weekday (a SOLID weekday law). */
+  | { kind: 'weekday'; key: string; line: string; opener: string }
 
 export interface EraDayKept {
   day: number
@@ -58,6 +60,8 @@ export interface NoticedInput {
   gap?: { line: string; opener: string } | null
   /** Free only: one line from their charts (server sends it to free only). */
   sample?: string | null
+  /** The evening-before heads-up, already decided (lib/home/insights weakDayEve), keyed per date. */
+  weakEve?: { key: string; line: string; opener: string } | null
 }
 
 export function pickNoticed(input: NoticedInput): Noticed | null {
@@ -66,6 +70,9 @@ export function pickNoticed(input: NoticedInput): Noticed | null {
   // Time-sensitive first: tomorrow is the day it tends to slip.
   if (input.gap && input.eraId && !seen.has(`gap:${input.eraId}`)) {
     return { kind: 'gap', key: `gap:${input.eraId}`, line: input.gap.line, opener: input.gap.opener }
+  }
+  if (input.weakEve && !seen.has(input.weakEve.key)) {
+    return { kind: 'weekday', key: input.weakEve.key, line: input.weakEve.line, opener: input.weakEve.opener }
   }
 
   const law = input.laws.find(l => !seen.has(`law:${l.id}`))
