@@ -152,9 +152,19 @@ async function handleSubscriptionActive(
     ? new Date(event.expiration_at_ms)
     : null
 
+  // The app logs in to RevenueCat with our own user id (lib/revenuecat
+  // configure appUserID), so match the account by user_id — a row that was
+  // never linked (link-revenuecat runs on launch) would otherwise collide on
+  // the unique user_id and every retry would fail, leaving a buyer on free.
+  const account = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } })
+  if (!account) {
+    console.warn(`[revenuecat] purchase for unknown user ${userId} — not a Voxu account id`)
+    return
+  }
   await prisma.subscription.upsert({
-    where: { revenuecat_user_id: userId },
+    where: { user_id: userId },
     update: {
+      revenuecat_user_id: userId,
       tier: 'premium',
       status: isTrialing ? 'trialing' : 'active',
       trial_start: isTrialing ? new Date(event.purchased_at_ms) : undefined,
@@ -181,7 +191,7 @@ async function handleSubscriptionCanceled(
   event: RevenueCatWebhookPayload['event']
 ) {
   await prisma.subscription.updateMany({
-    where: { revenuecat_user_id: userId },
+    where: { OR: [{ revenuecat_user_id: userId }, { user_id: userId }] },
     data: {
       status: 'canceled',
       // Keep premium access until expiration
@@ -197,7 +207,7 @@ async function handleSubscriptionExpired(
   event: RevenueCatWebhookPayload['event']
 ) {
   await prisma.subscription.updateMany({
-    where: { revenuecat_user_id: userId },
+    where: { OR: [{ revenuecat_user_id: userId }, { user_id: userId }] },
     data: {
       tier: 'free',
       status: 'expired',
@@ -222,7 +232,7 @@ async function handleSubscriptionPaused(
   event: RevenueCatWebhookPayload['event']
 ) {
   await prisma.subscription.updateMany({
-    where: { revenuecat_user_id: userId },
+    where: { OR: [{ revenuecat_user_id: userId }, { user_id: userId }] },
     data: {
       status: 'canceled', // Treat paused as canceled
       billing_period_end: event.expiration_at_ms
