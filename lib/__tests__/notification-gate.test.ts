@@ -110,3 +110,34 @@ describe('notification gate', () => {
     })
   })
 })
+
+describe('notification modes', () => {
+  // Noon in Honolulu: outside quiet hours. Two of OUR pushes already went out today.
+  const twoSent = () => [
+    { type: 'daily_quote', sent_at: honolulu('2026-09-04', 9) },
+    { type: 'coach_checkin', sent_at: honolulu('2026-09-04', 10) },
+  ]
+  const at = async (mode: string | null, type: string) => {
+    vi.useFakeTimers()
+    vi.setSystemTime(honolulu('2026-09-04', 12))
+    logRows = twoSent()
+    findUniquePrefs.mockResolvedValueOnce({ timezone: TZ, notification_mode: mode } as never)
+    return shouldSendNotification('u', type as never)
+  }
+
+  it('coach (and no choice yet) keeps the long-standing cap of two', async () => {
+    expect((await at('coach', 'motivational_nudge')).allow).toBe(false)
+    expect((await at(null, 'motivational_nudge')).allow).toBe(false)
+  })
+  it('strict allows up to four; quiet stops at one', async () => {
+    expect((await at('strict', 'motivational_nudge')).allow).toBe(true)
+    vi.useFakeTimers()
+    vi.setSystemTime(honolulu('2026-09-04', 12))
+    logRows = [{ type: 'daily_quote', sent_at: honolulu('2026-09-04', 9) }]
+    findUniquePrefs.mockResolvedValueOnce({ timezone: TZ, notification_mode: 'quiet' } as never)
+    expect((await shouldSendNotification('u', 'motivational_nudge' as never)).allow).toBe(false)
+  })
+  it('never rations a reminder they scheduled, in any mode', async () => {
+    expect((await at('quiet', 'midday_reset')).allow).toBe(true)
+  })
+})

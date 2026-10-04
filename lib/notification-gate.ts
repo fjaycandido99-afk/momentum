@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import type { NotificationType } from './push-service'
+import { capFor } from '@/lib/notifications/modes'
 
 /**
  * The single send-gate every push passes through: quiet hours → dedupe →
@@ -26,8 +27,9 @@ import type { NotificationType } from './push-service'
  * deficit ratcheted forward instead of resetting overnight.
  */
 
-// Max opportunistic pushes per local calendar day.
-const DAILY_CAP = 2
+// Max opportunistic pushes per local calendar day comes from their mode
+// (lib/notifications/modes): quiet 1, coach 2 (the long-standing default),
+// strict 4.
 // Don't send the SAME type twice inside this window. Shorter than 24h so
 // genuine daily reminders (~24h apart) are never suppressed.
 const DEDUPE_WINDOW_MS = 18 * 60 * 60 * 1000
@@ -136,12 +138,14 @@ export async function shouldSendNotification(userId: string, type: NotificationT
   const lane = LANE[type] ?? 'opportunistic'
 
   let timezone: string | null = null
+  let dailyCap = capFor(null)
   try {
     const prefs = await prisma.userPreferences.findUnique({
       where: { user_id: userId },
-      select: { timezone: true },
+      select: { timezone: true, notification_mode: true },
     })
     timezone = prefs?.timezone ?? null
+    dailyCap = capFor(prefs?.notification_mode)
   } catch {
     // Couldn't resolve timezone — don't block on it.
   }
@@ -177,7 +181,7 @@ export async function shouldSendNotification(userId: string, type: NotificationT
         r => (LANE[r.type as NotificationType] ?? 'opportunistic') === 'opportunistic'
           && localDay(r.sent_at, timezone) === today
       ).length
-      if (spentToday >= DAILY_CAP) {
+      if (spentToday >= dailyCap) {
         return { allow: false, reason: 'daily_cap' }
       }
     }

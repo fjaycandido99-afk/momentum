@@ -35,6 +35,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSubscriptionOptional } from '@/contexts/SubscriptionContext'
 import { NotificationSettings } from '@/components/notifications/NotificationSettings'
+import { NotificationModePicker } from '@/components/notifications/NotificationModePicker'
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
@@ -707,6 +708,7 @@ function SettingsContent() {
           title="Notifications"
           description="Push notifications & reminders"
         >
+          <div className="mb-4"><NotificationModePicker /></div>
           {/* Wake time drives the Daily Guide schedule. It used to also
               silently set the morning reminder time; those are separate
               now, so a reminder can sit where the user wants it. */}

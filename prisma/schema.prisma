@@ -167,6 +167,8 @@ model UserPreferences {
   // WellnessCheckIn while this is false. consented_at records when they
   // agreed, which is what makes the collection lawful.
   wellness_enabled     Boolean   @default(false)
+  /// How much Voxu nudges: "quiet" | "coach" | "strict" (lib/notifications/modes).
+  notification_mode String @default("coach")
   wellness_consented_at DateTime?
 
   // Appear in the circles of people whose era link you used, or who used
