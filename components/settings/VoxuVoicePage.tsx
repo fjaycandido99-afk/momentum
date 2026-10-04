@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { ChevronRight, Loader2, Play, Square } from 'lucide-react'
+import { AudioLines, ChevronRight, Gauge, Loader2, Play, Sparkles, Square } from 'lucide-react'
+import { ACCENT, CARD, Toggle } from './DailyRhythmPage'
 import { SpeakingRing } from '@/components/voice-guide/SpeakingRing'
 import Link from 'next/link'
 import { VOICE_RATES, voiceRate, setVoiceRate, fetchVoxuAudio, sharedVoxuPlayer, installVoxuUnlock } from '@/lib/voice/voxu-audio'
@@ -22,26 +23,11 @@ const TONES = [
 ] as const
 const RATE_LABEL: Record<number, string> = { 0.85: 'Slower', 1: 'Normal', 1.15: 'Faster', 1.3: 'Fastest' }
 
-function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      onClick={() => { haptic('light'); onChange(!on) }}
-      className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${on ? 'bg-white' : 'bg-white/15'}`}
-    >
-      <span className={`absolute top-0.5 w-5 h-5 rounded-full transition-all ${on ? 'left-[22px] bg-black' : 'left-0.5 bg-white/70'}`} />
-    </button>
-  )
-}
-
 function List({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <section className="mt-6">
-      <p className="px-1 text-px-11 tracking-[0.22em] uppercase text-white/45">{label}</p>
-      <div className="mt-2 rounded-2xl border border-white/[0.08] bg-white/[0.03] divide-y divide-white/[0.06] overflow-hidden">{children}</div>
+    <section className="mt-7">
+      <p className="mb-2 px-1 text-px-11 tracking-[0.22em] uppercase text-white/55">{label}</p>
+      <div className={`${CARD} divide-y divide-white/[0.06] overflow-hidden`}>{children}</div>
     </section>
   )
 }
@@ -127,12 +113,15 @@ export function VoxuVoicePage() {
   return (
     <div className="pb-6">
       {/* One voice, alive — the same dial as everywhere else in Voxu. */}
-      <div className="rounded-2xl border border-white/[0.1] bg-white/[0.03] p-4 flex items-center gap-4">
-        <div className="relative w-20 h-20 shrink-0"><SpeakingRing always size={104} /></div>
-        <div className="min-w-0">
-          <p className="text-px-22 text-white leading-tight" style={{ ...SERIF, fontWeight: 600 }}>Voxu</p>
+      <div className={`${CARD} relative overflow-hidden p-4 flex items-center gap-4`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/scenes/home/night-wide.jpg" alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover opacity-35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0a1019]/60 to-[#0a1019]" aria-hidden />
+        <div className="relative w-24 h-24 shrink-0"><SpeakingRing always size={120} glow="142 156 255" /></div>
+        <div className="relative min-w-0">
+          <p className="text-px-28 text-white leading-none" style={{ ...SERIF, fontWeight: 600 }}>Voxu</p>
           <p className="text-px-13 text-white/65 leading-snug mt-0.5">One voice. You choose how it talks to you.</p>
-          <button onClick={test} disabled={testing} className="tap-44 mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 text-px-13 text-white disabled:opacity-50">
+          <button onClick={test} disabled={testing} className="tap-44 mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-px-13 text-white border disabled:opacity-50" style={{ borderColor: ACCENT, background: `${ACCENT}26` }}>
             {testing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />} Test voice
           </button>
         </div>
@@ -141,33 +130,36 @@ export function VoxuVoicePage() {
 
       <List label="Voice">
         <div className="px-4 py-3.5">
-          <div className="flex items-baseline justify-between">
-            <p className="text-px-15 text-white">Speaking speed</p>
+          <div className="flex items-center gap-3.5">
+            <Gauge className="w-5 h-5 text-white/75" aria-hidden />
+            <p className="flex-1 text-px-15 text-white">Speaking speed</p>
             <p className="text-px-12 text-white/55">{RATE_LABEL[rate]}</p>
           </div>
-          <div className="mt-2.5 grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-white/[0.05]" role="radiogroup" aria-label="Speaking speed">
+          <div className="mt-3 grid grid-cols-4 gap-1 p-1 rounded-xl bg-black/30 border border-white/[0.06]" role="radiogroup" aria-label="Speaking speed">
             {VOICE_RATES.map(r => (
               <button
                 key={r}
                 role="radio"
                 aria-checked={rate === r}
                 onClick={() => { setRate(r); setVoiceRate(r); haptic('light') }}
-                className={`tap-44 py-1.5 rounded-lg text-px-12 ${rate === r ? 'bg-white text-black font-medium' : 'text-white/70'}`}
+                className={`tap-44 py-1.5 rounded-lg text-px-12 ${rate === r ? 'text-white font-medium' : 'text-white/65'}`}
+                style={rate === r ? { background: ACCENT } : undefined}
               >
                 {RATE_LABEL[r]}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-px-11 text-white/45">On this phone. Try it with Test voice.</p>
+          <p className="mt-2 pl-[2.1rem] text-px-11 text-white/45">On this phone. Try it with Test voice.</p>
         </div>
-        <div className="px-4 py-3.5 flex items-center gap-3">
+        <div className="px-4 py-3.5 flex items-center gap-3.5">
+          <AudioLines className="w-5 h-5 shrink-0 text-white/75" aria-hidden />
           <span className="min-w-0 flex-1">
-            <span className="block text-px-15 text-white">Speak replies in Talk</span>
-            <span className="block text-px-12 text-white/55">Voxu reads its answers aloud</span>
+            <span className="block text-px-15 text-white">Auto-play responses</span>
+            <span className="block text-px-12 text-white/55">Voxu speaks its replies in Talk</span>
           </span>
-          <Switch
+          <Toggle
             on={speakReplies}
-            label="Speak replies in Talk"
+            label="Auto-play responses"
             onChange={v => { setSpeakReplies(v); try { localStorage.setItem(TALK_VOICE_KEY, v ? 'on' : 'off') } catch { /* ignore */ } }}
           />
         </div>
@@ -180,7 +172,7 @@ export function VoxuVoicePage() {
               type="button"
               onClick={() => preview(t.key)}
               aria-label={previewing === t.key ? `Stop the ${t.title} sample` : `Hear ${t.title}`}
-              className="tap-44 ml-3 shrink-0 w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/85 active:bg-white/10"
+              className="tap-44 ml-3 shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white active:opacity-80" style={{ background: `${ACCENT}33`, border: `1px solid ${ACCENT}88` }}
             >
               {previewing === t.key ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3.5 h-3.5 translate-x-px" />}
             </button>
@@ -194,8 +186,8 @@ export function VoxuVoicePage() {
                 <span className="block text-px-15 text-white">{t.title}</span>
                 <span className="block text-px-12 text-white/55">{t.line}</span>
               </span>
-              <span className={`w-5 h-5 rounded-full border flex items-center justify-center ${tone === t.key ? 'border-white' : 'border-white/35'}`} aria-hidden>
-                {tone === t.key && <span className="w-2.5 h-2.5 rounded-full bg-white" />}
+              <span className={`w-5 h-5 rounded-full border flex items-center justify-center ${tone === t.key ? '' : 'border-white/35'}`} style={tone === t.key ? { borderColor: ACCENT } : undefined} aria-hidden>
+                {tone === t.key && <span className="w-2.5 h-2.5 rounded-full" style={{ background: ACCENT }} />}
               </span>
             </button>
           </div>
@@ -205,7 +197,8 @@ export function VoxuVoicePage() {
       {/* How Voxu coaches (concise, challenge…) moved to Mindset & Coaching,
           where it grew into per-situation choices (lib/coach/style). */}
       <List label="Conversation">
-        <Link href="/settings?s=mindset" className="flex items-center gap-3 px-4 py-3.5 active:bg-white/[0.04]">
+        <Link href="/settings?s=mindset" className="flex items-center gap-3.5 px-4 py-3.5 active:bg-white/[0.04]">
+          <Sparkles className="w-5 h-5 shrink-0 text-white/75" aria-hidden />
           <span className="min-w-0 flex-1">
             <span className="block text-px-15 text-white">Coaching style</span>
             <span className="block text-px-12 text-white/55">How hard Voxu pushes, how it answers when you&rsquo;re stuck, reply length</span>

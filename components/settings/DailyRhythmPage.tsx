@@ -7,9 +7,13 @@ import { syncLocalReminders } from '@/lib/notifications'
 import { haptic } from '@/lib/haptics'
 
 /** The Daily Rhythm skin (Francis's "Nighttime Daily Rhythm" mockup). */
-export const ACCENT = '#7C83FF'
+/** Fills: selected pills, switches, chips. */
+export const ACCENT = '#5566F7'
+/** Text on dark: times, chosen values. */
+export const ACCENT_TEXT = '#8E9CFF'
 const SERIF = { fontFamily: 'var(--font-cormorant), Georgia, serif' } as const
-const CARD = 'rounded-2xl border border-white/[0.08] bg-[#0b1020]/85 backdrop-blur-sm'
+/** The mockups' card, measured: near-black with a faint cool tint (#060b14–#0f1520). */
+export const CARD = 'rounded-2xl border border-white/[0.07] bg-[#0a1019]/90 backdrop-blur-sm'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const FOCUS: { key: FocusWindow | null; label: string }[] = [
@@ -245,7 +249,7 @@ export function DailyRhythmPage() {
             <div className="absolute inset-0 flex justify-between">
               {points.map(pt => (
                 <span key={pt.key} className="flex-1 flex justify-center items-center">
-                  <span className="w-3.5 h-3.5 rounded-full border-2 border-[#0b1020]" style={{ background: DOT[pt.key], boxShadow: `0 0 10px ${DOT[pt.key]}` }} />
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-[#0a1019]" style={{ background: DOT[pt.key], boxShadow: `0 0 10px ${DOT[pt.key]}` }} />
                 </span>
               ))}
             </div>
@@ -259,7 +263,7 @@ export function DailyRhythmPage() {
           const Icon = art.icon
           return (
             <div key={row.key} className={`${CARD} flex items-center gap-3.5 p-2.5 pr-4`}>
-              <span className="relative w-16 h-16 shrink-0 rounded-xl overflow-hidden flex items-center justify-center" style={{ background: `radial-gradient(circle at 50% 40%, ${art.tint}55, #0b1020 75%)` }}>
+              <span className="relative w-16 h-16 shrink-0 rounded-xl overflow-hidden flex items-center justify-center" style={{ background: `radial-gradient(circle at 50% 40%, ${art.tint}55, #0a1019 75%)` }}>
                 {art.img && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={art.img} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover opacity-70" />
@@ -268,7 +272,7 @@ export function DailyRhythmPage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-px-15 text-white">{row.title}</span>
-                <span className="block text-px-14 font-medium" style={{ color: ACCENT }}>{row.time}</span>
+                <span className="block text-px-14 font-medium" style={{ color: ACCENT_TEXT }}>{row.time}</span>
                 <span className="block text-px-12 text-white/60 leading-snug">{row.body}</span>
               </span>
             </div>
@@ -278,7 +282,7 @@ export function DailyRhythmPage() {
       <p className="mt-2 px-1 text-px-12 text-white/45">Reminder times and switches live in Notifications.</p>
 
       <div className={`${CARD} mt-6 p-4`}>
-        <p className="flex items-center gap-2 text-px-20 text-white" style={{ ...SERIF, fontWeight: 600 }}><Sparkles className="w-4 h-4" style={{ color: ACCENT }} /> Why this matters</p>
+        <p className="flex items-center gap-2 text-px-20 text-white" style={{ ...SERIF, fontWeight: 600 }}><Sparkles className="w-4 h-4" style={{ color: ACCENT_TEXT }} /> Why this matters</p>
         <p className="mt-1.5 text-px-13 text-white/65 leading-relaxed">Your rhythm helps Voxu suggest the hard things when you&rsquo;re sharpest, keep its own nudges out of your workday and your quiet hours, and remind you at times that fit your life.</p>
       </div>
 
