@@ -116,8 +116,8 @@ function CircularVisualizerInner({
       const t = timeRef.current
       for (let i = 0; i < barCount; i++) {
         const a = (i / barCount) * Math.PI * 2
-        const ripple = Math.sin(a * 3 + t * 1.6) * 0.07 + Math.sin(a * 5 - t * 1.1) * 0.05 + Math.sin(a * 2 - t * 0.6) * 0.04
-        const breath = 0.1 + Math.sin(t * 0.8) * 0.04
+        const ripple = Math.sin(a * 3 + t * 1.6) * 0.16 + Math.sin(a * 5 - t * 1.1) * 0.1 + Math.sin(a * 2 - t * 0.6) * 0.08
+        const breath = 0.3 + Math.sin(t * 0.8) * 0.1
         const target = Math.max(0.02, breath + ripple)
         smoothed[i] += (target - smoothed[i]) * 0.12
       }
@@ -132,8 +132,11 @@ function CircularVisualizerInner({
     const cx = w / 2
     const cy = h / 2
     const min = Math.min(w, h)
-    const radius = min * (dial ? 0.36 : 0.28)
-    const maxBarLength = min * (dial ? 0.09 : 0.18)
+    // Small dials sit a little tighter so their longer ticks stay inside the canvas.
+    const radius = min * (dial ? (min < 80 ? 0.3 : 0.36) : 0.28)
+    // A small dial (Voxu's header orb, ~52px) gets a floor in pixels: at 9%
+    // of its size a tick moved under a pixel and the ring looked frozen.
+    const maxBarLength = dial ? Math.max(min * 0.09, Math.min(7, min * 0.5 - radius - min * 0.035 - 0.5)) : min * 0.18
     const baseBar = dial ? min * 0.035 : 3
     const barWidth = dial ? 3 : 2
     const angleStep = (Math.PI * 2) / barCount
@@ -177,7 +180,10 @@ function CircularVisualizerInner({
       const angle = i * angleStep - Math.PI / 2
       const barLength = dial ? baseBar + value * maxBarLength : Math.max(baseBar, value * maxBarLength)
       // The dial is lit from the upper right, as in the mockup.
-      const lit = dial ? 0.45 + 0.55 * Math.max(0, Math.cos(angle + Math.PI / 4)) : 1
+      // Breathing, the light slowly travels round the dial — the motion that
+      // reads at any size.
+      const spin = breathe && !isPlaying ? timeRef.current * 1.6 : 0
+      const lit = dial ? 0.35 + 0.65 * Math.max(0, Math.cos(angle + Math.PI / 4 - spin)) : 1
       const opacity = (0.6 + value * 0.4) * lit
       const x1 = cx + Math.cos(angle) * radius
       const y1 = cy + Math.sin(angle) * radius
