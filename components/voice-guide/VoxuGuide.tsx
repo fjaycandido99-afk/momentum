@@ -9,7 +9,7 @@ import { navHref, type NavContext } from '@/lib/voice-guide/navigate'
 import { resolveIntent, type IntentContext } from '@/lib/voice-guide/intents'
 import { acceptRescue } from '@/lib/pulse/rescue-state'
 import type { RescuePlan } from '@/lib/pulse/rescue'
-import { fetchVoxuAudio, type VoxuAudioResult } from '@/lib/voice/voxu-audio'
+import { fetchVoxuAudio, installVoxuUnlock, sharedVoxuPlayer, type VoxuAudioResult } from '@/lib/voice/voxu-audio'
 import { SpeakingRing } from './SpeakingRing'
 import { FIRST_VISIT_ASK, type GuideLine, type GuideScreen } from '@/lib/voice-guide/scripts'
 import { haptic } from '@/lib/haptics'
@@ -109,6 +109,7 @@ export function VoxuGuide({
   const [paused, setPaused] = useState(false)
   const [index, setIndex] = useState(0)
   const [quiet, setQuiet] = useState(false) // a line fell back to captions
+  useEffect(() => { installVoxuUnlock() }, [])
   /** The day's spoken lines ran out (a 403 from chat-voice), not just a hiccup. */
   const [outOfVoice, setOutOfVoice] = useState(false)
   const sub = useSubscriptionOptional()
@@ -244,7 +245,10 @@ export function VoxuGuide({
           if (pausedRef.current) { resume.current = fallBack; return }
           return fallBack()
         }
-        const a = res.audio
+        // Through the one shared player (a tap unlocked it): in an iPhone
+        // browser a fresh element per line would be blocked after the first.
+        const a = sharedVoxuPlayer().el
+        a.src = res.audio.src
         audio.current = a
         a.onended = () => done()
         a.onerror = () => fallBack()

@@ -6,7 +6,8 @@ import { ArrowRight, AudioLines, Clock, Headphones, Keyboard, Landmark, Loader2,
 import { useMindsetOptional } from '@/contexts/MindsetContext'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
-import { fetchVoxuAudio } from '@/lib/voice/voxu-audio'
+import { fetchVoxuAudio, installVoxuUnlock, sharedVoxuPlayer } from '@/lib/voice/voxu-audio'
+import { APP_STORE_URL } from '@/components/marketing/JoinCta'
 import { SpeakingRing } from '@/components/voice-guide/SpeakingRing'
 import { InviteAsk } from '@/components/referral/InviteAsk'
 import { ERA_PRESETS_BY_KEY, eraName, DEFAULT_ERA_LENGTH_DAYS } from '@/lib/era/presets'
@@ -85,6 +86,7 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   /** No account yet: the opener runs in full, and Day 1 is kept on the device until they sign up. */
+  const isNativeApp = typeof window !== 'undefined' && !!(window as unknown as { Capacitor?: unknown }).Capacitor
   const [guest, setGuest] = useState(false)
   const replySig = useRef<string | null>(null)
   /** How they'll answer — chosen on the first screen. */
@@ -100,6 +102,9 @@ export function FirstLaunch({ hasEra, onEraChange }: {
     try { return localStorage.getItem(VOICE_KEY) !== 'off' } catch { return true }
   })
   const audio = useRef<HTMLAudioElement | null>(null)
+  /** ONE element for every line — iPhone Safari blocks sound from any element a tap didn't start. */
+  const getPlayer = sharedVoxuPlayer
+  useEffect(() => { installVoxuUnlock() }, [])
   const guideRun = useRef(0)
 
   const finish = useCallback(() => {
@@ -124,12 +129,9 @@ export function FirstLaunch({ hasEra, onEraChange }: {
     // 'onboarding': free for everyone, account or not — the opener is the taste.
     const res = await fetchVoxuAudio(text, 'onboarding', sig)
     if (!res.ok) return 'quiet'
-    audio.current = res.audio
-    return new Promise(done => {
-      res.audio.onended = () => done('played')
-      res.audio.onerror = () => done('quiet')
-      res.audio.play().catch(() => done('blocked'))
-    })
+    const p = getPlayer()
+    audio.current = p.el
+    return p.play(res.audio.src)
   }, [voiceOn])
 
   /**
@@ -343,7 +345,12 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   // so the bottom nav and the Today orb's own question showed through it.
   if (typeof document === 'undefined') return null
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label="Welcome to Voxu" className="fixed inset-0 z-[90] bg-black text-white overflow-y-auto overflow-x-hidden">
+    <div
+      role="dialog" aria-modal="true" aria-label="Welcome to Voxu"
+      className="fixed inset-0 z-[90] bg-black text-white overflow-y-auto overflow-x-hidden"
+      // The first touch anywhere unlocks Voxu's voice for every line after it.
+      onPointerDownCapture={() => getPlayer().unlock()}
+    >
       <ScrollLock />
       {/* Night over still water, as in the mockup — tall on a phone, wide on
           an iPad or computer. */}
@@ -570,6 +577,17 @@ export function FirstLaunch({ hasEra, onEraChange }: {
               Create my free account <ArrowRight className="w-4 h-4" />
             </a>
             <p className="mt-3 text-px-12 text-white/55">Already have one? <a href="/login" className="underline underline-offset-4">Sign in</a></p>
+            {/* In a browser: the app is the real home for this. */}
+            {!isNativeApp && (
+              <a href={APP_STORE_URL} className="tap-44 mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/25 text-px-13 text-white/90">
+                Get Voxu on the App Store
+              </a>
+            )}
+            {/* No account needed to look around — Day 1 stays saved on this
+                device and is created the moment they sign up. */}
+            <div className="mt-4">
+              <button onClick={finish} className="tap-44 text-px-13 text-white/60 underline underline-offset-4">Continue as guest</button>
+            </div>
           </div>
         )}
 

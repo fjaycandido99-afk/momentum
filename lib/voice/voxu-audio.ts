@@ -20,10 +20,14 @@ export const VOXU_SPEAKING_EVENT = 'voxu:speaking'
 let speaking: HTMLAudioElement | null = null
 export function currentVoxuAudio(): HTMLAudioElement | null { return speaking }
 function announce(next: HTMLAudioElement | null) {
-  if (speaking === next) return
+  // Always announce a start: a reused player (iPhone Safari) plays many
+  // lines through ONE element, and each new line needs its own levels.
+  if (speaking === next && next === null) return
   speaking = next
   try { window.dispatchEvent(new Event(VOXU_SPEAKING_EVENT)) } catch { /* no window */ }
 }
+/** Announce plays/stops of an element the caller owns (a reused player). */
+export function trackVoxuAudio(a: HTMLAudioElement): HTMLAudioElement { return track(a) }
 function track(a: HTMLAudioElement): HTMLAudioElement {
   a.addEventListener('playing', () => announce(a))
   const quiet = () => { if (speaking === a) announce(null) }
@@ -78,4 +82,67 @@ export async function fetchVoxuAudio(text: string, purpose: 'explain' | 'talk' |
   } catch {
     return { ok: false, reason: 'unavailable' }
   }
+}
+
+/**
+ * iPhone Safari only lets a page play sound from an element a TAP started.
+ * Each line used to get a brand-new Audio, so after the first only the
+ * first line ever played. A VoxuPlayer is one element: unlock() it inside
+ * the first tap (a silent blip), then play every line through it.
+ */
+const SILENCE = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA='
+export interface VoxuPlayer {
+  el: HTMLAudioElement
+  unlock: () => void
+  /** Play a fetched line; resolves when it ends ('played'), or at once. */
+  play: (src: string) => Promise<'played' | 'blocked' | 'quiet'>
+}
+export function createVoxuPlayer(): VoxuPlayer {
+  const el = track(new Audio())
+  el.preload = 'auto'
+  let unlocked = false
+  return {
+    el,
+    unlock() {
+      if (unlocked) return
+      unlocked = true
+      try {
+        el.src = SILENCE
+        const p = el.play()
+        // Only stop the blip itself — never a real line that started meanwhile.
+        if (p) p.then(() => { if (el.src === SILENCE) el.pause() }).catch(() => { unlocked = false })
+      } catch { unlocked = false }
+    },
+    play(src) {
+      return new Promise(done => {
+        el.onended = () => done('played')
+        el.onerror = () => done('quiet')
+        el.src = src
+        el.play().catch(() => done('blocked'))
+      })
+    },
+  }
+}
+
+/**
+ * The app-wide player every Voxu line goes through (opener, walkthrough,
+ * Talk), unlocked by the first tap anywhere — so in an iPhone browser the
+ * second line plays as surely as the first. The installed app allows sound
+ * without a tap, so there this simply reuses one element.
+ */
+let shared: VoxuPlayer | null = null
+export function sharedVoxuPlayer(): VoxuPlayer {
+  return (shared ??= createVoxuPlayer())
+}
+let unlockInstalled = false
+export function installVoxuUnlock(): void {
+  if (unlockInstalled || typeof document === 'undefined') return
+  unlockInstalled = true
+  const once = () => {
+    sharedVoxuPlayer().unlock()
+    document.removeEventListener('pointerdown', once, true)
+    document.removeEventListener('keydown', once, true)
+  }
+  document.addEventListener('pointerdown', once, true)
+  document.addEventListener('keydown', once, true)
 }

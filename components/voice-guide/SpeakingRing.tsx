@@ -5,8 +5,9 @@ import { CircularVisualizer } from '@/components/player/CircularVisualizer'
 import { BufferAnalyser, type AudioAnalyserLike } from '@/components/player/audio-analyser-cache'
 import { currentVoxuAudio, VOXU_SPEAKING_EVENT } from '@/lib/voice/voxu-audio'
 
-/** One decode per line, however many rings are showing it. */
-const analysers = new WeakMap<HTMLAudioElement, Promise<AudioAnalyserLike | null>>()
+/** One decode per line, however many rings are showing it — keyed by the
+ *  line itself, since one reused player (iPhone Safari) plays many lines. */
+const analysers = new WeakMap<HTMLAudioElement, { src: string; p: Promise<AudioAnalyserLike | null> }>()
 
 /**
  * Reads the line's own levels as it plays — the guided player's way
@@ -16,9 +17,10 @@ const analysers = new WeakMap<HTMLAudioElement, Promise<AudioAnalyserLike | null
  * on its own rather than not at all.
  */
 function analyserFor(audio: HTMLAudioElement): Promise<AudioAnalyserLike | null> {
-  let p = analysers.get(audio)
-  if (!p) {
-    p = (async () => {
+  const hit = analysers.get(audio)
+  if (hit && hit.src === audio.src) return hit.p
+  {
+    const p = (async () => {
       try {
         const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
         if (!Ctx || !audio.src) return null
@@ -31,21 +33,27 @@ function analyserFor(audio: HTMLAudioElement): Promise<AudioAnalyserLike | null>
         return null
       }
     })()
-    analysers.set(audio, p)
+    analysers.set(audio, { src: audio.src, p })
+    return p
   }
-  return p
 }
 
 /** Which of Voxu's lines is playing right now, app-wide. */
 export function useVoxuSpeaking(): HTMLAudioElement | null {
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(() => currentVoxuAudio())
+  return useVoxuSpeakingLine().audio
+}
+
+/** The playing element AND which line — a reused player changes src, not element. */
+function useVoxuSpeakingLine(): { audio: HTMLAudioElement | null; src: string | null } {
+  const read = () => { const a = currentVoxuAudio(); return { audio: a, src: a?.src ?? null } }
+  const [line, setLine] = useState(read)
   useEffect(() => {
-    const on = () => setAudio(currentVoxuAudio())
+    const on = () => setLine(read())
     window.addEventListener(VOXU_SPEAKING_EVENT, on)
     on()
     return () => window.removeEventListener(VOXU_SPEAKING_EVENT, on)
   }, [])
-  return audio
+  return line
 }
 
 /**
@@ -54,7 +62,7 @@ export function useVoxuSpeaking(): HTMLAudioElement | null {
  * whole canvas — about twice the orb. Nothing is drawn when Voxu is quiet.
  */
 export function SpeakingRing({ size, className = '', always = false }: { size: number; className?: string; /** Be the orb: the dial at rest when Voxu is quiet. */ always?: boolean }) {
-  const audio = useVoxuSpeaking()
+  const { audio, src } = useVoxuSpeakingLine()
   const [analyser, setAnalyser] = useState<AudioAnalyserLike | null>(null)
 
   useEffect(() => {
@@ -63,7 +71,7 @@ export function SpeakingRing({ size, className = '', always = false }: { size: n
     let live = true
     analyserFor(audio).then(a => { if (live) setAnalyser(a) })
     return () => { live = false }
-  }, [audio])
+  }, [audio, src])
 
   if (!audio && !always) return null
   // At rest the orb breathes. Like the header coin's flip, it's ambient — in

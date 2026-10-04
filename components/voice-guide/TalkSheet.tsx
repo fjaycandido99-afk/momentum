@@ -6,7 +6,7 @@ import { AudioLines, Loader2, Send, Volume2, VolumeX, X } from 'lucide-react'
 import { ScrollLock } from '@/components/ui/ScrollLock'
 import { VoiceInput } from '@/components/journal/VoiceInput'
 import { CrisisBanner, type CrisisContent } from '@/components/journal/CrisisBanner'
-import { fetchVoxuAudio } from '@/lib/voice/voxu-audio'
+import { fetchVoxuAudio, installVoxuUnlock, sharedVoxuPlayer } from '@/lib/voice/voxu-audio'
 import { SpeakingRing } from './SpeakingRing'
 import { isCommand } from '@/lib/voice-guide/intents'
 import { trackFeature } from '@/lib/analytics/track'
@@ -73,8 +73,15 @@ export function TalkSheet({
       if (res.reason === 'locked') { setNote('Spoken replies are used up for now, so here it is in words.'); setLimited(true) }
       return
     }
-    audio.current = res.audio
-    res.audio.play().catch(() => { /* blocked: the words are on screen */ })
+    // The shared, tap-unlocked player — replies arrive after a fetch, outside
+    // the tap, and an iPhone browser blocks a brand-new element there.
+    installVoxuUnlock()
+    const a = sharedVoxuPlayer().el
+    a.onended = null
+    a.onerror = null
+    a.src = res.audio.src
+    audio.current = a
+    a.play().catch(() => { /* blocked: the words are on screen */ })
   }, [voiceOn])
 
   // Voxu speaks first. Opening the sheet was their tap, so sound is allowed.
