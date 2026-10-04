@@ -38,7 +38,8 @@ import { eraOrdinal } from '@/lib/era/logic'
 import { ERA_PRACTICE_DOMAIN, OUTCOME_LINE, eraOutcome } from '@/lib/era/keep'
 import { isDismissed, setDismissed } from '@/lib/ui/dismiss'
 import { KeepOneThingSheet } from '@/components/era/KeepOneThingSheet'
-import { WidgetSetupTip } from '@/components/widget/WidgetSetup'
+import { markWidgetNudged, shouldNudgeWidget } from '@/components/widget/WidgetSetup'
+import { WidgetGuideSheet } from '@/components/widget/WidgetGuideSheet'
 import { EraReflection } from '@/components/era/EraReflection'
 import { eraCloseScript } from '@/lib/era/close'
 import { AddPracticeSheet } from '@/components/practices/AddPracticeSheet'
@@ -494,6 +495,8 @@ function ActiveEra({
   const promiseExpanded = writing || draft.trim().length > 0
   /** How sure they are before promising, 1–5. Skipping it is fine. */
   const [confidence, setConfidence] = useState<number | null>(null)
+  /** The widget guide, opened once by the nudge after a keep. */
+  const [widgetGuide, setWidgetGuide] = useState(false)
   /** Optional: what today's promise counts toward (receipts on Proof). */
   const [measure, setMeasure] = useState<MeasureDraft>(EMPTY_MEASURE)
   /** A just-answered yesterday, still owed its one-tap "why". */
@@ -590,6 +593,17 @@ function ActiveEra({
     // the "why" would never be asked for the miss that matters most — the one
     // they didn't answer last night. Hold it over into the next step.
     if (data) setPendingWhy(!reason && which === 'yesterday' ? { kept } : null)
+    // The widget's one moment: right after a keep, once ever, in the app —
+    // when "see this without opening Voxu" means the most. After the
+    // celebration, and never over another popup.
+    if (data && kept && shouldNudgeWidget()) {
+      markWidgetNudged()
+      const tryOpen = (n: number) => window.setTimeout(() => {
+        if (document.documentElement.classList.contains('modal-open')) { if (n < 10) tryOpen(n + 1); return }
+        setWidgetGuide(true)
+      }, n === 0 ? 2500 : 2000)
+      tryOpen(0)
+    }
     // The trial offer's one moment: right after a win, once three promises
     // have been kept. Never on day 1, never a wall, and only ever once.
     const next = data?.era as EraToday | null | undefined
@@ -1148,8 +1162,13 @@ function ActiveEra({
       />
       {/* Mornings only; renders nothing otherwise. */}
       <MorningBriefCard />
-      {/* Once, and only on a build that really has the widget. */}
-      <WidgetSetupTip />
+      {/* Once, after a keep (see check): the widget, with their day in it. */}
+      {widgetGuide && (
+        <WidgetGuideSheet
+          onClose={() => setWidgetGuide(false)}
+          era={{ title: era.title, day: Math.min(era.day, era.lengthDays), lengthDays: era.lengthDays, promise: era.today?.text ?? null }}
+        />
+      )}
 
       {/*
         The routine, one line, right under what the loop says to do now.

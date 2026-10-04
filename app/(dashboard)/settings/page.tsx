@@ -43,7 +43,7 @@ import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
 import { TierBanner } from '@/components/premium/TierBanner'
 import { SettingsCategory } from '@/components/settings/SettingsCategory'
-import { WidgetSettingsSection } from '@/components/widget/WidgetSetup'
+import { WidgetSettingsRow } from '@/components/widget/WidgetSetup'
 import { HomeShelvesSetting } from '@/components/settings/HomeShelvesSetting'
 import { GuideReminderSettings } from '@/components/settings/GuideReminderSettings'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
@@ -599,7 +599,7 @@ function SettingsContent() {
         </SettingsCategory>
 
         {/* Only on a build that has the widget (components/widget/WidgetSetup). */}
-        <WidgetSettingsSection />
+        <WidgetSettingsRow />
 
         {/* ═══════════════ 2. Daily Experience ═══════════════ */}
         <SettingsCategory
