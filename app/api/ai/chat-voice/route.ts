@@ -76,7 +76,15 @@ export async function POST(request: NextRequest) {
       || (!!user && (await prisma.era.count({ where: { user_id: user.id } })) === 0)
     )
 
+    // A guest pressing "Explain this": the walkthrough lines everyone hears
+    // are already in the shared cache — serve those (they cost nothing).
+    // Anything not cached needs an account, so a guest can never make new
+    // speech out of arbitrary text.
     if (!user && !onboarding) {
+      if (body?.purpose === 'explain' && text && text.length <= EXPLAIN_MAX_CHARS) {
+        const hit = await getSharedCached(`chat-${PRIMARY_MODEL}-voxu-${VOXU_VOICE_ID}-${createHash('sha1').update(text).digest('hex').slice(0, 32)}`)
+        if (hit) return NextResponse.json({ audio: hit.audioBase64, duration: hit.duration, tone: 'calm', cached: true })
+      }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

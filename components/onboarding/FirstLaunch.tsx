@@ -104,13 +104,16 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   const finish = useCallback(() => {
     audio.current?.pause()
     guideRun.current++
-    try { localStorage.setItem(KEY, '1') } catch { /* ignore */ }
+    // A guest's Day 1 waiting to be saved: hide for now, but NOT done — after
+    // they sign up the opener must come back to create it (resumePending).
+    try { if (!readPending()) localStorage.setItem(KEY, '1') } catch { /* ignore */ }
     setHidden(true)
   }, [])
 
   // Already has an era (a returning person on a new phone): nothing to show.
   useEffect(() => {
-    if (!hidden && hasEra === true) finish()
+    // Has an era already: a guest's saved Day 1 (if any) isn't needed.
+    if (!hidden && hasEra === true) { writePending(null); finish() }
   }, [hidden, hasEra, finish])
 
   /** Say a line in Voxu's voice (after their first tap). Resolves when it ends, or at once when quiet. */

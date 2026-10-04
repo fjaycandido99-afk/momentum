@@ -179,6 +179,19 @@ export function GrowthSection({ apiKey = null }: { apiKey?: string | null }) {
         )}
       </Card>
 
+      <Card title="Widget buttons" moves="the buttons on the home screen (iOS 17+ with the newer build): Mark Done, the mood check-in, keeping tomorrow's promise. Zero until that build ships.">
+        <div className="divide-y divide-white/5">
+          <Row label="Used any button" value={`${g.newFeatures.widget.people} people`} />
+          {g.newFeatures.widget.byAction.map(a => (
+            <Row
+              key={a.action}
+              label={a.action === 'promise_done' ? 'Mark Done' : a.action === 'checkin' ? 'Check-in' : 'Keep tomorrow'}
+              value={`${a.people} people · ${a.taps} taps`}
+            />
+          ))}
+        </div>
+      </Card>
+
       <Card title="Psychology lessons" moves="the 'For you' row (lessons tied to someone's own laws) and the links from Your laws and experiments. Lessons nobody opens are candidates for a better title, not deletion.">
         <div className="divide-y divide-white/5">
           <Row label="Opened the library" value={`${g.newFeatures.lessons.libraryOpeners} people`} />

@@ -138,6 +138,14 @@ export function TalkSheet({
         setMsgs(m => [...m, { role: 'assistant', content: reply }])
         void speak(reply)
       }
+      // Free, weekly: say it gently before the wall, never as a running count.
+      const q = data?.quota
+      if (q?.period === 'week' && typeof q.remaining === 'number' && q.remaining <= 5) {
+        setNote(q.remaining === 0
+          ? 'That was this week’s last conversation. They come back Monday.'
+          : 'You’ve used most of this week’s conversations. I can still explain things and take you places.')
+        setLimited(true)
+      }
     } catch {
       setNote('Couldn’t reach Voxu. Check your connection.')
     } finally {

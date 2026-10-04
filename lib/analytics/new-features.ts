@@ -125,3 +125,23 @@ export function experimentUse(rows: { userId: string; kind: string; status: stri
     byKind: [...kinds.entries()].map(([kind, started]) => ({ kind, started })).sort((a, b) => b.started - a.started),
   }
 }
+
+export interface WidgetUse {
+  /** Distinct people who used any widget button. */
+  people: number
+  /** Per button: people and taps. Which button only — never what it said. */
+  byAction: { action: string; people: number; taps: number }[]
+}
+
+/** The home-screen widget's buttons (app/api/widget/action). */
+export function widgetUse(events: FeatureEventRow[]): WidgetUse {
+  const w = events.filter(e => e.feature === 'widget' && e.action === 'use')
+  const actions = ['promise_done', 'checkin', 'tomorrow_keep']
+  return {
+    people: people(w),
+    byAction: actions.map(a => {
+      const rows = w.filter(e => e.metadata === a)
+      return { action: a, people: people(rows), taps: rows.length }
+    }),
+  }
+}

@@ -29,10 +29,13 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => null)
     if (!isWidgetAction(body?.action)) return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
+    // Admin totals (lib/analytics/new-features widgetUse): which button, never what it said.
+    const track = () => prisma.featureEvent.create({ data: { user_id: userId, feature: 'widget', action: 'use', metadata: body.action } }).catch(() => {})
 
     if (body.action === 'promise_done') {
       const r = await checkPromise(userId, { which: 'today', kept: true })
       if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status })
+      await track()
       return NextResponse.json({ ok: true })
     }
 
@@ -49,12 +52,14 @@ export async function POST(request: NextRequest) {
         create: { user_id: userId, local_day: day, mood },
         update: { mood },
       })
+      await track()
       return NextResponse.json({ ok: true })
     }
 
     // tomorrow_keep
     const r = await makePromise(userId, { text: body.text, source: 'typed', forDay: 'tomorrow' })
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status })
+    await track()
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('[widget action] error:', error)

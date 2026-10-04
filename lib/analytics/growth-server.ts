@@ -6,7 +6,7 @@ import {
   notificationOpens, promiseTiming, retention,
   type DisciplineRow, type EarlyUser, type EraRow, type PromiseFact, type UserDays,
 } from './growth'
-import { experimentUse, lessonUse, openerFunnel, voiceGuideUse } from './new-features'
+import { experimentUse, lessonUse, openerFunnel, voiceGuideUse, widgetUse } from './new-features'
 
 /**
  * Loads the founder's Growth & patterns view. EVERY select below names its
@@ -150,7 +150,7 @@ export async function loadGrowth() {
   // selected, only that one exists.
   const [recentEvents, experimentRows, noteRows] = await Promise.all([
     prisma.featureEvent.findMany({
-      where: { feature: { in: ['first_launch', 'voice_guide', 'psychology'] } },
+      where: { feature: { in: ['first_launch', 'voice_guide', 'psychology', 'widget'] } },
       select: { user_id: true, feature: true, action: true, metadata: true },
     }),
     prisma.patternExperiment.findMany({ select: { user_id: true, kind: true, status: true } }),
@@ -163,6 +163,7 @@ export async function loadGrowth() {
     newFeatures: {
       opener: openerFunnel(ev),
       voice: voiceGuideUse(ev),
+      widget: widgetUse(ev),
       lessons: lessonUse(ev),
       experiments: experimentUse(experimentRows.map(x => ({ userId: x.user_id, kind: x.kind, status: x.status }))),
       relicNotes: { people: new Set(noteRows.map(n => n.user_id)).size, notes: noteRows.length },

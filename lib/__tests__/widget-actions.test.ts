@@ -32,3 +32,17 @@ describe('widget buttons', () => {
     expect(tomorrowSuggestion(null, false)).toBeNull()
   })
 })
+
+describe('admin widget totals', () => {
+  it('counts people and taps per button, and nothing else', async () => {
+    const { widgetUse } = await import('@/lib/analytics/new-features')
+    const ev = (userId: string, metadata: string, feature = 'widget') => ({ userId, feature, action: 'use', metadata })
+    const w = widgetUse([ev('a', 'promise_done'), ev('a', 'promise_done'), ev('b', 'checkin'), ev('c', 'promise_done', 'voice_guide')])
+    expect(w.people).toBe(2)
+    expect(w.byAction).toEqual([
+      { action: 'promise_done', people: 1, taps: 2 },
+      { action: 'checkin', people: 1, taps: 1 },
+      { action: 'tomorrow_keep', people: 0, taps: 0 },
+    ])
+  })
+})
