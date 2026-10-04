@@ -2,6 +2,7 @@
 
 import { useState, useEffect, type ReactNode } from 'react'
 import { ChevronDown, type LucideIcon } from 'lucide-react'
+import { useSettingsSection } from './SettingsSectionContext'
 
 interface SettingsCategoryProps {
   id: string
@@ -91,6 +92,16 @@ export function SettingsCategory({
     const timers = [settle(360), settle(750)]
     return () => timers.forEach(clearTimeout)
   }, [id])
+
+  // Settings is an index of rows now: on the index, sections don't render;
+  // on a section's own page (/settings?s=<id>), it renders flat — no card,
+  // no accordion — as the page's content.
+  const section = useSettingsSection()
+  if (section === null) return null
+  if (section !== undefined) {
+    if (section !== id) return null
+    return <div id={id} className="space-y-5">{children}</div>
+  }
 
   const toggle = () => {
     const next = !isOpen

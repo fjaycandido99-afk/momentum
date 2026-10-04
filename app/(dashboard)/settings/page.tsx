@@ -41,9 +41,10 @@ import { NotificationModePicker } from '@/components/notifications/NotificationM
 import { LoadingScreen } from '@/components/ui/LoadingSpinner'
 import { PremiumBadge, ProLabel } from '@/components/premium'
 import { FeatureHint } from '@/components/ui/FeatureHint'
-import { TierBanner } from '@/components/premium/TierBanner'
 import { SettingsCategory } from '@/components/settings/SettingsCategory'
-import { WidgetSettingsRow } from '@/components/widget/WidgetSetup'
+import { SettingsIndex } from '@/components/settings/SettingsIndex'
+import { SettingsExtraPage, EXTRA_PAGES } from '@/components/settings/SettingsExtraPages'
+import { SettingsSectionContext } from '@/components/settings/SettingsSectionContext'
 import { HomeShelvesSetting } from '@/components/settings/HomeShelvesSetting'
 import { GuideReminderSettings } from '@/components/settings/GuideReminderSettings'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
@@ -93,6 +94,14 @@ import { TRIAL_DAYS } from '@/lib/subscription-constants'
 function SettingsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  // Settings is an index; each row opens /settings?s=<id> (SettingsIndex).
+  const section = searchParams.get('s')
+  useEffect(() => {
+    // Old links like /settings#ai-memory open that section's page.
+    if (section) return
+    const hash = window.location.hash.slice(1)
+    if (hash && (hash in SECTION_TITLES || hash in EXTRA_PAGES)) router.replace(`/settings?s=${hash}`)
+  }, [section, router])
   const supabase = createClient()
   const subscription = useSubscriptionOptional()
   const mindsetCtx = useMindsetOptional()
@@ -386,12 +395,13 @@ function SettingsContent() {
       {/* Header */}
       <div className="sticky top-0 z-50 px-6 safe-area-pt pb-4 mb-4 bg-black">
         <div className="absolute -bottom-6 left-0 right-0 h-6 bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
+        <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <Link href="/" aria-label="Back to home" className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
+            <Link href={section ? '/settings' : '/'} aria-label={section ? 'Back to Settings' : 'Back to home'} className="p-2 -ml-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none">
               <ChevronLeft className="w-5 h-5 text-white/70" />
             </Link>
-            <h1 className="text-2xl font-light shimmer-text">Settings</h1>
+            <h1 className="text-px-28 text-white" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 600 }}>{section ? (SECTION_TITLES[section] ?? 'Settings') : 'Settings'}</h1>
           </div>
           {saveStatus === 'saving' && (
             <span className="flex items-center gap-1.5 text-white/50 text-sm">
@@ -409,12 +419,22 @@ function SettingsContent() {
             <span role="alert" className="text-white text-sm">Failed to save</span>
           )}
         </div>
-        <p className="text-white/70 text-sm mt-1">Customize your Daily Guide</p>
+        <p className="text-white/65 text-sm mt-1">{section ? (EXTRA_PAGES[section]?.sub ?? SECTION_SUBS[section] ?? '') : 'Your Voxu, your way.'}</p>
+        </div>
       </div>
 
-      <TierBanner page="settings" />
-
-      <div className="px-6 space-y-3">
+      <SettingsSectionContext.Provider value={section}>
+      <div className="px-6 md:px-0 space-y-3 max-w-lg mx-auto">
+        {!section && (
+          <SettingsIndex
+            isPremium={!!subscription?.isPremium}
+            isTrialing={!!subscription?.isTrialing}
+            onUpgrade={() => subscription?.openUpgradeModal()}
+            rhythm={rhythmSummary(userType, workDays, classDays, workStartTime, workEndTime, classStartTime, classEndTime)}
+            name={null}
+          />
+        )}
+        {section && <SettingsExtraPage section={section} />}
         {/* ═══════════════ 1. Profile & Schedule ═══════════════ */}
         <SettingsCategory
           id="profile-schedule"
@@ -599,7 +619,6 @@ function SettingsContent() {
         </SettingsCategory>
 
         {/* Only on a build that has the widget (components/widget/WidgetSetup). */}
-        <WidgetSettingsRow />
 
         {/* ═══════════════ 2. Daily Experience ═══════════════ */}
         <SettingsCategory
@@ -1106,8 +1125,51 @@ function SettingsContent() {
           </div>
         </SettingsCategory>
       </div>
+      </SettingsSectionContext.Provider>
     </div>
   )
+}
+
+/** Each existing section's page title (SettingsCategory ids). */
+const SECTION_TITLES: Record<string, string> = {
+  'profile-schedule': 'Daily Rhythm',
+  'daily-experience': 'Daily Experience',
+  mindset: 'Mindset & Coaching',
+  notifications: 'Notifications',
+  'ai-memory': 'Voxu Memory',
+  language: 'Language',
+  account: 'Profile & Account',
+  ...Object.fromEntries(Object.entries(EXTRA_PAGES).map(([k, v]) => [k, v.title])),
+}
+const SECTION_SUBS: Record<string, string> = {
+  'profile-schedule': 'When your days start, and when you work or study.',
+  'daily-experience': 'What your day in Voxu includes, and how it sounds.',
+  mindset: 'The philosophy Voxu coaches you with.',
+  notifications: 'What Voxu sends, when, and how often.',
+  'ai-memory': 'What Voxu may remember about you.',
+  language: 'The language Voxu speaks.',
+  account: 'Your name, your plan, signing in and out.',
+}
+
+const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+function fmtTime(t: string): string {
+  const [h, m] = t.split(':').map(Number)
+  if (!Number.isFinite(h)) return t
+  return `${((h + 11) % 12) + 1}:${String(m || 0).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`
+}
+function fmtDays(days: number[]): string {
+  const d = [...days].sort((a, b) => a - b)
+  if (d.join() === '1,2,3,4,5') return 'Mon–Fri'
+  if (d.length === 7) return 'Every day'
+  if (!d.length) return 'No set days'
+  return d.map(x => DAY_ABBR[x]).join(', ')
+}
+/** "Professional · Mon–Fri · 9:00 AM–5:00 PM" for the Daily Rhythm row. */
+function rhythmSummary(type: string, work: number[], cls: number[], ws: string, we: string, cs: string, ce: string): string {
+  if (type === 'student') return `Student · ${fmtDays(cls)} · ${fmtTime(cs)}–${fmtTime(ce)}`
+  if (type === 'both') return `Work & study · ${fmtDays(work)} · ${fmtTime(ws)}–${fmtTime(we)}`
+  if (type === 'professional') return `Professional · ${fmtDays(work)} · ${fmtTime(ws)}–${fmtTime(we)}`
+  return 'Your days, your times'
 }
 
 export default function SettingsPage() {
