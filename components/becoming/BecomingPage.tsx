@@ -4,7 +4,8 @@ import { Component, useEffect, useRef, useState, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Lenis from 'lenis'
-import { SECTIONS, STAGE_OF, carve, carvedProgress, sculpt, sectionAt, type Section } from './store'
+import { SECTIONS, carvedProgress, makePromise, sculpt, sectionAt, type Section } from './store'
+import { NARRATION } from './script'
 
 // "The Art of Becoming" (preview at /becoming). Not a page you scroll
 // through but a gallery you stand in: one statue under one spotlight, the
@@ -65,74 +66,9 @@ const GALLERY_CAPTION: Partial<Record<Section, { n: string; title: string; line:
   scholar: { n: 'iii', title: 'The Scholar.', line: 'Understand it first. Then do the work, properly.' },
 }
 const ERAS = ['Locked In', 'Discipline', 'Comeback', 'Gym Arc', 'Stoic Mode', 'Confidence', 'Study', '5AM']
-const MIRROR: { label: string; era: string }[] = [
-  { label: 'Build discipline', era: 'Discipline' },
-  { label: 'Improve focus', era: 'Locked In' },
-  { label: 'Get stronger', era: 'Gym Arc' },
-  { label: 'Start over', era: 'Comeback' },
-]
-const RITUAL = [
-  { label: 'Move', min: 20 },
-  { label: 'Read', min: 15 },
-  { label: 'Focus', min: 25 },
-  { label: 'Reflect', min: 10 },
-]
 
 const chip = (on: boolean) =>
   `rounded-full px-3.5 py-1.5 text-xs transition ${on ? 'bg-white text-black' : 'border border-white/15 text-white/75 hover:border-white/40'}`
-
-function Mirror() {
-  const [pick, setPick] = useState<number | null>(null)
-  return (
-    <div className="mt-5">
-      <div className="flex flex-wrap justify-center gap-2">
-        {MIRROR.map((m, i) => (
-          <button
-            key={m.label}
-            className={chip(pick === i)}
-            aria-pressed={pick === i}
-            onClick={() => {
-              setPick(i)
-              carve(STAGE_OF.intention, 0.35)
-            }}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
-      <p className="mt-3 min-h-[1.25rem] text-xs text-white/55">
-        {pick === null ? 'What are you trying to change? A demo: nothing is saved.' : `A place to start: the ${MIRROR[pick].era} era.`}
-      </p>
-    </div>
-  )
-}
-
-function Ritual() {
-  const [on, setOn] = useState<boolean[]>(RITUAL.map(() => false))
-  const total = RITUAL.reduce((s, r, i) => s + (on[i] ? r.min : 0), 0)
-  return (
-    <div className="mt-5">
-      <div className="flex flex-wrap justify-center gap-2">
-        {RITUAL.map((r, i) => (
-          <button
-            key={r.label}
-            className={chip(on[i])}
-            aria-pressed={on[i]}
-            onClick={() => {
-              if (!on[i]) carve(STAGE_OF.discipline, 0.22)
-              setOn((o) => o.map((v, j) => (j === i ? !v : v)))
-            }}
-          >
-            {r.label} · {r.min} min
-          </button>
-        ))}
-      </div>
-      <p className="mt-3 min-h-[1.25rem] text-xs text-white/55">
-        {total ? `${total} minutes a day. Small enough to keep.` : 'Shape a day. A demo: nothing is saved.'}
-      </p>
-    </div>
-  )
-}
 
 function AppStoreButton() {
   return (
@@ -150,6 +86,94 @@ function AppStoreButton() {
   )
 }
 
+// The palette: warm ivory, stone grey, a muted antique gold used sparingly.
+const GOLD = '#B69B73'
+const kicker = 'text-[11px] uppercase tracking-[0.3em]'
+function Kicker({ children }: { children: ReactNode }) {
+  return (
+    <p className={kicker} style={{ color: GOLD }}>
+      {children}
+    </p>
+  )
+}
+
+const PROMISES = ['Move my body for 20 minutes', 'Read for 15 minutes', 'Practise 10 minutes of stillness']
+
+// "A glimpse of Voxu": make a promise, and the chisel strikes the stone.
+function PromiseDemo() {
+  const [pick, setPick] = useState<number | null>(null)
+  const [made, setMade] = useState(false)
+  return (
+    <div className="mt-5">
+      {!made ? (
+        <>
+          <p className="text-xs" style={{ color: '#96938F' }}>
+            What will you promise yourself today?
+          </p>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            {PROMISES.map((p, i) => (
+              <button key={p} className={chip(pick === i)} aria-pressed={pick === i} onClick={() => setPick(i)}>
+                {p}
+              </button>
+            ))}
+          </div>
+          <button
+            disabled={pick === null}
+            onClick={() => {
+              makePromise()
+              setMade(true)
+            }}
+            className="mt-4 rounded-full px-5 py-2 text-xs font-semibold text-black transition disabled:opacity-30"
+            style={{ background: GOLD }}
+          >
+            Make my promise
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-white/80">
+            Promised: <span className="text-white">{PROMISES[pick ?? 0].toLowerCase()}</span>. That&rsquo;s a mark in the stone.
+          </p>
+          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs underline underline-offset-4" style={{ color: GOLD }}>
+            Make it for real in Voxu, free
+          </a>
+        </>
+      )}
+      <p className="mt-3 text-[11px] text-white/35">A demo: nothing here is saved.</p>
+    </div>
+  )
+}
+
+// The night check: did you keep it?
+function NightCheck() {
+  const [ans, setAns] = useState<null | 'yes' | 'no'>(null)
+  return (
+    <div className="mt-5">
+      <p className="text-xs" style={{ color: '#96938F' }}>
+        Tonight: did you keep your promise?
+      </p>
+      <div className="mt-3 flex justify-center gap-2">
+        <button
+          className={chip(ans === 'yes')}
+          aria-pressed={ans === 'yes'}
+          onClick={() => {
+            if (ans !== 'yes') makePromise()
+            setAns('yes')
+          }}
+        >
+          I kept it
+        </button>
+        <button className={chip(ans === 'no')} aria-pressed={ans === 'no'} onClick={() => setAns('no')}>
+          Not today
+        </button>
+      </div>
+      <p className="mt-3 min-h-[1.25rem] text-xs text-white/55">
+        {ans === 'yes' ? 'Another mark. Kept promises add up.' : ans === 'no' ? 'Said honestly. Tomorrow is another stone.' : 'A demo: nothing here is saved.'}
+      </p>
+    </div>
+  )
+}
+
 /** What each chapter says: a caption, one line, and sometimes something to try. */
 function Caption({ section }: { section: Section }) {
   switch (section) {
@@ -157,7 +181,7 @@ function Caption({ section }: { section: Section }) {
       return (
         <>
           <h1 className="font-[family-name:var(--font-cormorant)] text-5xl font-medium leading-[1.02] sm:text-7xl">
-            You are not discovered. <span className="text-white/55">You are built.</span>
+            You are not discovered. <span style={{ color: '#96938F' }}>You are built.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm text-white/60 sm:text-base">
             Pick a 30-day era. Make one promise a day. Your coach answers it, asks at night whether you kept it, and keeps count — out loud, in a voice
@@ -169,8 +193,9 @@ function Caption({ section }: { section: Section }) {
     case 'potential':
       return (
         <>
-          <h2 className="caption-h">Every transformation begins somewhere.</h2>
-          <p className="caption-p">Choose who you are becoming for the next thirty days: four chapters, one written mission a day.</p>
+          <Kicker>Chapter I · The Stone</Kicker>
+          <h2 className="caption-h mt-2">Nobody becomes someone overnight.</h2>
+          <p className="caption-p">Every change starts as an unfinished stone, and one decision. Choose who you are becoming for the next thirty days.</p>
           <div className="mt-4 flex flex-wrap justify-center gap-1.5">
             {ERAS.map((e) => (
               <span key={e} className="rounded-full border border-white/12 px-2.5 py-1 text-[11px] text-white/70">
@@ -184,39 +209,44 @@ function Caption({ section }: { section: Section }) {
     case 'intention':
       return (
         <>
-          <h2 className="caption-h">Change begins with a decision.</h2>
+          <Kicker>Chapter II · The Promise</Kicker>
+          <h2 className="caption-h mt-2">Start with one promise.</h2>
           <p className="caption-p">
-            Each morning, one promise, small enough to keep. Your coach answers it, quoting what you said on day one on the days that lands hardest.
+            Each morning, promise yourself one thing, small enough to keep. Your coach answers it, quoting what you said on day one on the days that
+            lands hardest.
           </p>
-          <Mirror />
+          <PromiseDemo />
         </>
       )
     case 'discipline':
       return (
         <>
-          <h2 className="caption-h">Consistency gives intention its shape.</h2>
+          <Kicker>Chapter III · The Resistance</Kicker>
+          <h2 className="caption-h mt-2">Motivation fades. Your word remains.</h2>
           <p className="caption-p">
-            At night you answer honestly. Set a time and your coach calls you by name and asks for the day&rsquo;s promise out loud.
+            At night your coach asks whether you kept it, and you answer honestly. Set a time and your coach calls you by name and asks for the
+            day&rsquo;s promise out loud.
           </p>
-          <Ritual />
+          <NightCheck />
         </>
       )
     case 'strength':
       return (
         <>
-          <h2 className="caption-h">The body is built the same way.</h2>
+          <Kicker>Chapter IV · The Proof</Kicker>
+          <h2 className="caption-h mt-2">Every day leaves a mark.</h2>
           <p className="caption-p">
-            Guided sessions, soundscapes, motivation and sleep audio, chosen for your era. Training and routines beside it, on a timer or in sequence.
+            Thirty days, one promise a day. Your record shows what you actually do: promises kept, the weekday you slip on. It says nothing until there
+            is enough to say.
           </p>
         </>
       )
     case 'polish':
       return (
         <>
-          <h2 className="caption-h">Your own record, counted honestly.</h2>
-          <p className="caption-p">
-            Promises kept, the weekday you slip on, whether your certainty means anything. It says nothing until there is enough to say.
-          </p>
+          <Kicker>Chapter V · The Becoming</Kicker>
+          <h2 className="caption-h mt-2">Become someone you can count on.</h2>
+          <p className="caption-p">Guided sessions, soundscapes, motivation and sleep audio, chosen for the era you are in.</p>
           <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/45">8 eras · 30 missions each · 8 coach voices · 70+ audio sessions</p>
         </>
       )
@@ -226,7 +256,7 @@ function Caption({ section }: { section: Section }) {
       const g = GALLERY_CAPTION[section]!
       return (
         <>
-          <p className="text-[11px] uppercase tracking-[0.3em] text-white/45">Your coach&rsquo;s voice · {g.n} / iii</p>
+          <Kicker>Your coach&rsquo;s voice · {g.n} / iii</Kicker>
           <h2 className="caption-h mt-2">{g.title}</h2>
           <p className="caption-p">{g.line}</p>
           {section === 'scholar' && (
@@ -243,8 +273,8 @@ function Caption({ section }: { section: Section }) {
     case 'final':
       return (
         <>
-          <h2 className="font-[family-name:var(--font-cormorant)] text-4xl font-medium sm:text-6xl">The masterpiece is never finished.</h2>
-          <p className="caption-p">You become someone through what you choose to do, again and again.</p>
+          <h2 className="font-[family-name:var(--font-cormorant)] text-4xl font-medium sm:text-6xl">Becoming is not a destination. It is a practice.</h2>
+          <p className="caption-p">Tomorrow there&rsquo;s another stone. Start your era.</p>
           <div className="mt-6 flex flex-col items-center gap-2.5">
             <AppStoreButton />
             <span className="text-xs text-white/40">Free to start. No credit card required.</span>
@@ -259,6 +289,7 @@ export function BecomingPage() {
   const [section, setSection] = useState<Section>('hero')
   const [shown, setShown] = useState<Section>('hero')
   const stage = useRef<HTMLDivElement>(null)
+  const lenisRef = useRef<Lenis | null>(null)
   useEffect(() => setLive(has3d()), [])
 
   // Smooth scrolling (Lenis); the scroll through the tall stage becomes
@@ -269,6 +300,7 @@ export function BecomingPage() {
     html.style.scrollBehavior = 'auto'
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const lenis = reduced ? null : new Lenis({ lerp: 0.075, wheelMultiplier: 0.8 })
+    lenisRef.current = lenis
     let id = 0
     const tick = (t: number) => {
       lenis?.raf(t)
@@ -311,6 +343,35 @@ export function BecomingPage() {
   }, [])
 
   const idx = SECTIONS.indexOf(section)
+
+  // Jump to a chapter: smooth scroll to the middle of its part of the stage.
+  const goTo = (i: number) => {
+    const el = stage.current
+    if (!el) return
+    const run = el.offsetHeight - window.innerHeight
+    const y = el.offsetTop + (run * (i + 0.45)) / SECTIONS.length
+    if (lenisRef.current) lenisRef.current.scrollTo(y, { duration: 2.2 })
+    else window.scrollTo({ top: y, behavior: 'smooth' })
+  }
+
+  // Narration: Voxu Voice reads each chapter, once listening is switched on
+  // (browsers only play sound after a tap, and nobody should be surprised).
+  const [listen, setListen] = useState(false)
+  const audio = useRef<HTMLAudioElement | null>(null)
+  useEffect(() => {
+    if (!listen) {
+      audio.current?.pause()
+      return
+    }
+    const a = audio.current ?? new Audio()
+    audio.current = a
+    a.pause()
+    a.src = `/audio/becoming/${shown}.mp3`
+    a.play().catch(() => {
+      /* file missing or blocked: the caption still says it */
+    })
+  }, [listen, shown])
+  useEffect(() => () => audio.current?.pause(), [])
 
   return (
     <div className="relative bg-[#060609] text-white">
@@ -356,9 +417,22 @@ export function BecomingPage() {
               </span>
               <span className="text-sm font-semibold tracking-[0.2em]">VOXU</span>
             </Link>
-            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold tracking-[0.15em] text-white/80 hover:text-white">
-              DOWNLOAD FREE
-            </a>
+            <div className="flex items-center gap-5">
+              <button
+                onClick={() => setListen((v) => !v)}
+                aria-pressed={listen}
+                className="flex items-center gap-1.5 text-xs font-semibold tracking-[0.15em] text-white/70 hover:text-white"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                  <path d="M4 10v4h3l4 4V6L7 10H4Z" />
+                  {listen ? <path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" /> : <path d="m16 10 4 4m0-4-4 4" />}
+                </svg>
+                {listen ? 'VOXU IS SPEAKING' : 'LISTEN'}
+              </button>
+              <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold tracking-[0.15em]" style={{ color: GOLD }}>
+                DOWNLOAD FREE
+              </a>
+            </div>
           </header>
 
           {/* The chapter numeral, huge and faint behind everything. */}
@@ -371,14 +445,14 @@ export function BecomingPage() {
           </div>
 
           {/* Progress as chisel marks down the right edge. */}
-          <div className="pointer-events-none absolute right-5 top-1/2 flex -translate-y-1/2 flex-col gap-3 sm:right-8" aria-hidden>
+          <nav className="absolute right-3 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-1 sm:right-6" aria-label="Chapters">
             {['I', 'II', 'III', 'IV', 'V'].map((n, i) => (
-              <div key={n} className="flex items-center justify-end gap-2">
-                <span className={`text-[10px] tracking-[0.2em] transition ${idx === i + 1 ? 'text-white/80' : 'text-white/0 sm:text-white/25'}`}>{n}</span>
-                <span className={`h-px transition-all duration-500 ${idx > i ? 'w-6 bg-white/80' : 'w-3 bg-white/25'}`} />
-              </div>
+              <button key={n} onClick={() => goTo(i + 1)} className="group flex items-center justify-end gap-2 px-2 py-1.5" aria-label={`Chapter ${n}`}>
+                <span className={`text-[10px] tracking-[0.2em] transition ${idx === i + 1 ? 'text-white/80' : 'text-white/0 group-hover:text-white/60 sm:text-white/25'}`}>{n}</span>
+                <span className="h-px transition-all duration-500" style={{ width: idx > i ? 24 : 12, background: idx > i ? GOLD : 'rgba(255,255,255,0.25)' }} />
+              </button>
             ))}
-          </div>
+          </nav>
 
           {/* The caption, like a subtitle. */}
           <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[6svh] text-center">
@@ -386,6 +460,7 @@ export function BecomingPage() {
               className="pointer-events-auto mx-auto max-w-3xl transition-all duration-300"
               style={{ opacity: visible ? 1 : 0, transform: `translateY(${visible ? 0 : 10}px)` }}
               aria-live="polite"
+              title={NARRATION[shown]}
             >
               <Caption section={shown} />
             </div>

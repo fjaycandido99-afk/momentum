@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import { SECTIONS, STAGE_OF, carve, carvedProgress, sculpt, sectionAt, type Section } from './store'
+import { SECTIONS, STAGE_OF, carve, carvedProgress, promises, sculpt, sectionAt, type Section } from './store'
 
 // "The Art of Becoming": a marble statue that is carved as you scroll.
 // One finished model (Meshy); a shader keeps each region rough, chalky and
@@ -214,6 +214,7 @@ function Statue({ id = 'david', url = '/models/statue.glb' }: { id?: string; url
     const y = (pres - 1) * H * 1.08
     if (holder.current) {
       holder.current.position.y = y
+      holder.current.position.x = carved ? -1.35 * TOMORROW(now.p) : 0
       holder.current.rotation.y = (1 - pres) * 1.6
       holder.current.visible = pres > 0.001
     }
@@ -221,8 +222,47 @@ function Statue({ id = 'david', url = '/models/statue.glb' }: { id?: string; url
     uniforms.uMinY.value = y
     uniforms.uMaxY.value = y + H
   })
+  const markPoints = useMemo(() => {
+    if (!carved) return [] as THREE.Vector3[]
+    // Points on the front of the figure, chest to knees, spread evenly.
+    model.updateWorldMatrix(true, true)
+    const out: THREE.Vector3[] = []
+    const v = new THREE.Vector3()
+    const n = new THREE.Vector3()
+    const nm = new THREE.Matrix3()
+    model.traverse((o) => {
+      const me = o as THREE.Mesh
+      if (!me.isMesh) return
+      const pos = me.geometry.getAttribute('position')
+      const nor = me.geometry.getAttribute('normal')
+      nm.getNormalMatrix(me.matrixWorld)
+      const cand: THREE.Vector3[] = []
+      for (let i = 0; i < pos.count; i += 37) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(me.matrixWorld)
+        n.fromBufferAttribute(nor, i).applyMatrix3(nm).normalize()
+        const p = v.clone().multiplyScalar(fit.k).add(fit.offset)
+        if (n.z > 0.55 && p.y > H * 0.22 && p.y < H * 0.82) cand.push(p.add(n.multiplyScalar(0.012)))
+      }
+      // Thirty, spread out: greedy farthest-point picks.
+      if (cand.length) out.push(cand[0])
+      while (out.length < 30 && cand.length) {
+        let best = cand[0], bestD = -1
+        for (const c of cand) {
+          let dmin = Infinity
+          for (const q of out) dmin = Math.min(dmin, c.distanceToSquared(q))
+          if (dmin > bestD) {
+            bestD = dmin
+            best = c
+          }
+        }
+        out.push(best)
+      }
+    })
+    return out
+  }, [carved, model, fit])
   return (
     <group ref={holder}>
+    {carved && <Marks points={markPoints} />}
     <primitive
       object={model}
       scale={fit.k}
@@ -254,6 +294,17 @@ function Chips() {
   const sc = useMemo(() => new THREE.Vector3(), [])
   useFrame((_, dt) => {
     const d = Math.min(dt, 0.05)
+    if (promises.strikeRequested && nextMark.ready) {
+      promises.strikeRequested = false
+      for (let b = 0; b < 26; b++) {
+        const c = parts[next.current++ % N]
+        c.p.copy(nextMark.p)
+        c.v.set((Math.random() - 0.5) * 2.6, 0.8 + Math.random() * 1.8, 0.6 + Math.random() * 1.6)
+        c.spin.set(Math.random() * 9, Math.random() * 9, Math.random() * 9)
+        c.life = 1
+      }
+      sculpt.activity = Math.min(1, sculpt.activity + 0.6)
+    }
     const h = sculpt.hit
     if (h && holding.current) {
       acc.current += d * 28
@@ -296,6 +347,152 @@ function Chips() {
 }
 /** True while the visitor is pressing on the statue (set by the turntable). */
 const holding = { current: false }
+
+// ---- Promise marks -------------------------------------------------------------
+// A gold point of light where the chisel struck for each promise made. In
+// "Every day leaves a mark" the thirty marks of an era light up one by one.
+let glowTex: THREE.Texture | null = null
+function getGlow() {
+  if (glowTex) return glowTex
+  const c = document.createElement('canvas')
+  c.width = c.height = 64
+  const x = c.getContext('2d')!
+  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32)
+  g.addColorStop(0, 'rgba(255,236,200,1)')
+  g.addColorStop(0.35, 'rgba(214,180,120,0.55)')
+  g.addColorStop(1, 'rgba(182,155,115,0)')
+  x.fillStyle = g
+  x.fillRect(0, 0, 64, 64)
+  glowTex = new THREE.CanvasTexture(c)
+  return glowTex
+}
+/** World position of the mark the next strike lands on (for the chips). */
+const nextMark = { p: new THREE.Vector3(), ready: false }
+function Marks({ points }: { points: THREE.Vector3[] }) {
+  const refs = useRef<(THREE.Sprite | null)[]>([])
+  const cores = useRef<(THREE.Sprite | null)[]>([])
+  const born = useRef<number[]>([])
+  const v = useMemo(() => new THREE.Vector3(), [])
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime
+    // The era's marks light up through "Every day leaves a mark" (p 4..5).
+    const era = Math.round(30 * Math.min(1, Math.max(0, (now.p - 4.05) / 0.8)))
+    const lit = Math.max(promises.made, era)
+    points.forEach((_, i) => {
+      const sp = refs.current[i]
+      if (!sp) return
+      if (i < lit && born.current[i] === undefined) born.current[i] = t
+      if (i >= lit) born.current[i] = undefined as unknown as number
+      const age = born.current[i] === undefined ? -1 : t - born.current[i]
+      sp.visible = age >= 0
+      if (age < 0 && cores.current[i]) cores.current[i]!.visible = false
+      if (age >= 0) {
+        // A flash when struck, then a steady faint glow.
+        const flash = Math.max(0, 1 - age * 1.6)
+        const s = 0.11 + flash * 0.22
+        sp.scale.set(s, s, s)
+        ;(sp.material as THREE.SpriteMaterial).opacity = 0.85 + flash * 0.15
+        const core = cores.current[i]
+        if (core) {
+          core.visible = true
+          const cs = 0.035 + flash * 0.03
+          core.scale.set(cs, cs, cs)
+        }
+      }
+    })
+    // Where the next strike will land, for the chips.
+    const nxt = refs.current[Math.min(points.length - 1, promises.made - 1)]
+    if (nxt) {
+      nxt.getWorldPosition(v)
+      nextMark.p.copy(v)
+      nextMark.ready = true
+    }
+  })
+  return (
+    <>
+      {points.map((p, i) => (
+        <sprite
+          key={i}
+          position={p}
+          ref={(e) => {
+            refs.current[i] = e
+          }}
+          visible={false}
+        >
+          <spriteMaterial map={getGlow()} color="#c9a46a" transparent depthWrite={false} toneMapped={false} />
+        </sprite>
+      ))}
+      {/* A solid antique-gold point at the heart of each mark: on white
+          marble a glow alone disappears. */}
+      {points.map((p, i) => (
+        <sprite
+          key={`c${i}`}
+          position={p}
+          ref={(e) => {
+            cores.current[i] = e
+          }}
+          visible={false}
+        >
+          <spriteMaterial color="#9c7c4c" depthWrite={false} toneMapped={false} />
+        </sprite>
+      ))}
+    </>
+  )
+}
+
+// At the end, the carved statue steps aside and a fresh, untouched stone
+// rises beside it: tomorrow's work.
+const TOMORROW = (p: number) => smooth(9.05, 9.45, p)
+function TomorrowStone() {
+  const ref = useRef<THREE.InstancedMesh>(null)
+  const N = 4 * 8 * 3
+  useEffect(() => {
+    const mesh = ref.current
+    if (!mesh) return
+    const m = new THREE.Matrix4()
+    const q = new THREE.Quaternion()
+    const e = new THREE.Euler()
+    const col = new THREE.Color()
+    let i = 0
+    const rnd = (k: number) => {
+      const s2 = Math.sin(k * 91.3 + 7.1) * 43758.5453
+      return s2 - Math.floor(s2)
+    }
+    for (let y = 0; y < 8; y++)
+      for (let x = 0; x < 4; x++)
+        for (let z = 0; z < 3; z++) {
+          e.set((rnd(i) - 0.5) * 0.12, (rnd(i + 1) - 0.5) * 0.12, (rnd(i + 2) - 0.5) * 0.12)
+          q.setFromEuler(e)
+          const sz = 1.1 + rnd(i + 3) * 0.12
+          m.compose(
+            new THREE.Vector3((x + 0.5) / 4 * 1.3 - 0.65, (y + 0.5) / 8 * 2.6, (z + 0.5) / 3 * 0.95 - 0.475),
+            q,
+            new THREE.Vector3(1.3 / 4, 2.6 / 8, 0.95 / 3).multiplyScalar(sz),
+          )
+          mesh.setMatrixAt(i, m)
+          const t2 = rnd(i + 4)
+          mesh.setColorAt(i, col.setRGB(0.66 + t2 * 0.12, 0.65 + t2 * 0.11, 0.62 + t2 * 0.1))
+          i++
+        }
+    mesh.instanceMatrix.needsUpdate = true
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+  }, [])
+  const g = useRef<THREE.Group>(null)
+  useFrame(() => {
+    const k = TOMORROW(now.p)
+    if (!g.current) return
+    g.current.visible = k > 0.001
+    g.current.position.set(1.45, (k - 1) * 3, 0)
+  })
+  return (
+    <group ref={g} visible={false}>
+      <instancedMesh ref={ref} args={[undefined, undefined, N]} castShadow receiveShadow>
+        <boxGeometry />
+        <meshStandardMaterial color="#ffffff" roughness={0.95} flatShading />
+      </instancedMesh>
+    </group>
+  )
+}
 
 // ---- The block of marble the statue comes out of -------------------------------
 // Chunks covering the figure. They fall away as the block stage progresses
@@ -423,7 +620,7 @@ const WORK: Record<Section, [number, number, number]> = {
   stoic: [0.35, 1.75, 0.36],
   samurai: [-0.35, 1.75, 0.36],
   scholar: [0.4, 1.85, 0.36],
-  final: [0.0, 1.7, 0.42],
+  final: [0.0, 1.6, 0.5],
 }
 /** The chapter's turn and light, blended near the end of each chapter. */
 const work = { turn: 0, lightY: 1.7, width: 0.42 }
@@ -550,9 +747,15 @@ function Turntable({ children }: { children: React.ReactNode }) {
 }
 
 function Plinth() {
+  // At the end it widens so the finished statue and tomorrow's stone both
+  // stand on it.
+  const top = useRef<THREE.Mesh>(null)
+  useFrame(() => {
+    if (top.current) top.current.scale.set(1 + 1.35 * TOMORROW(now.p), 1, 1 + 0.25 * TOMORROW(now.p))
+  })
   return (
     <group>
-      <mesh position={[0, -0.12, 0]} receiveShadow>
+      <mesh ref={top} position={[0, -0.12, 0]} receiveShadow>
         <cylinderGeometry args={[1.35, 1.45, 0.24, 64]} />
         <meshStandardMaterial color="#121216" roughness={0.35} metalness={0.2} />
       </mesh>
@@ -605,6 +808,7 @@ export default function Sculpture() {
         <Dust />
       </Turntable>
       <Chips />
+      <TomorrowStone />
     </Canvas>
   )
 }

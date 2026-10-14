@@ -54,3 +54,19 @@ export function carvedProgress() {
   const hand = m.polish >= 1 ? 5.5 : m.legs >= 1 ? 4.4 + m.polish : m.torso >= 1 ? 3.45 + m.legs : m.head >= 1 ? 2.5 + m.torso : m.block >= 1 ? 1.55 + m.head : m.block * 1.55
   return Math.max(sculpt.p, hand)
 }
+
+// ---- Promises as chisel marks ------------------------------------------------
+// Every promise made in the demo strikes the stone and leaves a mark that
+// stays (gold, faint). In "Every day leaves a mark" the marks of a whole
+// 30-day era light up, one by one.
+export const promises = {
+  /** Promises made on this visit. */
+  made: 0,
+  /** Set when a promise is made; the scene strikes the next mark and clears it. */
+  strikeRequested: false,
+}
+export function makePromise() {
+  promises.made = Math.min(30, promises.made + 1)
+  promises.strikeRequested = true
+  carve('head', 0.25)
+}
