@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { APP_COOKIE, WEB_COOKIE, shouldSendToLanding } from '@/lib/marketing/landing-redirect'
 
 // Fallback values (these are public keys, safe to include)
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jkrpreixylczfdfdyxrm.supabase.co'
@@ -74,6 +75,25 @@ export async function updateSession(request: NextRequest) {
     url.pathname = '/'
     return NextResponse.redirect(url)
   }
+
+  // A signed-out visitor in a browser opening voxu.app sees the landing page
+  // (the apps load voxu.app too and never match; lib/marketing/landing-redirect).
+  const cookieNames = new Set(request.cookies.getAll().map((c) => c.name))
+  const webParam = request.nextUrl.searchParams.get('web') === '1'
+  if (shouldSendToLanding({
+    path: request.nextUrl.pathname,
+    signedIn: !!user,
+    userAgent: request.headers.get('user-agent') ?? '',
+    cookies: { app: cookieNames.has(APP_COOKIE), web: cookieNames.has(WEB_COOKIE) },
+    webParam,
+  })) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/download'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+  // Chose to start in the browser: remember it.
+  if (webParam) supabaseResponse.cookies.set(WEB_COOKIE, '1', { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
 
   // Everything else (home, daily-guide, discover, soundscape, settings, theme-setup)
   // is accessible to EVERYONE (guests and signed-in users)

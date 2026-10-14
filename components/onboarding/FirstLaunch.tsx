@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { isNativeApp } from '@/lib/native'
+import { introSeen } from '@/lib/marketing/intro-seen'
+import { useRouter } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import { ArrowRight, AudioLines, Clock, Headphones, Keyboard, Landmark, Loader2, MessageCircle, Mic, Volume2, VolumeX } from 'lucide-react'
 import { useMindsetOptional } from '@/contexts/MindsetContext'
@@ -74,6 +76,7 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   onEraChange: () => void
 }) {
   const mindsetCtx = useMindsetOptional()
+  const router = useRouter()
   const [hidden, setHidden] = useState(() => {
     if (typeof window === 'undefined') return true
     try { return localStorage.getItem(KEY) === '1' } catch { return true }
@@ -178,10 +181,13 @@ export function FirstLaunch({ hasEra, onEraChange }: {
   const showing = !hidden && hasEra === false && !!mindsetCtx?.mindset
   useEffect(() => {
     if (!showing || introPlayed.current) return
-    introPlayed.current = true
     // A guest who reached Day 1 and came back: signed up now? Keep it for
     // them. Still a guest? Back to the save step, nothing lost.
     const pending = readPending()
+    // First launch in the app: the intro story plays once, then Begin comes
+    // back here (the website shows the same story at /download).
+    if (inApp && !pending && !introSeen()) { router.replace('/intro'); return }
+    introPlayed.current = true
     if (pending) { void resumePending(pending); return }
     trackFeature('first_launch', 'open')
     // Then it listens, by itself. Where sound was blocked (a browser before

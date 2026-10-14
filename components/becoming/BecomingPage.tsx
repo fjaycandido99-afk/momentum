@@ -1,6 +1,6 @@
 'use client'
 
-import { Component, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Component, createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Lenis from 'lenis'
@@ -70,7 +70,22 @@ const ERAS = ['Locked In', 'Discipline', 'Comeback', 'Gym Arc', 'Stoic Mode', 'C
 const chip = (on: boolean) =>
   `rounded-full px-3.5 py-1.5 text-xs transition ${on ? 'bg-white text-black' : 'border border-white/15 text-white/75 hover:border-white/40'}`
 
+/** Website or the app's own intro: in the app there is nothing to download. */
+const Mode = createContext<{ app: boolean; onBegin?: () => void }>({ app: false })
+
 function AppStoreButton() {
+  const mode = useContext(Mode)
+  if (mode.app) {
+    return (
+      <button
+        onClick={mode.onBegin}
+        className="inline-flex h-12 items-center rounded-full px-8 text-sm font-semibold tracking-[0.12em] text-black transition hover:brightness-110"
+        style={{ background: GOLD }}
+      >
+        BEGIN
+      </button>
+    )
+  }
   return (
     <a
       href={APP_STORE_URL}
@@ -101,6 +116,7 @@ const PROMISES = ['Move my body for 20 minutes', 'Read for 15 minutes', 'Practis
 
 // "A glimpse of Voxu": make a promise, and the chisel strikes the stone.
 function PromiseDemo() {
+  const { app } = useContext(Mode)
   const [pick, setPick] = useState<number | null>(null)
   const [made, setMade] = useState(false)
   return (
@@ -134,9 +150,11 @@ function PromiseDemo() {
           <p className="text-sm text-white/80">
             Promised: <span className="text-white">{PROMISES[pick ?? 0].toLowerCase()}</span>. That&rsquo;s a mark in the stone.
           </p>
-          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs underline underline-offset-4" style={{ color: GOLD }}>
-            Make it for real in Voxu, free
-          </a>
+          {!app && (
+            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs underline underline-offset-4" style={{ color: GOLD }}>
+              Make it for real in Voxu, free
+            </a>
+          )}
         </>
       )}
       <p className="mt-3 text-[11px] text-white/35">A demo: nothing here is saved.</p>
@@ -175,6 +193,18 @@ function NightCheck() {
 }
 
 /** What each chapter says: a caption, one line, and sometimes something to try. */
+function FreeLine() {
+  if (useContext(Mode).app) return null
+  return (
+    <span className="text-xs text-white/[0.78]">
+      Free to start. No credit card required.{' '}
+      <a href="/?web=1" className="underline underline-offset-4 hover:text-white">
+        Or start in your browser
+      </a>
+    </span>
+  )
+}
+
 function Caption({ section }: { section: Section }) {
   switch (section) {
     case 'hero':
@@ -189,7 +219,7 @@ function Caption({ section }: { section: Section }) {
           </p>
           <div className="mt-6 flex flex-col items-center gap-2 lg:items-start">
             <AppStoreButton />
-            <span className="text-xs text-white/[0.78]">Free to start. No credit card required.</span>
+            <FreeLine />
           </div>
           <p className="mt-5 text-[11px] uppercase tracking-[0.3em] text-white/[0.78]">Scroll to carve · or hold the chisel to the stone</p>
         </>
@@ -284,14 +314,14 @@ function Caption({ section }: { section: Section }) {
           <p className="caption-p">Tomorrow there&rsquo;s another stone. Start your era.</p>
           <div className="mt-6 flex flex-col items-center gap-2.5 lg:items-start">
             <AppStoreButton />
-            <span className="text-xs text-white/[0.78]">Free to start. No credit card required.</span>
+            <FreeLine />
           </div>
         </>
       )
   }
 }
 
-export function BecomingPage({ children }: { children?: ReactNode }) {
+export function BecomingPage({ children, app = false, onBegin }: { children?: ReactNode; app?: boolean; onBegin?: () => void }) {
   const [live, setLive] = useState(false)
   const [section, setSection] = useState<Section>('hero')
   const [shown, setShown] = useState<Section>('hero')
@@ -391,6 +421,7 @@ export function BecomingPage({ children }: { children?: ReactNode }) {
   useEffect(() => () => audio.current?.pause(), [])
 
   return (
+    <Mode.Provider value={{ app, onBegin }}>
     <div className="relative bg-[#060609] text-white">
       <style>{`
         .caption-h { font-family: var(--font-cormorant); font-weight: 500; line-height: 1.05; font-size: 2.25rem; }
@@ -449,7 +480,12 @@ export function BecomingPage({ children }: { children?: ReactNode }) {
                 </svg>
                 {listen ? 'VOXU IS SPEAKING' : 'LISTEN'}
               </button>
-              <a
+              {app ? (
+                <button onClick={onBegin} className="text-xs font-semibold tracking-[0.15em] text-white/80 hover:text-white">
+                  SKIP
+                </button>
+              ) : (
+                            <a
                 href={APP_STORE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -458,6 +494,7 @@ export function BecomingPage({ children }: { children?: ReactNode }) {
               >
                 DOWNLOAD FREE
               </a>
+              )}
             </div>
           </header>
 
@@ -494,8 +531,9 @@ export function BecomingPage({ children }: { children?: ReactNode }) {
         </div>
       </div>
 
-      {children}
+      {!app && children}
 
+      {!app && (
       <footer className="relative border-t border-white/5 bg-black px-5 py-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 text-xs text-white/[0.78]">
           <span>© {new Date().getFullYear()} Voxu</span>
@@ -507,6 +545,8 @@ export function BecomingPage({ children }: { children?: ReactNode }) {
           </div>
         </div>
       </footer>
+      )}
     </div>
+    </Mode.Provider>
   )
 }
