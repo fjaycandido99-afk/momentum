@@ -41,7 +41,8 @@ function Progress() {
     ;(Object.keys(live) as (keyof typeof live)[]).forEach((k) => {
       const want = Math.max(s[k], sculpt.manual[k])
       const before = live[k]
-      live[k] = THREE.MathUtils.damp(live[k], want, 3.2, d)
+      // Catch up faster after a big jump (a quick scroll, a link).
+      live[k] = THREE.MathUtils.damp(live[k], want, 3.2 + Math.abs(want - live[k]) * 14, d)
       sculpt.activity = Math.min(1, sculpt.activity + Math.abs(live[k] - before) * 3)
     })
     sculpt.activity = THREE.MathUtils.damp(sculpt.activity, 0, 1.6, d)
@@ -65,23 +66,31 @@ function useCarvedMaterial(base: THREE.MeshStandardMaterial) {
       uTorso: { value: 0 },
       uLegs: { value: 0 },
       uPolish: { value: 0 },
+      uFeet: { value: 1 },
       uMinY: { value: 0 },
       uMaxY: { value: H },
     }
-    const mat = base.clone()
-    mat.map = null
-    mat.normalMap = null
-    mat.roughnessMap = null
-    mat.metalnessMap = null
-    mat.metalness = 0
-    mat.color.set('#ffffff')
+    // Marble, not plaster: a physical material with a soft clearcoat (the
+    // sheen of polished stone) and a faint warm glow from within, standing
+    // in for the way light sinks into real marble. Meshy's own texture isn't
+    // used; the shader paints the stone.
+    void base
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: '#ffffff',
+      metalness: 0,
+      roughness: 0.4,
+      clearcoat: 0.01,
+      clearcoatRoughness: 0.28,
+      emissive: new THREE.Color('#3a2c1e'),
+      emissiveIntensity: 0.0,
+    })
     mat.onBeforeCompile = (shader) => {
       Object.assign(shader.uniforms, uniforms)
       shader.vertexShader = shader.vertexShader
         .replace(
           '#include <common>',
           `#include <common>
-          uniform float uHead, uTorso, uLegs, uMinY, uMaxY;
+          uniform float uHead, uTorso, uLegs, uFeet, uMinY, uMaxY;
           varying float vRough; varying vec3 vObj; varying float vYn;
           ${NOISE}`,
         )
@@ -97,7 +106,7 @@ function useCarvedMaterial(base: THREE.MeshStandardMaterial) {
           vYn = yn;
           float r = mix(1.0 - uLegs, 1.0 - uTorso, smoothstep(-0.34, -0.2, yn));
           r = mix(r, 1.0 - uHead, smoothstep(0.52, 0.62, yn));
-          r = max(r, smoothstep(-0.72, -0.88, yn) * 0.9); // the unfinished feet
+          r = max(r, smoothstep(-0.72, -0.88, yn) * 0.9 * uFeet); // the unfinished feet
           vRough = clamp(r, 0.0, 1.0);
           // Rough stone: chunky, chiselled displacement out from the surface.
           float n = floor(vxNoise(position * 11.0) * 4.0) / 4.0;
@@ -116,8 +125,10 @@ function useCarvedMaterial(base: THREE.MeshStandardMaterial) {
           `#include <map_fragment>
           // Polished marble: warm white with soft grey veins.
           float vein = abs(sin((vObj.x * 0.8 + vObj.y * 0.55 + vObj.z * 0.3) * 9.0 + vxNoise(vObj * 3.0) * 7.0));
-          float veinLine = smoothstep(0.93, 1.0, 1.0 - vein) * (0.35 + 0.65 * vxNoise(vObj * 7.0));
-          vec3 polished = vec3(0.95, 0.94, 0.92) - veinLine * vec3(0.20, 0.20, 0.22);
+          float veinLine = smoothstep(0.9, 1.0, 1.0 - vein) * (0.4 + 0.6 * vxNoise(vObj * 7.0));
+          // Faint cloudy variation, then thin grey veins: Carrara, not plaster.
+          float cloud = vxNoise(vObj * 2.2) * 0.05;
+          vec3 polished = vec3(0.965, 0.95, 0.915) - cloud - veinLine * vec3(0.30, 0.30, 0.31);
           // Rough stone: chalky grey with chisel marks.
           float chisel = smoothstep(0.55, 0.9, abs(sin((vObj.x + vObj.y * 1.7) * 60.0 + vxNoise(vObj * 9.0) * 4.0)));
           vec3 rough = vec3(0.66, 0.65, 0.63) * (0.82 + 0.28 * vxNoise(vObj * 34.0)) - chisel * 0.05;
@@ -142,8 +153,25 @@ function useCarvedMaterial(base: THREE.MeshStandardMaterial) {
 }
 
 // ---- The statue ---------------------------------------------------------------
-function Statue() {
-  const { scene } = useGLTF('/models/statue.glb')
+// Who stands in the spotlight when: the carved statue for the carving
+// chapters and the end; each gallery statue for its own chapter. A statue
+// leaving sinks down through the plinth; the next one rises out of it.
+const PRESENCE: Record<string, (p: number) => number> = {
+  david: (p) => 1 - smooth(5.82, 6.12, p) + smooth(8.88, 9.18, p),
+  stoic: (p) => smooth(5.88, 6.18, p) * (1 - smooth(6.82, 7.12, p)),
+  samurai: (p) => smooth(6.88, 7.18, p) * (1 - smooth(7.82, 8.12, p)),
+  scholar: (p) => smooth(7.88, 8.18, p) * (1 - smooth(8.82, 9.12, p)),
+}
+const GALLERY = [
+  { id: 'stoic', url: '/models/stoic.glb' },
+  { id: 'samurai', url: '/models/samurai.glb' },
+  { id: 'scholar', url: '/models/scholar.glb' },
+]
+
+function Statue({ id = 'david', url = '/models/statue.glb' }: { id?: string; url?: string }) {
+  const { scene } = useGLTF(url)
+  const holder = useRef<THREE.Group>(null)
+  const carved = id === 'david'
   const mesh = useMemo(() => {
     let found: THREE.Mesh | null = null
     scene.traverse((o) => {
@@ -171,12 +199,30 @@ function Statue() {
     return m
   }, [scene, mat])
   useFrame(() => {
-    uniforms.uHead.value = live.head
-    uniforms.uTorso.value = live.torso
-    uniforms.uLegs.value = live.legs
-    uniforms.uPolish.value = live.polish
+    // The gallery statues are finished works: fully carved and polished,
+    // no raw patch. The carved statue follows the carving.
+    uniforms.uHead.value = carved ? live.head : 1
+    uniforms.uTorso.value = carved ? live.torso : 1
+    uniforms.uLegs.value = carved ? live.legs : 1
+    uniforms.uPolish.value = carved ? live.polish : 1
+    uniforms.uFeet.value = carved ? 1 : 0
+    // Polished stone gets the clearcoat sheen and the inner glow.
+    const pol = carved ? live.polish : 1
+    mat.clearcoat = 0.01 + 0.5 * pol
+    mat.emissiveIntensity = 0.35 * pol
+    const pres = Math.min(1, Math.max(0, PRESENCE[id](now.p)))
+    const y = (pres - 1) * H * 1.08
+    if (holder.current) {
+      holder.current.position.y = y
+      holder.current.rotation.y = (1 - pres) * 1.6
+      holder.current.visible = pres > 0.001
+    }
+    // Carving bands are measured from where the statue actually stands.
+    uniforms.uMinY.value = y
+    uniforms.uMaxY.value = y + H
   })
   return (
+    <group ref={holder}>
     <primitive
       object={model}
       scale={fit.k}
@@ -188,6 +234,7 @@ function Statue() {
         if (sculpt.hit) sculpt.hit = { x: e.point.x, y: e.point.y, z: e.point.z }
       }}
     />
+    </group>
   )
 }
 
@@ -303,6 +350,9 @@ function Block() {
       mesh.setMatrixAt(i, m)
     })
     mesh.instanceMatrix.needsUpdate = true
+    // The block belongs to the carved statue: it leaves with it.
+    const dp = Math.min(1, Math.max(0, PRESENCE.david(now.p)))
+    mesh.position.y = (dp - 1) * H * 1.08
     if (!tinted.current) {
       // Varied marble tones, so the block reads as stone, not a wall.
       const col = new THREE.Color()
@@ -313,7 +363,7 @@ function Block() {
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
       tinted.current = true
     }
-    mesh.visible = live.block < 0.999
+    mesh.visible = live.block < 0.999 && dp > 0.001
   })
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, chunks.length]} castShadow receiveShadow>
@@ -370,6 +420,9 @@ const WORK: Record<Section, [number, number, number]> = {
   discipline: [-0.75, 2.2, 0.17],
   strength: [0.7, 0.85, 0.17],
   polish: [-0.25, 1.7, 0.36],
+  stoic: [0.35, 1.75, 0.36],
+  samurai: [-0.35, 1.75, 0.36],
+  scholar: [0.4, 1.85, 0.36],
   final: [0.0, 1.7, 0.42],
 }
 /** The chapter's turn and light, blended near the end of each chapter. */
@@ -535,7 +588,7 @@ export default function Sculpture() {
         shadow-camera-bottom={-1}
         shadow-bias={-0.0004}
       />
-      <directionalLight position={[3, 3, -5]} intensity={1.4} color="#7c6cff" />
+      <directionalLight position={[3, 3, -5]} intensity={0.7} color="#7c6cff" />
       <WorkLight />
       <pointLight position={[0, 1.2, 2.5]} intensity={4} color="#c9c2ff" distance={6} />
       <Progress />
@@ -544,6 +597,9 @@ export default function Sculpture() {
       <Turntable>
         <Suspense fallback={null}>
           <Statue />
+          {GALLERY.map((g) => (
+            <Statue key={g.id} id={g.id} url={g.url} />
+          ))}
         </Suspense>
         <Block />
         <Dust />
@@ -554,3 +610,4 @@ export default function Sculpture() {
 }
 
 useGLTF.preload('/models/statue.glb')
+GALLERY.forEach((g) => useGLTF.preload(g.url))

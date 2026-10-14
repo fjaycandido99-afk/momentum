@@ -46,7 +46,24 @@ function Fallback() {
   return <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,240,220,0.12),transparent_50%)]" />
 }
 
-const NUMERAL: Record<Section, string> = { hero: '', potential: 'I', intention: 'II', discipline: 'III', strength: 'IV', polish: 'V', final: '' }
+const NUMERAL: Record<Section, string> = {
+  hero: '',
+  potential: 'I',
+  intention: 'II',
+  discipline: 'III',
+  strength: 'IV',
+  polish: 'V',
+  stoic: '',
+  samurai: '',
+  scholar: '',
+  final: '',
+}
+// The gallery: three of the eight mindsets your coach can speak from.
+const GALLERY_CAPTION: Partial<Record<Section, { n: string; title: string; line: string }>> = {
+  stoic: { n: 'i', title: 'The Stoic.', line: 'Calm about what you can\u2019t control; exact about what you can.' },
+  samurai: { n: 'ii', title: 'The Samurai.', line: 'Discipline as a way of living: quiet, exact, unhurried.' },
+  scholar: { n: 'iii', title: 'The Scholar.', line: 'Understand it first. Then do the work, properly.' },
+}
 const ERAS = ['Locked In', 'Discipline', 'Comeback', 'Gym Arc', 'Stoic Mode', 'Confidence', 'Study', '5AM']
 const MIRROR: { label: string; era: string }[] = [
   { label: 'Build discipline', era: 'Discipline' },
@@ -203,6 +220,26 @@ function Caption({ section }: { section: Section }) {
           <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/45">8 eras · 30 missions each · 8 coach voices · 70+ audio sessions</p>
         </>
       )
+    case 'stoic':
+    case 'samurai':
+    case 'scholar': {
+      const g = GALLERY_CAPTION[section]!
+      return (
+        <>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-white/45">Your coach&rsquo;s voice · {g.n} / iii</p>
+          <h2 className="caption-h mt-2">{g.title}</h2>
+          <p className="caption-p">{g.line}</p>
+          {section === 'scholar' && (
+            <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-white/45">
+              Stoic · Existentialist · Cynic · Hedonist · Samurai · Scholar · Manifestor · Hustler
+            </p>
+          )}
+          {section === 'stoic' && (
+            <p className="mt-4 text-xs text-white/50">Eight mindsets. The mindset is how your coach talks to you; the era is what you work on.</p>
+          )}
+        </>
+      )
+    }
     case 'final':
       return (
         <>
@@ -239,7 +276,7 @@ export function BecomingPage() {
       if (el) {
         const r = el.getBoundingClientRect()
         const run = Math.max(1, el.offsetHeight - window.innerHeight)
-        sculpt.p = Math.min(1, Math.max(0, -r.top / run)) * 6
+        sculpt.p = Math.min(1, Math.max(0, -r.top / run)) * SECTIONS.length
       }
       const s = sectionAt(carvedProgress())
       setSection((cur) => (cur === s ? cur : s))
@@ -285,7 +322,7 @@ export function BecomingPage() {
       `}</style>
 
       {/* The stage: tall, so scrolling through it carves; its view is pinned. */}
-      <div ref={stage} className="relative h-[700svh]">
+      <div ref={stage} className="relative h-[1100svh]">
         <div className="sticky top-0 h-[100svh] overflow-hidden">
           <div className="absolute inset-0" style={{ cursor: CHISEL }}>
             {live ? (

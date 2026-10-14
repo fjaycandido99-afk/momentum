@@ -1,11 +1,21 @@
 // Shared state between the page (HTML) and the sculpture (3D). Plain
 // objects, read every frame by the scene, so nothing re-renders.
 
-export type Section = 'hero' | 'potential' | 'intention' | 'discipline' | 'strength' | 'polish' | 'final'
-export const SECTIONS: Section[] = ['hero', 'potential', 'intention', 'discipline', 'strength', 'polish', 'final']
+export type Section =
+  | 'hero'
+  | 'potential'
+  | 'intention'
+  | 'discipline'
+  | 'strength'
+  | 'polish'
+  | 'stoic'
+  | 'samurai'
+  | 'scholar'
+  | 'final'
+export const SECTIONS: Section[] = ['hero', 'potential', 'intention', 'discipline', 'strength', 'polish', 'stoic', 'samurai', 'scholar', 'final']
 
 export const sculpt = {
-  /** Scroll progress through the pinned stage, 0..6 (one unit per chapter). */
+  /** Scroll progress through the pinned stage, 0..SECTIONS.length (one unit per chapter). */
   p: 0,
   /** Carving the visitor did by hand (holding on the statue, the demos), per stage, 0..1. */
   manual: { block: 0, head: 0, torso: 0, legs: 0, polish: 0 },
@@ -26,6 +36,9 @@ export const STAGE_OF: Record<Section, Stage> = {
   discipline: 'torso',
   strength: 'legs',
   polish: 'polish',
+  stoic: 'polish',
+  samurai: 'polish',
+  scholar: 'polish',
   final: 'polish',
 }
 
@@ -38,6 +51,6 @@ export function carve(stage: Stage, amount: number) {
 /** How far the carving has got, scroll or hand, whichever is further (for the chapter shown). */
 export function carvedProgress() {
   const m = sculpt.manual
-  const hand = m.polish >= 1 ? 6 : m.legs >= 1 ? 4.4 + m.polish : m.torso >= 1 ? 3.45 + m.legs : m.head >= 1 ? 2.5 + m.torso : m.block >= 1 ? 1.55 + m.head : m.block * 1.55
+  const hand = m.polish >= 1 ? 5.5 : m.legs >= 1 ? 4.4 + m.polish : m.torso >= 1 ? 3.45 + m.legs : m.head >= 1 ? 2.5 + m.torso : m.block >= 1 ? 1.55 + m.head : m.block * 1.55
   return Math.max(sculpt.p, hand)
 }
