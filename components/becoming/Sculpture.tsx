@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import { SECTIONS, STAGE_OF, carve, sculpt, sectionEls, type Section } from './store'
+import { SECTIONS, STAGE_OF, carve, carvedProgress, sculpt, sectionAt, type Section } from './store'
 
 // "The Art of Becoming": a marble statue that is carved as you scroll.
 // One finished model (Meshy); a shader keeps each region rough, chalky and
@@ -18,21 +18,6 @@ const smooth = (a: number, b: number, v: number) => {
   return t * t * (3 - 2 * t)
 }
 
-// ---- Where the scroll is ----------------------------------------------------
-// p runs 0..6 across the sections: the section under the middle of the
-// screen, plus how far through it you are.
-function readProgress() {
-  const mid = window.innerHeight * 0.5
-  const list = sectionEls
-    .filter((s) => s.el.isConnected)
-    .map((s) => ({ i: SECTIONS.indexOf(s.id), r: s.el.getBoundingClientRect() }))
-    .sort((a, b) => a.i - b.i)
-  if (!list.length) return { p: 0, section: 'hero' as Section }
-  let cur = list[0]
-  for (const s of list) if (s.r.top <= mid) cur = s
-  const frac = Math.min(1, Math.max(0, (mid - cur.r.top) / Math.max(cur.r.height, 1)))
-  return { p: cur.i + frac, section: SECTIONS[cur.i] }
-}
 /** How carved each stage is at progress p (scroll), before hand carving. */
 function stagesAt(p: number) {
   return {
@@ -48,10 +33,10 @@ const now = { p: 0, section: 'hero' as Section }
 
 function Progress() {
   useFrame((_, dt) => {
-    const r = readProgress()
-    now.p = r.p
-    now.section = r.section
-    const s = stagesAt(r.p)
+    // The view follows the scroll or the hand carving, whichever is further.
+    now.p = carvedProgress()
+    now.section = sectionAt(now.p)
+    const s = stagesAt(sculpt.p)
     const d = Math.min(dt, 0.05)
     ;(Object.keys(live) as (keyof typeof live)[]).forEach((k) => {
       const want = Math.max(s[k], sculpt.manual[k])
@@ -191,8 +176,79 @@ function Statue() {
     uniforms.uLegs.value = live.legs
     uniforms.uPolish.value = live.polish
   })
-  return <primitive object={model} scale={fit.k} position={fit.offset} />
+  return (
+    <primitive
+      object={model}
+      scale={fit.k}
+      position={fit.offset}
+      onPointerDown={(e: { point: THREE.Vector3 }) => {
+        sculpt.hit = { x: e.point.x, y: e.point.y, z: e.point.z }
+      }}
+      onPointerMove={(e: { point: THREE.Vector3 }) => {
+        if (sculpt.hit) sculpt.hit = { x: e.point.x, y: e.point.y, z: e.point.z }
+      }}
+    />
+  )
 }
+
+// ---- Chips: stone flying off the chisel point while you hold ----------------------
+function Chips() {
+  const ref = useRef<THREE.InstancedMesh>(null)
+  const N = 70
+  const parts = useMemo(
+    () => Array.from({ length: N }, () => ({ p: new THREE.Vector3(), v: new THREE.Vector3(), life: 0, spin: new THREE.Vector3() })),
+    [],
+  )
+  const next = useRef(0)
+  const acc = useRef(0)
+  const m = useMemo(() => new THREE.Matrix4(), [])
+  const q = useMemo(() => new THREE.Quaternion(), [])
+  const e = useMemo(() => new THREE.Euler(), [])
+  const sc = useMemo(() => new THREE.Vector3(), [])
+  useFrame((_, dt) => {
+    const d = Math.min(dt, 0.05)
+    const h = sculpt.hit
+    if (h && holding.current) {
+      acc.current += d * 28
+      while (acc.current > 1) {
+        acc.current -= 1
+        const c = parts[next.current++ % N]
+        c.p.set(h.x, h.y, h.z)
+        c.v.set((Math.random() - 0.5) * 2.2, 0.6 + Math.random() * 1.6, (Math.random() - 0.2) * 2.2)
+        c.spin.set(Math.random() * 9, Math.random() * 9, Math.random() * 9)
+        c.life = 1
+      }
+    }
+    const mesh = ref.current
+    if (!mesh) return
+    parts.forEach((c, i) => {
+      if (c.life > 0) {
+        c.life -= d * 1.4
+        c.v.y -= 6 * d
+        c.p.addScaledVector(c.v, d)
+        if (c.p.y < 0.01) {
+          c.p.y = 0.01
+          c.v.multiplyScalar(0.3)
+          c.v.y = Math.abs(c.v.y)
+        }
+      }
+      e.set(c.spin.x * (1 - c.life), c.spin.y * (1 - c.life), c.spin.z * (1 - c.life))
+      q.setFromEuler(e)
+      sc.setScalar(Math.max(0.0001, c.life) * (0.025 + (i % 5) * 0.006))
+      m.compose(c.p, q, sc)
+      mesh.setMatrixAt(i, m)
+    })
+    mesh.instanceMatrix.needsUpdate = true
+  })
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, N]} castShadow>
+      <dodecahedronGeometry args={[1, 0]} />
+      <meshStandardMaterial color="#d9d4cc" roughness={0.9} flatShading />
+    </instancedMesh>
+  )
+}
+/** True while the visitor is pressing on the statue (set by the turntable). */
+const holding = { current: false }
 
 // ---- The block of marble the statue comes out of -------------------------------
 // Chunks covering the figure. They fall away as the block stage progresses
@@ -236,7 +292,8 @@ function Block() {
     const mesh = ref.current
     if (!mesh) return
     chunks.forEach((c, i) => {
-      const f = smooth(c.th, c.th + 0.18, live.block)
+      // live.block * 1.2 so even the lowest stones finish falling by the end.
+      const f = smooth(c.th, c.th + 0.18, live.block * 1.2)
       v.copy(c.p).addScaledVector(c.dir, f * 0.9)
       v.y -= f * f * 2.6
       e.set(c.tilt.x + c.spin.x * f, c.tilt.y + c.spin.y * f, c.tilt.z + c.spin.z * f)
@@ -303,43 +360,50 @@ function Dust() {
 // ---- Camera: a viewpoint per section, blended as you scroll ----------------------
 // [distance, camera height, look-at height, orbit angle]
 const VIEWS: Record<Section, [number, number, number, number]> = {
-  hero: [7.4, 1.9, 1.6, 0.25],
-  potential: [6.3, 1.8, 1.6, -0.35],
-  intention: [2.4, 2.95, 2.85, 0.15],
-  discipline: [3.5, 2.3, 2.1, -0.55],
-  strength: [3.7, 0.9, 1.0, 0.6],
-  polish: [5.0, 1.9, 1.7, -0.2],
-  final: [8.6, 1.7, 1.6, 0.05],
+  hero: [12.5, 1.3, 1.6, 0],
+  potential: [10.5, 1.5, 1.7, -0.3],
+  intention: [3.1, 3.0, 2.75, 0.18],
+  discipline: [4.2, 2.3, 2.0, -0.5],
+  strength: [4.4, 0.7, 1.15, 0.55],
+  polish: [8, 2.0, 1.8, -0.15],
+  final: [13, 1.2, 1.6, 0],
 }
 
 function Rig() {
   const camera = useThree((s) => s.camera)
   const size = useThree((s) => s.size)
-  const pos = useRef(new THREE.Vector3(0, 2, 10))
-  const look = useRef(new THREE.Vector3(0, 1.6, 0))
+  // Start on the hero view (not swooping in from close up).
+  const pos = useRef(new THREE.Vector3(0, VIEWS.hero[1], VIEWS.hero[0]))
+  const look = useRef(new THREE.Vector3(0, VIEWS.hero[2], 0))
   const vp = useMemo(() => new THREE.Vector3(), [])
   const vl = useMemo(() => new THREE.Vector3(), [])
   useFrame(({ clock }, dt) => {
     const i = Math.min(SECTIONS.length - 1, Math.floor(now.p))
-    const k = smooth(0.55, 1, now.p - i) // hold the view, then move on near the end
+    const k = smooth(0.6, 1, now.p - i) // hold the view, then move on near the end
     const a = VIEWS[SECTIONS[i]]
     const b = VIEWS[SECTIONS[Math.min(SECTIONS.length - 1, i + 1)]]
     const mix = (x: number, y: number) => x + (y - x) * k
     let [dist, cy, ly, ang] = [mix(a[0], b[0]), mix(a[1], b[1]), mix(a[2], b[2]), mix(a[3], b[3])]
-    // Wide screens: the statue sits right of the text. Phones: centred,
-    // lifted into the top half, and further back.
+    // Always centred. Narrow screens step back so the whole figure fits,
+    // and lift it a little above the caption.
     const aspect = size.width / Math.max(1, size.height)
-    const narrow = Math.min(1, Math.max(0, (1.5 - aspect) / 0.8))
-    dist *= 1 + 0.55 * narrow
-    const sideways = 1.25 * (1 - narrow) * Math.min(1, dist / 5)
-    ang += Math.sin(clock.elapsedTime * 0.15) * 0.04 + sculpt.pointer.x * 0.05
-    vl.set(-sideways, ly - narrow * 0.9 * Math.min(1, dist / 5), 0)
-    vp.set(Math.sin(ang) * dist, cy, Math.cos(ang) * dist).add(new THREE.Vector3(-sideways, -narrow * 0.4, 0))
+    const narrow = Math.min(1, Math.max(0, (1.2 - aspect) / 0.7))
+    dist *= 1 + 0.7 * narrow
+    ang += Math.sin(clock.elapsedTime * 0.15) * 0.04 + sculpt.pointer.x * 0.04
+    // Look a little below the figure's centre so it stands in the upper part
+    // of the frame, above the caption.
+    vl.set(0, ly - narrow * 0.6, 0)
+    vp.set(Math.sin(ang) * dist, cy + sculpt.pointer.y * 0.1, Math.cos(ang) * dist)
     const d = Math.min(dt, 0.05)
     pos.current.lerp(vp, 1 - Math.exp(-3 * d))
     look.current.lerp(vl, 1 - Math.exp(-3 * d))
     camera.position.copy(pos.current)
     camera.lookAt(look.current)
+    // Shift the picture up so the statue lives above the caption, which
+    // owns the bottom of the screen.
+    const cam = camera as THREE.PerspectiveCamera
+    const lift = Math.round(size.height * 0.14)
+    if (cam.view?.offsetY !== lift) cam.setViewOffset(size.width, size.height, 0, lift, size.width, size.height)
   })
   return null
 }
@@ -370,6 +434,8 @@ function Turntable({ children }: { children: React.ReactNode }) {
     }
     const up = () => {
       s.down = false
+      holding.current = false
+      sculpt.hit = null
     }
     el.addEventListener('pointerdown', down)
     window.addEventListener('pointermove', move)
@@ -383,7 +449,9 @@ function Turntable({ children }: { children: React.ReactNode }) {
   useFrame(({ clock }, dt) => {
     const s = st.current
     const d = Math.min(dt, 0.05)
-    if (s.down && s.moved < 6 && performance.now() - s.holdFrom > 250) carve(STAGE_OF[now.section], d * 0.45)
+    const held = s.down && s.moved < 8 && performance.now() - s.holdFrom > 180 && !!sculpt.hit
+    holding.current = held
+    if (held) carve(STAGE_OF[now.section], d * 0.4)
     if (!s.down) {
       s.yaw += s.vel
       s.vel *= Math.exp(-3 * d)
@@ -413,7 +481,7 @@ export default function Sculpture() {
     <Canvas
       shadows
       dpr={[1, 1.5]}
-      camera={{ position: [0, 2, 10], fov: 32, near: 0.5, far: 80 }}
+      camera={{ position: [0, 1.3, 12.5], fov: 32, near: 0.5, far: 80 }}
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       onCreated={({ gl }) => gl.setClearColor('#060609')}
     >
@@ -432,7 +500,12 @@ export default function Sculpture() {
         shadow-camera-bottom={-1}
         shadow-bias={-0.0004}
       />
-      <directionalLight position={[3, 3, -5]} intensity={1.6} color="#7c6cff" />
+      <directionalLight position={[3, 3, -5]} intensity={1.4} color="#7c6cff" />
+      <spotLight position={[0, 9, 1.5]} angle={0.32} penumbra={0.6} intensity={60} distance={16} color="#fff4e6" castShadow />
+      <mesh position={[0, 5.2, 0.6]}>
+        <coneGeometry args={[2.1, 9, 48, 1, true]} />
+        <meshBasicMaterial color="#fff2dc" transparent opacity={0.035} depthWrite={false} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} />
+      </mesh>
       <pointLight position={[0, 1.2, 2.5]} intensity={4} color="#c9c2ff" distance={6} />
       <Progress />
       <Rig />
@@ -444,6 +517,7 @@ export default function Sculpture() {
         <Block />
         <Dust />
       </Turntable>
+      <Chips />
     </Canvas>
   )
 }

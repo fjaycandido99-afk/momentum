@@ -4,19 +4,21 @@
 export type Section = 'hero' | 'potential' | 'intention' | 'discipline' | 'strength' | 'polish' | 'final'
 export const SECTIONS: Section[] = ['hero', 'potential', 'intention', 'discipline', 'strength', 'polish', 'final']
 
-/** Sections register their element; the scene reads scroll position from them. */
-export const sectionEls: { id: Section; el: HTMLElement }[] = []
-
 export const sculpt = {
-  /** Carving the visitor did by hand (hold on the statue, the demos), per stage, 0..1. */
+  /** Scroll progress through the pinned stage, 0..6 (one unit per chapter). */
+  p: 0,
+  /** Carving the visitor did by hand (holding on the statue, the demos), per stage, 0..1. */
   manual: { block: 0, head: 0, torso: 0, legs: 0, polish: 0 },
   /** Recent carving activity (0..1), drives the dust. */
   activity: 0,
   pointer: { x: 0, y: 0 },
+  /** Where the chisel is touching the statue while held (world space), or null. */
+  hit: null as null | { x: number; y: number; z: number },
 }
 
 export type Stage = keyof typeof sculpt.manual
-/** Which stage a section works on (for hand carving and the demos). */
+export const sectionAt = (p: number): Section => SECTIONS[Math.min(SECTIONS.length - 1, Math.max(0, Math.floor(p)))]
+/** Which stage a chapter works on (for hand carving and the demos). */
 export const STAGE_OF: Record<Section, Stage> = {
   hero: 'block',
   potential: 'block',
@@ -31,4 +33,11 @@ export const STAGE_OF: Record<Section, Stage> = {
 export function carve(stage: Stage, amount: number) {
   sculpt.manual[stage] = Math.min(1, sculpt.manual[stage] + amount)
   sculpt.activity = Math.min(1, sculpt.activity + amount * 6)
+}
+
+/** How far the carving has got, scroll or hand, whichever is further (for the chapter shown). */
+export function carvedProgress() {
+  const m = sculpt.manual
+  const hand = m.polish >= 1 ? 6 : m.legs >= 1 ? 4.4 + m.polish : m.torso >= 1 ? 3.45 + m.legs : m.head >= 1 ? 2.5 + m.torso : m.block >= 1 ? 1.55 + m.head : m.block * 1.55
+  return Math.max(sculpt.p, hand)
 }

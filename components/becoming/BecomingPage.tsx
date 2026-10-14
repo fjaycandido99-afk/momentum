@@ -4,15 +4,21 @@ import { Component, useEffect, useRef, useState, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Lenis from 'lenis'
-import { STAGE_OF, carve, sculpt, sectionEls, type Section } from './store'
+import { SECTIONS, STAGE_OF, carve, carvedProgress, sculpt, sectionAt, type Section } from './store'
 
-// "The Art of Becoming" (preview at /becoming): a marble statue behind the
-// page, carved as you scroll through what Voxu does. Every claim here is one
-// the current /download page makes; the two demos (the Mirror, the ritual
-// builder) are labelled as demos and send nothing anywhere.
+// "The Art of Becoming" (preview at /becoming). Not a page you scroll
+// through but a gallery you stand in: one statue under one spotlight, the
+// page pinned around it. Scrolling, or holding the chisel to the stone,
+// carves it chapter by chapter; captions come and go like subtitles. Every
+// claim is one the /download page already makes; the Mirror and the ritual
+// builder are labelled demos and send nothing anywhere.
 
 const Sculpture = dynamic(() => import('./Sculpture'), { ssr: false })
 const APP_STORE_URL = 'https://apps.apple.com/app/id6759702163'
+// A small chisel for the cursor over the stone.
+const CHISEL = `url("data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><g transform="rotate(45 14 14)"><rect x="12" y="1" width="4" height="13" rx="1.5" fill="#c8a272"/><rect x="11" y="14" width="6" height="3" fill="#8a8f99"/><path d="M11.5 17h5l-1 9h-3z" fill="#e8ebf0"/></g></svg>',
+)}") 4 24, crosshair`
 
 function has3d() {
   try {
@@ -23,7 +29,7 @@ function has3d() {
   }
 }
 
-// The statue is decoration: if it fails, the page carries on without it.
+// The statue is the page, but if it can't load the words still stand.
 class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
   static getDerivedStateFromError() {
@@ -37,40 +43,77 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
   }
 }
 function Fallback() {
-  return <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_65%_40%,rgba(124,108,255,0.18),transparent_55%)]" />
+  return <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,240,220,0.12),transparent_50%)]" />
 }
 
-function useSection(id: Section) {
-  const ref = useRef<HTMLElement>(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const entry = { id, el }
-    sectionEls.push(entry)
-    return () => {
-      const i = sectionEls.indexOf(entry)
-      if (i >= 0) sectionEls.splice(i, 1)
-    }
-  }, [id])
-  return ref
-}
+const NUMERAL: Record<Section, string> = { hero: '', potential: 'I', intention: 'II', discipline: 'III', strength: 'IV', polish: 'V', final: '' }
+const ERAS = ['Locked In', 'Discipline', 'Comeback', 'Gym Arc', 'Stoic Mode', 'Confidence', 'Study', '5AM']
+const MIRROR: { label: string; era: string }[] = [
+  { label: 'Build discipline', era: 'Discipline' },
+  { label: 'Improve focus', era: 'Locked In' },
+  { label: 'Get stronger', era: 'Gym Arc' },
+  { label: 'Start over', era: 'Comeback' },
+]
+const RITUAL = [
+  { label: 'Move', min: 20 },
+  { label: 'Read', min: 15 },
+  { label: 'Focus', min: 25 },
+  { label: 'Reflect', min: 10 },
+]
 
-// Text sits on the left over the dark side on wide screens; below laptop
-// width it gets a dark panel so it stays readable over the statue.
-const panel = 'rounded-3xl bg-black/75 p-6 ring-1 ring-white/5 lg:rounded-none lg:bg-transparent lg:p-0 lg:ring-0'
+const chip = (on: boolean) =>
+  `rounded-full px-3.5 py-1.5 text-xs transition ${on ? 'bg-white text-black' : 'border border-white/15 text-white/75 hover:border-white/40'}`
 
-function Chapter({ id, stage, title, children }: { id: Section; stage?: string; title: ReactNode; children?: ReactNode }) {
-  const ref = useSection(id)
+function Mirror() {
+  const [pick, setPick] = useState<number | null>(null)
   return (
-    <section ref={ref} id={id} className="relative flex min-h-[110svh] items-end pb-16 pt-[48svh] lg:items-center lg:pb-0 lg:pt-0">
-      <div className="mx-auto w-full max-w-6xl px-5">
-        <div className={`max-w-md ${panel}`}>
-          {stage && <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.3em] text-violet-300/80">{stage}</p>}
-          <h2 className="font-[family-name:var(--font-cormorant)] text-4xl font-medium leading-[1.05] sm:text-5xl">{title}</h2>
-          {children}
-        </div>
+    <div className="mt-5">
+      <div className="flex flex-wrap justify-center gap-2">
+        {MIRROR.map((m, i) => (
+          <button
+            key={m.label}
+            className={chip(pick === i)}
+            aria-pressed={pick === i}
+            onClick={() => {
+              setPick(i)
+              carve(STAGE_OF.intention, 0.35)
+            }}
+          >
+            {m.label}
+          </button>
+        ))}
       </div>
-    </section>
+      <p className="mt-3 min-h-[1.25rem] text-xs text-white/55">
+        {pick === null ? 'What are you trying to change? A demo: nothing is saved.' : `A place to start: the ${MIRROR[pick].era} era.`}
+      </p>
+    </div>
+  )
+}
+
+function Ritual() {
+  const [on, setOn] = useState<boolean[]>(RITUAL.map(() => false))
+  const total = RITUAL.reduce((s, r, i) => s + (on[i] ? r.min : 0), 0)
+  return (
+    <div className="mt-5">
+      <div className="flex flex-wrap justify-center gap-2">
+        {RITUAL.map((r, i) => (
+          <button
+            key={r.label}
+            className={chip(on[i])}
+            aria-pressed={on[i]}
+            onClick={() => {
+              if (!on[i]) carve(STAGE_OF.discipline, 0.22)
+              setOn((o) => o.map((v, j) => (j === i ? !v : v)))
+            }}
+          >
+            {r.label} · {r.min} min
+          </button>
+        ))}
+      </div>
+      <p className="mt-3 min-h-[1.25rem] text-xs text-white/55">
+        {total ? `${total} minutes a day. Small enough to keep.` : 'Shape a day. A demo: nothing is saved.'}
+      </p>
+    </div>
   )
 }
 
@@ -80,7 +123,7 @@ function AppStoreButton() {
       href={APP_STORE_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex h-12 items-center gap-2.5 rounded-full bg-white px-6 text-sm font-semibold text-black transition hover:bg-white/90"
+      className="inline-flex h-11 items-center gap-2.5 rounded-full bg-white px-6 text-sm font-semibold text-black transition hover:bg-white/90"
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden>
         <path d="M16.37 1.43c0 1.14-.42 2.2-1.25 3.05-.9.94-2 1.48-3.18 1.39a3.4 3.4 0 0 1 1.27-2.96c.83-.78 2.03-1.33 3.16-1.48ZM20.6 17.3c-.55 1.27-.82 1.84-1.53 2.96-1 1.56-2.4 3.5-4.14 3.52-1.55.01-1.95-1-4.05-1-2.1.01-2.54 1.02-4.09 1-1.74-.02-3.07-1.77-4.07-3.33C-.07 16.1-.36 11.04 1.38 8.4c1.24-1.88 3.2-2.98 5.04-2.98 1.87 0 3.05 1.02 4.6 1.02 1.5 0 2.42-1.02 4.58-1.02 1.64 0 3.38.9 4.62 2.44-4.06 2.22-3.4 8.02.38 9.44Z" />
@@ -90,107 +133,137 @@ function AppStoreButton() {
   )
 }
 
-const ERAS = ['Locked In', 'Discipline', 'Comeback', 'Gym Arc', 'Stoic Mode', 'Confidence', 'Study', '5AM']
-const MIRROR: { label: string; era: string; line: string }[] = [
-  { label: 'Build discipline', era: 'Discipline', line: 'Thirty days of one kept promise at a time.' },
-  { label: 'Improve focus', era: 'Locked In', line: 'Fewer things, done properly, every day.' },
-  { label: 'Get stronger', era: 'Gym Arc', line: 'The body, built the way everything else is.' },
-  { label: 'Start over', era: 'Comeback', line: 'Day one again, with a record this time.' },
-]
-const RITUAL = [
-  { label: 'Move', min: 20 },
-  { label: 'Read', min: 15 },
-  { label: 'Focus', min: 25 },
-  { label: 'Reflect', min: 10 },
-]
-const VOICES = ['Stoic', 'Existentialist', 'Cynic', 'Hedonist', 'Samurai', 'Scholar', 'Manifestor', 'Hustler']
-
-function Mirror() {
-  const [pick, setPick] = useState<number | null>(null)
-  const p = pick === null ? null : MIRROR[pick]
-  return (
-    <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <p className="font-[family-name:var(--font-cormorant)] text-2xl">What are you trying to change?</p>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        {MIRROR.map((m, i) => (
-          <button
-            key={m.label}
-            onClick={() => {
-              setPick(i)
-              carve(STAGE_OF.intention, 0.35)
-            }}
-            aria-pressed={pick === i}
-            className={`rounded-xl px-3 py-2.5 text-left text-sm transition ${
-              pick === i ? 'bg-white text-black' : 'border border-white/10 text-white/80 hover:border-white/30'
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
-      {p && (
-        <p className="mt-4 text-sm text-white/70">
-          A place to start: the <span className="text-white">{p.era}</span> era. {p.line}
-        </p>
-      )}
-      <p className="mt-3 text-[11px] text-white/35">A demo. Nothing you pick here is saved or sent.</p>
-    </div>
-  )
-}
-
-function Ritual() {
-  const [on, setOn] = useState<boolean[]>(RITUAL.map(() => false))
-  const total = RITUAL.reduce((s, r, i) => s + (on[i] ? r.min : 0), 0)
-  return (
-    <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <p className="text-sm font-medium text-white/80">Shape a day</p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {RITUAL.map((r, i) => (
-          <button
-            key={r.label}
-            onClick={() => {
-              setOn((o) => o.map((v, j) => (j === i ? !v : v)))
-              if (!on[i]) carve(STAGE_OF.discipline, 0.22)
-            }}
-            aria-pressed={on[i]}
-            className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm transition ${
-              on[i] ? 'bg-white text-black' : 'border border-white/10 text-white/80 hover:border-white/30'
-            }`}
-          >
-            {r.label}
-            <span className={on[i] ? 'text-black/60' : 'text-white/40'}>{r.min} min</span>
-          </button>
-        ))}
-      </div>
-      <p className="mt-4 text-sm text-white/70">{total ? `${total} minutes a day. Small enough to keep.` : 'Pick what you would do each day.'}</p>
-      <p className="mt-3 text-[11px] text-white/35">A demo of the idea, not a routine saved to the app.</p>
-    </div>
-  )
+/** What each chapter says: a caption, one line, and sometimes something to try. */
+function Caption({ section }: { section: Section }) {
+  switch (section) {
+    case 'hero':
+      return (
+        <>
+          <h1 className="font-[family-name:var(--font-cormorant)] text-5xl font-medium leading-[1.02] sm:text-7xl">
+            You are not discovered. <span className="text-white/55">You are built.</span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-sm text-white/60 sm:text-base">
+            Pick a 30-day era. Make one promise a day. Your coach answers it, asks at night whether you kept it, and keeps count — out loud, in a voice
+            you choose.
+          </p>
+          <p className="mt-5 text-[11px] uppercase tracking-[0.3em] text-white/40">Scroll to carve · or hold the chisel to the stone</p>
+        </>
+      )
+    case 'potential':
+      return (
+        <>
+          <h2 className="caption-h">Every transformation begins somewhere.</h2>
+          <p className="caption-p">Choose who you are becoming for the next thirty days: four chapters, one written mission a day.</p>
+          <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+            {ERAS.map((e) => (
+              <span key={e} className="rounded-full border border-white/12 px-2.5 py-1 text-[11px] text-white/70">
+                {e}
+              </span>
+            ))}
+            <span className="rounded-full border border-dashed border-white/20 px-2.5 py-1 text-[11px] text-white/45">or your own</span>
+          </div>
+        </>
+      )
+    case 'intention':
+      return (
+        <>
+          <h2 className="caption-h">Change begins with a decision.</h2>
+          <p className="caption-p">
+            Each morning, one promise, small enough to keep. Your coach answers it, quoting what you said on day one on the days that lands hardest.
+          </p>
+          <Mirror />
+        </>
+      )
+    case 'discipline':
+      return (
+        <>
+          <h2 className="caption-h">Consistency gives intention its shape.</h2>
+          <p className="caption-p">
+            At night you answer honestly. Set a time and your coach calls you by name and asks for the day&rsquo;s promise out loud.
+          </p>
+          <Ritual />
+        </>
+      )
+    case 'strength':
+      return (
+        <>
+          <h2 className="caption-h">The body is built the same way.</h2>
+          <p className="caption-p">
+            Guided sessions, soundscapes, motivation and sleep audio, chosen for your era. Training and routines beside it, on a timer or in sequence.
+          </p>
+        </>
+      )
+    case 'polish':
+      return (
+        <>
+          <h2 className="caption-h">Your own record, counted honestly.</h2>
+          <p className="caption-p">
+            Promises kept, the weekday you slip on, whether your certainty means anything. It says nothing until there is enough to say.
+          </p>
+          <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/45">8 eras · 30 missions each · 8 coach voices · 70+ audio sessions</p>
+        </>
+      )
+    case 'final':
+      return (
+        <>
+          <h2 className="font-[family-name:var(--font-cormorant)] text-4xl font-medium sm:text-6xl">The masterpiece is never finished.</h2>
+          <p className="caption-p">You become someone through what you choose to do, again and again.</p>
+          <div className="mt-6 flex flex-col items-center gap-2.5">
+            <AppStoreButton />
+            <span className="text-xs text-white/40">Free to start. No credit card required.</span>
+          </div>
+        </>
+      )
+  }
 }
 
 export function BecomingPage() {
   const [live, setLive] = useState(false)
+  const [section, setSection] = useState<Section>('hero')
+  const [shown, setShown] = useState<Section>('hero')
+  const stage = useRef<HTMLDivElement>(null)
   useEffect(() => setLive(has3d()), [])
 
-  // Smooth scrolling, so the carving and the camera glide with the page.
+  // Smooth scrolling (Lenis); the scroll through the tall stage becomes
+  // progress 0..6 for the carving.
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const html = document.documentElement
     const prev = html.style.scrollBehavior
     html.style.scrollBehavior = 'auto'
-    const lenis = new Lenis({ lerp: 0.08, wheelMultiplier: 0.9 })
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const lenis = reduced ? null : new Lenis({ lerp: 0.075, wheelMultiplier: 0.8 })
     let id = 0
-    const raf = (t: number) => {
-      lenis.raf(t)
-      id = requestAnimationFrame(raf)
+    const tick = (t: number) => {
+      lenis?.raf(t)
+      const el = stage.current
+      if (el) {
+        const r = el.getBoundingClientRect()
+        const run = Math.max(1, el.offsetHeight - window.innerHeight)
+        sculpt.p = Math.min(1, Math.max(0, -r.top / run)) * 6
+      }
+      const s = sectionAt(carvedProgress())
+      setSection((cur) => (cur === s ? cur : s))
+      id = requestAnimationFrame(tick)
     }
-    id = requestAnimationFrame(raf)
+    id = requestAnimationFrame(tick)
     return () => {
       cancelAnimationFrame(id)
-      lenis.destroy()
+      lenis?.destroy()
       html.style.scrollBehavior = prev
     }
   }, [])
+  // Captions cross-fade: the old one leaves, then the new one arrives.
+  const [visible, setVisible] = useState(true)
+  useEffect(() => {
+    if (section === shown) return
+    setVisible(false)
+    const t = setTimeout(() => {
+      setShown(section)
+      setVisible(true)
+    }, 320)
+    return () => clearTimeout(t)
+  }, [section, shown])
+
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
       sculpt.pointer.x = (e.clientX / window.innerWidth) * 2 - 1
@@ -200,150 +273,100 @@ export function BecomingPage() {
     return () => removeEventListener('pointermove', onMove)
   }, [])
 
-  const heroRef = useSection('hero')
-  const finalRef = useSection('final')
+  const idx = SECTIONS.indexOf(section)
 
   return (
-    <div className="relative min-h-screen bg-[#060609] text-white">
-      <div className="fixed inset-0 z-0">
-        {live ? (
-          <SceneBoundary>
-            <Sculpture />
-          </SceneBoundary>
-        ) : (
-          <Fallback />
-        )}
-        {/* Darken the text side on wide screens, the lower half on phones. */}
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,transparent_40%,rgba(6,6,9,0.7)_70%,rgba(6,6,9,0.9)_100%)] lg:bg-[linear-gradient(90deg,rgba(6,6,9,0.92)_0%,rgba(6,6,9,0.55)_38%,transparent_62%)]" />
+    <div className="relative bg-[#060609] text-white">
+      <style>{`
+        .caption-h { font-family: var(--font-cormorant); font-weight: 500; line-height: 1.05; font-size: 2.25rem; }
+        @media (min-width: 640px) { .caption-h { font-size: 3.4rem; } }
+        .caption-p { margin: 0.9rem auto 0; max-width: 34rem; font-size: 0.95rem; color: rgba(255,255,255,0.6); }
+        @keyframes grain { 0%,100% { transform: translate(0,0) } 25% { transform: translate(-2%,1%) } 50% { transform: translate(1%,-2%) } 75% { transform: translate(2%,2%) } }
+      `}</style>
+
+      {/* The stage: tall, so scrolling through it carves; its view is pinned. */}
+      <div ref={stage} className="relative h-[700svh]">
+        <div className="sticky top-0 h-[100svh] overflow-hidden">
+          <div className="absolute inset-0" style={{ cursor: CHISEL }}>
+            {live ? (
+              <SceneBoundary>
+                <Sculpture />
+              </SceneBoundary>
+            ) : (
+              <Fallback />
+            )}
+          </div>
+
+          {/* Film: letterbox, a vignette, a little grain. */}
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_42%,transparent_45%,rgba(0,0,0,0.75)_100%)]" />
+          <div
+            className="pointer-events-none absolute -inset-[10%] opacity-[0.07] mix-blend-overlay"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>')}")`,
+              animation: 'grain 1.2s steps(4) infinite',
+            }}
+          />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[7svh] bg-black" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42svh] bg-gradient-to-t from-black via-black/80 to-transparent" />
+
+          {/* Header, inside the top letterbox. */}
+          <header className="absolute inset-x-0 top-0 z-20 flex h-[7svh] min-h-[52px] items-center justify-between px-5 sm:px-8" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            <Link href="/download" className="flex items-center gap-2">
+              <span className="relative flex h-6 w-6 items-center justify-center">
+                <span className="absolute inset-0 rounded-full border border-white/50" />
+                <span className="absolute inset-[4px] rounded-full border border-white/70" />
+                <span className="h-1.5 w-1.5 rounded-full bg-white" />
+              </span>
+              <span className="text-sm font-semibold tracking-[0.2em]">VOXU</span>
+            </Link>
+            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold tracking-[0.15em] text-white/80 hover:text-white">
+              DOWNLOAD FREE
+            </a>
+          </header>
+
+          {/* The chapter numeral, huge and faint behind everything. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-5 top-[9svh] font-[family-name:var(--font-cormorant)] text-[22vw] font-light leading-none text-white/[0.06] transition-opacity duration-700 sm:left-10 sm:text-[14vw]"
+            style={{ opacity: NUMERAL[shown] ? 1 : 0 }}
+          >
+            {NUMERAL[shown]}
+          </div>
+
+          {/* Progress as chisel marks down the right edge. */}
+          <div className="pointer-events-none absolute right-5 top-1/2 flex -translate-y-1/2 flex-col gap-3 sm:right-8" aria-hidden>
+            {['I', 'II', 'III', 'IV', 'V'].map((n, i) => (
+              <div key={n} className="flex items-center justify-end gap-2">
+                <span className={`text-[10px] tracking-[0.2em] transition ${idx === i + 1 ? 'text-white/80' : 'text-white/0 sm:text-white/25'}`}>{n}</span>
+                <span className={`h-px transition-all duration-500 ${idx > i ? 'w-6 bg-white/80' : 'w-3 bg-white/25'}`} />
+              </div>
+            ))}
+          </div>
+
+          {/* The caption, like a subtitle. */}
+          <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[6svh] text-center">
+            <div
+              className="pointer-events-auto mx-auto max-w-3xl transition-all duration-300"
+              style={{ opacity: visible ? 1 : 0, transform: `translateY(${visible ? 0 : 10}px)` }}
+              aria-live="polite"
+            >
+              <Caption section={shown} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      <header className="fixed inset-x-0 top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <Link href="/download" className="flex items-center gap-2">
-            <span className="relative flex h-7 w-7 items-center justify-center">
-              <span className="absolute inset-0 rounded-full border border-white/50" />
-              <span className="absolute inset-[5px] rounded-full border border-white/70" />
-              <span className="h-2 w-2 rounded-full bg-white" />
-            </span>
-            <span className="text-lg font-semibold tracking-wide">Voxu</span>
-          </Link>
-          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black hover:bg-white/90">
-            Download Free
-          </a>
+      <footer className="relative border-t border-white/5 bg-black px-5 py-8">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 text-xs text-white/40">
+          <span>© {new Date().getFullYear()} Voxu</span>
+          <div className="flex flex-wrap gap-5">
+            <Link href="/pricing" className="hover:text-white">Pricing</Link>
+            <Link href="/support" className="hover:text-white">Support</Link>
+            <Link href="/privacy" className="hover:text-white">Privacy</Link>
+            <Link href="/terms" className="hover:text-white">Terms</Link>
+          </div>
         </div>
-      </header>
-
-      {/* The page lets clicks through to the statue (drag to turn, hold to
-          carve); only the text panels take them. */}
-      <main className="pointer-events-none relative z-10 [&_a]:pointer-events-auto [&_button]:pointer-events-auto">
-        <section ref={heroRef} id="hero" className="relative flex min-h-[100svh] items-end pb-16 pt-[48svh] lg:items-center lg:pb-0 lg:pt-0">
-          <div className="mx-auto w-full max-w-6xl px-5">
-            <div className={`max-w-lg ${panel}`}>
-              <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.3em] text-violet-300/80">Voxu · The art of becoming</p>
-              <h1 className="font-[family-name:var(--font-cormorant)] text-5xl font-medium leading-[1.02] sm:text-7xl">
-                You are not discovered.
-                <br />
-                <span className="text-white/60">You are built.</span>
-              </h1>
-              <p className="mt-6 text-base leading-relaxed text-white/65 sm:text-lg">
-                Pick a 30-day era. Make one promise a day. Your coach answers it, asks at night whether you kept it, and keeps count — out loud, in a
-                voice you choose.
-              </p>
-              <div className="mt-8 flex flex-col items-start gap-3">
-                <AppStoreButton />
-                <span className="text-sm text-white/40">Free to start. No credit card required.</span>
-              </div>
-              <p className="mt-10 text-xs text-white/35">Scroll, and watch the stone. Press and hold on the statue to carve it yourself.</p>
-            </div>
-          </div>
-        </section>
-
-        <Chapter id="potential" stage="Stage I · Potential" title="Every transformation begins somewhere.">
-          <p className="mt-5 text-white/65">Choose who you are becoming for the next thirty days. Thirty days, four chapters, one written mission a day.</p>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {ERAS.map((e) => (
-              <span key={e} className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/75">
-                {e}
-              </span>
-            ))}
-            <span className="rounded-full border border-dashed border-white/20 px-3 py-1 text-xs text-white/45">or name your own</span>
-          </div>
-        </Chapter>
-
-        <Chapter id="intention" stage="Stage II · Intention" title="Change begins with a decision.">
-          <p className="mt-5 text-white/65">
-            Each morning you promise yourself one thing, small enough to keep. Your coach answers it, quoting what you said on day one on the days that
-            lands hardest.
-          </p>
-          <Mirror />
-        </Chapter>
-
-        <Chapter id="discipline" stage="Stage III · Discipline" title="Consistency gives intention its shape.">
-          <p className="mt-5 text-white/65">
-            At night you answer honestly: did you keep it? Set a time and your coach calls you by name, tells you where you are in your era, and asks for
-            the day&rsquo;s promise out loud.
-          </p>
-          <Ritual />
-        </Chapter>
-
-        <Chapter id="strength" stage="Stage IV · Strength" title="The body is built the same way.">
-          <p className="mt-5 text-white/65">
-            Guided sessions, ambient soundscapes, motivation and sleep audio, chosen to suit the era you are in. Training and routines sit beside it, run
-            on a timer or in sequence.
-          </p>
-        </Chapter>
-
-        <Chapter id="polish" stage="Stage V · Polish" title="Your own record, counted honestly.">
-          <p className="mt-5 text-white/65">
-            Promises kept, the weekday you slip on, whether your certainty means anything. Every figure shows the numbers behind it, and says nothing
-            until there is enough to say.
-          </p>
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            {[
-              ['8', 'Eras to choose from'],
-              ['30', 'Written missions per era'],
-              ['8', 'Coach voices'],
-              ['70+', 'Audio sessions'],
-            ].map(([n, l]) => (
-              <div key={l} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <div className="font-[family-name:var(--font-cormorant)] text-3xl">{n}</div>
-                <div className="mt-1 text-xs text-white/50">{l}</div>
-              </div>
-            ))}
-          </div>
-          <p className="mt-5 text-xs leading-relaxed text-white/45">
-            {VOICES.join(', ')}. The mindset is how your coach talks to you; the era is what you are working on.
-          </p>
-        </Chapter>
-
-        <section ref={finalRef} id="final" className="relative flex min-h-[110svh] items-end pb-24 pt-[48svh] lg:items-center lg:pb-0 lg:pt-0">
-          <div className="mx-auto w-full max-w-6xl px-5">
-            <div className={`max-w-lg ${panel}`}>
-              <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.3em] text-violet-300/80">The next chapter</p>
-              <h2 className="font-[family-name:var(--font-cormorant)] text-5xl font-medium leading-[1.02] sm:text-6xl">The masterpiece is never finished.</h2>
-              <p className="mt-6 text-white/65">
-                You don&rsquo;t become someone new in a day. You become them through what you choose to do, again and again.
-              </p>
-              <div className="mt-8 flex flex-col items-start gap-3">
-                <AppStoreButton />
-                <span className="text-sm text-white/40">Free to start. No credit card required.</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <footer className="relative border-t border-white/5 bg-[#060609]/90 px-5 py-8">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 text-sm text-white/40">
-            <span>© {new Date().getFullYear()} Voxu</span>
-            <div className="flex flex-wrap gap-5">
-              <Link href="/pricing" className="hover:text-white">Pricing</Link>
-              <Link href="/support" className="hover:text-white">Support</Link>
-              <Link href="/privacy" className="hover:text-white">Privacy</Link>
-              <Link href="/terms" className="hover:text-white">Terms</Link>
-            </div>
-          </div>
-        </footer>
-      </main>
+      </footer>
     </div>
   )
 }
