@@ -56,7 +56,7 @@ export default function MarketingLayout({
   const isInstallPage = isNative && pathname === '/download'
   // /download is the landing page and draws its own fixed header (logo +
   // Download Free); this one stacked on top of it at the same spot.
-  const ownHeader = pathname === '/download' || pathname === '/becoming'
+  const ownHeader = pathname === '/download'
 
   useEffect(() => {
     if (isInstallPage) router.replace('/')
@@ -65,9 +65,9 @@ export default function MarketingLayout({
   return (
     // overflow-x-hidden: the landing page's decorative glows sit past the
     // edge and made the whole page scroll sideways on a phone.
-    // /becoming pins its stage with position: sticky, which overflow-x-hidden
+    // /download pins its stage with position: sticky, which overflow-x-hidden
     // breaks (it makes this a scroll container); clip doesn't.
-    <div className={`min-h-screen bg-black ${pathname === '/becoming' ? 'overflow-x-clip' : 'overflow-x-hidden'}`}>
+    <div className={`min-h-screen bg-black ${pathname === '/download' ? 'overflow-x-clip' : 'overflow-x-hidden'}`}>
       {!ownHeader && (
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-white/5" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">

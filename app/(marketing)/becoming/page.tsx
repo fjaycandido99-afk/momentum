@@ -1,5 +1,6 @@
-import { BecomingPage } from '@/components/becoming/BecomingPage'
+import { permanentRedirect } from 'next/navigation'
 
+// The preview became the landing page.
 export default function Becoming() {
-  return <BecomingPage />
+  permanentRedirect('/download')
 }

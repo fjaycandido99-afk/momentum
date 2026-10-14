@@ -87,7 +87,7 @@ function AppStoreButton() {
 }
 
 // The palette: warm ivory, stone grey, a muted antique gold used sparingly.
-const GOLD = '#B69B73'
+const GOLD = '#C9AE82'
 const kicker = 'text-[11px] uppercase tracking-[0.3em]'
 function Kicker({ children }: { children: ReactNode }) {
   return (
@@ -107,10 +107,10 @@ function PromiseDemo() {
     <div className="mt-5">
       {!made ? (
         <>
-          <p className="text-xs" style={{ color: '#96938F' }}>
+          <p className="text-xs" style={{ color: '#BDB8B0' }}>
             What will you promise yourself today?
           </p>
-          <div className="mt-3 flex flex-wrap justify-center gap-2">
+          <div className="mt-3 flex flex-wrap justify-center gap-2 lg:justify-start">
             {PROMISES.map((p, i) => (
               <button key={p} className={chip(pick === i)} aria-pressed={pick === i} onClick={() => setPick(i)}>
                 {p}
@@ -149,10 +149,10 @@ function NightCheck() {
   const [ans, setAns] = useState<null | 'yes' | 'no'>(null)
   return (
     <div className="mt-5">
-      <p className="text-xs" style={{ color: '#96938F' }}>
+      <p className="text-xs" style={{ color: '#BDB8B0' }}>
         Tonight: did you keep your promise?
       </p>
-      <div className="mt-3 flex justify-center gap-2">
+      <div className="mt-3 flex justify-center gap-2 lg:justify-start">
         <button
           className={chip(ans === 'yes')}
           aria-pressed={ans === 'yes'}
@@ -167,7 +167,7 @@ function NightCheck() {
           Not today
         </button>
       </div>
-      <p className="mt-3 min-h-[1.25rem] text-xs text-white/55">
+      <p className="mt-3 min-h-[1.25rem] text-xs text-white/[0.78]">
         {ans === 'yes' ? 'Another mark. Kept promises add up.' : ans === 'no' ? 'Said honestly. Tomorrow is another stone.' : 'A demo: nothing here is saved.'}
       </p>
     </div>
@@ -180,14 +180,18 @@ function Caption({ section }: { section: Section }) {
     case 'hero':
       return (
         <>
-          <h1 className="font-[family-name:var(--font-cormorant)] text-5xl font-medium leading-[1.02] sm:text-7xl">
-            You are not discovered. <span style={{ color: '#96938F' }}>You are built.</span>
+          <h1 className="font-[family-name:var(--font-cormorant)] text-5xl font-medium leading-[1.02] sm:text-7xl lg:text-[4.2rem]">
+            You are not discovered. <span style={{ color: '#BDB8B0' }}>You are built.</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-white/60 sm:text-base">
+          <p className="mx-auto mt-4 max-w-xl text-sm text-white/[0.78] sm:text-base lg:mx-0">
             Pick a 30-day era. Make one promise a day. Your coach answers it, asks at night whether you kept it, and keeps count — out loud, in a voice
             you choose.
           </p>
-          <p className="mt-5 text-[11px] uppercase tracking-[0.3em] text-white/40">Scroll to carve · or hold the chisel to the stone</p>
+          <div className="mt-6 flex flex-col items-center gap-2 lg:items-start">
+            <AppStoreButton />
+            <span className="text-xs text-white/[0.78]">Free to start. No credit card required.</span>
+          </div>
+          <p className="mt-5 text-[11px] uppercase tracking-[0.3em] text-white/[0.78]">Scroll to carve · or hold the chisel to the stone</p>
         </>
       )
     case 'potential':
@@ -196,13 +200,13 @@ function Caption({ section }: { section: Section }) {
           <Kicker>Chapter I · The Stone</Kicker>
           <h2 className="caption-h mt-2">Nobody becomes someone overnight.</h2>
           <p className="caption-p">Every change starts as an unfinished stone, and one decision. Choose who you are becoming for the next thirty days.</p>
-          <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+          <div className="mt-4 flex flex-wrap justify-center gap-1.5 lg:justify-start">
             {ERAS.map((e) => (
               <span key={e} className="rounded-full border border-white/12 px-2.5 py-1 text-[11px] text-white/70">
                 {e}
               </span>
             ))}
-            <span className="rounded-full border border-dashed border-white/20 px-2.5 py-1 text-[11px] text-white/45">or your own</span>
+            <span className="rounded-full border border-dashed border-white/20 px-2.5 py-1 text-[11px] text-white/[0.78]">or your own</span>
           </div>
         </>
       )
@@ -250,7 +254,7 @@ function Caption({ section }: { section: Section }) {
             Kept promises earn relics: coins like Said Out Loud, Word Kept and Era Complete, yours to wear. Guided sessions, soundscapes and sleep
             audio come with the era you are in.
           </p>
-          <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/45">8 eras · 30 missions each · 8 coach voices · 70+ audio sessions</p>
+          <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/[0.78]">8 eras · 30 missions each · 8 coach voices · 70+ audio sessions</p>
         </>
       )
     case 'stoic':
@@ -263,12 +267,12 @@ function Caption({ section }: { section: Section }) {
           <h2 className="caption-h mt-2">{g.title}</h2>
           <p className="caption-p">{g.line}</p>
           {section === 'scholar' && (
-            <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-white/45">
+            <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-white/[0.78]">
               Stoic · Existentialist · Cynic · Hedonist · Samurai · Scholar · Manifestor · Hustler
             </p>
           )}
           {section === 'stoic' && (
-            <p className="mt-4 text-xs text-white/50">Eight mindsets. The mindset is how your coach talks to you; the era is what you work on.</p>
+            <p className="mt-4 text-xs text-white/[0.78]">Eight mindsets. The mindset is how your coach talks to you; the era is what you work on.</p>
           )}
         </>
       )
@@ -278,16 +282,16 @@ function Caption({ section }: { section: Section }) {
         <>
           <h2 className="font-[family-name:var(--font-cormorant)] text-4xl font-medium sm:text-6xl">Becoming is not a destination. It is a practice.</h2>
           <p className="caption-p">Tomorrow there&rsquo;s another stone. Start your era.</p>
-          <div className="mt-6 flex flex-col items-center gap-2.5">
+          <div className="mt-6 flex flex-col items-center gap-2.5 lg:items-start">
             <AppStoreButton />
-            <span className="text-xs text-white/40">Free to start. No credit card required.</span>
+            <span className="text-xs text-white/[0.78]">Free to start. No credit card required.</span>
           </div>
         </>
       )
   }
 }
 
-export function BecomingPage() {
+export function BecomingPage({ children }: { children?: ReactNode }) {
   const [live, setLive] = useState(false)
   const [section, setSection] = useState<Section>('hero')
   const [shown, setShown] = useState<Section>('hero')
@@ -357,6 +361,16 @@ export function BecomingPage() {
     else window.scrollTo({ top: y, behavior: 'smooth' })
   }
 
+  // Deep links: /download#chapter-3 opens on that chapter.
+  useEffect(() => {
+    const m = /^#chapter-([1-5])$/.exec(window.location.hash)
+    if (!m) return
+    const el = stage.current
+    if (!el) return
+    const run = el.offsetHeight - window.innerHeight
+    window.scrollTo(0, el.offsetTop + (run * (Number(m[1]) + 0.45)) / SECTIONS.length)
+  }, [])
+
   // Narration: Voxu Voice reads each chapter, once listening is switched on
   // (browsers only play sound after a tap, and nobody should be surprised).
   const [listen, setListen] = useState(false)
@@ -380,8 +394,9 @@ export function BecomingPage() {
     <div className="relative bg-[#060609] text-white">
       <style>{`
         .caption-h { font-family: var(--font-cormorant); font-weight: 500; line-height: 1.05; font-size: 2.25rem; }
-        @media (min-width: 640px) { .caption-h { font-size: 3.4rem; } }
-        .caption-p { margin: 0.9rem auto 0; max-width: 34rem; font-size: 0.95rem; color: rgba(255,255,255,0.6); }
+        @media (min-width: 640px) { .caption-h { font-size: 3rem; } }
+        @media (min-width: 1024px) { .caption-h { font-size: 3.3rem; } .caption-p { margin-left: 0; } }
+        .caption-p { margin: 0.9rem auto 0; max-width: 34rem; font-size: 0.95rem; color: rgba(255,255,255,0.82); }
         @keyframes grain { 0%,100% { transform: translate(0,0) } 25% { transform: translate(-2%,1%) } 50% { transform: translate(1%,-2%) } 75% { transform: translate(2%,2%) } }
       `}</style>
 
@@ -408,7 +423,9 @@ export function BecomingPage() {
             }}
           />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[7svh] bg-black" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[42svh] bg-gradient-to-t from-black via-black/80 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[48svh] bg-gradient-to-t from-black via-black/90 to-transparent lg:hidden" />
+          {/* Wide screens: the message sits on the left, over a soft shade. */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[52vw] bg-gradient-to-r from-black/90 via-black/55 to-transparent lg:block" />
 
           {/* Header, inside the top letterbox. */}
           <header className="absolute inset-x-0 top-0 z-20 flex h-[7svh] min-h-[52px] items-center justify-between px-5 sm:px-8" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
@@ -432,7 +449,13 @@ export function BecomingPage() {
                 </svg>
                 {listen ? 'VOXU IS SPEAKING' : 'LISTEN'}
               </button>
-              <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold tracking-[0.15em]" style={{ color: GOLD }}>
+              <a
+                href={APP_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full px-4 py-2 text-xs font-semibold tracking-[0.12em] text-black transition hover:brightness-110"
+                style={{ background: GOLD }}
+              >
                 DOWNLOAD FREE
               </a>
             </div>
@@ -441,7 +464,7 @@ export function BecomingPage() {
           {/* The chapter numeral, huge and faint behind everything. */}
           <div
             aria-hidden
-            className={`pointer-events-none absolute left-5 top-[9svh] font-[family-name:var(--font-cormorant)] text-[22vw] font-light leading-none text-white/[0.06] transition-opacity duration-700 sm:left-10 sm:text-[14vw] ${["potential", "intention", "discipline", "strength"].includes(shown) ? "xl:invisible" : ""}`}
+            className={`pointer-events-none absolute left-5 top-[9svh] font-[family-name:var(--font-cormorant)] text-[22vw] font-light leading-none text-white/[0.06] transition-opacity duration-700 sm:left-10 sm:text-[14vw] lg:hidden`}
             style={{ opacity: NUMERAL[shown] ? 1 : 0 }}
           >
             {NUMERAL[shown]}
@@ -451,16 +474,16 @@ export function BecomingPage() {
           <nav className="absolute right-3 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-1 sm:right-6" aria-label="Chapters">
             {['I', 'II', 'III', 'IV', 'V'].map((n, i) => (
               <button key={n} onClick={() => goTo(i + 1)} className="group flex items-center justify-end gap-2 px-2 py-1.5" aria-label={`Chapter ${n}`}>
-                <span className={`text-[10px] tracking-[0.2em] transition ${idx === i + 1 ? 'text-white/80' : 'text-white/0 group-hover:text-white/60 sm:text-white/25'}`}>{n}</span>
+                <span className={`text-[10px] tracking-[0.2em] transition ${idx === i + 1 ? 'text-white/80' : 'text-white/0 group-hover:text-white/[0.78] sm:text-white/25'}`}>{n}</span>
                 <span className="h-px transition-all duration-500" style={{ width: idx > i ? 24 : 12, background: idx > i ? GOLD : 'rgba(255,255,255,0.25)' }} />
               </button>
             ))}
           </nav>
 
           {/* The caption, like a subtitle. */}
-          <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[6svh] text-center">
+          <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[3.5svh] text-center lg:inset-x-auto lg:bottom-auto lg:left-[5vw] lg:top-1/2 lg:w-[34vw] lg:max-w-[560px] lg:-translate-y-1/2 lg:px-0 lg:pb-0 lg:text-left">
             <div
-              className="pointer-events-auto mx-auto max-w-3xl transition-all duration-300"
+              className="pointer-events-auto mx-auto max-w-4xl transition-all lg:mx-0 duration-300"
               style={{ opacity: visible ? 1 : 0, transform: `translateY(${visible ? 0 : 10}px)` }}
               aria-live="polite"
               title={NARRATION[shown]}
@@ -471,8 +494,10 @@ export function BecomingPage() {
         </div>
       </div>
 
+      {children}
+
       <footer className="relative border-t border-white/5 bg-black px-5 py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 text-xs text-white/40">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 text-xs text-white/[0.78]">
           <span>© {new Date().getFullYear()} Voxu</span>
           <div className="flex flex-wrap gap-5">
             <Link href="/pricing" className="hover:text-white">Pricing</Link>

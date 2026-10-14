@@ -597,14 +597,14 @@ function Phone3D() {
     const t = clock.elapsedTime
     const k = shown.current
     g.current.visible = k > 0.01
-    g.current.position.set(-2.7, 1.7 + Math.sin(t * 0.7) * 0.05 - (1 - k) * 0.4, 1.0)
-    g.current.rotation.set(-0.03 + sculpt.pointer.y * 0.04, 0.36 + Math.sin(t * 0.3) * 0.04 + sculpt.pointer.x * 0.07, 0.015)
+    g.current.position.set(2.55, 1.6 + Math.sin(t * 0.7) * 0.05 - (1 - k) * 0.4, 1.0)
+    g.current.rotation.set(-0.03 + sculpt.pointer.y * 0.04, -0.36 + Math.sin(t * 0.3) * 0.04 + sculpt.pointer.x * 0.07, 0.015)
     g.current.scale.setScalar(0.95 * (0.88 + 0.12 * k))
   })
   return (
     <group ref={g} visible={false}>
       {/* Its own soft light, so the titanium and glass read. */}
-      <pointLight position={[0.6, 0.8, 2.2]} intensity={5} distance={5} color="#fff6ec" />
+      <pointLight position={[-0.6, 0.8, 2.2]} intensity={5} distance={5} color="#fff6ec" />
       <RoundedBox args={[PW, PH, PD]} radius={PR} smoothness={10}>
         <meshPhysicalMaterial color="#c9c6d3" metalness={0.85} roughness={0.25} clearcoat={0.7} clearcoatRoughness={0.15} envMapIntensity={1.2} />
       </RoundedBox>
@@ -780,14 +780,17 @@ function Rig() {
     // Fixed framing: far enough for the whole figure; phones step back.
     const aspect = size.width / Math.max(1, size.height)
     const narrow = Math.min(1, Math.max(0, (1.2 - aspect) / 0.7))
-    const dist = 12.5 * (1 + 0.7 * narrow)
+    // Wide screens: the statue fills the middle of the screen, the message
+    // sits beside it. Narrow: the statue sits above the caption.
+    const wide = size.width >= 1024 && aspect > 1.15
+    const dist = wide ? 8.2 : 10.6 * (1 + 0.32 * narrow)
     const t = clock.elapsedTime
     const ang = Math.sin(t * 0.12) * 0.05 + sculpt.pointer.x * 0.03
     camera.position.set(Math.sin(ang) * dist, 1.4 + Math.sin(t * 0.17) * 0.06 + sculpt.pointer.y * 0.06, Math.cos(ang) * dist)
-    camera.lookAt(0, 1.65 - narrow * 0.6, 0)
+    camera.lookAt(0, wide ? 1.45 : 1.6 - narrow * 0.15, 0)
     // Shift the picture up so the statue lives above the caption.
     const cam = camera as THREE.PerspectiveCamera
-    const lift = Math.round(size.height * 0.14)
+    const lift = wide ? 0 : Math.round(size.height * 0.17)
     if (cam.view?.offsetY !== lift) cam.setViewOffset(size.width, size.height, 0, lift, size.width, size.height)
   })
   return null
@@ -904,7 +907,7 @@ export default function Sculpture() {
   return (
     <Canvas
       shadows
-      dpr={[1, 1.5]}
+      dpr={[1, 2]}
       camera={{ position: [0, 1.3, 12.5], fov: 32, near: 0.5, far: 80 }}
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       onCreated={({ gl }) => gl.setClearColor('#060609')}
@@ -917,7 +920,7 @@ export default function Sculpture() {
         intensity={2.0}
         color="#ffe8cc"
         castShadow
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-3}
         shadow-camera-right={3}
         shadow-camera-top={4}
