@@ -210,7 +210,7 @@ function Caption({ section }: { section: Section }) {
     case 'hero':
       return (
         <>
-          <h1 className="font-[family-name:var(--font-cormorant)] text-5xl font-medium leading-[1.02] sm:text-7xl lg:text-[4.2rem]">
+          <h1 className="font-[family-name:var(--font-cormorant)] text-[2.6rem] font-medium leading-[1.02] sm:text-7xl lg:text-[4.2rem]">
             You are not discovered. <span style={{ color: '#BDB8B0' }}>You are built.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm text-white/[0.78] sm:text-base lg:mx-0">
@@ -336,7 +336,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     const prev = html.style.scrollBehavior
     html.style.scrollBehavior = 'auto'
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const lenis = reduced ? null : new Lenis({ lerp: 0.075, wheelMultiplier: 0.8 })
+    const lenis = reduced ? null : new Lenis({ lerp: 0.13, wheelMultiplier: 0.9 })
     lenisRef.current = lenis
     let id = 0
     const tick = (t: number) => {
@@ -366,7 +366,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     const t = setTimeout(() => {
       setShown(section)
       setVisible(true)
-    }, 320)
+    }, 140)
     return () => clearTimeout(t)
   }, [section, shown])
 
@@ -424,7 +424,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     <Mode.Provider value={{ app, onBegin }}>
     <div className="relative bg-[#060609] text-white">
       <style>{`
-        .caption-h { font-family: var(--font-cormorant); font-weight: 500; line-height: 1.05; font-size: 2.25rem; }
+        .caption-h { font-family: var(--font-cormorant); font-weight: 500; line-height: 1.05; font-size: 2.05rem; }
         @media (min-width: 640px) { .caption-h { font-size: 3rem; } }
         @media (min-width: 1024px) { .caption-h { font-size: 3.3rem; } .caption-p { margin-left: 0; } }
         .caption-p { margin: 0.9rem auto 0; max-width: 34rem; font-size: 0.95rem; color: rgba(255,255,255,0.82); }
@@ -454,7 +454,9 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
             }}
           />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[7svh] bg-black" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[48svh] bg-gradient-to-t from-black via-black/90 to-transparent lg:hidden" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[28svh] bg-gradient-to-t from-black/90 to-transparent lg:hidden" />
+          {/* Phones: a soft dark band across the middle, where the message sits. */}
+          <div className="pointer-events-none absolute inset-x-0 top-[22%] h-[60%] bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.72)_28%,rgba(0,0,0,0.72)_72%,transparent)] lg:hidden" />
           {/* Wide screens: the message sits on the left, over a soft shade. */}
           <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[52vw] bg-gradient-to-r from-black/90 via-black/55 to-transparent lg:block" />
 
@@ -508,7 +510,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
           </div>
 
           {/* Progress as chisel marks down the right edge. */}
-          <nav className="absolute right-3 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-1 sm:right-6" aria-label="Chapters">
+          <nav className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 flex-col sm:flex gap-1 sm:right-6" aria-label="Chapters">
             {['I', 'II', 'III', 'IV', 'V'].map((n, i) => (
               <button key={n} onClick={() => goTo(i + 1)} className="group flex items-center justify-end gap-2 px-2 py-1.5" aria-label={`Chapter ${n}`}>
                 <span className={`text-[10px] tracking-[0.2em] transition ${idx === i + 1 ? 'text-white/80' : 'text-white/0 group-hover:text-white/[0.78] sm:text-white/25'}`}>{n}</span>
@@ -518,9 +520,9 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
           </nav>
 
           {/* The caption, like a subtitle. */}
-          <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[3.5svh] text-center lg:inset-x-auto lg:bottom-auto lg:left-[5vw] lg:top-1/2 lg:w-[34vw] lg:max-w-[560px] lg:-translate-y-1/2 lg:px-0 lg:pb-0 lg:text-left">
+          <div className="absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 px-4 text-center sm:px-8 lg:inset-x-auto lg:bottom-auto lg:left-[5vw] lg:w-[34vw] lg:max-w-[560px] lg:px-0 lg:text-left">
             <div
-              className="pointer-events-auto mx-auto max-w-4xl transition-all lg:mx-0 duration-300"
+              className="pointer-events-auto mx-auto max-w-4xl transition-all duration-200 [text-shadow:0_2px_18px_rgba(0,0,0,0.85)] lg:mx-0 lg:[text-shadow:none]"
               style={{ opacity: visible ? 1 : 0, transform: `translateY(${visible ? 0 : 10}px)` }}
               aria-live="polite"
               title={NARRATION[shown]}

@@ -43,7 +43,7 @@ function Progress() {
       const want = Math.max(s[k], sculpt.manual[k])
       const before = live[k]
       // Catch up faster after a big jump (a quick scroll, a link).
-      live[k] = THREE.MathUtils.damp(live[k], want, 3.2 + Math.abs(want - live[k]) * 14, d)
+      live[k] = THREE.MathUtils.damp(live[k], want, 5.5 + Math.abs(want - live[k]) * 16, d)
       sculpt.activity = Math.min(1, sculpt.activity + Math.abs(live[k] - before) * 3)
     })
     sculpt.activity = THREE.MathUtils.damp(sculpt.activity, 0, 1.6, d)
@@ -504,13 +504,14 @@ function Relic({ url, i }: { url: string; i: number }) {
     const face = new THREE.MeshPhysicalMaterial({ map: tex, metalness: 0.55, roughness: 0.38, clearcoat: 0.5, clearcoatRoughness: 0.3 })
     return [edge, face, face]
   }, [tex])
+  const narrowView = useThree((st) => st.size.width / Math.max(1, st.size.height) < 0.85)
   useFrame(({ clock }) => {
     if (!g.current) return
     const show = smooth(5.05, 5.35, now.p) * (1 - smooth(5.75, 5.95, now.p))
     const t = clock.elapsedTime
     const a = t * 0.35 + (i * Math.PI * 2) / 3
     g.current.visible = show > 0.01
-    g.current.position.set(Math.sin(a) * 1.35, 1.1 + i * 0.75 + Math.sin(t * 0.8 + i) * 0.06, Math.cos(a) * 1.0 + 0.3)
+    g.current.position.set(Math.sin(a) * (narrowView ? 0.75 : 1.35), 1.1 + i * 0.75 + Math.sin(t * 0.8 + i) * 0.06, Math.cos(a) * 1.0 + 0.3)
     g.current.rotation.set(Math.PI / 2, 0, t * 0.9 + i)
     g.current.scale.setScalar(show)
   })
@@ -783,14 +784,16 @@ function Rig() {
     // Wide screens: the statue fills the middle of the screen, the message
     // sits beside it. Narrow: the statue sits above the caption.
     const wide = size.width >= 1024 && aspect > 1.15
-    const dist = wide ? 8.2 : 10.6 * (1 + 0.32 * narrow)
+    // Phones: the statue fills the screen; the message floats over it.
+    const tall = !wide && aspect < 0.85
+    const dist = wide ? 8.2 : tall ? 8.1 + (aspect - 0.46) * 4 : 10.6 * (1 + 0.32 * narrow)
     const t = clock.elapsedTime
     const ang = Math.sin(t * 0.12) * 0.05 + sculpt.pointer.x * 0.03
     camera.position.set(Math.sin(ang) * dist, 1.4 + Math.sin(t * 0.17) * 0.06 + sculpt.pointer.y * 0.06, Math.cos(ang) * dist)
-    camera.lookAt(0, wide ? 1.45 : 1.6 - narrow * 0.15, 0)
+    camera.lookAt(0, wide ? 1.45 : tall ? 1.3 : 1.6 - narrow * 0.15, 0)
     // Shift the picture up so the statue lives above the caption.
     const cam = camera as THREE.PerspectiveCamera
-    const lift = wide ? 0 : Math.round(size.height * 0.17)
+    const lift = wide || tall ? 0 : Math.round(size.height * 0.17)
     if (cam.view?.offsetY !== lift) cam.setViewOffset(size.width, size.height, 0, lift, size.width, size.height)
   })
   return null
