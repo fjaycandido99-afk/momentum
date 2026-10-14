@@ -6,7 +6,6 @@ import Link from 'next/link'
 import Lenis from 'lenis'
 import { SECTIONS, carvedProgress, makePromise, sculpt, sectionAt, type Section } from './store'
 import { NARRATION } from './script'
-import { PhonePreview } from './PhonePreview'
 
 // "The Art of Becoming" (preview at /becoming). Not a page you scroll
 // through but a gallery you stand in: one statue under one spotlight, the
@@ -247,7 +246,10 @@ function Caption({ section }: { section: Section }) {
         <>
           <Kicker>Chapter V · The Becoming</Kicker>
           <h2 className="caption-h mt-2">Become someone you can count on.</h2>
-          <p className="caption-p">Guided sessions, soundscapes, motivation and sleep audio, chosen for the era you are in.</p>
+          <p className="caption-p">
+            Kept promises earn relics: coins like Said Out Loud, Word Kept and Era Complete, yours to wear. Guided sessions, soundscapes and sleep
+            audio come with the era you are in.
+          </p>
           <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/45">8 eras · 30 missions each · 8 coach voices · 70+ audio sessions</p>
         </>
       )
@@ -454,11 +456,6 @@ export function BecomingPage() {
               </button>
             ))}
           </nav>
-
-          {/* The app, beside the story (wide screens; phones have the demos). */}
-          <div className="absolute left-[6vw] top-1/2 z-10 hidden -translate-y-[56%] xl:block">
-            <PhonePreview section={shown} visible={visible} />
-          </div>
 
           {/* The caption, like a subtitle. */}
           <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[6svh] text-center">

@@ -1,10 +1,11 @@
 'use client'
 
-import { Suspense, useEffect, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useGLTF } from '@react-three/drei'
+import { Environment, Lightformer, RoundedBox, useGLTF, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { SECTIONS, STAGE_OF, carve, carvedProgress, promises, sculpt, sectionAt, type Section } from './store'
+import { SCREENS, SCREEN_H, SCREEN_W, drawScreen } from './phoneScreens'
 
 // "The Art of Becoming": a marble statue that is carved as you scroll.
 // One finished model (Meshy); a shader keeps each region rough, chalky and
@@ -67,6 +68,10 @@ function useCarvedMaterial(base: THREE.MeshStandardMaterial) {
       uLegs: { value: 0 },
       uPolish: { value: 0 },
       uFeet: { value: 1 },
+      uMarks: { value: Array.from({ length: 30 }, () => new THREE.Vector3(0, -99, 0)) },
+      uLit: { value: 0 },
+      uDissolve: { value: 1 },
+      uDir: { value: 0 },
       uMinY: { value: 0 },
       uMaxY: { value: H },
     }
@@ -91,7 +96,7 @@ function useCarvedMaterial(base: THREE.MeshStandardMaterial) {
           '#include <common>',
           `#include <common>
           uniform float uHead, uTorso, uLegs, uFeet, uMinY, uMaxY;
-          varying float vRough; varying vec3 vObj; varying float vYn;
+          varying float vRough; varying vec3 vObj; varying float vYn; varying vec3 vWorld;
           ${NOISE}`,
         )
         .replace(
@@ -99,6 +104,7 @@ function useCarvedMaterial(base: THREE.MeshStandardMaterial) {
           `#include <begin_vertex>
           vObj = position;
           vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWorld = wp.xyz;
           // Height through the statue, -1 (feet) .. 1 (crown), with a ragged
           // edge so a carved region never meets the rough one in a line.
           float yn = (wp.y - uMinY) / (uMaxY - uMinY) * 2.0 - 1.0;
@@ -116,8 +122,9 @@ function useCarvedMaterial(base: THREE.MeshStandardMaterial) {
         .replace(
           '#include <common>',
           `#include <common>
-          uniform float uPolish;
-          varying float vRough; varying vec3 vObj; varying float vYn;
+          uniform float uPolish, uLit, uDissolve, uDir;
+          uniform vec3 uMarks[30];
+          varying float vRough; varying vec3 vObj; varying float vYn; varying vec3 vWorld;
           ${NOISE}`,
         )
         .replace(
@@ -132,12 +139,47 @@ function useCarvedMaterial(base: THREE.MeshStandardMaterial) {
           // Rough stone: chalky grey with chisel marks.
           float chisel = smoothstep(0.55, 0.9, abs(sin((vObj.x + vObj.y * 1.7) * 60.0 + vxNoise(vObj * 9.0) * 4.0)));
           vec3 rough = vec3(0.66, 0.65, 0.63) * (0.82 + 0.28 * vxNoise(vObj * 34.0)) - chisel * 0.05;
-          diffuseColor.rgb = mix(polished, rough, vRough);`,
+          diffuseColor.rgb = mix(polished, rough, vRough);
+          float vxEdge = 0.0;
+          // Kintsugi: each kept promise lays a thin seam of gold into the
+          // stone around its mark.
+          float seamMask = 0.0;
+          for (int i = 0; i < 30; i++) {
+            if (float(i) >= uLit) break;
+            seamMask = max(seamMask, 1.0 - smoothstep(0.12, 0.42, distance(vWorld, uMarks[i])));
+          }
+          float seamN = abs(vxNoise(vWorld * 5.0) - 0.5) + abs(vxNoise(vWorld * 13.0) - 0.5) * 0.25;
+          float vxSeam = (1.0 - smoothstep(0.012, 0.034, seamN)) * seamMask;
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.80, 0.62, 0.33), vxSeam);
+          // Dissolve: the statue turns to dust from the base up as it leaves,
+          // and forms from the base up as it arrives.
+          if (uDissolve < 0.999) {
+            // A clean sweep along the height, barely broken by the grain:
+            // arriving builds from the base up, leaving clears from the top down.
+            float h = clamp(vYn * 0.5 + 0.5, 0.0, 1.0);
+            float dn = (uDir > 0.5 ? h : 1.0 - h) * 0.9 + vxNoise(vWorld * 4.0) * 0.1;
+            float front = uDissolve * 1.04;
+            if (dn > front) discard;
+            vxEdge = 1.0 - smoothstep(0.0, 0.018, front - dn);
+            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.0, 0.93, 0.80), vxEdge);
+          }`,
         )
         .replace(
           '#include <roughnessmap_fragment>',
           `#include <roughnessmap_fragment>
-          roughnessFactor = mix(mix(0.5, 0.2, uPolish), 0.95, vRough);`,
+          roughnessFactor = mix(mix(0.5, 0.2, uPolish), 0.95, vRough);
+          roughnessFactor = mix(roughnessFactor, 0.22, vxSeam);`,
+        )
+        .replace(
+          '#include <emissivemap_fragment>',
+          `#include <emissivemap_fragment>
+          totalEmissiveRadiance += vec3(1.0, 0.82, 0.55) * vxEdge * 1.6;
+          totalEmissiveRadiance += vec3(0.85, 0.62, 0.30) * vxSeam * 0.55;`,
+        )
+        .replace(
+          '#include <metalnessmap_fragment>',
+          `#include <metalnessmap_fragment>
+          metalnessFactor = mix(metalnessFactor, 0.85, vxSeam);`,
         )
         .replace(
           '#include <normal_fragment_begin>',
@@ -157,10 +199,11 @@ function useCarvedMaterial(base: THREE.MeshStandardMaterial) {
 // chapters and the end; each gallery statue for its own chapter. A statue
 // leaving sinks down through the plinth; the next one rises out of it.
 const PRESENCE: Record<string, (p: number) => number> = {
-  david: (p) => 1 - smooth(5.82, 6.12, p) + smooth(8.88, 9.18, p),
-  stoic: (p) => smooth(5.88, 6.18, p) * (1 - smooth(6.82, 7.12, p)),
-  samurai: (p) => smooth(6.88, 7.18, p) * (1 - smooth(7.82, 8.12, p)),
-  scholar: (p) => smooth(7.88, 8.18, p) * (1 - smooth(8.82, 9.12, p)),
+  // One at a time: the old figure sweeps away, then the next builds up.
+  david: (p) => 1 - smooth(5.72, 5.97, p) + smooth(9.03, 9.28, p),
+  stoic: (p) => smooth(6.03, 6.28, p) * (1 - smooth(6.72, 6.97, p)),
+  samurai: (p) => smooth(7.03, 7.28, p) * (1 - smooth(7.72, 7.97, p)),
+  scholar: (p) => smooth(8.03, 8.28, p) * (1 - smooth(8.72, 8.97, p)),
 }
 const GALLERY = [
   { id: 'stoic', url: '/models/stoic.glb' },
@@ -211,16 +254,37 @@ function Statue({ id = 'david', url = '/models/statue.glb' }: { id?: string; url
     mat.clearcoat = 0.01 + 0.5 * pol
     mat.emissiveIntensity = 0.35 * pol
     const pres = Math.min(1, Math.max(0, PRESENCE[id](now.p)))
-    const y = (pres - 1) * H * 1.08
+    uniforms.uDissolve.value = pres
+    // Forming (presence rising) or leaving.
+    uniforms.uDir.value = PRESENCE[id](now.p + 0.01) > PRESENCE[id](now.p) ? 1 : 0
     if (holder.current) {
-      holder.current.position.y = y
       holder.current.position.x = carved ? -1.35 * TOMORROW(now.p) : 0
-      holder.current.rotation.y = (1 - pres) * 1.6
       holder.current.visible = pres > 0.001
     }
-    // Carving bands are measured from where the statue actually stands.
-    uniforms.uMinY.value = y
-    uniforms.uMaxY.value = y + H
+    // Dust rises while a statue turns to dust or forms.
+    if (pres > 0.02 && pres < 0.98) sculpt.activity = Math.max(sculpt.activity, 0.75)
+    // A shadow only once it is whole (a dissolving shape would cast a solid one).
+    model.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh) o.castShadow = pres > 0.999
+    })
+    uniforms.uMinY.value = 0
+    uniforms.uMaxY.value = H
+    // Kept promises: the seams sit around these marks.
+    if (carved && holder.current) {
+      const era = Math.round(30 * Math.min(1, Math.max(0, (now.p - 4.05) / 0.8)))
+      const lit = Math.min(markPoints.length, Math.max(promises.made, era))
+      uniforms.uLit.value = lit
+      markPoints.forEach((pt, i) => {
+        const w = uniforms.uMarks.value[i]
+        w.copy(pt)
+        holder.current!.localToWorld(w)
+      })
+      const k = Math.max(0, promises.made - 1)
+      if (markPoints[k]) {
+        nextMark.p.copy(uniforms.uMarks.value[k])
+        nextMark.ready = true
+      }
+    }
   })
   const markPoints = useMemo(() => {
     if (!carved) return [] as THREE.Vector3[]
@@ -262,7 +326,6 @@ function Statue({ id = 'david', url = '/models/statue.glb' }: { id?: string; url
   }, [carved, model, fit])
   return (
     <group ref={holder}>
-    {carved && <Marks points={markPoints} />}
     <primitive
       object={model}
       scale={fit.k}
@@ -351,94 +414,8 @@ const holding = { current: false }
 // ---- Promise marks -------------------------------------------------------------
 // A gold point of light where the chisel struck for each promise made. In
 // "Every day leaves a mark" the thirty marks of an era light up one by one.
-let glowTex: THREE.Texture | null = null
-function getGlow() {
-  if (glowTex) return glowTex
-  const c = document.createElement('canvas')
-  c.width = c.height = 64
-  const x = c.getContext('2d')!
-  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32)
-  g.addColorStop(0, 'rgba(255,236,200,1)')
-  g.addColorStop(0.35, 'rgba(214,180,120,0.55)')
-  g.addColorStop(1, 'rgba(182,155,115,0)')
-  x.fillStyle = g
-  x.fillRect(0, 0, 64, 64)
-  glowTex = new THREE.CanvasTexture(c)
-  return glowTex
-}
 /** World position of the mark the next strike lands on (for the chips). */
 const nextMark = { p: new THREE.Vector3(), ready: false }
-function Marks({ points }: { points: THREE.Vector3[] }) {
-  const refs = useRef<(THREE.Sprite | null)[]>([])
-  const cores = useRef<(THREE.Sprite | null)[]>([])
-  const born = useRef<number[]>([])
-  const v = useMemo(() => new THREE.Vector3(), [])
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime
-    // The era's marks light up through "Every day leaves a mark" (p 4..5).
-    const era = Math.round(30 * Math.min(1, Math.max(0, (now.p - 4.05) / 0.8)))
-    const lit = Math.max(promises.made, era)
-    points.forEach((_, i) => {
-      const sp = refs.current[i]
-      if (!sp) return
-      if (i < lit && born.current[i] === undefined) born.current[i] = t
-      if (i >= lit) born.current[i] = undefined as unknown as number
-      const age = born.current[i] === undefined ? -1 : t - born.current[i]
-      sp.visible = age >= 0
-      if (age < 0 && cores.current[i]) cores.current[i]!.visible = false
-      if (age >= 0) {
-        // A flash when struck, then a steady faint glow.
-        const flash = Math.max(0, 1 - age * 1.6)
-        const s = 0.11 + flash * 0.22
-        sp.scale.set(s, s, s)
-        ;(sp.material as THREE.SpriteMaterial).opacity = 0.85 + flash * 0.15
-        const core = cores.current[i]
-        if (core) {
-          core.visible = true
-          const cs = 0.035 + flash * 0.03
-          core.scale.set(cs, cs, cs)
-        }
-      }
-    })
-    // Where the next strike will land, for the chips.
-    const nxt = refs.current[Math.min(points.length - 1, promises.made - 1)]
-    if (nxt) {
-      nxt.getWorldPosition(v)
-      nextMark.p.copy(v)
-      nextMark.ready = true
-    }
-  })
-  return (
-    <>
-      {points.map((p, i) => (
-        <sprite
-          key={i}
-          position={p}
-          ref={(e) => {
-            refs.current[i] = e
-          }}
-          visible={false}
-        >
-          <spriteMaterial map={getGlow()} color="#c9a46a" transparent depthWrite={false} toneMapped={false} />
-        </sprite>
-      ))}
-      {/* A solid antique-gold point at the heart of each mark: on white
-          marble a glow alone disappears. */}
-      {points.map((p, i) => (
-        <sprite
-          key={`c${i}`}
-          position={p}
-          ref={(e) => {
-            cores.current[i] = e
-          }}
-          visible={false}
-        >
-          <spriteMaterial color="#9c7c4c" depthWrite={false} toneMapped={false} />
-        </sprite>
-      ))}
-    </>
-  )
-}
 
 // At the end, the carved statue steps aside and a fresh, untouched stone
 // rises beside it: tomorrow's work.
@@ -490,6 +467,165 @@ function TomorrowStone() {
         <boxGeometry />
         <meshStandardMaterial color="#ffffff" roughness={0.95} flatShading />
       </instancedMesh>
+    </group>
+  )
+}
+
+// A soft warm pool of light on the plinth, like a gallery downlight.
+function LightPool() {
+  const tex = useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = c.height = 256
+    const x = c.getContext('2d')!
+    const g = x.createRadialGradient(128, 128, 0, 128, 128, 128)
+    g.addColorStop(0, 'rgba(255,236,210,0.55)')
+    g.addColorStop(0.5, 'rgba(255,226,190,0.16)')
+    g.addColorStop(1, 'rgba(255,220,180,0)')
+    x.fillStyle = g
+    x.fillRect(0, 0, 256, 256)
+    return new THREE.CanvasTexture(c)
+  }, [])
+  return (
+    <mesh rotation-x={-Math.PI / 2} position={[0, -0.235, 0]}>
+      <planeGeometry args={[7, 7]} />
+      <meshBasicMaterial map={tex} transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+    </mesh>
+  )
+}
+
+// ---- Relics: the app's achievement coins, turning in the air in Chapter V.
+const RELICS = ['/achievements/era_first_promise.jpg', '/achievements/era_first_kept.jpg', '/achievements/era_complete.jpg']
+function Relic({ url, i }: { url: string; i: number }) {
+  const tex = useTexture(url)
+  tex.colorSpace = THREE.SRGBColorSpace
+  const g = useRef<THREE.Group>(null)
+  const mats = useMemo(() => {
+    const edge = new THREE.MeshPhysicalMaterial({ color: '#b9bcc4', metalness: 1, roughness: 0.32, clearcoat: 0.4 })
+    const face = new THREE.MeshPhysicalMaterial({ map: tex, metalness: 0.55, roughness: 0.38, clearcoat: 0.5, clearcoatRoughness: 0.3 })
+    return [edge, face, face]
+  }, [tex])
+  useFrame(({ clock }) => {
+    if (!g.current) return
+    const show = smooth(5.05, 5.35, now.p) * (1 - smooth(5.75, 5.95, now.p))
+    const t = clock.elapsedTime
+    const a = t * 0.35 + (i * Math.PI * 2) / 3
+    g.current.visible = show > 0.01
+    g.current.position.set(Math.sin(a) * 1.35, 1.1 + i * 0.75 + Math.sin(t * 0.8 + i) * 0.06, Math.cos(a) * 1.0 + 0.3)
+    g.current.rotation.set(Math.PI / 2, 0, t * 0.9 + i)
+    g.current.scale.setScalar(show)
+  })
+  return (
+    <group ref={g} visible={false}>
+      <mesh material={mats} castShadow>
+        <cylinderGeometry args={[0.3, 0.3, 0.045, 64]} />
+      </mesh>
+    </group>
+  )
+}
+function Relics() {
+  return (
+    <>
+      {RELICS.map((u, i) => (
+        <Relic key={u} url={u} i={i} />
+      ))}
+    </>
+  )
+}
+
+// ---- The app, in a phone floating beside the statue (AppForAll's phone):
+// titanium frame, black glass, the Dynamic Island, and the chapter's app
+// screen drawn onto the glass (phoneScreens.ts).
+const PW = 1.04, PH = 2.16, PD = 0.1, PR = 0.17
+function roundedRectGeometry(w: number, h: number, r: number) {
+  const sh = new THREE.Shape()
+  const x = -w / 2
+  const y = -h / 2
+  sh.moveTo(x + r, y)
+  sh.lineTo(x + w - r, y)
+  sh.quadraticCurveTo(x + w, y, x + w, y + r)
+  sh.lineTo(x + w, y + h - r)
+  sh.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+  sh.lineTo(x + r, y + h)
+  sh.quadraticCurveTo(x, y + h, x, y + h - r)
+  sh.lineTo(x, y + r)
+  sh.quadraticCurveTo(x, y, x + r, y)
+  const g = new THREE.ShapeGeometry(sh, 16)
+  const pos = g.attributes.position
+  const uv = g.attributes.uv
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) - x) / w, (pos.getY(i) - y) / h)
+  return g
+}
+function Phone3D() {
+  const g = useRef<THREE.Group>(null)
+  const width = useThree((st) => st.size.width)
+  const screenGeo = useMemo(() => roundedRectGeometry(PW - 0.1, PH - 0.1, PR - 0.06), [])
+  const glassGeo = useMemo(() => roundedRectGeometry(PW - 0.03, PH - 0.03, PR - 0.015), [])
+  // One texture per screen, drawn once (after the fonts load).
+  const textures = useMemo(() => {
+    const out: Partial<Record<Section, THREE.CanvasTexture>> = {}
+    for (const sec of SCREENS) {
+      const c = document.createElement('canvas')
+      c.width = SCREEN_W
+      c.height = SCREEN_H
+      drawScreen(c, sec)
+      const t = new THREE.CanvasTexture(c)
+      t.colorSpace = THREE.SRGBColorSpace
+      t.anisotropy = 8
+      out[sec] = t
+      document.fonts?.ready.then(() => {
+        drawScreen(c, sec)
+        t.needsUpdate = true
+      })
+    }
+    return out
+  }, [])
+  // Never blank: starts on the first screen.
+  const screenMat = useMemo(() => new THREE.MeshBasicMaterial({ toneMapped: false, map: textures.potential ?? null }), [textures])
+  const shown = useRef(0)
+  const last = useRef<Section | null>(null)
+  useFrame(({ clock }, dt) => {
+    const sec = SECTIONS[Math.min(SECTIONS.length - 1, Math.max(0, Math.floor(sculpt.p)))]
+    const has = SCREENS.includes(sec)
+    if (has && last.current !== sec) {
+      last.current = sec
+      screenMat.map = textures[sec] ?? null
+      screenMat.needsUpdate = true
+    }
+    const want = has && width >= 1100 ? 1 : 0
+    shown.current = THREE.MathUtils.damp(shown.current, want, want ? 4 : 7, Math.min(dt, 0.05))
+    if (!g.current) return
+    const t = clock.elapsedTime
+    const k = shown.current
+    g.current.visible = k > 0.01
+    g.current.position.set(-2.7, 1.7 + Math.sin(t * 0.7) * 0.05 - (1 - k) * 0.4, 1.0)
+    g.current.rotation.set(-0.03 + sculpt.pointer.y * 0.04, 0.36 + Math.sin(t * 0.3) * 0.04 + sculpt.pointer.x * 0.07, 0.015)
+    g.current.scale.setScalar(0.95 * (0.88 + 0.12 * k))
+  })
+  return (
+    <group ref={g} visible={false}>
+      {/* Its own soft light, so the titanium and glass read. */}
+      <pointLight position={[0.6, 0.8, 2.2]} intensity={5} distance={5} color="#fff6ec" />
+      <RoundedBox args={[PW, PH, PD]} radius={PR} smoothness={10}>
+        <meshPhysicalMaterial color="#c9c6d3" metalness={0.85} roughness={0.25} clearcoat={0.7} clearcoatRoughness={0.15} envMapIntensity={1.2} />
+      </RoundedBox>
+      <mesh geometry={glassGeo} position={[0, 0, PD / 2 + 0.002]}>
+        <meshPhysicalMaterial color="#030306" roughness={0.04} metalness={0.3} clearcoat={1} clearcoatRoughness={0.02} />
+      </mesh>
+      <mesh geometry={screenGeo} material={screenMat} position={[0, 0, PD / 2 + 0.004]} />
+      <RoundedBox args={[0.27, 0.075, 0.004]} radius={0.035} smoothness={4} position={[0, PH / 2 - 0.13, PD / 2 + 0.007]}>
+        <meshBasicMaterial color="#000000" />
+      </RoundedBox>
+      <mesh geometry={glassGeo} position={[0, 0, PD / 2 + 0.006]}>
+        <meshPhysicalMaterial color="#ffffff" transparent opacity={0.05} roughness={0.02} clearcoat={1} depthWrite={false} />
+      </mesh>
+      {[0.48, 0.28].map((y) => (
+        <RoundedBox key={y} args={[0.02, 0.14, 0.05]} radius={0.008} position={[-PW / 2 - 0.006, y, 0]}>
+          <meshStandardMaterial color="#c9c6d6" metalness={1} roughness={0.25} />
+        </RoundedBox>
+      ))}
+      <RoundedBox args={[0.02, 0.24, 0.05]} radius={0.008} position={[PW / 2 + 0.006, 0.35, 0]}>
+        <meshStandardMaterial color="#c9c6d6" metalness={1} roughness={0.25} />
+      </RoundedBox>
     </group>
   )
 }
@@ -685,10 +821,7 @@ function WorkLight() {
     <>
       <primitive object={target} />
       <spotLight ref={light} position={[1.6, 7.5, 3.2]} target={target} angle={0.42} penumbra={0.75} distance={18} color="#ffe2b8" castShadow />
-      <mesh ref={beam}>
-        <coneGeometry args={[1, 1, 40, 1, true]} />
-        <meshBasicMaterial color="#ffe6c4" transparent opacity={0.04} depthWrite={false} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} />
-      </mesh>
+
     </>
   )
 }
@@ -791,9 +924,15 @@ export default function Sculpture() {
         shadow-camera-bottom={-1}
         shadow-bias={-0.0004}
       />
-      <directionalLight position={[3, 3, -5]} intensity={0.7} color="#7c6cff" />
+      {/* A cool rim from behind to separate the figure from the dark. */}
+      <directionalLight position={[2, 4, -6]} intensity={0.9} color="#dfe6ff" />
       <WorkLight />
-      <pointLight position={[0, 1.2, 2.5]} intensity={4} color="#c9c2ff" distance={6} />
+      <pointLight position={[0, 1.4, 3]} intensity={3} color="#fff4e6" distance={7} />
+      <LightPool />
+      <Environment resolution={64} frames={1}>
+        <Lightformer form="rect" intensity={2} position={[0, 5, 3]} rotation-x={Math.PI / 2} scale={[8, 2, 1]} color="#ffffff" />
+        <Lightformer form="rect" intensity={1} position={[-5, 1, 2]} rotation-y={Math.PI / 2} scale={[6, 3, 1]} color="#fff2e2" />
+      </Environment>
       <Progress />
       <Rig />
       <Plinth />
@@ -809,6 +948,10 @@ export default function Sculpture() {
       </Turntable>
       <Chips />
       <TomorrowStone />
+      <Suspense fallback={null}>
+        <Relics />
+      </Suspense>
+      <Phone3D />
     </Canvas>
   )
 }
