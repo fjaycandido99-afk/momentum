@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Lenis from 'lenis'
 import { SECTIONS, carvedProgress, makePromise, sculpt, sectionAt, type Section } from './store'
 import { NARRATION } from './script'
+import { PhonePreview } from './PhonePreview'
 
 // "The Art of Becoming" (preview at /becoming). Not a page you scroll
 // through but a gallery you stand in: one statue under one spotlight, the
@@ -438,7 +439,7 @@ export function BecomingPage() {
           {/* The chapter numeral, huge and faint behind everything. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute left-5 top-[9svh] font-[family-name:var(--font-cormorant)] text-[22vw] font-light leading-none text-white/[0.06] transition-opacity duration-700 sm:left-10 sm:text-[14vw]"
+            className={`pointer-events-none absolute left-5 top-[9svh] font-[family-name:var(--font-cormorant)] text-[22vw] font-light leading-none text-white/[0.06] transition-opacity duration-700 sm:left-10 sm:text-[14vw] ${["potential", "intention", "discipline", "strength"].includes(shown) ? "xl:invisible" : ""}`}
             style={{ opacity: NUMERAL[shown] ? 1 : 0 }}
           >
             {NUMERAL[shown]}
@@ -453,6 +454,11 @@ export function BecomingPage() {
               </button>
             ))}
           </nav>
+
+          {/* The app, beside the story (wide screens; phones have the demos). */}
+          <div className="absolute left-[6vw] top-1/2 z-10 hidden -translate-y-[56%] xl:block">
+            <PhonePreview section={shown} visible={visible} />
+          </div>
 
           {/* The caption, like a subtitle. */}
           <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[6svh] text-center">
