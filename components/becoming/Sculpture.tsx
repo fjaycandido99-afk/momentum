@@ -357,55 +357,90 @@ function Dust() {
   )
 }
 
-// ---- Camera: a viewpoint per section, blended as you scroll ----------------------
-// [distance, camera height, look-at height, orbit angle]
-const VIEWS: Record<Section, [number, number, number, number]> = {
-  hero: [12.5, 1.3, 1.6, 0],
-  potential: [10.5, 1.5, 1.7, -0.3],
-  intention: [3.1, 3.0, 2.75, 0.18],
-  discipline: [4.2, 2.3, 2.0, -0.5],
-  strength: [4.4, 0.7, 1.15, 0.55],
-  polish: [8, 2.0, 1.8, -0.15],
-  final: [13, 1.2, 1.6, 0],
+// ---- The workshop: a still camera, a turning statue, a moving work light -------
+// The camera never zooms. It frames the whole figure and only drifts a
+// little. Each chapter turns the statue on its stand to show a new side
+// (like a sculptor turning the piece), and a narrow work light slides to
+// the part being carved, then opens up to light the whole figure.
+// [statue turn (radians), work-light height, work-light width]
+const WORK: Record<Section, [number, number, number]> = {
+  hero: [0.0, 1.7, 0.42],
+  potential: [-0.55, 1.7, 0.42],
+  intention: [0.45, 2.95, 0.13],
+  discipline: [-0.75, 2.2, 0.17],
+  strength: [0.7, 0.85, 0.17],
+  polish: [-0.25, 1.7, 0.36],
+  final: [0.0, 1.7, 0.42],
+}
+/** The chapter's turn and light, blended near the end of each chapter. */
+const work = { turn: 0, lightY: 1.7, width: 0.42 }
+function blendWork() {
+  const i = Math.min(SECTIONS.length - 1, Math.floor(now.p))
+  const k = smooth(0.55, 1, now.p - i)
+  const x = WORK[SECTIONS[i]]
+  const y = WORK[SECTIONS[Math.min(SECTIONS.length - 1, i + 1)]]
+  return { turn: x[0] + (y[0] - x[0]) * k, lightY: x[1] + (y[1] - x[1]) * k, width: x[2] + (y[2] - x[2]) * k }
 }
 
 function Rig() {
   const camera = useThree((s) => s.camera)
   const size = useThree((s) => s.size)
-  // Start on the hero view (not swooping in from close up).
-  const pos = useRef(new THREE.Vector3(0, VIEWS.hero[1], VIEWS.hero[0]))
-  const look = useRef(new THREE.Vector3(0, VIEWS.hero[2], 0))
-  const vp = useMemo(() => new THREE.Vector3(), [])
-  const vl = useMemo(() => new THREE.Vector3(), [])
   useFrame(({ clock }, dt) => {
-    const i = Math.min(SECTIONS.length - 1, Math.floor(now.p))
-    const k = smooth(0.6, 1, now.p - i) // hold the view, then move on near the end
-    const a = VIEWS[SECTIONS[i]]
-    const b = VIEWS[SECTIONS[Math.min(SECTIONS.length - 1, i + 1)]]
-    const mix = (x: number, y: number) => x + (y - x) * k
-    let [dist, cy, ly, ang] = [mix(a[0], b[0]), mix(a[1], b[1]), mix(a[2], b[2]), mix(a[3], b[3])]
-    // Always centred. Narrow screens step back so the whole figure fits,
-    // and lift it a little above the caption.
+    const d = Math.min(dt, 0.05)
+    const w = blendWork()
+    work.turn = THREE.MathUtils.damp(work.turn, w.turn, 2.2, d)
+    work.lightY = THREE.MathUtils.damp(work.lightY, w.lightY, 2.6, d)
+    work.width = THREE.MathUtils.damp(work.width, w.width, 2.6, d)
+    // Fixed framing: far enough for the whole figure; phones step back.
     const aspect = size.width / Math.max(1, size.height)
     const narrow = Math.min(1, Math.max(0, (1.2 - aspect) / 0.7))
-    dist *= 1 + 0.7 * narrow
-    ang += Math.sin(clock.elapsedTime * 0.15) * 0.04 + sculpt.pointer.x * 0.04
-    // Look a little below the figure's centre so it stands in the upper part
-    // of the frame, above the caption.
-    vl.set(0, ly - narrow * 0.6, 0)
-    vp.set(Math.sin(ang) * dist, cy + sculpt.pointer.y * 0.1, Math.cos(ang) * dist)
-    const d = Math.min(dt, 0.05)
-    pos.current.lerp(vp, 1 - Math.exp(-3 * d))
-    look.current.lerp(vl, 1 - Math.exp(-3 * d))
-    camera.position.copy(pos.current)
-    camera.lookAt(look.current)
-    // Shift the picture up so the statue lives above the caption, which
-    // owns the bottom of the screen.
+    const dist = 12.5 * (1 + 0.7 * narrow)
+    const t = clock.elapsedTime
+    const ang = Math.sin(t * 0.12) * 0.05 + sculpt.pointer.x * 0.03
+    camera.position.set(Math.sin(ang) * dist, 1.4 + Math.sin(t * 0.17) * 0.06 + sculpt.pointer.y * 0.06, Math.cos(ang) * dist)
+    camera.lookAt(0, 1.65 - narrow * 0.6, 0)
+    // Shift the picture up so the statue lives above the caption.
     const cam = camera as THREE.PerspectiveCamera
     const lift = Math.round(size.height * 0.14)
     if (cam.view?.offsetY !== lift) cam.setViewOffset(size.width, size.height, 0, lift, size.width, size.height)
   })
   return null
+}
+
+// The work light: a narrow warm spot on the region being carved, with a
+// faint visible beam, opening to light the whole figure at the end.
+function WorkLight() {
+  const light = useRef<THREE.SpotLight>(null)
+  const beam = useRef<THREE.Mesh>(null)
+  const target = useMemo(() => new THREE.Object3D(), [])
+  useFrame(() => {
+    const l = light.current
+    if (!l) return
+    target.position.set(0, work.lightY, 0)
+    l.angle = work.width
+    // Narrow light is concentrated: brighter, so the worked region glows.
+    l.intensity = 90 + (0.42 - work.width) * 420
+    if (beam.current) {
+      const top = new THREE.Vector3(1.6, 7.5, 3.2)
+      const to = new THREE.Vector3(0, work.lightY, 0)
+      const len = top.distanceTo(to)
+      beam.current.position.copy(top).lerp(to, 0.5)
+      beam.current.lookAt(to)
+      beam.current.rotateX(Math.PI / 2)
+      const r = Math.tan(work.width) * len
+      beam.current.scale.set(r, len, r)
+    }
+  })
+  return (
+    <>
+      <primitive object={target} />
+      <spotLight ref={light} position={[1.6, 7.5, 3.2]} target={target} angle={0.42} penumbra={0.75} distance={18} color="#ffe2b8" castShadow />
+      <mesh ref={beam}>
+        <coneGeometry args={[1, 1, 40, 1, true]} />
+        <meshBasicMaterial color="#ffe6c4" transparent opacity={0.04} depthWrite={false} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} />
+      </mesh>
+    </>
+  )
 }
 
 // ---- Turn it, and carve it by hand -------------------------------------------------
@@ -456,7 +491,7 @@ function Turntable({ children }: { children: React.ReactNode }) {
       s.yaw += s.vel
       s.vel *= Math.exp(-3 * d)
     }
-    if (g.current) g.current.rotation.y = s.yaw + Math.sin(clock.elapsedTime * 0.2) * 0.3
+    if (g.current) g.current.rotation.y = work.turn + s.yaw + Math.sin(clock.elapsedTime * 0.2) * 0.12
   })
   return <group ref={g}>{children}</group>
 }
@@ -486,11 +521,11 @@ export default function Sculpture() {
       onCreated={({ gl }) => gl.setClearColor('#060609')}
     >
       <fog attach="fog" args={['#060609', 9, 26]} />
-      <ambientLight intensity={0.16} />
+      <ambientLight intensity={0.28} />
       {/* One warm key light from above-left, an indigo rim from behind. */}
       <directionalLight
         position={[-4, 7, 4]}
-        intensity={2.8}
+        intensity={2.0}
         color="#ffe8cc"
         castShadow
         shadow-mapSize={[1024, 1024]}
@@ -501,11 +536,7 @@ export default function Sculpture() {
         shadow-bias={-0.0004}
       />
       <directionalLight position={[3, 3, -5]} intensity={1.4} color="#7c6cff" />
-      <spotLight position={[0, 9, 1.5]} angle={0.32} penumbra={0.6} intensity={60} distance={16} color="#fff4e6" castShadow />
-      <mesh position={[0, 5.2, 0.6]}>
-        <coneGeometry args={[2.1, 9, 48, 1, true]} />
-        <meshBasicMaterial color="#fff2dc" transparent opacity={0.035} depthWrite={false} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} />
-      </mesh>
+      <WorkLight />
       <pointLight position={[0, 1.2, 2.5]} intensity={4} color="#c9c2ff" distance={6} />
       <Progress />
       <Rig />
