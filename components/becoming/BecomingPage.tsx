@@ -336,7 +336,9 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     const prev = html.style.scrollBehavior
     html.style.scrollBehavior = 'auto'
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const lenis = reduced ? null : new Lenis({ lerp: 0.13, wheelMultiplier: 0.9 })
+    // No wheel smoothing: inside the story the wheel pages by chapter (below);
+    // Lenis animates those steps.
+    const lenis = reduced ? null : new Lenis({ smoothWheel: false })
     lenisRef.current = lenis
     let id = 0
     const tick = (t: number) => {
@@ -358,6 +360,114 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
       html.style.scrollBehavior = prev
     }
   }, [])
+  // Chapter by chapter: inside the story one flick, swipe or key press moves
+  // exactly one chapter, so the 3D never drifts between two. Past the last
+  // chapter the page scrolls normally again.
+  useEffect(() => {
+    const N = SECTIONS.length
+    const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+    let busy = false
+    let doneAt = 0
+    let lastWheel = 0
+    const geo = () => {
+      const el = stage.current!
+      const top = el.offsetTop
+      const run = Math.max(1, el.offsetHeight - window.innerHeight)
+      return { top, run, end: top + run }
+    }
+    const pos = (i: number) => {
+      const { top, run } = geo()
+      return i <= 0 ? top : top + (run * (i + 0.45)) / N
+    }
+    const inStage = () => {
+      if (!stage.current) return false
+      const { top, end } = geo()
+      return window.scrollY >= top - 2 && window.scrollY <= end - 2
+    }
+    const nearest = () => {
+      let best = 0
+      for (let i = 1; i < N; i++) if (Math.abs(window.scrollY - pos(i)) < Math.abs(window.scrollY - pos(best))) best = i
+      return best
+    }
+    const glide = (y: number) => {
+      busy = true
+      const finish = () => {
+        busy = false
+        doneAt = performance.now()
+      }
+      const l = lenisRef.current
+      if (l) l.scrollTo(y, { duration: 1.1, easing: ease, lock: true, force: true, onComplete: finish })
+      else {
+        window.scrollTo({ top: y })
+        setTimeout(finish, 300)
+      }
+    }
+    const page = (dir: number) => {
+      if (busy) return
+      const i = nearest() + dir
+      if (i < 0) return
+      glide(i >= N ? geo().end + 1 : pos(i))
+    }
+    const onWheel = (e: WheelEvent) => {
+      if (!inStage()) return
+      e.preventDefault()
+      const now = performance.now()
+      const gap = now - lastWheel
+      lastWheel = now
+      if (busy || Math.abs(e.deltaY) < 4) return
+      // A trackpad keeps sending a coasting tail after a flick: only a fresh
+      // gesture (a pause before it) turns the next page.
+      if (gap < 160 && now - doneAt < 700) return
+      page(Math.sign(e.deltaY))
+    }
+    let y0 = 0
+    let startedIn = false
+    const onTouchStart = (e: TouchEvent) => {
+      y0 = e.touches[0].clientY
+      startedIn = inStage()
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (startedIn && e.cancelable) e.preventDefault()
+    }
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!startedIn) return
+      const dy = y0 - e.changedTouches[0].clientY
+      if (Math.abs(dy) > 36) page(Math.sign(dy))
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (!inStage()) return
+      const dir = ['ArrowDown', 'PageDown', ' '].includes(e.key) ? 1 : ['ArrowUp', 'PageUp'].includes(e.key) ? -1 : 0
+      if (!dir) return
+      e.preventDefault()
+      page(dir)
+    }
+    // Arriving from below (or a jump) and stopping between chapters: settle.
+    let settle = 0
+    const onScroll = () => {
+      clearTimeout(settle)
+      settle = window.setTimeout(() => {
+        if (busy || !inStage()) return
+        const y = pos(nearest())
+        if (Math.abs(window.scrollY - y) > 4) glide(y)
+      }, 180)
+    }
+    window.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      clearTimeout(settle)
+      window.removeEventListener('wheel', onWheel)
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', onTouchEnd)
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [])
+
   // Captions cross-fade: the old one leaves, then the new one arrives.
   const [visible, setVisible] = useState(true)
   useEffect(() => {

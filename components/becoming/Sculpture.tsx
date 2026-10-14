@@ -258,7 +258,7 @@ function Statue({ id = 'david', url = '/models/statue.glb' }: { id?: string; url
     // Forming (presence rising) or leaving.
     uniforms.uDir.value = PRESENCE[id](now.p + 0.01) > PRESENCE[id](now.p) ? 1 : 0
     if (holder.current) {
-      holder.current.position.x = carved ? -1.35 * TOMORROW(now.p) : 0
+      holder.current.position.x = 0
       holder.current.visible = pres > 0.001
     }
     // Dust rises while a statue turns to dust or forms.
@@ -417,59 +417,6 @@ const holding = { current: false }
 /** World position of the mark the next strike lands on (for the chips). */
 const nextMark = { p: new THREE.Vector3(), ready: false }
 
-// At the end, the carved statue steps aside and a fresh, untouched stone
-// rises beside it: tomorrow's work.
-const TOMORROW = (p: number) => smooth(9.05, 9.45, p)
-function TomorrowStone() {
-  const ref = useRef<THREE.InstancedMesh>(null)
-  const N = 4 * 8 * 3
-  useEffect(() => {
-    const mesh = ref.current
-    if (!mesh) return
-    const m = new THREE.Matrix4()
-    const q = new THREE.Quaternion()
-    const e = new THREE.Euler()
-    const col = new THREE.Color()
-    let i = 0
-    const rnd = (k: number) => {
-      const s2 = Math.sin(k * 91.3 + 7.1) * 43758.5453
-      return s2 - Math.floor(s2)
-    }
-    for (let y = 0; y < 8; y++)
-      for (let x = 0; x < 4; x++)
-        for (let z = 0; z < 3; z++) {
-          e.set((rnd(i) - 0.5) * 0.12, (rnd(i + 1) - 0.5) * 0.12, (rnd(i + 2) - 0.5) * 0.12)
-          q.setFromEuler(e)
-          const sz = 1.1 + rnd(i + 3) * 0.12
-          m.compose(
-            new THREE.Vector3((x + 0.5) / 4 * 1.3 - 0.65, (y + 0.5) / 8 * 2.6, (z + 0.5) / 3 * 0.95 - 0.475),
-            q,
-            new THREE.Vector3(1.3 / 4, 2.6 / 8, 0.95 / 3).multiplyScalar(sz),
-          )
-          mesh.setMatrixAt(i, m)
-          const t2 = rnd(i + 4)
-          mesh.setColorAt(i, col.setRGB(0.66 + t2 * 0.12, 0.65 + t2 * 0.11, 0.62 + t2 * 0.1))
-          i++
-        }
-    mesh.instanceMatrix.needsUpdate = true
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
-  }, [])
-  const g = useRef<THREE.Group>(null)
-  useFrame(() => {
-    const k = TOMORROW(now.p)
-    if (!g.current) return
-    g.current.visible = k > 0.001
-    g.current.position.set(1.45, (k - 1) * 3, 0)
-  })
-  return (
-    <group ref={g} visible={false}>
-      <instancedMesh ref={ref} args={[undefined, undefined, N]} castShadow receiveShadow>
-        <boxGeometry />
-        <meshStandardMaterial color="#ffffff" roughness={0.95} flatShading />
-      </instancedMesh>
-    </group>
-  )
-}
 
 // A soft warm pool of light on the plinth, like a gallery downlight.
 function LightPool() {
@@ -788,9 +735,10 @@ function Rig() {
     const tall = !wide && aspect < 0.85
     const dist = wide ? 8.2 : tall ? 8.1 + (aspect - 0.46) * 4 : 10.6 * (1 + 0.32 * narrow)
     const t = clock.elapsedTime
-    const ang = Math.sin(t * 0.12) * 0.05 + sculpt.pointer.x * 0.03
-    camera.position.set(Math.sin(ang) * dist, 1.4 + Math.sin(t * 0.17) * 0.06 + sculpt.pointer.y * 0.06, Math.cos(ang) * dist)
-    camera.lookAt(0, wide ? 1.45 : tall ? 1.3 : 1.6 - narrow * 0.15, 0)
+    // Phones hold the camera still; wider screens drift a little.
+    const ang = tall ? 0 : Math.sin(t * 0.12) * 0.05 + sculpt.pointer.x * 0.03
+    camera.position.set(Math.sin(ang) * dist, tall ? 1.4 : 1.4 + Math.sin(t * 0.17) * 0.06 + sculpt.pointer.y * 0.06, Math.cos(ang) * dist)
+    camera.lookAt(0, wide ? 1.45 : tall ? 1.72 : 1.6 - narrow * 0.15, 0)
     // Shift the picture up so the statue lives above the caption.
     const cam = camera as THREE.PerspectiveCamera
     const lift = wide || tall ? 0 : Math.round(size.height * 0.17)
@@ -838,6 +786,7 @@ function WorkLight() {
 function Turntable({ children }: { children: React.ReactNode }) {
   const g = useRef<THREE.Group>(null)
   const gl = useThree((s) => s.gl)
+  const size = useThree((s) => s.size)
   const st = useRef({ down: false, moved: 0, lastX: 0, yaw: 0, vel: 0, holdFrom: 0 })
   useEffect(() => {
     const el = gl.domElement
@@ -880,21 +829,21 @@ function Turntable({ children }: { children: React.ReactNode }) {
       s.yaw += s.vel
       s.vel *= Math.exp(-3 * d)
     }
-    if (g.current) g.current.rotation.y = work.turn + s.yaw + Math.sin(clock.elapsedTime * 0.2) * 0.12
+    // Phones: the statue always faces forward (a swipe pages, it never turns it).
+    const tall = size.width < 1024 && size.width / Math.max(1, size.height) < 0.85
+    if (tall) {
+      s.yaw = 0
+      s.vel = 0
+    }
+    if (g.current) g.current.rotation.y = tall ? 0 : work.turn + s.yaw + Math.sin(clock.elapsedTime * 0.2) * 0.12
   })
   return <group ref={g}>{children}</group>
 }
 
 function Plinth() {
-  // At the end it widens so the finished statue and tomorrow's stone both
-  // stand on it.
-  const top = useRef<THREE.Mesh>(null)
-  useFrame(() => {
-    if (top.current) top.current.scale.set(1 + 1.35 * TOMORROW(now.p), 1, 1 + 0.25 * TOMORROW(now.p))
-  })
   return (
     <group>
-      <mesh ref={top} position={[0, -0.12, 0]} receiveShadow>
+      <mesh position={[0, -0.12, 0]} receiveShadow>
         <cylinderGeometry args={[1.35, 1.45, 0.24, 64]} />
         <meshStandardMaterial color="#121216" roughness={0.35} metalness={0.2} />
       </mesh>
@@ -953,7 +902,6 @@ export default function Sculpture() {
         <Dust />
       </Turntable>
       <Chips />
-      <TomorrowStone />
       <Suspense fallback={null}>
         <Relics />
       </Suspense>
