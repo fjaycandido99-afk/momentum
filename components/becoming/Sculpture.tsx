@@ -856,10 +856,12 @@ function Plinth() {
 }
 
 export default function Sculpture() {
+  // Phones: a lighter render (resolution, shadows) so the animation stays smooth.
+  const small = typeof window !== 'undefined' && Math.min(window.innerWidth, window.innerHeight) < 700
   return (
     <Canvas
       shadows
-      dpr={[1, 2]}
+      dpr={small ? [1, 1.5] : [1, 2]}
       camera={{ position: [0, 1.3, 12.5], fov: 32, near: 0.5, far: 80 }}
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       onCreated={({ gl }) => gl.setClearColor('#060609')}
@@ -872,7 +874,7 @@ export default function Sculpture() {
         intensity={2.0}
         color="#ffe8cc"
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={small ? [1024, 1024] : [2048, 2048]}
         shadow-camera-left={-3}
         shadow-camera-right={3}
         shadow-camera-top={4}

@@ -327,6 +327,10 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
   const [shown, setShown] = useState<Section>('hero')
   const stage = useRef<HTMLDivElement>(null)
   const lenisRef = useRef<Lenis | null>(null)
+  // The story's progress animates on its own clock (not by scrolling the
+  // page, which stutters on phones under WebGL): see the paging below.
+  const tween = useRef({ active: false, from: 0, to: 0, t0: 0, dur: 1300 })
+  const jumpRef = useRef<(i: number) => void>(() => {})
   useEffect(() => setLive(has3d()), [])
 
   // Smooth scrolling (Lenis); the scroll through the tall stage becomes
@@ -344,7 +348,13 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     const tick = (t: number) => {
       lenis?.raf(t)
       const el = stage.current
-      if (el) {
+      const tw = tween.current
+      if (tw.active) {
+        const k = Math.min(1, (performance.now() - tw.t0) / tw.dur)
+        const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2
+        sculpt.p = tw.from + (tw.to - tw.from) * e
+        if (k >= 1) tw.active = false
+      } else if (el) {
         const r = el.getBoundingClientRect()
         const run = Math.max(1, el.offsetHeight - window.innerHeight)
         sculpt.p = Math.min(1, Math.max(0, -r.top / run)) * SECTIONS.length
@@ -389,18 +399,36 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
       for (let i = 1; i < N; i++) if (Math.abs(window.scrollY - pos(i)) < Math.abs(window.scrollY - pos(best))) best = i
       return best
     }
+    const finish = () => {
+      busy = false
+      doneAt = performance.now()
+    }
     const glide = (y: number) => {
       busy = true
-      const finish = () => {
-        busy = false
-        doneAt = performance.now()
-      }
+      const { top, run, end } = geo()
       const l = lenisRef.current
-      if (l) l.scrollTo(y, { duration: 1.1, easing: ease, lock: true, force: true, onComplete: finish })
-      else {
-        window.scrollTo({ top: y })
-        setTimeout(finish, 300)
+      if (y > end) {
+        // Leaving the story: a real scroll down to the sections below.
+        if (l) l.scrollTo(y, { duration: 0.9, easing: ease, force: true, onComplete: finish })
+        else {
+          window.scrollTo({ top: y })
+          setTimeout(finish, 300)
+        }
+        return
       }
+      // Inside the story the view is pinned, so the page jumps at once and
+      // only the story's progress animates: smooth on every device.
+      const from = sculpt.p
+      const to = (Math.min(Math.max(y - top, 0), run) / run) * N
+      if (l) l.scrollTo(y, { immediate: true, force: true })
+      else window.scrollTo(0, y)
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const dur = reduced ? 1 : 900 + Math.min(2, Math.abs(to - from)) * 400
+      tween.current = { active: true, from, to, t0: performance.now(), dur }
+      window.setTimeout(finish, Math.max(0, dur - 250))
+    }
+    jumpRef.current = (i: number) => {
+      if (!busy) glide(pos(i))
     }
     const page = (dir: number) => {
       if (busy) return
@@ -493,12 +521,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
 
   // Jump to a chapter: smooth scroll to the middle of its part of the stage.
   const goTo = (i: number) => {
-    const el = stage.current
-    if (!el) return
-    const run = el.offsetHeight - window.innerHeight
-    const y = el.offsetTop + (run * (i + 0.45)) / SECTIONS.length
-    if (lenisRef.current) lenisRef.current.scrollTo(y, { duration: 2.2 })
-    else window.scrollTo({ top: y, behavior: 'smooth' })
+    jumpRef.current(i)
   }
 
   // Deep links: /download#chapter-3 opens on that chapter.
