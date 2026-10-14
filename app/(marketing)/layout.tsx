@@ -56,7 +56,7 @@ export default function MarketingLayout({
   const isInstallPage = isNative && pathname === '/download'
   // /download is the landing page and draws its own fixed header (logo +
   // Download Free); this one stacked on top of it at the same spot.
-  const ownHeader = pathname === '/download'
+  const ownHeader = pathname === '/download' || pathname === '/becoming'
 
   useEffect(() => {
     if (isInstallPage) router.replace('/')

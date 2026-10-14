@@ -30,6 +30,8 @@
     "@capacitor/preferences": "^8.0.1",
     "@capacitor/push-notifications": "^8.0.0",
     "@prisma/client": "^5.19.0",
+    "@react-three/drei": "9.122.0",
+    "@react-three/fiber": "8.18.0",
     "@revenuecat/purchases-capacitor": "^12.0.5",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",
@@ -41,6 +43,7 @@
     "groq-sdk": "^0.37.0",
     "html2canvas": "^1.4.1",
     "idb": "^8.0.3",
+    "lenis": "1.1.14",
     "lucide-react": "^0.562.0",
     "next": "^14.2.18",
     "next-intl": "^4.8.2",
@@ -50,6 +53,7 @@
     "stripe": "^20.2.0",
     "swr": "^2.4.0",
     "tailwind-merge": "^3.4.0",
+    "three": "0.170.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
@@ -58,6 +62,7 @@
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
+    "@types/three": "0.170.0",
     "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^5.1.4",
     "autoprefixer": "^10.4.17",
