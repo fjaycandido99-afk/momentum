@@ -1,11 +1,8 @@
-import { listPrices, usd } from '@/lib/pricing'
-
-// What follows the story on the landing page: the counted facts, the prices
-// and the way in (the story itself shows the features). No ratings and no
-// testimonials until real ones exist; prices come from lib/pricing.
+// What follows the story on the landing page: the counted facts and the way
+// in (the story itself shows the features; prices live on /pricing). No
+// ratings and no testimonials until real ones exist.
 
 const APP_STORE_URL = 'https://apps.apple.com/app/id6759702163'
-const GOLD = '#C9AE82'
 const serif = 'font-[family-name:var(--font-cormorant)]'
 
 const STATS: [string, string][] = [
@@ -32,7 +29,6 @@ export function AppStoreButton({ big = false }: { big?: boolean }) {
 }
 
 export function IntroSections() {
-  const price = listPrices()
   return (
     <div className="relative bg-[#060609] text-white">
       {/* Counted facts. */}
@@ -44,48 +40,6 @@ export function IntroSections() {
               <div className="mt-1 text-sm text-white/70">{label}</div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* Free and Premium. */}
-      <section className="px-5 py-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs uppercase tracking-[0.3em]" style={{ color: GOLD }}>
-            Start free
-          </p>
-          <h2 className={`${serif} mt-3 text-4xl font-medium sm:text-5xl`}>The habit is free. Forever.</h2>
-          <p className="mx-auto mt-5 max-w-xl leading-relaxed text-white/75">
-            The era, your daily promise, the missions and the check-in are free: a paywall in front of a habit means the habit never forms. Premium is
-            the depth: your coach remembering day one every time it matters, spoken replies, and the letter it writes you at day 30.
-          </p>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-              <div className="text-sm text-white/70">Free</div>
-              <div className={`${serif} mt-1 text-4xl font-medium`}>$0</div>
-              <div className="mt-1 text-xs text-white/60">The whole era loop</div>
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-              <div className="text-sm text-white/70">Monthly</div>
-              <div className={`${serif} mt-1 text-4xl font-medium`}>
-                {usd(price.monthly)}
-                <span className="text-base text-white/60">/mo</span>
-              </div>
-              <div className="mt-1 text-xs text-white/60">Cancel anytime</div>
-            </div>
-            <div className="relative rounded-3xl border p-6" style={{ borderColor: `${GOLD}80`, background: 'rgba(201,174,130,0.06)' }}>
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-0.5 text-[10px] font-bold tracking-wider text-black" style={{ background: GOLD }}>
-                BEST VALUE
-              </div>
-              <div className="text-sm text-white/70">Yearly</div>
-              <div className={`${serif} mt-1 text-4xl font-medium`}>
-                {usd(price.yearly)}
-                <span className="text-base text-white/60">/yr</span>
-              </div>
-              <div className="mt-1 text-xs text-white/60">
-                ${price.yearlyPerMonth}/mo, save {price.yearlySave}%
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
