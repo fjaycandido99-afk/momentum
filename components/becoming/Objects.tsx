@@ -627,6 +627,15 @@ function Phone3D() {
 /** Where the floor sits for the current arrangement. */
 const floorY = () => (layout.tall ? -3.1 : -1.25)
 
+/**
+ * Phones and tablets get a lighter scene: a phone's graphics chip can't carry
+ * the mirror floor (the whole scene drawn twice), the glow and anti-aliasing
+ * passes and a 2x canvas, and the flights and effects stutter. At phone size
+ * the lighter version looks the same.
+ */
+const LIGHT =
+  typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px), (pointer: coarse)').matches
+
 function Floor() {
   const ref = useRef<THREE.Mesh>(null)
   const width = useThree((s) => s.size.width)
@@ -636,6 +645,9 @@ function Floor() {
   return (
     <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.25, -2]}>
       <planeGeometry args={[70, 70]} />
+      {LIGHT ? (
+        <meshStandardMaterial color="#040404" roughness={0.85} metalness={0.15} envMapIntensity={0.3} />
+      ) : (
       <MeshReflectorMaterial
         resolution={width < 768 ? 256 : 512}
         blur={[400, 120]}
@@ -650,6 +662,7 @@ function Floor() {
         metalness={0.5}
         mirror={0}
       />
+      )}
     </mesh>
   )
 }
@@ -701,7 +714,7 @@ function Pools() {
 function Stars() {
   const ref = useRef<THREE.Points>(null)
   const geo = useMemo(() => {
-    const n = 1400
+    const n = LIGHT ? 600 : 1400
     const p = new Float32Array(n * 3)
     const c = new Float32Array(n * 3)
     for (let i = 0; i < n; i++) {
@@ -735,7 +748,7 @@ function Stars() {
 export default function Objects() {
   return (
     <Canvas
-      dpr={[1, 2]}
+      dpr={LIGHT ? [1, 1.5] : [1, 2]}
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
       camera={{ fov: 44, position: [0, 2.7, 8.6], near: 0.05, far: 80 }}
       style={{ background: '#000' }}
@@ -745,7 +758,7 @@ export default function Objects() {
       <fog attach="fog" args={['#000000', 11, 30]} />
       <Stars />
       {/* Reflections only (the background stays black): a clean studio. */}
-      <Environment resolution={128} frames={1}>
+      <Environment resolution={LIGHT ? 64 : 128} frames={1}>
         <Lightformer form="rect" intensity={3} color="#fff4e8" position={[-4, 5, 5]} scale={[6, 3, 1]} />
         <Lightformer form="rect" intensity={1.5} color="#ffffff" position={[5, 2, 3]} scale={[3, 4, 1]} />
         <Lightformer form="rect" intensity={1.2} color="#d9c19a" position={[0, 3, -6]} scale={[8, 2, 1]} />
@@ -767,12 +780,15 @@ export default function Objects() {
       </Suspense>
       <Dust />
       {/* Crisp: no blur, no grain; a light glow on the brightest metal and a soft vignette. */}
-      <EffectComposer multisampling={4} enableNormalPass={false}>
-        <Bloom intensity={0.25} luminanceThreshold={0.88} luminanceSmoothing={0.15} mipmapBlur />
-        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-        <Vignette offset={0.35} darkness={0.5} />
-        <SMAA />
-      </EffectComposer>
+      {/* Phones skip it: the renderer's own tone mapping and anti-aliasing are enough there. */}
+      {!LIGHT && (
+        <EffectComposer multisampling={4} enableNormalPass={false}>
+          <Bloom intensity={0.25} luminanceThreshold={0.88} luminanceSmoothing={0.15} mipmapBlur />
+          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+          <Vignette offset={0.35} darkness={0.5} />
+          <SMAA />
+        </EffectComposer>
+      )}
     </Canvas>
   )
 }
