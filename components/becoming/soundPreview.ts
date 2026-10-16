@@ -94,7 +94,8 @@ export function playSound(kind: number) {
     meter.getByteTimeDomainData(data)
     let peak = 0
     for (const v of data) peak = Math.max(peak, Math.abs(v - 128))
-    sculpt.audio = Math.min(1, peak / 40)
+    // Never quite still while a sound plays (some browsers report silence to the meter).
+    sculpt.audio = Math.max(0.18, Math.min(1, peak / 40))
     raf = requestAnimationFrame(tick)
   }
   tick()

@@ -7,6 +7,7 @@ import { Environment, Html, Lightformer, MeshReflectorMaterial, RoundedBox, useG
 import { Bloom, EffectComposer, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
 import { promises, sculpt } from './store'
+import { FallingLeaves, SoundRings, makeFx, useBonsaiFx, useBrainFx } from './artefactFx'
 import { DEMO_START, drawScreen, SCREEN_H, SCREEN_W, type DemoState } from './phoneScreens'
 
 // "The Art of Becoming": the five parts of Voxu as artefacts on stone
@@ -94,7 +95,9 @@ function useArtefact(url: string, h: number) {
       me.material = m
       mats.push(m)
     })
-    return { model, mats }
+    // Its width, for effects placed at its sides.
+    const width = (size.x / size.y) * h
+    return { model, mats, width }
   }, [scene, h])
 }
 
@@ -155,7 +158,12 @@ const seen = new Set<number>()
 
 function Artefact({ id }: { id: Id }) {
   const o = OBJS[id]
-  const { model, mats } = useArtefact(o.url, o.h)
+  const { model, mats, width } = useArtefact(o.url, o.h)
+  // Its own response to the visitor (brain, bonsai, headphones).
+  const fx = useMemo(() => (id === 'brain' || id === 'bonsai' ? makeFx(id, model, mats) : null), [id, model, mats])
+  const leaves = useRef<{ drop: (n: number) => void } | null>(null)
+  useBrainFx(id === 'brain' ? fx : null, () => flight.pick === o.chapter)
+  useBonsaiFx(id === 'bonsai' ? fx : null, { drop: (n) => leaves.current?.drop(n) })
   const place = useRef<THREE.Group>(null)
   const float = useRef<THREE.Group>(null)
   const label = useRef<HTMLButtonElement>(null)
@@ -227,6 +235,8 @@ function Artefact({ id }: { id: Id }) {
     <group ref={place}>
       <group ref={float}>
         <primitive object={model} />
+        {id === 'bonsai' && <FallingLeaves h={o.h} api={leaves} />}
+        {id === 'headphones' && <SoundRings h={o.h} w={width} />}
       </group>
       {/* What you tap: a plain box around the object (cheaper than the object itself). */}
       <mesh
