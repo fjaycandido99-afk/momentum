@@ -802,7 +802,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[7svh] bg-black" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[28svh] bg-gradient-to-t from-black/90 to-transparent lg:hidden" />
           {/* Phones: a soft dark band across the middle, where the message sits. */}
-          <div className="pointer-events-none absolute inset-x-0 top-[22%] h-[60%] bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.42)_28%,rgba(0,0,0,0.42)_72%,transparent)] transition-opacity duration-700 lg:hidden" style={{ opacity: overviewOpen ? 0 : 1 }} />
+          <div className="pointer-events-none absolute inset-x-0 top-[18%] h-[68%] bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.8)_22%,rgba(0,0,0,0.8)_78%,transparent)] transition-opacity duration-700 lg:hidden" style={{ opacity: overviewOpen ? 0 : 1 }} />
           {/* Wide screens: the message sits on the left, over a soft shade. */}
           <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[52vw] bg-gradient-to-r from-black/90 via-black/55 to-transparent transition-opacity duration-700 lg:block" style={{ opacity: overviewOpen ? 0 : 1 }} />
 

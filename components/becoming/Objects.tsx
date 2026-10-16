@@ -3,7 +3,7 @@
 import { Component, Suspense, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, Html, Lightformer, MeshReflectorMaterial, RoundedBox, useGLTF } from '@react-three/drei'
+import { Environment, Html, Lightformer, PerformanceMonitor, MeshReflectorMaterial, RoundedBox, useGLTF } from '@react-three/drei'
 import { Bloom, EffectComposer, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
 import { promises, sculpt } from './store'
@@ -749,13 +749,23 @@ function Stars() {
 }
 
 export default function Objects() {
+  // Full sharpness (the screen's own pixel density, up to 3x on an iPhone) while
+  // the frame rate holds; one step down when it drops, back up when it recovers.
+  const [dpr, setDpr] = useState(() => (typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, LIGHT ? 3 : 2)))
+  const top = typeof window === 'undefined' ? 2 : Math.min(window.devicePixelRatio || 1, LIGHT ? 3 : 2)
   return (
     <Canvas
-      dpr={LIGHT ? [1, 1.5] : [1, 2]}
+      dpr={dpr}
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
       camera={{ fov: 44, position: [0, 2.7, 8.6], near: 0.05, far: 80 }}
       style={{ background: '#000' }}
     >
+      <PerformanceMonitor
+        onDecline={() => setDpr((d) => Math.max(1, +(d - 0.5).toFixed(2)))}
+        onIncline={() => setDpr((d) => Math.min(top, +(d + 0.5).toFixed(2)))}
+        flipflops={4}
+        onFallback={() => setDpr(1)}
+      />
       <color attach="background" args={['#000000']} />
       {/* Everything far away fades into the black. */}
       <fog attach="fog" args={['#000000', 11, 30]} />
