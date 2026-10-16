@@ -1,25 +1,24 @@
 'use client'
 
-import { Component, createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Component, createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Lenis from 'lenis'
 import { SECTIONS, carvedProgress, makePromise, sculpt, sectionAt, type Section } from './store'
 import { NARRATION } from './script'
+import { hasScreen, screenFor } from './PhonePreview'
+import { AUDIO, DEMO_START, type DemoState } from './phoneScreens'
+import { playSound, stopSound } from './soundPreview'
 
 // "The Art of Becoming" (preview at /becoming). Not a page you scroll
-// through but a gallery you stand in: one statue under one spotlight, the
-// page pinned around it. Scrolling, or holding the chisel to the stone,
-// carves it chapter by chapter; captions come and go like subtitles. Every
-// claim is one the /download page already makes; the Mirror and the ritual
-// builder are labelled demos and send nothing anywhere.
+// through but a film you sit in: one shot per chapter, statues in a black
+// void and a moving camera (Objects.tsx), the page pinned around it; captions
+// come and go like subtitles. Every claim is one the /download page already
+// makes; the demos are labelled and send nothing anywhere.
 
-const Sculpture = dynamic(() => import('./Sculpture'), { ssr: false })
+// The film: the five artefacts in a black void (Objects.tsx).
+const Objects = dynamic(() => import('./Objects'), { ssr: false })
 const APP_STORE_URL = 'https://apps.apple.com/app/id6759702163'
-// A small chisel for the cursor over the stone.
-const CHISEL = `url("data:image/svg+xml,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><g transform="rotate(45 14 14)"><rect x="12" y="1" width="4" height="13" rx="1.5" fill="#c8a272"/><rect x="11" y="14" width="6" height="3" fill="#8a8f99"/><path d="M11.5 17h5l-1 9h-3z" fill="#e8ebf0"/></g></svg>',
-)}") 4 24, crosshair`
 
 function has3d() {
   try {
@@ -73,6 +72,13 @@ const chip = (on: boolean) =>
 /** Website or the app's own intro: in the app there is nothing to download. */
 const Mode = createContext<{ app: boolean; onBegin?: () => void }>({ app: false })
 
+/** What the visitor has done in the demos; the phone shows it, the artefact reacts. */
+const Demo = createContext<{ d: DemoState; set: (p: Partial<DemoState>) => void }>({ d: DEMO_START, set: () => {} })
+/** The artefact for chapter `ch` gives a small start, as if it heard you. */
+function react(ch: number) {
+  sculpt.react = { chapter: ch, at: performance.now() }
+}
+
 function AppStoreButton() {
   const mode = useContext(Mode)
   if (mode.app) {
@@ -114,61 +120,95 @@ function Kicker({ children }: { children: ReactNode }) {
 
 const PROMISES = ['Move my body for 20 minutes', 'Read for 15 minutes', 'Practise 10 minutes of stillness']
 
-// "A glimpse of Voxu": make a promise, and the chisel strikes the stone.
-function PromiseDemo() {
-  const { app } = useContext(Mode)
-  const [pick, setPick] = useState<number | null>(null)
-  const [made, setMade] = useState(false)
+// Daily Eras: pick one; the phone and the column follow.
+function EraDemo() {
+  const { d, set } = useContext(Demo)
   return (
-    <div className="mt-5">
-      {!made ? (
-        <>
-          <p className="text-xs" style={{ color: '#BDB8B0' }}>
-            What will you promise yourself today?
-          </p>
-          <div className="mt-3 flex flex-wrap justify-center gap-2 lg:justify-start">
-            {PROMISES.map((p, i) => (
-              <button key={p} className={chip(pick === i)} aria-pressed={pick === i} onClick={() => setPick(i)}>
-                {p}
-              </button>
-            ))}
-          </div>
+    <div className="mt-4">
+      <p className="text-xs" style={{ color: '#BDB8B0' }}>
+        Try one on:
+      </p>
+      <div className="mt-2 flex flex-wrap justify-center gap-1.5 lg:justify-start">
+        {ERAS.map((e) => (
           <button
-            disabled={pick === null}
+            key={e}
+            className={chip(d.era === e)}
+            aria-pressed={d.era === e}
             onClick={() => {
-              makePromise()
-              setMade(true)
+              set({ era: e })
+              react(1)
             }}
-            className="mt-4 rounded-full px-5 py-2 text-xs font-semibold text-black transition disabled:opacity-30"
-            style={{ background: GOLD }}
           >
-            Make my promise
+            {e}
           </button>
-        </>
-      ) : (
-        <>
-          <p className="text-sm text-white/80">
-            Promised: <span className="text-white">{PROMISES[pick ?? 0].toLowerCase()}</span>. That&rsquo;s a mark in the stone.
-          </p>
-          {!app && (
-            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs underline underline-offset-4" style={{ color: GOLD }}>
-              Make it for real in Voxu, free
-            </a>
-          )}
-        </>
-      )}
-      <p className="mt-3 text-[11px] text-white/35">A demo: nothing here is saved.</p>
+        ))}
+        <span className="rounded-full border border-dashed border-white/20 px-3.5 py-1.5 text-xs text-white/[0.78]">or your own</span>
+      </div>
+      <p className="mt-3 text-[11px] text-white/[0.55]">A demo: nothing here is saved.</p>
     </div>
   )
 }
 
-// The night check: did you keep it?
-function NightCheck() {
-  const [ans, setAns] = useState<null | 'yes' | 'no'>(null)
+// AI Coach: choose today's promise and make it; the coach answers on the phone.
+function PromiseDemo() {
+  const { app } = useContext(Mode)
+  const { d, set } = useContext(Demo)
+  const [made, setMade] = useState(false)
   return (
     <div className="mt-5">
       <p className="text-xs" style={{ color: '#BDB8B0' }}>
-        Tonight: did you keep your promise?
+        What will you promise yourself today?
+      </p>
+      <div className="mt-3 flex flex-wrap justify-center gap-2 lg:justify-start">
+        {PROMISES.map((p) => (
+          <button
+            key={p}
+            className={chip(d.promise === p)}
+            aria-pressed={d.promise === p}
+            onClick={() => {
+              set({ promise: p, night: null })
+              setMade(false)
+            }}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+      {!made ? (
+        <button
+          onClick={() => {
+            makePromise()
+            react(3)
+            setMade(true)
+          }}
+          className="mt-4 rounded-full px-5 py-2 text-xs font-semibold text-black transition hover:brightness-110"
+          style={{ background: GOLD }}
+        >
+          Make my promise
+        </button>
+      ) : (
+        <p className="mt-4 text-sm text-white/80">
+          Promised: <span className="text-white">{d.promise.toLowerCase()}</span>. Your coach&rsquo;s answer is on the phone.
+          {!app && (
+            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs underline underline-offset-4" style={{ color: GOLD }}>
+              Make it for real
+            </a>
+          )}
+        </p>
+      )}
+      <p className="mt-3 text-[11px] text-white/[0.55]">A demo: nothing here is saved.</p>
+    </div>
+  )
+}
+
+// Reflection: answer tonight's check-in, honestly.
+function NightCheck() {
+  const { d, set } = useContext(Demo)
+  const ans = d.night
+  return (
+    <div className="mt-5">
+      <p className="text-xs" style={{ color: '#BDB8B0' }}>
+        Tonight: did you keep &ldquo;{d.promise.toLowerCase()}&rdquo;?
       </p>
       <div className="mt-3 flex justify-center gap-2 lg:justify-start">
         <button
@@ -176,18 +216,99 @@ function NightCheck() {
           aria-pressed={ans === 'yes'}
           onClick={() => {
             if (ans !== 'yes') makePromise()
-            setAns('yes')
+            set({ night: 'yes' })
+            react(2)
           }}
         >
           I kept it
         </button>
-        <button className={chip(ans === 'no')} aria-pressed={ans === 'no'} onClick={() => setAns('no')}>
+        <button
+          className={chip(ans === 'no')}
+          aria-pressed={ans === 'no'}
+          onClick={() => {
+            set({ night: 'no' })
+            react(2)
+          }}
+        >
           Not today
         </button>
       </div>
       <p className="mt-3 min-h-[1.25rem] text-xs text-white/[0.78]">
-        {ans === 'yes' ? 'Another mark. Kept promises add up.' : ans === 'no' ? 'Said honestly. Tomorrow is another stone.' : 'A demo: nothing here is saved.'}
+        {ans === 'yes' ? 'Another mark. Kept promises add up.' : ans === 'no' ? 'Said honestly. Tomorrow is another day.' : 'A demo: nothing here is saved.'}
       </p>
+    </div>
+  )
+}
+
+// Habit Builder: keep today's promise and watch the record fill.
+function HabitDemo() {
+  const { d, set } = useContext(Demo)
+  const today = Math.max(12, ...d.kept.map((k) => k + 1))
+  const done = today > 30
+  return (
+    <div className="mt-5">
+      <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+        <button
+          disabled={done}
+          onClick={() => {
+            set({ kept: [...d.kept, today] })
+            makePromise()
+            react(4)
+          }}
+          className="rounded-full px-5 py-2 text-xs font-semibold text-black transition hover:brightness-110 disabled:opacity-30"
+          style={{ background: GOLD }}
+        >
+          {done ? 'Era complete' : `Keep day ${today}`}
+        </button>
+        <button
+          onClick={() => {
+            set({ kept: DEMO_START.kept })
+            react(4)
+          }}
+          className="text-xs text-white/[0.78] underline underline-offset-4 hover:text-white"
+        >
+          Start over
+        </button>
+      </div>
+      <p className="mt-3 text-[11px] text-white/[0.55]">A demo: nothing here is saved.</p>
+    </div>
+  )
+}
+
+// Guided Audio: play an example sound; the headphones move with it.
+function AudioDemo() {
+  const { d, set } = useContext(Demo)
+  return (
+    <div className="mt-5 space-y-2">
+      {AUDIO.map(([kind, title], i) => {
+        const on = d.audio === i
+        return (
+          <button
+            key={title}
+            onClick={() => {
+              if (on) {
+                stopSound()
+                set({ audio: null })
+              } else {
+                playSound(i)
+                set({ audio: i })
+                react(5)
+              }
+            }}
+            aria-pressed={on}
+            className={`flex w-full max-w-sm items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${on ? 'border-white/60 bg-white/10' : 'border-white/15 hover:border-white/40'}`}
+          >
+            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${on ? 'bg-white text-black' : 'bg-white/10 text-white'}`} aria-hidden>
+              {on ? '❚❚' : '▶'}
+            </span>
+            <span>
+              <span className="block text-[10px] uppercase tracking-[0.25em] text-white/[0.6]">{kind}</span>
+              <span className="block text-sm text-white">{title}</span>
+            </span>
+          </button>
+        )
+      })}
+      <p className="pt-1 text-[11px] text-white/[0.55]">Example sounds made in your browser, not Voxu recordings.</p>
     </div>
   )
 }
@@ -221,70 +342,76 @@ function Caption({ section }: { section: Section }) {
             <AppStoreButton />
             <FreeLine />
           </div>
-          <p className="mt-5 text-[11px] uppercase tracking-[0.3em] text-white/[0.78]">Scroll to carve · or hold the chisel to the stone</p>
+          <p className="mt-5 text-[11px] uppercase tracking-[0.3em] text-white/[0.78]">Tap an object to explore · or scroll</p>
         </>
       )
     case 'potential':
       return (
         <>
-          <Kicker>Chapter I · The Stone</Kicker>
-          <h2 className="caption-h mt-2">Nobody becomes someone overnight.</h2>
-          <p className="caption-p">Every change starts as an unfinished stone, and one decision. Choose who you are becoming for the next thirty days.</p>
-          <div className="mt-4 flex flex-wrap justify-center gap-1.5 lg:justify-start">
-            {ERAS.map((e) => (
-              <span key={e} className="rounded-full border border-white/12 px-2.5 py-1 text-[11px] text-white/70">
-                {e}
-              </span>
-            ))}
-            <span className="rounded-full border border-dashed border-white/20 px-2.5 py-1 text-[11px] text-white/[0.78]">or your own</span>
-          </div>
+          <Kicker>I · Daily Eras</Kicker>
+          <h2 className="caption-h mt-2">Choose who you are becoming.</h2>
+          <p className="caption-p">
+            Nobody changes overnight. Pick a 30-day era and work on one thing, a day at a time: thirty missions, one for each day, built for who you
+            want to be.
+          </p>
+          <EraDemo />
         </>
       )
     case 'intention':
       return (
         <>
-          <Kicker>Chapter II · The Promise</Kicker>
-          <h2 className="caption-h mt-2">Start with one promise.</h2>
+          <Kicker>II · Reflection</Kicker>
+          <h2 className="caption-h mt-2">Every night, an honest answer.</h2>
           <p className="caption-p">
-            Each morning, promise yourself one thing, small enough to keep. Your coach answers it, quoting what you said on day one on the days that
-            lands hardest.
+            At night your coach asks whether you kept today&rsquo;s promise, and you answer honestly. Over time your record shows what you actually do:
+            promises kept, the weekday you slip on. It says nothing until there is enough to say.
           </p>
-          <PromiseDemo />
+          <NightCheck />
         </>
       )
     case 'discipline':
       return (
         <>
-          <Kicker>Chapter III · The Resistance</Kicker>
-          <h2 className="caption-h mt-2">Motivation fades. Your word remains.</h2>
+          <Kicker>III · AI Coach</Kicker>
+          <h2 className="caption-h mt-2">A coach that remembers your word.</h2>
           <p className="caption-p">
-            At night your coach asks whether you kept it, and you answer honestly. Set a time and your coach calls you by name and asks for the
-            day&rsquo;s promise out loud.
+            Each morning you promise yourself one thing, small enough to keep, and your coach answers it, quoting what you said on day one on the
+            days that land hardest. Set a time and it calls you by name and asks for the day&rsquo;s promise out loud.
           </p>
-          <NightCheck />
+          <PromiseDemo />
+          <p className="mt-4 hidden text-[11px] uppercase tracking-[0.2em] text-white/[0.78] lg:block">
+            Stoic · Existentialist · Cynic · Hedonist · Samurai · Scholar · Manifestor · Hustler
+          </p>
+          <p className="mt-2 hidden text-xs text-white/[0.78] lg:block">Eight mindsets. The mindset is how your coach talks to you; the era is what you work on.</p>
         </>
       )
     case 'strength':
       return (
         <>
-          <Kicker>Chapter IV · The Proof</Kicker>
-          <h2 className="caption-h mt-2">Every day leaves a mark.</h2>
+          <Kicker>IV · Habit Builder</Kicker>
+          <h2 className="caption-h mt-2">Motivation fades. Your word remains.</h2>
           <p className="caption-p">
-            Thirty days, one promise a day. Your record shows what you actually do: promises kept, the weekday you slip on. It says nothing until there
-            is enough to say.
+            One promise a day, thirty days in a row. Kept promises earn relics: coins like Said Out Loud, Word Kept and Era Complete, yours to wear.
+            Every day leaves a mark.
           </p>
+          <HabitDemo />
         </>
       )
     case 'polish':
       return (
         <>
-          <Kicker>Chapter V · The Becoming</Kicker>
-          <h2 className="caption-h mt-2">Become someone you can count on.</h2>
+          <Kicker>V · Guided Audio</Kicker>
+          <h2 className="caption-h mt-2">Focus by day. Rest by night.</h2>
           <p className="caption-p">
-            Kept promises earn relics: coins like Said Out Loud, Word Kept and Era Complete, yours to wear. Guided sessions, soundscapes and sleep
-            audio come with the era you are in.
+            Guided sessions, soundscapes and sleep audio come with the era you are in, so the practice follows you from your first promise to the
+            last light out.
           </p>
-          <p className="mt-4 text-[11px] uppercase tracking-[0.25em] text-white/[0.78]">8 eras · 30 missions each · 8 coach voices · 70+ audio sessions</p>
+          <AudioDemo />
+          <p className="mt-4 hidden text-[11px] lg:block uppercase tracking-[0.25em] text-white/[0.78]">8 eras · 30 missions each · 8 coach voices · 70+ audio sessions</p>
+          <div className="mt-6 flex flex-col items-center gap-2 lg:items-start">
+            <AppStoreButton />
+            <FreeLine />
+          </div>
         </>
       )
     case 'stoic':
@@ -331,7 +458,36 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
   // page, which stutters on phones under WebGL): see the paging below.
   const tween = useRef({ active: false, from: 0, to: 0, t0: 0, dur: 1300 })
   const jumpRef = useRef<(i: number) => void>(() => {})
-  useEffect(() => setLive(has3d()), [])
+  // The objects film is a picker, not a story you scroll through: tap an
+  // object to open its chapter; scrolling closes it again. (The older looks
+  // keep the chapter-by-chapter scroll.)
+  const picker = true
+  const pickerRef = useRef(true)
+  pickerRef.current = picker
+  const [picked, setPicked] = useState(0)
+  const overviewOpen = picker && picked === 0
+  const [demo, setDemo] = useState<DemoState>(DEMO_START)
+  const demoCtx = useMemo(() => ({ d: demo, set: (p: Partial<DemoState>) => setDemo((cur) => ({ ...cur, ...p })) }), [demo])
+  const [phoneOpen, setPhoneOpen] = useState(false)
+  // Leaving a chapter quiets the sound preview and closes the phone sheet.
+  useEffect(() => {
+    stopSound()
+    setDemo((cur) => (cur.audio === null ? cur : { ...cur, audio: null }))
+    setPhoneOpen(false)
+  }, [picked])
+  useEffect(() => () => stopSound(), [])
+  // The 3D phone in the scene shows the open chapter's screen, with what the visitor did.
+  useEffect(() => {
+    sculpt.phone = { section: screenFor(shown), demo, v: sculpt.phone.v + 1, focus: phoneOpen }
+  }, [shown, demo, phoneOpen])
+  const pickedRef = useRef(0)
+  pickedRef.current = picked
+  useEffect(() => {
+    sculpt.pick = picked
+  }, [picked])
+  useEffect(() => {
+    setLive(has3d())
+  }, [])
 
   // Smooth scrolling (Lenis); the scroll through the tall stage becomes
   // progress 0..6 for the carving.
@@ -349,6 +505,14 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
       lenis?.raf(t)
       const el = stage.current
       const tw = tween.current
+      if (pickerRef.current) {
+        const i = pickedRef.current
+        sculpt.p = i ? i + 0.45 : 0
+        const s = SECTIONS[i]
+        setSection((cur) => (cur === s ? cur : s))
+        id = requestAnimationFrame(tick)
+        return
+      }
       if (tw.active) {
         const k = Math.min(1, (performance.now() - tw.t0) / tw.dur)
         const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2
@@ -428,7 +592,24 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
       window.setTimeout(finish, Math.max(0, dur - 250))
     }
     jumpRef.current = (i: number) => {
+      if (pickerRef.current) {
+        if (!busy) {
+          busy = true
+          setPicked(i)
+          window.scrollTo(0, 0)
+          window.setTimeout(finish, 900)
+        }
+        return
+      }
       if (!busy) glide(pos(i))
+    }
+    // Picker: while a chapter is open, any scroll gesture closes it (back to all five).
+    const close = () => {
+      if (busy || !pickedRef.current) return false
+      busy = true
+      setPicked(0)
+      window.setTimeout(finish, 900)
+      return true
     }
     const page = (dir: number) => {
       if (busy) return
@@ -437,6 +618,16 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
       glide(i >= N ? geo().end + 1 : pos(i))
     }
     const onWheel = (e: WheelEvent) => {
+      if (pickerRef.current) {
+        if (!pickedRef.current) return
+        e.preventDefault()
+        const now = performance.now()
+        const gap = now - lastWheel
+        lastWheel = now
+        if (Math.abs(e.deltaY) < 4 || (gap < 160 && now - doneAt < 700)) return
+        close()
+        return
+      }
       if (!inStage()) return
       e.preventDefault()
       const now = performance.now()
@@ -452,7 +643,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     let startedIn = false
     const onTouchStart = (e: TouchEvent) => {
       y0 = e.touches[0].clientY
-      startedIn = inStage()
+      startedIn = pickerRef.current ? pickedRef.current > 0 : inStage()
     }
     const onTouchMove = (e: TouchEvent) => {
       if (startedIn && e.cancelable) e.preventDefault()
@@ -460,9 +651,18 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     const onTouchEnd = (e: TouchEvent) => {
       if (!startedIn) return
       const dy = y0 - e.changedTouches[0].clientY
-      if (Math.abs(dy) > 36) page(Math.sign(dy))
+      if (Math.abs(dy) <= 36) return
+      if (pickerRef.current) close()
+      else page(Math.sign(dy))
     }
     const onKey = (e: KeyboardEvent) => {
+      if (pickerRef.current) {
+        if (pickedRef.current && ['Escape', 'ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Backspace'].includes(e.key)) {
+          e.preventDefault()
+          close()
+        }
+        return
+      }
       if (!inStage()) return
       const dir = ['ArrowDown', 'PageDown', ' '].includes(e.key) ? 1 : ['ArrowUp', 'PageUp'].includes(e.key) ? -1 : 0
       if (!dir) return
@@ -474,7 +674,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     const onScroll = () => {
       clearTimeout(settle)
       settle = window.setTimeout(() => {
-        if (busy || !inStage()) return
+        if (pickerRef.current || busy || !inStage()) return
         const y = pos(nearest())
         if (Math.abs(window.scrollY - y) > 4) glide(y)
       }, 180)
@@ -523,11 +723,22 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
   const goTo = (i: number) => {
     jumpRef.current(i)
   }
+  // Tapping an object in the scene jumps to its chapter.
+  useEffect(() => {
+    sculpt.jump = (i) => jumpRef.current(i)
+    return () => {
+      sculpt.jump = null
+    }
+  }, [])
 
   // Deep links: /download#chapter-3 opens on that chapter.
   useEffect(() => {
     const m = /^#chapter-([1-5])$/.exec(window.location.hash)
     if (!m) return
+    if (pickerRef.current) {
+      setPicked(Number(m[1]))
+      return
+    }
     const el = stage.current
     if (!el) return
     const run = el.offsetHeight - window.innerHeight
@@ -555,22 +766,24 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
 
   return (
     <Mode.Provider value={{ app, onBegin }}>
-    <div className="relative bg-[#060609] text-white">
+    <Demo.Provider value={demoCtx}>
+    <div className="relative bg-black text-white">
       <style>{`
-        .caption-h { font-family: var(--font-cormorant); font-weight: 500; line-height: 1.05; font-size: 2.05rem; }
+        .caption-h { font-family: var(--font-cormorant); font-weight: 500; line-height: 1.05; font-size: 1.85rem; }
         @media (min-width: 640px) { .caption-h { font-size: 3rem; } }
         @media (min-width: 1024px) { .caption-h { font-size: 3.3rem; } .caption-p { margin-left: 0; } }
-        .caption-p { margin: 0.9rem auto 0; max-width: 34rem; font-size: 0.95rem; color: rgba(255,255,255,0.82); }
+        .caption-p { margin: 0.7rem auto 0; max-width: 34rem; font-size: 0.88rem; line-height: 1.45; color: rgba(255,255,255,0.86); }
+        @media (min-width: 1024px) { .caption-p { font-size: 0.95rem; line-height: 1.5; margin-top: 0.9rem; } }
         @keyframes grain { 0%,100% { transform: translate(0,0) } 25% { transform: translate(-2%,1%) } 50% { transform: translate(1%,-2%) } 75% { transform: translate(2%,2%) } }
       `}</style>
 
       {/* The stage: tall, so scrolling through it carves; its view is pinned. */}
-      <div ref={stage} className="relative h-[1100svh]">
+      <div ref={stage} className={`relative ${picker ? 'h-[100svh]' : 'h-[1100svh]'}`}>
         <div className="sticky top-0 h-[100svh] overflow-hidden">
-          <div className="absolute inset-0" style={{ cursor: CHISEL }}>
+          <div className="absolute inset-0">
             {live ? (
               <SceneBoundary>
-                <Sculpture />
+                <Objects />
               </SceneBoundary>
             ) : (
               <Fallback />
@@ -589,9 +802,9 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[7svh] bg-black" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[28svh] bg-gradient-to-t from-black/90 to-transparent lg:hidden" />
           {/* Phones: a soft dark band across the middle, where the message sits. */}
-          <div className="pointer-events-none absolute inset-x-0 top-[22%] h-[60%] bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.72)_28%,rgba(0,0,0,0.72)_72%,transparent)] lg:hidden" />
+          <div className="pointer-events-none absolute inset-x-0 top-[22%] h-[60%] bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.72)_28%,rgba(0,0,0,0.72)_72%,transparent)] transition-opacity duration-700 lg:hidden" style={{ opacity: overviewOpen ? 0 : 1 }} />
           {/* Wide screens: the message sits on the left, over a soft shade. */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[52vw] bg-gradient-to-r from-black/90 via-black/55 to-transparent lg:block" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[52vw] bg-gradient-to-r from-black/90 via-black/55 to-transparent transition-opacity duration-700 lg:block" style={{ opacity: overviewOpen ? 0 : 1 }} />
 
           {/* Header, inside the top letterbox. */}
           <header className="absolute inset-x-0 top-0 z-20 flex h-[7svh] min-h-[52px] items-center justify-between px-5 sm:px-8" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
@@ -652,15 +865,48 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
             ))}
           </nav>
 
+          {/* The overview keeps words to a minimum: what this is, and how to use it. */}
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-[8svh] z-10 px-6 text-center transition-opacity duration-700"
+            style={{ opacity: overviewOpen ? 1 : 0 }}
+          >
+            <p className="font-[family-name:var(--font-cormorant)] text-2xl font-medium sm:text-4xl">Everything you need to become who you choose.</p>
+            <p className="mt-3 text-[11px] uppercase tracking-[0.3em] text-white/[0.78]">Choose an artifact to explore</p>
+          </div>
+
+          {/* Phones: the 3D phone is brought up close; tap anywhere to put it back. */}
+          {picker && picked > 0 && hasScreen(shown) && phoneOpen && (
+            <button className="absolute inset-0 z-30 flex items-end justify-center bg-gradient-to-t from-black/70 to-transparent pb-[6svh] lg:hidden" onClick={() => setPhoneOpen(false)}>
+              <span className="text-[11px] uppercase tracking-[0.25em] text-white/[0.78]">In the app · example · tap to close</span>
+            </button>
+          )}
+
           {/* The caption, like a subtitle. */}
-          <div className="absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 px-4 text-center sm:px-8 lg:inset-x-auto lg:bottom-auto lg:left-[5vw] lg:w-[34vw] lg:max-w-[560px] lg:px-0 lg:text-left">
+          <div className={`absolute inset-x-0 z-10 px-4 text-center sm:px-8 lg:inset-x-auto lg:bottom-auto lg:left-[5vw] lg:top-1/2 lg:w-[34vw] lg:max-w-[560px] lg:-translate-y-1/2 lg:px-0 lg:text-left top-1/2 -translate-y-1/2`}>
             <div
               className="pointer-events-auto mx-auto max-w-4xl transition-all duration-200 [text-shadow:0_2px_18px_rgba(0,0,0,0.85)] lg:mx-0 lg:[text-shadow:none]"
-              style={{ opacity: visible ? 1 : 0, transform: `translateY(${visible ? 0 : 10}px)` }}
+              style={{ opacity: visible && !phoneOpen ? 1 : 0, transform: `translateY(${visible ? 0 : 10}px)` }}
               aria-live="polite"
               title={NARRATION[shown]}
             >
-              <Caption section={shown} />
+              {picker && shown === 'hero' ? null : <Caption section={shown} />}
+              {picker && picked > 0 && (
+                <button
+                  onClick={() => setPicked(0)}
+                  className="mt-6 text-[11px] uppercase tracking-[0.3em] text-white/[0.78] hover:text-white"
+                >
+                  ← Back to the universe
+                </button>
+              )}
+              {picker && picked > 0 && hasScreen(shown) && (
+                <button
+                  onClick={() => setPhoneOpen(true)}
+                  className="ml-6 mt-6 text-[11px] uppercase tracking-[0.3em] lg:hidden"
+                  style={{ color: GOLD }}
+                >
+                  See it in Voxu
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -682,6 +928,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
       </footer>
       )}
     </div>
+    </Demo.Provider>
     </Mode.Provider>
   )
 }

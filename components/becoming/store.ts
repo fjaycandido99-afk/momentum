@@ -22,6 +22,16 @@ export const sculpt = {
   /** Recent carving activity (0..1), drives the dust. */
   activity: 0,
   pointer: { x: 0, y: 0 },
+  /** The visitor just did something in a chapter's demo: its object reacts. */
+  react: { chapter: 0, at: 0 },
+  /** Loudness of the audio preview (0..1), for the headphones. */
+  audio: 0,
+  /** The app screen on the 3D phone: which screen, what the visitor did, a version to redraw on, and whether it's brought close (phones). */
+  phone: { section: null as Section | null, demo: null as unknown, v: 0, focus: false },
+  /** Which object is picked: 0 = the overview, 1..5 = a chapter. */
+  pick: 0,
+  /** Fly the story to a chapter (set by the page; the scene calls it when an object is tapped). */
+  jump: null as null | ((i: number) => void),
   /** Where the chisel is touching the statue while held (world space), or null. */
   hit: null as null | { x: number; y: number; z: number },
 }
