@@ -802,7 +802,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[7svh] bg-black" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[28svh] bg-gradient-to-t from-black/90 to-transparent lg:hidden" />
           {/* Phones: a soft dark band across the middle, where the message sits. */}
-          <div className="pointer-events-none absolute inset-x-0 top-[22%] h-[60%] bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.72)_28%,rgba(0,0,0,0.72)_72%,transparent)] transition-opacity duration-700 lg:hidden" style={{ opacity: overviewOpen ? 0 : 1 }} />
+          <div className="pointer-events-none absolute inset-x-0 top-[22%] h-[60%] bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.42)_28%,rgba(0,0,0,0.42)_72%,transparent)] transition-opacity duration-700 lg:hidden" style={{ opacity: overviewOpen ? 0 : 1 }} />
           {/* Wide screens: the message sits on the left, over a soft shade. */}
           <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[52vw] bg-gradient-to-r from-black/90 via-black/55 to-transparent transition-opacity duration-700 lg:block" style={{ opacity: overviewOpen ? 0 : 1 }} />
 
@@ -884,7 +884,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
           {/* The caption, like a subtitle. */}
           <div className={`absolute inset-x-0 z-10 px-4 text-center sm:px-8 lg:inset-x-auto lg:bottom-auto lg:left-[5vw] lg:top-1/2 lg:w-[34vw] lg:max-w-[560px] lg:-translate-y-1/2 lg:px-0 lg:text-left top-1/2 -translate-y-1/2`}>
             <div
-              className="pointer-events-auto mx-auto max-w-4xl transition-all duration-200 [text-shadow:0_2px_18px_rgba(0,0,0,0.85)] lg:mx-0 lg:[text-shadow:none]"
+              className="pointer-events-auto mx-auto max-w-4xl transition-all duration-200 [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_2px_22px_rgba(0,0,0,0.95)] lg:mx-0 lg:[text-shadow:none]"
               style={{ opacity: visible && !phoneOpen ? 1 : 0, transform: `translateY(${visible ? 0 : 10}px)` }}
               aria-live="polite"
               title={NARRATION[shown]}

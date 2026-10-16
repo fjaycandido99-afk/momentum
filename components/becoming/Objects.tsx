@@ -473,7 +473,7 @@ function Phone3D() {
     // Just under the glow threshold: the white type stays sharp instead of blooming.
     return { canvas: c, tex: t, mat: new THREE.MeshBasicMaterial({ map: t, color: new THREE.Color(0.8, 0.8, 0.8), toneMapped: false, transparent: true, opacity: 0 }) }
   }, [])
-  const st = useRef({ v: -1, shown: 0, pos: new THREE.Vector3(), q: new THREE.Quaternion(), placed: false })
+  const st = useRef({ v: -1, shown: 0, pos: new THREE.Vector3(), q: new THREE.Quaternion(), placed: false, lastId: 'brain' as Id })
   const tmp = useMemo(() => ({ d: new THREE.Vector3(), r: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), m: new THREE.Matrix4(), target: new THREE.Vector3(), q: new THREE.Quaternion() }), [])
   const fadeMats = useRef<THREE.Material[]>([])
   const label = useRef<HTMLParagraphElement>(null)
@@ -501,10 +501,17 @@ function Phone3D() {
     const wide = size.width >= 1024 && size.width / size.height > 1.2
     const open = flight.pick !== 0 && !!ph.section && flight.k > 0.55
     const want = open && (wide || ph.focus) ? 1 : 0
-    s.shown = THREE.MathUtils.damp(s.shown, want, want ? 3 : 8, Math.min(dt, 0.05))
+    s.shown = THREE.MathUtils.damp(s.shown, want, want ? 3 : 8, Math.min(dt, 0.25))
     const grp = g.current
     if (!grp) return
     grp.visible = s.shown > 0.01
+    // The screen and its caption are page elements: hide them with the phone,
+    // or they stay floating where the phone was.
+    if (domWrap.current) {
+      domWrap.current.style.opacity = String(s.shown)
+      domWrap.current.style.visibility = grp.visible ? 'visible' : 'hidden'
+    }
+    if (label.current) label.current.style.opacity = String(ph.focus || !grp.visible ? 0 : s.shown)
     if (!grp.visible) {
       s.placed = false
       return
@@ -523,7 +530,9 @@ function Phone3D() {
       q.setFromRotationMatrix(m)
     } else {
       // Beside the open artefact, a little toward the camera, to its right.
-      const id = BY_CHAPTER[flight.pick]
+      // While it fades out after closing, it stays beside the artefact it belonged to.
+      if (flight.pick !== 0) s.lastId = BY_CHAPTER[flight.pick] ?? s.lastId
+      const id = s.lastId
       const shot = shotFor(id)
       d.subVectors(shot.cam, shot.look)
       const dist = d.length() * 1.45
