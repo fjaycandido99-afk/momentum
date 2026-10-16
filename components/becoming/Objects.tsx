@@ -186,8 +186,10 @@ function Artefact({ id }: { id: Id }) {
       place.current.rotation.y = Math.atan2(cam.x - at.x, cam.z - at.z)
     }
     // Drifting slowly around its spot, bobbing, turning; the picked one settles.
-    if (float.current && !reduced) {
-      const free = picked ? 1 - flight.k : 1
+    // With Reduce Motion on it still floats, at half the drift: the scene is
+    // meant to be alive, and a slow float isn't the kind of motion that hurts.
+    if (float.current) {
+      const free = (picked ? 1 - flight.k : 1) * (reduced ? 0.5 : 1)
       float.current.position.set(
         Math.sin(t * 0.31 + o.phase) * 0.16 * free,
         Math.sin(t * 0.83 + o.phase) * 0.1 * free,
@@ -345,14 +347,15 @@ function Director() {
       f.t0 = t
     }
     const target = want === 0 ? L().overview : shotFor(BY_CHAPTER[want])
-    const k = reduced ? 1 : ease((t - f.t0) / 1.7)
+    // Reduce Motion: a shorter, flatter glide rather than a jump cut.
+    const k = ease((t - f.t0) / (reduced ? 1.1 : 1.7))
     flight.pick = want
     flight.k = k
     const { p, l, r } = tmp
     p.lerpVectors(f.fromPos, target.cam, k)
     l.lerpVectors(f.fromLook, target.look, k)
     // Rise a little in the middle of the flight, like a crane.
-    p.y += Math.sin(k * Math.PI) * 0.6
+    p.y += Math.sin(k * Math.PI) * (reduced ? 0.15 : 0.6)
     f.look.copy(l)
     if (!reduced) {
       // A slow breath, and gentle depth parallax with the pointer.
