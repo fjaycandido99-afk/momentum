@@ -188,7 +188,7 @@ So the gate is here, not in the build:
 
 ### Play Console — only Francis can do these
 
-1. Create the app record under `com.voxu.app`.
+1. Create the app record under `app.voxu` (com.voxu.app was taken on Play).
 2. **Data safety form** — must declare every data type collected and match
    https://voxu.app/privacy exactly. This is where most submissions stall.
 3. Content rating questionnaire.
@@ -233,7 +233,7 @@ Done 2026-09-22:
 **The two things I cannot produce, because only Google issues them:**
 
 1. **`android/app/google-services.json`** — Firebase Console → Project
-   settings → Your apps → Add app → Android → package name `com.voxu.app` →
+   settings → Your apps → Add app → Android → package name `app.voxu` →
    download. Save to `android/app/google-services.json`. It contains a real
    `mobilesdk_app_id`, project number and API key that only Google can mint;
    a hand-written one fails at registration, so there is no way to stub it.

@@ -74,7 +74,7 @@ The server picks the correct APNs endpoint based on this flag.
 ### 2. Add the Android App
 
 1. In your Firebase project, click **Add app** > **Android**
-2. Package name: `com.voxu.app`
+2. Package name: `app.voxu` (Android; iOS stays com.voxu.app)
 3. Register the app
 4. Download `google-services.json`
 5. Place it at `android/app/google-services.json`

@@ -34,7 +34,10 @@ android {
     namespace = "com.voxu.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.voxu.app"
+        // Play ID. com.voxu.app was already taken on Google Play by someone
+        // else; the iPhone app keeps com.voxu.app. The Java package
+        // (namespace) stays com.voxu.app, which Android allows.
+        applicationId "app.voxu"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Play refuses a versionCode it has already seen, so CI overrides
@@ -115,7 +118,7 @@ apply from: 'capacitor.build.gradle'
  *
  * The file itself cannot live in this repo's history usefully — download it
  * from Firebase Console (Project settings → Your apps → Android app
- * com.voxu.app) to android/app/google-services.json, or let CI write it from
+ * app.voxu) to android/app/google-services.json, or let CI write it from
  * the GOOGLE_SERVICES_JSON variable. It is not a secret: it ships inside the
  * APK, and its API key is restricted to this package name.
  */
@@ -128,7 +131,7 @@ if (servicesJSON.exists() && servicesJSON.length() > 0) {
             && !project.hasProperty('allowNoPush')) {
         throw new GradleException(
             message + '\n' +
-            'Download it from Firebase Console (Project settings -> Your apps -> com.voxu.app) ' +
+            'Download it from Firebase Console (Project settings -> Your apps -> app.voxu) ' +
             'to android/app/google-services.json, or pass -PallowNoPush=true to ship without push.'
         )
     }

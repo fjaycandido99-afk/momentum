@@ -55,7 +55,7 @@ if (fs.existsSync(SERVICES) && fs.statSync(SERVICES).size > 0) {
 } else {
   console.log('2. google-services.json: MISSING  <- push is dead, build still runs')
   console.log('   Firebase Console -> Project settings -> Your apps -> Add app')
-  console.log('   -> Android -> package name com.voxu.app -> download')
+  console.log('   -> Android -> package name app.voxu -> download')
   console.log(`   Save to ${rel(SERVICES)}`)
   console.log('   Then commit it: git add -f android/app/google-services.json')
   console.log('   (Not a secret: it ships inside the APK and its key is')

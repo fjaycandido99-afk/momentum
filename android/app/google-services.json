@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:538765635902:android:af5ee30acdb8a85fc4fc6f",
+        "android_client_info": {
+          "package_name": "app.voxu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBh05CfsbS3K94EvDoDBt61nIRw21XtjL0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:538765635902:android:5e3c902e9dd0aa92c4fc6f",
         "android_client_info": {
           "package_name": "com.voxu.app"
