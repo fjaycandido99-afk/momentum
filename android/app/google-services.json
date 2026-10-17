@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "538765635902",
+    "project_id": "voxu-b544c",
+    "storage_bucket": "voxu-b544c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:538765635902:android:5e3c902e9dd0aa92c4fc6f",
+        "android_client_info": {
+          "package_name": "com.voxu.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBh05CfsbS3K94EvDoDBt61nIRw21XtjL0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
