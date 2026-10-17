@@ -22,7 +22,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- voxu://app/<path>: the widget's taps (and any other link into a screen). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="voxu" />
+            </intent-filter>
+
         </activity>
+
+        <!-- Voxu · Today, the home-screen widget (TodayWidget.java). -->
+        <receiver
+            android:name=".TodayWidget"
+            android:label="Voxu · Today"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_today_info" />
+        </receiver>
 
         <!--
           FCM presentation defaults.

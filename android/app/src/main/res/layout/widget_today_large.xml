@@ -1,0 +1,153 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@android:id/background" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/wg_bg" android:clipToOutline="true">
+    <ImageView android:layout_width="match_parent" android:layout_height="match_parent"
+        android:scaleType="centerCrop" android:src="@drawable/wg_overview_photo" android:importantForAccessibility="no"/>
+    <ImageView android:layout_width="match_parent" android:layout_height="match_parent"
+        android:src="@drawable/wg_photo_fade" android:scaleType="fitXY" android:importantForAccessibility="no"/>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
+
+        <TextView android:id="@+id/w_eyebrow" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="VOXU" android:textAllCaps="true" android:letterSpacing="0.16" android:textSize="10sp"
+            android:fontFamily="sans-serif-medium" android:textColor="#8CFFFFFF" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:id="@+id/w_now" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
+            android:textSize="22sp" android:fontFamily="serif" android:textColor="#FFFFFFFF" android:maxLines="2" android:ellipsize="end"/>
+        <TextView android:id="@+id/w_sub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp"
+            android:textSize="12sp" android:fontFamily="serif" android:textStyle="italic" android:textColor="#BFFFFFFF"
+            android:maxLines="2" android:ellipsize="end" android:visibility="gone"/>
+
+        <LinearLayout android:id="@+id/w_guide" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp"
+            android:background="@drawable/wg_card" android:orientation="horizontal" android:gravity="center_vertical" android:padding="10dp"
+            android:visibility="gone">
+            <ImageView android:layout_width="15dp" android:layout_height="15dp" android:src="@drawable/wg_headphones" android:tint="#8CFFFFFF" android:importantForAccessibility="no"/>
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Today’s guided session"
+                    android:textSize="10sp" android:textColor="#8CFFFFFF"/>
+                <TextView android:id="@+id/w_guide_name" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="13sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFFFF" android:maxLines="1" android:ellipsize="end"/>
+            </LinearLayout>
+            <FrameLayout android:layout_width="32dp" android:layout_height="32dp">
+                <ImageView android:id="@+id/w_play_ring" android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:src="@drawable/wg_play_ring" android:importantForAccessibility="no"/>
+                <ImageView android:layout_width="13dp" android:layout_height="13dp" android:layout_gravity="center" android:layout_marginStart="1dp"
+                    android:src="@drawable/wg_play" android:contentDescription="Play"/>
+            </FrameLayout>
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp"
+            android:orientation="horizontal" android:gravity="center_vertical">
+
+            <LinearLayout android:id="@+id/w_count" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginEnd="14dp" android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+                <ImageView android:id="@+id/w_count_ring" android:layout_width="22dp" android:layout_height="22dp" android:importantForAccessibility="no"/>
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:orientation="vertical">
+                    <TextView android:id="@+id/w_count_text" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFFFF"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Completed"
+                        android:textSize="9sp" android:textColor="#8CFFFFFF"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/w_streak" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginEnd="14dp" android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+                <ImageView android:id="@+id/w_flame" android:layout_width="15dp" android:layout_height="15dp" android:src="@drawable/wg_flame" android:importantForAccessibility="no"/>
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:orientation="vertical">
+                    <TextView android:id="@+id/w_streak_text" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFFFF"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Day streak"
+                        android:textSize="9sp" android:textColor="#8CFFFFFF"/>
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:id="@+id/w_progress" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="vertical" android:visibility="gone">
+                <TextView android:id="@+id/w_progress_text" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFFFF"/>
+                <ImageView android:id="@+id/w_bar" android:layout_width="70dp" android:layout_height="4dp" android:layout_marginTop="4dp" android:importantForAccessibility="no"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/w_today" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" android:orientation="vertical" android:visibility="gone">
+
+        <TextView android:id="@+id/w_today_label" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Today" android:textAllCaps="true" android:letterSpacing="0.16" android:textSize="10sp"
+            android:fontFamily="sans-serif-medium" android:textColor="#8CFFFFFF" android:maxLines="1" android:ellipsize="end"/>
+
+        <LinearLayout android:id="@+id/w_row0" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="7dp" android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+            <ImageView android:id="@+id/w_row0_icon" android:layout_width="14dp" android:layout_height="14dp" android:importantForAccessibility="no"/>
+            <TextView android:id="@+id/w_row0_title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:layout_marginStart="8dp" android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFFFF"
+                android:maxLines="1" android:ellipsize="end"/>
+            <TextView android:id="@+id/w_row0_time" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="4dp" android:textSize="10sp" android:textColor="#8CFFFFFF" android:visibility="gone"/>
+            <TextView android:id="@+id/w_row0_tag" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="4dp" android:background="@drawable/wg_tag" android:paddingStart="6dp" android:paddingEnd="6dp"
+                android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="9sp" android:fontFamily="sans-serif-medium"
+                android:textColor="#FF000000" android:visibility="gone"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/w_row1" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="7dp" android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+            <ImageView android:id="@+id/w_row1_icon" android:layout_width="14dp" android:layout_height="14dp" android:importantForAccessibility="no"/>
+            <TextView android:id="@+id/w_row1_title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:layout_marginStart="8dp" android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFFFF"
+                android:maxLines="1" android:ellipsize="end"/>
+            <TextView android:id="@+id/w_row1_time" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="4dp" android:textSize="10sp" android:textColor="#8CFFFFFF" android:visibility="gone"/>
+            <TextView android:id="@+id/w_row1_tag" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="4dp" android:background="@drawable/wg_tag" android:paddingStart="6dp" android:paddingEnd="6dp"
+                android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="9sp" android:fontFamily="sans-serif-medium"
+                android:textColor="#FF000000" android:visibility="gone"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/w_row2" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="7dp" android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+            <ImageView android:id="@+id/w_row2_icon" android:layout_width="14dp" android:layout_height="14dp" android:importantForAccessibility="no"/>
+            <TextView android:id="@+id/w_row2_title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:layout_marginStart="8dp" android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFFFF"
+                android:maxLines="1" android:ellipsize="end"/>
+            <TextView android:id="@+id/w_row2_time" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="4dp" android:textSize="10sp" android:textColor="#8CFFFFFF" android:visibility="gone"/>
+            <TextView android:id="@+id/w_row2_tag" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="4dp" android:background="@drawable/wg_tag" android:paddingStart="6dp" android:paddingEnd="6dp"
+                android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="9sp" android:fontFamily="sans-serif-medium"
+                android:textColor="#FF000000" android:visibility="gone"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/w_row3" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="7dp" android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
+            <ImageView android:id="@+id/w_row3_icon" android:layout_width="14dp" android:layout_height="14dp" android:importantForAccessibility="no"/>
+            <TextView android:id="@+id/w_row3_title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:layout_marginStart="8dp" android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFFFF"
+                android:maxLines="1" android:ellipsize="end"/>
+            <TextView android:id="@+id/w_row3_time" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="4dp" android:textSize="10sp" android:textColor="#8CFFFFFF" android:visibility="gone"/>
+            <TextView android:id="@+id/w_row3_tag" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="4dp" android:background="@drawable/wg_tag" android:paddingStart="6dp" android:paddingEnd="6dp"
+                android:paddingTop="2dp" android:paddingBottom="2dp" android:textSize="9sp" android:fontFamily="sans-serif-medium"
+                android:textColor="#FF000000" android:visibility="gone"/>
+        </LinearLayout>
+        </LinearLayout>
+
+        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+
+            <LinearLayout android:id="@+id/w_mark" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:background="@drawable/wg_pill" android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="12dp" android:paddingEnd="14dp" android:paddingTop="8dp" android:paddingBottom="8dp">
+                <ImageView android:layout_width="13dp" android:layout_height="13dp" android:src="@drawable/wg_check" android:importantForAccessibility="no"/>
+                <TextView android:id="@+id/w_mark_text" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp" android:text="Mark Done" android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium" android:textColor="#FFFFFFFF" android:maxLines="1"/>
+            </LinearLayout>
+            <LinearLayout android:id="@+id/w_open" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:layout_marginStart="8dp" android:background="@drawable/wg_pill" android:orientation="horizontal" android:gravity="center_vertical"
+                android:paddingStart="12dp" android:paddingEnd="10dp" android:paddingTop="8dp" android:paddingBottom="8dp">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Open Voxu"
+                    android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFFFF" android:maxLines="1"/>
+                <ImageView android:layout_width="14dp" android:layout_height="14dp" android:src="@drawable/wg_chevron" android:tint="#8CFFFFFF" android:importantForAccessibility="no"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

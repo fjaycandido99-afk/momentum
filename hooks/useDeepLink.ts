@@ -18,8 +18,8 @@ export function useDeepLink() {
         // Dynamic import — only loads on native platforms
         const { App } = await import('@capacitor/app')
 
-        const listener = await App.addListener('appUrlOpen', (event) => {
-          const url = new URL(event.url)
+        const handle = (href: string) => {
+          const url = new URL(href)
           // Keep the query string and hash. Dropping them silently broke
           // any deep link that carried state — a notification pointing at
           // /daily-guide?session=midday_reset landed on the page with the
@@ -51,7 +51,27 @@ export function useDeepLink() {
           if (url.pathname) {
             router.push(target)
           }
-        })
+        }
+
+        const listener = await App.addListener('appUrlOpen', (event) => handle(event.url))
+
+        // Android doesn't send appUrlOpen for the link that STARTED the app
+        // (a widget tap while Voxu was closed), only for links while it's
+        // open; it has to be asked for. iOS sends both, so this is Android
+        // only — asking there too would open the link twice. Once per launch
+        // link, so a reload of the page doesn't replay it.
+        const { Capacitor } = await import('@capacitor/core')
+        if (Capacitor.getPlatform() === 'android') {
+          const href = (await App.getLaunchUrl())?.url
+          if (href?.startsWith('voxu://')) {
+            let seen = ''
+            try { seen = sessionStorage.getItem('voxu.launch-url') ?? '' } catch { /* storage off */ }
+            if (seen !== href) {
+              try { sessionStorage.setItem('voxu.launch-url', href) } catch { /* storage off */ }
+              handle(href)
+            }
+          }
+        }
 
         cleanup = () => {
           listener.remove()

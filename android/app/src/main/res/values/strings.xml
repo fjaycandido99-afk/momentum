@@ -8,4 +8,5 @@
     <string name="title_activity_main">Voxu</string>
     <string name="package_name">com.voxu.app</string>
     <string name="custom_url_scheme">com.voxu.app</string>
+    <string name="widget_today_description">Your era day, today’s promise, and how today is going.</string>
 </resources>
