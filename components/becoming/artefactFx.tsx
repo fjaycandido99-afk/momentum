@@ -147,6 +147,110 @@ export function makeFx(kind: 'brain' | 'bonsai', model: THREE.Object3D, mats: TH
   return { uniforms }
 }
 
+/**
+ * The centrepiece's material: finished marble where it has been carved, rough
+ * dark stone where it hasn't, a thin gold seam along the line between, and a
+ * glint on what was carved last. The order things are carved in is fixed: the
+ * face first, one side and the back last, so even the most it ever gets
+ * (uDone 0.9) leaves some of it raw.
+ */
+export type CoreFx = {
+  uniforms: {
+    uMin: { value: THREE.Vector3 }
+    uMax: { value: THREE.Vector3 }
+    /** How much is carved (0..1). */
+    uDone: { value: number }
+    /** How much was carved before the latest piece, so it can glint. */
+    uFrom: { value: number }
+    /** The glint on the latest piece (fades). */
+    uFresh: { value: number }
+    /** Warm light inside the gold seam (rises at the reveal). */
+    uLight: { value: number }
+    uGold: { value: THREE.Color }
+  }
+}
+export function makeCoreFx(model: THREE.Object3D, mats: THREE.MeshStandardMaterial[]): CoreFx {
+  const min = new THREE.Vector3(Infinity, Infinity, Infinity)
+  const max = new THREE.Vector3(-Infinity, -Infinity, -Infinity)
+  model.traverse((o) => {
+    const me = o as THREE.Mesh
+    if (!me.isMesh) return
+    me.geometry.computeBoundingBox()
+    min.min(me.geometry.boundingBox!.min)
+    max.max(me.geometry.boundingBox!.max)
+  })
+  const uniforms: CoreFx['uniforms'] = {
+    uMin: { value: min },
+    uMax: { value: max },
+    uDone: { value: 0.2 },
+    uFrom: { value: 0.2 },
+    uFresh: { value: 0 },
+    uLight: { value: 0 },
+    uGold: { value: GOLD },
+  }
+  // Grain about a twelfth of the model across.
+  const scale = (12 / Math.max(0.0001, max.y - min.y)).toFixed(3)
+  const field = /* glsl */ `
+    float coreField(vec3 p) {
+      vec3 q = (p - uMin) / max(uMax - uMin, vec3(0.0001));
+      // Broad noise, so the raw stone is one rough-edged region rather than spots.
+      float n = fxNoise(p * coreScale * 0.35) * 0.75 + fxNoise(p * coreScale * 1.4) * 0.25;
+      // Carved from the front back and from one side across (the face first), never in a straight line.
+      return 0.28 * n + 0.47 * q.x + 0.25 * (1.0 - q.z);
+    }`
+  for (const m of mats) {
+    m.onBeforeCompile = (shader) => {
+      Object.assign(shader.uniforms, uniforms)
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vFxPos;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFxPos = position;')
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          '#include <common>',
+          `#include <common>
+          varying vec3 vFxPos;
+          uniform vec3 uMin, uMax, uGold;
+          uniform float uDone, uFrom, uFresh, uLight;
+          const float coreScale = ${scale};
+          ${NOISE}
+          ${field}`,
+        )
+        .replace(
+          '#include <map_fragment>',
+          `#include <map_fragment>
+          float coreF = coreField(vFxPos);
+          float coreRaw = smoothstep(uDone - 0.012, uDone + 0.012, coreF);
+          {
+            // Raw stone: dark, mottled.
+            float g = fxNoise(vFxPos * coreScale * 4.0);
+            vec3 stone = vec3(0.17, 0.155, 0.14) * (0.65 + 0.7 * g);
+            diffuseColor.rgb = mix(diffuseColor.rgb, stone, coreRaw);
+          }`,
+        )
+        .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.95, coreRaw);')
+        .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.0, coreRaw);')
+        .replace(
+          '#include <normal_fragment_maps>',
+          `#include <normal_fragment_maps>
+          // Chisel-rough where it is still stone.
+          normal = normalize(normal + (vec3(fxNoise(vFxPos * coreScale * 9.0), fxNoise(vFxPos * coreScale * 9.0 + 7.1), fxNoise(vFxPos * coreScale * 9.0 + 3.3)) - 0.5) * 0.9 * coreRaw);`,
+        )
+        .replace(
+          '#include <emissivemap_fragment>',
+          `#include <emissivemap_fragment>
+          {
+            float seam = 1.0 - smoothstep(0.0, 0.012, abs(coreF - uDone));
+            float fresh = step(uFrom, coreF) * step(coreF, uDone) * uFresh;
+            totalEmissiveRadiance += uGold * (seam * (1.6 + 1.6 * uLight) + fresh * 0.45);
+          }`,
+        )
+    }
+    m.customProgramCacheKey = () => 'fx-core'
+    m.needsUpdate = true
+  }
+  return { uniforms }
+}
+
 const ease = (t: number) => {
   const x = Math.min(1, Math.max(0, t))
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2

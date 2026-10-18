@@ -485,6 +485,14 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
   useEffect(() => {
     sculpt.pick = picked
   }, [picked])
+  // The centrepiece's moment (every world opened, or it was tapped) changes what the overview says.
+  const [revealed, setRevealed] = useState(false)
+  useEffect(() => {
+    sculpt.core.onReveal = () => setRevealed(true)
+    return () => {
+      sculpt.core.onReveal = null
+    }
+  }, [])
   useEffect(() => {
     setLive(has3d())
   }, [])
@@ -770,6 +778,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     <div className="relative bg-black text-white">
       <style>{`
         .caption-h { font-family: var(--font-cormorant); font-weight: 500; line-height: 1.05; font-size: 1.85rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
         @media (min-width: 640px) { .caption-h { font-size: 3rem; } }
         @media (min-width: 1024px) { .caption-h { font-size: 3.3rem; } .caption-p { margin-left: 0; } }
         .caption-p { margin: 0.7rem auto 0; max-width: 34rem; font-size: 0.88rem; line-height: 1.45; color: rgba(255,255,255,0.86); }
@@ -870,10 +879,12 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
             className="pointer-events-none absolute inset-x-0 bottom-[8svh] z-10 px-6 text-center transition-opacity duration-700"
             style={{ opacity: overviewOpen ? 1 : 0 }}
           >
-            <p className="font-[family-name:var(--font-cormorant)] text-2xl font-medium sm:text-4xl">Everything you need to become who you choose.</p>
+            <p key={revealed ? 'r' : 'o'} className="animate-[fadeIn_1.2s_ease] font-[family-name:var(--font-cormorant)] text-2xl font-medium sm:text-4xl">
+              {revealed ? 'You are the work in progress.' : 'Everything you need to become who you choose.'}
+            </p>
             <p className="mt-3 flex items-center justify-center gap-4 text-[11px] uppercase tracking-[0.3em] text-white/[0.78]">
               <span aria-hidden className="hidden h-px w-14 bg-white/25 sm:block" />
-              Choose a world to explore
+              {revealed ? 'Every choice shapes who you become' : 'Choose a world to explore'}
               <span aria-hidden className="hidden h-px w-14 bg-white/25 sm:block" />
             </p>
           </div>

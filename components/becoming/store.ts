@@ -30,6 +30,12 @@ export const sculpt = {
   phone: { section: null as Section | null, demo: null as unknown, v: 0, focus: false },
   /** Which object is picked: 0 = the overview, 1..5 = a chapter. */
   pick: 0,
+  /**
+   * The centrepiece (the unfinished self): how many worlds have been opened on
+   * this visit (it carves itself a little more for each), when its reveal last
+   * started (performance.now, 0 = never), and the page's hook for it.
+   */
+  core: { opened: 0, reveal: 0, onReveal: null as null | (() => void) },
   /** Fly the story to a chapter (set by the page; the scene calls it when an object is tapped). */
   jump: null as null | ((i: number) => void),
   /** Where the chisel is touching the statue while held (world space), or null. */
