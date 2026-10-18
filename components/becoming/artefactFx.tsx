@@ -152,14 +152,14 @@ const ease = (t: number) => {
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
 }
 
-/** Drive the brain: a promise sends light up the veins; a faint shimmer while it is open. */
-export function useBrainFx(fx: Fx | null, open: () => boolean) {
+/** Drive the brain: a promise sends light up the veins; the veins shimmer as much as `idle` says (0..1). */
+export function useBrainFx(fx: Fx | null, idle: () => number) {
   const last = useRef(0)
   useFrame(({ clock }, dt) => {
     if (!fx) return
     const u = fx.uniforms
     u.uTime.value = clock.elapsedTime
-    u.uIdle.value = THREE.MathUtils.damp(u.uIdle.value, open() ? 1 : 0, 2, dt)
+    u.uIdle.value = THREE.MathUtils.damp(u.uIdle.value, idle(), 2, dt)
     const r = sculpt.react
     if (r.chapter === 3 && r.at !== last.current) last.current = r.at
     const since = (performance.now() - last.current) / 1000

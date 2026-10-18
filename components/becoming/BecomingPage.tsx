@@ -871,7 +871,11 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
             style={{ opacity: overviewOpen ? 1 : 0 }}
           >
             <p className="font-[family-name:var(--font-cormorant)] text-2xl font-medium sm:text-4xl">Everything you need to become who you choose.</p>
-            <p className="mt-3 text-[11px] uppercase tracking-[0.3em] text-white/[0.78]">Choose an artifact to explore</p>
+            <p className="mt-3 flex items-center justify-center gap-4 text-[11px] uppercase tracking-[0.3em] text-white/[0.78]">
+              <span aria-hidden className="hidden h-px w-14 bg-white/25 sm:block" />
+              Choose a world to explore
+              <span aria-hidden className="hidden h-px w-14 bg-white/25 sm:block" />
+            </p>
           </div>
 
           {/* Phones: the 3D phone is brought up close; tap anywhere to put it back. */}

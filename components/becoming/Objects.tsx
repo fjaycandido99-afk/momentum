@@ -11,52 +11,126 @@ import { FallingLeaves, SoundRings, makeFx, useBonsaiFx, useBrainFx } from './ar
 import { DEMO_START, drawScreen, SCREEN_H, SCREEN_W, type DemoState } from './phoneScreens'
 
 // "The Art of Becoming": the five parts of Voxu as artefacts on stone
-// pedestals (Meshy image-to-3D, compressed with meshopt), a constellation in a
-// black void: the AI Coach at the centre, the other four orbiting it at
-// different depths on a faint gold ring. Tap one and the camera flies to it
-// while the others fall back into the dark; scroll (or "Back to the
-// universe") flies back out. Phones get their own tall arrangement.
+// pedestals (Meshy image-to-3D, compressed with meshopt), an inner cosmos in a
+// black void: the AI Coach is the core, the other four are worlds riding slow
+// gold orbits around it, with small dark moons, travelling beads of light and
+// drifting rock. Tap one and the orbits stop, the camera flies to it and the
+// rest falls back into the dark; scroll (or "Back to the universe") flies back
+// out and the system turns again. Phones get their own tall arrangement.
 
 type Id = 'column' | 'scroll' | 'brain' | 'bonsai' | 'headphones'
-type Obj = { url: string; h: number; /** Its chapter (1..5). */ chapter: number; label: string; phase: number }
+type Obj = {
+  url: string
+  h: number
+  /** Its chapter (1..5). */
+  chapter: number
+  label: string
+  /** One line on hover: the chapter's own headline, so it promises nothing new. */
+  line: string
+  phase: number
+}
 const OBJS: Record<Id, Obj> = {
-  column: { url: '/models/column.glb', h: 1.6, chapter: 1, label: 'Daily Eras', phase: 0 },
-  scroll: { url: '/models/scroll.glb', h: 0.9, chapter: 2, label: 'Reflection', phase: 1.3 },
-  // The centrepiece, larger than the rest.
-  brain: { url: '/models/brain.glb', h: 1.85, chapter: 3, label: 'AI Coach', phase: 2.6 },
-  bonsai: { url: '/models/bonsai.glb', h: 1.45, chapter: 4, label: 'Habit Builder', phase: 3.9 },
-  headphones: { url: '/models/headphones.glb', h: 1.2, chapter: 5, label: 'Guided Audio', phase: 5.2 },
+  column: { url: '/models/column.glb', h: 1.6, chapter: 1, label: 'Daily Eras', line: 'Choose who you are becoming.', phase: 0 },
+  scroll: { url: '/models/scroll.glb', h: 0.9, chapter: 2, label: 'Reflection', line: 'Every night, an honest answer.', phase: 1.3 },
+  // The core, larger than the rest.
+  brain: { url: '/models/brain.glb', h: 1.85, chapter: 3, label: 'AI Coach', line: 'A coach that remembers your word.', phase: 2.6 },
+  bonsai: { url: '/models/bonsai.glb', h: 1.45, chapter: 4, label: 'Habit Builder', line: 'Motivation fades. Your word remains.', phase: 3.9 },
+  headphones: { url: '/models/headphones.glb', h: 1.2, chapter: 5, label: 'Guided Audio', line: 'Focus by day. Rest by night.', phase: 5.2 },
 }
 const IDS = Object.keys(OBJS) as Id[]
 const BY_CHAPTER = Object.fromEntries(IDS.map((id) => [OBJS[id].chapter, id])) as Record<number, Id>
 
+/** Where an object rides: which orbit (0 = the core), at what angle, raised by how much. */
+type Seat = { s: number; th: number; lift: number }
 type Layout = {
   overview: { cam: THREE.Vector3; look: THREE.Vector3; fov: number }
-  at: Record<Id, THREE.Vector3>
-  /** The orbit ring: centre and radii (x, z), or null for none. */
-  ring: { c: THREE.Vector3; rx: number; rz: number } | null
+  /** The orbit plane: a point on it is c + a·cos θ·s + b·sin θ·s (b leans, so the far side rides higher). */
+  orbit: { c: THREE.Vector3; a: THREE.Vector3; b: THREE.Vector3 }
+  /** The rings drawn (orbit sizes); the worlds ride some of them. */
+  rings: number[]
+  /** Which rings carry a moon, and where. */
+  moons: { s: number; th: number; r: number }[]
+  seat: Record<Id, Seat>
+  /** Wide screens turn the whole system; phones only sway, so nothing drifts behind the core or the words. */
+  turns: boolean
 }
 const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
+const deg = (d: number) => (d * Math.PI) / 180
 const LAYOUTS: Record<'wide' | 'tall', Layout> = {
   wide: {
     overview: { cam: v(0, 2.7, 8.6), look: v(0, 0.55, -1.6), fov: 44 },
-    at: { brain: v(0, -0.05, -1.6), column: v(-3.9, -0.35, 0.1), scroll: v(3.5, -0.55, 0.4), bonsai: v(-2.7, 0.55, -3.9), headphones: v(3.1, 0.6, -3.6) },
-    ring: { c: v(0, 0.05, -1.75), rx: 4.1, rz: 2.15 },
+    orbit: { c: v(0, 0, -1.75), a: v(4.3, 0, 0), b: v(0, -0.5, 2.3) },
+    rings: [0.45, 0.66, 0.84, 1, 1.18],
+    moons: [
+      { s: 0.45, th: deg(20), r: 0.07 },
+      { s: 0.45, th: deg(200), r: 0.09 },
+      { s: 0.84, th: deg(95), r: 0.1 },
+      { s: 0.84, th: deg(250), r: 0.08 },
+      { s: 0.84, th: deg(5), r: 0.1 },
+      { s: 1.18, th: deg(60), r: 0.12 },
+      { s: 1.18, th: deg(185), r: 0.11 },
+      { s: 1.18, th: deg(290), r: 0.09 },
+    ],
+    seat: {
+      brain: { s: 0, th: 0, lift: -0.05 },
+      column: { s: 1, th: deg(150), lift: 0 },
+      scroll: { s: 1, th: deg(28), lift: 0 },
+      bonsai: { s: 0.66, th: deg(222), lift: 0.25 },
+      headphones: { s: 0.66, th: deg(320), lift: 0.3 },
+    },
+    turns: true,
   },
   tall: {
     overview: { cam: v(0, 0.6, 9.6), look: v(0, 0.2, -1.6), fov: 50 },
-    at: { brain: v(0, -0.3, -1.6), column: v(-1.25, 2.0, -2.6), headphones: v(1.35, 2.15, -3.1), bonsai: v(-1.2, -2.3, -2.2), scroll: v(1.15, -2.1, -0.7) },
-    ring: null,
+    orbit: { c: v(0, -0.05, -1.6), a: v(1.6, 0, 0.2), b: v(0, 2.5, -0.2) },
+    rings: [0.5, 1, 1.22],
+    moons: [
+      { s: 1.22, th: deg(90), r: 0.1 },
+      { s: 1.22, th: deg(180), r: 0.13 },
+      { s: 1.22, th: deg(0), r: 0.09 },
+      { s: 1.22, th: deg(270), r: 0.11 },
+    ],
+    seat: {
+      // Beside the core rather than above and below it, so the bottom two stay clear of the words.
+      brain: { s: 0, th: 0, lift: -0.25 },
+      column: { s: 1, th: deg(145), lift: 0 },
+      headphones: { s: 1, th: deg(35), lift: 0 },
+      bonsai: { s: 1, th: deg(215), lift: 0 },
+      scroll: { s: 1, th: deg(325), lift: 0 },
+    },
+    turns: false,
   },
 }
 /** Which arrangement is on screen (set by the camera from the canvas shape). */
 const layout = { tall: false }
 const L = () => LAYOUTS[layout.tall ? 'tall' : 'wide']
 
+/**
+ * The system's motion, advanced by the Director every frame: `t` is orbit time,
+ * which slows while a world is hovered and stops while one is open (so the
+ * camera flies to a world that stays put).
+ */
+const orbit = { t: 0, speed: 1, hover: null as Id | null }
+/** One turn in ten minutes on wide screens; phones sway ±11° over seventy seconds. */
+const spin = () => (L().turns ? orbit.t * ((Math.PI * 2) / 600) : 0.2 * Math.sin((orbit.t * Math.PI * 2) / 70))
+/** A point on an orbit of size s at angle th (before the system's spin). */
+function orbitPoint(s: number, th: number, out: THREE.Vector3) {
+  const o = L().orbit
+  const a = th + spin()
+  return out.copy(o.c).addScaledVector(o.a, Math.cos(a) * s).addScaledVector(o.b, Math.sin(a) * s)
+}
+/** Where an object is right now. */
+function posOf(id: Id, out = new THREE.Vector3()) {
+  const st = L().seat[id]
+  orbitPoint(st.s, st.th, out)
+  out.y += st.lift
+  return out
+}
+
 /** The close shot for an object: in front of it (toward the overview camera), a little to one side and above. */
 function shotFor(id: Id) {
   const o = OBJS[id]
-  const at = L().at[id]
+  const at = posOf(id)
   const from = L().overview.cam
   const toCam = v(from.x - at.x, 0, from.z - at.z).normalize()
   const side = v(toCam.z, 0, -toCam.x)
@@ -73,6 +147,29 @@ const ease = (t: number) => {
 
 /** The flight between shots, shared with the objects and the ring. */
 const flight = { pick: 0, k: 1 }
+
+/** A soft warm radial glow, shared by the light pools and the core's halo. */
+let glowTex: THREE.CanvasTexture | null = null
+function glowTexture() {
+  if (glowTex) return glowTex
+  const c = document.createElement('canvas')
+  c.width = c.height = 128
+  const x = c.getContext('2d')!
+  const gr = x.createRadialGradient(64, 64, 0, 64, 64, 64)
+  gr.addColorStop(0, 'rgba(255,226,180,0.9)')
+  gr.addColorStop(0.35, 'rgba(255,214,160,0.35)')
+  gr.addColorStop(1, 'rgba(0,0,0,0)')
+  x.fillStyle = gr
+  x.fillRect(0, 0, 128, 128)
+  glowTex = new THREE.CanvasTexture(c)
+  return glowTex
+}
+
+const GOLD = '#C9AE82'
+/** A thin flat ring (the halo under each pedestal), radius 1. */
+const HALO_GEO = new THREE.RingGeometry(0.975, 1, 96)
+const haloMaterial = () =>
+  new THREE.MeshBasicMaterial({ color: '#e2c58f', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false })
 
 /** A model, scaled to its height and standing on the origin, with its own fadeable material. */
 function useArtefact(url: string, h: number) {
@@ -162,15 +259,25 @@ function Artefact({ id }: { id: Id }) {
   // Its own response to the visitor (brain, bonsai, headphones).
   const fx = useMemo(() => (id === 'brain' || id === 'bonsai' ? makeFx(id, model, mats) : null), [id, model, mats])
   const leaves = useRef<{ drop: (n: number) => void } | null>(null)
-  useBrainFx(id === 'brain' ? fx : null, () => flight.pick === o.chapter)
+  // The core's veins shimmer faintly in the overview too: it is the live centre of the system.
+  useBrainFx(id === 'brain' ? fx : null, () => (flight.pick === o.chapter ? 1 : flight.pick === 0 ? 0.5 : 0))
   useBonsaiFx(id === 'bonsai' ? fx : null, { drop: (n) => leaves.current?.drop(n) })
   const place = useRef<THREE.Group>(null)
   const float = useRef<THREE.Group>(null)
-  const label = useRef<HTMLButtonElement>(null)
+  const label = useRef<HTMLDivElement>(null)
   const mark = useRef<HTMLSpanElement>(null)
+  const line = useRef<HTMLSpanElement>(null)
+  const tick = useRef<HTMLSpanElement>(null)
   const st = useRef({ hover: 0, shown: 0, born: -1, solid: false })
   const [hovered, setHovered] = useState(false)
   const reduced = useMemo(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches, [])
+  // The halo it stands on (two for the core), and the core's own light.
+  const core = id === 'brain'
+  const haloR = Math.min(width * 0.6 + 0.05, o.h * 0.9)
+  const haloMats = useMemo(() => [haloMaterial(), haloMaterial()], [])
+  const glow = useRef<THREE.Mesh>(null)
+  const lamp = useRef<THREE.PointLight>(null)
+  const at = useMemo(() => new THREE.Vector3(), [])
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime
     const s = st.current
@@ -178,8 +285,10 @@ function Artefact({ id }: { id: Id }) {
     const picked = flight.pick === o.chapter
     const someone = flight.pick !== 0
     if (picked) seen.add(o.chapter)
-    // Where it floats (the arrangement depends on the screen), facing the overview camera.
-    const at = L().at[id]
+    if (hovered && !someone) orbit.hover = id
+    else if (orbit.hover === id) orbit.hover = null
+    // Where it rides on its orbit (the arrangement depends on the screen), facing the overview camera.
+    posOf(id, at)
     const cam = L().overview.cam
     if (place.current) {
       place.current.position.copy(at)
@@ -207,7 +316,8 @@ function Artefact({ id }: { id: Id }) {
       if (jolt > 0) float.current.rotation.y += dt * 4 * jolt
       // ...and the headphones move with the sound.
       const beat = o.chapter === 5 ? sculpt.audio * 0.05 : 0
-      float.current.scale.setScalar(1 + 0.08 * jolt + beat)
+      // A hovered world leans in a little.
+      float.current.scale.setScalar(1 + 0.08 * jolt + beat + 0.06 * s.hover)
     }
     s.hover = THREE.MathUtils.damp(s.hover, hovered && !someone ? 1 : 0, 6, dt)
     // Fades in once loaded; falls back into the dark while another one is open.
@@ -223,11 +333,23 @@ function Artefact({ id }: { id: Id }) {
     }
     s.solid = solid
     if (place.current) place.current.visible = s.shown > 0.01
-    // Names only in the overview; brighter on hover; a gold mark once explored.
+    // The halo: brighter on hover, faint while it is open, gone while another is.
+    const ring = s.shown * (picked ? 0.3 : someone ? 0 : 0.42 + 0.5 * s.hover)
+    haloMats[0].opacity = ring
+    haloMats[1].opacity = core ? ring * 0.45 : 0
+    if (core) {
+      // The core glows from within, a slow breath.
+      const breath = 0.85 + 0.15 * Math.sin(t * 0.6)
+      if (glow.current) (glow.current.material as THREE.MeshBasicMaterial).opacity = s.shown * (someone && !picked ? 0 : 0.14 * breath)
+      if (lamp.current) lamp.current.intensity = s.shown * (someone && !picked ? 0 : 2.2 * breath)
+    }
+    // Names only in the overview; brighter on hover, with its one line; a gold mark once explored.
     if (label.current) {
       label.current.style.opacity = !someone && flight.k > 0.6 ? String(0.72 + 0.28 * s.hover) : '0'
       label.current.style.pointerEvents = someone ? 'none' : 'auto'
     }
+    if (line.current) line.current.style.opacity = String(s.hover)
+    if (tick.current) tick.current.style.opacity = String(1 - s.hover)
     if (mark.current) mark.current.style.opacity = seen.has(o.chapter) ? '1' : '0'
   })
   const go = () => {
@@ -240,6 +362,22 @@ function Artefact({ id }: { id: Id }) {
         {id === 'bonsai' && <FallingLeaves h={o.h} api={leaves} />}
         {id === 'headphones' && <SoundRings h={o.h} w={width} />}
       </group>
+      {/* The halo it floats over, with a bead of light at its front edge. */}
+      <mesh geometry={HALO_GEO} material={haloMats[0]} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.12, 0]} scale={haloR} />
+      <mesh geometry={HALO_GEO} material={haloMats[1]} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.12, 0]} scale={haloR * 1.35} />
+      <mesh position={[0, -0.12, haloR]} material={haloMats[0]}>
+        <sphereGeometry args={[0.028, 12, 8]} />
+      </mesh>
+      {core && (
+        <>
+          {/* Warm light from within the core: a glow behind it and a lamp that lights its pedestal and the nearest worlds. */}
+          <mesh ref={glow} position={[0, o.h * 0.55, -0.35]} scale={o.h * 2.8}>
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial map={glowTexture()} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} fog={false} />
+          </mesh>
+          <pointLight ref={lamp} position={[0, o.h * 0.3, o.h * 0.45]} color="#ffc98a" intensity={0} distance={5} decay={2} />
+        </>
+      )}
       {/* What you tap: a plain box around the object (cheaper than the object itself). */}
       <mesh
         position={[0, o.h / 2, 0]}
@@ -260,66 +398,252 @@ function Artefact({ id }: { id: Id }) {
         <boxGeometry args={[o.h * 1.1, o.h * 1.25, o.h * 1.1]} />
         <meshBasicMaterial visible={false} />
       </mesh>
-      <Html position={[0, -0.18, 0]} center zIndexRange={[5, 0]}>
-        <button
+      {/* Hung from the halo's front edge: the name, then a dotted line down, or its one line on hover. */}
+      <Html position={[0, -0.12, haloR]} zIndexRange={[5, 0]}>
+        <div
           ref={label}
-          onClick={go}
-          onPointerEnter={() => setHovered(true)}
-          onPointerLeave={() => setHovered(false)}
-          style={{
-            opacity: 0,
-            transition: 'opacity 0.5s',
-            color: '#C9AE82',
-            font: '600 11px/1 Inter, system-ui, sans-serif',
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            whiteSpace: 'nowrap',
-            background: 'none',
-            border: 0,
-            padding: '10px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '7px',
-          }}
+          style={{ opacity: 0, transition: 'opacity 0.5s', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}
         >
-          <span ref={mark} aria-hidden style={{ opacity: 0, width: 5, height: 5, borderRadius: 9, background: '#C9AE82', transition: 'opacity 0.5s' }} />
-          {o.label}
-        </button>
+          <button
+            onClick={go}
+            onPointerEnter={() => setHovered(true)}
+            onPointerLeave={() => setHovered(false)}
+            style={{
+              color: GOLD,
+              font: '600 11px/1 Inter, system-ui, sans-serif',
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+              background: 'none',
+              border: 0,
+              padding: '10px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '7px',
+            }}
+          >
+            <span ref={mark} aria-hidden style={{ opacity: 0, width: 5, height: 5, borderRadius: 9, background: GOLD, transition: 'opacity 0.5s' }} />
+            {o.label}
+          </button>
+          <span ref={tick} aria-hidden style={{ width: 0, height: 18, borderLeft: `1px dotted ${GOLD}`, opacity: 1 }} />
+          <span
+            ref={line}
+            style={{
+              position: 'absolute',
+              top: 32,
+              opacity: 0,
+              color: 'rgba(255,255,255,0.82)',
+              font: 'italic 500 15px/1.2 var(--font-cormorant), Georgia, serif',
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+              textShadow: '0 1px 8px rgba(0,0,0,0.9)',
+            }}
+          >
+            {o.line}
+          </span>
+        </div>
       </Html>
     </group>
   )
 }
 
-/** A faint gold orbit, tying the five together; it fades while one is open. */
-function Ring() {
-  const ref = useRef<THREE.LineLoop>(null)
-  const line = useMemo(() => {
+/** How much of the system shows: all of it in the overview, nothing while a world is open. */
+const systemShown = () => (flight.pick === 0 ? flight.k : 1 - flight.k)
+
+/**
+ * The orbits: thin gold rings around the core, beads of light travelling along
+ * them, small dark moons riding them. A hovered world's ring brightens. It all
+ * fades while a world is open.
+ */
+function Orbits() {
+  const MAX_RINGS = 5
+  const BEADS = 3
+  const { lines, ringMats } = useMemo(() => {
     const pts: THREE.Vector3[] = []
-    for (let i = 0; i < 160; i++) {
-      const a = (i / 160) * Math.PI * 2
+    for (let i = 0; i < 200; i++) {
+      const a = (i / 200) * Math.PI * 2
       pts.push(new THREE.Vector3(Math.cos(a), 0, Math.sin(a)))
     }
     const geo = new THREE.BufferGeometry().setFromPoints(pts)
-    const mat = new THREE.LineDashedMaterial({ color: '#C9AE82', dashSize: 0.035, gapSize: 0.05, transparent: true, opacity: 0 })
-    const l = new THREE.LineLoop(geo, mat)
-    l.computeLineDistances()
-    return l
+    const ringMats = Array.from({ length: MAX_RINGS }, () => new THREE.LineBasicMaterial({ color: '#d9bd8c', transparent: true, opacity: 0, depthWrite: false, fog: false }))
+    const lines = ringMats.map((m) => {
+      const l = new THREE.LineLoop(geo, m)
+      l.matrixAutoUpdate = false
+      return l
+    })
+    return { lines, ringMats }
   }, [])
-  useFrame(({ clock }, dt) => {
-    const r = L().ring
-    const l = ref.current
-    if (!l) return
-    l.visible = !!r
-    if (!r) return
-    l.position.copy(r.c)
-    l.scale.set(r.rx, 1, r.rz)
-    l.rotation.y = clock.elapsedTime * 0.01
-    const mat = l.material as THREE.LineDashedMaterial
-    const want = flight.pick === 0 ? 0.32 * flight.k : 0.32 * (1 - flight.k)
-    mat.opacity = THREE.MathUtils.damp(mat.opacity, want, 3, dt)
+  // Beads: a few per ring, each at its own pace.
+  const beads = useMemo(() => {
+    const n = MAX_RINGS * BEADS
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3))
+    const seeds = Array.from({ length: n }, (_, i) => ({ th: Math.random() * Math.PI * 2, w: (0.04 + Math.random() * 0.08) * (i % 2 ? 1 : 1.3) }))
+    return { g, seeds }
+  }, [])
+  const beadMat = useRef<THREE.PointsMaterial>(null)
+  const moons = useRef<(THREE.Mesh | null)[]>([])
+  const moonMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#1a1714', metalness: 0.75, roughness: 0.32, envMapIntensity: 1.3, transparent: true, opacity: 0 }), [])
+  const tmp = useMemo(() => ({ m: new THREE.Matrix4(), a: new THREE.Vector3(), b: new THREE.Vector3(), n: new THREE.Vector3(), p: new THREE.Vector3() }), [])
+  useFrame((_, dt) => {
+    const lay = L()
+    const shown = systemShown()
+    const { m, a, b, n, p } = tmp
+    const hoverS = orbit.hover ? lay.seat[orbit.hover].s : -1
+    const turn = spin()
+    lines.forEach((l, i) => {
+      const s = lay.rings[i]
+      l.visible = s !== undefined && shown > 0.01
+      if (!l.visible) return
+      // The unit circle, laid onto this orbit's plane at this size.
+      a.copy(lay.orbit.a).multiplyScalar(s)
+      b.copy(lay.orbit.b).multiplyScalar(s)
+      n.crossVectors(b, a).normalize()
+      m.makeBasis(a, n, b).setPosition(lay.orbit.c)
+      l.matrix.copy(m)
+      l.matrixWorldNeedsUpdate = true
+      // Inner rings a touch brighter; the hovered world's ring glows.
+      const lit = s === hoverS ? 0.55 : 0.2 - i * 0.02
+      ringMats[i].opacity = THREE.MathUtils.damp(ringMats[i].opacity, lit * shown, 6, dt)
+    })
+    const pos = beads.g.attributes.position as THREE.BufferAttribute
+    beads.seeds.forEach((sd, i) => {
+      const s = lay.rings[Math.floor(i / BEADS)]
+      if (s === undefined) {
+        pos.setXYZ(i, 0, -999, 0)
+        return
+      }
+      // Beads keep moving even while the system is held still: the cosmos stays alive.
+      sd.th += dt * sd.w
+      orbitPoint(s, sd.th - turn, p)
+      pos.setXYZ(i, p.x, p.y, p.z)
+    })
+    pos.needsUpdate = true
+    if (beadMat.current) beadMat.current.opacity = 0.9 * shown
+    moonMat.opacity = shown
+    moonMat.transparent = shown < 0.995
+    moons.current.forEach((me, i) => {
+      if (!me) return
+      const mo = lay.moons[i]
+      me.visible = !!mo && shown > 0.01
+      if (!mo) return
+      orbitPoint(mo.s, mo.th, me.position)
+      me.scale.setScalar(mo.r)
+    })
   })
-  return <primitive ref={ref} object={line} />
+  return (
+    <>
+      {lines.map((l, i) => (
+        <primitive key={i} object={l} />
+      ))}
+      <points geometry={beads.g} frustumCulled={false}>
+        <pointsMaterial ref={beadMat} size={0.075} color="#ffe2a8" transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} fog={false} sizeAttenuation />
+      </points>
+      {Array.from({ length: 8 }, (_, i) => (
+        <mesh
+          key={i}
+          ref={(me) => {
+            moons.current[i] = me
+          }}
+          material={moonMat}
+          visible={false}
+        >
+          <sphereGeometry args={[1, 32, 20]} />
+        </mesh>
+      ))}
+    </>
+  )
+}
+
+/** Dark stone fragments drifting at the edge of the system, slowly tumbling. */
+function Rocks() {
+  const N = LIGHT ? 14 : 28
+  const mesh = useRef<THREE.InstancedMesh>(null)
+  const geo = useMemo(() => {
+    // A rough stone: an icosahedron with its corners pushed about.
+    const g = new THREE.IcosahedronGeometry(1, 1)
+    const p = g.attributes.position as THREE.BufferAttribute
+    const seen = new Map<string, number>()
+    for (let i = 0; i < p.count; i++) {
+      const key = `${p.getX(i).toFixed(3)},${p.getY(i).toFixed(3)},${p.getZ(i).toFixed(3)}`
+      const k = seen.get(key) ?? 0.7 + Math.random() * 0.5
+      seen.set(key, k)
+      p.setXYZ(i, p.getX(i) * k, p.getY(i) * k * 0.8, p.getZ(i) * k)
+    }
+    g.computeVertexNormals()
+    return g
+  }, [])
+  const mat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#2a2622', roughness: 0.85, metalness: 0.15, flatShading: true }), [])
+  const rocks = useMemo(
+    () =>
+      Array.from({ length: N }, () => ({
+        // In a loose band beyond the outer ring, a few near the lens.
+        s: 1.35 + Math.random() * 0.8,
+        th: Math.random() * Math.PI * 2,
+        y: (Math.random() - 0.5) * 1.6,
+        r: 0.03 + Math.pow(Math.random(), 3) * 0.16,
+        rot: new THREE.Euler(Math.random() * 6, Math.random() * 6, Math.random() * 6),
+        tumble: (Math.random() - 0.5) * 0.3,
+      })),
+    [N],
+  )
+  const tmp = useMemo(() => ({ m: new THREE.Matrix4(), q: new THREE.Quaternion(), p: new THREE.Vector3(), sc: new THREE.Vector3() }), [])
+  useFrame((_, dt) => {
+    const im = mesh.current
+    if (!im) return
+    const { m, q, p, sc } = tmp
+    rocks.forEach((r, i) => {
+      r.rot.x += dt * r.tumble
+      r.rot.y += dt * r.tumble * 0.7
+      orbitPoint(r.s, r.th, p)
+      p.y += r.y
+      q.setFromEuler(r.rot)
+      sc.setScalar(r.r)
+      m.compose(p, q, sc)
+      im.setMatrixAt(i, m)
+    })
+    im.instanceMatrix.needsUpdate = true
+  })
+  return <instancedMesh ref={mesh} args={[geo, mat, N]} frustumCulled={false} />
+}
+
+/** A very faint warm haze far behind the system, the only "nebula" there is. */
+function Haze() {
+  const tex = useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = 512
+    c.height = 256
+    const x = c.getContext('2d')!
+    // Soft clouds along a diagonal band, built from many faint blobs.
+    for (let i = 0; i < 70; i++) {
+      const u = Math.random()
+      const cx = u * 512
+      const cy = 200 - u * 150 + (Math.random() - 0.5) * 70
+      const r = 20 + Math.random() * 60
+      const gr = x.createRadialGradient(cx, cy, 0, cx, cy, r)
+      gr.addColorStop(0, `rgba(200,185,165,${0.05 + Math.random() * 0.06})`)
+      gr.addColorStop(1, 'rgba(0,0,0,0)')
+      x.fillStyle = gr
+      x.fillRect(cx - r, cy - r, r * 2, r * 2)
+    }
+    // Fade to nothing well before the edges, so it never reads as a rectangle.
+    x.globalCompositeOperation = 'destination-in'
+    x.setTransform(2, 0, 0, 1, 0, 0)
+    const edge = x.createRadialGradient(128, 128, 0, 128, 128, 128)
+    edge.addColorStop(0, 'rgba(0,0,0,1)')
+    edge.addColorStop(0.55, 'rgba(0,0,0,0.6)')
+    edge.addColorStop(1, 'rgba(0,0,0,0)')
+    x.fillStyle = edge
+    x.fillRect(0, 0, 256, 256)
+    return new THREE.CanvasTexture(c)
+  }, [])
+  return (
+    <mesh position={[6, 9, -34]} scale={[60, 30, 1]}>
+      <planeGeometry args={[1, 1]} />
+      <meshBasicMaterial map={tex} transparent opacity={0.55} depthWrite={false} blending={THREE.AdditiveBlending} fog={false} />
+    </mesh>
+  )
 }
 
 function Director() {
@@ -335,6 +659,10 @@ function Director() {
     const f = fly.current
     layout.tall = size.width / size.height < 0.85
     const want = sculpt.pick
+    // The system turns: slower while a world is hovered, held still while one is
+    // open. Reduce Motion halves it (a slow orbit is calm motion, not the kind that hurts).
+    orbit.speed = THREE.MathUtils.damp(orbit.speed, want !== 0 ? 0 : orbit.hover ? 0.25 : 1, want !== 0 ? 5 : 1.5, dt)
+    orbit.t += Math.min(dt, 0.1) * orbit.speed * (reduced ? 0.5 : 1)
     if (want !== f.pick || layout.tall !== f.tall) {
       // A new flight starts from wherever the camera is now (the first shot starts in place).
       const first = f.pick === -1 || layout.tall !== f.tall
@@ -671,24 +999,14 @@ function Floor() {
 }
 
 function Pools() {
-  const tex = useMemo(() => {
-    const c = document.createElement('canvas')
-    c.width = c.height = 128
-    const x = c.getContext('2d')!
-    const gr = x.createRadialGradient(64, 64, 0, 64, 64, 64)
-    gr.addColorStop(0, 'rgba(255,226,180,0.9)')
-    gr.addColorStop(0.35, 'rgba(255,214,160,0.35)')
-    gr.addColorStop(1, 'rgba(0,0,0,0)')
-    x.fillStyle = gr
-    x.fillRect(0, 0, 128, 128)
-    return new THREE.CanvasTexture(c)
-  }, [])
+  const tex = useMemo(() => glowTexture(), [])
   const refs = useRef<Partial<Record<Id, THREE.Mesh>>>({})
+  const at = useMemo(() => new THREE.Vector3(), [])
   useFrame((_, dt) => {
     for (const id of IDS) {
       const m = refs.current[id]
       if (!m) continue
-      const at = L().at[id]
+      posOf(id, at)
       m.position.set(at.x, floorY() + 0.01, at.z)
       const mat = m.material as THREE.MeshBasicMaterial
       const lit = flight.pick === 0 ? 1 : flight.pick === OBJS[id].chapter ? 1.4 : 0
@@ -770,6 +1088,7 @@ export default function Objects() {
       {/* Everything far away fades into the black. */}
       <fog attach="fog" args={['#000000', 11, 30]} />
       <Stars />
+      <Haze />
       {/* Reflections only (the background stays black): a clean studio. */}
       <Environment resolution={LIGHT ? 64 : 128} frames={1}>
         <Lightformer form="rect" intensity={3} color="#fff4e8" position={[-4, 5, 5]} scale={[6, 3, 1]} />
@@ -778,7 +1097,8 @@ export default function Objects() {
       </Environment>
       <Director />
       <DragSpin />
-      <Ring />
+      <Orbits />
+      <Rocks />
       {IDS.map((id) => (
         <Skip key={id}>
           <Suspense fallback={null}>
