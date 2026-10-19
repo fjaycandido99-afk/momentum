@@ -42,6 +42,20 @@ export const sculpt = {
   hit: null as null | { x: number; y: number; z: number },
 }
 
+/**
+ * The climb: the chapters in the order a visitor is led through them (Daily
+ * Eras, Habit Builder, AI Coach, Guided Audio, Reflection), each a step up
+ * toward the bust. Any step can still be opened directly.
+ */
+export const STEPS = [1, 4, 3, 5, 2]
+export const STEP_NAME: Record<number, string> = { 1: 'Daily Eras', 4: 'Habit Builder', 3: 'AI Coach', 5: 'Guided Audio', 2: 'Reflection' }
+/** Chapters opened on this visit. */
+export const visited = new Set<number>()
+/** The first step not yet opened (the start for a new visitor), or 0 once all are. */
+export const nextStep = () => STEPS.find((c) => !visited.has(c)) ?? 0
+/** The step after a chapter on the climb, or 0 after the last. */
+export const stepAfter = (chapter: number) => STEPS[STEPS.indexOf(chapter) + 1] ?? 0
+
 export type Stage = keyof typeof sculpt.manual
 export const sectionAt = (p: number): Section => SECTIONS[Math.min(SECTIONS.length - 1, Math.max(0, Math.floor(p)))]
 /** Which stage a chapter works on (for hand carving and the demos). */

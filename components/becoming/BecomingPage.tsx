@@ -4,7 +4,7 @@ import { Component, createContext, useContext, useEffect, useMemo, useRef, useSt
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Lenis from 'lenis'
-import { SECTIONS, carvedProgress, makePromise, sculpt, sectionAt, type Section } from './store'
+import { SECTIONS, STEPS, STEP_NAME, carvedProgress, makePromise, nextStep, sculpt, sectionAt, stepAfter, visited, type Section } from './store'
 import { NARRATION } from './script'
 import { hasScreen, screenFor } from './PhonePreview'
 import { AUDIO, DEMO_START, type DemoState } from './phoneScreens'
@@ -49,10 +49,10 @@ function Fallback() {
 const NUMERAL: Record<Section, string> = {
   hero: '',
   potential: 'I',
-  intention: 'II',
+  strength: 'II',
   discipline: 'III',
-  strength: 'IV',
-  polish: 'V',
+  polish: 'IV',
+  intention: 'V',
   stoic: '',
   samurai: '',
   scholar: '',
@@ -348,7 +348,7 @@ function Caption({ section }: { section: Section }) {
     case 'potential':
       return (
         <>
-          <Kicker>I · Daily Eras</Kicker>
+          <Kicker>Step I · Daily Eras</Kicker>
           <h2 className="caption-h mt-2">Choose who you are becoming.</h2>
           <p className="caption-p">
             Nobody changes overnight. Pick a 30-day era and work on one thing, a day at a time: thirty missions, one for each day, built for who you
@@ -360,19 +360,23 @@ function Caption({ section }: { section: Section }) {
     case 'intention':
       return (
         <>
-          <Kicker>II · Reflection</Kicker>
+          <Kicker>Step V · Reflection</Kicker>
           <h2 className="caption-h mt-2">Every night, an honest answer.</h2>
           <p className="caption-p">
             At night your coach asks whether you kept today&rsquo;s promise, and you answer honestly. Over time your record shows what you actually do:
             promises kept, the weekday you slip on. It says nothing until there is enough to say.
           </p>
           <NightCheck />
+          <div className="mt-6 flex flex-col items-center gap-2 lg:items-start">
+            <AppStoreButton />
+            <FreeLine />
+          </div>
         </>
       )
     case 'discipline':
       return (
         <>
-          <Kicker>III · AI Coach</Kicker>
+          <Kicker>Step III · AI Coach</Kicker>
           <h2 className="caption-h mt-2">A coach that remembers your word.</h2>
           <p className="caption-p">
             Each morning you promise yourself one thing, small enough to keep, and your coach answers it, quoting what you said on day one on the
@@ -388,7 +392,7 @@ function Caption({ section }: { section: Section }) {
     case 'strength':
       return (
         <>
-          <Kicker>IV · Habit Builder</Kicker>
+          <Kicker>Step II · Habit Builder</Kicker>
           <h2 className="caption-h mt-2">Motivation fades. Your word remains.</h2>
           <p className="caption-p">
             One promise a day, thirty days in a row. Kept promises earn relics: coins like Said Out Loud, Word Kept and Era Complete, yours to wear.
@@ -400,7 +404,7 @@ function Caption({ section }: { section: Section }) {
     case 'polish':
       return (
         <>
-          <Kicker>V · Guided Audio</Kicker>
+          <Kicker>Step IV · Guided Audio</Kicker>
           <h2 className="caption-h mt-2">Focus by day. Rest by night.</h2>
           <p className="caption-p">
             Guided sessions, soundscapes and sleep audio come with the era you are in, so the practice follows you from your first promise to the
@@ -408,10 +412,6 @@ function Caption({ section }: { section: Section }) {
           </p>
           <AudioDemo />
           <p className="mt-4 hidden text-[11px] lg:block uppercase tracking-[0.25em] text-white/[0.78]">8 eras · 30 missions each · 8 coach voices · 70+ audio sessions</p>
-          <div className="mt-6 flex flex-col items-center gap-2 lg:items-start">
-            <AppStoreButton />
-            <FreeLine />
-          </div>
         </>
       )
     case 'stoic':
@@ -484,6 +484,10 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
   pickedRef.current = picked
   useEffect(() => {
     sculpt.pick = picked
+    if (picked) {
+      visited.add(picked)
+      sculpt.core.opened = visited.size
+    }
   }, [picked])
   // The centrepiece's moment (every world opened, or it was tapped) changes what the overview says.
   const [revealed, setRevealed] = useState(false)
@@ -725,7 +729,6 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     return () => removeEventListener('pointermove', onMove)
   }, [])
 
-  const idx = SECTIONS.indexOf(section)
 
   // Jump to a chapter: smooth scroll to the middle of its part of the stage.
   const goTo = (i: number) => {
@@ -864,29 +867,48 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
             {NUMERAL[shown]}
           </div>
 
-          {/* Progress as chisel marks down the right edge. */}
-          <nav className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 flex-col sm:flex gap-1 sm:right-6" aria-label="Chapters">
-            {['I', 'II', 'III', 'IV', 'V'].map((n, i) => (
-              <button key={n} onClick={() => goTo(i + 1)} className="group flex items-center justify-end gap-2 px-2 py-1.5" aria-label={`Chapter ${n}`}>
-                <span className={`text-[10px] tracking-[0.2em] transition ${idx === i + 1 ? 'text-white/80' : 'text-white/0 group-hover:text-white/[0.78] sm:text-white/25'}`}>{n}</span>
-                <span className="h-px transition-all duration-500" style={{ width: idx > i ? 24 : 12, background: idx > i ? GOLD : 'rgba(255,255,255,0.25)' }} />
-              </button>
-            ))}
+          {/* The climb down the right edge: the five steps by name, the open one lit, the ones done in gold. */}
+          <nav className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-3 sm:flex sm:right-8" aria-label="Steps">
+            {/* The thread joining the steps, behind the dots. */}
+            <span aria-hidden className="absolute bottom-4 left-[17px] top-4 w-px bg-white/15" />
+            {STEPS.map((c, i) => {
+              const open = picked === c
+              const done = visited.has(c)
+              return (
+                <button key={c} onClick={() => goTo(c)} className="group relative flex items-center gap-3 px-2 py-1.5 text-left" aria-label={`Step ${i + 1}: ${STEP_NAME[c]}`}>
+                  <span className="relative h-2 w-2 rounded-full transition" style={{ background: open || done ? GOLD : 'rgba(255,255,255,0.3)' }} />
+                  <span className="w-6 text-[10px] tracking-[0.15em] text-white/35">{['I', 'II', 'III', 'IV', 'V'][i]}</span>
+                  <span className={`text-[10px] uppercase tracking-[0.25em] transition ${open ? 'text-white' : done ? 'text-[#C9AE82]' : 'text-white/45 group-hover:text-white/[0.78]'}`}>{STEP_NAME[c]}</span>
+                </button>
+              )
+            })}
           </nav>
 
-          {/* The overview keeps words to a minimum: what this is, and how to use it. */}
+          {/* The overview: what this is, and one clear way in (the first step not yet taken). */}
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-[8svh] z-10 px-6 text-center transition-opacity duration-700"
-            style={{ opacity: overviewOpen ? 1 : 0 }}
+            className="absolute inset-x-0 bottom-[6svh] z-10 px-6 text-center transition-opacity duration-700 lg:inset-x-auto lg:bottom-auto lg:left-[6vw] lg:top-1/2 lg:w-[36vw] lg:max-w-[560px] lg:-translate-y-1/2 lg:px-0 lg:text-left"
+            style={{ opacity: overviewOpen ? 1 : 0, pointerEvents: overviewOpen ? 'auto' : 'none' }}
           >
-            <p key={revealed ? 'r' : 'o'} className="animate-[fadeIn_1.2s_ease] font-[family-name:var(--font-cormorant)] text-2xl font-medium sm:text-4xl">
-              {revealed ? 'You are the work in progress.' : 'Everything you need to become who you choose.'}
+            <p className="hidden text-[11px] uppercase tracking-[0.4em] text-white/[0.78] sm:block">The Voxu experience</p>
+            <h1
+              key={revealed ? 'r' : 'o'}
+              className="mt-2 animate-[fadeIn_1.2s_ease] font-[family-name:var(--font-cormorant)] text-[1.75rem] font-medium uppercase leading-[1.02] sm:mt-3 sm:text-5xl lg:text-[4.1rem]"
+              style={{ color: '#EDE3D1' }}
+            >
+              {revealed ? 'You are the work in progress.' : 'Step by step into a better you.'}
+            </h1>
+            {/* Phones keep it short: the steps need the room. */}
+            <p className="mx-auto mt-4 hidden max-w-md text-[15px] leading-relaxed text-white/80 sm:block lg:mx-0 lg:text-base">
+              {revealed ? 'Every choice shapes who you become.' : 'A complete system for discipline, clarity and personal growth, built around who you want to become.'}
             </p>
-            <p className="mt-3 flex items-center justify-center gap-4 text-[11px] uppercase tracking-[0.3em] text-white/[0.78]">
-              <span aria-hidden className="hidden h-px w-14 bg-white/25 sm:block" />
-              {revealed ? 'Every choice shapes who you become' : 'Choose a world to explore'}
-              <span aria-hidden className="hidden h-px w-14 bg-white/25 sm:block" />
-            </p>
+            <button
+              onClick={() => goTo(nextStep() || STEPS[0])}
+              className="mt-4 inline-flex items-center gap-3 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-black transition hover:brightness-110 sm:mt-6"
+              style={{ background: GOLD }}
+            >
+              {nextStep() === STEPS[0] || !nextStep() ? 'Explore the worlds' : `Continue: ${STEP_NAME[nextStep()]}`}
+              <span aria-hidden>→</span>
+            </button>
           </div>
 
           {/* Phones: the 3D phone is brought up close; tap anywhere to put it back. */}
@@ -906,17 +928,25 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
             >
               {picker && shown === 'hero' ? null : <Caption section={shown} />}
               {picker && picked > 0 && (
-                <button
-                  onClick={() => setPicked(0)}
-                  className="mt-6 text-[11px] uppercase tracking-[0.3em] text-white/[0.78] hover:text-white"
-                >
-                  ← Back to the universe
-                </button>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
+                  {/* The climb goes on: the next step, or back to the bust after the last. */}
+                  <button
+                    onClick={() => (stepAfter(picked) ? goTo(stepAfter(picked)) : setPicked(0))}
+                    className="inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.25em] transition hover:bg-[#C9AE82] hover:text-black"
+                    style={{ borderColor: GOLD, color: GOLD }}
+                  >
+                    {stepAfter(picked) ? `Next: ${STEP_NAME[stepAfter(picked)]}` : 'Reach the top'}
+                    <span aria-hidden>→</span>
+                  </button>
+                  <button onClick={() => setPicked(0)} className="text-[11px] uppercase tracking-[0.3em] text-white/[0.78] hover:text-white">
+                    ← All steps
+                  </button>
+                </div>
               )}
               {picker && picked > 0 && hasScreen(shown) && (
                 <button
                   onClick={() => setPhoneOpen(true)}
-                  className="ml-6 mt-6 text-[11px] uppercase tracking-[0.3em] lg:hidden"
+                  className="mt-4 text-[11px] uppercase tracking-[0.3em] lg:hidden"
                   style={{ color: GOLD }}
                 >
                   See it in Voxu

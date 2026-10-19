@@ -241,7 +241,11 @@ export function makeCoreFx(model: THREE.Object3D, mats: THREE.MeshStandardMateri
           {
             float seam = 1.0 - smoothstep(0.0, 0.012, abs(coreF - uDone));
             float fresh = step(uFrom, coreF) * step(coreF, uDone) * uFresh;
-            totalEmissiveRadiance += uGold * (seam * (1.6 + 1.6 * uLight) + fresh * 0.45);
+            // Kintsugi: thin gold cracks running through the finished marble, where a
+            // broad noise crosses its middle; a second noise leaves stretches unbroken.
+            float crackN = fxNoise(vFxPos * coreScale * 0.9) * 0.6 + fxNoise(vFxPos * coreScale * 2.2) * 0.4;
+            float crack = (1.0 - smoothstep(0.0, 0.007, abs(crackN - 0.5))) * smoothstep(0.58, 0.7, fxNoise(vFxPos * coreScale * 0.5 + 11.0));
+            totalEmissiveRadiance += uGold * (seam * (1.6 + 1.6 * uLight) + fresh * 0.45 + crack * (1.0 - coreRaw) * 1.4 * uLight);
           }`,
         )
     }
