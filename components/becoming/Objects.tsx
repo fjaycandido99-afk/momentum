@@ -62,7 +62,7 @@ type Layout = {
   art: number
   /** The artefacts alone a little larger than their stones (phones need them bigger to read). */
   artBoost: number
-  /** How deep the slabs stack under a step at most (world units); Infinity reaches the water. */
+  /** How deep the slabs stack under a step at most (world units); Infinity reaches the water. Lower slabs go darker. */
   stoneDepth: number
 }
 const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
@@ -106,21 +106,22 @@ const LAYOUTS: Record<'wide' | 'tall', Layout> = {
   // the stones zigzag away and up toward David, who stands in the water behind.
   tall: {
     // Aimed low, so the climb sits above the words and David fills the top.
-    overview: { cam: v(0, 3.0, 12.5), look: v(0, 2.6, -3), fov: 52 },
+    overview: { cam: v(0, 5.2, 12.5), look: v(0, 1.2, -3), fov: 52 },
     water: 0,
     c: v(0, 0, -3),
     // Towering over the last step.
     // Far back, a backdrop to the climb rather than the first thing you see.
-    core: { at: v(0.5, -1.4, -17), h: 12 },
+    core: { at: v(0.5, -1.6, -19), h: 10.5 },
     seat: {
       // Each step standing in the water, rising a little from one to the next.
       // Spread wide and deep enough that no two steps overlap on screen (each is its own tap).
-      // Rising steeply, so each step (and its name) has its own band of the screen.
-      column: { at: v(-1.2, 0.25, 3.6), r: 1.05 },
-      bonsai: { at: v(1.2, 1.15, 1.6), r: 1.0 },
-      brain: { at: v(-1.15, 2.05, -0.4), r: 1.0 },
-      headphones: { at: v(1.15, 2.95, -2.4), r: 0.95 },
-      scroll: { at: v(-0.1, 3.85, -4.4), r: 0.95 },
+      // Standing in the water, rising only a little: seen from above, distance
+      // spreads them up the screen (each name gets its own band) without towers.
+      column: { at: v(-1.2, 0.3, 3.8), r: 1.05 },
+      bonsai: { at: v(1.2, 0.6, 1.4), r: 1.0 },
+      brain: { at: v(-1.15, 0.9, -1.0), r: 1.0 },
+      headphones: { at: v(1.15, 1.2, -3.4), r: 0.95 },
+      scroll: { at: v(-0.1, 1.5, -5.8), r: 0.95 },
     },
     monoliths: [
       { at: v(-4.2, 0, -7), h: 7, w: 1.0, tilt: 0.04 },
@@ -439,7 +440,7 @@ function Artefact({ id }: { id: Id }) {
       })),
     [],
   )
-  const stackTmp = useMemo(() => ({ m: new THREE.Matrix4(), q: new THREE.Quaternion(), e: new THREE.Euler(), p: new THREE.Vector3(), sc: new THREE.Vector3() }), [])
+  const stackTmp = useMemo(() => ({ m: new THREE.Matrix4(), q: new THREE.Quaternion(), e: new THREE.Euler(), p: new THREE.Vector3(), sc: new THREE.Vector3(), c: new THREE.Color() }), [])
   const edgeMat = useMemo(() => haloMaterial(), [])
   // A soft warm glow behind the artefact, so it stands out from the dark and from David.
   const glowMat = useMemo(
@@ -500,11 +501,15 @@ function Artefact({ id }: { id: Id }) {
         q.setFromEuler(e)
         sc.set(r * ly.grow, r * ly.squash, r * ly.grow)
         m.compose(p, q, sc)
+        // Darker the deeper it goes, so a stack sinks into shadow rather than ending in an edge.
+        stackTmp.c.setScalar(Math.max(0.12, 1 - (-y / Math.max(depth, 0.001)) * 0.85))
+        stack.current.setColorAt(n, stackTmp.c)
         stack.current.setMatrixAt(n++, m)
         y -= h * 0.92
       }
       stack.current.count = n
       stack.current.instanceMatrix.needsUpdate = true
+      if (stack.current.instanceColor) stack.current.instanceColor.needsUpdate = true
     }
     if (float.current) {
       // You turn the open one by dragging.
@@ -750,6 +755,8 @@ const core = {
   /** Send n chips of stone off the bust into orbit. */
   chip: (_t: number, _n: number) => {},
   autoRevealed: false,
+  /** Where his head is (in the bust's own units, height 1), found from the model: the halo centres on it. */
+  head: new THREE.Vector3(0.03, 0.8, 0),
   /** When a drifting stone last struck him (clock seconds): his gold cracks flash. */
   flash: -99,
 }
@@ -758,6 +765,27 @@ function CoreModel() {
   // Normalised to height 1; the group around it scales it to the layout.
   const { model, mats } = useArtefact(coreUrl(), 1)
   useCoreBody(model, mats)
+  // Find his head: the middle of everything in the top quarter of the model.
+  useMemo(() => {
+    model.updateMatrixWorld(true)
+    const v3 = new THREE.Vector3()
+    const sum = new THREE.Vector3()
+    let n = 0
+    model.traverse((o) => {
+      const me = o as THREE.Mesh
+      if (!me.isMesh) return
+      const p = me.geometry.attributes.position
+      const step = Math.max(1, Math.floor(p.count / 20000))
+      for (let i = 0; i < p.count; i += step) {
+        v3.fromBufferAttribute(p, i).applyMatrix4(me.matrixWorld)
+        if (v3.y > 0.72) {
+          sum.add(v3)
+          n++
+        }
+      }
+    })
+    if (n) core.head.copy(sum.divideScalar(n))
+  }, [model])
   return <primitive object={model} />
 }
 
@@ -840,6 +868,7 @@ function Core() {
   const glow = useRef<THREE.Mesh>(null)
   const lamp = useRef<THREE.PointLight>(null)
   const name = useRef<HTMLButtonElement>(null)
+  const halo = useRef<THREE.Mesh>(null)
   const gold = useMemo(() => new THREE.MeshBasicMaterial({ color: brightGold(2.3, 1.35, 0.5), toneMapped: false, transparent: true, opacity: 0, fog: false }), [])
   const pose = useRef<THREE.Group>(null)
   // A gold ribbon sweeping once round his chest and shoulders on a tilt (in the
@@ -881,6 +910,9 @@ function Core() {
     const breath = 0.85 + 0.15 * Math.sin(clock.elapsedTime * 0.6)
     const rev = revealAmount()
     gold.opacity = shown
+    // The halo and its glow sit behind his head, wherever the model puts it.
+    if (halo.current) halo.current.position.set(core.head.x, core.head.y - 0.03, core.head.z - 0.18)
+    if (glow.current) glow.current.position.set(core.head.x, core.head.y - 0.06, core.head.z - 0.28)
     // His name, only in the overview (at his summit the caption says it).
     if (name.current) {
       const on = flight.pick === 0 && flight.k > 0.6
@@ -908,7 +940,7 @@ function Core() {
         <Fragments />
       </Suspense>
       {/* A gold halo behind the head, and the ribbon round the shoulders. */}
-      <mesh material={gold} position={[0.03, 0.8, -0.2]}>
+      <mesh ref={halo} material={gold} position={[0.03, 0.8, -0.2]}>
         <torusGeometry args={[0.34, 0.003, 10, 220]} />
       </mesh>
       <mesh geometry={ribbon} material={gold} />

@@ -135,8 +135,38 @@ function Kicker({ children }: { children: ReactNode }) {
 }
 
 const PROMISES = ['Move my body for 20 minutes', 'Read for 15 minutes', 'Practise 10 minutes of stillness']
+/** Each promise's practice art from the app (public/practices). */
+const PROMISE_ART: Record<string, string> = {
+  'Move my body for 20 minutes': '/practices/run.webp',
+  'Read for 15 minutes': '/practices/read.webp',
+  'Practise 10 minutes of stillness': '/practices/mind.webp',
+}
 
 // Daily Eras: pick one; the phone and the column follow.
+/** A card in the era card's look: the app's own art beside a title, a line and an optional detail. */
+function ArtCard({ img, title, line, detail, label }: { img: string; title: string; line?: string; detail?: ReactNode; label?: string }) {
+  return (
+    <div key={img + title} className="mx-auto mt-4 flex max-w-sm animate-[fadeIn_0.6s_ease] items-stretch gap-3 overflow-hidden rounded-2xl border border-white/15 bg-black/55 text-left lg:mx-0">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={img} alt="" className="h-auto w-20 shrink-0 object-cover" />
+      <div className="py-3 pr-3">
+        <p className="font-[family-name:var(--font-cormorant)] text-lg leading-tight text-white">{title}</p>
+        {line && <p className="mt-0.5 text-xs text-white/70">{line}</p>}
+        {detail && (
+          <p className="mt-2 text-xs text-white/90">
+            {label && (
+              <span className="mr-1.5 text-[10px] uppercase tracking-[0.2em]" style={{ color: GOLD }}>
+                {label}
+              </span>
+            )}
+            {detail}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function EraDemo() {
   const { d, set } = useContext(Demo)
   return (
@@ -167,22 +197,7 @@ function EraDemo() {
         const day1 = key ? ERA_MISSIONS[key]?.[0] : undefined
         if (!preset) return null
         return (
-          <div key={key} className="mx-auto mt-4 flex max-w-sm animate-[fadeIn_0.6s_ease] items-stretch gap-3 overflow-hidden rounded-2xl border border-white/15 bg-black/55 text-left lg:mx-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/era/${key}.jpg`} alt="" className="h-auto w-20 shrink-0 object-cover" />
-            <div className="py-3 pr-3">
-              <p className="font-[family-name:var(--font-cormorant)] text-lg leading-tight text-white">{preset.title}</p>
-              <p className="mt-0.5 text-xs text-white/70">{preset.tagline}</p>
-              {day1 && (
-                <p className="mt-2 text-xs text-white/90">
-                  <span className="mr-1.5 text-[10px] uppercase tracking-[0.2em]" style={{ color: GOLD }}>
-                    Day 1
-                  </span>
-                  {day1}
-                </p>
-              )}
-            </div>
-          </div>
+          <ArtCard key={key} img={`/era/${key}.jpg`} title={preset.title} line={preset.tagline} label={day1 ? 'Day 1' : undefined} detail={day1} />
         )
       })()}
       <p className="mt-3 text-[11px] text-white/[0.55]">A demo: nothing here is saved.</p>
@@ -228,14 +243,20 @@ function PromiseDemo() {
           Make my promise
         </button>
       ) : (
-        <p className="mt-4 text-sm text-white/80">
-          Promised: <span className="text-white">{d.promise.toLowerCase()}</span>. Your coach&rsquo;s answer is on the phone.
+        <>
+          <ArtCard
+            img={PROMISE_ART[d.promise] ?? '/practices/mind.webp'}
+            title="Today’s promise"
+            line={d.promise}
+            label="Tonight"
+            detail="your coach asks whether you kept it."
+          />
           {!app && (
-            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs underline underline-offset-4" style={{ color: GOLD }}>
+            <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs underline underline-offset-4" style={{ color: GOLD }}>
               Make it for real
             </a>
           )}
-        </p>
+        </>
       )}
       <p className="mt-3 text-[11px] text-white/[0.55]">A demo: nothing here is saved.</p>
     </div>
@@ -274,9 +295,12 @@ function NightCheck() {
           Not today
         </button>
       </div>
-      <p className="mt-3 min-h-[1.25rem] text-xs text-white/[0.78]">
-        {ans === 'yes' ? 'Another mark. Kept promises add up.' : ans === 'no' ? 'Said honestly. Tomorrow is another day.' : 'A demo: nothing here is saved.'}
-      </p>
+      <ArtCard
+        img="/journal/prompt.jpg"
+        title={ans === 'yes' ? 'Kept.' : ans === 'no' ? 'Not today.' : 'Tonight’s check-in'}
+        line={ans === 'yes' ? 'Another mark. Kept promises add up.' : ans === 'no' ? 'Said honestly. Tomorrow is another day.' : 'One honest answer, every night.'}
+      />
+      <p className="mt-3 text-[11px] text-white/[0.55]">A demo: nothing here is saved.</p>
     </div>
   )
 }
@@ -311,12 +335,22 @@ function HabitDemo() {
           Start over
         </button>
       </div>
+      <ArtCard
+        img={done ? '/era/complete.jpg' : '/era/start.jpg'}
+        title={done ? 'Era complete.' : `Day ${today} of 30`}
+        line={`${d.kept.length} promises kept so far.`}
+        label={done ? undefined : 'Next'}
+        detail={done ? 'Thirty days of your word.' : `keep day ${today}.`}
+      />
       <p className="mt-3 text-[11px] text-white/[0.55]">A demo: nothing here is saved.</p>
     </div>
   )
 }
 
-// Guided Audio: play an example sound; the headphones move with it.
+/** Each clip's art from the app: the calm narrator at wind-down, the direct one at morning prime, Voxu at the journal. */
+const AUDIO_ART = ['/sessions/thumbs/wind_down.jpg', '/sessions/thumbs/morning_prime.jpg', '/journal/prompt.jpg']
+
+// Guided Audio: play a real voice from the app.
 function AudioDemo() {
   const { d, set } = useContext(Demo)
   return (
@@ -339,8 +373,10 @@ function AudioDemo() {
             aria-pressed={on}
             className={`flex w-full max-w-sm items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${on ? 'border-white/60 bg-white/10' : 'border-white/15 hover:border-white/40'}`}
           >
-            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${on ? 'bg-white text-black' : 'bg-white/10 text-white'}`} aria-hidden>
-              {on ? '❚❚' : '▶'}
+            <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl" aria-hidden>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={AUDIO_ART[i]} alt="" className="h-full w-full object-cover" />
+              <span className={`absolute inset-0 flex items-center justify-center text-xs ${on ? 'bg-black/30 text-white' : 'bg-black/45 text-white'}`}>{on ? '❚❚' : '▶'}</span>
             </span>
             <span>
               <span className="block text-[10px] uppercase tracking-[0.25em] text-white/[0.6]">{kind}</span>
