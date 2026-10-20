@@ -10,7 +10,6 @@ import { sculpt } from './store'
 //   AI Coach (brain)       a promise sends warm light up through its gold veins
 //   Habit Builder (bonsai) every day kept fills the canopy out a little; new
 //                          growth glints, a leaf or two drifts down; day 30 flares
-//   Guided Audio (phones)  sound leaves the ear cups as soft rings, as loud as it is
 // All of it is restrained on purpose: light that follows the material that is
 // already there (the veins, the leaves), slow fades, nothing that pops.
 
@@ -390,71 +389,4 @@ export function FallingLeaves({ h, api }: { h: number; api: { current: { drop: (
     im.visible = any
   })
   return <instancedMesh ref={mesh} args={[geo, mat, N]} visible={false} />
-}
-
-/** Sound leaving the ear cups as soft rings, as loud as the sound is. */
-export function SoundRings({ h, w }: { h: number; w: number }) {
-  const N = 10
-  const rings = useMemo(() => Array.from({ length: N }, () => ({ t: 99, side: 1 })), [])
-  const geo = useMemo(() => new THREE.RingGeometry(0.955, 1, 96), [])
-  const mats = useMemo(
-    () =>
-      Array.from(
-        { length: N },
-        () => new THREE.MeshBasicMaterial({ color: '#e9c88d', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
-      ),
-    [],
-  )
-  const refs = useRef<(THREE.Mesh | null)[]>([])
-  const st = useRef({ next: 0, side: 1 })
-  const camera = useThree((s) => s.camera)
-  const wp = useMemo(() => new THREE.Vector3(), [])
-  // The ear cups: at the sides of the band, a little below its middle.
-  const cupY = h * 0.5
-  const cupX = w * 0.36
-  const cupR = h * 0.17
-  useFrame(({ clock }, dt) => {
-    const level = sculpt.audio
-    const t = clock.elapsedTime
-    if (level > 0.04 && t > st.current.next) {
-      const r = rings.find((x) => x.t > 1.8)
-      if (r) {
-        r.t = 0
-        r.side = st.current.side
-        st.current.side *= -1
-      }
-      // Louder sound, closer rings.
-      st.current.next = t + 0.55 - level * 0.3
-    }
-    rings.forEach((r, i) => {
-      const m = refs.current[i]
-      if (!m) return
-      r.t += dt
-      const k = r.t / 1.8
-      m.visible = k < 1
-      if (!m.visible) return
-      const e = 1 - Math.pow(1 - k, 2)
-      // Leaving the cup outward, always turned to the viewer so it reads as a ring.
-      m.position.set(r.side * (cupX + e * h * 0.22), cupY, 0)
-      m.scale.setScalar(cupR * (0.6 + e * 1.25))
-      m.getWorldPosition(wp)
-      m.lookAt(camera.position)
-      mats[i].opacity = 0.55 * Math.pow(1 - k, 1.7) * Math.min(1, 0.5 + level)
-    })
-  })
-  return (
-    <>
-      {rings.map((_, i) => (
-        <mesh
-          key={i}
-          ref={(m) => {
-            refs.current[i] = m
-          }}
-          geometry={geo}
-          material={mats[i]}
-          visible={false}
-        />
-      ))}
-    </>
-  )
 }

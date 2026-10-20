@@ -48,15 +48,20 @@ export const sculpt = {
  * toward the bust. Any step can still be opened directly.
  */
 export const STEPS = [1, 4, 3, 5, 2]
-export const STEP_NAME: Record<number, string> = { 1: 'Daily Eras', 4: 'Habit Builder', 3: 'AI Coach', 5: 'Guided Audio', 2: 'Reflection' }
+export const STEP_NAME: Record<number, string> = { 1: 'Daily Eras', 4: 'Habit Builder', 3: 'AI Coach', 5: 'Guided Audio', 2: 'Reflection', 6: 'Achievements' }
+/** David at the top of the climb: his achievements (the coins you earn). Opened like a step, but not one of the five. */
+export const SUMMIT = 6
 /** Chapters opened on this visit. */
 export const visited = new Set<number>()
 /** The first step not yet opened (the start for a new visitor), or 0 once all are. */
 export const nextStep = () => STEPS.find((c) => !visited.has(c)) ?? 0
-/** The step after a chapter on the climb, or 0 after the last. */
-export const stepAfter = (chapter: number) => STEPS[STEPS.indexOf(chapter) + 1] ?? 0
-/** The step before a chapter on the climb, or 0 before the first. */
-export const stepBefore = (chapter: number) => STEPS[STEPS.indexOf(chapter) - 1] ?? 0
+/** The way up: the five steps, then David at the summit. */
+const PATH = [...STEPS, SUMMIT]
+/** The step after a chapter on the way up (the summit after the last step), or 0 at the top. */
+export const stepAfter = (chapter: number) => PATH[PATH.indexOf(chapter) + 1] ?? 0
+/** The step before a chapter, or 0 before the first. */
+export const stepBefore = (chapter: number) => PATH[PATH.indexOf(chapter) - 1] ?? 0
+
 
 export type Stage = keyof typeof sculpt.manual
 export const sectionAt = (p: number): Section => SECTIONS[Math.min(SECTIONS.length - 1, Math.max(0, Math.floor(p)))]

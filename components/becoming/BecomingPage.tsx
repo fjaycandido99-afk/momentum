@@ -4,9 +4,14 @@ import { Component, createContext, useContext, useEffect, useMemo, useRef, useSt
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Lenis from 'lenis'
-import { SECTIONS, STEPS, STEP_NAME, carvedProgress, makePromise, nextStep, sculpt, sectionAt, stepAfter, stepBefore, visited, type Section } from './store'
+import { SECTIONS, STEPS, STEP_NAME, SUMMIT, carvedProgress, makePromise, nextStep, sculpt, sectionAt, stepAfter, stepBefore, visited, type Section } from './store'
 import { NARRATION } from './script'
-import { hasScreen, screenFor } from './PhonePreview'
+import { ERA_PRESETS_BY_KEY } from '@/lib/era/presets'
+import { ERA_MISSIONS } from '@/lib/era/missions'
+import { VOXU_PREVIEW_ENTRY } from '@/lib/voice/voxu-preview'
+import { ACHIEVEMENTS } from '@/lib/achievements'
+import { AchievementBadge } from '@/components/progress/AchievementBadge'
+import { screenFor } from './PhonePreview'
 import { AUDIO, DEMO_START, type DemoState } from './phoneScreens'
 import { playSound, stopSound } from './soundPreview'
 
@@ -56,7 +61,7 @@ const NUMERAL: Record<Section, string> = {
   stoic: '',
   samurai: '',
   scholar: '',
-  final: '',
+  final: 'VI',
 }
 // The gallery: three of the eight mindsets your coach can speak from.
 const GALLERY_CAPTION: Partial<Record<Section, { n: string; title: string; line: string }>> = {
@@ -65,6 +70,17 @@ const GALLERY_CAPTION: Partial<Record<Section, { n: string; title: string; line:
   scholar: { n: 'iii', title: 'The Scholar.', line: 'Understand it first. Then do the work, properly.' },
 }
 const ERAS = ['Locked In', 'Discipline', 'Comeback', 'Gym Arc', 'Stoic Mode', 'Confidence', 'Study', '5AM']
+/** The chip's era in the app's own data (lib/era): its art, tagline and Day 1 mission. */
+const ERA_KEY: Record<string, string> = {
+  'Locked In': 'locked_in',
+  Discipline: 'discipline',
+  Comeback: 'comeback',
+  'Gym Arc': 'gym_arc',
+  'Stoic Mode': 'stoic_mode',
+  Confidence: 'confidence',
+  Study: 'study',
+  '5AM': 'five_am',
+}
 
 const chip = (on: boolean) =>
   `rounded-full px-3.5 py-1.5 text-xs transition ${on ? 'bg-white text-black' : 'border border-white/15 text-white/75 hover:border-white/40'}`
@@ -144,6 +160,31 @@ function EraDemo() {
         ))}
         <span className="rounded-full border border-dashed border-white/20 px-3.5 py-1.5 text-xs text-white/[0.78]">or your own</span>
       </div>
+      {/* The era you tried on, as the app has it: its art, its line, and what Day 1 asks of you. */}
+      {(() => {
+        const key = ERA_KEY[d.era]
+        const preset = key ? ERA_PRESETS_BY_KEY.get(key) : undefined
+        const day1 = key ? ERA_MISSIONS[key]?.[0] : undefined
+        if (!preset) return null
+        return (
+          <div key={key} className="mx-auto mt-4 flex max-w-sm animate-[fadeIn_0.6s_ease] items-stretch gap-3 overflow-hidden rounded-2xl border border-white/15 bg-black/55 text-left lg:mx-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/era/${key}.jpg`} alt="" className="h-auto w-20 shrink-0 object-cover" />
+            <div className="py-3 pr-3">
+              <p className="font-[family-name:var(--font-cormorant)] text-lg leading-tight text-white">{preset.title}</p>
+              <p className="mt-0.5 text-xs text-white/70">{preset.tagline}</p>
+              {day1 && (
+                <p className="mt-2 text-xs text-white/90">
+                  <span className="mr-1.5 text-[10px] uppercase tracking-[0.2em]" style={{ color: GOLD }}>
+                    Day 1
+                  </span>
+                  {day1}
+                </p>
+              )}
+            </div>
+          </div>
+        )
+      })()}
       <p className="mt-3 text-[11px] text-white/[0.55]">A demo: nothing here is saved.</p>
     </div>
   )
@@ -290,7 +331,7 @@ function AudioDemo() {
                 stopSound()
                 set({ audio: null })
               } else {
-                playSound(i)
+                playSound(i, () => set({ audio: null }))
                 set({ audio: i })
                 react(5)
               }
@@ -304,11 +345,47 @@ function AudioDemo() {
             <span>
               <span className="block text-[10px] uppercase tracking-[0.25em] text-white/[0.6]">{kind}</span>
               <span className="block text-sm text-white">{title}</span>
+              {/* The Voxu clip answers a journal entry: show what was written. */}
+              {kind === 'Voxu Voice' && <span className="mt-1 block text-xs italic text-white/60">“{VOXU_PREVIEW_ENTRY}”</span>}
             </span>
           </button>
         )
       })}
-      <p className="pt-1 text-[11px] text-white/[0.55]">Example sounds made in your browser, not Voxu recordings.</p>
+      <p className="pt-1 text-[11px] text-white/[0.55]">Real voices from the app: two guided-session narrators, and Voxu Voice answering a journal entry.</p>
+    </div>
+  )
+}
+
+/** Coins from the app (lib/achievements), from the first promise to three finished eras. */
+const RELIC_PATH = ['era_first_promise', 'era_first_kept', 'era_streak_7', 'era_kept_25', 'era_complete', 'era_three']
+function Relics() {
+  const coins = RELIC_PATH.map((id) => ACHIEVEMENTS.find((a) => a.id === id)).filter((a): a is (typeof ACHIEVEMENTS)[number] => !!a)
+  const [open, setOpen] = useState(coins[0]?.id ?? '')
+  const sel = coins.find((c) => c.id === open)
+  return (
+    <div className="mt-5">
+      <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
+        {coins.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => {
+              setOpen(c.id)
+              react(SUMMIT)
+            }}
+            aria-pressed={open === c.id}
+            aria-label={c.title}
+            className={`rounded-full transition ${open === c.id ? 'scale-110' : 'opacity-75 hover:opacity-100'}`}
+          >
+            <AchievementBadge id={c.id} category={c.category} icon={c.icon} rarity={c.rarity} unlocked plain size={52} />
+          </button>
+        ))}
+      </div>
+      {sel && (
+        <p key={sel.id} className="mt-3 animate-[fadeIn_0.5s_ease] text-sm text-white/90">
+          <span className="font-[family-name:var(--font-cormorant)] text-lg text-white">{sel.title}</span>
+          <span className="text-white/60"> · {sel.description}</span>
+        </p>
+      )}
     </div>
   )
 }
@@ -367,10 +444,6 @@ function Caption({ section }: { section: Section }) {
             what you actually do: promises kept, the weekday you slip on. It says nothing until there is enough to say.
           </p>
           <NightCheck />
-          <div className="mt-6 flex flex-col items-center gap-2 lg:items-start">
-            <AppStoreButton />
-            <FreeLine />
-          </div>
         </>
       )
     case 'discipline':
@@ -437,8 +510,13 @@ function Caption({ section }: { section: Section }) {
     case 'final':
       return (
         <>
-          <h2 className="font-[family-name:var(--font-cormorant)] text-4xl font-medium sm:text-6xl">Becoming is not a destination. It is a practice.</h2>
-          <p className="caption-p">Tomorrow there&rsquo;s another stone. Start your era.</p>
+          <Kicker>The summit · Achievements</Kicker>
+          <h2 className="caption-h mt-2">Every promise kept leaves a mark.</h2>
+          <p className="caption-p">
+            Keep your word and you earn relics: coins you can wear, from your first promise said out loud to a finished era. Steel first, then
+            silver, then gold.
+          </p>
+          <Relics />
           <div className="mt-6 flex flex-col items-center gap-2.5 lg:items-start">
             <AppStoreButton />
             <FreeLine />
@@ -468,25 +546,23 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
   const overviewOpen = picker && picked === 0
   const [demo, setDemo] = useState<DemoState>(DEMO_START)
   const demoCtx = useMemo(() => ({ d: demo, set: (p: Partial<DemoState>) => setDemo((cur) => ({ ...cur, ...p })) }), [demo])
-  const [phoneOpen, setPhoneOpen] = useState(false)
-  // Leaving a chapter quiets the sound preview and closes the phone sheet.
+  // Leaving a chapter quiets the sound preview.
   useEffect(() => {
     stopSound()
     setDemo((cur) => (cur.audio === null ? cur : { ...cur, audio: null }))
-    setPhoneOpen(false)
   }, [picked])
   useEffect(() => () => stopSound(), [])
   // The 3D phone in the scene shows the open chapter's screen, with what the visitor did.
   useEffect(() => {
-    sculpt.phone = { section: screenFor(shown), demo, v: sculpt.phone.v + 1, focus: phoneOpen }
-  }, [shown, demo, phoneOpen])
+    sculpt.phone = { section: screenFor(shown), demo, v: sculpt.phone.v + 1, focus: false }
+  }, [shown, demo])
   const pickedRef = useRef(0)
   pickedRef.current = picked
   useEffect(() => {
     sculpt.pick = picked
     if (picked) {
       visited.add(picked)
-      sculpt.core.opened = visited.size
+      sculpt.core.opened = STEPS.filter((c) => visited.has(c)).length
     }
   }, [picked])
   // The centrepiece's moment (every world opened, or it was tapped) changes what the overview says.
@@ -520,7 +596,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
       if (pickerRef.current) {
         const i = pickedRef.current
         sculpt.p = i ? i + 0.45 : 0
-        const s = SECTIONS[i]
+        const s: Section = i === SUMMIT ? 'final' : SECTIONS[i]
         setSection((cur) => (cur === s ? cur : s))
         id = requestAnimationFrame(tick)
         return
@@ -889,23 +965,23 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
           <nav className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-3 sm:flex sm:right-8" aria-label="Steps">
             {/* The thread joining the steps, behind the dots. */}
             <span aria-hidden className="absolute bottom-4 left-[17px] top-4 w-px bg-white/15" />
-            {STEPS.map((c, i) => {
+            {[...STEPS, SUMMIT].map((c, i) => {
               const open = picked === c
               const done = visited.has(c)
               return (
                 <button key={c} onClick={() => goTo(c)} className="group relative flex items-center gap-3 px-2 py-1.5 text-left" aria-label={`Step ${i + 1}: ${STEP_NAME[c]}`}>
                   <span className="relative h-2 w-2 rounded-full transition" style={{ background: open || done ? GOLD : 'rgba(255,255,255,0.3)' }} />
-                  <span className="w-6 text-[10px] tracking-[0.15em] text-white/35">{['I', 'II', 'III', 'IV', 'V'][i]}</span>
+                  <span className="w-6 text-[10px] tracking-[0.15em] text-white/35">{['I', 'II', 'III', 'IV', 'V', 'VI'][i]}</span>
                   <span className={`text-[10px] uppercase tracking-[0.25em] transition ${open ? 'text-white' : done ? 'text-[#C9AE82]' : 'text-white/45 group-hover:text-white/[0.78]'}`}>{STEP_NAME[c]}</span>
                 </button>
               )
             })}
           </nav>
 
-          {/* Phones: a dark wash behind the overview's words, which sit over the bright water. */}
+          {/* Phones: a short dark wash behind the overview's words only (taller, it cut off the water's reflections). */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[30svh] bg-gradient-to-t from-black via-black/80 to-transparent transition-opacity duration-700 lg:hidden"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[20svh] bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-700 lg:hidden"
             style={{ opacity: overviewOpen ? 1 : 0 }}
           />
           {/* The overview: what this is, and one clear way in (the first step not yet taken). */}
@@ -917,7 +993,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
             <h1
               key={revealed ? 'r' : 'o'}
               className="mt-2 animate-[fadeIn_1.2s_ease] font-[family-name:var(--font-cormorant)] text-[1.75rem] font-medium uppercase leading-[1.02] sm:mt-3 sm:text-5xl lg:text-[4.1rem]"
-              style={{ color: '#EDE3D1' }}
+              style={{ color: '#EDE3D1', textShadow: '0 2px 12px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.8)' }}
             >
               {revealed ? 'You are the work in progress.' : 'Step by step into a better you.'}
             </h1>
@@ -936,7 +1012,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
           </div>
 
           {/* Phones: arrows at the edges to the step before and after (or swipe sideways). */}
-          {picker && picked > 0 && !phoneOpen && (
+          {picker && picked > 0 && (
             <>
               {stepBefore(picked) > 0 && (
                 <button
@@ -960,18 +1036,11 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
             </>
           )}
 
-          {/* Phones: the 3D phone is brought up close; tap anywhere to put it back. */}
-          {picker && picked > 0 && hasScreen(shown) && phoneOpen && (
-            <button className="absolute inset-0 z-30 flex items-end justify-center bg-gradient-to-t from-black/70 to-transparent pb-[6svh] lg:hidden" onClick={() => setPhoneOpen(false)}>
-              <span className="text-[11px] uppercase tracking-[0.25em] text-white/[0.78]">In the app · example · tap to close</span>
-            </button>
-          )}
-
           {/* The caption, like a subtitle. */}
           <div className={`absolute inset-x-0 z-10 px-4 text-center sm:px-8 lg:inset-x-auto lg:bottom-auto lg:left-[5vw] lg:top-1/2 lg:w-[34vw] lg:max-w-[560px] lg:-translate-y-1/2 lg:px-0 lg:text-left top-1/2 -translate-y-1/2`}>
             <div
               className="pointer-events-auto mx-auto max-w-4xl transition-all duration-200 [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_2px_22px_rgba(0,0,0,0.95)] lg:mx-0 lg:[text-shadow:none]"
-              style={{ opacity: visible && !phoneOpen ? 1 : 0, transform: `translateY(${visible ? 0 : 10}px)` }}
+              style={{ opacity: visible ? 1 : 0, transform: `translateY(${visible ? 0 : 10}px)` }}
               aria-live="polite"
               title={NARRATION[shown]}
             >
@@ -984,22 +1053,13 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
                     className="inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.25em] transition hover:bg-[#C9AE82] hover:text-black"
                     style={{ borderColor: GOLD, color: GOLD }}
                   >
-                    {stepAfter(picked) ? `Next: ${STEP_NAME[stepAfter(picked)]}` : 'Reach the top'}
+                    {stepAfter(picked) === SUMMIT ? 'Reach the top' : stepAfter(picked) ? `Next: ${STEP_NAME[stepAfter(picked)]}` : 'Back to the climb'}
                     <span aria-hidden>→</span>
                   </button>
                   <button onClick={() => setPicked(0)} className="text-[11px] uppercase tracking-[0.3em] text-white/[0.78] hover:text-white">
                     ← All steps
                   </button>
                 </div>
-              )}
-              {picker && picked > 0 && hasScreen(shown) && (
-                <button
-                  onClick={() => setPhoneOpen(true)}
-                  className="mt-4 text-[11px] uppercase tracking-[0.3em] lg:hidden"
-                  style={{ color: GOLD }}
-                >
-                  See it in Voxu
-                </button>
               )}
             </div>
           </div>

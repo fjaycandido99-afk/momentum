@@ -66,11 +66,11 @@ const COACH: Record<string, string> = {
   'Read for 15 minutes': 'Fifteen minutes is small enough to keep. On day one you said you wanted your evenings back. This is how.',
   'Practise 10 minutes of stillness': 'Ten quiet minutes is small enough to keep. On day one you said you wanted a calmer head. This is how.',
 }
-/** Example rows on the audio screen. */
+/** The clips on the audio screen: two guided-session narrators, then Voxu Voice answering a journal entry (real recordings, soundPreview.ts). */
 export const AUDIO: [string, string][] = [
-  ['Guided', 'Morning focus · 8 min'],
-  ['Soundscape', 'Rain on stone · 30 min'],
-  ['Sleep', 'Slow breathing · 20 min'],
+  ['Guided · calm narrator', 'Take a breath'],
+  ['Guided · direct narrator', 'One promise, one step'],
+  ['Voxu Voice', 'Answering your journal'],
 ]
 
 export function drawScreen(c: HTMLCanvasElement, section: Section, d: DemoState = DEMO_START) {
@@ -288,21 +288,21 @@ export function drawScreen(c: HTMLCanvasElement, section: Section, d: DemoState 
     x.fillText('Listen', P, 300)
     x.fillStyle = 'rgba(255,255,255,0.55)'
     x.font = `400 28px ${sans}`
-    x.fillText('Guided sessions, soundscapes, sleep audio.', P, 360)
+    x.fillText('Guided sessions and Voxu Voice.', P, 360)
     AUDIO.forEach(([kind, title], i) => {
-      const y = 430 + i * 230
+      const y = 420 + i * 185
       const on = d.audio === i
-      card(y, 200)
-      eyebrow(kind, y + 70)
+      card(y, 165)
+      eyebrow(kind, y + 60)
       x.fillStyle = '#fff'
-      x.font = `600 44px ${serif}`
-      x.fillText(title, P + 16, y + 140)
+      x.font = `600 42px ${serif}`
+      x.fillText(title, P + 16, y + 122)
       // Play or pause.
       const cx = W - P - 60
-      const cy = y + 100
+      const cy = y + 82
       x.fillStyle = on ? '#fff' : 'rgba(255,255,255,0.1)'
       x.beginPath()
-      x.arc(cx, cy, 48, 0, Math.PI * 2)
+      x.arc(cx, cy, 42, 0, Math.PI * 2)
       x.fill()
       x.fillStyle = on ? '#000' : '#fff'
       if (on) {
@@ -319,7 +319,7 @@ export function drawScreen(c: HTMLCanvasElement, section: Section, d: DemoState 
     if (d.audio !== null) {
       x.fillStyle = 'rgba(255,255,255,0.75)'
       x.font = `400 30px ${sans}`
-      x.fillText(`Now playing: ${AUDIO[d.audio][1]}`, P, 1180)
+      x.fillText(`Now playing: ${AUDIO[d.audio][1]}`, P, 1200)
     }
   }
 }

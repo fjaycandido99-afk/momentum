@@ -3,13 +3,12 @@
 import { Component, Suspense, useMemo, useRef, useState, type ReactNode } from 'react'
 import * as THREE from 'three'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, Html, Lightformer, PerformanceMonitor, MeshReflectorMaterial, RoundedBox, useGLTF } from '@react-three/drei'
+import { Environment, Html, Lightformer, PerformanceMonitor, MeshReflectorMaterial, useGLTF } from '@react-three/drei'
 import { Bloom, EffectComposer, SMAA, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { nextStep, promises, sculpt, visited } from './store'
+import { STEPS, SUMMIT, nextStep, promises, sculpt, visited } from './store'
 import { monolithGeometry, rippleNormals, rockTexture } from './scenery'
-import { FallingLeaves, SoundRings, makeCoreFx, makeFx, useBonsaiFx, useBrainFx } from './artefactFx'
-import { DEMO_START, drawScreen, SCREEN_H, SCREEN_W, type DemoState } from './phoneScreens'
+import { FallingLeaves, makeCoreFx, makeFx, useBonsaiFx, useBrainFx } from './artefactFx'
 
 // "The Art of Becoming": the five parts of Voxu as artefacts on stone
 // pedestals (Meshy image-to-3D, compressed with meshopt), an inner cosmos in a
@@ -107,7 +106,7 @@ const LAYOUTS: Record<'wide' | 'tall', Layout> = {
   // the stones zigzag away and up toward David, who stands in the water behind.
   tall: {
     // Aimed low, so the climb sits above the words and David fills the top.
-    overview: { cam: v(0, 2.6, 12.5), look: v(0, 1.9, -3), fov: 52 },
+    overview: { cam: v(0, 3.0, 12.5), look: v(0, 2.6, -3), fov: 52 },
     water: 0,
     c: v(0, 0, -3),
     // Towering over the last step.
@@ -116,11 +115,12 @@ const LAYOUTS: Record<'wide' | 'tall', Layout> = {
     seat: {
       // Each step standing in the water, rising a little from one to the next.
       // Spread wide and deep enough that no two steps overlap on screen (each is its own tap).
-      column: { at: v(-1.25, 0.25, 3.6), r: 1.05 },
-      bonsai: { at: v(1.25, 0.7, 1.5), r: 1.0 },
-      brain: { at: v(-1.2, 1.15, -0.6), r: 1.0 },
-      headphones: { at: v(1.2, 1.6, -2.7), r: 0.95 },
-      scroll: { at: v(-0.2, 2.05, -4.8), r: 0.95 },
+      // Rising steeply, so each step (and its name) has its own band of the screen.
+      column: { at: v(-1.2, 0.25, 3.6), r: 1.05 },
+      bonsai: { at: v(1.2, 1.15, 1.6), r: 1.0 },
+      brain: { at: v(-1.15, 2.05, -0.4), r: 1.0 },
+      headphones: { at: v(1.15, 2.95, -2.4), r: 0.95 },
+      scroll: { at: v(-0.1, 3.85, -4.4), r: 0.95 },
     },
     monoliths: [
       { at: v(-4.2, 0, -7), h: 7, w: 1.0, tilt: 0.04 },
@@ -167,6 +167,21 @@ function shotFor(id: Id) {
   const cam = v(at.x, at.y + h * 0.72, at.z).addScaledVector(toCam, d).addScaledVector(side, d * 0.3)
   return { cam, look: v(at.x, at.y + h * 0.5, at.z), fov: 34 }
 }
+
+/** The shot of David at the summit: his head and shoulders, a little to one side (the words take the other). */
+function summitShot() {
+  const at = corePos()
+  const h = L().core.h
+  const look = v(at.x, at.y + h * 0.62, at.z)
+  const from = L().overview.cam
+  const dir = v(from.x - look.x, 0, from.z - look.z).normalize()
+  const side = v(dir.z, 0, -dir.x)
+  const cam = look.clone().addScaledVector(dir, h * 1.35).addScaledVector(side, h * 0.12)
+  cam.y += h * 0.05
+  return { cam, look, fov: 38 }
+}
+/** The shot for a chapter: an artefact's, or David's at the summit. */
+const shotOf = (pick: number) => (pick === SUMMIT ? summitShot() : shotFor(BY_CHAPTER[pick]))
 
 const ease = (t: number) => {
   const x = Math.min(1, Math.max(0, t))
@@ -498,10 +513,8 @@ function Artefact({ id }: { id: Id }) {
       const u = (performance.now() - sculpt.react.at) / 900
       const jolt = sculpt.react.chapter === o.chapter && u >= 0 && u < 1 ? Math.sin(Math.PI * u) * (1 - u) : 0
       if (jolt > 0) float.current.rotation.y += dt * 4 * jolt
-      // ...and the headphones move with the sound.
-      const beat = o.chapter === 5 ? sculpt.audio * 0.05 : 0
       // A hovered world leans in a little.
-      float.current.scale.setScalar((1 + 0.08 * jolt + beat + 0.06 * s.hover) * L().artBoost)
+      float.current.scale.setScalar((1 + 0.08 * jolt + 0.06 * s.hover) * L().artBoost)
     }
     s.hover = THREE.MathUtils.damp(s.hover, hovered && !someone ? 1 : 0, 6, dt)
     // Fades in once loaded; falls back into the dark while another one is open.
@@ -550,7 +563,6 @@ function Artefact({ id }: { id: Id }) {
       <group ref={float}>
         <primitive object={model} />
         {id === 'bonsai' && <FallingLeaves h={o.h} api={leaves} />}
-        {id === 'headphones' && <SoundRings h={o.h} w={width} />}
       </group>
       <mesh material={glowMat} position={[0, o.h * L().artBoost * 0.55, -0.3]} scale={o.h * L().artBoost * 2.2}>
         <planeGeometry args={[1, 1]} />
@@ -589,7 +601,7 @@ function Artefact({ id }: { id: Id }) {
       {/* Under the slab: "Start here", the explored mark and the one line on hover. The name you
           see is carved in the stone; this one stays for clicks and screen readers. */}
       {/* Phones: just above the artefact (on the stone's edge the next step covered it), on a dark pill so it reads over anything. */}
-      <Html position={LIGHT ? [0, o.h * L().artBoost + 0.12, 0] : [0, -slab.thick * L().seat[id].r - 0.02, L().seat[id].r]} zIndexRange={[15, 0]}>
+      <Html position={LIGHT ? [0, o.h * L().artBoost + 0.06, 0] : [0, -slab.thick * L().seat[id].r - 0.02, L().seat[id].r]} zIndexRange={[15, 0]}>
         <div
           ref={label}
           style={{ opacity: 0, transition: 'opacity 0.5s', transform: LIGHT ? 'translate(-50%, -100%)' : 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}
@@ -606,14 +618,14 @@ function Artefact({ id }: { id: Id }) {
             style={{
               // Phones show the name here (the carving is too small to read); elsewhere it is in the stone.
               color: LIGHT ? '#E3C68E' : 'transparent',
-              font: `600 ${LIGHT ? 10 : 11}px/1 Inter, system-ui, sans-serif`,
-              letterSpacing: '0.22em',
+              font: `600 ${LIGHT ? 9 : 11}px/1 Inter, system-ui, sans-serif`,
+              letterSpacing: LIGHT ? '0.16em' : '0.22em',
               textTransform: 'uppercase',
               whiteSpace: 'nowrap',
               background: LIGHT ? 'rgba(8,6,4,0.72)' : 'none',
               border: LIGHT ? '1px solid rgba(201,174,130,0.5)' : 0,
               borderRadius: 999,
-              padding: LIGHT ? '6px 10px 6px 12px' : '10px',
+              padding: LIGHT ? '5px 8px 5px 10px' : '10px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -621,7 +633,7 @@ function Artefact({ id }: { id: Id }) {
             }}
           >
             <span ref={mark} aria-hidden style={{ opacity: 0, width: 5, height: 5, borderRadius: 9, background: GOLD, transition: 'opacity 0.5s' }} />
-            {o.label}
+            {['I', 'II', 'III', 'IV', 'V'][STEPS.indexOf(o.chapter)]} · {o.label}
           </button>
           <span ref={tick} aria-hidden style={{ display: 'none' }} />
           <span
@@ -709,14 +721,16 @@ function useCoreBody(model: THREE.Object3D, mats: THREE.MeshStandardMaterial[]) 
     u.uFrom.value = s.from
     u.uFresh.value = s.to > s.from ? Math.max(0, 1 - Math.max(0, since - 0.4) / 2.4) : 0
     // The gold cracks glow a little more for each world opened, and fully at the reveal.
-    const struck = Math.max(0, 1 - (t - core.flash) / 0.9)
+    // A drifting stone striking him, or a coin chosen at his summit, flashes his gold cracks.
+    const coin = sculpt.react.chapter === SUMMIT ? Math.max(0, 1 - (performance.now() - sculpt.react.at) / 900) : 0
+    const struck = Math.max(coin, 1 - (t - core.flash) / 0.9, 0)
     u.uLight.value = THREE.MathUtils.damp(u.uLight.value, Math.max(revealAmount(), 0.5 * Math.min(1, opened / 5), struck), struck > 0.5 ? 12 : 3, dt)
     // Every world opened and the carving shown: its moment, once.
     if (opened >= 5 && !core.autoRevealed && flight.pick === 0 && flight.k > 0.95 && since > 2.6) {
       core.autoRevealed = true
       startReveal()
     }
-    const want = Math.min(1, (t - s.born) / 1.2) * (flight.pick === 0 ? 1 : 0)
+    const want = Math.min(1, (t - s.born) / 1.2) * (flight.pick === 0 || flight.pick === SUMMIT ? 1 : 0)
     s.shown = THREE.MathUtils.damp(s.shown, want, 4, dt)
     const solid = s.shown > 0.995
     for (const m of mats) {
@@ -825,18 +839,33 @@ function Core() {
   const group = useRef<THREE.Group>(null)
   const glow = useRef<THREE.Mesh>(null)
   const lamp = useRef<THREE.PointLight>(null)
+  const name = useRef<HTMLButtonElement>(null)
   const gold = useMemo(() => new THREE.MeshBasicMaterial({ color: brightGold(2.3, 1.35, 0.5), toneMapped: false, transparent: true, opacity: 0, fog: false }), [])
   const pose = useRef<THREE.Group>(null)
-  // A gold ribbon spiralling up round the shoulders and chest (in the bust's own units, height 1).
+  // A gold ribbon sweeping once round his chest and shoulders on a tilt (in the
+  // bust's own units, height 1), thinning away to nothing at both ends.
   const ribbon = useMemo(() => {
     const pts: THREE.Vector3[] = []
-    for (let i = 0; i <= 160; i++) {
-      const t = i / 160
-      const a = -0.6 + t * Math.PI * 2 * 1.2
-      const r = 0.44 - t * 0.08
-      pts.push(new THREE.Vector3(Math.cos(a) * r, 0.36 + t * 0.3 + Math.sin(a) * 0.05, Math.sin(a) * r * 0.85))
+    const N = 200
+    for (let i = 0; i <= N; i++) {
+      const t = i / N
+      const a = -1.9 + t * Math.PI * 2 * 0.92
+      // Low at the front left, rising across his back to the right shoulder.
+      pts.push(new THREE.Vector3(Math.cos(a) * 0.5, 0.3 + Math.sin(a + 0.6) * 0.09 + t * 0.08, Math.sin(a) * 0.42))
     }
-    return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 320, 0.0035, 8, false)
+    const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 400, 0.004, 8, false)
+    // Taper: pull each ring of the tube in toward its centre line near the ends.
+    const curve = new THREE.CatmullRomCurve3(pts)
+    const p = geo.attributes.position
+    const ring = 9
+    const c = new THREE.Vector3()
+    for (let i = 0; i < p.count; i++) {
+      const t = Math.floor(i / ring) / 400
+      const k = Math.min(1, t / 0.18, (1 - t) / 0.18)
+      curve.getPointAt(Math.min(1, t), c)
+      p.setXYZ(i, c.x + (p.getX(i) - c.x) * k, c.y + (p.getY(i) - c.y) * k, c.z + (p.getZ(i) - c.z) * k)
+    }
+    return geo
   }, [])
   useFrame(({ clock }) => {
     const g = group.current
@@ -848,10 +877,16 @@ function Core() {
     g.rotation.y = Math.atan2(cam.x - g.position.x, cam.z - g.position.z)
     // ...while the figure itself looks up and away to the right, turning only a little.
     if (pose.current) pose.current.rotation.set(0, Math.sin(clock.elapsedTime * 0.12) * 0.06, 0)
-    const shown = systemShown()
+    const shown = coreShown()
     const breath = 0.85 + 0.15 * Math.sin(clock.elapsedTime * 0.6)
     const rev = revealAmount()
     gold.opacity = shown
+    // His name, only in the overview (at his summit the caption says it).
+    if (name.current) {
+      const on = flight.pick === 0 && flight.k > 0.6
+      name.current.style.opacity = on ? '1' : '0'
+      name.current.style.pointerEvents = on ? 'auto' : 'none'
+    }
     if (glow.current) (glow.current.material as THREE.MeshBasicMaterial).opacity = shown * (0.22 + 0.15 * rev) * breath
     if (lamp.current) {
       // In world units: the bust is scaled up, the light's reach and strength are not.
@@ -874,7 +909,7 @@ function Core() {
       </Suspense>
       {/* A gold halo behind the head, and the ribbon round the shoulders. */}
       <mesh material={gold} position={[0.03, 0.8, -0.2]}>
-        <torusGeometry args={[0.34, 0.0045, 10, 200]} />
+        <torusGeometry args={[0.34, 0.003, 10, 220]} />
       </mesh>
       <mesh geometry={ribbon} material={gold} />
       {/* Warm light from within: a glow behind it and a lamp on its face and the nearest worlds. */}
@@ -883,13 +918,35 @@ function Core() {
         <meshBasicMaterial map={glowTexture()} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} fog={false} />
       </mesh>
       <pointLight ref={lamp} position={[0, 0.78, 0.32]} color="#ffc98a" intensity={0} distance={6} decay={2} />
+      {/* His name, like the steps': above his head. Tapping it opens his achievements. */}
+      <Html position={[0, 1.02, 0]} center zIndexRange={[15, 0]}>
+        <button
+          ref={name}
+          onClick={() => flight.pick === 0 && sculpt.jump?.(SUMMIT)}
+          style={{
+            opacity: 0,
+            transition: 'opacity 0.5s',
+            color: '#E3C68E',
+            font: `600 ${LIGHT ? 9 : 11}px/1 Inter, system-ui, sans-serif`,
+            letterSpacing: LIGHT ? '0.16em' : '0.22em',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+            background: 'rgba(8,6,4,0.72)',
+            border: '1px solid rgba(201,174,130,0.5)',
+            borderRadius: 999,
+            padding: LIGHT ? '5px 10px' : '8px 14px',
+            cursor: 'pointer',
+          }}
+        >
+          VI · Achievements
+        </button>
+      </Html>
       {/* What you tap. */}
       <mesh
         position={[0, 0.5, 0]}
         onClick={(e) => {
           e.stopPropagation()
-          if (nextStep()) sculpt.jump?.(nextStep())
-          else startReveal()
+          if (flight.pick === 0) sculpt.jump?.(SUMMIT)
         }}
         onPointerOver={(e) => {
           e.stopPropagation()
@@ -908,6 +965,8 @@ function Core() {
 
 /** How much of the system shows: all of it in the overview, nothing while a world is open. */
 const systemShown = () => (flight.pick === 0 ? flight.k : 1 - flight.k)
+/** David and his halo: in the overview and at his own summit. */
+const coreShown = () => (flight.pick === 0 || flight.pick === SUMMIT ? 1 : 1 - flight.k)
 
 /** Gold dust hanging in the air over the water, drifting very slowly. */
 function GoldDust() {
@@ -1291,7 +1350,7 @@ function Director() {
     if (want !== f.pick || layout.tall !== f.tall) {
       // A new flight starts from wherever the camera is now (the first shot starts in place).
       const first = f.pick === -1 || layout.tall !== f.tall
-      const start = want === 0 ? L().overview : shotFor(BY_CHAPTER[want])
+      const start = want === 0 ? L().overview : shotOf(want)
       f.fromPos.copy(first ? start.cam : cam.position)
       f.fromLook.copy(first ? start.look : f.look)
       f.fromFov = first ? start.fov : cam.fov
@@ -1299,7 +1358,7 @@ function Director() {
       f.tall = layout.tall
       f.t0 = t
     }
-    const target = want === 0 ? L().overview : shotFor(BY_CHAPTER[want])
+    const target = want === 0 ? L().overview : shotOf(want)
     // Reduce Motion: a shorter, flatter glide rather than a jump cut.
     const k = ease((t - f.t0) / (reduced ? 1.1 : 1.7))
     flight.pick = want
@@ -1385,199 +1444,6 @@ function Dust() {
   )
 }
 
-
-// ---- The phone ------------------------------------------------------------
-// A real 3D phone (titanium frame, black glass, the Dynamic Island) with the
-// chapter's Voxu screen drawn onto the glass (phoneScreens.ts), redrawn as
-// the visitor uses the demo. On wide screens it floats beside the open
-// artefact, a little toward the camera; on phones it is brought up close when
-// asked for ("See it in Voxu").
-const PW = 1.04
-const PH = 2.16
-const PD = 0.1
-const PR = 0.17
-function roundedRectGeometry(w: number, h: number, r: number) {
-  const sh = new THREE.Shape()
-  const x = -w / 2
-  const y = -h / 2
-  sh.moveTo(x + r, y)
-  sh.lineTo(x + w - r, y)
-  sh.quadraticCurveTo(x + w, y, x + w, y + r)
-  sh.lineTo(x + w, y + h - r)
-  sh.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-  sh.lineTo(x + r, y + h)
-  sh.quadraticCurveTo(x, y + h, x, y + h - r)
-  sh.lineTo(x, y + r)
-  sh.quadraticCurveTo(x, y, x + r, y)
-  const g = new THREE.ShapeGeometry(sh, 16)
-  const pos = g.attributes.position
-  const uv = g.attributes.uv
-  for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) - x) / w, (pos.getY(i) - y) / h)
-  return g
-}
-
-function Phone3D() {
-  const g = useRef<THREE.Group>(null)
-  const { camera, size } = useThree()
-  const screenGeo = useMemo(() => roundedRectGeometry(PW - 0.1, PH - 0.1, PR - 0.06), [])
-  const glassGeo = useMemo(() => roundedRectGeometry(PW - 0.03, PH - 0.03, PR - 0.015), [])
-  const { canvas, tex, mat } = useMemo(() => {
-    const c = document.createElement('canvas')
-    c.width = SCREEN_W
-    c.height = SCREEN_H
-    const t = new THREE.CanvasTexture(c)
-    t.colorSpace = THREE.SRGBColorSpace
-    t.anisotropy = 16
-    t.minFilter = THREE.LinearMipmapLinearFilter
-    t.generateMipmaps = true
-    // Just under the glow threshold: the white type stays sharp instead of blooming.
-    return { canvas: c, tex: t, mat: new THREE.MeshBasicMaterial({ map: t, color: new THREE.Color(0.8, 0.8, 0.8), toneMapped: false, transparent: true, opacity: 0 }) }
-  }, [])
-  const st = useRef({ v: -1, shown: 0, pos: new THREE.Vector3(), q: new THREE.Quaternion(), placed: false, lastId: 'brain' as Id })
-  const tmp = useMemo(() => ({ d: new THREE.Vector3(), r: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), m: new THREE.Matrix4(), target: new THREE.Vector3(), q: new THREE.Quaternion() }), [])
-  const fadeMats = useRef<THREE.Material[]>([])
-  const label = useRef<HTMLParagraphElement>(null)
-  // The screen itself is a real canvas element placed on the glass (sharp text at any size).
-  const dom = useRef<HTMLCanvasElement>(null)
-  const domWrap = useRef<HTMLDivElement>(null)
-  const draw = () => {
-    const ph = sculpt.phone
-    const target = dom.current ?? canvas
-    if (ph.section) drawScreen(target, ph.section, (ph.demo as DemoState) ?? DEMO_START)
-    tex.needsUpdate = true
-  }
-  useMemo(() => {
-    document.fonts?.ready.then(draw)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useFrame(({ clock }, dt) => {
-    const s = st.current
-    const ph = sculpt.phone
-    if (ph.v !== s.v) {
-      s.v = ph.v
-      draw()
-    }
-    const wide = size.width >= 1024 && size.width / size.height > 1.2
-    const open = flight.pick !== 0 && !!ph.section && flight.k > 0.55
-    const want = open && (wide || ph.focus) ? 1 : 0
-    s.shown = THREE.MathUtils.damp(s.shown, want, want ? 3 : 8, Math.min(dt, 0.25))
-    const grp = g.current
-    if (!grp) return
-    grp.visible = s.shown > 0.01
-    // The screen and its caption are page elements: hide them with the phone,
-    // or they stay floating where the phone was.
-    if (domWrap.current) {
-      domWrap.current.style.opacity = String(s.shown)
-      domWrap.current.style.visibility = grp.visible ? 'visible' : 'hidden'
-    }
-    if (label.current) label.current.style.opacity = String(ph.focus || !grp.visible ? 0 : s.shown)
-    if (!grp.visible) {
-      s.placed = false
-      return
-    }
-    const t = clock.elapsedTime
-    const { d, r, up, m, target, q } = tmp
-    let scale = 1
-    if (ph.focus && !wide) {
-      // Brought close, in front of the lens, filling most of the screen.
-      camera.getWorldDirection(d)
-      const dist = 2.6
-      target.copy(camera.position).addScaledVector(d, dist)
-      const visH = 2 * Math.tan(THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov / 2)) * dist
-      scale = Math.min((0.72 * visH) / PH, (0.8 * visH * (size.width / size.height)) / PW)
-      m.lookAt(camera.position, target, up)
-      q.setFromRotationMatrix(m)
-    } else {
-      // Beside the open artefact, a little toward the camera, to its right.
-      // While it fades out after closing, it stays beside the artefact it belonged to.
-      if (flight.pick !== 0) s.lastId = BY_CHAPTER[flight.pick] ?? s.lastId
-      const id = s.lastId
-      const shot = shotFor(id)
-      d.subVectors(shot.cam, shot.look)
-      const dist = d.length() * 1.45
-      d.normalize()
-      r.crossVectors(up, d).normalize()
-      target.copy(shot.look).addScaledVector(r, dist * 0.225).addScaledVector(d, dist * 0.2)
-      target.y += Math.sin(t * 0.7) * 0.03
-      // About two fifths of the screen height.
-      const away = camera.position.distanceTo(target)
-      scale = (0.5 * 2 * Math.tan(THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov / 2)) * away) / PH
-      // Face the camera, turned a touch toward the artefact.
-      m.lookAt(camera.position, target, up)
-      q.setFromRotationMatrix(m)
-      q.multiply(tmp.q.setFromAxisAngle(up, -0.05 + sculpt.pointer.x * 0.04))
-    }
-    if (!s.placed) {
-      s.pos.copy(target)
-      s.q.copy(q)
-      s.placed = true
-    }
-    const l = 1 - Math.exp(-6 * dt)
-    s.pos.lerp(target, l)
-    s.q.slerp(q, l)
-    grp.position.copy(s.pos)
-    grp.quaternion.copy(s.q)
-    // It rises into place as it appears.
-    grp.position.y -= (1 - s.shown) * 0.25
-    grp.scale.setScalar(scale * (0.9 + 0.1 * s.shown))
-    mat.opacity = s.shown
-    if (domWrap.current) domWrap.current.style.opacity = String(s.shown)
-    if (label.current) label.current.style.opacity = String(ph.focus ? 0 : s.shown)
-    const fading = s.shown < 0.995
-    for (const fm of fadeMats.current) {
-      fm.opacity = s.shown
-      if (fm.transparent !== fading) {
-        fm.transparent = fading
-        fm.needsUpdate = true
-      }
-    }
-  })
-  const fade = (el: THREE.Material | null) => {
-    if (el && !fadeMats.current.includes(el)) fadeMats.current.push(el)
-  }
-  return (
-    <group ref={g} visible={false}>
-      <Html position={[0, -PH / 2 - 0.2, 0]} center zIndexRange={[5, 0]}>
-        <p ref={label} style={{ opacity: 0, color: 'rgba(255,255,255,0.55)', font: '600 10px/1 Inter, system-ui, sans-serif', letterSpacing: '0.25em', textTransform: 'uppercase', whiteSpace: 'nowrap', margin: 0 }}>In the app · example</p>
-      </Html>
-      <RoundedBox args={[PW, PH, PD]} radius={PR} smoothness={8}>
-        <meshPhysicalMaterial ref={fade} color="#c9c6d3" metalness={0.85} roughness={0.25} clearcoat={0.7} clearcoatRoughness={0.15} envMapIntensity={1.2} transparent />
-      </RoundedBox>
-      <mesh geometry={glassGeo} position={[0, 0, PD / 2 + 0.002]}>
-        <meshPhysicalMaterial ref={fade} color="#030306" roughness={0.2} metalness={0.2} clearcoat={0.3} clearcoatRoughness={0.3} transparent />
-      </mesh>
-      <mesh geometry={screenGeo} position={[0, 0, PD / 2 + 0.004]}>
-        <meshBasicMaterial color="#05070d" />
-      </mesh>
-      {/* 1 CSS px = distanceFactor / 400 world units: 468 px across the 0.94 screen. */}
-      <Html transform position={[0, 0, PD / 2 + 0.006]} distanceFactor={((PW - 0.1) / 468) * 400} zIndexRange={[4, 0]} pointerEvents="none">
-        <div ref={domWrap} style={{ opacity: 0 }}>
-          <canvas
-            ref={(el) => {
-              ;(dom as { current: HTMLCanvasElement | null }).current = el
-              if (el) draw()
-            }}
-            width={SCREEN_W}
-            height={SCREEN_H}
-            style={{ width: 468, height: (468 * SCREEN_H) / SCREEN_W, borderRadius: 52, display: 'block' }}
-          />
-        </div>
-      </Html>
-      <RoundedBox args={[0.27, 0.075, 0.004]} radius={0.035} smoothness={4} position={[0, PH / 2 - 0.13, PD / 2 + 0.007]}>
-        <meshBasicMaterial ref={fade} color="#000000" transparent />
-      </RoundedBox>
-      {[0.48, 0.28].map((y) => (
-        <RoundedBox key={y} args={[0.02, 0.14, 0.05]} radius={0.008} position={[-PW / 2 - 0.006, y, 0]}>
-          <meshStandardMaterial ref={fade} color="#c9c6d6" metalness={1} roughness={0.25} transparent />
-        </RoundedBox>
-      ))}
-      <RoundedBox args={[0.02, 0.24, 0.05]} radius={0.008} position={[PW / 2 + 0.006, 0.35, 0]}>
-        <meshStandardMaterial ref={fade} color="#c9c6d6" metalness={1} roughness={0.25} transparent />
-      </RoundedBox>
-    </group>
-  )
-}
 
 // ---- The world ------------------------------------------------------------
 // A dark polished floor far below that catches faint reflections, a soft
@@ -1718,9 +1584,6 @@ export default function Objects() {
         </Skip>
       ))}
       <Floor />
-      <Suspense fallback={null}>
-        <Phone3D />
-      </Suspense>
       <Dust />
       {/* Crisp: no blur, no grain; a light glow on the brightest metal and a soft vignette. */}
       {/* Phones skip it: the renderer's own tone mapping and anti-aliasing are enough there. */}
