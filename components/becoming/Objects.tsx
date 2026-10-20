@@ -293,9 +293,20 @@ function carvedTexture(text: string) {
 /** The band the name is cut into: the front arc of a unit cylinder, unit tall (facing +z). */
 const CARVE_GEO = new THREE.CylinderGeometry(1, 1, 1, 48, 1, true, -0.55, 1.1)
 
+/**
+ * Gold brighter than white, for the glow pass to bloom into gold. Phones have
+ * no glow pass, where it would clip to a pale yellow: there it is the same hue
+ * held within range, so it reads as gold.
+ */
+function brightGold(r: number, g: number, b: number) {
+  if (!LIGHT) return new THREE.Color(r, g, b)
+  const k = 1 / Math.max(r, g, b)
+  return new THREE.Color(r * k, g * k * 0.92, b * k * 0.8)
+}
+
 /** The rim's glowing gold. */
 const haloMaterial = () =>
-  new THREE.MeshBasicMaterial({ color: new THREE.Color(1.2, 0.9, 0.5), transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false })
+  new THREE.MeshBasicMaterial({ color: brightGold(1.2, 0.9, 0.5), transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false })
 
 /** A model, scaled to its height and standing on the origin, with its own fadeable material. */
 function useArtefact(url: string, h: number) {
@@ -798,7 +809,7 @@ function Core() {
   const group = useRef<THREE.Group>(null)
   const glow = useRef<THREE.Mesh>(null)
   const lamp = useRef<THREE.PointLight>(null)
-  const gold = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color(2.3, 1.35, 0.5), toneMapped: false, transparent: true, opacity: 0, fog: false }), [])
+  const gold = useMemo(() => new THREE.MeshBasicMaterial({ color: brightGold(2.3, 1.35, 0.5), toneMapped: false, transparent: true, opacity: 0, fog: false }), [])
   const pose = useRef<THREE.Group>(null)
   // A gold ribbon spiralling up round the shoulders and chest (in the bust's own units, height 1).
   const ribbon = useMemo(() => {
@@ -1587,8 +1598,8 @@ function Floor() {
           The reflection is multiplied by the base colour, so it must not be pure black.
           Phones get it too (the water is the scene), with no blur pass. */}
       <MeshReflectorMaterial
-          resolution={LIGHT ? 256 : width < 768 ? 512 : 1024}
-          blur={LIGHT ? [0, 0] : [20, 6]}
+          resolution={LIGHT ? 512 : width < 768 ? 512 : 1024}
+          blur={LIGHT ? [40, 12] : [20, 6]}
           mixBlur={0.05}
           mixStrength={7}
           mixContrast={1.15}
@@ -1654,10 +1665,10 @@ export default function Objects() {
       style={{ background: '#000' }}
     >
       <PerformanceMonitor
-        onDecline={() => setDpr((d) => Math.max(LIGHT ? 1.5 : 1, +(d - 0.25).toFixed(2)))}
+        onDecline={() => setDpr((d) => Math.max(LIGHT ? 2 : 1, +(d - 0.25).toFixed(2)))}
         onIncline={() => setDpr((d) => Math.min(top, +(d + 0.5).toFixed(2)))}
         flipflops={4}
-        onFallback={() => setDpr(LIGHT ? 1.5 : 1)}
+        onFallback={() => setDpr(LIGHT ? 2 : 1)}
       />
       <color attach="background" args={['#000000']} />
       {/* Everything far away fades into the black. */}
