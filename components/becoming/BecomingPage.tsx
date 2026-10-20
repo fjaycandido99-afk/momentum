@@ -4,7 +4,7 @@ import { Component, createContext, useContext, useEffect, useMemo, useRef, useSt
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Lenis from 'lenis'
-import { SECTIONS, STEPS, STEP_NAME, carvedProgress, makePromise, nextStep, sculpt, sectionAt, stepAfter, visited, type Section } from './store'
+import { SECTIONS, STEPS, STEP_NAME, carvedProgress, makePromise, nextStep, sculpt, sectionAt, stepAfter, stepBefore, visited, type Section } from './store'
 import { NARRATION } from './script'
 import { hasScreen, screenFor } from './PhonePreview'
 import { AUDIO, DEMO_START, type DemoState } from './phoneScreens'
@@ -349,9 +349,9 @@ function Caption({ section }: { section: Section }) {
       return (
         <>
           <Kicker>Step I · Daily Eras</Kicker>
-          <h2 className="caption-h mt-2">Choose who you are becoming.</h2>
+          <h2 className="caption-h mt-2">Every climb starts with a direction.</h2>
           <p className="caption-p">
-            Nobody changes overnight. Pick a 30-day era and work on one thing, a day at a time: thirty missions, one for each day, built for who you
+            Choose who you are becoming. Pick a 30-day era and work on one thing, a day at a time: thirty missions, one for each day, built for who you
             want to be.
           </p>
           <EraDemo />
@@ -361,10 +361,10 @@ function Caption({ section }: { section: Section }) {
       return (
         <>
           <Kicker>Step V · Reflection</Kicker>
-          <h2 className="caption-h mt-2">Every night, an honest answer.</h2>
+          <h2 className="caption-h mt-2">See how far you&rsquo;ve climbed.</h2>
           <p className="caption-p">
-            At night your coach asks whether you kept today&rsquo;s promise, and you answer honestly. Over time your record shows what you actually do:
-            promises kept, the weekday you slip on. It says nothing until there is enough to say.
+            Every night, an honest answer: your coach asks whether you kept today&rsquo;s promise, and you tell the truth. Over time your record shows
+            what you actually do: promises kept, the weekday you slip on. It says nothing until there is enough to say.
           </p>
           <NightCheck />
           <div className="mt-6 flex flex-col items-center gap-2 lg:items-start">
@@ -377,10 +377,10 @@ function Caption({ section }: { section: Section }) {
       return (
         <>
           <Kicker>Step III · AI Coach</Kicker>
-          <h2 className="caption-h mt-2">A coach that remembers your word.</h2>
+          <h2 className="caption-h mt-2">You don&rsquo;t climb alone.</h2>
           <p className="caption-p">
-            Each morning you promise yourself one thing, small enough to keep, and your coach answers it, quoting what you said on day one on the
-            days that land hardest. Set a time and it calls you by name and asks for the day&rsquo;s promise out loud.
+            A coach that remembers your word. Each morning you promise yourself one thing, small enough to keep, and your coach answers it, quoting
+            what you said on day one on the days that land hardest. Set a time and it calls you by name and asks for the day&rsquo;s promise out loud.
           </p>
           <PromiseDemo />
           <p className="mt-4 hidden text-[11px] uppercase tracking-[0.2em] text-white/[0.78] lg:block">
@@ -393,10 +393,10 @@ function Caption({ section }: { section: Section }) {
       return (
         <>
           <Kicker>Step II · Habit Builder</Kicker>
-          <h2 className="caption-h mt-2">Motivation fades. Your word remains.</h2>
+          <h2 className="caption-h mt-2">One stone at a time.</h2>
           <p className="caption-p">
-            One promise a day, thirty days in a row. Kept promises earn relics: coins like Said Out Loud, Word Kept and Era Complete, yours to wear.
-            Every day leaves a mark.
+            Motivation fades; your word remains. Make one promise a day, thirty days in a row, and every one you keep is a step that holds. Kept
+            promises earn relics: coins like Said Out Loud, Word Kept and Era Complete, yours to wear.
           </p>
           <HabitDemo />
         </>
@@ -405,10 +405,10 @@ function Caption({ section }: { section: Section }) {
       return (
         <>
           <Kicker>Step IV · Guided Audio</Kicker>
-          <h2 className="caption-h mt-2">Focus by day. Rest by night.</h2>
+          <h2 className="caption-h mt-2">Steady breath for the climb.</h2>
           <p className="caption-p">
-            Guided sessions, soundscapes and sleep audio come with the era you are in, so the practice follows you from your first promise to the
-            last light out.
+            Focus by day, rest by night. Guided sessions, soundscapes and sleep audio come with the era you are in, so the practice follows you from
+            your first promise to the last light out.
           </p>
           <AudioDemo />
           <p className="mt-4 hidden text-[11px] lg:block uppercase tracking-[0.25em] text-white/[0.78]">8 eras · 30 missions each · 8 coach voices · 70+ audio sessions</p>
@@ -651,9 +651,16 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
       if (gap < 160 && now - doneAt < 700) return
       page(Math.sign(e.deltaY))
     }
+    // Inside a world, sideways moves along the climb: the next step, or the one before.
+    const along = (dir: number) => {
+      const c = dir > 0 ? stepAfter(pickedRef.current) : stepBefore(pickedRef.current)
+      if (c) jumpRef.current(c)
+    }
+    let x0 = 0
     let y0 = 0
     let startedIn = false
     const onTouchStart = (e: TouchEvent) => {
+      x0 = e.touches[0].clientX
       y0 = e.touches[0].clientY
       startedIn = pickerRef.current ? pickedRef.current > 0 : inStage()
     }
@@ -662,12 +669,23 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
     }
     const onTouchEnd = (e: TouchEvent) => {
       if (!startedIn) return
+      const dx = x0 - e.changedTouches[0].clientX
       const dy = y0 - e.changedTouches[0].clientY
+      // A sideways swipe in a world: left for the next step, right for the one before.
+      if (pickerRef.current && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+        along(Math.sign(dx))
+        return
+      }
       if (Math.abs(dy) <= 36) return
       if (pickerRef.current) close()
       else page(Math.sign(dy))
     }
     const onKey = (e: KeyboardEvent) => {
+      if (pickerRef.current && pickedRef.current && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+        e.preventDefault()
+        along(e.key === 'ArrowRight' ? 1 : -1)
+        return
+      }
       if (pickerRef.current) {
         if (pickedRef.current && ['Escape', 'ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Backspace'].includes(e.key)) {
           e.preventDefault()
@@ -899,7 +917,7 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
             </h1>
             {/* Phones keep it short: the steps need the room. */}
             <p className="mx-auto mt-4 hidden max-w-md text-[15px] leading-relaxed text-white/80 sm:block lg:mx-0 lg:text-base">
-              {revealed ? 'Every choice shapes who you become.' : 'A complete system for discipline, clarity and personal growth, built around who you want to become.'}
+              {revealed ? 'Every choice shapes who you become.' : 'Five steps, one practice. Choose who you are becoming, keep one promise a day, and climb with a coach that remembers your word.'}
             </p>
             <button
               onClick={() => goTo(nextStep() || STEPS[0])}
@@ -910,6 +928,31 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
               <span aria-hidden>→</span>
             </button>
           </div>
+
+          {/* Phones: arrows at the edges to the step before and after (or swipe sideways). */}
+          {picker && picked > 0 && !phoneOpen && (
+            <>
+              {stepBefore(picked) > 0 && (
+                <button
+                  onClick={() => goTo(stepBefore(picked))}
+                  aria-label={`Back to ${STEP_NAME[stepBefore(picked)]}`}
+                  className="absolute left-0 top-[24%] z-20 flex h-16 w-11 -translate-y-1/2 items-center justify-center text-3xl text-white/60 lg:hidden"
+                >
+                  ‹
+                </button>
+              )}
+              {stepAfter(picked) > 0 && (
+                <button
+                  onClick={() => goTo(stepAfter(picked))}
+                  aria-label={`On to ${STEP_NAME[stepAfter(picked)]}`}
+                  className="absolute right-0 top-[24%] z-20 flex h-16 w-11 -translate-y-1/2 items-center justify-center text-3xl lg:hidden"
+                  style={{ color: GOLD }}
+                >
+                  ›
+                </button>
+              )}
+            </>
+          )}
 
           {/* Phones: the 3D phone is brought up close; tap anywhere to put it back. */}
           {picker && picked > 0 && hasScreen(shown) && phoneOpen && (

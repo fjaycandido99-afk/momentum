@@ -55,6 +55,8 @@ export const visited = new Set<number>()
 export const nextStep = () => STEPS.find((c) => !visited.has(c)) ?? 0
 /** The step after a chapter on the climb, or 0 after the last. */
 export const stepAfter = (chapter: number) => STEPS[STEPS.indexOf(chapter) + 1] ?? 0
+/** The step before a chapter on the climb, or 0 before the first. */
+export const stepBefore = (chapter: number) => STEPS[STEPS.indexOf(chapter) - 1] ?? 0
 
 export type Stage = keyof typeof sculpt.manual
 export const sectionAt = (p: number): Section => SECTIONS[Math.min(SECTIONS.length - 1, Math.max(0, Math.floor(p)))]

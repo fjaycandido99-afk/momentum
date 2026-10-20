@@ -31,11 +31,11 @@ type Obj = {
   phase: number
 }
 const OBJS: Record<Id, Obj> = {
-  column: { url: '/models/column.glb', h: 1.15, chapter: 1, label: 'Daily Eras', line: 'Choose who you are becoming.', phase: 0 },
-  scroll: { url: '/models/scroll.glb', h: 0.55, chapter: 2, label: 'Reflection', line: 'Every night, an honest answer.', phase: 1.3 },
-  brain: { url: '/models/brain.glb', h: 0.95, chapter: 3, label: 'AI Coach', line: 'A coach that remembers your word.', phase: 2.6 },
-  bonsai: { url: '/models/bonsai.glb', h: 1.05, chapter: 4, label: 'Habit Builder', line: 'Motivation fades. Your word remains.', phase: 3.9 },
-  headphones: { url: '/models/headphones.glb', h: 0.85, chapter: 5, label: 'Guided Audio', line: 'Focus by day. Rest by night.', phase: 5.2 },
+  column: { url: '/models/column.glb', h: 1.15, chapter: 1, label: 'Daily Eras', line: 'Every climb starts with a direction.', phase: 0 },
+  scroll: { url: '/models/scroll.glb', h: 0.55, chapter: 2, label: 'Reflection', line: 'See how far you’ve climbed.', phase: 1.3 },
+  brain: { url: '/models/brain.glb', h: 0.95, chapter: 3, label: 'AI Coach', line: 'You don’t climb alone.', phase: 2.6 },
+  bonsai: { url: '/models/bonsai.glb', h: 1.05, chapter: 4, label: 'Habit Builder', line: 'One stone at a time.', phase: 3.9 },
+  headphones: { url: '/models/headphones.glb', h: 0.85, chapter: 5, label: 'Guided Audio', line: 'Steady breath for the climb.', phase: 5.2 },
 }
 const IDS = Object.keys(OBJS) as Id[]
 const BY_CHAPTER = Object.fromEntries(IDS.map((id) => [OBJS[id].chapter, id])) as Record<number, Id>
@@ -111,14 +111,15 @@ const LAYOUTS: Record<'wide' | 'tall', Layout> = {
     water: 0,
     c: v(0, 0, -3),
     // Towering over the last step.
-    core: { at: v(0.5, -0.8, -9), h: 10.5 },
+    core: { at: v(0.5, -1.0, -12), h: 12 },
     seat: {
       // Each step standing in the water, rising a little from one to the next.
-      column: { at: v(-0.9, 0.25, 3.2), r: 1.05 },
-      bonsai: { at: v(0.95, 0.6, 1.7), r: 1.0 },
-      brain: { at: v(-0.85, 0.95, 0.2), r: 1.0 },
-      headphones: { at: v(0.9, 1.3, -1.3), r: 0.95 },
-      scroll: { at: v(-0.15, 1.65, -2.8), r: 0.95 },
+      // Spread wide and deep enough that no two steps overlap on screen (each is its own tap).
+      column: { at: v(-1.25, 0.25, 3.6), r: 1.05 },
+      bonsai: { at: v(1.25, 0.7, 1.5), r: 1.0 },
+      brain: { at: v(-1.2, 1.15, -0.6), r: 1.0 },
+      headphones: { at: v(1.2, 1.6, -2.7), r: 0.95 },
+      scroll: { at: v(-0.2, 2.05, -4.8), r: 0.95 },
     },
     monoliths: [
       { at: v(-4.2, 0, -7), h: 7, w: 1.0, tilt: 0.04 },
@@ -145,15 +146,6 @@ function ringPoint(r: number, th: number, y: number, out: THREE.Vector3) {
 /** Where the bust's base stands. */
 function corePos(out = new THREE.Vector3()) {
   return out.copy(L().core.at)
-}
-/** The close shot of the bust's face, for its reveal. */
-function faceShot() {
-  const at = corePos()
-  const h = L().core.h
-  const look = v(at.x, at.y + h * 0.8, at.z)
-  const from = L().overview.cam
-  const dir = v(from.x - look.x, (from.y - look.y) * 0.3, from.z - look.z).normalize()
-  return { cam: look.clone().addScaledVector(dir, h * 0.9), look, fov: 34 }
 }
 /** Where an object stands. */
 function posOf(id: Id, out = new THREE.Vector3()) {
@@ -352,7 +344,7 @@ function DragSpin() {
   useMemo(() => {
     const el = gl.domElement
     const down = (e: PointerEvent) => {
-      if (flight.pick === 0) return
+      if (flight.pick === 0 || e.pointerType === 'touch') return
       drag.down = true
       drag.x = e.clientX
       drag.moved = 0
@@ -507,7 +499,8 @@ function Artefact({ id }: { id: Id }) {
     if (place.current) place.current.visible = s.shown > 0.01
     slab.mat.opacity = s.shown
     slab.mat.transparent = s.shown < 0.995
-    carveMat.opacity = s.shown
+    // Inside its own world the caption names it; the carving would sit huge behind the words.
+    carveMat.opacity = s.shown * (picked ? 1 - flight.k : 1)
     // The gold edge: brighter on hover, breathing on the step to take next, faint while open.
     const next = nextStep() === o.chapter
     const pulse = next && !someone ? 0.25 * (0.5 + 0.5 * Math.sin(t * 2.2)) : 0
@@ -545,9 +538,10 @@ function Artefact({ id }: { id: Id }) {
         position={[0, -slab.thick * L().seat[id].r * 0.5, 0]}
         scale={[L().seat[id].r * 1.03, slab.thick * L().seat[id].r * 0.9, L().seat[id].r * 1.03]}
       />
-      {/* What you tap: a plain box around the object (cheaper than the object itself). */}
+      {/* What you tap: a column over its own stone (cheaper than the object itself, and
+          no wider than the stone, so neighbouring steps never take each other's taps). */}
       <mesh
-        position={[0, o.h / 2, 0]}
+        position={[0, (o.h * L().artBoost) / 2, 0]}
         onClick={(e) => {
           e.stopPropagation()
           go()
@@ -562,7 +556,7 @@ function Artefact({ id }: { id: Id }) {
           document.body.style.cursor = ''
         }}
       >
-        <boxGeometry args={[o.h * 1.1, o.h * 1.25, o.h * 1.1]} />
+        <cylinderGeometry args={[L().seat[id].r * 0.9, L().seat[id].r * 0.9, o.h * L().artBoost + 0.2, 16]} />
         <meshBasicMaterial visible={false} />
       </mesh>
       {/* Under the slab: "Start here", the explored mark and the one line on hover. The name you
@@ -622,12 +616,10 @@ function Artefact({ id }: { id: Id }) {
 }
 
 // ---- The centrepiece ------------------------------------------------------
-// The unfinished self: a marble bust at the centre of the orbits, partly still
-// raw stone. Every world the visitor opens carves a little more of it (a gold
-// seam runs along the line, the new part glints, chips fly off into orbit);
-// it never finishes. Once all five
-// worlds are opened, the camera goes in close to its face and back out, and
-// the page says what it means. Tapping it plays that too.
+// David at the top of the climb, his marble breaking into gold-veined rock.
+// Every world the visitor opens lights his gold cracks a little more and sends
+// shards off his shoulder. Once all five are opened, the cracks blaze (the
+// camera stays where it is) and the page says what it means.
 
 const CORE_URL = '/models/core.glb'
 /**
@@ -636,7 +628,7 @@ const CORE_URL = '/models/core.glb'
  * instead (see the light below) and sends shards off the shoulder.
  */
 const carvedFor = (_opened: number) => 1.2
-/** Its moment, in seconds: in close by 2.2, held until 4.4, back out by 7.2. */
+/** His moment, in seconds: the cracks rise to full by 2.2, hold until 4.4, settle by 7.2. */
 const REVEAL = { in: 2.2, hold: 4.4, out: 7.2 }
 function revealAmount() {
   const at = sculpt.core.reveal
@@ -655,7 +647,11 @@ function startReveal() {
 
 /** Drives a centrepiece model (or the stand-in): the carving, fading with the system. */
 function useCoreBody(model: THREE.Object3D, mats: THREE.MeshStandardMaterial[]) {
-  const fx = useMemo(() => makeCoreFx(model, mats), [model, mats])
+  const fx = useMemo(() => {
+    // He stands far back: the distance fog would dim him into the dark.
+    for (const m of mats) m.fog = false
+    return makeCoreFx(model, mats)
+  }, [model, mats])
   const st = useRef({ shown: 0, born: -1, solid: false, opened: -1, from: carvedFor(0), to: carvedFor(0), at: -99 })
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime
@@ -1275,13 +1271,6 @@ function Director() {
     const { p, l, r } = tmp
     p.lerpVectors(f.fromPos, target.cam, k)
     l.lerpVectors(f.fromLook, target.look, k)
-    // The centrepiece's moment: in close to its face, and back out.
-    const rev = want === 0 ? revealAmount() : 0
-    if (rev > 0) {
-      const face = faceShot()
-      p.lerp(face.cam, rev)
-      l.lerp(face.look, rev)
-    }
     // Rise a little in the middle of the flight, like a crane.
     p.y += Math.sin(k * Math.PI) * (reduced ? 0.15 : 0.6)
     f.look.copy(l)
@@ -1306,7 +1295,7 @@ function Director() {
     // Phones: the artefact sits centred behind the words, whole.
     p.sub(l).multiplyScalar(1 + (wide ? 0.45 : 0.6) * close).add(l)
     cam.position.copy(p)
-    cam.fov = THREE.MathUtils.lerp(THREE.MathUtils.lerp(f.fromFov, target.fov, k), 34, rev)
+    cam.fov = THREE.MathUtils.lerp(f.fromFov, target.fov, k)
     const half = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) * p.distanceTo(l)
     cam.lookAt(l)
     r.setFromMatrixColumn(cam.matrixWorld, 0)
@@ -1589,7 +1578,7 @@ function Floor() {
           The reflection is multiplied by the base colour, so it must not be pure black.
           Phones get it too (the water is the scene), with no blur pass. */}
       <MeshReflectorMaterial
-          resolution={width < 768 ? 512 : 1024}
+          resolution={LIGHT ? 384 : width < 768 ? 512 : 1024}
           blur={LIGHT ? [0, 0] : [20, 6]}
           mixBlur={0.05}
           mixStrength={7}
@@ -1656,10 +1645,10 @@ export default function Objects() {
       style={{ background: '#000' }}
     >
       <PerformanceMonitor
-        onDecline={() => setDpr((d) => Math.max(1, +(d - 0.5).toFixed(2)))}
+        onDecline={() => setDpr((d) => Math.max(LIGHT ? 2 : 1, +(d - 0.5).toFixed(2)))}
         onIncline={() => setDpr((d) => Math.min(top, +(d + 0.5).toFixed(2)))}
         flipflops={4}
-        onFallback={() => setDpr(1)}
+        onFallback={() => setDpr(LIGHT ? 2 : 1)}
       />
       <color attach="background" args={['#000000']} />
       {/* Everything far away fades into the black. */}
