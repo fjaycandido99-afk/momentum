@@ -228,10 +228,12 @@ const RIM_GEO = new THREE.TorusGeometry(1, 0.016, 8, 180)
 /**
  * The stepping-stone slab (Meshy): its geometry centred, scaled so its widest
  * radius is 1, top at 0; plus how thick it is at that size. Each step wears
- * its own fadeable copy of the material.
+ * its own fadeable copy of the material. The top slab is the full model; the
+ * layers stacked under it, barely seen, use a light one (slab-lite.glb: about
+ * a sixth of the triangles), which phones in particular need.
  */
-function useSlab() {
-  const { scene } = useGLTF('/models/slab.glb')
+function useSlab(url = '/models/slab.glb') {
+  const { scene } = useGLTF(url)
   return useMemo(() => {
     let mesh: THREE.Mesh | null = null
     scene.traverse((o) => {
@@ -396,6 +398,7 @@ function Artefact({ id }: { id: Id }) {
   // each turned, nudged and tilted a little so the stack reads as natural rock.
   const stack = useRef<THREE.InstancedMesh>(null)
   const slab = useSlab()
+  const under = useSlab('/models/slab-lite.glb')
   const layers = useMemo(
     () =>
       Array.from({ length: STACK_MAX }, (_, i) => ({
@@ -499,8 +502,10 @@ function Artefact({ id }: { id: Id }) {
     if (place.current) place.current.visible = s.shown > 0.01
     slab.mat.opacity = s.shown
     slab.mat.transparent = s.shown < 0.995
+    under.mat.opacity = s.shown
+    under.mat.transparent = s.shown < 0.995
     // Inside its own world the caption names it; the carving would sit huge behind the words.
-    carveMat.opacity = s.shown * (picked ? 1 - flight.k : 1)
+    carveMat.opacity = LIGHT ? 0 : s.shown * (picked ? 1 - flight.k : 1)
     // The gold edge: brighter on hover, breathing on the step to take next, faint while open.
     const next = nextStep() === o.chapter
     const pulse = next && !someone ? 0.25 * (0.5 + 0.5 * Math.sin(t * 2.2)) : 0
@@ -511,7 +516,7 @@ function Artefact({ id }: { id: Id }) {
     }
     // Names only in the overview; brighter on hover, with its one line; a gold mark once explored.
     if (label.current) {
-      label.current.style.opacity = !someone && flight.k > 0.6 ? String(0.72 + 0.28 * s.hover) : '0'
+      label.current.style.opacity = !someone && flight.k > 0.6 ? String(LIGHT ? 1 : 0.72 + 0.28 * s.hover) : '0'
       label.current.style.pointerEvents = someone ? 'none' : 'auto'
     }
     if (line.current) line.current.style.opacity = s.hover < 0.03 ? '0' : String(s.hover)
@@ -530,7 +535,7 @@ function Artefact({ id }: { id: Id }) {
       </group>
       {/* Its stepping stone, reaching into the water, with a gold edge round the top. */}
       <mesh geometry={slab.geo} material={slab.mat} scale={L().seat[id].r} rotation={[0, o.phase * 2, 0]} />
-      <instancedMesh ref={stack} args={[slab.geo, slab.mat, STACK_MAX]} frustumCulled={false} />
+      <instancedMesh ref={stack} args={[under.geo, under.mat, STACK_MAX]} frustumCulled={false} />
       <mesh geometry={RIM_GEO} material={edgeMat} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]} scale={L().seat[id].r} />
       <mesh
         geometry={CARVE_GEO}
@@ -561,7 +566,8 @@ function Artefact({ id }: { id: Id }) {
       </mesh>
       {/* Under the slab: "Start here", the explored mark and the one line on hover. The name you
           see is carved in the stone; this one stays for clicks and screen readers. */}
-      <Html position={[0, -slab.thick * L().seat[id].r - 0.02, L().seat[id].r]} zIndexRange={[5, 0]}>
+      {/* Phones: on the stone's front edge, where the name reads as the stone's own. */}
+      <Html position={[0, LIGHT ? -slab.thick * L().seat[id].r * 0.35 : -slab.thick * L().seat[id].r - 0.02, L().seat[id].r]} zIndexRange={[15, 0]}>
         <div
           ref={label}
           style={{ opacity: 0, transition: 'opacity 0.5s', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}
@@ -576,7 +582,9 @@ function Artefact({ id }: { id: Id }) {
             onPointerLeave={() => setHovered(false)}
             aria-label={o.label}
             style={{
-              color: 'transparent',
+              // Phones show the name here (the carving is too small to read); elsewhere it is in the stone.
+              color: LIGHT ? '#E3C68E' : 'transparent',
+              textShadow: LIGHT ? '0 1px 6px rgba(0,0,0,0.95)' : undefined,
               font: '600 11px/1 Inter, system-ui, sans-serif',
               letterSpacing: '0.22em',
               textTransform: 'uppercase',
@@ -621,7 +629,8 @@ function Artefact({ id }: { id: Id }) {
 // shards off his shoulder. Once all five are opened, the cracks blaze (the
 // camera stays where it is) and the page says what it means.
 
-const CORE_URL = '/models/core.glb'
+/** David: the full model, or a light one on phones (about a third of the triangles, smaller textures). */
+const coreUrl = () => (LIGHT ? '/models/core-lite.glb' : '/models/core.glb')
 /**
  * How much is carved. The bust (Meshy) already breaks into rock with gold
  * veins of its own, so nothing is left raw: climbing lights its gold cracks
@@ -706,7 +715,7 @@ const core = {
 
 function CoreModel() {
   // Normalised to height 1; the group around it scales it to the layout.
-  const { model, mats } = useArtefact(CORE_URL, 1)
+  const { model, mats } = useArtefact(coreUrl(), 1)
   useCoreBody(model, mats)
   return <primitive object={model} />
 }
@@ -1578,7 +1587,7 @@ function Floor() {
           The reflection is multiplied by the base colour, so it must not be pure black.
           Phones get it too (the water is the scene), with no blur pass. */}
       <MeshReflectorMaterial
-          resolution={LIGHT ? 384 : width < 768 ? 512 : 1024}
+          resolution={LIGHT ? 256 : width < 768 ? 512 : 1024}
           blur={LIGHT ? [0, 0] : [20, 6]}
           mixBlur={0.05}
           mixStrength={7}
@@ -1635,8 +1644,8 @@ function Stars() {
 export default function Objects() {
   // Full sharpness (the screen's own pixel density, up to 3x on an iPhone) while
   // the frame rate holds; one step down when it drops, back up when it recovers.
-  const [dpr, setDpr] = useState(() => (typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, LIGHT ? 3 : 2)))
-  const top = typeof window === 'undefined' ? 2 : Math.min(window.devicePixelRatio || 1, LIGHT ? 3 : 2)
+  const [dpr, setDpr] = useState(() => (typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 2)))
+  const top = typeof window === 'undefined' ? 2 : Math.min(window.devicePixelRatio || 1, 2)
   return (
     <Canvas
       dpr={dpr}
@@ -1645,10 +1654,10 @@ export default function Objects() {
       style={{ background: '#000' }}
     >
       <PerformanceMonitor
-        onDecline={() => setDpr((d) => Math.max(LIGHT ? 2 : 1, +(d - 0.5).toFixed(2)))}
+        onDecline={() => setDpr((d) => Math.max(LIGHT ? 1.5 : 1, +(d - 0.25).toFixed(2)))}
         onIncline={() => setDpr((d) => Math.min(top, +(d + 0.5).toFixed(2)))}
         flipflops={4}
-        onFallback={() => setDpr(LIGHT ? 2 : 1)}
+        onFallback={() => setDpr(LIGHT ? 1.5 : 1)}
       />
       <color attach="background" args={['#000000']} />
       {/* Everything far away fades into the black. */}
@@ -1700,7 +1709,8 @@ export default function Objects() {
   )
 }
 
-useGLTF.preload('/models/core.glb')
+useGLTF.preload(coreUrl())
 useGLTF.preload('/models/slab.glb')
+useGLTF.preload('/models/slab-lite.glb')
 useGLTF.preload('/models/asteroid.glb')
 useGLTF.preload('/models/brain.glb')

@@ -902,6 +902,12 @@ export function BecomingPage({ children, app = false, onBegin }: { children?: Re
             })}
           </nav>
 
+          {/* Phones: a dark wash behind the overview's words, which sit over the bright water. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[30svh] bg-gradient-to-t from-black via-black/80 to-transparent transition-opacity duration-700 lg:hidden"
+            style={{ opacity: overviewOpen ? 1 : 0 }}
+          />
           {/* The overview: what this is, and one clear way in (the first step not yet taken). */}
           <div
             className="absolute inset-x-0 bottom-[6svh] z-10 px-6 text-center transition-opacity duration-700 lg:inset-x-auto lg:bottom-auto lg:left-[6vw] lg:top-1/2 lg:w-[36vw] lg:max-w-[560px] lg:-translate-y-1/2 lg:px-0 lg:text-left"
