@@ -111,7 +111,8 @@ const LAYOUTS: Record<'wide' | 'tall', Layout> = {
     water: 0,
     c: v(0, 0, -3),
     // Towering over the last step.
-    core: { at: v(0.5, -1.0, -12), h: 12 },
+    // Far back, a backdrop to the climb rather than the first thing you see.
+    core: { at: v(0.5, -1.4, -17), h: 12 },
     seat: {
       // Each step standing in the water, rising a little from one to the next.
       // Spread wide and deep enough that no two steps overlap on screen (each is its own tap).
@@ -425,6 +426,11 @@ function Artefact({ id }: { id: Id }) {
   )
   const stackTmp = useMemo(() => ({ m: new THREE.Matrix4(), q: new THREE.Quaternion(), e: new THREE.Euler(), p: new THREE.Vector3(), sc: new THREE.Vector3() }), [])
   const edgeMat = useMemo(() => haloMaterial(), [])
+  // A soft warm glow behind the artefact, so it stands out from the dark and from David.
+  const glowMat = useMemo(
+    () => new THREE.MeshBasicMaterial({ map: glowTexture(), color: '#ffcf8a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false }),
+    [],
+  )
   // Its name, carved into the front of its slab.
   const carveMat = useMemo(
     // The gold letters glow softly (emissive), so they read against the bright-veined marble.
@@ -517,6 +523,8 @@ function Artefact({ id }: { id: Id }) {
     under.mat.transparent = s.shown < 0.995
     // Inside its own world the caption names it; the carving would sit huge behind the words.
     carveMat.opacity = LIGHT ? 0 : s.shown * (picked ? 1 - flight.k : 1)
+    // The warm glow behind it: brighter on hover, gone while another world is open.
+    glowMat.opacity = s.shown * (someone && !picked ? 0 : 0.3 + 0.25 * s.hover)
     // The gold edge: brighter on hover, breathing on the step to take next, faint while open.
     const next = nextStep() === o.chapter
     const pulse = next && !someone ? 0.25 * (0.5 + 0.5 * Math.sin(t * 2.2)) : 0
@@ -544,6 +552,9 @@ function Artefact({ id }: { id: Id }) {
         {id === 'bonsai' && <FallingLeaves h={o.h} api={leaves} />}
         {id === 'headphones' && <SoundRings h={o.h} w={width} />}
       </group>
+      <mesh material={glowMat} position={[0, o.h * L().artBoost * 0.55, -0.3]} scale={o.h * L().artBoost * 2.2}>
+        <planeGeometry args={[1, 1]} />
+      </mesh>
       {/* Its stepping stone, reaching into the water, with a gold edge round the top. */}
       <mesh geometry={slab.geo} material={slab.mat} scale={L().seat[id].r} rotation={[0, o.phase * 2, 0]} />
       <instancedMesh ref={stack} args={[under.geo, under.mat, STACK_MAX]} frustumCulled={false} />
@@ -577,11 +588,11 @@ function Artefact({ id }: { id: Id }) {
       </mesh>
       {/* Under the slab: "Start here", the explored mark and the one line on hover. The name you
           see is carved in the stone; this one stays for clicks and screen readers. */}
-      {/* Phones: on the stone's front edge, where the name reads as the stone's own. */}
-      <Html position={[0, LIGHT ? -slab.thick * L().seat[id].r * 0.35 : -slab.thick * L().seat[id].r - 0.02, L().seat[id].r]} zIndexRange={[15, 0]}>
+      {/* Phones: just above the artefact (on the stone's edge the next step covered it), on a dark pill so it reads over anything. */}
+      <Html position={LIGHT ? [0, o.h * L().artBoost + 0.12, 0] : [0, -slab.thick * L().seat[id].r - 0.02, L().seat[id].r]} zIndexRange={[15, 0]}>
         <div
           ref={label}
-          style={{ opacity: 0, transition: 'opacity 0.5s', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}
+          style={{ opacity: 0, transition: 'opacity 0.5s', transform: LIGHT ? 'translate(-50%, -100%)' : 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}
         >
           <span
             ref={nextTag}
@@ -595,14 +606,14 @@ function Artefact({ id }: { id: Id }) {
             style={{
               // Phones show the name here (the carving is too small to read); elsewhere it is in the stone.
               color: LIGHT ? '#E3C68E' : 'transparent',
-              textShadow: LIGHT ? '0 1px 6px rgba(0,0,0,0.95)' : undefined,
-              font: '600 11px/1 Inter, system-ui, sans-serif',
+              font: `600 ${LIGHT ? 10 : 11}px/1 Inter, system-ui, sans-serif`,
               letterSpacing: '0.22em',
               textTransform: 'uppercase',
               whiteSpace: 'nowrap',
-              background: 'none',
-              border: 0,
-              padding: '10px',
+              background: LIGHT ? 'rgba(8,6,4,0.72)' : 'none',
+              border: LIGHT ? '1px solid rgba(201,174,130,0.5)' : 0,
+              borderRadius: 999,
+              padding: LIGHT ? '6px 10px 6px 12px' : '10px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -668,8 +679,13 @@ function startReveal() {
 /** Drives a centrepiece model (or the stand-in): the carving, fading with the system. */
 function useCoreBody(model: THREE.Object3D, mats: THREE.MeshStandardMaterial[]) {
   const fx = useMemo(() => {
-    // He stands far back: the distance fog would dim him into the dark.
-    for (const m of mats) m.fog = false
+    // He stands far back: the distance fog would dim him into the dark, so it is
+    // left off and he is dimmed by hand instead, a little, so the artefacts in
+    // front of him are what stands out (more on phones, where he fills the screen).
+    for (const m of mats) {
+      m.fog = false
+      m.color.multiplyScalar(LIGHT ? 0.55 : 0.8)
+    }
     return makeCoreFx(model, mats)
   }, [model, mats])
   const st = useRef({ shown: 0, born: -1, solid: false, opened: -1, from: carvedFor(0), to: carvedFor(0), at: -99 })
