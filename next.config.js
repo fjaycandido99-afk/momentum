@@ -31,7 +31,7 @@ const nextConfig = {
       },
       {
         source: '/download',
-        headers: [{ key: 'Content-Security-Policy', value: "frame-ancestors 'self' https://appforall.llc https://www.appforall.llc https://patchpulse.app" }],
+        headers: [{ key: 'Content-Security-Policy', value: "frame-ancestors 'self' https://appforall.app https://www.appforall.app https://patchpulse.app" }],
       },
       {
         source: '/(.*)',
